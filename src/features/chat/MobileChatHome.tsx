@@ -3,6 +3,9 @@ import { Box, IconButton } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
+import { ChatSidebar } from "./components/sidebar/ChatSidebar";
+import { useChatRouting } from "./hooks/useChatRouting";
+
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
@@ -10,14 +13,13 @@ import { UIStateManagementState } from "../../hooks/common/useUIStateManagement"
 import { NoteManagementState } from "../../hooks/notes/useNoteManagement";
 import { SprintMilestoneManagementState } from "../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
+import { UseTodoGroupsState } from "../../hooks/useTodoGroups";
 import { UserProps } from "../../types/admin";
-import { MessageProps, ThreadMessageProps, ToDoFactProps } from "../../types/chat";
+import { MessageProps, ThreadMessageProps } from "../../types/chat";
 import { TaskCommentProps } from "../../types/tasks";
 import { ChatNoteMain } from "../notes/chat-notes/components/ChatNoteMain";
 import { CreateTaskForm } from "../tasks/components/contents/CreateTaskForm";
 import { TaskPreview } from "../tasks/components/contents/TaskPreview";
-import { ChatSidebar } from "./components/sidebar/ChatSidebar";
-import { useChatRouting } from "./hooks/useChatRouting";
 import { MessagesPane } from "./MainChatPane";
 import { ThreadPane } from "./ThreadChatPane";
 
@@ -38,15 +40,10 @@ type MobileChatHomeProps = {
     currentWindowHeight: number;
     mainChatPanelSize: number;
     incompleteTodoCount: number;
-    isExistingTodaysTodo: boolean;
-    setIsExistingTodaysTodo: (v: boolean) => void;
     isToDoVisible: boolean;
     setIsToDoVisible: (v: boolean) => void;
-    todos: ToDoFactProps[];
-    setTodos: React.Dispatch<React.SetStateAction<ToDoFactProps[]>>;
-    setTodoFromMessageBubble: (
-        todo: MessageProps | ThreadMessageProps | TaskCommentProps
-    ) => void;
+    useTG: UseTodoGroupsState;
+    setTodoFromMessageBubble: (todo: MessageProps | ThreadMessageProps | TaskCommentProps) => void;
 };
 
 // Full-screen overlay shell for flag-driven side panes that have no URL
@@ -76,7 +73,7 @@ const MobileOverlay = ({
             }}
         >
             <IconButton
-                onClick={onClose}
+                aria-label="Close"
                 size="sm"
                 variant="plain"
                 sx={{
@@ -90,7 +87,7 @@ const MobileOverlay = ({
                         background: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)",
                     },
                 }}
-                aria-label="Close"
+                onClick={onClose}
             >
                 <CloseRoundedIcon sx={{ fontSize: 20 }} />
             </IconButton>
@@ -117,12 +114,9 @@ export const MobileChatHome = (props: MobileChatHomeProps) => {
         currentWindowHeight,
         mainChatPanelSize,
         incompleteTodoCount,
-        isExistingTodaysTodo,
-        setIsExistingTodaysTodo,
         isToDoVisible,
         setIsToDoVisible,
-        todos,
-        setTodos,
+        useTG,
         setTodoFromMessageBubble,
     } = props;
 
@@ -148,19 +142,19 @@ export const MobileChatHome = (props: MobileChatHomeProps) => {
             {showSidebar && (
                 <Box sx={{ height: "100%", width: "100%" }}>
                     <ChatSidebar
-                        useCM={useCM}
                         chatRouting={chatRouting}
                         incompleteTodoCount={incompleteTodoCount}
+                        isToDoVisible={isToDoVisible}
                         myself={myself}
                         setIsToDoVisible={setIsToDoVisible}
-                        isToDoVisible={isToDoVisible}
                         setMyself={setMyself}
                         socket={socket}
-                        useTEM={useTEM}
-                        useUISM={useUISM}
-                        useTM={useTM}
-                        usePM={usePM}
+                        useCM={useCM}
                         useNM={useNM}
+                        usePM={usePM}
+                        useTEM={useTEM}
+                        useTM={useTM}
+                        useUISM={useUISM}
                     />
                 </Box>
             )}
@@ -168,25 +162,22 @@ export const MobileChatHome = (props: MobileChatHomeProps) => {
             {hasMain && (
                 <Box sx={{ height: "100%", width: "100%" }}>
                     <MessagesPane
-                        useCM={useCM}
                         currentMainChatId={currentMainChatId}
                         currentWindowHeight={currentWindowHeight}
                         incompleteTodoCount={incompleteTodoCount}
-                        isExistingTodaysTodo={isExistingTodaysTodo}
                         isToDoVisible={isToDoVisible}
                         myself={myself}
                         paneSizePCT={mainChatPanelSize}
-                        setIsExistingTodaysTodo={setIsExistingTodaysTodo}
                         setIsToDoVisible={setIsToDoVisible}
                         setMyself={setMyself}
-                        setTodos={setTodos}
-                        socket={socket}
-                        useTEM={useTEM}
-                        todos={todos}
-                        useUISM={useUISM}
-                        useTM={useTM}
-                        usePM={usePM}
                         setTodoFromMessageBubble={setTodoFromMessageBubble}
+                        socket={socket}
+                        useCM={useCM}
+                        usePM={usePM}
+                        useTEM={useTEM}
+                        useTG={useTG}
+                        useTM={useTM}
+                        useUISM={useUISM}
                     />
                 </Box>
             )}
@@ -194,18 +185,18 @@ export const MobileChatHome = (props: MobileChatHomeProps) => {
             {hasThread && (
                 <Box sx={{ height: "100%", width: "100%" }}>
                     <ThreadPane
-                        useCM={useCM}
-                        usePM={usePM}
                         currentThreadChatId={currentThreadChatId}
                         currentWindowHeight={currentWindowHeight}
                         myself={myself}
                         setMyself={setMyself}
+                        setTodoFromMessageBubble={setTodoFromMessageBubble}
                         socket={socket}
+                        useCM={useCM}
+                        useNM={useNM}
+                        usePM={usePM}
                         useTEM={useTEM}
                         useTM={useTM}
                         useUISM={useUISM}
-                        useNM={useNM}
-                        setTodoFromMessageBubble={setTodoFromMessageBubble}
                     />
                 </Box>
             )}
@@ -213,23 +204,21 @@ export const MobileChatHome = (props: MobileChatHomeProps) => {
             {/* Flag-driven overlays (no URL representation) */}
             {useTM.isCreatingTask.flag === true && (
                 <MobileOverlay
-                    onClose={() =>
-                        useTM.setIsCreatingTask((prev) => ({ ...prev, flag: false }))
-                    }
+                    onClose={() => useTM.setIsCreatingTask((prev) => ({ ...prev, flag: false }))}
                 >
                     <Box sx={{ p: 1, pt: 6, height: "100%", overflow: "auto" }}>
                         <CreateTaskForm
                             chatType={useCM.currentThreadChat?.chatType || -1}
-                            useCM={useCM}
                             myself={myself}
-                            usePM={usePM}
                             setMyself={setMyself}
                             socket={socket}
+                            useCM={useCM}
+                            useNM={useNM}
+                            usePM={usePM}
+                            useSM={useSM}
                             useTEM={useTEM}
                             useTM={useTM}
                             useUISM={useUISM}
-                            useNM={useNM}
-                            useSM={useSM}
                         />
                     </Box>
                 </MobileOverlay>
@@ -240,17 +229,17 @@ export const MobileChatHome = (props: MobileChatHomeProps) => {
                     <MobileOverlay onClose={() => useTM.setIsTaskPreviewVisible(false)}>
                         <Box sx={{ p: 1, pt: 6, height: "100%", overflow: "auto" }}>
                             <TaskPreview
-                                useCM={useCM}
                                 myself={myself}
                                 setMyself={setMyself}
+                                setTodoFromMessageBubble={setTodoFromMessageBubble}
                                 socket={socket}
-                                useTEM={useTEM}
-                                useTM={useTM}
-                                useSM={useSM}
-                                useUISM={useUISM}
+                                useCM={useCM}
                                 useNM={useNM}
                                 usePM={usePM}
-                                setTodoFromMessageBubble={setTodoFromMessageBubble}
+                                useSM={useSM}
+                                useTEM={useTEM}
+                                useTM={useTM}
+                                useUISM={useUISM}
                             />
                         </Box>
                     </MobileOverlay>
@@ -260,22 +249,21 @@ export const MobileChatHome = (props: MobileChatHomeProps) => {
                 <MobileOverlay onClose={() => useCM.setIsChatNoteVisibleInChat(false)}>
                     <Box sx={{ p: 1, pt: 6, height: "100%", overflow: "auto" }}>
                         <ChatNoteMain
-                            useCM={useCM}
                             isInChatPage={true}
                             isInTaskPage={false}
                             myself={myself}
-                            useNM={useNM}
-                            useTM={useTM}
-                            usePM={usePM}
                             setMyself={setMyself}
                             socket={socket}
+                            useCM={useCM}
+                            useNM={useNM}
+                            usePM={usePM}
                             useTEM={useTEM}
+                            useTM={useTM}
                             useUISM={useUISM}
                         />
                     </Box>
                 </MobileOverlay>
             )}
-
         </Box>
     );
 };

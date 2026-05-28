@@ -328,11 +328,42 @@ export type CreateGMResponse = {
     message: string;
 };
 
-export type ToDoFactProps = {
-    todoId: number;
-    todoContent: PartialBlock[] | any[];
+// Todo: free-form, per-user category label. Optional on items —
+// uncategorized items render in an implicit top section.
+export type TodoCategoryProps = {
+    categoryId: number;
+    name: string;
+    sortOrder: number;
+    tsCreatedAt: string;
+    tsUpdatedAt: string;
+};
+
+// One actionable todo item. `notes` is an optional BlockNote document
+// for rich-text detail; the `title` is the short label shown in the row.
+// `parentItemId` is non-null on child items in a one-level nesting:
+// children share the parent's tag and live inside the same group.
+export type TodoItemProps = {
+    itemId: number;
+    groupId: number;
+    categoryId: number | null;
+    parentItemId: number | null;
+    title: string;
+    notes: PartialBlock[] | null;
     isCompleted: boolean;
-    dtCreatedOn: string;
+    sortOrder: number;
+    tsCreatedAt: string;
+    tsUpdatedAt: string;
+    tsCompletedAt: string | null;
+};
+
+// A day's worth of todos. Created lazily on first item write — there's
+// no longer an "isExistingTodaysTodo" flag; the group is just absent
+// until the user adds an item.
+export type TodoGroupProps = {
+    groupId: number;
+    localDate: string;
+    isCompleted: boolean;
+    items: TodoItemProps[];
     tsCreatedAt: string;
     tsUpdatedAt: string;
 };

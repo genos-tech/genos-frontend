@@ -17,14 +17,9 @@ import { ProjectManagementState } from "../../hooks/common/useProjectManagement"
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
+import { UseTodoGroupsState } from "../../hooks/useTodoGroups";
 import { UserProps } from "../../types/admin";
-import {
-    ChatProps,
-    MessageProps,
-    ThreadMessageProps,
-    ThreadProps,
-    ToDoFactProps,
-} from "../../types/chat";
+import { ChatProps, MessageProps, ThreadMessageProps, ThreadProps } from "../../types/chat";
 import { TaskCommentProps } from "../../types/tasks";
 import { ToDoPane } from "./ToDoPane";
 
@@ -40,10 +35,9 @@ type MessagesPaneProps = {
     usePM: ProjectManagementState;
     setIsToDoVisible: (value: boolean) => void;
     isToDoVisible: boolean;
-    todos: ToDoFactProps[];
-    setTodos: React.Dispatch<React.SetStateAction<ToDoFactProps[]>>;
-    isExistingTodaysTodo: boolean;
-    setIsExistingTodaysTodo: (value: boolean) => void;
+    // null is allowed for surfaces (e.g. the link-preview modal) that
+    // never render the todo pane and therefore don't own a useTG instance.
+    useTG?: UseTodoGroupsState | null;
     incompleteTodoCount: number;
     useUISM: UIStateManagementState;
     useTM: TaskManagementState;
@@ -57,18 +51,15 @@ export const MessagesPane = (props: MessagesPaneProps) => {
         currentMainChatId,
         currentWindowHeight,
         incompleteTodoCount,
-        isExistingTodaysTodo,
         isToDoVisible,
         myself,
         usePM,
-        setIsExistingTodaysTodo,
         setIsToDoVisible,
         setMyself,
         useUISM,
-        setTodos,
         socket,
         useTEM,
-        todos,
+        useTG,
         useCM,
         useTM,
         setTodoFromMessageBubble,
@@ -200,18 +191,16 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                     {/* To-Do Pane for only myself */}
                     {isToDoVisible === true &&
                         useCM.currentMainChat?.chatType === 1 &&
-                        useCM.currentMainChat?.dmPartnerUser.userId === myself.userId && (
+                        useCM.currentMainChat?.dmPartnerUser.userId === myself.userId &&
+                        useTG && (
                             <ToDoPane
                                 currentWindowHeight={currentWindowHeight}
-                                isExistingTodaysTodo={isExistingTodaysTodo}
                                 myself={myself}
-                                setIsExistingTodaysTodo={setIsExistingTodaysTodo}
                                 setMyself={setMyself}
-                                setTodos={setTodos}
                                 socket={socket}
-                                todos={todos}
                                 useCM={useCM}
                                 useTEM={useTEM}
+                                useTG={useTG}
                                 useUISM={useUISM}
                             />
                         )}

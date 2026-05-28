@@ -1,4 +1,4 @@
-import { ToDoFactProps } from "../../types/chat";
+import { TodoGroupProps } from "../../types/chat";
 import { TodoRepository } from "../repositories/todo";
 
 export class TodoService {
@@ -8,15 +8,15 @@ export class TodoService {
         this.repo = new TodoRepository();
     }
 
-    async getTodosByUser(userId: string): Promise<ToDoFactProps[]> {
-        return this.repo.getTodosByUser(userId);
+    async getGroupsByUser(userId: string): Promise<TodoGroupProps[]> {
+        return this.repo.getGroupsByUser(userId);
     }
 
-    async cacheTodos(todos: ToDoFactProps[], userId: string): Promise<void> {
-        await this.repo.batchSaveTodos(todos, userId);
+    async cacheGroups(groups: TodoGroupProps[], userId: string): Promise<void> {
+        await this.repo.batchSaveGroups(groups, userId);
     }
 
-    async saveTodo(todo: ToDoFactProps, userId: string): Promise<void> {
-        await this.repo.saveTodo(todo, userId);
+    async deleteGroup(groupId: number): Promise<void> {
+        await this.repo.deleteGroup(groupId);
     }
 }

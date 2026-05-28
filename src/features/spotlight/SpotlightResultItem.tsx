@@ -8,6 +8,7 @@ import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
 import NoteAltRoundedIcon from "@mui/icons-material/NoteAltRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
+import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
 import { Box, Chip, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
@@ -29,6 +30,7 @@ const ENTITY_ICON = {
     task: AssignmentRoundedIcon,
     note: NoteAltRoundedIcon,
     project: FolderRoundedIcon,
+    todo: TaskAltRoundedIcon,
 };
 
 const ENTITY_ICON_GRADIENT: Record<string, string> = {
@@ -36,6 +38,7 @@ const ENTITY_ICON_GRADIENT: Record<string, string> = {
     task: "linear-gradient(135deg, #22c55e 0%, #10b981 100%)",
     note: "linear-gradient(135deg, #818cf8 0%, #6366f1 100%)",
     project: "linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%)",
+    todo: "linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%)",
 };
 
 // Dark-mode text colors tuned for the translucent purple sheet behind
@@ -68,6 +71,12 @@ export const entitySubtitle = (r: SpotlightResult, ts: SpotlightMessages): strin
     }
     if (r.entity_type === "task") return ts.entitySubtitle.task;
     if (r.entity_type === "project") return ts.entitySubtitle.project;
+    if (r.entity_type === "todo") {
+        // Pull the local_date out of `entity_id` for a date-flavored
+        // subtitle ("Todo · 2026-05-28"). Falls back to plain "Todo".
+        const m = r.entity_id.match(/^todo:(\d{4}-\d{2}-\d{2})/);
+        return m ? `Todo · ${m[1]}` : "Todo";
+    }
     if (r.entity_type === "note") {
         switch (r.note_type) {
             case "personal":

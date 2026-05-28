@@ -15,9 +15,8 @@ import { ThreadPanel } from "./components/panels/ThreadPanel";
 import { ResizeHandle } from "./components/shared/ResizeHandle";
 import { ChatSidebar } from "./components/sidebar/ChatSidebar";
 import { useChatRouting } from "./hooks/useChatRouting";
-import { appendTodoContent, createNewTodo } from "./services/createNewTodo";
+import { appendTodoFromMessage } from "./services/appendTodoFromMessage";
 import { getFirstLine } from "./utils/common";
-import { defaultTodoContent } from "./utils/defaults";
 
 import { LayoutStyles } from "../../components/ui/styles/commonStyle";
 import { useAuth } from "../../context/AuthContext";
@@ -31,12 +30,11 @@ import { NoteManagementState } from "../../hooks/notes/useNoteManagement";
 import { SprintMilestoneManagementState } from "../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
 import { usePanelSizes } from "../../hooks/usePanelSizes";
-import { useTodos } from "../../hooks/useTodos";
+import { useTodoGroups } from "../../hooks/useTodoGroups";
 import { useWindowSize } from "../../hooks/useWindowSize";
 import { UserProps } from "../../types/admin";
-import { MessageProps, ThreadMessageProps, ToDoFactProps } from "../../types/chat";
+import { MessageProps, ThreadMessageProps } from "../../types/chat";
 import { TaskCommentProps } from "../../types/tasks";
-import { getLocalCurrentDate } from "../../utils/dateUtils";
 import { ModalCreateProject } from "../tasks/components/modals/ModalCreateProject";
 import { ModalCreateTag } from "../tasks/components/modals/ModalCreateTag";
 import { MobileChatHome } from "./MobileChatHome";
@@ -81,8 +79,8 @@ export const ChatHome = (props: ChatHomeProps) => {
     const { width, height } = useWindowSize();
     const { mainChatPanelSize, setMainChatPanelSize, subChatPanelSize, setSubChatPanelSize } =
         usePanelSizes();
-    const { todos, setTodos, isExistingTodaysTodo, setIsExistingTodaysTodo, incompleteTodoCount } =
-        useTodos(myself, accessToken, isToDoVisible);
+    const useTG = useTodoGroups(myself, accessToken, isToDoVisible);
+    const { incompleteCount } = useTG;
 
     // URL-based routing
     const chatRouting = useChatRouting({ useCM, useTM, myself });
@@ -95,80 +93,44 @@ export const ChatHome = (props: ChatHomeProps) => {
     const handleAppendTodo = async (
         todoFromMessageBubble: MessageProps | ThreadMessageProps | TaskCommentProps
     ) => {
-        let todayTodo: ToDoFactProps | undefined = todos.find(
-            (todo) => todo.dtCreatedOn === getLocalCurrentDate()
-        );
-        if (!todayTodo) {
-            const todoContent: ToDoFactProps = await createNewTodo(
-                accessToken,
-                myself,
-                defaultTodoContent,
-                (error) => {
-                    console.error(error);
-                }
-            );
-            if (todoContent) {
-                todayTodo = todoContent;
-                setTodos((prev) => [todoContent, ...prev]);
-                setIsExistingTodaysTodo(true);
-            }
-        }
-
-        if (!todayTodo) {
-            return;
-        }
-
+        let created;
         if ("messageIdWithChatIdAndThreadId" in todoFromMessageBubble) {
-            appendTodoContent(
-                accessToken,
-                myself,
-                todos,
-                setTodos,
-                todayTodo,
-                todoFromMessageBubble.chatType,
-                todoFromMessageBubble.chatId,
-                todoFromMessageBubble.threadId,
-                todoFromMessageBubble.messageId,
-                true,
-                getFirstLine(todoFromMessageBubble.content[0])
-            );
+            created = await appendTodoFromMessage(accessToken, myself, {
+                chatType: todoFromMessageBubble.chatType,
+                chatId: todoFromMessageBubble.chatId,
+                threadId: todoFromMessageBubble.threadId,
+                messageId: todoFromMessageBubble.messageId,
+                isThread: true,
+                messageText: getFirstLine(todoFromMessageBubble.content[0]),
+            });
         } else if ("messageIdWithChatId" in todoFromMessageBubble) {
-            // MessageProps
-            appendTodoContent(
-                accessToken,
-                myself,
-                todos,
-                setTodos,
-                todayTodo,
-                todoFromMessageBubble.chatType,
-                todoFromMessageBubble.chatId,
-                null,
-                todoFromMessageBubble.messageId,
-                false,
-                getFirstLine(todoFromMessageBubble.content[0])
-            );
+            created = await appendTodoFromMessage(accessToken, myself, {
+                chatType: todoFromMessageBubble.chatType,
+                chatId: todoFromMessageBubble.chatId,
+                threadId: null,
+                messageId: todoFromMessageBubble.messageId,
+                isThread: false,
+                messageText: getFirstLine(todoFromMessageBubble.content[0]),
+            });
         } else if ("commentId" in todoFromMessageBubble) {
-            // TaskCommentProps
-            if (!todoFromMessageBubble.projectId) {
-                return;
-            }
-            appendTodoContent(
-                accessToken,
-                myself,
-                todos,
-                setTodos,
-                todayTodo,
-                3,
-                todoFromMessageBubble.projectId, // for chatId
-                todoFromMessageBubble.taskId, // for threadId
-                todoFromMessageBubble.commentId, // for messageId
-                true,
-                getFirstLine(todoFromMessageBubble.commentBody[0])
-            );
+            if (!todoFromMessageBubble.projectId) return;
+            created = await appendTodoFromMessage(accessToken, myself, {
+                chatType: 3,
+                chatId: todoFromMessageBubble.projectId,
+                threadId: todoFromMessageBubble.taskId,
+                messageId: todoFromMessageBubble.commentId,
+                isThread: true,
+                messageText: getFirstLine(todoFromMessageBubble.commentBody[0]),
+            });
         }
 
+        if (created) {
+            // appendTodoFromMessage bypassed the hook's optimistic
+            // mutator, so re-pull groups for an authoritative view.
+            await useTG.refresh();
+            setTodoAddedFromMessageOpen(true);
+        }
         setTodoFromMessageBubble(null);
-        setTodoAddedFromMessageOpen(true);
     };
 
     // Task preview is closed by default on chat. `useTM.isTaskPreviewVisible`
@@ -247,17 +209,17 @@ export const ChatHome = (props: ChatHomeProps) => {
 
     return (
         <ChatProvider
-            useCM={useCM}
+            currentThreadTaskId={currentThreadTaskId}
             myself={myself}
-            useNM={useNM}
-            usePM={usePM}
+            setCurrentThreadTaskId={setCurrentThreadTaskId}
             setMyself={setMyself}
             socket={socket}
+            useCM={useCM}
+            useNM={useNM}
+            usePM={usePM}
             useTEM={useTEM}
             useTM={useTM}
             useUISM={useUISM}
-            currentThreadTaskId={currentThreadTaskId}
-            setCurrentThreadTaskId={setCurrentThreadTaskId}
         >
             <Box sx={LayoutStyles.outerWrapper}>
                 <Snackbar
@@ -284,29 +246,26 @@ export const ChatHome = (props: ChatHomeProps) => {
 
                     {isMobile ? (
                         <MobileChatHome
-                            useTEM={useTEM}
-                            socket={socket}
-                            myself={myself}
-                            setMyself={setMyself}
-                            useCM={useCM}
-                            useUISM={useUISM}
-                            useNM={useNM}
-                            usePM={usePM}
-                            useTM={useTM}
-                            useSM={useSM}
                             chatRouting={chatRouting}
                             currentMainChatId={currentMainChatId}
                             currentThreadChatId={currentThreadChatId}
                             currentWindowHeight={height}
-                            mainChatPanelSize={mainChatPanelSize}
-                            incompleteTodoCount={incompleteTodoCount}
-                            isExistingTodaysTodo={isExistingTodaysTodo}
-                            setIsExistingTodaysTodo={setIsExistingTodaysTodo}
+                            incompleteTodoCount={incompleteCount}
                             isToDoVisible={isToDoVisible}
+                            mainChatPanelSize={mainChatPanelSize}
+                            myself={myself}
                             setIsToDoVisible={setIsToDoVisible}
-                            todos={todos}
-                            setTodos={setTodos}
+                            setMyself={setMyself}
                             setTodoFromMessageBubble={setTodoFromMessageBubble}
+                            socket={socket}
+                            useCM={useCM}
+                            useNM={useNM}
+                            usePM={usePM}
+                            useSM={useSM}
+                            useTEM={useTEM}
+                            useTG={useTG}
+                            useTM={useTM}
+                            useUISM={useUISM}
                         />
                     ) : (
                         <PanelGroup
@@ -330,19 +289,19 @@ export const ChatHome = (props: ChatHomeProps) => {
                                         }}
                                     >
                                         <ChatSidebar
-                                            useCM={useCM}
                                             chatRouting={chatRouting}
-                                            incompleteTodoCount={incompleteTodoCount}
+                                            incompleteTodoCount={incompleteCount}
+                                            isToDoVisible={isToDoVisible}
                                             myself={myself}
                                             setIsToDoVisible={setIsToDoVisible}
-                                            isToDoVisible={isToDoVisible}
                                             setMyself={setMyself}
                                             socket={socket}
-                                            useTEM={useTEM}
-                                            useUISM={useUISM}
-                                            useTM={useTM}
-                                            usePM={usePM}
+                                            useCM={useCM}
                                             useNM={useNM}
+                                            usePM={usePM}
+                                            useTEM={useTEM}
+                                            useTM={useTM}
+                                            useUISM={useUISM}
                                         />
                                     </Sheet>
                                 </Box>
@@ -358,31 +317,26 @@ export const ChatHome = (props: ChatHomeProps) => {
                                             {useCM.isSubChatVisible === true && (
                                                 <>
                                                     <SubChatPanel
-                                                        useCM={useCM}
                                                         currentSubChatId={currentSubChatId}
                                                         currentWindowHeight={height}
-                                                        incompleteTodoCount={incompleteTodoCount}
-                                                        isExistingTodaysTodo={isExistingTodaysTodo}
+                                                        incompleteTodoCount={incompleteCount}
                                                         isToDoVisible={isToDoVisible}
                                                         myself={myself}
-                                                        usePM={usePM}
-                                                        setIsExistingTodaysTodo={
-                                                            setIsExistingTodaysTodo
-                                                        }
                                                         setMyself={setMyself}
                                                         setSubChatPanelSize={setSubChatPanelSize}
-                                                        setTodos={setTodos}
                                                         socket={socket}
                                                         subChatPanelSize={subChatPanelSize}
+                                                        useCM={useCM}
+                                                        usePM={usePM}
                                                         useTEM={useTEM}
+                                                        useTG={useTG}
                                                         useTM={useTM}
-                                                        todos={todos}
                                                         useUISM={useUISM}
-                                                        todoFromMessageBubble={
-                                                            todoFromMessageBubble
-                                                        }
                                                         setTodoFromMessageBubble={
                                                             setTodoFromMessageBubble
+                                                        }
+                                                        todoFromMessageBubble={
+                                                            todoFromMessageBubble
                                                         }
                                                     />
                                                     <ResizeHandle
@@ -394,27 +348,24 @@ export const ChatHome = (props: ChatHomeProps) => {
 
                                             {/* Main Chat Pane */}
                                             <MainChatPanel
-                                                useCM={useCM}
                                                 currentMainChatId={currentMainChatId}
                                                 currentWindowHeight={height}
-                                                incompleteTodoCount={incompleteTodoCount}
-                                                isExistingTodaysTodo={isExistingTodaysTodo}
+                                                incompleteTodoCount={incompleteCount}
                                                 isToDoVisible={isToDoVisible}
                                                 mainChatPanelSize={mainChatPanelSize}
                                                 myself={myself}
-                                                usePM={usePM}
-                                                setIsExistingTodaysTodo={setIsExistingTodaysTodo}
                                                 setIsToDoVisible={setIsToDoVisible}
                                                 setMainChatPanelSize={setMainChatPanelSize}
                                                 setMyself={setMyself}
-                                                setTodos={setTodos}
-                                                socket={socket}
-                                                useTEM={useTEM}
-                                                useTM={useTM}
-                                                todos={todos}
-                                                useUISM={useUISM}
-                                                todoFromMessageBubble={todoFromMessageBubble}
                                                 setTodoFromMessageBubble={setTodoFromMessageBubble}
+                                                socket={socket}
+                                                todoFromMessageBubble={todoFromMessageBubble}
+                                                useCM={useCM}
+                                                usePM={usePM}
+                                                useTEM={useTEM}
+                                                useTG={useTG}
+                                                useTM={useTM}
+                                                useUISM={useUISM}
                                             />
                                         </PanelGroup>
                                     </Panel>
@@ -426,18 +377,18 @@ export const ChatHome = (props: ChatHomeProps) => {
                                 <>
                                     <ResizeHandle key="thread-chat-resize-handle" />
                                     <ThreadPanel
-                                        useCM={useCM}
                                         currentThreadChatId={currentThreadChatId}
                                         currentWindowHeight={height}
                                         myself={myself}
+                                        setMyself={setMyself}
+                                        setTodoFromMessageBubble={setTodoFromMessageBubble}
+                                        socket={socket}
+                                        useCM={useCM}
                                         useNM={useNM}
                                         usePM={usePM}
-                                        setMyself={setMyself}
-                                        socket={socket}
                                         useTEM={useTEM}
                                         useTM={useTM}
                                         useUISM={useUISM}
-                                        setTodoFromMessageBubble={setTodoFromMessageBubble}
                                     />
                                 </>
                             )}
@@ -447,16 +398,16 @@ export const ChatHome = (props: ChatHomeProps) => {
                                 <>
                                     <ResizeHandle key="create-task-resize-handle" />
                                     <CreateTaskPanel
-                                        useCM={useCM}
                                         myself={myself}
-                                        usePM={usePM}
                                         setMyself={setMyself}
                                         socket={socket}
+                                        useCM={useCM}
+                                        useNM={useNM}
+                                        usePM={usePM}
+                                        useSM={useSM}
                                         useTEM={useTEM}
                                         useTM={useTM}
                                         useUISM={useUISM}
-                                        useNM={useNM}
-                                        useSM={useSM}
                                     />
                                 </>
                             )}
@@ -476,17 +427,17 @@ export const ChatHome = (props: ChatHomeProps) => {
                                     <>
                                         <ResizeHandle key="task-preview-resize-handle" />
                                         <TaskPreviewPanel
-                                            useCM={useCM}
                                             myself={myself}
+                                            setMyself={setMyself}
+                                            setTodoFromMessageBubble={setTodoFromMessageBubble}
+                                            socket={socket}
+                                            useCM={useCM}
                                             useNM={useNM}
                                             usePM={usePM}
-                                            setMyself={setMyself}
-                                            socket={socket}
+                                            useSM={useSM}
                                             useTEM={useTEM}
                                             useTM={useTM}
-                                            useSM={useSM}
                                             useUISM={useUISM}
-                                            setTodoFromMessageBubble={setTodoFromMessageBubble}
                                         />
                                     </>
                                 )}
@@ -496,12 +447,12 @@ export const ChatHome = (props: ChatHomeProps) => {
                                 <>
                                     <ResizeHandle key="chat-note-resize-handle" />
                                     <ChatNotePanel
-                                        useCM={useCM}
                                         myself={myself}
-                                        useNM={useNM}
-                                        usePM={usePM}
                                         setMyself={setMyself}
                                         socket={socket}
+                                        useCM={useCM}
+                                        useNM={useNM}
+                                        usePM={usePM}
                                         useTEM={useTEM}
                                         useTM={useTM}
                                         useUISM={useUISM}
@@ -529,7 +480,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                     <ModalCreateProject myself={myself} usePM={usePM} />
 
                     {/* Modal for creating a new tag — global flag-gated */}
-                    <ModalCreateTag myself={myself} useTM={useTM} usePM={usePM} />
+                    <ModalCreateTag myself={myself} usePM={usePM} useTM={useTM} />
                 </Sheet>
 
                 {/* Hover Animation with CSS */}

@@ -299,7 +299,14 @@ export const STORE_CONFIGS: Record<string, StoreConfig> = {
 //     repurpose an index, drop and re-add it in a dedicated migration step.
 export const initDB = async (): Promise<IDBPDatabase> => {
     return openDB(DB_NAME, DB_VERSION, {
-        upgrade(db, _oldVersion, _newVersion, tx) {
+        upgrade(db, oldVersion, _newVersion, tx) {
+            // v8: the TODOS store's record shape changed (ToDoFact →
+            // ToDoGroup), so the keyPath moved from "todoId" to
+            // "groupId". Old rows are unreadable under the new shape;
+            // drop the store so the generic loop below recreates it.
+            if (oldVersion < 8 && db.objectStoreNames.contains("todos")) {
+                db.deleteObjectStore("todos");
+            }
             Object.values(STORE_CONFIGS).forEach((config) => {
                 if (!db.objectStoreNames.contains(config.name)) {
                     const store = db.createObjectStore(config.name, {

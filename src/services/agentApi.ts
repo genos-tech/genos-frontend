@@ -95,7 +95,7 @@ export interface AskAgentArgs extends BaseStreamHandlers {
     teamId: string;
     accessToken: string | null;
     sessionId?: string;
-    entityTypes?: Array<"chat" | "task" | "note">;
+    entityTypes?: Array<"chat" | "task" | "note" | "todo">;
     // When false, the backend filters the web-browse tool out of the
     // agent's tool list so the model can't call it. Defaults to true
     // (current behavior) if omitted.

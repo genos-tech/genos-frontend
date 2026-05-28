@@ -879,27 +879,41 @@ div[data-floating-ui-focusable] {
     color: var(--code-dark-color);
 }
 
-/* Todo preview */
-.todo-preview-light .bn-editor {
-    color: black;
-    background-color: transparent;
-    padding-left: 20px;
+/* Todo per-item notes editor.
+ *
+ * Mirrors the bnChatEditor palette — same background, code, and
+ * empty-placeholder colors — so the notes editor sits visually in the
+ * same family as the chat composer instead of looking like a foreign
+ * widget. Sizing differs (no padding-top toolbar inset, no min/max
+ * height) because the notes editor inlines under the row rather than
+ * docking like the chat composer.
+ */
+.todo-item-notes-light .bn-editor {
+    background-color: var(--editor-light-bg);
 }
 
-.todo-preview-light code {
+.todo-item-notes-light code {
     background-color: var(--code-light-bg) !important;
     color: var(--code-light-color);
 }
 
-.todo-preview-dark .bn-editor {
-    color: white;
-    background-color: transparent;
-    padding-left: 20px;
+.todo-item-notes-light .bn-block-content[data-is-empty-and-focused="true"] .bn-inline-content::before {
+    color: var(--editor-placeholder-light) !important;
+    opacity: 1 !important;
 }
 
-.todo-preview-dark code {
+.todo-item-notes-dark .bn-editor {
+    background-color: var(--editor-dark-bg);
+}
+
+.todo-item-notes-dark code {
     background-color: var(--code-dark-bg) !important;
     color: var(--code-dark-color);
+}
+
+.todo-item-notes-dark .bn-block-content[data-is-empty-and-focused="true"] .bn-inline-content::before {
+    color: var(--editor-placeholder-dark) !important;
+    opacity: 1 !important;
 }
 
 /* ==========================================================================

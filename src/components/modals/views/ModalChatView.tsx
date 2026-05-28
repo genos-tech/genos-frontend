@@ -36,15 +36,14 @@ type ModalChatViewProps = {
     useNM: NoteManagementState;
 };
 
+// The modal never renders ToDoPane, so we pass placeholder/no-op
+// values for the todo-related props that MessagesPane still requires.
 const NOOP_TODOS_PROPS = {
     incompleteTodoCount: 0,
-    isExistingTodaysTodo: false,
     isToDoVisible: false,
-    setIsExistingTodaysTodo: () => {},
     setIsToDoVisible: () => {},
     setTodoFromMessageBubble: () => {},
-    setTodos: () => {},
-    todos: [],
+    useTG: null as null,
 };
 
 // Renders MessagesPane / ThreadPane against modal-local chat + thread

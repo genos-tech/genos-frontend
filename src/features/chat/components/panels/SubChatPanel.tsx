@@ -6,8 +6,9 @@ import { ProjectManagementState } from "../../../../hooks/common/useProjectManag
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
+import { UseTodoGroupsState } from "../../../../hooks/useTodoGroups";
 import { UserProps } from "../../../../types/admin";
-import { MessageProps, ThreadMessageProps, ToDoFactProps } from "../../../../types/chat";
+import { MessageProps, ThreadMessageProps } from "../../../../types/chat";
 import { TaskCommentProps } from "../../../../types/tasks";
 import { MessagesSubPane } from "../../SubChatPane";
 
@@ -22,11 +23,8 @@ interface SubChatPanelProps {
     subChatPanelSize: number;
     setSubChatPanelSize: (size: number) => void;
     incompleteTodoCount: number;
-    isExistingTodaysTodo: boolean;
     isToDoVisible: boolean;
-    todos: ToDoFactProps[];
-    setTodos: React.Dispatch<React.SetStateAction<ToDoFactProps[]>>;
-    setIsExistingTodaysTodo: (value: boolean) => void;
+    useTG: UseTodoGroupsState;
     socket: any;
     setMyself: (me: UserProps) => void;
     useUISM: UIStateManagementState;
@@ -47,15 +45,11 @@ export const SubChatPanel = ({
     subChatPanelSize,
     setSubChatPanelSize,
     incompleteTodoCount,
-    isExistingTodaysTodo,
     isToDoVisible,
-    todos,
-    setTodos,
-    setIsExistingTodaysTodo,
+    useTG,
     socket,
     setMyself,
     useUISM,
-    todoFromMessageBubble,
     setTodoFromMessageBubble,
 }: SubChatPanelProps) => {
     const { mode } = useColorScheme();
@@ -71,25 +65,22 @@ export const SubChatPanel = ({
                 }}
             >
                 <MessagesSubPane
-                    useCM={useCM}
                     currentSubChatId={currentSubChatId}
                     currentWindowHeight={currentWindowHeight}
                     incompleteTodoCount={incompleteTodoCount}
-                    isExistingTodaysTodo={isExistingTodaysTodo}
                     isToDoVisible={isToDoVisible}
                     myself={myself}
                     paneSizePCT={subChatPanelSize}
-                    setIsExistingTodaysTodo={setIsExistingTodaysTodo}
                     setIsToDoVisible={() => {}}
                     setMyself={setMyself}
-                    setTodos={setTodos}
-                    socket={socket}
-                    useTEM={useTEM}
-                    todos={todos}
-                    useUISM={useUISM}
-                    useTM={useTM}
-                    usePM={usePM}
                     setTodoFromMessageBubble={setTodoFromMessageBubble}
+                    socket={socket}
+                    useCM={useCM}
+                    usePM={usePM}
+                    useTEM={useTEM}
+                    useTG={useTG}
+                    useTM={useTM}
+                    useUISM={useUISM}
                 />
             </Box>
         </Panel>
