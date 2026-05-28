@@ -23,6 +23,7 @@ import {
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
+import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
@@ -34,6 +35,7 @@ import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TagListProps, TaskProps } from "../../../../types/tasks";
+import { isMac } from "../../../../utils/platform";
 import { LinkedPrCard } from "../../../integrations/components/LinkedPrCard";
 import { parsePrUrl } from "../../../integrations/utils/parsePrUrl";
 import { createEmptyTask } from "../../services/createEmptyTask";
@@ -52,7 +54,7 @@ import {
 } from "../../utils/taskTemplates";
 import { TaskCreateAttachmentBlock } from "./base/TaskCreateAttachmentBlock";
 import { TaskCreateBodyBlock } from "./base/TaskCreateBodyBlock";
-import { TaskCreateFooter } from "./base/TaskCreateFooter";
+import { TaskCreateFooter, type TaskCreateFooterHandle } from "./base/TaskCreateFooter";
 import { TaskMainBlock } from "./base/TaskMainBlock";
 import { TaskTitleBlock } from "./base/TaskTitleBlock";
 
@@ -561,6 +563,42 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
     const [titleErrorOpen, setTitleErrorOpen] = useState(false);
     const [titleError, setTitleError] = useState("");
 
+    // Cmd/Ctrl + Enter submit shortcut.
+    //
+    // Routes through the same code path the buttons use so disabled
+    // gating, the create-in-flight lock, and side effects (table /
+    // preview reveal) all behave identically. The handler is held in
+    // a ref so a single stable `keydown` listener can call the latest
+    // closure without re-binding on every render.
+    const taskFooterRef = useRef<TaskCreateFooterHandle>(null);
+    const shortcutLabel = isMac() ? "⌘ + Enter" : "Ctrl + Enter";
+    const isMilestoneSubmitDisabled =
+        isCreatingMilestone || !taskTitle.trim() || !taskContent?.project?.projectId;
+    const shortcutHandlerRef = useRef<() => void>(() => {});
+    shortcutHandlerRef.current = () => {
+        // Suppress while any confirmation dialog is open — the user is
+        // mid-decision in the modal, hijacking their Enter would be
+        // surprising. Joy's `ModalDialog` carries `role="alertdialog"`.
+        if (document.querySelector('[role="alertdialog"]')) return;
+        if (creationKind === "milestone") {
+            if (isMilestoneSubmitDisabled) return;
+            void handleCreateMilestone();
+        } else {
+            taskFooterRef.current?.submit();
+        }
+    };
+    useEffect(() => {
+        const onKeyDown = (e: KeyboardEvent) => {
+            if (e.key !== "Enter") return;
+            const modifier = isMac() ? e.metaKey : e.ctrlKey;
+            if (!modifier) return;
+            e.preventDefault();
+            shortcutHandlerRef.current();
+        };
+        window.addEventListener("keydown", onKeyDown);
+        return () => window.removeEventListener("keydown", onKeyDown);
+    }, []);
+
     // "Has the user actually entered anything worth confirming before
     // discarding?" The Cancel buttons short-circuit straight to teardown
     // when this is false, so an untouched form doesn't pop a modal.
@@ -955,19 +993,28 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                                 >
                                     Cancel
                                 </Button>
-                                <Button
-                                    color="primary"
-                                    disabled={!taskTitle.trim() || !taskContent.project?.projectId}
-                                    loading={isCreatingMilestone}
-                                    size="sm"
-                                    startDecorator={<FlagRoundedIcon sx={{ fontSize: 14 }} />}
-                                    onClick={handleCreateMilestone}
+                                <AppTooltip
+                                    title={
+                                        isMilestoneSubmitDisabled
+                                            ? "Create Milestone"
+                                            : `Create Milestone (${shortcutLabel})`
+                                    }
                                 >
-                                    Create Milestone
-                                </Button>
+                                    <Button
+                                        color="primary"
+                                        disabled={isMilestoneSubmitDisabled}
+                                        loading={isCreatingMilestone}
+                                        size="sm"
+                                        startDecorator={<FlagRoundedIcon sx={{ fontSize: 14 }} />}
+                                        onClick={handleCreateMilestone}
+                                    >
+                                        Create Milestone
+                                    </Button>
+                                </AppTooltip>
                             </Stack>
                         ) : (
                             <TaskCreateFooter
+                                ref={taskFooterRef}
                                 accessToken={accessToken}
                                 isCreatingTask={isCreatingTask}
                                 isDirty={isDirty}

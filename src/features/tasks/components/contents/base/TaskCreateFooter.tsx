@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { forwardRef, useImperativeHandle, useState } from "react";
 import AddTaskRoundedIcon from "@mui/icons-material/AddTaskRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import WarningRoundedIcon from "@mui/icons-material/WarningRounded";
@@ -15,13 +15,24 @@ import {
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
+import { AppTooltip } from "../../../../../components/ui/AppTooltip";
 import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../../hooks/common/useProjectManagement";
 import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../../types/admin";
 import { TaskProps } from "../../../../../types/tasks";
+import { isMac } from "../../../../../utils/platform";
 import { deleteEmptyTask } from "../../../services/deleteEmptyTask";
 import { uploadNewTask } from "../../../services/uploadNewTask";
+
+// Imperative handle so `CreateTaskForm` can trigger the same submit
+// path the button uses from a global Cmd/Ctrl+Enter keydown listener.
+// Exposing a method (instead of lifting `DoUploadNewTask` up) keeps
+// all the upload-orchestration state — `isCreatingTask`, disabled
+// gating, snackbar messages — local to this component.
+export interface TaskCreateFooterHandle {
+    submit: () => void;
+}
 
 type TaskCreateFooterProps = {
     socket: Socket | null;
@@ -46,222 +57,246 @@ type TaskCreateFooterProps = {
     isDirty?: boolean;
 };
 
-export const TaskCreateFooter = (props: TaskCreateFooterProps) => {
-    const {
-        socket,
-        myself,
-        accessToken,
-        useCM,
-        taskContent,
-        taskTitle,
-        useTM,
-        isCreatingTask = false,
-        setIsCreatingTask,
-        setIsSubmitted,
-        setTitleError,
-        setTitleErrorOpen,
-        usePM,
-        isDirty = false,
-    } = props;
+export const TaskCreateFooter = forwardRef<TaskCreateFooterHandle, TaskCreateFooterProps>(
+    (props, ref) => {
+        const {
+            socket,
+            myself,
+            accessToken,
+            useCM,
+            taskContent,
+            taskTitle,
+            useTM,
+            isCreatingTask = false,
+            setIsCreatingTask,
+            setIsSubmitted,
+            setTitleError,
+            setTitleErrorOpen,
+            usePM,
+            isDirty = false,
+        } = props;
 
-    const { mode } = useColorScheme();
-    const isDark = mode === "dark";
-    const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
+        const { mode } = useColorScheme();
+        const isDark = mode === "dark";
+        const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
 
-    const isDisabled =
-        isCreatingTask || taskTitle === "" || taskContent.project?.projectId === null;
+        const isDisabled =
+            isCreatingTask || taskTitle === "" || taskContent.project?.projectId === null;
 
-    const DoUploadNewTask = async () => {
-        // Guard against a double-click sending two creates in parallel
-        // (the button is also visually locked via `isDisabled`).
-        if (isCreatingTask) return;
+        const DoUploadNewTask = async () => {
+            // Guard against a double-click sending two creates in parallel
+            // (the button is also visually locked via `isDisabled`).
+            if (isCreatingTask) return;
 
-        setIsCreatingTask?.(true);
-        try {
-            await uploadNewTask({
-                socket: socket,
-                myself: myself,
-                taskContent: taskContent,
-                useCM: useCM,
-                accessToken: accessToken || "",
-                setTitleError: setTitleError,
-                setTitleErrorOpen: setTitleErrorOpen,
-                setCurrentPreviewTaskId: useTM.setCurrentPreviewTaskId,
-            });
+            setIsCreatingTask?.(true);
+            try {
+                await uploadNewTask({
+                    socket: socket,
+                    myself: myself,
+                    taskContent: taskContent,
+                    useCM: useCM,
+                    accessToken: accessToken || "",
+                    setTitleError: setTitleError,
+                    setTitleErrorOpen: setTitleErrorOpen,
+                    setCurrentPreviewTaskId: useTM.setCurrentPreviewTaskId,
+                });
 
-            if (taskContent.project && taskContent.project.projectId) {
-                localStorage.setItem("lastProjectId", String(taskContent.project.projectId));
-                usePM.setCurrentProject(taskContent.project);
-            } else {
-                console.error("Failed to set the current project");
+                if (taskContent.project && taskContent.project.projectId) {
+                    localStorage.setItem("lastProjectId", String(taskContent.project.projectId));
+                    usePM.setCurrentProject(taskContent.project);
+                } else {
+                    console.error("Failed to set the current project");
+                }
+
+                setIsSubmitted(true);
+            } finally {
+                // Always release the lock — `uploadNewTask` already reports
+                // failures through `setTitleError`, so leaving the form
+                // wedged on a transient backend hiccup would be worse than
+                // letting the user retry.
+                setIsCreatingTask?.(false);
+            }
+        };
+
+        // Pull the same gating + side effects the button's onClick uses
+        // (table reveal + preview reveal) into one place so both surfaces
+        // — click and Cmd/Ctrl+Enter — fire identically. The shortcut
+        // respects `isDisabled` so an empty title or in-flight create
+        // doesn't slip through.
+        const triggerSubmit = () => {
+            if (isDisabled) return;
+            if (window.location.pathname.includes("/workspace/tasks")) {
+                useTM.setIsTaskTableVisible(true);
+            }
+            useTM.setIsTaskPreviewVisible(true);
+            DoUploadNewTask();
+        };
+
+        useImperativeHandle(ref, () => ({
+            submit: triggerSubmit,
+        }));
+
+        const shortcutLabel = isMac() ? "⌘ + Enter" : "Ctrl + Enter";
+
+        const handleCancel = () => {
+            // Cancel = "throw away anything in progress" — wipe the persisted
+            // draft alongside the backend empty-task so the next form open is
+            // a clean slate.
+            useTM.setTaskDraft(null);
+            if (useTM.setIsCreatingTask) {
+                useTM.setIsCreatingTask({
+                    flag: false,
+                    parentTaskId: null,
+                    rootTaskId: useTM.currentPreviewTask?.rootTaskId || null,
+                    creationKind: "task",
+                    milestoneId: null,
+                });
             }
 
-            setIsSubmitted(true);
-        } finally {
-            // Always release the lock — `uploadNewTask` already reports
-            // failures through `setTitleError`, so leaving the form
-            // wedged on a transient backend hiccup would be worse than
-            // letting the user retry.
-            setIsCreatingTask?.(false);
-        }
-    };
+            if (taskContent.id !== undefined) {
+                deleteEmptyTask({
+                    myself: myself,
+                    taskId: taskContent.id,
+                    accessToken: accessToken,
+                    setInitialEmptyTaskId: useTM.setInitialEmptyTaskId,
+                });
+            }
+        };
 
-    const handleCancel = () => {
-        // Cancel = "throw away anything in progress" — wipe the persisted
-        // draft alongside the backend empty-task so the next form open is
-        // a clean slate.
-        useTM.setTaskDraft(null);
-        if (useTM.setIsCreatingTask) {
-            useTM.setIsCreatingTask({
-                flag: false,
-                parentTaskId: null,
-                rootTaskId: useTM.currentPreviewTask?.rootTaskId || null,
-                creationKind: "task",
-                milestoneId: null,
-            });
-        }
+        // Two-step cancel: dirty drafts confirm via modal, untouched drafts
+        // (user clicked into the form, did nothing, clicked Cancel) tear
+        // down immediately so we don't nag.
+        const handleCancelClick = () => {
+            if (isDirty) {
+                setShowDiscardConfirm(true);
+            } else {
+                handleCancel();
+            }
+        };
 
-        if (taskContent.id !== undefined) {
-            deleteEmptyTask({
-                myself: myself,
-                taskId: taskContent.id,
-                accessToken: accessToken,
-                setInitialEmptyTaskId: useTM.setInitialEmptyTaskId,
-            });
-        }
-    };
-
-    // Two-step cancel: dirty drafts confirm via modal, untouched drafts
-    // (user clicked into the form, did nothing, clicked Cancel) tear
-    // down immediately so we don't nag.
-    const handleCancelClick = () => {
-        if (isDirty) {
-            setShowDiscardConfirm(true);
-        } else {
+        const confirmDiscard = () => {
+            setShowDiscardConfirm(false);
             handleCancel();
-        }
-    };
+        };
 
-    const confirmDiscard = () => {
-        setShowDiscardConfirm(false);
-        handleCancel();
-    };
+        return (
+            <Stack direction="row" sx={{ display: "flex", justifyContent: "flex-end", gap: 1.5 }}>
+                <Button
+                    disabled={isCreatingTask}
+                    size="sm"
+                    startDecorator={<CloseRoundedIcon sx={{ fontSize: 16 }} />}
+                    variant="plain"
+                    sx={{
+                        fontWeight: 600,
+                        fontSize: "13px",
+                        borderRadius: "10px",
+                        px: 2,
+                        py: 0.75,
+                        color: isDark ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.6)",
+                        background: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)",
+                        border: "1px solid",
+                        borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)",
+                        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                        "&:hover": {
+                            background: isDark
+                                ? "rgba(232,121,195,0.12)"
+                                : "rgba(232,121,195,0.08)",
+                            borderColor: isDark
+                                ? "rgba(232,121,195,0.3)"
+                                : "rgba(232,121,195,0.25)",
+                            color: "#ef4444",
+                        },
+                        "&:active": {
+                            transform: "scale(0.98)",
+                        },
+                    }}
+                    onClick={handleCancelClick}
+                >
+                    Cancel
+                </Button>
 
-    return (
-        <Stack direction="row" sx={{ display: "flex", justifyContent: "flex-end", gap: 1.5 }}>
-            <Button
-                disabled={isCreatingTask}
-                size="sm"
-                startDecorator={<CloseRoundedIcon sx={{ fontSize: 16 }} />}
-                variant="plain"
-                sx={{
-                    fontWeight: 600,
-                    fontSize: "13px",
-                    borderRadius: "10px",
-                    px: 2,
-                    py: 0.75,
-                    color: isDark ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.6)",
-                    background: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)",
-                    border: "1px solid",
-                    borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)",
-                    transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                    "&:hover": {
-                        background: isDark ? "rgba(232,121,195,0.12)" : "rgba(232,121,195,0.08)",
-                        borderColor: isDark ? "rgba(232,121,195,0.3)" : "rgba(232,121,195,0.25)",
-                        color: "#ef4444",
-                    },
-                    "&:active": {
-                        transform: "scale(0.98)",
-                    },
-                }}
-                onClick={handleCancelClick}
-            >
-                Cancel
-            </Button>
+                <Modal open={showDiscardConfirm} onClose={() => setShowDiscardConfirm(false)}>
+                    <ModalDialog variant="outlined" role="alertdialog">
+                        <DialogTitle>
+                            <WarningRoundedIcon sx={{ color: "#f59e0b" }} />
+                            Discard this draft?
+                        </DialogTitle>
+                        <Divider />
+                        <DialogContent>
+                            Your title, body, and attachments will be lost. This can&apos;t be
+                            undone.
+                        </DialogContent>
+                        <DialogActions>
+                            <Button
+                                color="danger"
+                                variant="solid"
+                                startDecorator={<CloseRoundedIcon sx={{ fontSize: 16 }} />}
+                                onClick={confirmDiscard}
+                            >
+                                Discard draft
+                            </Button>
+                            <Button
+                                color="neutral"
+                                variant="plain"
+                                onClick={() => setShowDiscardConfirm(false)}
+                            >
+                                Keep editing
+                            </Button>
+                        </DialogActions>
+                    </ModalDialog>
+                </Modal>
+                <AppTooltip title={isDisabled ? "Create Task" : `Create Task (${shortcutLabel})`}>
+                    <Button
+                        disabled={isDisabled}
+                        loading={isCreatingTask}
+                        loadingPosition="start"
+                        size="sm"
+                        startDecorator={<AddTaskRoundedIcon sx={{ fontSize: 16 }} />}
+                        variant="solid"
+                        sx={{
+                            fontWeight: 600,
+                            fontSize: "13px",
+                            borderRadius: "10px",
+                            px: 2.5,
+                            py: 0.75,
+                            background: isDisabled
+                                ? isDark
+                                    ? "rgba(255,255,255,0.08)"
+                                    : "rgba(0,0,0,0.08)"
+                                : "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)",
+                            color: isDisabled
+                                ? isDark
+                                    ? "rgba(255,255,255,0.3)"
+                                    : "rgba(0,0,0,0.3)"
+                                : "white",
+                            boxShadow: isDisabled ? "none" : "0 2px 8px rgba(124,58,237,0.3)",
+                            transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                            "&:hover": {
+                                background: isDisabled
+                                    ? isDark
+                                        ? "rgba(255,255,255,0.08)"
+                                        : "rgba(0,0,0,0.08)"
+                                    : "linear-gradient(135deg, #a78bfa 0%, #c084fc 100%)",
+                                boxShadow: isDisabled ? "none" : "0 4px 12px rgba(124,58,237,0.4)",
+                                transform: isDisabled ? "none" : "translateY(-1px)",
+                            },
+                            "&:active": {
+                                transform: isDisabled ? "none" : "translateY(0)",
+                                boxShadow: isDisabled ? "none" : "0 2px 6px rgba(124,58,237,0.25)",
+                            },
+                            "&:disabled": {
+                                background: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)",
+                                color: isDark ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.3)",
+                            },
+                        }}
+                        onClick={triggerSubmit}
+                    >
+                        {isCreatingTask ? "Creating…" : "Create Task"}
+                    </Button>
+                </AppTooltip>
+            </Stack>
+        );
+    }
+);
 
-            <Modal open={showDiscardConfirm} onClose={() => setShowDiscardConfirm(false)}>
-                <ModalDialog variant="outlined" role="alertdialog">
-                    <DialogTitle>
-                        <WarningRoundedIcon sx={{ color: "#f59e0b" }} />
-                        Discard this draft?
-                    </DialogTitle>
-                    <Divider />
-                    <DialogContent>
-                        Your title, body, and attachments will be lost. This can&apos;t be undone.
-                    </DialogContent>
-                    <DialogActions>
-                        <Button
-                            color="danger"
-                            variant="solid"
-                            startDecorator={<CloseRoundedIcon sx={{ fontSize: 16 }} />}
-                            onClick={confirmDiscard}
-                        >
-                            Discard draft
-                        </Button>
-                        <Button
-                            color="neutral"
-                            variant="plain"
-                            onClick={() => setShowDiscardConfirm(false)}
-                        >
-                            Keep editing
-                        </Button>
-                    </DialogActions>
-                </ModalDialog>
-            </Modal>
-            <Button
-                disabled={isDisabled}
-                loading={isCreatingTask}
-                loadingPosition="start"
-                size="sm"
-                startDecorator={<AddTaskRoundedIcon sx={{ fontSize: 16 }} />}
-                variant="solid"
-                sx={{
-                    fontWeight: 600,
-                    fontSize: "13px",
-                    borderRadius: "10px",
-                    px: 2.5,
-                    py: 0.75,
-                    background: isDisabled
-                        ? isDark
-                            ? "rgba(255,255,255,0.08)"
-                            : "rgba(0,0,0,0.08)"
-                        : "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)",
-                    color: isDisabled
-                        ? isDark
-                            ? "rgba(255,255,255,0.3)"
-                            : "rgba(0,0,0,0.3)"
-                        : "white",
-                    boxShadow: isDisabled ? "none" : "0 2px 8px rgba(124,58,237,0.3)",
-                    transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                    "&:hover": {
-                        background: isDisabled
-                            ? isDark
-                                ? "rgba(255,255,255,0.08)"
-                                : "rgba(0,0,0,0.08)"
-                            : "linear-gradient(135deg, #a78bfa 0%, #c084fc 100%)",
-                        boxShadow: isDisabled ? "none" : "0 4px 12px rgba(124,58,237,0.4)",
-                        transform: isDisabled ? "none" : "translateY(-1px)",
-                    },
-                    "&:active": {
-                        transform: isDisabled ? "none" : "translateY(0)",
-                        boxShadow: isDisabled ? "none" : "0 2px 6px rgba(124,58,237,0.25)",
-                    },
-                    "&:disabled": {
-                        background: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)",
-                        color: isDark ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.3)",
-                    },
-                }}
-                onClick={() => {
-                    // Open task table if the current location is task.
-                    if (location.pathname.includes("/workspace/tasks")) {
-                        useTM.setIsTaskTableVisible(true);
-                    }
-                    useTM.setIsTaskPreviewVisible(true);
-                    DoUploadNewTask();
-                }}
-            >
-                {isCreatingTask ? "Creating…" : "Create Task"}
-            </Button>
-        </Stack>
-    );
-};
+TaskCreateFooter.displayName = "TaskCreateFooter";
