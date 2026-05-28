@@ -132,7 +132,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
             setNameError(t.common.profileEdit.nameEmpty);
             return;
         }
-        if (next === gmChat.chatName) {
+        if (next === liveChat.chatName) {
             setNameEditMode(false);
             setNameError(null);
             return;
@@ -373,7 +373,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                     }}
                                     noWrap
                                 >
-                                    Group Message Profile - {gmChat.chatName}
+                                    Group Message Profile - {liveChat.chatName}
                                 </Typography>
                                 {/* Close button — without it mobile users
                                     have no way to dismiss the modal,
@@ -529,13 +529,22 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                             onChange={(e) =>
                                                                 setNameDraft(e.target.value)
                                                             }
-                                                            onKeyDown={(e) => {
-                                                                if (e.key === "Enter")
-                                                                    void handleNameSave();
-                                                                if (e.key === "Escape") {
-                                                                    setNameEditMode(false);
-                                                                    setNameError(null);
-                                                                }
+                                                            // Pin keydown to the inner <input>
+                                                            // so Enter/Escape never get
+                                                            // swallowed by Joy's slot wrapper.
+                                                            slotProps={{
+                                                                input: {
+                                                                    onKeyDown: (e) => {
+                                                                        if (e.key === "Enter") {
+                                                                            e.preventDefault();
+                                                                            void handleNameSave();
+                                                                        }
+                                                                        if (e.key === "Escape") {
+                                                                            setNameEditMode(false);
+                                                                            setNameError(null);
+                                                                        }
+                                                                    },
+                                                                },
                                                             }}
                                                             sx={{
                                                                 flex: 1,
@@ -576,7 +585,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                                 fontSize: "18px",
                                                             }}
                                                         >
-                                                            {gmChat.chatName}
+                                                            {liveChat.chatName}
                                                         </Typography>
                                                         {isGMOwner && (
                                                             <Tooltip
@@ -589,7 +598,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                                     variant="plain"
                                                                     onClick={() => {
                                                                         setNameDraft(
-                                                                            gmChat.chatName
+                                                                            liveChat.chatName
                                                                         );
                                                                         setNameError(null);
                                                                         setNameEditMode(true);
@@ -617,101 +626,109 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                             </FormControl>
 
                                             {/* Owner */}
-                                            <Stack
-                                                direction="row"
-                                                alignItems="flex-end"
-                                                spacing={2}
-                                            >
-                                                <FormControl>
-                                                    <FormLabel
-                                                        sx={{
-                                                            color: styles.labelColor,
-                                                            fontSize: "0.75rem",
-                                                            fontWeight: 600,
-                                                            textTransform: "uppercase",
-                                                            letterSpacing: "0.05em",
-                                                            mb: 0.5,
+                                            <FormControl>
+                                                <FormLabel
+                                                    sx={{
+                                                        color: styles.labelColor,
+                                                        fontSize: "0.75rem",
+                                                        fontWeight: 600,
+                                                        textTransform: "uppercase",
+                                                        letterSpacing: "0.05em",
+                                                        mb: 0.5,
+                                                    }}
+                                                >
+                                                    {t.chat.modals.gmProfile.owner}
+                                                </FormLabel>
+                                                <Stack
+                                                    direction={{ xs: "column", sm: "row" }}
+                                                    alignItems={{
+                                                        xs: "flex-start",
+                                                        sm: "center",
+                                                    }}
+                                                    justifyContent="space-between"
+                                                    spacing={{ xs: 1, sm: 2 }}
+                                                    sx={{ width: "100%" }}
+                                                >
+                                                    <Stack
+                                                        direction={{ xs: "column", sm: "row" }}
+                                                        alignItems={{
+                                                            xs: "flex-start",
+                                                            sm: "center",
                                                         }}
+                                                        spacing={{ xs: 0.5, sm: 2 }}
                                                     >
-                                                        {t.chat.modals.gmProfile.owner}
-                                                    </FormLabel>
-                                                    <Button
-                                                        color="neutral"
-                                                        variant="plain"
-                                                        sx={{
-                                                            justifyContent: "flex-start",
-                                                            px: 1.5,
-                                                            py: 0.5,
-                                                            borderRadius: "8px",
-                                                            transition: "all 0.2s ease",
-                                                            "&:hover": {
-                                                                background: styles.hoverBg,
-                                                            },
-                                                        }}
-                                                        onClick={() => {
-                                                            if (gmProfile?.ownerUserId) {
-                                                                setAvatarUserId(
-                                                                    gmProfile.ownerUserId
-                                                                );
-                                                                setOpenUserProfile(true);
-                                                            }
-                                                        }}
-                                                    >
-                                                        <Typography
-                                                            fontWeight="bold"
+                                                        <Button
+                                                            color="neutral"
+                                                            variant="plain"
                                                             sx={{
-                                                                userSelect: "text",
-                                                                fontSize: "20px",
+                                                                justifyContent: "flex-start",
+                                                                px: 1.5,
+                                                                py: 0.5,
+                                                                borderRadius: "8px",
+                                                                transition: "all 0.2s ease",
+                                                                "&:hover": {
+                                                                    background: styles.hoverBg,
+                                                                },
+                                                            }}
+                                                            onClick={() => {
+                                                                if (gmProfile?.ownerUserId) {
+                                                                    setAvatarUserId(
+                                                                        gmProfile.ownerUserId
+                                                                    );
+                                                                    setOpenUserProfile(true);
+                                                                }
+                                                            }}
+                                                        >
+                                                            <Typography
+                                                                fontWeight="bold"
+                                                                sx={{
+                                                                    userSelect: "text",
+                                                                    fontSize: "20px",
+                                                                    color: styles.valueColor,
+                                                                }}
+                                                            >
+                                                                {gmProfile
+                                                                    ? useTEM.teamMemberProfiles[
+                                                                          gmProfile?.ownerUserId
+                                                                      ]?.userName
+                                                                    : t.chat.modals.gmProfile.na}
+                                                            </Typography>
+                                                        </Button>
+                                                        <Typography
+                                                            component="a"
+                                                            href={`mailto:${
+                                                                gmProfile
+                                                                    ? useTEM.teamMemberProfiles[
+                                                                          gmProfile?.ownerUserId
+                                                                      ]?.userEmail
+                                                                    : t.chat.modals.gmProfile.na
+                                                            }`}
+                                                            startDecorator={
+                                                                <EmailRoundedIcon
+                                                                    fontSize="small"
+                                                                    sx={{
+                                                                        color: styles.accentColor,
+                                                                    }}
+                                                                />
+                                                            }
+                                                            sx={{
+                                                                textDecoration: "none",
                                                                 color: styles.valueColor,
+                                                                cursor: "pointer",
+                                                                transition: "all 0.2s ease",
+                                                                "&:hover": {
+                                                                    color: styles.accentColor,
+                                                                },
                                                             }}
                                                         >
                                                             {gmProfile
                                                                 ? useTEM.teamMemberProfiles[
                                                                       gmProfile?.ownerUserId
-                                                                  ]?.userName
+                                                                  ]?.userEmail
                                                                 : t.chat.modals.gmProfile.na}
                                                         </Typography>
-                                                    </Button>
-                                                </FormControl>
-
-                                                <Typography
-                                                    component="a"
-                                                    href={`mailto:${
-                                                        gmProfile
-                                                            ? useTEM.teamMemberProfiles[
-                                                                  gmProfile?.ownerUserId
-                                                              ]?.userEmail
-                                                            : t.chat.modals.gmProfile.na
-                                                    }`}
-                                                    startDecorator={
-                                                        <EmailRoundedIcon
-                                                            fontSize="small"
-                                                            sx={{ color: styles.accentColor }}
-                                                        />
-                                                    }
-                                                    sx={{
-                                                        textDecoration: "none",
-                                                        color: styles.valueColor,
-                                                        cursor: "pointer",
-                                                        pb: "8px",
-                                                        transition: "all 0.2s ease",
-                                                        "&:hover": {
-                                                            color: styles.accentColor,
-                                                        },
-                                                    }}
-                                                >
-                                                    {gmProfile
-                                                        ? useTEM.teamMemberProfiles[
-                                                              gmProfile?.ownerUserId
-                                                          ]?.userEmail
-                                                        : t.chat.modals.gmProfile.na}
-                                                </Typography>
-                                                {isGMOwner && (
-                                                    <Tooltip
-                                                        size="sm"
-                                                        title={t.common.profileEdit.transferOwner}
-                                                        variant="outlined"
-                                                    >
+                                                    </Stack>
+                                                    {isGMOwner && (
                                                         <Button
                                                             size="sm"
                                                             variant="outlined"
@@ -722,13 +739,16 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                                 />
                                                             }
                                                             onClick={() => setOpenTransfer(true)}
-                                                            sx={{ borderRadius: "8px", pb: "8px" }}
+                                                            sx={{
+                                                                borderRadius: "8px",
+                                                                flexShrink: 0,
+                                                            }}
                                                         >
                                                             {t.common.profileEdit.transferOwner}
                                                         </Button>
-                                                    </Tooltip>
-                                                )}
-                                            </Stack>
+                                                    )}
+                                                </Stack>
+                                            </FormControl>
 
                                             {/* Members with Search */}
                                             <FormControl>

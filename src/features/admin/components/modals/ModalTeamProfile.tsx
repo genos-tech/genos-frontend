@@ -317,7 +317,7 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                     noWrap
                                 >
                                     {fmt(t.admin.teamProfile.title, {
-                                        teamName: myself.teamName,
+                                        teamName: teamProfile.teamName,
                                     })}
                                 </Typography>
                                 {/* Close button — without it mobile users
@@ -489,13 +489,32 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                                 onChange={(e) =>
                                                                     setNameDraft(e.target.value)
                                                                 }
-                                                                onKeyDown={(e) => {
-                                                                    if (e.key === "Enter")
-                                                                        void handleNameSave();
-                                                                    if (e.key === "Escape") {
-                                                                        setNameEditMode(false);
-                                                                        setNameError(null);
-                                                                    }
+                                                                // Pin keydown to the inner <input>
+                                                                // via slotProps so Enter/Escape
+                                                                // always land on the typing
+                                                                // target — Joy Input's outer
+                                                                // onKeyDown wrapper can miss
+                                                                // synthetic events that bubble
+                                                                // through composed slots.
+                                                                slotProps={{
+                                                                    input: {
+                                                                        onKeyDown: (e) => {
+                                                                            if (
+                                                                                e.key === "Enter"
+                                                                            ) {
+                                                                                e.preventDefault();
+                                                                                void handleNameSave();
+                                                                            }
+                                                                            if (
+                                                                                e.key === "Escape"
+                                                                            ) {
+                                                                                setNameEditMode(
+                                                                                    false
+                                                                                );
+                                                                                setNameError(null);
+                                                                            }
+                                                                        },
+                                                                    },
                                                                 }}
                                                                 sx={{
                                                                     flex: 1,
@@ -632,99 +651,105 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                 </Box>
                                             </FormControl>
 
-                                            <Stack
-                                                direction={"row"}
-                                                alignItems="flex-end"
-                                                spacing={2}
-                                            >
-                                                <FormControl>
-                                                    <FormLabel
-                                                        sx={{
-                                                            color: styles.labelColor,
-                                                            fontSize: "0.75rem",
-                                                            fontWeight: 600,
-                                                            textTransform: "uppercase",
-                                                            letterSpacing: "0.05em",
-                                                            mb: 0.5,
+                                            <FormControl>
+                                                <FormLabel
+                                                    sx={{
+                                                        color: styles.labelColor,
+                                                        fontSize: "0.75rem",
+                                                        fontWeight: 600,
+                                                        textTransform: "uppercase",
+                                                        letterSpacing: "0.05em",
+                                                        mb: 0.5,
+                                                    }}
+                                                >
+                                                    {t.admin.teamProfile.owner}
+                                                </FormLabel>
+                                                <Stack
+                                                    direction={{ xs: "column", sm: "row" }}
+                                                    alignItems={{
+                                                        xs: "flex-start",
+                                                        sm: "center",
+                                                    }}
+                                                    justifyContent="space-between"
+                                                    spacing={{ xs: 1, sm: 2 }}
+                                                    sx={{ width: "100%" }}
+                                                >
+                                                    <Stack
+                                                        direction={{ xs: "column", sm: "row" }}
+                                                        alignItems={{
+                                                            xs: "flex-start",
+                                                            sm: "center",
                                                         }}
+                                                        spacing={{ xs: 0.5, sm: 2 }}
                                                     >
-                                                        {t.admin.teamProfile.owner}
-                                                    </FormLabel>
-                                                    <Button
-                                                        color="neutral"
-                                                        variant="plain"
-                                                        sx={{
-                                                            justifyContent: "flex-start",
-                                                            px: 1.5,
-                                                            py: 0.5,
-                                                            borderRadius: "8px",
-                                                            transition: "all 0.2s ease",
-                                                            "&:hover": {
-                                                                background: styles.hoverBg,
-                                                            },
-                                                        }}
-                                                        onClick={() => {
-                                                            setAvatarUserId(
-                                                                teamProfile.teamOwnerId
-                                                            );
-                                                            setOpenUserProfile(true);
-                                                        }}
-                                                    >
-                                                        <Typography
-                                                            fontWeight="bold"
+                                                        <Button
+                                                            color="neutral"
+                                                            variant="plain"
                                                             sx={{
-                                                                userSelect: "text",
-                                                                fontSize: "20px",
+                                                                justifyContent: "flex-start",
+                                                                px: 1.5,
+                                                                py: 0.5,
+                                                                borderRadius: "8px",
+                                                                transition: "all 0.2s ease",
+                                                                "&:hover": {
+                                                                    background: styles.hoverBg,
+                                                                },
+                                                            }}
+                                                            onClick={() => {
+                                                                setAvatarUserId(
+                                                                    teamProfile.teamOwnerId
+                                                                );
+                                                                setOpenUserProfile(true);
+                                                            }}
+                                                        >
+                                                            <Typography
+                                                                fontWeight="bold"
+                                                                sx={{
+                                                                    userSelect: "text",
+                                                                    fontSize: "20px",
+                                                                    color: styles.valueColor,
+                                                                }}
+                                                            >
+                                                                {
+                                                                    useTEM.teamMemberProfiles[
+                                                                        teamProfile?.teamOwnerId
+                                                                    ]?.userName
+                                                                }
+                                                            </Typography>
+                                                        </Button>
+                                                        <Typography
+                                                            component="a"
+                                                            href={`mailto:${
+                                                                useTEM.teamMemberProfiles[
+                                                                    teamProfile?.teamOwnerId
+                                                                ]?.userEmail
+                                                            }`}
+                                                            startDecorator={
+                                                                <EmailRoundedIcon
+                                                                    fontSize="small"
+                                                                    sx={{
+                                                                        color: styles.accentColor,
+                                                                    }}
+                                                                />
+                                                            }
+                                                            sx={{
+                                                                textDecoration: "none",
                                                                 color: styles.valueColor,
+                                                                cursor: "pointer",
+                                                                transition: "all 0.2s ease",
+                                                                "&:hover": {
+                                                                    color: styles.accentColor,
+                                                                },
                                                             }}
                                                         >
                                                             {
                                                                 useTEM.teamMemberProfiles[
                                                                     teamProfile?.teamOwnerId
-                                                                ]?.userName
+                                                                ]?.userEmail
                                                             }
                                                         </Typography>
-                                                    </Button>
-                                                </FormControl>
-
-                                                <Typography
-                                                    component="a"
-                                                    href={`mailto:${
-                                                        useTEM.teamMemberProfiles[
-                                                            teamProfile?.teamOwnerId
-                                                        ]?.userEmail
-                                                    }`}
-                                                    startDecorator={
-                                                        <EmailRoundedIcon
-                                                            fontSize="small"
-                                                            sx={{
-                                                                color: styles.accentColor,
-                                                            }}
-                                                        />
-                                                    }
-                                                    sx={{
-                                                        textDecoration: "none",
-                                                        color: styles.valueColor,
-                                                        cursor: "pointer",
-                                                        pb: "8px",
-                                                        transition: "all 0.2s ease",
-                                                        "&:hover": {
-                                                            color: styles.accentColor,
-                                                        },
-                                                    }}
-                                                >
-                                                    {
-                                                        useTEM.teamMemberProfiles[
-                                                            teamProfile?.teamOwnerId
-                                                        ]?.userEmail
-                                                    }
-                                                </Typography>
-                                                {isTeamOwner && (
-                                                    <Tooltip
-                                                        size="sm"
-                                                        title={t.common.profileEdit.transferOwner}
-                                                        variant="outlined"
-                                                    >
+                                                    </Stack>
+                                                    {isTeamOwner && (
                                                         <Button
                                                             size="sm"
                                                             variant="outlined"
@@ -737,14 +762,14 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                             onClick={() => setOpenTransfer(true)}
                                                             sx={{
                                                                 borderRadius: "8px",
-                                                                pb: "8px",
+                                                                flexShrink: 0,
                                                             }}
                                                         >
                                                             {t.common.profileEdit.transferOwner}
                                                         </Button>
-                                                    </Tooltip>
-                                                )}
-                                            </Stack>
+                                                    )}
+                                                </Stack>
+                                            </FormControl>
 
                                             {teamProfile.teamMembers.length > 0 && (
                                                 <FormControl>
