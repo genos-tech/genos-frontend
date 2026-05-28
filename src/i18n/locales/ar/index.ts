@@ -1102,8 +1102,7 @@ export const ar: DeepPartial<Messages> = {
             chooseMyNoteOrCreate: "اختر ملاحظة من الشريط الجانبي، أو أنشئ ملاحظة جديدة",
             chooseNoteToEdit: "اختر ملاحظة من الشريط الجانبي لبدء التعديل",
             newMyNote: "ملاحظة شخصية جديدة",
-            sharedNotesTitle: "الملاحظات المشتركة",
-            sharedNotesSubtitle: "قريبًا — تعاون مع فريقك",
+            sharedNotesTitle: "اختر ملاحظة مشتركة من الشريط الجانبي",
         },
         header: {
             myNotesLabel: "ملاحظاتي",

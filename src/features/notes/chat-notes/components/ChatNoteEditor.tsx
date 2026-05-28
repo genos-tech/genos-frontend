@@ -1,7 +1,6 @@
 import { PartialBlock } from "@blocknote/core";
-import CheckIcon from "@mui/icons-material/Check";
 import NoteAltIcon from "@mui/icons-material/NoteAlt";
-import { Box, Chip, FormControl, Input } from "@mui/joy";
+import { FormControl, Input } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { BnChatNoteEditor } from "../../../../components/editors/bnChatNoteEditor";
@@ -95,36 +94,9 @@ export const ChatNoteEditor = ({
                 />
             </FormControl>
 
-            {noteBodySaved === true && (
-                <Box
-                    sx={{
-                        position: "absolute",
-                        top: "52.5px",
-                        right: "9%",
-                        transform: "translateX(-50%)",
-                        zIndex: 100,
-                    }}
-                >
-                    <Chip
-                        size="sm"
-                        variant="soft"
-                        color="neutral"
-                        startDecorator={<CheckIcon sx={{ fontSize: 14 }} />}
-                        sx={{
-                            fontWeight: 500,
-                            fontSize: "13px",
-                            "--Chip-paddingInline": "10px",
-                            animation: "fadeIn 0.3s ease-in-out",
-                            "@keyframes fadeIn": {
-                                from: { opacity: 0, transform: "scale(0.95)" },
-                                to: { opacity: 1, transform: "scale(1)" },
-                            },
-                        }}
-                    >
-                        {t.notes.editor.savedChip}
-                    </Chip>
-                </Box>
-            )}
+            {/* "Saved" chip lives INSIDE BnChatNoteEditor (next to the
+                wrap toggles) so it stays anchored to them when the
+                comments pane opens — see `noteBodySaved` prop below. */}
 
             <BnChatNoteEditor
                 body={body}
@@ -132,6 +104,7 @@ export const ChatNoteEditor = ({
                 currentChatNote={currentChatNote}
                 currentNoteMembers={currentNoteMembers}
                 myself={myself}
+                noteBodySaved={noteBodySaved}
                 resyncSignal={resyncSignal}
                 setBody={onBodyChange}
                 setMyself={setMyself}

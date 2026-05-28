@@ -80,8 +80,7 @@ export const notes = {
         chooseMyNoteOrCreate: "Choose a note from the sidebar, or create a new one",
         chooseNoteToEdit: "Choose a note from the sidebar to start editing",
         newMyNote: "New My Note",
-        sharedNotesTitle: "Shared Notes",
-        sharedNotesSubtitle: "Coming soon - collaborate with your team",
+        sharedNotesTitle: "Choose a shared note from the sidebar",
     },
     header: {
         myNotesLabel: "My Notes",
@@ -120,7 +119,7 @@ export const notes = {
         childExistsError: "Can't delete because child note(s) exists.",
     },
     sharing: {
-        title: "Share \"{title}\"",
+        title: 'Share "{title}"',
         ownerDescription:
             "Add teammates by name and choose their role. Editors can change the note; viewers can only read it.",
         viewerDescription:

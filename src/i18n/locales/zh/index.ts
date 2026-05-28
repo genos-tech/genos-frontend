@@ -1088,8 +1088,7 @@ export const zh: DeepPartial<Messages> = {
             chooseMyNoteOrCreate: "从侧边栏选择一篇笔记，或新建一篇",
             chooseNoteToEdit: "从侧边栏选择一篇笔记开始编辑",
             newMyNote: "新建我的笔记",
-            sharedNotesTitle: "共享笔记",
-            sharedNotesSubtitle: "敬请期待——与团队协作编辑",
+            sharedNotesTitle: "从侧边栏选择一篇共享笔记",
         },
         header: {
             myNotesLabel: "我的笔记",

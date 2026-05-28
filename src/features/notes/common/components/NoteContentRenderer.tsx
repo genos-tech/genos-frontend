@@ -296,10 +296,7 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
 
     // Shared Note placeholder
     if (useNM.currentNoteType === 4) {
-        return renderPlaceholder(
-            t.notes.placeholder.sharedNotesTitle,
-            t.notes.placeholder.sharedNotesSubtitle
-        );
+        return renderPlaceholder(t.notes.placeholder.sharedNotesTitle);
     }
 
     // The active Main renders the header + tab strip for the active

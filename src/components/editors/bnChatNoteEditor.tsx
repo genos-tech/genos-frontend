@@ -45,8 +45,9 @@ import {
     TextAlignButton,
 } from "@blocknote/react";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
+import CheckIcon from "@mui/icons-material/Check";
 import DownloadIcon from "@mui/icons-material/Download";
-import { Box, IconButton, Modal, ModalDialog, Tooltip } from "@mui/joy";
+import { Box, Chip, IconButton, Modal, ModalDialog, Tooltip } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { RiAlertFill } from "react-icons/ri";
 import { Socket } from "socket.io-client";
@@ -105,6 +106,10 @@ type BnChatNoteEditorProps = {
     setBody: (text: PartialBlock[] | any[]) => void;
     setNoteBodyEdited?: (value: boolean) => void;
     setNoteBodySaved?: (value: boolean) => void;
+    /** When true, render an inline "Saved" chip pinned to the left of
+     *  the wrap-toggle buttons. Lives inside the editor so it follows
+     *  the toggles' shift when the comments pane opens. */
+    noteBodySaved?: boolean;
     useUISM: UIStateManagementState;
     /** Explicit note-role members. Used to gate edit affordances —
      *  Viewers see the body but only the comment-add button. The
@@ -125,6 +130,7 @@ export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
         setBody,
         setNoteBodyEdited,
         setNoteBodySaved,
+        noteBodySaved,
         useUISM,
         useCM,
         currentNoteMembers,
@@ -388,6 +394,9 @@ export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
                         position: "absolute",
                         top: 8,
                         zIndex: 10,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1,
                         // When the threads sidebar opens it takes the
                         // right half of the editor — the toggles would
                         // float over the comments pane instead of the
@@ -396,6 +405,28 @@ export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
                         ...(showThreadsSidebar ? { right: 370 } : { right: 52 }),
                     }}
                 >
+                    {/* "Saved" chip rides alongside the wrap toggles so
+                        it shifts together when the comments pane opens. */}
+                    {noteBodySaved && (
+                        <Chip
+                            color="neutral"
+                            size="sm"
+                            startDecorator={<CheckIcon sx={{ fontSize: 14 }} />}
+                            variant="soft"
+                            sx={{
+                                fontWeight: 500,
+                                fontSize: "13px",
+                                "--Chip-paddingInline": "10px",
+                                animation: "fadeIn 0.3s ease-in-out",
+                                "@keyframes fadeIn": {
+                                    from: { opacity: 0, transform: "scale(0.95)" },
+                                    to: { opacity: 1, transform: "scale(1)" },
+                                },
+                            }}
+                        >
+                            {t.notes.editor.savedChip}
+                        </Chip>
+                    )}
                     <WrapToggleButtons
                         unwrapAll={unwrapAll}
                         setUnwrapAll={setUnwrapAll}

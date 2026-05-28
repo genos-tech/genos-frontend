@@ -1130,20 +1130,6 @@ export const TaskHomeContent = ({
                                     </Stack>
                                 </Stack>
 
-                                {/* Sprint date range indicator */}
-                                <Typography
-                                    level="body-xs"
-                                    sx={{
-                                        color: isDark
-                                            ? "rgba(165,180,252,0.7)"
-                                            : "rgba(124,58,237,0.6)",
-                                        fontWeight: 500,
-                                    }}
-                                >
-                                    Sprint window: {new Date(sprintStart).toLocaleDateString()}{" "}
-                                    &mdash; {new Date(now).toLocaleDateString()}
-                                </Typography>
-
                                 {/* Sprint progress bar */}
                                 <Box>
                                     <Stack

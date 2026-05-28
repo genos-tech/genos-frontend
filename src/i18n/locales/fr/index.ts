@@ -1114,8 +1114,7 @@ export const fr: DeepPartial<Messages> = {
                 "Choisissez une note dans la barre latérale ou créez-en une nouvelle",
             chooseNoteToEdit: "Choisissez une note dans la barre latérale pour commencer à éditer",
             newMyNote: "Nouvelle note personnelle",
-            sharedNotesTitle: "Notes partagées",
-            sharedNotesSubtitle: "Bientôt disponible — collaborez avec votre équipe",
+            sharedNotesTitle: "Choisissez une note partagée dans la barre latérale",
         },
         header: {
             myNotesLabel: "Mes notes",

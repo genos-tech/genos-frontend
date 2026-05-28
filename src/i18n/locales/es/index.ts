@@ -1102,8 +1102,7 @@ export const es: DeepPartial<Messages> = {
             chooseMyNoteOrCreate: "Elige una nota de la barra lateral o crea una nueva",
             chooseNoteToEdit: "Elige una nota de la barra lateral para empezar a editar",
             newMyNote: "Nueva nota personal",
-            sharedNotesTitle: "Notas compartidas",
-            sharedNotesSubtitle: "Próximamente: colabora con tu equipo",
+            sharedNotesTitle: "Elige una nota compartida en la barra lateral",
         },
         header: {
             myNotesLabel: "Mis notas",

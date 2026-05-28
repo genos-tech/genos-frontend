@@ -1107,8 +1107,7 @@ export const ja: DeepPartial<Messages> = {
             chooseMyNoteOrCreate: "サイドバーからノートを選ぶか、新規に作成してください",
             chooseNoteToEdit: "サイドバーからノートを選んで編集を始めましょう",
             newMyNote: "新規マイノート",
-            sharedNotesTitle: "共有ノート",
-            sharedNotesSubtitle: "近日公開 — チームと共同編集できるようになります",
+            sharedNotesTitle: "サイドバーから共有ノートを選んでください",
         },
         header: {
             myNotesLabel: "マイノート",
