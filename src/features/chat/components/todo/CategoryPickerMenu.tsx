@@ -55,14 +55,14 @@ export const CategoryPickerMenu = (props: CategoryPickerMenuProps) => {
                     opacity: triggerLabel ? 0.95 : 0.55,
                 }}
             >
-                {triggerLabel ?? "Set category"}
+                {triggerLabel ?? "Add tag"}
             </MenuButton>
             <Menu placement="bottom-end" size="sm" sx={{ minWidth: 200 }}>
                 <MenuItem onClick={() => onSelect(null)}>
                     <Box sx={{ width: 18 }}>
                         {currentCategoryId === null ? <CheckIcon sx={{ fontSize: 16 }} /> : null}
                     </Box>
-                    <Typography level="body-sm">Uncategorized</Typography>
+                    <Typography level="body-sm">General</Typography>
                 </MenuItem>
                 {categories.map((c) => (
                     <MenuItem key={c.categoryId} onClick={() => onSelect(c.categoryId)}>
@@ -77,7 +77,7 @@ export const CategoryPickerMenu = (props: CategoryPickerMenuProps) => {
                 <ListDivider />
                 <Box sx={{ display: "flex", gap: 0.5, p: 0.5 }}>
                     <Input
-                        placeholder="New category"
+                        placeholder="New tag"
                         size="sm"
                         sx={{ flex: 1, fontSize: "0.8rem" }}
                         value={newName}

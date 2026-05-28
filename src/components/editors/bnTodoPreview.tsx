@@ -145,6 +145,7 @@ export const BnTodoPreview = (props: BnTodoPreviewProps) => {
                 sideMenu={false}
                 slashMenu={false}
                 tableHandles={false}
+                theme={mode === "dark" ? "dark" : "light"}
                 data-changing-font-demo // custom font
                 onChange={() => {
                     setBody(editor.document);

@@ -85,7 +85,12 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
     const isDark = mode === "dark";
 
     const [title, setTitle] = useState(item.title);
-    const [notesExpanded, setNotesExpanded] = useState(false);
+    // Default to expanded when the item ships with actual notes content
+    // (i.e. not just the placeholder empty paragraph) so the user sees
+    // them without an extra click. Empty notes stay collapsed.
+    const [notesExpanded, setNotesExpanded] = useState(
+        () => !isEffectivelyEmpty(item.notes ?? [])
+    );
     const [notesBody, setNotesBody] = useState<PartialBlock[]>(() => ensureNonEmpty(item.notes));
     const notesDirtyRef = useRef(false);
 
@@ -198,12 +203,18 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
             {notesExpanded && (
                 <Box
                     sx={{
-                        mt: 1,
-                        ml: 4,
+                        mt: 0.5,
+                        mx: 0,
                         borderRadius: "8px",
-                        border: "1px solid",
                         borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
-                        background: isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.015)",
+                        overflow: "hidden",
+                        // BnTodoPreview ships with px: "10px" + BlockNote's
+                        // own gutter — together they leave the cursor
+                        // floating a long way from the border. Trim both
+                        // down to a single small inset so there's breathing
+                        // room without wasting horizontal space.
+                        "& .bn-editor": { paddingInline: "16px" },
+                        "& [class*='-todo-item-notes-']": { px: "24px" },
                     }}
                 >
                     <TodoNotesEditor

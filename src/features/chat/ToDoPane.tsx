@@ -179,6 +179,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                             All ({totalItems})
                         </Chip>
                         <Chip
+                            color="warning"
                             size="sm"
                             startDecorator={<FilterListRoundedIcon sx={{ fontSize: 14 }} />}
                             sx={{ cursor: "pointer", borderRadius: "6px" }}

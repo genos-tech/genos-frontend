@@ -72,9 +72,10 @@ export const TodoGroupCard = (props: TodoGroupCardProps) => {
             }));
         const result = [];
         // Always include an uncategorized section (even when empty) so
-        // the user always has somewhere to drop a new "no category" item.
+        // the user always has somewhere to drop a new item that isn't
+        // assigned a tag yet.
         result.push({
-            title: "Uncategorized",
+            title: "General",
             categoryId: null as number | null,
             items: uncategorized,
         });
