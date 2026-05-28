@@ -146,8 +146,6 @@ export const MessageListRenderer = ({
             const reactions = (msg as MessageProps).reactions;
             if (reactions && reactions.length > 0) {
                 paddingBottom += 2.5;
-            } else if (numRepliesWithoutFirstMessage > 0) {
-                paddingBottom += 2.5;
             } else if (chat.chatType === 3) {
                 paddingBottom += 1;
             }
@@ -162,7 +160,7 @@ export const MessageListRenderer = ({
             };
         }
         return out;
-    }, [messages, isThread, chat.chatType]);
+    }, [messages, isThread, chat.chatType, isCompact]);
 
     // Focus-state inputs change when the user clicks a thread or follows a
     // jump-to-message link, but they're independent of `messages`. Compute
