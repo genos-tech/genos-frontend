@@ -766,7 +766,13 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                             </Stack>
 
                                             {canShowLeave && (
-                                                <Box sx={{ mt: 2 }}>
+                                                <Box
+                                                    sx={{
+                                                        mt: 2,
+                                                        display: "flex",
+                                                        justifyContent: "flex-end",
+                                                    }}
+                                                >
                                                     <Button
                                                         color="danger"
                                                         variant="outlined"
