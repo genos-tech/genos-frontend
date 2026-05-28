@@ -48,6 +48,23 @@ export const common = {
         gmDescription:
             "You'll no longer see this group's messages. You can re-join later if it's public.",
     },
+    profileEdit: {
+        rename: "Rename",
+        save: "Save",
+        cancel: "Cancel",
+        nameEmpty: "Name cannot be empty.",
+        renameError: "Couldn't rename. Please try again.",
+        transferOwner: "Transfer ownership",
+        transferTitle: "Transfer ownership?",
+        transferTeamDescription:
+            "You'll become a regular member. Only owners can rename or transfer ownership again.",
+        transferProjectDescription: "You'll become a regular member of this project.",
+        transferGMDescription: "You'll become a regular member of this group.",
+        transferPickMember: "Pick a member to receive ownership",
+        transferConfirm: "Transfer",
+        transferError: "Couldn't transfer ownership. Please try again.",
+        noOtherMembers: "No other members to transfer ownership to.",
+    },
     empty: {
         noResults: "No results",
         noItems: "Nothing here yet",

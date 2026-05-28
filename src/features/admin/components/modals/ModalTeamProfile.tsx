@@ -5,6 +5,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import SearchIcon from "@mui/icons-material/Search";
+import SwapHorizRoundedIcon from "@mui/icons-material/SwapHorizRounded";
 import {
     Avatar,
     Box,
@@ -30,6 +31,7 @@ import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithSt
 import { FileSizeRejectionSnackbar } from "../../../../components/ui/feedback/FileSizeRejectionSnackbar";
 import { useFileSizeGuard } from "../../../../components/ui/feedback/useFileSizeGuard";
 import { ModalLeaveConfirm } from "../../../../components/ui/misc/ModalLeaveConfirm";
+import { ModalTransferOwner } from "../../../../components/ui/misc/ModalTransferOwner";
 import { ProfileModalStyles } from "../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
@@ -39,6 +41,7 @@ import { fmt, useTranslation } from "../../../../i18n";
 import { TeamProfileProps, UserProps } from "../../../../types/admin";
 import { extractYYYYMMDD } from "../../../../utils/dateUtils";
 import { leaveTeam } from "../../services/leaveTeam";
+import { updateTeamProfile } from "../../services/updateTeamProfile";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
@@ -90,6 +93,69 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
     // which lists the user's remaining teams plus create/join forms.
     const [openLeaveConfirm, setOpenLeaveConfirm] = useState(false);
     const isTeamOwner = myself.userId === teamProfile.teamOwnerId;
+
+    // Inline rename + transfer-ownership flow (owner-only). Both PUT
+    // through the same endpoint (`updateTeamProfile`). Renames update
+    // the local `teamProfile` so the modal reflects the change without
+    // a refetch; the per-user my_teams cache (60s TTL) refreshes on
+    // its own.
+    const [nameEditMode, setNameEditMode] = useState(false);
+    const [nameDraft, setNameDraft] = useState("");
+    const [nameError, setNameError] = useState<string | null>(null);
+    const [nameSaving, setNameSaving] = useState(false);
+    const [openTransfer, setOpenTransfer] = useState(false);
+
+    const handleNameSave = async () => {
+        const next = nameDraft.trim();
+        if (!next) {
+            setNameError(t.common.profileEdit.nameEmpty);
+            return;
+        }
+        if (next === teamProfile.teamName) {
+            setNameEditMode(false);
+            setNameError(null);
+            return;
+        }
+        setNameSaving(true);
+        setNameError(null);
+        const ok = await updateTeamProfile(
+            accessToken,
+            teamProfile.teamId,
+            { teamName: next },
+            setNameError
+        );
+        setNameSaving(false);
+        if (ok) {
+            setTeamProfile({ ...teamProfile, teamName: next });
+            setNameEditMode(false);
+        }
+    };
+
+    const handleTransferConfirm = async (newOwnerId: string) => {
+        const ok = await updateTeamProfile(accessToken, teamProfile.teamId, {
+            ownerId: newOwnerId,
+        });
+        if (ok) {
+            setTeamProfile({ ...teamProfile, teamOwnerId: newOwnerId });
+            setOpenTransfer(false);
+        }
+        return ok;
+    };
+
+    // Members the owner can transfer ownership to: everyone except
+    // themselves. Empty when the team has only the owner.
+    const transferCandidates = useMemo(
+        () =>
+            teamProfile.teamMembers
+                .filter((m) => m.userId !== myself.userId)
+                .map((m) => ({
+                    userId: m.userId,
+                    userName: m.userName,
+                    userEmail: m.userEmail,
+                    avatarImgPath: m.avatarImgPath,
+                })),
+        [teamProfile.teamMembers, myself.userId]
+    );
 
     const handleLeaveTeam = async () => {
         const ok = await leaveTeam(accessToken, teamProfile.teamId, myself.userId);
@@ -410,28 +476,119 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                     >
                                                         {t.admin.teamProfile.teamName}
                                                     </FormLabel>
-                                                    <Box
-                                                        sx={{
-                                                            px: 2,
-                                                            py: 1,
-                                                            borderRadius: "8px",
-                                                            background: isDark
-                                                                ? "rgba(124,58,237,0.1)"
-                                                                : "rgba(124,58,237,0.05)",
-                                                            border: `1px solid ${styles.border}`,
-                                                        }}
-                                                    >
+                                                    {nameEditMode ? (
+                                                        <Stack
+                                                            direction="row"
+                                                            spacing={1}
+                                                            alignItems="center"
+                                                        >
+                                                            <Input
+                                                                size="sm"
+                                                                autoFocus
+                                                                value={nameDraft}
+                                                                onChange={(e) =>
+                                                                    setNameDraft(e.target.value)
+                                                                }
+                                                                onKeyDown={(e) => {
+                                                                    if (e.key === "Enter")
+                                                                        void handleNameSave();
+                                                                    if (e.key === "Escape") {
+                                                                        setNameEditMode(false);
+                                                                        setNameError(null);
+                                                                    }
+                                                                }}
+                                                                sx={{
+                                                                    flex: 1,
+                                                                    "--Input-radius": "8px",
+                                                                }}
+                                                            />
+                                                            <Button
+                                                                size="sm"
+                                                                variant="solid"
+                                                                loading={nameSaving}
+                                                                onClick={handleNameSave}
+                                                            >
+                                                                {t.common.profileEdit.save}
+                                                            </Button>
+                                                            <Button
+                                                                size="sm"
+                                                                variant="plain"
+                                                                color="neutral"
+                                                                onClick={() => {
+                                                                    setNameEditMode(false);
+                                                                    setNameError(null);
+                                                                }}
+                                                            >
+                                                                {t.common.profileEdit.cancel}
+                                                            </Button>
+                                                        </Stack>
+                                                    ) : (
+                                                        <Stack
+                                                            direction="row"
+                                                            spacing={1}
+                                                            alignItems="center"
+                                                        >
+                                                            <Box
+                                                                sx={{
+                                                                    flex: 1,
+                                                                    px: 2,
+                                                                    py: 1,
+                                                                    borderRadius: "8px",
+                                                                    background: isDark
+                                                                        ? "rgba(124,58,237,0.1)"
+                                                                        : "rgba(124,58,237,0.05)",
+                                                                    border: `1px solid ${styles.border}`,
+                                                                }}
+                                                            >
+                                                                <Typography
+                                                                    fontWeight="bold"
+                                                                    sx={{
+                                                                        userSelect: "text",
+                                                                        color: styles.valueColor,
+                                                                        fontSize: "18px",
+                                                                    }}
+                                                                >
+                                                                    {teamProfile.teamName}
+                                                                </Typography>
+                                                            </Box>
+                                                            {isTeamOwner && (
+                                                                <Tooltip
+                                                                    size="sm"
+                                                                    title={
+                                                                        t.common.profileEdit.rename
+                                                                    }
+                                                                    variant="outlined"
+                                                                >
+                                                                    <IconButton
+                                                                        size="sm"
+                                                                        variant="plain"
+                                                                        onClick={() => {
+                                                                            setNameDraft(
+                                                                                teamProfile.teamName
+                                                                            );
+                                                                            setNameError(null);
+                                                                            setNameEditMode(true);
+                                                                        }}
+                                                                    >
+                                                                        <EditIcon
+                                                                            sx={{ fontSize: 18 }}
+                                                                        />
+                                                                    </IconButton>
+                                                                </Tooltip>
+                                                            )}
+                                                        </Stack>
+                                                    )}
+                                                    {nameError && (
                                                         <Typography
-                                                            fontWeight="bold"
+                                                            level="body-xs"
                                                             sx={{
-                                                                userSelect: "text",
-                                                                color: styles.valueColor,
-                                                                fontSize: "18px",
+                                                                color: "rgba(232,121,195,0.9)",
+                                                                mt: 0.5,
                                                             }}
                                                         >
-                                                            {teamProfile.teamName}
+                                                            {nameError}
                                                         </Typography>
-                                                    </Box>
+                                                    )}
                                                 </FormControl>
                                             </Stack>
 
@@ -562,6 +719,31 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                         ]?.userEmail
                                                     }
                                                 </Typography>
+                                                {isTeamOwner && (
+                                                    <Tooltip
+                                                        size="sm"
+                                                        title={t.common.profileEdit.transferOwner}
+                                                        variant="outlined"
+                                                    >
+                                                        <Button
+                                                            size="sm"
+                                                            variant="outlined"
+                                                            color="neutral"
+                                                            startDecorator={
+                                                                <SwapHorizRoundedIcon
+                                                                    sx={{ fontSize: 16 }}
+                                                                />
+                                                            }
+                                                            onClick={() => setOpenTransfer(true)}
+                                                            sx={{
+                                                                borderRadius: "8px",
+                                                                pb: "8px",
+                                                            }}
+                                                        >
+                                                            {t.common.profileEdit.transferOwner}
+                                                        </Button>
+                                                    </Tooltip>
+                                                )}
                                             </Stack>
 
                                             {teamProfile.teamMembers.length > 0 && (
@@ -814,6 +996,14 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                 entityName={teamProfile.teamName}
                 onConfirm={handleLeaveTeam}
                 onCancel={() => setOpenLeaveConfirm(false)}
+            />
+            <ModalTransferOwner
+                open={openTransfer}
+                title={t.common.profileEdit.transferTitle}
+                description={t.common.profileEdit.transferTeamDescription}
+                candidates={transferCandidates}
+                onConfirm={handleTransferConfirm}
+                onCancel={() => setOpenTransfer(false)}
             />
         </>
     );

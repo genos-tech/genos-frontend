@@ -5,6 +5,7 @@ import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
 import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import SearchIcon from "@mui/icons-material/Search";
+import SwapHorizRoundedIcon from "@mui/icons-material/SwapHorizRounded";
 import {
     Avatar,
     Box,
@@ -29,6 +30,7 @@ import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithSt
 import { FileSizeRejectionSnackbar } from "../../../../components/ui/feedback/FileSizeRejectionSnackbar";
 import { useFileSizeGuard } from "../../../../components/ui/feedback/useFileSizeGuard";
 import { ModalLeaveConfirm } from "../../../../components/ui/misc/ModalLeaveConfirm";
+import { ModalTransferOwner } from "../../../../components/ui/misc/ModalTransferOwner";
 import { ProfileModalStyles } from "../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatService } from "../../../../db/services/chat.service";
@@ -46,6 +48,7 @@ import {
 import { addChat } from "../../services/addChat";
 import { leaveGM } from "../../services/leaveGM";
 import { loadGMProfile } from "../../services/loadGMProfile";
+import { updateGMProfile } from "../../services/updateGMProfile";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
@@ -113,6 +116,74 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
     const [openLeaveConfirm, setOpenLeaveConfirm] = useState(false);
     const isGMOwner = !!gmProfile && myself.userId === gmProfile.ownerUserId;
     const canShowLeave = !!gmProfile && !isGMOwner;
+
+    // Inline rename + transfer-ownership flow (owner-only). Mirrors
+    // ModalTeamProfile and ModalProjectProfile.
+    const [nameEditMode, setNameEditMode] = useState(false);
+    const [nameDraft, setNameDraft] = useState("");
+    const [nameError, setNameError] = useState<string | null>(null);
+    const [nameSaving, setNameSaving] = useState(false);
+    const [openTransfer, setOpenTransfer] = useState(false);
+
+    const handleNameSave = async () => {
+        if (!gmProfile) return;
+        const next = nameDraft.trim();
+        if (!next) {
+            setNameError(t.common.profileEdit.nameEmpty);
+            return;
+        }
+        if (next === gmChat.chatName) {
+            setNameEditMode(false);
+            setNameError(null);
+            return;
+        }
+        setNameSaving(true);
+        setNameError(null);
+        const ok = await updateGMProfile(
+            accessToken,
+            gmChat.chatId,
+            { gmName: next },
+            setNameError
+        );
+        setNameSaving(false);
+        if (ok) {
+            // Reflect rename in the chat-list row so the sidebar updates
+            // immediately. funcSetAllChats overwrites on next sync.
+            useCM.setAllChats((prev) =>
+                prev.map((c) =>
+                    c.chatType === gmChat.chatType && c.chatId === gmChat.chatId
+                        ? { ...c, chatName: next }
+                        : c
+                )
+            );
+            setNameEditMode(false);
+        }
+    };
+
+    const handleTransferConfirm = async (newOwnerId: string) => {
+        if (!gmProfile) return false;
+        const ok = await updateGMProfile(accessToken, gmChat.chatId, {
+            ownerUserId: newOwnerId,
+        });
+        if (ok) {
+            setGmProfile({ ...gmProfile, ownerUserId: newOwnerId });
+            setOpenTransfer(false);
+        }
+        return ok;
+    };
+
+    const transferCandidates = useMemo(
+        () =>
+            (gmProfile?.gmMembers ?? [])
+                .filter((m) => m.userId !== myself.userId)
+                .map((m) => ({
+                    userId: m.userId,
+                    userName: m.userName,
+                    userEmail: m.userEmail,
+                    avatarImgPath: m.avatarImgPath,
+                })),
+        [gmProfile?.gmMembers, myself.userId]
+    );
 
     const handleLeaveGM = async () => {
         const ok = await leaveGM(accessToken, gmChat.chatId, myself.userId);
@@ -431,6 +502,120 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                     {/* Details Section */}
                                     <Stack spacing={2} sx={{ flexGrow: 1 }}>
                                         <Stack direction="column" spacing={1.5}>
+                                            {/* Group name — inline rename for owners. */}
+                                            <FormControl>
+                                                <FormLabel
+                                                    sx={{
+                                                        color: styles.labelColor,
+                                                        fontSize: "0.75rem",
+                                                        fontWeight: 600,
+                                                        textTransform: "uppercase",
+                                                        letterSpacing: "0.05em",
+                                                        mb: 0.5,
+                                                    }}
+                                                >
+                                                    Group name
+                                                </FormLabel>
+                                                {nameEditMode ? (
+                                                    <Stack
+                                                        direction="row"
+                                                        spacing={1}
+                                                        alignItems="center"
+                                                    >
+                                                        <Input
+                                                            size="sm"
+                                                            autoFocus
+                                                            value={nameDraft}
+                                                            onChange={(e) =>
+                                                                setNameDraft(e.target.value)
+                                                            }
+                                                            onKeyDown={(e) => {
+                                                                if (e.key === "Enter")
+                                                                    void handleNameSave();
+                                                                if (e.key === "Escape") {
+                                                                    setNameEditMode(false);
+                                                                    setNameError(null);
+                                                                }
+                                                            }}
+                                                            sx={{
+                                                                flex: 1,
+                                                                "--Input-radius": "8px",
+                                                            }}
+                                                        />
+                                                        <Button
+                                                            size="sm"
+                                                            variant="solid"
+                                                            loading={nameSaving}
+                                                            onClick={handleNameSave}
+                                                        >
+                                                            {t.common.profileEdit.save}
+                                                        </Button>
+                                                        <Button
+                                                            size="sm"
+                                                            variant="plain"
+                                                            color="neutral"
+                                                            onClick={() => {
+                                                                setNameEditMode(false);
+                                                                setNameError(null);
+                                                            }}
+                                                        >
+                                                            {t.common.profileEdit.cancel}
+                                                        </Button>
+                                                    </Stack>
+                                                ) : (
+                                                    <Stack
+                                                        direction="row"
+                                                        spacing={1}
+                                                        alignItems="center"
+                                                    >
+                                                        <Typography
+                                                            fontWeight="bold"
+                                                            sx={{
+                                                                userSelect: "text",
+                                                                color: styles.valueColor,
+                                                                fontSize: "18px",
+                                                            }}
+                                                        >
+                                                            {gmChat.chatName}
+                                                        </Typography>
+                                                        {isGMOwner && (
+                                                            <Tooltip
+                                                                size="sm"
+                                                                title={t.common.profileEdit.rename}
+                                                                variant="outlined"
+                                                            >
+                                                                <IconButton
+                                                                    size="sm"
+                                                                    variant="plain"
+                                                                    onClick={() => {
+                                                                        setNameDraft(
+                                                                            gmChat.chatName
+                                                                        );
+                                                                        setNameError(null);
+                                                                        setNameEditMode(true);
+                                                                    }}
+                                                                >
+                                                                    <EditIcon
+                                                                        sx={{ fontSize: 16 }}
+                                                                    />
+                                                                </IconButton>
+                                                            </Tooltip>
+                                                        )}
+                                                    </Stack>
+                                                )}
+                                                {nameError && (
+                                                    <Typography
+                                                        level="body-xs"
+                                                        sx={{
+                                                            color: "rgba(232,121,195,0.9)",
+                                                            mt: 0.5,
+                                                        }}
+                                                    >
+                                                        {nameError}
+                                                    </Typography>
+                                                )}
+                                            </FormControl>
+
                                             {/* Owner */}
                                             <Stack
                                                 direction="row"
@@ -521,6 +706,28 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                           ]?.userEmail
                                                         : t.chat.modals.gmProfile.na}
                                                 </Typography>
+                                                {isGMOwner && (
+                                                    <Tooltip
+                                                        size="sm"
+                                                        title={t.common.profileEdit.transferOwner}
+                                                        variant="outlined"
+                                                    >
+                                                        <Button
+                                                            size="sm"
+                                                            variant="outlined"
+                                                            color="neutral"
+                                                            startDecorator={
+                                                                <SwapHorizRoundedIcon
+                                                                    sx={{ fontSize: 16 }}
+                                                                />
+                                                            }
+                                                            onClick={() => setOpenTransfer(true)}
+                                                            sx={{ borderRadius: "8px", pb: "8px" }}
+                                                        >
+                                                            {t.common.profileEdit.transferOwner}
+                                                        </Button>
+                                                    </Tooltip>
+                                                )}
                                             </Stack>
 
                                             {/* Members with Search */}
@@ -816,6 +1023,14 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                 entityName={gmChat.chatName}
                 onConfirm={handleLeaveGM}
                 onCancel={() => setOpenLeaveConfirm(false)}
+            />
+            <ModalTransferOwner
+                open={openTransfer}
+                title={t.common.profileEdit.transferTitle}
+                description={t.common.profileEdit.transferGMDescription}
+                candidates={transferCandidates}
+                onConfirm={handleTransferConfirm}
+                onCancel={() => setOpenTransfer(false)}
             />
         </>
     );

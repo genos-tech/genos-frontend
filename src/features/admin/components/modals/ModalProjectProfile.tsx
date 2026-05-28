@@ -5,6 +5,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import SearchIcon from "@mui/icons-material/Search";
+import SwapHorizRoundedIcon from "@mui/icons-material/SwapHorizRounded";
 import {
     Avatar,
     Box,
@@ -30,6 +31,7 @@ import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithSt
 import { FileSizeRejectionSnackbar } from "../../../../components/ui/feedback/FileSizeRejectionSnackbar";
 import { useFileSizeGuard } from "../../../../components/ui/feedback/useFileSizeGuard";
 import { ModalLeaveConfirm } from "../../../../components/ui/misc/ModalLeaveConfirm";
+import { ModalTransferOwner } from "../../../../components/ui/misc/ModalTransferOwner";
 import { ProfileModalStyles } from "../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatService } from "../../../../db/services/chat.service";
@@ -44,6 +46,7 @@ import { AllChatProps } from "../../../../types/chat";
 import { extractYYYYMMDD } from "../../../../utils/dateUtils";
 import { addChat } from "../../../chat/services/addChat";
 import { leaveProject } from "../../services/leaveProject";
+import { updateProjectProfile } from "../../services/updateProjectProfile";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
@@ -102,6 +105,78 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
     const [openLeaveConfirm, setOpenLeaveConfirm] = useState(false);
     const isProjectOwner = !!projectProfile && myself.userId === projectProfile.ownerUserId;
     const canShowLeave = !!projectProfile && !isProjectOwner;
+
+    // Inline rename + transfer-ownership flow (owner-only). Mirrors the
+    // pattern in ModalTeamProfile: PUT through `updateProjectProfile`,
+    // update the local profile state on success so the modal reflects
+    // the change without a refetch.
+    const [nameEditMode, setNameEditMode] = useState(false);
+    const [nameDraft, setNameDraft] = useState("");
+    const [nameError, setNameError] = useState<string | null>(null);
+    const [nameSaving, setNameSaving] = useState(false);
+    const [openTransfer, setOpenTransfer] = useState(false);
+
+    const handleNameSave = async () => {
+        if (!projectProfile) return;
+        const next = nameDraft.trim();
+        if (!next) {
+            setNameError(t.common.profileEdit.nameEmpty);
+            return;
+        }
+        if (next === pmChat.chatName) {
+            setNameEditMode(false);
+            setNameError(null);
+            return;
+        }
+        setNameSaving(true);
+        setNameError(null);
+        const ok = await updateProjectProfile(
+            accessToken,
+            pmChat.chatId,
+            { projectName: next },
+            setNameError
+        );
+        setNameSaving(false);
+        if (ok) {
+            setProjectProfile({ ...projectProfile, projectName: next });
+            // Reflect rename in the chat-list row too so the sidebar
+            // updates immediately. `funcSetAllChats` overwrites this
+            // entry on next sync anyway.
+            useCM.setAllChats((prev) =>
+                prev.map((c) =>
+                    c.chatType === pmChat.chatType && c.chatId === pmChat.chatId
+                        ? { ...c, chatName: next }
+                        : c
+                )
+            );
+            setNameEditMode(false);
+        }
+    };
+
+    const handleTransferConfirm = async (newOwnerId: string) => {
+        if (!projectProfile) return false;
+        const ok = await updateProjectProfile(accessToken, pmChat.chatId, {
+            ownerId: newOwnerId,
+        });
+        if (ok) {
+            setProjectProfile({ ...projectProfile, ownerUserId: newOwnerId });
+            setOpenTransfer(false);
+        }
+        return ok;
+    };
+
+    const transferCandidates = useMemo(
+        () =>
+            (projectProfile?.projectMembers ?? [])
+                .filter((m) => m.userId !== myself.userId)
+                .map((m) => ({
+                    userId: m.userId,
+                    userName: m.userName,
+                    userEmail: m.userEmail,
+                    avatarImgPath: m.avatarImgPath,
+                })),
+        [projectProfile?.projectMembers, myself.userId]
+    );
 
     const handleLeaveProject = async () => {
         if (!myself.teamId) return false;
@@ -469,6 +544,119 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                         }}
                                     >
                                         <Stack direction="column" spacing={1.5}>
+                                            {/* Project name — inline rename for owners. */}
+                                            <FormControl>
+                                                <FormLabel
+                                                    sx={{
+                                                        color: styles.labelColor,
+                                                        fontSize: "0.75rem",
+                                                        fontWeight: 600,
+                                                        textTransform: "uppercase",
+                                                        letterSpacing: "0.05em",
+                                                        mb: 0.5,
+                                                    }}
+                                                >
+                                                    Project name
+                                                </FormLabel>
+                                                {nameEditMode ? (
+                                                    <Stack
+                                                        direction="row"
+                                                        spacing={1}
+                                                        alignItems="center"
+                                                    >
+                                                        <Input
+                                                            size="sm"
+                                                            autoFocus
+                                                            value={nameDraft}
+                                                            onChange={(e) =>
+                                                                setNameDraft(e.target.value)
+                                                            }
+                                                            onKeyDown={(e) => {
+                                                                if (e.key === "Enter")
+                                                                    void handleNameSave();
+                                                                if (e.key === "Escape") {
+                                                                    setNameEditMode(false);
+                                                                    setNameError(null);
+                                                                }
+                                                            }}
+                                                            sx={{
+                                                                flex: 1,
+                                                                "--Input-radius": "8px",
+                                                            }}
+                                                        />
+                                                        <Button
+                                                            size="sm"
+                                                            variant="solid"
+                                                            loading={nameSaving}
+                                                            onClick={handleNameSave}
+                                                        >
+                                                            {t.common.profileEdit.save}
+                                                        </Button>
+                                                        <Button
+                                                            size="sm"
+                                                            variant="plain"
+                                                            color="neutral"
+                                                            onClick={() => {
+                                                                setNameEditMode(false);
+                                                                setNameError(null);
+                                                            }}
+                                                        >
+                                                            {t.common.profileEdit.cancel}
+                                                        </Button>
+                                                    </Stack>
+                                                ) : (
+                                                    <Stack
+                                                        direction="row"
+                                                        spacing={1}
+                                                        alignItems="center"
+                                                    >
+                                                        <Typography
+                                                            fontWeight="bold"
+                                                            sx={{
+                                                                userSelect: "text",
+                                                                color: styles.valueColor,
+                                                                fontSize: "18px",
+                                                            }}
+                                                        >
+                                                            {pmChat.chatName}
+                                                        </Typography>
+                                                        {isProjectOwner && (
+                                                            <AppTooltip
+                                                                title={t.common.profileEdit.rename}
+                                                                size="sm"
+                                                            >
+                                                                <IconButton
+                                                                    size="sm"
+                                                                    variant="plain"
+                                                                    onClick={() => {
+                                                                        setNameDraft(
+                                                                            pmChat.chatName
+                                                                        );
+                                                                        setNameError(null);
+                                                                        setNameEditMode(true);
+                                                                    }}
+                                                                >
+                                                                    <EditIcon
+                                                                        sx={{ fontSize: 16 }}
+                                                                    />
+                                                                </IconButton>
+                                                            </AppTooltip>
+                                                        )}
+                                                    </Stack>
+                                                )}
+                                                {nameError && (
+                                                    <Typography
+                                                        level="body-xs"
+                                                        sx={{
+                                                            color: palette.dangerTint,
+                                                            mt: 0.5,
+                                                        }}
+                                                    >
+                                                        {nameError}
+                                                    </Typography>
+                                                )}
+                                            </FormControl>
+
                                             <Stack
                                                 direction={"row"}
                                                 alignItems="flex-end"
@@ -561,6 +749,27 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                           ]?.userEmail
                                                         : t.admin.projectProfile.notAvailable}
                                                 </Typography>
+                                                {isProjectOwner && (
+                                                    <AppTooltip
+                                                        title={t.common.profileEdit.transferOwner}
+                                                        size="sm"
+                                                    >
+                                                        <Button
+                                                            size="sm"
+                                                            variant="outlined"
+                                                            color="neutral"
+                                                            startDecorator={
+                                                                <SwapHorizRoundedIcon
+                                                                    sx={{ fontSize: 16 }}
+                                                                />
+                                                            }
+                                                            onClick={() => setOpenTransfer(true)}
+                                                            sx={{ borderRadius: "8px", pb: "8px" }}
+                                                        >
+                                                            {t.common.profileEdit.transferOwner}
+                                                        </Button>
+                                                    </AppTooltip>
+                                                )}
                                             </Stack>
 
                                             <FormControl>
@@ -985,6 +1194,14 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                 entityName={pmChat.chatName}
                 onConfirm={handleLeaveProject}
                 onCancel={() => setOpenLeaveConfirm(false)}
+            />
+            <ModalTransferOwner
+                open={openTransfer}
+                title={t.common.profileEdit.transferTitle}
+                description={t.common.profileEdit.transferProjectDescription}
+                candidates={transferCandidates}
+                onConfirm={handleTransferConfirm}
+                onCancel={() => setOpenTransfer(false)}
             />
         </>
     );
