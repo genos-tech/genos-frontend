@@ -237,13 +237,21 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
         setShareMeetLink(null);
         if (!link || !socket) return;
         // Mirror the BlockNote document shape `bnChatEditor` emits — a
-        // paragraph block with the link, plus a trailing empty paragraph.
-        // The trailing block is mandatory: `BnChatPreview` does
-        // `content.slice(0, -1)` when seeding its preview editor.
+        // paragraph block with a `link` inline node so the URL renders
+        // as a clickable hyperlink (plain text wouldn't auto-linkify on
+        // the receive side). Trailing empty paragraph is mandatory:
+        // `BnChatPreview` does `content.slice(0, -1)` when seeding its
+        // preview editor.
         const content = [
             {
                 type: "paragraph",
-                content: [{ type: "text", text: link, styles: {} }],
+                content: [
+                    {
+                        type: "link",
+                        href: link,
+                        content: [{ type: "text", text: link, styles: {} }],
+                    },
+                ],
             },
             {
                 type: "paragraph",
