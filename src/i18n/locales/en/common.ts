@@ -26,12 +26,27 @@ export const common = {
         filter: "Filter",
         clear: "Clear",
         signOut: "Sign out",
+        leave: "Leave",
     },
     confirm: {
         deleteTitle: "Are you sure?",
         deleteBody: "This action cannot be undone.",
         unsavedTitle: "Discard unsaved changes?",
         unsavedBody: "Your changes will be lost.",
+    },
+    leaveConfirm: {
+        leave: "Leave",
+        cancel: "Cancel",
+        genericError: "Couldn't leave. Please try again.",
+        teamTitle: "Leave team?",
+        teamDescription:
+            "You'll lose access to this team's chats and projects. You can re-join later.",
+        projectTitle: "Leave project?",
+        projectDescription:
+            "You'll no longer see this project's messages. You can re-join later if it's public.",
+        gmTitle: "Leave group?",
+        gmDescription:
+            "You'll no longer see this group's messages. You can re-join later if it's public.",
     },
     empty: {
         noResults: "No results",

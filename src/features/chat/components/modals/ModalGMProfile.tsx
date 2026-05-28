@@ -3,6 +3,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import EditIcon from "@mui/icons-material/Edit";
 import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
 import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
+import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import SearchIcon from "@mui/icons-material/Search";
 import {
     Avatar,
@@ -27,6 +28,7 @@ import { Socket } from "socket.io-client";
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
 import { FileSizeRejectionSnackbar } from "../../../../components/ui/feedback/FileSizeRejectionSnackbar";
 import { useFileSizeGuard } from "../../../../components/ui/feedback/useFileSizeGuard";
+import { ModalLeaveConfirm } from "../../../../components/ui/misc/ModalLeaveConfirm";
 import { ProfileModalStyles } from "../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
@@ -41,6 +43,7 @@ import {
     useGMProfileImageVersion,
 } from "../../../../utils/gmProfileImageVersion";
 import { addChat } from "../../services/addChat";
+import { leaveGM } from "../../services/leaveGM";
 import { loadGMProfile } from "../../services/loadGMProfile";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
@@ -102,6 +105,35 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
     const avatarSrc = liveChat.profileImagePath
         ? `${media_url}/${liveChat.profileImagePath}${imageVersion > 0 ? `?v=${imageVersion}` : ""}`
         : undefined;
+
+    // Leave-GM flow. Owners can't leave (would orphan the group);
+    // ownership is loaded async so the button is gated on both
+    // gmProfile presence and ownerUserId mismatch.
+    const [openLeaveConfirm, setOpenLeaveConfirm] = useState(false);
+    const isGMOwner = !!gmProfile && myself.userId === gmProfile.ownerUserId;
+    const canShowLeave = !!gmProfile && !isGMOwner;
+
+    const handleLeaveGM = async () => {
+        const ok = await leaveGM(accessToken, gmChat.chatId, myself.userId);
+        if (!ok) return false;
+        useCM.setAllChats((prev) =>
+            prev.filter((c) => !(c.chatType === gmChat.chatType && c.chatId === gmChat.chatId))
+        );
+        if (
+            useCM.currentMainChat?.chatType === gmChat.chatType &&
+            useCM.currentMainChat?.chatId === gmChat.chatId
+        ) {
+            useCM.setCurrentMainChat(undefined);
+        }
+        if (
+            useCM.currentSubChat?.chatType === gmChat.chatType &&
+            useCM.currentSubChat?.chatId === gmChat.chatId
+        ) {
+            useCM.setCurrentSubChat(undefined);
+        }
+        setOpenModalGMProfile(false);
+        return true;
+    };
 
     // Member search state
     const [memberSearchQuery, setMemberSearchQuery] = useState("");
@@ -732,6 +764,32 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                     </Box>
                                                 </FormControl>
                                             </Stack>
+
+                                            {canShowLeave && (
+                                                <Box sx={{ mt: 2 }}>
+                                                    <Button
+                                                        color="danger"
+                                                        variant="outlined"
+                                                        startDecorator={
+                                                            <LogoutRoundedIcon fontSize="small" />
+                                                        }
+                                                        onClick={() => setOpenLeaveConfirm(true)}
+                                                        sx={{
+                                                            borderRadius: "10px",
+                                                            borderColor: "rgba(232,121,195,0.4)",
+                                                            color: "rgba(232,121,195,0.9)",
+                                                            "&:hover": {
+                                                                background:
+                                                                    "rgba(232,121,195,0.08)",
+                                                                borderColor:
+                                                                    "rgba(232,121,195,0.6)",
+                                                            },
+                                                        }}
+                                                    >
+                                                        {t.common.actions.leave}
+                                                    </Button>
+                                                </Box>
+                                            )}
                                         </Stack>
                                     </Stack>
                                 </Stack>
@@ -740,6 +798,14 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                     </Box>
                 </ModalDialog>
             </Modal>
+            <ModalLeaveConfirm
+                open={openLeaveConfirm}
+                title={t.common.leaveConfirm.gmTitle}
+                description={t.common.leaveConfirm.gmDescription}
+                entityName={gmChat.chatName}
+                onConfirm={handleLeaveGM}
+                onCancel={() => setOpenLeaveConfirm(false)}
+            />
         </>
     );
 };

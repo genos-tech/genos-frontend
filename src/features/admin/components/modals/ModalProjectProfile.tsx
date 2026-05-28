@@ -3,6 +3,7 @@ import AssignmentIcon from "@mui/icons-material/Assignment";
 import CloseIcon from "@mui/icons-material/Close";
 import EditIcon from "@mui/icons-material/Edit";
 import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
+import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import SearchIcon from "@mui/icons-material/Search";
 import {
     Avatar,
@@ -28,6 +29,7 @@ import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
 import { FileSizeRejectionSnackbar } from "../../../../components/ui/feedback/FileSizeRejectionSnackbar";
 import { useFileSizeGuard } from "../../../../components/ui/feedback/useFileSizeGuard";
+import { ModalLeaveConfirm } from "../../../../components/ui/misc/ModalLeaveConfirm";
 import { ProfileModalStyles } from "../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
@@ -40,6 +42,7 @@ import { ProjectProfileProps, UserProps } from "../../../../types/admin";
 import { AllChatProps } from "../../../../types/chat";
 import { extractYYYYMMDD } from "../../../../utils/dateUtils";
 import { addChat } from "../../../chat/services/addChat";
+import { leaveProject } from "../../services/leaveProject";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
@@ -90,6 +93,41 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
     const [codeDraft, setCodeDraft] = useState("");
     const [codeError, setCodeError] = useState<string | null>(null);
     const [codeSaving, setCodeSaving] = useState(false);
+
+    // Leave-project flow. Owners can't leave (would orphan the project);
+    // ownership is loaded async (projectProfile may be null on first
+    // open) so the button is gated on both projectProfile presence and
+    // ownerUserId mismatch.
+    const [openLeaveConfirm, setOpenLeaveConfirm] = useState(false);
+    const isProjectOwner = !!projectProfile && myself.userId === projectProfile.ownerUserId;
+    const canShowLeave = !!projectProfile && !isProjectOwner;
+
+    const handleLeaveProject = async () => {
+        if (!myself.teamId) return false;
+        const ok = await leaveProject(accessToken, myself.teamId, pmChat.chatId, myself.userId);
+        if (!ok) return false;
+        // Drop the project chat from the in-memory list so the sidebar
+        // updates immediately. `funcSetAllChats()` re-reads from IDB on
+        // the next sync; the stale IDB row gets overwritten when the
+        // chat-list response no longer includes this project.
+        useCM.setAllChats((prev) =>
+            prev.filter((c) => !(c.chatType === pmChat.chatType && c.chatId === pmChat.chatId))
+        );
+        if (
+            useCM.currentMainChat?.chatType === pmChat.chatType &&
+            useCM.currentMainChat?.chatId === pmChat.chatId
+        ) {
+            useCM.setCurrentMainChat(undefined);
+        }
+        if (
+            useCM.currentSubChat?.chatType === pmChat.chatType &&
+            useCM.currentSubChat?.chatId === pmChat.chatId
+        ) {
+            useCM.setCurrentSubChat(undefined);
+        }
+        setOpenModalProjectProfile(false);
+        return true;
+    };
 
     const handleCodeSave = async () => {
         if (!projectProfile?.projectId) return;
@@ -897,6 +935,32 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                     </Box>
                                                 </FormControl>
                                             </Stack>
+
+                                            {canShowLeave && (
+                                                <Box sx={{ mt: 2 }}>
+                                                    <Button
+                                                        color="danger"
+                                                        variant="outlined"
+                                                        startDecorator={
+                                                            <LogoutRoundedIcon fontSize="small" />
+                                                        }
+                                                        onClick={() => setOpenLeaveConfirm(true)}
+                                                        sx={{
+                                                            borderRadius: "10px",
+                                                            borderColor: "rgba(232,121,195,0.4)",
+                                                            color: "rgba(232,121,195,0.9)",
+                                                            "&:hover": {
+                                                                background:
+                                                                    "rgba(232,121,195,0.08)",
+                                                                borderColor:
+                                                                    "rgba(232,121,195,0.6)",
+                                                            },
+                                                        }}
+                                                    >
+                                                        {t.common.actions.leave}
+                                                    </Button>
+                                                </Box>
+                                            )}
                                         </Stack>
                                     </Stack>
                                 </Stack>
@@ -905,6 +969,14 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                     </Box>
                 </ModalDialog>
             </Modal>
+            <ModalLeaveConfirm
+                open={openLeaveConfirm}
+                title={t.common.leaveConfirm.projectTitle}
+                description={t.common.leaveConfirm.projectDescription}
+                entityName={pmChat.chatName}
+                onConfirm={handleLeaveProject}
+                onCancel={() => setOpenLeaveConfirm(false)}
+            />
         </>
     );
 };
