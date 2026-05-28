@@ -427,7 +427,7 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
                 sx={{
                     width: "100%",
                     position: "relative",
-                    py: 0.5,
+                    py: 0.25,
                     pl: 2,
                     pr: 2,
                     cursor: "pointer",
