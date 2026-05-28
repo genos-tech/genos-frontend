@@ -276,4 +276,70 @@ export class ChatService {
         const result = await this.pmThreadRepo.delete(key);
         return result.success;
     }
+
+    // Wipe every row for a single GM/PM chat from IDB — used after the
+    // user leaves the group/project so the chat (and all its messages /
+    // threads) doesn't linger in cache. We delete the chat-list row,
+    // every message via the per-chat index, and every thread message
+    // the same way. DM is intentionally excluded — leaving a DM isn't
+    // a thing in this app. Failures are swallowed to keep leave UX
+    // smooth; worst case a stale row sits in IDB until the next sync.
+    async deleteGMChatData(chatId: number): Promise<void> {
+        try {
+            await this.gmChatRepo.delete(chatId);
+            const messages = await this.gmMessageRepo.getMessagesByChatId(2, chatId);
+            await Promise.all(
+                // Key shape mirrors `deleteGMMessage` above. The stored
+                // `messageIdWithChatId` field is typed optional, so we
+                // rebuild from `chatId-messageId` to stay type-safe.
+                messages.map((m) => this.gmMessageRepo.delete(`${chatId}-${m.messageId}`))
+            );
+            // Thread messages live in a separate store keyed by
+            // `${chatId}-${messageId}` (matches `deleteGMThreadMessage`).
+            // `getThreadMessages` takes a threadId, so sweep the thread
+            // ids surfaced by parent messages with replies — bounded by
+            // how many threads existed, which is small.
+            const threadIds = Array.from(
+                new Set(messages.filter((m) => (m.numReplies ?? 0) > 0).map((m) => m.messageId))
+            );
+            for (const threadId of threadIds) {
+                const tms = await this.gmThreadRepo.getThreadMessages(2, chatId, threadId);
+                await Promise.all(
+                    tms.map((tm) => this.gmThreadRepo.delete(`${chatId}-${tm.messageId}`))
+                );
+            }
+        } catch {
+            /* best-effort; stale rows will be overwritten by next sync */
+        }
+    }
+
+    async deletePMChatData(chatId: number): Promise<void> {
+        try {
+            await this.pmChatRepo.delete(chatId);
+            const messages = await this.pmMessageRepo.getMessagesByChatId(3, chatId);
+            await Promise.all(
+                // PM message keys are `${chatId}-${taskId}-${messageId}`
+                // when the message is task-linked, else `${chatId}-${messageId}`.
+                // Mirrors `deletePMMessage` above.
+                messages.map((m) =>
+                    this.pmMessageRepo.delete(
+                        m.taskId != null
+                            ? `${chatId}-${m.taskId}-${m.messageId}`
+                            : `${chatId}-${m.messageId}`
+                    )
+                )
+            );
+            const threadIds = Array.from(
+                new Set(messages.filter((m) => (m.numReplies ?? 0) > 0).map((m) => m.messageId))
+            );
+            for (const threadId of threadIds) {
+                const tms = await this.pmThreadRepo.getThreadMessages(3, chatId, threadId);
+                await Promise.all(
+                    tms.map((tm) => this.pmThreadRepo.delete(`${chatId}-${tm.messageId}`))
+                );
+            }
+        } catch {
+            /* best-effort; stale rows will be overwritten by next sync */
+        }
+    }
 }
