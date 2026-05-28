@@ -87,6 +87,54 @@ export const useProjectTaskManagement = ({
         }
     }, [useTM.currentPreviewTaskId, useTM.isNewTaskCreated, useTM.isTaskUpdatedBySomeone]);
 
+    // Freshness strategy. Two pieces working together:
+    //
+    //   (A) Window focus → refresh the project task list. The list call
+    //       is cheap and gives every row a fresh `updatedAt`. This is
+    //       the *trigger*: it makes `allTasks` authoritative.
+    //   (B) `allTasks`-watch effect below → when the open preview's row
+    //       in `allTasks` has a newer `updatedAt` than what
+    //       `currentPreviewTask` currently shows, re-run
+    //       `loadUpdatedTask`. `loadSpecificTask` then compares against
+    //       the IDB cache: cache up-to-date → instant hit, no API call;
+    //       cache stale → API refetch. Either way the preview lands on
+    //       fresh data.
+    //
+    // This catches everything the PM socket misses (PR-merge auto-close,
+    // teammate edits via the task UI, background jobs) without paying
+    // for a full task refetch every focus event.
+    useEffect(() => {
+        const onFocus = () => {
+            if (usePM.currentProject) {
+                void usePM.refreshProjectTasks(usePM.currentProject.projectId);
+            }
+        };
+        window.addEventListener("focus", onFocus);
+        return () => window.removeEventListener("focus", onFocus);
+    }, [usePM.currentProject]);
+
+    // (B) — re-run loadUpdatedTask whenever the row in `allTasks` for
+    // the currently-previewed task has a newer `updatedAt` than what
+    // the preview is showing. Triggered by focus refresh, by PM-channel
+    // updates that update `allTasks`, by initial app mount — anything
+    // that puts fresh `updatedAt`s in the table.
+    useEffect(() => {
+        if (!usePM.currentProject || useTM.currentPreviewTaskId === -1) return;
+        const row = useTM.allTasks.find(
+            (t) => t.id != null && String(t.id) === String(useTM.currentPreviewTaskId)
+        );
+        const rowUpdatedAt = row?.updatedAt ?? null;
+        const previewUpdatedAt = useTM.currentPreviewTask?.updatedAt ?? null;
+        if (!rowUpdatedAt) return;
+        if (previewUpdatedAt && String(rowUpdatedAt) <= String(previewUpdatedAt)) return;
+        void useTM.loadUpdatedTask(usePM.currentProject.projectId);
+    }, [
+        usePM.currentProject,
+        useTM.currentPreviewTaskId,
+        useTM.allTasks,
+        useTM.currentPreviewTask?.updatedAt,
+    ]);
+
     // Handle new task creation
     useEffect(() => {
         if (useTM.isNewTaskCreated === true) {

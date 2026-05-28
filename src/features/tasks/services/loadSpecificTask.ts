@@ -21,13 +21,27 @@ export const loadSpecificTask = async (
     projectId: number,
     taskId: number,
     accessToken: string | null,
-    options?: { forceRefresh?: boolean }
+    options?: { forceRefresh?: boolean; expectedMinUpdatedAt?: string | null }
 ) => {
     try {
         if (!options?.forceRefresh) {
             const cached = await getCachedFullTask(taskId);
             if (cached) {
-                return [scrubInFlightAttachments(cached)];
+                // Freshness guard: when the caller knows a baseline
+                // timestamp (typically the row's `updatedAt` from the
+                // project task list, which was just refreshed), trust
+                // the cache only when its `updatedAt` is at least that
+                // recent. A mismatch means a teammate (or a backend
+                // job like the PR-merge auto-closer) wrote a newer
+                // version we haven't observed — fall through to the
+                // API to pick it up.
+                const expected = options?.expectedMinUpdatedAt;
+                if (
+                    !expected ||
+                    (cached.updatedAt != null && String(cached.updatedAt) >= String(expected))
+                ) {
+                    return [scrubInFlightAttachments(cached)];
+                }
             }
         }
 

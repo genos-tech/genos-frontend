@@ -409,6 +409,15 @@ export const useTaskManagement = (
         setIsTaskVisibleInNote(false);
     };
 
+    // Look up the canonical `updatedAt` for a task from the (freshly
+    // refreshed) project task list. Returned as `string | null` so it
+    // can be passed straight through `loadSpecificTask`'s freshness
+    // guard — null disables the guard for tasks not yet in the list.
+    const expectedUpdatedAtFromList = (taskId: number): string | null => {
+        const row = allTasks.find((t) => t.id != null && String(t.id) === String(taskId));
+        return row?.updatedAt ?? null;
+    };
+
     // Load specific task
     const loadTask = async (projectId: number, taskId: number) => {
         try {
@@ -416,7 +425,8 @@ export const useTaskManagement = (
                 myself,
                 projectId,
                 taskId,
-                accessToken
+                accessToken,
+                { expectedMinUpdatedAt: expectedUpdatedAtFromList(taskId) }
             );
 
             if (loadedTask.length > 0) {
@@ -433,7 +443,8 @@ export const useTaskManagement = (
                 myself,
                 projectId,
                 currentPreviewTaskId,
-                accessToken
+                accessToken,
+                { expectedMinUpdatedAt: expectedUpdatedAtFromList(currentPreviewTaskId) }
             );
 
             // No need to update the current preview task when a new tag is created.
