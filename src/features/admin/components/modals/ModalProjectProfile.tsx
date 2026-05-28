@@ -32,6 +32,7 @@ import { useFileSizeGuard } from "../../../../components/ui/feedback/useFileSize
 import { ModalLeaveConfirm } from "../../../../components/ui/misc/ModalLeaveConfirm";
 import { ProfileModalStyles } from "../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../context/AuthContext";
+import { ChatService } from "../../../../db/services/chat.service";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
@@ -107,9 +108,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
         const ok = await leaveProject(accessToken, myself.teamId, pmChat.chatId, myself.userId);
         if (!ok) return false;
         // Drop the project chat from the in-memory list so the sidebar
-        // updates immediately. `funcSetAllChats()` re-reads from IDB on
-        // the next sync; the stale IDB row gets overwritten when the
-        // chat-list response no longer includes this project.
+        // updates immediately.
         useCM.setAllChats((prev) =>
             prev.filter((c) => !(c.chatType === pmChat.chatType && c.chatId === pmChat.chatId))
         );
@@ -125,6 +124,10 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
         ) {
             useCM.setCurrentSubChat(undefined);
         }
+        // Purge IDB so cached project data (messages, threads, chat row)
+        // doesn't keep rendering after leave. Best-effort — failures are
+        // swallowed inside the helper.
+        await new ChatService().deletePMChatData(pmChat.chatId);
         setOpenModalProjectProfile(false);
         return true;
     };

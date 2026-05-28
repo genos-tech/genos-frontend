@@ -31,6 +31,7 @@ import { useFileSizeGuard } from "../../../../components/ui/feedback/useFileSize
 import { ModalLeaveConfirm } from "../../../../components/ui/misc/ModalLeaveConfirm";
 import { ProfileModalStyles } from "../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../context/AuthContext";
+import { ChatService } from "../../../../db/services/chat.service";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
@@ -131,6 +132,10 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
         ) {
             useCM.setCurrentSubChat(undefined);
         }
+        // Purge IDB so cached group data (messages, threads, chat row)
+        // doesn't keep rendering after leave. Best-effort — failures
+        // are swallowed inside the helper.
+        await new ChatService().deleteGMChatData(gmChat.chatId);
         setOpenModalGMProfile(false);
         return true;
     };
