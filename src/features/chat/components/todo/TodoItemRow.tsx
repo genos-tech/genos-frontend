@@ -9,6 +9,7 @@ import { Box, Checkbox, IconButton, Input, Stack, Textarea } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
+import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
@@ -218,44 +219,47 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
                         onSelect={(categoryId) => onCategoryChange(item.itemId, categoryId)}
                     />
                 )}
-                <IconButton
-                    size="sm"
-                    sx={{ borderRadius: "6px" }}
-                    title={notesExpanded ? "Collapse notes" : "Expand notes"}
-                    variant="plain"
-                    onClick={() => {
-                        if (notesExpanded) flushNotesIfDirty();
-                        setNotesExpanded((v) => !v);
-                    }}
-                >
-                    {notesExpanded ? (
-                        <ExpandLessRoundedIcon sx={{ fontSize: 18 }} />
-                    ) : (
-                        <ExpandMoreRoundedIcon sx={{ fontSize: 18 }} />
-                    )}
-                </IconButton>
-                {/* "+ subitem" only on top-level rows. */}
-                {!isChild && onAddSubitem && (
+                <AppTooltip title={notesExpanded ? "Collapse notes" : "Expand notes"}>
                     <IconButton
                         size="sm"
                         sx={{ borderRadius: "6px" }}
-                        title="Add subitem"
                         variant="plain"
-                        onClick={() => setSubitemAddOpen((v) => !v)}
+                        onClick={() => {
+                            if (notesExpanded) flushNotesIfDirty();
+                            setNotesExpanded((v) => !v);
+                        }}
                     >
-                        <SubdirectoryArrowRightRoundedIcon sx={{ fontSize: 16 }} />
+                        {notesExpanded ? (
+                            <ExpandLessRoundedIcon sx={{ fontSize: 18 }} />
+                        ) : (
+                            <ExpandMoreRoundedIcon sx={{ fontSize: 18 }} />
+                        )}
                     </IconButton>
+                </AppTooltip>
+                {/* "+ subitem" only on top-level rows. */}
+                {!isChild && onAddSubitem && (
+                    <AppTooltip title="Add subitem">
+                        <IconButton
+                            size="sm"
+                            sx={{ borderRadius: "6px" }}
+                            variant="plain"
+                            onClick={() => setSubitemAddOpen((v) => !v)}
+                        >
+                            <SubdirectoryArrowRightRoundedIcon sx={{ fontSize: 16 }} />
+                        </IconButton>
+                    </AppTooltip>
                 )}
-                <IconButton
-                    color="danger"
-                    size="sm"
-                    sx={{ borderRadius: "6px" }}
-                    title="Delete"
-                    variant="plain"
-                    onClick={() => onDelete(item.itemId)}
-                >
-                    <DeleteOutlineRoundedIcon sx={{ fontSize: 16 }} />
-                </IconButton>
+                <AppTooltip title="Delete">
+                    <IconButton
+                        color="danger"
+                        size="sm"
+                        sx={{ borderRadius: "6px" }}
+                        variant="plain"
+                        onClick={() => onDelete(item.itemId)}
+                    >
+                        <DeleteOutlineRoundedIcon sx={{ fontSize: 16 }} />
+                    </IconButton>
+                </AppTooltip>
             </Stack>
             {notesExpanded && (
                 <Box

@@ -4,12 +4,13 @@ import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlin
 import FilterListRoundedIcon from "@mui/icons-material/FilterListRounded";
 import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
 import TipsAndUpdatesRoundedIcon from "@mui/icons-material/TipsAndUpdatesRounded";
-import { Box, Chip, IconButton, Stack, Tooltip, Typography, useColorScheme } from "@mui/joy";
+import { Box, Chip, IconButton, Stack, Typography, useColorScheme } from "@mui/joy";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
 
 import { TodoGroupCard } from "./components/todo/TodoGroupCard";
 
+import { AppTooltip } from "../../components/ui/AppTooltip";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
@@ -144,7 +145,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
 
                     {/* "New Todo" button — only when today's group is empty/absent. */}
                     {!todayExists && (
-                        <Tooltip title="Create today's todo list">
+                        <AppTooltip title="Create today's todo list">
                             <IconButton
                                 size="sm"
                                 sx={{
@@ -169,7 +170,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                 <AddIcon sx={{ fontSize: "18px" }} />
                                 Start today
                             </IconButton>
-                        </Tooltip>
+                        </AppTooltip>
                     )}
                 </Stack>
 
