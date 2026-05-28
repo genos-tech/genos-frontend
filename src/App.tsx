@@ -530,11 +530,33 @@ export const App = () => {
             }
 
             // Todos have no dedicated route — the ToDoPane lives inside
-            // the user's self-DM. Best-effort: open the workspace home;
-            // the user's pinned self-DM exposes the pane via the header
-            // toggle. Future work: a /workspace/todo route.
+            // the user's self-DM. Route to that DM and dispatch a
+            // `openTodoPane` event that chatHome consumes to flip the
+            // pane visible (it persists in localStorage too so a
+            // subsequent reload keeps the user on the pane).
             if (r.entity_type === "todo") {
-                navigate("/workspace");
+                const selfDm = useCM.allChats.find(
+                    (c) => c.chatType === 1 && c.dmPartnerUser?.userId === myself.userId
+                );
+                localStorage.setItem("isToDoVisible", "true");
+                window.dispatchEvent(new CustomEvent("openTodoPane"));
+                if (selfDm) {
+                    useCM.moveToSpecificChat(
+                        1,
+                        selfDm.chatId,
+                        0,
+                        false,
+                        false,
+                        useTM.setCurrentPreviewTaskId,
+                        usePM.setCurrentProject,
+                        undefined
+                    );
+                } else {
+                    // No self-DM cached locally yet — drop the user on
+                    // the workspace root; the chat list will populate
+                    // and the pane opens on first self-DM click.
+                    navigate("/workspace");
+                }
                 return;
             }
         },

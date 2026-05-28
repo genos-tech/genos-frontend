@@ -282,6 +282,18 @@ export const useTodoGroups = (
         if (fresh) setGroups(fresh);
     }, [accessToken, myself]);
 
+    // External invalidator: anything that mutates todos outside the
+    // hook (currently the Spotlight agent's create/update_todo_item
+    // tools) dispatches `window` event `todoChanged` so the pane
+    // catches up without a manual reload.
+    useEffect(() => {
+        const handler = () => {
+            void refresh();
+        };
+        window.addEventListener("todoChanged", handler);
+        return () => window.removeEventListener("todoChanged", handler);
+    }, [refresh]);
+
     return {
         groups,
         setGroups,
