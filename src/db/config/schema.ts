@@ -288,6 +288,128 @@ export const STORE_CONFIGS: Record<string, StoreConfig> = {
         name: STORES.SYNC_CHECKPOINTS,
         keyPath: KEY_PATHS.SYNC_CHECKPOINTS,
     },
+    // ---- v9: unified messaging stores ----
+    // All keyed by server UUID `id`. Channel-scoped reads use a
+    // by-channel index; the per-channel ordering uses the compound
+    // `(channelId, seq)` index. PM grouping is a render-time selector
+    // backed by `(channelId, metadata.taskId via the writer-projected
+    // taskKey)` — see the writer comment in `channelService.ts`.
+    [STORES.CHANNELS]: {
+        name: STORES.CHANNELS,
+        keyPath: KEY_PATHS.CHANNELS,
+        indexes: [
+            {
+                name: INDEX_NAMES.CHANNELS_BY_KIND,
+                keyPath: INDEX_KEY_PATHS.CHANNELS_BY_KIND,
+                unique: false,
+            },
+        ],
+    },
+    [STORES.CHANNEL_MEMBERS]: {
+        name: STORES.CHANNEL_MEMBERS,
+        keyPath: KEY_PATHS.CHANNEL_MEMBERS,
+        indexes: [
+            {
+                name: INDEX_NAMES.CHANNEL_MEMBERS_BY_CHANNEL,
+                keyPath: INDEX_KEY_PATHS.CHANNEL_MEMBERS_BY_CHANNEL,
+                unique: false,
+            },
+            {
+                name: INDEX_NAMES.CHANNEL_MEMBERS_BY_USER,
+                keyPath: INDEX_KEY_PATHS.CHANNEL_MEMBERS_BY_USER,
+                unique: false,
+            },
+        ],
+    },
+    [STORES.MESSAGES_V3]: {
+        name: STORES.MESSAGES_V3,
+        keyPath: KEY_PATHS.MESSAGES_V3,
+        indexes: [
+            {
+                name: INDEX_NAMES.MESSAGES_V3_BY_CHANNEL,
+                keyPath: INDEX_KEY_PATHS.MESSAGES_V3_BY_CHANNEL,
+                unique: false,
+            },
+            {
+                name: INDEX_NAMES.MESSAGES_V3_BY_CHANNEL_SEQ,
+                keyPath: [
+                    INDEX_KEY_PATHS.MESSAGES_V3_BY_CHANNEL_SEQ[0],
+                    INDEX_KEY_PATHS.MESSAGES_V3_BY_CHANNEL_SEQ[1],
+                ],
+                // unique: catches double-write under race; cf. the
+                // backend's `(channel, seq)` UNIQUE constraint.
+                unique: true,
+            },
+            {
+                name: INDEX_NAMES.MESSAGES_V3_BY_THREAD_ROOT,
+                keyPath: INDEX_KEY_PATHS.MESSAGES_V3_BY_THREAD_ROOT,
+                unique: false,
+            },
+            {
+                name: INDEX_NAMES.MESSAGES_V3_BY_CHANNEL_TASK,
+                keyPath: [
+                    INDEX_KEY_PATHS.MESSAGES_V3_BY_CHANNEL_TASK[0],
+                    INDEX_KEY_PATHS.MESSAGES_V3_BY_CHANNEL_TASK[1],
+                ],
+                unique: false,
+            },
+        ],
+    },
+    [STORES.MESSAGE_REACTIONS]: {
+        name: STORES.MESSAGE_REACTIONS,
+        keyPath: KEY_PATHS.MESSAGE_REACTIONS,
+        indexes: [
+            {
+                name: INDEX_NAMES.MESSAGE_REACTIONS_BY_MESSAGE,
+                keyPath: INDEX_KEY_PATHS.MESSAGE_REACTIONS_BY_MESSAGE,
+                unique: false,
+            },
+        ],
+    },
+    [STORES.READ_CURSORS]: {
+        name: STORES.READ_CURSORS,
+        keyPath: KEY_PATHS.READ_CURSORS,
+        indexes: [
+            {
+                name: INDEX_NAMES.READ_CURSORS_BY_CHANNEL,
+                keyPath: INDEX_KEY_PATHS.READ_CURSORS_BY_CHANNEL,
+                unique: false,
+            },
+        ],
+    },
+    [STORES.PINS]: {
+        name: STORES.PINS,
+        keyPath: KEY_PATHS.PINS,
+        indexes: [
+            {
+                name: INDEX_NAMES.PINS_BY_USER,
+                keyPath: INDEX_KEY_PATHS.PINS_BY_USER,
+                unique: false,
+            },
+        ],
+    },
+    [STORES.FLAGS]: {
+        name: STORES.FLAGS,
+        keyPath: KEY_PATHS.FLAGS,
+        indexes: [
+            {
+                name: INDEX_NAMES.FLAGS_BY_USER,
+                keyPath: INDEX_KEY_PATHS.FLAGS_BY_USER,
+                unique: false,
+            },
+        ],
+    },
+    [STORES.MESSAGE_ATTACHMENTS]: {
+        name: STORES.MESSAGE_ATTACHMENTS,
+        keyPath: KEY_PATHS.MESSAGE_ATTACHMENTS,
+        indexes: [
+            {
+                name: INDEX_NAMES.MESSAGE_ATTACHMENTS_BY_MESSAGE,
+                keyPath: INDEX_KEY_PATHS.MESSAGE_ATTACHMENTS_BY_MESSAGE,
+                unique: false,
+            },
+        ],
+    },
 };
 
 // Initialize database with proper schema.
