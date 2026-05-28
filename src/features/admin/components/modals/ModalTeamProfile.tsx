@@ -3,6 +3,7 @@ import AssignmentIcon from "@mui/icons-material/Assignment";
 import CloseIcon from "@mui/icons-material/Close";
 import EditIcon from "@mui/icons-material/Edit";
 import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
+import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import SearchIcon from "@mui/icons-material/Search";
 import {
     Avatar,
@@ -22,11 +23,13 @@ import {
     Typography,
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
+import { useNavigate } from "react-router-dom";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
 import { FileSizeRejectionSnackbar } from "../../../../components/ui/feedback/FileSizeRejectionSnackbar";
 import { useFileSizeGuard } from "../../../../components/ui/feedback/useFileSizeGuard";
+import { ModalLeaveConfirm } from "../../../../components/ui/misc/ModalLeaveConfirm";
 import { ProfileModalStyles } from "../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
@@ -35,6 +38,7 @@ import { UIStateManagementState } from "../../../../hooks/common/useUIStateManag
 import { fmt, useTranslation } from "../../../../i18n";
 import { TeamProfileProps, UserProps } from "../../../../types/admin";
 import { extractYYYYMMDD } from "../../../../utils/dateUtils";
+import { leaveTeam } from "../../services/leaveTeam";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
@@ -72,11 +76,33 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
     const { t } = useTranslation();
+    const navigate = useNavigate();
     const isDark = mode === "dark";
     const styles = isDark ? ProfileModalStyles.dark : ProfileModalStyles.light;
 
     // Member search state
     const [memberSearchQuery, setMemberSearchQuery] = useState("");
+
+    // Leave-team flow. Owners can't leave (would orphan the team), so
+    // the button is hidden when myself === teamOwnerId. After a
+    // successful leave we drop the team-scoped localStorage keys and
+    // route to /jointeam — same shape as the post-signup landing page,
+    // which lists the user's remaining teams plus create/join forms.
+    const [openLeaveConfirm, setOpenLeaveConfirm] = useState(false);
+    const isTeamOwner = myself.userId === teamProfile.teamOwnerId;
+
+    const handleLeaveTeam = async () => {
+        const ok = await leaveTeam(accessToken, teamProfile.teamId, myself.userId);
+        if (!ok) return false;
+        // The /jointeam screen reads teamId/teamName fresh and the
+        // workspace bootstrap re-fetches on team change, so clearing
+        // these two keys is enough to force a clean re-entry.
+        localStorage.removeItem("teamId");
+        localStorage.removeItem("teamName");
+        setOpenModalTeamProfile(false);
+        navigate("/jointeam");
+        return true;
+    };
 
     // Filter members based on search query
     const filteredMembers = useMemo(() => {
@@ -741,6 +767,38 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                     </Typography>
                                                 </Box>
                                             </FormControl>
+
+                                            {!isTeamOwner && (
+                                                <Box
+                                                    sx={{
+                                                        mt: 2,
+                                                        display: "flex",
+                                                        justifyContent: "flex-end",
+                                                    }}
+                                                >
+                                                    <Button
+                                                        color="danger"
+                                                        variant="outlined"
+                                                        startDecorator={
+                                                            <LogoutRoundedIcon fontSize="small" />
+                                                        }
+                                                        onClick={() => setOpenLeaveConfirm(true)}
+                                                        sx={{
+                                                            borderRadius: "10px",
+                                                            borderColor: "rgba(232,121,195,0.4)",
+                                                            color: "rgba(232,121,195,0.9)",
+                                                            "&:hover": {
+                                                                background:
+                                                                    "rgba(232,121,195,0.08)",
+                                                                borderColor:
+                                                                    "rgba(232,121,195,0.6)",
+                                                            },
+                                                        }}
+                                                    >
+                                                        {t.common.actions.leave}
+                                                    </Button>
+                                                </Box>
+                                            )}
                                         </Stack>
                                     </Stack>
                                 </Stack>
@@ -749,6 +807,14 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                     </Box>
                 </ModalDialog>
             </Modal>
+            <ModalLeaveConfirm
+                open={openLeaveConfirm}
+                title={t.common.leaveConfirm.teamTitle}
+                description={t.common.leaveConfirm.teamDescription}
+                entityName={teamProfile.teamName}
+                onConfirm={handleLeaveTeam}
+                onCancel={() => setOpenLeaveConfirm(false)}
+            />
         </>
     );
 };

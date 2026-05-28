@@ -499,6 +499,13 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
                             ),
                         };
                     });
+                    // Cross-feature invalidator: the chat-side ToDoPane
+                    // owns its own state and won't see these writes
+                    // unless we nudge it. useTodoGroups listens for
+                    // this event and refetches.
+                    if (tool_name === "create_todo_item" || tool_name === "update_todo_item") {
+                        window.dispatchEvent(new CustomEvent("todoChanged"));
+                    }
                 },
                 onToolError: ({
                     step,
