@@ -128,27 +128,7 @@ export const MessageListRenderer = ({
                 getTimeDiffSeconds(prev.tsSent, msg.tsSent) < simpleBubbleWindowSecs &&
                 (isThread || chat.chatType !== 3);
 
-            // Mirror BubbleUnderBar's chip-count rules so the reserved bottom
-            // padding stays in sync with whether a chip will actually render.
-            // PM bubbles surface task comments rather than thread replies;
-            // thread bubbles still use numReplies (the chip is gated off
-            // in-thread anyway).
-            let numRepliesWithoutFirstMessage: number;
-            if (isThread) {
-                numRepliesWithoutFirstMessage = (msg as MessageProps).numReplies;
-            } else if (chat.chatType === 3) {
-                numRepliesWithoutFirstMessage = (msg as MessageProps).taskCommentCount ?? 0;
-            } else {
-                numRepliesWithoutFirstMessage = (msg as MessageProps).numReplies - 1;
-            }
-
             let paddingBottom = 0.3;
-            const reactions = (msg as MessageProps).reactions;
-            if (reactions && reactions.length > 0) {
-                paddingBottom += 2.5;
-            } else if (chat.chatType === 3) {
-                paddingBottom += 1;
-            }
             if (i === messages.length - 1) paddingBottom += 3;
 
             out[i] = {
