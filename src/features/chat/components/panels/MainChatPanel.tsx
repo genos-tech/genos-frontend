@@ -6,8 +6,9 @@ import { ProjectManagementState } from "../../../../hooks/common/useProjectManag
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
+import { UseTodoGroupsState } from "../../../../hooks/useTodoGroups";
 import { UserProps } from "../../../../types/admin";
-import { MessageProps, ThreadMessageProps, ToDoFactProps } from "../../../../types/chat";
+import { MessageProps, ThreadMessageProps } from "../../../../types/chat";
 import { TaskCommentProps } from "../../../../types/tasks";
 import { ResizeHandle } from "../../../notes/common/components/ResizeHandle";
 import { MessagesPane } from "../../MainChatPane";
@@ -28,12 +29,9 @@ interface MainChatPanelProps {
     mainChatPanelSize: number;
     setMainChatPanelSize: (size: number) => void;
     incompleteTodoCount: number;
-    isExistingTodaysTodo: boolean;
     isToDoVisible: boolean;
     setIsToDoVisible: (value: boolean) => void;
-    todos: ToDoFactProps[];
-    setTodos: React.Dispatch<React.SetStateAction<ToDoFactProps[]>>;
-    setIsExistingTodaysTodo: (value: boolean) => void;
+    useTG: UseTodoGroupsState;
     socket: any;
     setMyself: (me: UserProps) => void;
     useUISM: UIStateManagementState;
@@ -50,14 +48,10 @@ export const MainChatPanel = ({
     mainChatPanelSize,
     setMainChatPanelSize,
     incompleteTodoCount,
-    isExistingTodaysTodo,
     isToDoVisible,
     setIsToDoVisible,
-    todos,
-    setTodos,
-    todoFromMessageBubble,
+    useTG,
     setTodoFromMessageBubble,
-    setIsExistingTodaysTodo,
     socket,
     setMyself,
     useUISM,
@@ -66,25 +60,22 @@ export const MainChatPanel = ({
         <Panel id={"4"} maxSize={80} minSize={30} order={4} onResize={setMainChatPanelSize}>
             {useCM.currentMainChat && useCM.currentMainChat.chatId !== -1 && (
                 <MessagesPane
-                    useCM={useCM}
                     currentMainChatId={currentMainChatId}
                     currentWindowHeight={currentWindowHeight}
                     incompleteTodoCount={incompleteTodoCount}
-                    isExistingTodaysTodo={isExistingTodaysTodo}
                     isToDoVisible={isToDoVisible}
                     myself={myself}
                     paneSizePCT={mainChatPanelSize}
-                    setIsExistingTodaysTodo={setIsExistingTodaysTodo}
                     setIsToDoVisible={setIsToDoVisible}
                     setMyself={setMyself}
-                    setTodos={setTodos}
-                    socket={socket}
-                    useTEM={useTEM}
-                    todos={todos}
-                    useUISM={useUISM}
-                    useTM={useTM}
-                    usePM={usePM}
                     setTodoFromMessageBubble={setTodoFromMessageBubble}
+                    socket={socket}
+                    useCM={useCM}
+                    usePM={usePM}
+                    useTEM={useTEM}
+                    useTG={useTG}
+                    useTM={useTM}
+                    useUISM={useUISM}
                 />
             )}
             {!(useCM.currentMainChat && useCM.currentMainChat.chatId !== -1) && (

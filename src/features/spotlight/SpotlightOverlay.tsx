@@ -33,6 +33,7 @@ import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import ReplayRoundedIcon from "@mui/icons-material/ReplayRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import StickyNote2RoundedIcon from "@mui/icons-material/StickyNote2Rounded";
+import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
 import { Box, Button, Chip, CircularProgress, IconButton, Sheet, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import ReactMarkdown, { defaultUrlTransform } from "react-markdown";
@@ -1608,6 +1609,13 @@ function _chipLabel(s: SpotlightResult, ts: SpotlightMessages): string {
     if (s.entity_type === "project" && s.project_id) {
         return fmt(ts.chip.projectPlain, { subtitle, sep });
     }
+    if (s.entity_type === "todo") {
+        // Parse the date out of entity_id (`todo:YYYY-MM-DD:item:<id>` or
+        // `todo:YYYY-MM-DD`) for a short subtitle.
+        const datePart = s.entity_id.match(/^todo:(\d{4}-\d{2}-\d{2})/)?.[1];
+        const base = datePart ? `Todo · ${datePart}` : "Todo";
+        return title ? `${base}${sep}${title}` : base;
+    }
     // Fallback to raw entity_id if specific ids are absent.
     return title ? `${s.entity_id}: ${title}` : s.entity_id;
 }
@@ -1617,6 +1625,7 @@ function _sourceIcon(entityType: string) {
     if (entityType === "chat") return <ChatBubbleOutlineRoundedIcon sx={{ fontSize: 13 }} />;
     if (entityType === "note") return <StickyNote2RoundedIcon sx={{ fontSize: 13 }} />;
     if (entityType === "project") return <FolderRoundedIcon sx={{ fontSize: 13 }} />;
+    if (entityType === "todo") return <TaskAltRoundedIcon sx={{ fontSize: 13 }} />;
     return undefined;
 }
 

@@ -528,6 +528,15 @@ export const App = () => {
                 navigate("/workspace/notes");
                 return;
             }
+
+            // Todos have no dedicated route — the ToDoPane lives inside
+            // the user's self-DM. Best-effort: open the workspace home;
+            // the user's pinned self-DM exposes the pane via the header
+            // toggle. Future work: a /workspace/todo route.
+            if (r.entity_type === "todo") {
+                navigate("/workspace");
+                return;
+            }
         },
         [spotlight, navigate, useCM, useTM, usePM]
     );

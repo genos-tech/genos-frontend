@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useMemo, useRef } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
 import FilterListRoundedIcon from "@mui/icons-material/FilterListRounded";
@@ -8,18 +8,16 @@ import { Box, Chip, IconButton, Stack, Tooltip, Typography, useColorScheme } fro
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
 
-import { TodoBubble } from "./components/bubbles/TodoBubble";
-import { createNewTodo } from "./services/createNewTodo";
-import { defaultTodoContent } from "./utils/defaults";
+import { TodoGroupCard } from "./components/todo/TodoGroupCard";
 
-import { ActionButtonStyles } from "../../components/ui/styles/commonStyle";
-import { useAuth } from "../../context/AuthContext";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
-import { fmt, useTranslation } from "../../i18n";
+import { UseTodoGroupsState } from "../../hooks/useTodoGroups";
+import { useTranslation } from "../../i18n";
 import { UserProps } from "../../types/admin";
-import { ToDoFactProps } from "../../types/chat";
+import { TodoGroupProps } from "../../types/chat";
+import { getLocalCurrentDate } from "../../utils/dateUtils";
 
 type ToDoPaneProps = {
     useCM: ChatManagementState;
@@ -28,68 +26,54 @@ type ToDoPaneProps = {
     setMyself: (value: UserProps) => void;
     socket: Socket | null;
     useUISM: UIStateManagementState;
-    todos: ToDoFactProps[];
-    setTodos: React.Dispatch<React.SetStateAction<ToDoFactProps[]>>;
-    isExistingTodaysTodo: boolean;
-    setIsExistingTodaysTodo: (value: boolean) => void;
+    useTG: UseTodoGroupsState;
     currentWindowHeight: number;
 };
+
 export const ToDoPane = (props: ToDoPaneProps) => {
-    const {
-        useCM,
-        myself,
-        useTEM,
-        setMyself,
-        socket,
-        useUISM,
-        todos,
-        setTodos,
-        isExistingTodaysTodo,
-        setIsExistingTodaysTodo,
-        currentWindowHeight,
-    } = props;
-    const { accessToken } = useAuth();
+    const { useCM, myself, useTEM, setMyself, socket, useUISM, useTG, currentWindowHeight } =
+        props;
     const { mode } = useColorScheme();
     const { t } = useTranslation();
     const isDark = mode === "dark";
-    const styles = isDark ? ActionButtonStyles.dark : ActionButtonStyles.light;
-    const [tmpAllTodos, setTmpAllTodos] = useState<ToDoFactProps[]>(todos);
-    const [tmpIncompleteTodos, setTmpIncompleteTodos] = useState<ToDoFactProps[]>(
-        todos.filter((todo) => !todo.isCompleted)
-    );
-
-    const handleCreateNewTodo = async () => {
-        const todoContent = await createNewTodo(
-            accessToken,
-            myself,
-            defaultTodoContent,
-            (error) => {
-                console.error(error);
-            }
-        );
-        if (todoContent) {
-            setTodos((prev) => [todoContent, ...prev]);
-            setIsExistingTodaysTodo(true);
-        }
-    };
-
-    useEffect(() => {
-        setTmpAllTodos(todos);
-        setTmpIncompleteTodos(todos.filter((todo) => !todo.isCompleted));
-    }, [todos]);
 
     const virtuosoRef = useRef<VirtuosoHandle | null>(null);
 
-    // Stats
-    const completedCount = tmpAllTodos.filter((t) => t.isCompleted).length;
-    const totalCount = tmpAllTodos.length;
+    const { groups, categories, incompleteCount, addItem, patchItem, removeItem, addCategory } =
+        useTG;
+
+    // Apply the existing "Incomplete only" filter chip — now operates
+    // on groups: a group is hidden if all items are completed (when the
+    // chip is on). Groups with zero items still show so the user can
+    // add to today.
+    const displayGroups = useMemo(() => {
+        if (!useCM.showOnlyInCompleteTodos) return groups;
+        return groups
+            .map((g) => ({ ...g, items: g.items.filter((i) => !i.isCompleted) }))
+            .filter((g) => g.items.length > 0 || g.localDate === getLocalCurrentDate());
+    }, [groups, useCM.showOnlyInCompleteTodos]);
+
+    const totalItems = useMemo(() => groups.reduce((a, g) => a + g.items.length, 0), [groups]);
+    const completedItems = totalItems - incompleteCount;
+
+    const handleCreateTodayGroup = async () => {
+        // Add an empty "Untitled todo" placeholder for today, opening the
+        // pane for editing. Matches the "+ New Todo" affordance.
+        await addItem({
+            localDate: getLocalCurrentDate(),
+            title: "Untitled todo",
+        });
+    };
+
+    const handleAddItem = async (localDate: string, title: string, categoryId: number | null) => {
+        await addItem({ localDate, title, categoryId });
+    };
+
+    const todayExists = groups.some((g) => g.localDate === getLocalCurrentDate());
 
     return (
         <Box
             sx={{
-                // Subtract the parent chat header height (MainChatPaneHeader / SubChatPaneHeader
-                // both have minHeight: 64px) so the pane fits inside its actual allocated space
-                // and the Pro Tip footer below sits at the real bottom of the visible area.
                 height: "calc(100dvh - 64px)",
                 display: "flex",
                 flexDirection: "column",
@@ -98,7 +82,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                     : "linear-gradient(180deg, rgba(245,247,250,0.8) 0%, transparent 100%)",
             }}
         >
-            {/* Header Section */}
+            {/* Header */}
             <Box
                 sx={{
                     px: 2.5,
@@ -109,9 +93,8 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                         : "1px solid rgba(0,0,0,0.06)",
                 }}
             >
-                {/* Title Row */}
-                <Stack direction="row" alignItems="center" justifyContent="space-between" mb={1.5}>
-                    <Stack direction="row" alignItems="center" spacing={1.5}>
+                <Stack alignItems="center" direction="row" justifyContent="space-between" mb={1.5}>
+                    <Stack alignItems="center" direction="row" spacing={1.5}>
                         <Box
                             sx={{
                                 width: 36,
@@ -126,10 +109,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                             }}
                         >
                             <TaskAltRoundedIcon
-                                sx={{
-                                    fontSize: 20,
-                                    color: isDark ? "#a78bfa" : "#7c3aed",
-                                }}
+                                sx={{ fontSize: 20, color: isDark ? "#a78bfa" : "#7c3aed" }}
                             />
                         </Box>
                         <Stack spacing={0}>
@@ -151,18 +131,14 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                     fontSize: "0.75rem",
                                 }}
                             >
-                                {fmt(t.chat.todoPane.completedOfTotal, { completed: completedCount, total: totalCount })}
+                                {completedItems} of {totalItems} items completed
                             </Typography>
                         </Stack>
                     </Stack>
 
-                    {/* Add Button */}
-                    {isExistingTodaysTodo ? (
-                        <Tooltip
-                            title={t.chat.todoPane.existingTodayTooltip}
-                            variant="outlined"
-                            sx={{ borderRadius: "8px" }}
-                        >
+                    {/* "New Todo" button — only when today's group is empty/absent. */}
+                    {!todayExists && (
+                        <Tooltip title="Create today's todo list">
                             <IconButton
                                 size="sm"
                                 sx={{
@@ -172,245 +148,92 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                     fontSize: "13px",
                                     fontWeight: 600,
                                     gap: 0.5,
-                                    background: "rgba(92, 92, 92, 0.12)",
-                                    color: "rgba(255, 255, 255, 0.5)",
-                                    // no hover action
-                                    "&:hover:not(:disabled)": {
-                                        background: "rgba(92, 92, 92, 0.12)",
-                                        color: "rgba(255, 255, 255, 0.5)",
+                                    background: isDark
+                                        ? "linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%)"
+                                        : "linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%)",
+                                    color: "#fff",
+                                    "&:hover": {
+                                        background: isDark
+                                            ? "linear-gradient(135deg, #6d28d9 0%, #7c3aed 100%)"
+                                            : "linear-gradient(135deg, #6d28d9 0%, #7c3aed 100%)",
                                     },
                                 }}
+                                onClick={handleCreateTodayGroup}
                             >
                                 <AddIcon sx={{ fontSize: "18px" }} />
-                                {t.chat.todoPane.newTodo}
+                                Start today
                             </IconButton>
                         </Tooltip>
-                    ) : (
-                        <IconButton
-                            disabled={isExistingTodaysTodo}
-                            size="sm"
-                            sx={{
-                                background: styles.createButtonBg,
-                                color: "#fff",
-                                borderRadius: "10px",
-                                px: 1.5,
-                                py: 0.75,
-                                fontSize: "13px",
-                                fontWeight: 600,
-                                gap: 0.5,
-                                boxShadow: isDark
-                                    ? "0 2px 8px rgba(124,58,237,0.4)"
-                                    : "0 2px 8px rgba(124,58,237,0.3)",
-                                transition: "all 0.2s ease",
-                                "&:hover": {
-                                    background: styles.createButtonHover,
-                                    transform: "translateY(-1px)",
-                                    boxShadow: isDark
-                                        ? "0 4px 12px rgba(124,58,237,0.5)"
-                                        : "0 4px 12px rgba(124,58,237,0.4)",
-                                },
-                            }}
-                            onClick={handleCreateNewTodo}
-                        >
-                            <AddIcon sx={{ fontSize: "18px" }} />
-                            {t.chat.todoPane.newTodo}
-                        </IconButton>
                     )}
                 </Stack>
 
-                {/* Filter Row */}
-                <Stack direction="row" alignItems="center" justifyContent="space-between">
-                    <Stack direction="row" alignItems="center" spacing={1}>
+                {/* Filter row */}
+                <Stack alignItems="center" direction="row" justifyContent="space-between">
+                    <Stack alignItems="center" direction="row" spacing={1}>
                         <Chip
                             size="sm"
+                            sx={{ cursor: "pointer", borderRadius: "6px" }}
                             variant={!useCM.showOnlyInCompleteTodos ? "solid" : "soft"}
                             onClick={() => useCM.setShowOnlyInCompleteTodos(false)}
-                            sx={{
-                                cursor: "pointer",
-                                fontWeight: 500,
-                                fontSize: "0.7rem",
-                                borderRadius: "6px",
-                                transition: "all 0.15s ease",
-                                background: !useCM.showOnlyInCompleteTodos
-                                    ? isDark
-                                        ? "rgba(255,255,255,0.12)"
-                                        : "rgba(0,0,0,0.08)"
-                                    : "transparent",
-                                color: !useCM.showOnlyInCompleteTodos
-                                    ? isDark
-                                        ? "rgba(255,255,255,0.9)"
-                                        : "white"
-                                    : isDark
-                                      ? "rgba(255,255,255,0.5)"
-                                      : "rgba(0,0,0,0.45)",
-                                "&:hover": {
-                                    background: isDark
-                                        ? "rgba(255,255,255,0.15)"
-                                        : "rgba(0,0,0,0.1)",
-                                },
-                            }}
                         >
-                            {fmt(t.chat.todoPane.allFilter, { count: totalCount })}
+                            All ({totalItems})
                         </Chip>
                         <Chip
                             size="sm"
+                            startDecorator={<FilterListRoundedIcon sx={{ fontSize: 14 }} />}
+                            sx={{ cursor: "pointer", borderRadius: "6px" }}
                             variant={useCM.showOnlyInCompleteTodos ? "solid" : "soft"}
                             onClick={() => useCM.setShowOnlyInCompleteTodos(true)}
-                            sx={{
-                                cursor: "pointer",
-                                fontWeight: 500,
-                                fontSize: "0.7rem",
-                                borderRadius: "6px",
-                                transition: "all 0.15s ease",
-                                background: useCM.showOnlyInCompleteTodos
-                                    ? isDark
-                                        ? "rgba(251,191,36,0.2)"
-                                        : "rgba(251,191,36,0.15)"
-                                    : "transparent",
-                                color: useCM.showOnlyInCompleteTodos
-                                    ? isDark
-                                        ? "#fcd34d"
-                                        : "rgba(255, 255, 32, 0.93)"
-                                    : isDark
-                                      ? "rgba(255,255,255,0.5)"
-                                      : "rgba(0,0,0,0.45)",
-                                "&:hover": {
-                                    background: useCM.showOnlyInCompleteTodos
-                                        ? isDark
-                                            ? "rgba(251,191,36,0.25)"
-                                            : "rgba(251,191,36,0.2)"
-                                        : isDark
-                                          ? "rgba(255,255,255,0.08)"
-                                          : "rgba(0,0,0,0.06)",
-                                },
-                            }}
-                            startDecorator={
-                                <FilterListRoundedIcon
-                                    sx={{
-                                        fontSize: 14,
-                                        opacity: useCM.showOnlyInCompleteTodos ? 1 : 0.6,
-                                    }}
-                                />
-                            }
                         >
-                            {fmt(t.chat.todoPane.incompleteFilter, { count: totalCount - completedCount })}
+                            Incomplete ({incompleteCount})
                         </Chip>
                     </Stack>
                 </Stack>
             </Box>
 
-            {/* Todo List */}
-            <Box sx={{ flex: 1, px: 0.5, py: 0.5, overflow: "hidden" }}>
-                {(() => {
-                    // Determine which todos to display based on filter
-                    const displayTodos = useCM.showOnlyInCompleteTodos
-                        ? tmpIncompleteTodos
-                        : tmpAllTodos;
-
-                    if (displayTodos.length > 0) {
-                        return (
-                            <Virtuoso
-                                ref={virtuosoRef}
-                                atBottomThreshold={128}
-                                atTopThreshold={64}
-                                className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
-                                initialTopMostItemIndex={0}
-                                totalCount={displayTodos.length}
-                                itemContent={(index) => {
-                                    const todo = displayTodos[index];
-                                    return (
-                                        <TodoBubble
-                                            key={`todo-bubble-${todo.todoId}`}
-                                            useCM={useCM}
-                                            currentIndex={index}
-                                            isExistingTodaysTodo={isExistingTodaysTodo}
-                                            myself={myself}
-                                            setMyself={setMyself}
-                                            setTodos={setTodos}
-                                            socket={socket}
-                                            useTEM={useTEM}
-                                            todo={todo}
-                                            useUISM={useUISM}
-                                        />
-                                    );
-                                }}
-                                style={{
-                                    height: useCM.isSubChatVisible
-                                        ? `${(currentWindowHeight - 250) * 0.43}px`
-                                        : `${currentWindowHeight - 250}px`,
-                                }}
-                            />
-                        );
-                    }
-
-                    // Empty State
-                    return (
-                        <Stack
-                            alignItems="center"
-                            justifyContent="center"
-                            spacing={2}
-                            sx={{
-                                height: "100%",
-                                py: 8,
-                            }}
-                        >
-                            <Box
-                                sx={{
-                                    width: 64,
-                                    height: 64,
-                                    borderRadius: "16px",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    background: isDark
-                                        ? "rgba(255,255,255,0.04)"
-                                        : "rgba(0,0,0,0.03)",
-                                }}
-                            >
-                                <CheckCircleOutlineRoundedIcon
-                                    sx={{
-                                        fontSize: 32,
-                                        color: isDark
-                                            ? "rgba(255,255,255,0.2)"
-                                            : "rgba(0,0,0,0.15)",
-                                    }}
+            {/* Group list */}
+            <Box sx={{ flex: 1, py: 0.5, overflow: "hidden" }}>
+                {displayGroups.length > 0 ? (
+                    <Virtuoso
+                        ref={virtuosoRef}
+                        className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
+                        totalCount={displayGroups.length}
+                        itemContent={(index) => {
+                            const group = displayGroups[index] as TodoGroupProps;
+                            return (
+                                <TodoGroupCard
+                                    key={`todo-group-${group.groupId}`}
+                                    categories={categories}
+                                    group={group}
+                                    myself={myself}
+                                    setMyself={setMyself}
+                                    socket={socket}
+                                    useCM={useCM}
+                                    useTEM={useTEM}
+                                    useUISM={useUISM}
+                                    onAddItem={handleAddItem}
+                                    onCategoryCreate={addCategory}
+                                    onDeleteItem={removeItem}
+                                    onPatchItem={patchItem}
                                 />
-                            </Box>
-                            <Stack spacing={0.5} alignItems="center">
-                                <Typography
-                                    level="title-sm"
-                                    sx={{
-                                        fontWeight: 600,
-                                        color: isDark
-                                            ? "rgba(255,255,255,0.6)"
-                                            : "rgba(0,0,0,0.55)",
-                                    }}
-                                >
-                                    {useCM.showOnlyInCompleteTodos
-                                        ? t.chat.todoPane.allCaughtUp
-                                        : t.chat.todoPane.noTodosYet}
-                                </Typography>
-                                <Typography
-                                    level="body-xs"
-                                    sx={{
-                                        color: isDark
-                                            ? "rgba(255,255,255,0.35)"
-                                            : "rgba(0,0,0,0.35)",
-                                        textAlign: "center",
-                                        maxWidth: 200,
-                                    }}
-                                >
-                                    {useCM.showOnlyInCompleteTodos
-                                        ? t.chat.todoPane.allCompletedSubtitle
-                                        : t.chat.todoPane.createFirstSubtitle}
-                                </Typography>
-                            </Stack>
-                        </Stack>
-                    );
-                })()}
+                            );
+                        }}
+                        style={{
+                            height: useCM.isSubChatVisible
+                                ? `${(currentWindowHeight - 250) * 0.43}px`
+                                : `${currentWindowHeight - 250}px`,
+                        }}
+                    />
+                ) : (
+                    <EmptyState
+                        isDark={isDark}
+                        showIncompleteOnly={useCM.showOnlyInCompleteTodos}
+                        onAddTodayClick={handleCreateTodayGroup}
+                    />
+                )}
             </Box>
 
-            {/* Pro Tip at the very bottom of the ToDoPane */}
+            {/* Pro Tip footer */}
             <Box
                 sx={{
                     mt: "auto",
@@ -439,10 +262,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                         }}
                     >
                         <TipsAndUpdatesRoundedIcon
-                            sx={{
-                                fontSize: 22,
-                                color: isDark ? "#a78bfa" : "#7c3aed",
-                            }}
+                            sx={{ fontSize: 22, color: isDark ? "#a78bfa" : "#7c3aed" }}
                         />
                     </Box>
                     <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -462,11 +282,82 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                 color: isDark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.55)",
                             }}
                         >
-                            {t.chat.todoPane.proTipBody}
+                            Ask the agent: "what's left today?" or "create a todo: …" — the
+                            Spotlight palette can read, add, and toggle your items directly.
                         </Typography>
                     </Box>
                 </Stack>
             </Box>
         </Box>
+    );
+};
+
+interface EmptyStateProps {
+    showIncompleteOnly: boolean;
+    onAddTodayClick: () => void;
+    isDark: boolean;
+}
+
+const EmptyState = ({ showIncompleteOnly, onAddTodayClick, isDark }: EmptyStateProps) => {
+    return (
+        <Stack
+            alignItems="center"
+            justifyContent="center"
+            spacing={2}
+            sx={{ height: "100%", py: 8 }}
+        >
+            <Box
+                sx={{
+                    width: 64,
+                    height: 64,
+                    borderRadius: "16px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    background: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)",
+                }}
+            >
+                <CheckCircleOutlineRoundedIcon
+                    sx={{
+                        fontSize: 32,
+                        color: isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.15)",
+                    }}
+                />
+            </Box>
+            <Stack alignItems="center" spacing={0.5}>
+                <Typography
+                    level="title-sm"
+                    sx={{
+                        fontWeight: 600,
+                        color: isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.55)",
+                    }}
+                >
+                    {showIncompleteOnly ? "All caught up!" : "No todos yet"}
+                </Typography>
+                <Typography
+                    level="body-xs"
+                    sx={{
+                        color: isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.35)",
+                        textAlign: "center",
+                        maxWidth: 240,
+                    }}
+                >
+                    {showIncompleteOnly
+                        ? "No incomplete items in your visible groups."
+                        : "Create today's group to get started."}
+                </Typography>
+                {!showIncompleteOnly && (
+                    <IconButton
+                        size="sm"
+                        sx={{ mt: 1, borderRadius: "8px", px: 1.5 }}
+                        variant="soft"
+                        onClick={onAddTodayClick}
+                    >
+                        <AddIcon sx={{ fontSize: 16, mr: 0.5 }} />
+                        Start today
+                    </IconButton>
+                )}
+            </Stack>
+        </Stack>
     );
 };

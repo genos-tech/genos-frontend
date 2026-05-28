@@ -1,11 +1,11 @@
 // Database constants
 export const DB_NAME = "genosData";
-// Bumped to 7: adds the `syncCheckpoints` store used for per-data-type
-// incremental ("delta") sync watermarks. The upgrade callback in
-// ./schema.ts is additive and idempotent, so existing v6 databases
-// re-enter the callback and emerge with the new store but otherwise
-// unchanged.
-export const DB_VERSION = 7;
+// Bumped to 8: the TODOS store's record shape changed from per-day
+// ToDoFact to per-day ToDoGroup, so the keyPath moved from "todoId"
+// to "groupId". The upgrade in ./schema.ts drops & recreates the
+// TODOS store when oldVersion < 8 — cached entries from the old shape
+// would otherwise be unreadable.
+export const DB_VERSION = 8;
 
 // LRU cap for the full-task cache (TASK_FULL store).
 export const MAX_CACHED_FULL_TASKS = 500;
@@ -60,7 +60,7 @@ export const KEY_PATHS = {
     PERSONAL_NOTES: "noteId",
     TASK_NOTES: "noteId",
     CHAT_NOTES: "noteId",
-    TODOS: "todoId",
+    TODOS: "groupId",
     SYNC_CHECKPOINTS: "key",
 } as const;
 
