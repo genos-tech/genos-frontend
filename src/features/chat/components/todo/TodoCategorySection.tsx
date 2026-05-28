@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
 import AddIcon from "@mui/icons-material/Add";
 import ExpandLessRoundedIcon from "@mui/icons-material/ExpandLessRounded";
@@ -21,6 +21,7 @@ interface TodoCategorySectionProps {
     items: TodoItemProps[];
     categories: TodoCategoryProps[];
     onAddItem: (title: string, categoryId: number | null) => Promise<void>;
+    onAddSubitem: (parentItemId: number, title: string) => Promise<void>;
     onPatchItem: (itemId: number, patch: UpdateTodoItemPatch) => void;
     onDeleteItem: (itemId: number) => void;
     onCategoryCreate: (name: string) => Promise<TodoCategoryProps | undefined>;
@@ -39,6 +40,7 @@ export const TodoCategorySection = (props: TodoCategorySectionProps) => {
         items,
         categories,
         onAddItem,
+        onAddSubitem,
         onPatchItem,
         onDeleteItem,
         onCategoryCreate,
@@ -54,6 +56,26 @@ export const TodoCategorySection = (props: TodoCategorySectionProps) => {
 
     const [collapsed, setCollapsed] = useState(false);
     const [newTitle, setNewTitle] = useState("");
+
+    // Group children under their parents so TodoItemRow renders the tree.
+    const { topLevelItems, subitemsByParent } = useMemo(() => {
+        const top: TodoItemProps[] = [];
+        const byParent = new Map<number, TodoItemProps[]>();
+        for (const i of items) {
+            if (i.parentItemId === null) {
+                top.push(i);
+            } else {
+                const arr = byParent.get(i.parentItemId) ?? [];
+                arr.push(i);
+                byParent.set(i.parentItemId, arr);
+            }
+        }
+        // Stable order: by sort_order then itemId for children too.
+        for (const arr of byParent.values()) {
+            arr.sort((a, b) => a.sortOrder - b.sortOrder || a.itemId - b.itemId);
+        }
+        return { topLevelItems: top, subitemsByParent: byParent };
+    }, [items]);
 
     const completed = items.filter((i) => i.isCompleted).length;
 
@@ -105,17 +127,19 @@ export const TodoCategorySection = (props: TodoCategorySectionProps) => {
 
             {!collapsed && (
                 <Box sx={{ pl: 1 }}>
-                    {items.map((item) => (
+                    {topLevelItems.map((item) => (
                         <TodoItemRow
                             key={item.itemId}
                             categories={categories}
                             item={item}
+                            subitems={subitemsByParent.get(item.itemId) ?? []}
                             myself={myself}
                             setMyself={setMyself}
                             socket={socket}
                             useCM={useCM}
                             useTEM={useTEM}
                             useUISM={useUISM}
+                            onAddSubitem={onAddSubitem}
                             onCategoryCreate={onCategoryCreate}
                             onDelete={onDeleteItem}
                             onCategoryChange={(itemId, newCategoryId) =>

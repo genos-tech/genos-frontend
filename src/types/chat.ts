@@ -340,10 +340,13 @@ export type TodoCategoryProps = {
 
 // One actionable todo item. `notes` is an optional BlockNote document
 // for rich-text detail; the `title` is the short label shown in the row.
+// `parentItemId` is non-null on child items in a one-level nesting:
+// children share the parent's tag and live inside the same group.
 export type TodoItemProps = {
     itemId: number;
     groupId: number;
     categoryId: number | null;
+    parentItemId: number | null;
     title: string;
     notes: PartialBlock[] | null;
     isCompleted: boolean;

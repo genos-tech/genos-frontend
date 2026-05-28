@@ -23,6 +23,7 @@ interface TodoGroupCardProps {
     group: TodoGroupProps;
     categories: TodoCategoryProps[];
     onAddItem: (localDate: string, title: string, categoryId: number | null) => Promise<void>;
+    onAddSubitem: (localDate: string, parentItemId: number, title: string) => Promise<void>;
     onPatchItem: (itemId: number, patch: UpdateTodoItemPatch) => void;
     onDeleteItem: (itemId: number) => void;
     onCategoryCreate: (name: string) => Promise<TodoCategoryProps | undefined>;
@@ -39,6 +40,7 @@ export const TodoGroupCard = (props: TodoGroupCardProps) => {
         group,
         categories,
         onAddItem,
+        onAddSubitem,
         onPatchItem,
         onDeleteItem,
         onCategoryCreate,
@@ -196,6 +198,9 @@ export const TodoGroupCard = (props: TodoGroupCardProps) => {
                         useTEM={useTEM}
                         useUISM={useUISM}
                         onAddItem={(t, cId) => onAddItem(group.localDate, t, cId)}
+                        onAddSubitem={(parentItemId, t) =>
+                            onAddSubitem(group.localDate, parentItemId, t)
+                        }
                         onCategoryCreate={onCategoryCreate}
                         onDeleteItem={onDeleteItem}
                         onPatchItem={onPatchItem}

@@ -69,6 +69,12 @@ export const ToDoPane = (props: ToDoPaneProps) => {
         await addItem({ localDate, title, categoryId });
     };
 
+    const handleAddSubitem = async (localDate: string, parentItemId: number, title: string) => {
+        // Server ignores categoryId on children — pass null and let it
+        // mirror the parent's tag.
+        await addItem({ localDate, title, categoryId: null, parentItemId });
+    };
+
     const todayExists = groups.some((g) => g.localDate === getLocalCurrentDate());
 
     return (
@@ -213,6 +219,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                     useTEM={useTEM}
                                     useUISM={useUISM}
                                     onAddItem={handleAddItem}
+                                    onAddSubitem={handleAddSubitem}
                                     onCategoryCreate={addCategory}
                                     onDeleteItem={removeItem}
                                     onPatchItem={patchItem}

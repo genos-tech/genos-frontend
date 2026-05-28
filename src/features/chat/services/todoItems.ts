@@ -10,6 +10,10 @@ export interface CreateTodoItemInput {
     title: string;
     notes?: PartialBlock[] | null;
     categoryId?: number | null;
+    // When set, the new item is created as a child of an existing
+    // item. The server ignores `categoryId` in this case — children
+    // inherit their parent's tag.
+    parentItemId?: number | null;
     sortOrder?: number;
 }
 
@@ -27,6 +31,7 @@ export const createTodoItem = async (
             title: input.title,
             notes: input.notes ?? null,
             category_id: input.categoryId ?? null,
+            parent_item_id: input.parentItemId ?? null,
             sort_order: input.sortOrder ?? 0,
         });
         return res.data as TodoItemProps;

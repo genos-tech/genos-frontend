@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
+import AddIcon from "@mui/icons-material/Add";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import ExpandLessRoundedIcon from "@mui/icons-material/ExpandLessRounded";
 import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
-import { Box, Checkbox, IconButton, Input, Stack } from "@mui/joy";
+import SubdirectoryArrowRightRoundedIcon from "@mui/icons-material/SubdirectoryArrowRightRounded";
+import { Box, Checkbox, IconButton, Input, Stack, Textarea } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
@@ -18,6 +20,9 @@ import { TodoNotesEditor } from "./TodoNotesEditor";
 interface TodoItemRowProps {
     item: TodoItemProps;
     categories: TodoCategoryProps[];
+    // Direct children of this row. Empty on rows that are themselves
+    // children (one-level nesting cap).
+    subitems?: TodoItemProps[];
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     useTEM: TeamManagementState;
@@ -30,6 +35,10 @@ interface TodoItemRowProps {
     onCategoryChange: (itemId: number, categoryId: number | null) => void;
     onDelete: (itemId: number) => void;
     onCategoryCreate: (name: string) => Promise<TodoCategoryProps | undefined>;
+    // Append a new child under this row's parent (top-level row's
+    // own item_id, or — when this row is itself a child rendered by
+    // its own parent — undefined).
+    onAddSubitem?: (parentItemId: number, title: string) => Promise<void>;
 }
 
 const NOTES_SAVE_INTERVAL_MS = 2000;
@@ -67,6 +76,7 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
     const {
         item,
         categories,
+        subitems = [],
         myself,
         setMyself,
         useTEM,
@@ -79,7 +89,10 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
         onCategoryChange,
         onDelete,
         onCategoryCreate,
+        onAddSubitem,
     } = props;
+
+    const isChild = item.parentItemId !== null;
 
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
@@ -93,6 +106,19 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
     );
     const [notesBody, setNotesBody] = useState<PartialBlock[]>(() => ensureNonEmpty(item.notes));
     const notesDirtyRef = useRef(false);
+
+    // Subitem add: a small inline input that the user opens with the
+    // "+ subitem" button. Only meaningful on top-level rows; children
+    // never render the affordance (one-level nesting cap).
+    const [subitemAddOpen, setSubitemAddOpen] = useState(false);
+    const [newSubitemTitle, setNewSubitemTitle] = useState("");
+    const handleAddSubitem = async () => {
+        const t = newSubitemTitle.trim();
+        if (!t || !onAddSubitem) return;
+        await onAddSubitem(item.itemId, t);
+        setNewSubitemTitle("");
+        // Keep the input open so the user can rapid-add several.
+    };
 
     // Sync local state when the item is refreshed from the server.
     useEffect(() => {
@@ -144,35 +170,54 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
                     size="sm"
                     onChange={(e) => onToggleComplete(item.itemId, e.target.checked)}
                 />
-                <Input
+                <Textarea
                     placeholder="Untitled todo"
                     size="sm"
                     value={title}
                     variant="plain"
+                    minRows={1}
+                    maxRows={6}
                     sx={{
                         flex: 1,
                         textDecoration: item.isCompleted ? "line-through" : undefined,
                         opacity: item.isCompleted ? 0.55 : 1,
                         fontSize: "0.9rem",
-                        "& input": { px: 0 },
+                        // Strip Textarea's default chrome so it sits flush
+                        // like the original single-line Input.
+                        background: "transparent",
+                        minHeight: 0,
+                        py: 0,
+                        "--Textarea-paddingBlock": "0px",
+                        "& textarea": { px: 0, resize: "none" },
                     }}
-                    onChange={(e) => setTitle(e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                        setTitle(e.target.value)
+                    }
                     onBlur={() => {
                         if (title !== item.title) onTitleCommit(item.itemId, title);
                     }}
-                    onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                            (e.target as HTMLInputElement).blur();
+                    onKeyDown={(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+                        // Enter inserts a newline by default (Textarea
+                        // behavior). Cmd/Ctrl+Enter commits without
+                        // leaving the field, which is consistent with
+                        // the chat editor's send shortcut.
+                        if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                            e.preventDefault();
+                            (e.target as HTMLTextAreaElement).blur();
                         }
                     }}
                 />
-                <CategoryPickerMenu
-                    categories={categories}
-                    currentCategoryId={item.categoryId}
-                    triggerLabel={currentCategory ? currentCategory.name : null}
-                    onCreate={onCategoryCreate}
-                    onSelect={(categoryId) => onCategoryChange(item.itemId, categoryId)}
-                />
+                {/* Children inherit the parent's tag — hide the picker
+                    on child rows to avoid implying otherwise. */}
+                {!isChild && (
+                    <CategoryPickerMenu
+                        categories={categories}
+                        currentCategoryId={item.categoryId}
+                        triggerLabel={currentCategory ? currentCategory.name : null}
+                        onCreate={onCategoryCreate}
+                        onSelect={(categoryId) => onCategoryChange(item.itemId, categoryId)}
+                    />
+                )}
                 <IconButton
                     size="sm"
                     sx={{ borderRadius: "6px" }}
@@ -189,6 +234,18 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
                         <ExpandMoreRoundedIcon sx={{ fontSize: 18 }} />
                     )}
                 </IconButton>
+                {/* "+ subitem" only on top-level rows. */}
+                {!isChild && onAddSubitem && (
+                    <IconButton
+                        size="sm"
+                        sx={{ borderRadius: "6px" }}
+                        title="Add subitem"
+                        variant="plain"
+                        onClick={() => setSubitemAddOpen((v) => !v)}
+                    >
+                        <SubdirectoryArrowRightRoundedIcon sx={{ fontSize: 16 }} />
+                    </IconButton>
+                )}
                 <IconButton
                     color="danger"
                     size="sm"
@@ -232,6 +289,82 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
                             notesDirtyRef.current = true;
                         }}
                     />
+                </Box>
+            )}
+
+            {/* Subitems: render children indented under the parent
+                row. Each child is a TodoItemRow with no subitems of its
+                own (one-level cap) and no add-subitem affordance. */}
+            {!isChild && (subitems.length > 0 || subitemAddOpen) && (
+                <Box
+                    sx={{
+                        pl: 3,
+                        ml: 1,
+                        borderLeft: "2px solid",
+                        borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)",
+                    }}
+                >
+                    {subitems.map((child) => (
+                        <TodoItemRow
+                            key={child.itemId}
+                            categories={categories}
+                            item={child}
+                            myself={myself}
+                            setMyself={setMyself}
+                            socket={socket}
+                            useCM={useCM}
+                            useTEM={useTEM}
+                            useUISM={useUISM}
+                            onCategoryCreate={onCategoryCreate}
+                            onDelete={onDelete}
+                            onCategoryChange={onCategoryChange}
+                            onNotesCommit={onNotesCommit}
+                            onTitleCommit={onTitleCommit}
+                            onToggleComplete={onToggleComplete}
+                        />
+                    ))}
+
+                    {subitemAddOpen && (
+                        <Stack
+                            alignItems="center"
+                            direction="row"
+                            spacing={1}
+                            sx={{ mt: 0.25, px: 1 }}
+                        >
+                            <Input
+                                autoFocus
+                                placeholder="+ Add subitem"
+                                size="sm"
+                                sx={{
+                                    flex: 1,
+                                    fontSize: "0.85rem",
+                                    "& input": { px: 0 },
+                                }}
+                                value={newSubitemTitle}
+                                variant="plain"
+                                onChange={(e) => setNewSubitemTitle(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                        e.preventDefault();
+                                        handleAddSubitem();
+                                    } else if (e.key === "Escape") {
+                                        setSubitemAddOpen(false);
+                                        setNewSubitemTitle("");
+                                    }
+                                }}
+                            />
+                            {newSubitemTitle.trim() && (
+                                <IconButton
+                                    size="sm"
+                                    sx={{ borderRadius: "6px" }}
+                                    variant="soft"
+                                    onClick={handleAddSubitem}
+                                >
+                                    <AddIcon sx={{ fontSize: 16 }} />
+                                </IconButton>
+                            )}
+                        </Stack>
+                    )}
                 </Box>
             )}
         </Box>
