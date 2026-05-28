@@ -3,62 +3,82 @@
  *
  * Replaces `useMessageManagement` + `useReadStatusManagement` +
  * `useScrollManagement` (which the chat surfaces wire individually
- * today). Returns the channel metadata, messages, the user's read
- * cursor, and the markRead helper.
+ * today). Subscribes to the `channelService` in-memory store via
+ * `useSyncExternalStore`; every socket event that mutates state
+ * triggers a re-render automatically.
  *
- * Reads from IDB (so the UI renders the cached snapshot instantly on
- * navigation) and subscribes to live updates via the socket router
- * — which `channelService.handle*` methods write to IDB, triggering
- * the live query refresh.
- *
- * Phase 4 scope: hook surface + return type only. The body wires
- * placeholder empty state for now — the live query plumbing arrives
- * in the same follow-up commit that fills in `channelService.handle*`
- * IDB writes. Keeping the surface stable from this commit means
- * consumers can be wired now and start receiving data the moment the
- * writes land.
+ * The hook is intentionally read-only on the channel slot: send /
+ * edit / delete / react flow through `channelService` mutation
+ * methods, which the consumer calls directly. Keeping the hook narrow
+ * to "give me the current state of this channel" matches the
+ * useSyncExternalStore pattern and avoids the legacy `useChatManagement`
+ * God-hook footprint.
  */
 
-import { useState } from "react";
+import { useCallback, useMemo, useSyncExternalStore } from "react";
 
 import { channelService } from "../../../services/channel/channelService";
 import type { Channel, Message, ReadCursor } from "../../../types/channel";
 
 export interface UseChannelResult {
     channel: Channel | null;
+    /** Non-thread messages (the main pane). Sorted by tsSent asc. */
     messages: Message[];
+    /** Thread replies. Use `useChannelThread(messageId)` for a per-thread
+     *  view; this is the full list, for callers that already filter. */
+    threadReplies: Message[];
+    /** Read cursor for the main timeline (thread cursors not exposed
+     *  here yet — wiring those once a thread UI consumer needs them). */
     readCursor: ReadCursor | null;
     /**
      * Advance the read cursor to `messageId`. Forward-only — calling
      * with a lower seq than the existing cursor is a server-side no-op.
+     * Routes through the socket so other tabs of the same user receive
+     * `read.advanced` and decrement their unread badge in real time.
      */
     markRead: (messageId: string) => Promise<void>;
-    /**
-     * True while the initial IDB read is in flight (or while the
-     * channel is being fetched from the server). False once the
-     * hook is ready to render.
-     */
+    /** True while there's no channel cached yet. Becomes false the
+     *  moment any channel row lands in the store — even if its message
+     *  list is still empty. */
     isLoading: boolean;
 }
 
-/* eslint-disable @typescript-eslint/no-unused-vars */
 export function useChannel(channelId: string): UseChannelResult {
-    // TODO: replace these stubs with live queries against the IDB
-    // CHANNELS / MESSAGES_V3 / READ_CURSORS stores. The stub shape
-    // exists so consumers can be wired now; data flows once the writes
-    // land in `channelService.handle*`.
-    const [channel] = useState<Channel | null>(null);
-    const [messages] = useState<Message[]>([]);
-    const [readCursor] = useState<ReadCursor | null>(null);
-    const [isLoading] = useState<boolean>(true);
+    const snapshot = useSyncExternalStore(
+        channelService.subscribe,
+        channelService.getSnapshot,
+        channelService.getSnapshot
+    );
 
-    const markRead = async (_messageId: string): Promise<void> => {
-        // TODO: route through the socket (`read.advance`) so the
-        // server broadcasts `read.advanced` to other tabs in the same
-        // user room. See plan §4.5.
-        void channelService;
+    const channel = snapshot.channels.get(channelId) ?? null;
+    const allMessages = snapshot.messagesByChannel.get(channelId) ?? [];
+    const readCursor = snapshot.cursorsByChannel.get(channelId) ?? null;
+
+    // Split top-level vs thread replies. Memoize so consumers that
+    // pass these as React.memo props don't re-render every snapshot.
+    const { messages, threadReplies } = useMemo(() => {
+        const top: Message[] = [];
+        const replies: Message[] = [];
+        for (const m of allMessages) {
+            if (m.isThreadReply) replies.push(m);
+            else top.push(m);
+        }
+        return { messages: top, threadReplies: replies };
+    }, [allMessages]);
+
+    const markRead = useCallback(
+        async (messageId: string) => {
+            await channelService.markRead(channelId, messageId);
+        },
+        [channelId]
+    );
+
+    return {
+        channel,
+        messages,
+        threadReplies,
+        readCursor,
+        markRead,
+        isLoading: channel == null,
     };
-
-    return { channel, messages, readCursor, markRead, isLoading };
 }
-/* eslint-enable @typescript-eslint/no-unused-vars */
