@@ -35,9 +35,7 @@ import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../context/AuthContext";
 import { useMentionGroupsContext } from "../../context/MentionGroupsContext";
-import { addChat } from "../../features/chat/services/addChat";
-import { addMessage } from "../../features/chat/services/addMessage";
-import { getFirstLine } from "../../features/chat/utils/common";
+import { sendChatMessage } from "../../features/chat/services/sendChatMessage";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
 import { useAnchorClickIntercept } from "../../hooks/common/useAnchorClickIntercept";
@@ -47,8 +45,7 @@ import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { useTranslation } from "../../i18n";
 import { UserProps } from "../../types/admin";
-import { AllChatProps, ChatProps, MessageProps } from "../../types/chat";
-import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
+import { ChatProps } from "../../types/chat";
 import { EmojiPicker } from "../ui/emoji/EmojiPicker";
 import { FileSizeRejectionSnackbar } from "../ui/feedback/FileSizeRejectionSnackbar";
 import { FileUploadOverlay, FileUploadStatusBadge } from "../ui/feedback/FileUploadProgress";
@@ -333,124 +330,16 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
 
     const sendingMessage = async () => {
         if (editor.document.length > 1 && socket !== null) {
-            // Set input text. `getFirstLine` already returns
-            // attachment-aware previews ("Image: …", "File: …", etc.)
-            // for non-text first blocks, so we don't need a separate
-            // image fallback here.
-            const content: any[] | any = editor.document;
-            const contentText: string = getFirstLine(content[0]);
-
-            socket.emit(
-                "message",
-                {
-                    methodType: "POST",
-                    message: editor.document,
-                    destCGName: chat.chatName,
-                    destCGId: chat.chatId,
-                    chatType: chat.chatType,
-                    dmPartnerUserId: chat.dmPartnerUser.userId,
-                    taskId: null,
-                    taskStatus: null,
-                    systemUserId: null,
-                    messageIdForPut: null,
-                },
-                async (ack: any) => {
-                    const updatedChat: ChatProps = {
-                        chatId: chat.chatId,
-                        chatName: chat.chatName,
-                        chatType: chat.chatType,
-                        systemUserId: chat.systemUserId,
-                        dmPartnerUser: chat.dmPartnerUser,
-                        lastReadMessageId: chat.lastReadMessageId + 1,
-                        messages: [
-                            ...chat.messages,
-                            {
-                                chatType: chat.chatType,
-                                messageIdWithChatId: `${chat.chatId}-${String(
-                                    Number(chat.latestMessage?.messageId) + 1
-                                )}`,
-                                chatId: chat.chatId,
-                                messageId: Number(chat.latestMessage?.messageId) + 1,
-                                content: editor.document,
-                                contentText: contentText,
-                                sender: myself,
-                                tsSent: getLocalCurrentTimestamp(),
-                                tsUpdated: getLocalCurrentTimestamp(),
-                                numReplies: 0,
-                                taskId: null,
-                                taskStatus: null,
-                            },
-                        ],
-                        latestMessage: {
-                            chatType: chat.chatType,
-                            systemUserId: chat.systemUserId,
-                            messageIdWithChatId: `${chat.chatId}-${String(
-                                Number(chat.latestMessage?.messageId) + 1
-                            )}`,
-                            chatId: chat.chatId,
-                            messageId: Number(chat.latestMessage?.messageId) + 1,
-                            content: editor.document,
-                            contentText: contentText,
-                            sender: myself,
-                            tsSent: getLocalCurrentTimestamp(),
-                            tsUpdated: getLocalCurrentTimestamp(),
-                            numReplies: 0,
-                            taskId: null,
-                            taskStatus: null,
-                        },
-                        latestMessageText: contentText,
-                        TSLastMessage: getLocalCurrentTimestamp(),
-                        profileImagePath: chat.profileImagePath,
-                    };
-                    setCurrentChat(updatedChat);
-
-                    const latestMessage: MessageProps = {
-                        chatType: chat.chatType,
-                        systemUserId: chat.systemUserId,
-                        messageIdWithChatId: `${chat.chatId}-${String(
-                            Number(chat.latestMessage?.messageId) + 1
-                        )}`,
-                        chatId: chat.chatId,
-                        messageId: Number(chat.latestMessage?.messageId) + 1,
-                        content: editor.document,
-                        contentText: contentText,
-                        sender: myself,
-                        tsSent: getLocalCurrentTimestamp(),
-                        tsUpdated: getLocalCurrentTimestamp(),
-                        numReplies: 0,
-                        taskId: null,
-                        taskStatus: null,
-                    };
-                    if (latestMessage) {
-                        const existingAllChat = useCM.allChats.find(
-                            (c) => c.chatId === chat.chatId && c.chatType === chat.chatType
-                        );
-                        const newChat: AllChatProps = {
-                            chatId: chat.chatId,
-                            chatName: chat.chatName,
-                            systemUserId: chat.systemUserId,
-                            chatType: chat.chatType,
-                            dmPartnerUser: chat.dmPartnerUser,
-                            lastReadMessageId:
-                                chat.messages[chat.messages.length - 1].messageId + 1,
-                            latestMessage: latestMessage,
-                            latestMessageText: contentText,
-                            TSLastMessage: getLocalCurrentTimestamp(),
-                            profileImagePath: chat.profileImagePath,
-                            mdmMembers: existingAllChat?.mdmMembers,
-                        };
-
-                        if (newChat) {
-                            await addMessage(latestMessage, newChat.chatType);
-                            await addChat(newChat, newChat.chatType);
-                            await useCM.funcSetAllChats();
-
-                            editor.replaceBlocks(editor.document, []);
-                            clearDraft();
-                        }
-                    }
-                }
-            );
+            await sendChatMessage({
+                socket,
+                chat,
+                content: editor.document,
+                myself,
+                useCM,
+                setCurrentChat,
+            });
+            editor.replaceBlocks(editor.document, []);
+            clearDraft();
         }
     };
 

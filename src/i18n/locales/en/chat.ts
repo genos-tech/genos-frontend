@@ -138,13 +138,9 @@ export const chat = {
         openNoteTooltip: "Open Note linked to this thread",
         online: "Online",
         offline: "Offline",
-        quickMeetTooltip: "Start a Quick Meet — adds a 1h event and shares the link",
+        quickMeetTooltip: "Start a Quick Meet — copy a link and optionally share it",
         quickMeetEventTitle: "Quick Meet",
         quickMeetGenerating: "Generating Meet link…",
-        quickMeetSuccess:
-            "Meet link shared · copied to clipboard · 1h event added to your calendar",
-        quickMeetUndo: "Undo",
-        quickMeetUndone: "Quick Meet event removed from your calendar.",
         quickMeetFailed: "Couldn't generate a Meet link. Try again.",
         quickMeetNotConnected: "Connect Google Calendar in Integrations to use Quick Meet.",
         quickMeetScopeMissing:
@@ -184,6 +180,12 @@ export const chat = {
             delete: "Delete",
             errorDeleteFromThread: "Failed to delete message from thread",
             errorDeleteFromChat: "Failed to delete message from chat",
+        },
+        shareMeetLink: {
+            title: "Share Meet Link?",
+            description: "The link is already copied to your clipboard.",
+            cancel: "Cancel",
+            share: "Share in chat",
         },
         createGM: {
             title: "Create New Group Message",
