@@ -43,8 +43,9 @@ import { isMac } from "../../../../utils/platform";
 import { createEvent, deleteEvent, getEvent } from "../../../integrations/services/calendar";
 import { redirectToOAuthConnect } from "../../../integrations/services/oauth";
 import { useMarkAllChatActivityRead } from "../../hooks/useMarkAllChatActivityRead";
-import { sendTextMessage } from "../../services/sendTextMessage";
+import { sendChatMessage } from "../../services/sendChatMessage";
 import { ModalAddMembers } from "../modals/ModalAddMembers";
+import { ModalShareMeetLink } from "../modals/ModalShareMeetLink";
 import { HeaderUserName } from "./HeaderUserName";
 
 type MainChatPaneHeaderProps = {
@@ -138,19 +139,21 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
     // routes), in which case the IconButton renders nothing below.
     const calendarModal = useCalendarModal();
 
-    // Quick Meet flow state. `lastQuickMeetEventId` carries the Google
-    // event id created by the most recent click so the snackbar's Undo
-    // can delete it on the user's behalf. Cleared on snackbar dismiss.
+    // Quick Meet flow state. The throwaway calendar event is deleted
+    // immediately after the Meet link is minted — Google keeps the
+    // meeting space valid for hours after the linking event is gone,
+    // so the calendar stays clean.
     const { accessToken } = useAuth();
     const [quickMeetLoading, setQuickMeetLoading] = useState(false);
-    // `needsGrant` swaps the snackbar's action button from Undo to a
+    // `needsGrant` swaps the snackbar's action button to a
     // "Grant access" CTA that re-runs the connect-intent OAuth flow.
     const [quickMeetSnackbar, setQuickMeetSnackbar] = useState<{
-        kind: "success" | "error" | "info";
+        kind: "error" | "info";
         text: string;
         needsGrant?: boolean;
     } | null>(null);
-    const [lastQuickMeetEventId, setLastQuickMeetEventId] = useState<string | null>(null);
+    // Link held for the share-confirm modal; null when modal is closed.
+    const [shareMeetLink, setShareMeetLink] = useState<string | null>(null);
 
     const handleQuickMeet = async () => {
         if (!accessToken || quickMeetLoading) return;
@@ -159,29 +162,14 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
 
         const now = new Date();
         const inOneHour = new Date(now.getTime() + 60 * 60 * 1000);
-        // In a DM with a real Gmail address, invite the partner so
-        // the event lands on their calendar too — solo Quick Meets
-        // weren't useful. Other chat types stay solo because we
-        // don't easily have per-member emails on the frontend yet.
-        const partnerEmail = chat.chatType === 1 ? chat.dmPartnerUser?.userEmail : undefined;
-        const attendees =
-            partnerEmail && typeof partnerEmail === "string"
-                ? [{ email: partnerEmail, displayName: chat.dmPartnerUser.userName }]
-                : undefined;
         const event = await createEvent(
             accessToken,
             {
                 add_meet: true,
-                ...(attendees ? { attendees } : {}),
                 end: { dateTime: inOneHour.toISOString() },
                 start: { dateTime: now.toISOString() },
                 summary: t.chat.headers.quickMeetEventTitle,
             },
-            // Generic error text path — the discriminator-based
-            // handling below decides scope-missing vs not-connected
-            // vs generic; this callback only fires on "other" axios
-            // errors and surfaces whatever Google / the backend
-            // returned in the snackbar.
             (err) => {
                 setQuickMeetSnackbar({
                     kind: "error",
@@ -189,9 +177,6 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                 });
             }
         );
-        // Domain-error discriminators set their own snackbar with
-        // the right CTA. `needsGrant` swaps Undo for a Grant-access
-        // button in the snackbar footer.
         if (event === "google_not_connected") {
             setQuickMeetLoading(false);
             setQuickMeetSnackbar({
@@ -216,8 +201,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
 
         // hangoutLink may not be present on the create response;
         // conferenceData.createRequest.status.statusCode can be
-        // "pending". Poll up to ~5 s for the link to appear before
-        // giving up. Cheap; Google usually populates in <1 s.
+        // "pending". Poll up to ~5 s for the link to appear.
         let link = event.hangoutLink;
         for (let i = 0; !link && i < 5; i++) {
             await new Promise((r) => setTimeout(r, 1000));
@@ -228,33 +212,52 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
         }
         setQuickMeetLoading(false);
 
+        // Always clean up the throwaway event; the Meet space survives.
+        void deleteEvent(accessToken, event.id);
+
         if (!link) {
             setQuickMeetSnackbar({ kind: "error", text: t.chat.headers.quickMeetFailed });
             return;
         }
 
-        sendTextMessage(socket, chat, link);
         // Best-effort clipboard copy so the user can paste the link
-        // elsewhere without scrolling for the chat message. Fails
-        // silently under non-secure origin / iframe sandboxes; the
-        // snackbar text covers both cases since the link is already
-        // posted to chat regardless.
+        // elsewhere even if they cancel the share modal. Fails silently
+        // under non-secure origin / iframe sandboxes.
         try {
             await navigator.clipboard.writeText(link);
         } catch {
-            /* clipboard not available — link is still in chat */
+            /* clipboard not available — link still shown in modal */
         }
-        setLastQuickMeetEventId(event.id);
-        setQuickMeetSnackbar({ kind: "success", text: t.chat.headers.quickMeetSuccess });
+
+        setShareMeetLink(link);
     };
 
-    const handleQuickMeetUndo = async () => {
-        const id = lastQuickMeetEventId;
-        setQuickMeetSnackbar(null);
-        setLastQuickMeetEventId(null);
-        if (!id || !accessToken) return;
-        await deleteEvent(accessToken, id);
-        setQuickMeetSnackbar({ kind: "info", text: t.chat.headers.quickMeetUndone });
+    const handleShareMeetLink = async () => {
+        const link = shareMeetLink;
+        setShareMeetLink(null);
+        if (!link || !socket) return;
+        // Mirror the BlockNote document shape `bnChatEditor` emits — a
+        // paragraph block with the link, plus a trailing empty paragraph.
+        // The trailing block is mandatory: `BnChatPreview` does
+        // `content.slice(0, -1)` when seeding its preview editor.
+        const content = [
+            {
+                type: "paragraph",
+                content: [{ type: "text", text: link, styles: {} }],
+            },
+            {
+                type: "paragraph",
+                content: [],
+            },
+        ];
+        await sendChatMessage({
+            socket,
+            chat,
+            content,
+            myself,
+            useCM,
+            setCurrentChat: useCM.setCurrentMainChat,
+        });
     };
 
     const handleQuickMeetGrant = () => {
@@ -265,6 +268,11 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
         // scopes in place.
         void redirectToOAuthConnect("google", accessToken, undefined, () => undefined);
     };
+
+    // Quick Meet is meaningless in self-DMs (no one to meet) and
+    // disabled in PM (PM messages must be system-user + task-linked;
+    // the share path can't post there). Surfaced in DM/GM/MDM.
+    const showQuickMeet = chat.chatType !== 3 && !isYou;
 
     const { markAllAsRead } = useMarkAllChatActivityRead({ myself, useCM });
 
@@ -377,22 +385,21 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                                 </MenuItem>
                             )}
 
-                            <MenuItem
-                                disabled={quickMeetLoading}
-                                onClick={handleQuickMeet}
-                            >
-                                {quickMeetLoading ? (
-                                    <CircularProgress
-                                        size="sm"
-                                        sx={{ "--CircularProgress-size": "18px" }}
-                                    />
-                                ) : (
-                                    <VideoCameraFrontRoundedIcon
-                                        sx={{ fontSize: 18, color: styles.accentColor }}
-                                    />
-                                )}
-                                {t.chat.headers.quickMeetTooltip}
-                            </MenuItem>
+                            {showQuickMeet && (
+                                <MenuItem disabled={quickMeetLoading} onClick={handleQuickMeet}>
+                                    {quickMeetLoading ? (
+                                        <CircularProgress
+                                            size="sm"
+                                            sx={{ "--CircularProgress-size": "18px" }}
+                                        />
+                                    ) : (
+                                        <VideoCameraFrontRoundedIcon
+                                            sx={{ fontSize: 18, color: styles.accentColor }}
+                                        />
+                                    )}
+                                    {t.chat.headers.quickMeetTooltip}
+                                </MenuItem>
+                            )}
 
                             {chat.chatType === 3 && (
                                 <MenuItem
@@ -415,9 +422,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                             )}
 
                             {isYou === true && (
-                                <MenuItem
-                                    onClick={() => setIsToDoVisible(!isToDoVisible)}
-                                >
+                                <MenuItem onClick={() => setIsToDoVisible(!isToDoVisible)}>
                                     {isToDoVisible ? (
                                         <QuestionAnswerRoundedIcon
                                             sx={{ fontSize: 18, color: styles.accentColor }}
@@ -483,16 +488,16 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                         setMyself={setMyself}
                     />
                 )}
+                <ModalShareMeetLink
+                    open={shareMeetLink !== null}
+                    link={shareMeetLink}
+                    onShare={handleShareMeetLink}
+                    onCancel={() => setShareMeetLink(null)}
+                />
                 <Snackbar
                     anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-                    autoHideDuration={quickMeetSnackbar?.kind === "success" ? 8000 : 4000}
-                    color={
-                        quickMeetSnackbar?.kind === "error"
-                            ? "danger"
-                            : quickMeetSnackbar?.kind === "success"
-                              ? "success"
-                              : "neutral"
-                    }
+                    autoHideDuration={4000}
+                    color={quickMeetSnackbar?.kind === "error" ? "danger" : "neutral"}
                     open={quickMeetSnackbar !== null}
                     variant="soft"
                     endDecorator={
@@ -500,16 +505,11 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                             <Button size="sm" variant="solid" onClick={handleQuickMeetGrant}>
                                 {t.chat.headers.quickMeetGrant}
                             </Button>
-                        ) : quickMeetSnackbar?.kind === "success" && lastQuickMeetEventId ? (
-                            <Button size="sm" variant="outlined" onClick={handleQuickMeetUndo}>
-                                {t.chat.headers.quickMeetUndo}
-                            </Button>
                         ) : null
                     }
                     onClose={(_e, reason) => {
                         if (reason === "clickaway") return;
                         setQuickMeetSnackbar(null);
-                        setLastQuickMeetEventId(null);
                     }}
                 >
                     {quickMeetSnackbar?.text}
@@ -572,33 +572,35 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                     </Tooltip>
                 )}
 
-                {/* Quick Meet — instant Meet link, posted to current chat */}
-                <Tooltip
-                    size="sm"
-                    title={t.chat.headers.quickMeetTooltip}
-                    variant="outlined"
-                    sx={{ borderRadius: "8px" }}
-                >
-                    <IconButton
+                {/* Quick Meet — mint a Meet link, copy to clipboard, offer to share */}
+                {showQuickMeet && (
+                    <Tooltip
                         size="sm"
-                        variant="plain"
-                        disabled={quickMeetLoading}
-                        sx={actionButtonStyle}
-                        onClick={handleQuickMeet}
-                        aria-label={t.chat.headers.quickMeetTooltip}
+                        title={t.chat.headers.quickMeetTooltip}
+                        variant="outlined"
+                        sx={{ borderRadius: "8px" }}
                     >
-                        {quickMeetLoading ? (
-                            <CircularProgress
-                                size="sm"
-                                sx={{ "--CircularProgress-size": "18px" }}
-                            />
-                        ) : (
-                            <VideoCameraFrontRoundedIcon
-                                sx={{ fontSize: 18, color: styles.accentColor }}
-                            />
-                        )}
-                    </IconButton>
-                </Tooltip>
+                        <IconButton
+                            size="sm"
+                            variant="plain"
+                            disabled={quickMeetLoading}
+                            sx={actionButtonStyle}
+                            onClick={handleQuickMeet}
+                            aria-label={t.chat.headers.quickMeetTooltip}
+                        >
+                            {quickMeetLoading ? (
+                                <CircularProgress
+                                    size="sm"
+                                    sx={{ "--CircularProgress-size": "18px" }}
+                                />
+                            ) : (
+                                <VideoCameraFrontRoundedIcon
+                                    sx={{ fontSize: 18, color: styles.accentColor }}
+                                />
+                            )}
+                        </IconButton>
+                    </Tooltip>
+                )}
 
                 {/* Create Task Button */}
                 {chat.chatType === 3 && (
@@ -793,20 +795,24 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                 />
             )}
 
-            {/* Quick Meet feedback snackbar — surfaces transparently
-                that a 1h calendar event was created, and offers Undo
-                (deletes the event but leaves the posted chat message
-                in place). */}
+            {/* Share-Meet-Link confirm modal — opens once the link is
+                in the clipboard. Approve sends the link to chat using
+                the same optimistic-update path as the BlockNote editor;
+                Cancel just closes and the user keeps the clipboard. */}
+            <ModalShareMeetLink
+                open={shareMeetLink !== null}
+                link={shareMeetLink}
+                onShare={handleShareMeetLink}
+                onCancel={() => setShareMeetLink(null)}
+            />
+
+            {/* Quick Meet error snackbar — only renders on failure /
+                missing-scope / not-connected paths. The success path
+                opens the share modal instead. */}
             <Snackbar
                 anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-                autoHideDuration={quickMeetSnackbar?.kind === "success" ? 8000 : 4000}
-                color={
-                    quickMeetSnackbar?.kind === "error"
-                        ? "danger"
-                        : quickMeetSnackbar?.kind === "success"
-                          ? "success"
-                          : "neutral"
-                }
+                autoHideDuration={4000}
+                color={quickMeetSnackbar?.kind === "error" ? "danger" : "neutral"}
                 open={quickMeetSnackbar !== null}
                 variant="soft"
                 endDecorator={
@@ -814,16 +820,11 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                         <Button size="sm" variant="solid" onClick={handleQuickMeetGrant}>
                             {t.chat.headers.quickMeetGrant}
                         </Button>
-                    ) : quickMeetSnackbar?.kind === "success" && lastQuickMeetEventId ? (
-                        <Button size="sm" variant="outlined" onClick={handleQuickMeetUndo}>
-                            {t.chat.headers.quickMeetUndo}
-                        </Button>
                     ) : null
                 }
                 onClose={(_e, reason) => {
                     if (reason === "clickaway") return;
                     setQuickMeetSnackbar(null);
-                    setLastQuickMeetEventId(null);
                 }}
             >
                 {quickMeetSnackbar?.text}
