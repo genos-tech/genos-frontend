@@ -205,6 +205,16 @@ export const ChatHome = (props: ChatHomeProps) => {
         }
     }, [useTM.currentPreviewTask]);
 
+    // Spotlight source-chip → todo flow: App.tsx dispatches
+    // `openTodoPane` after it navigates to the self-DM. We flip the
+    // local visibility flag (which the toggle button also drives) so
+    // the pane is open by the time the navigation lands.
+    useEffect(() => {
+        const handler = () => setIsToDoVisible(true);
+        window.addEventListener("openTodoPane", handler);
+        return () => window.removeEventListener("openTodoPane", handler);
+    }, []);
+
     const ls = mode === "dark" ? LayoutStyles.dark : LayoutStyles.light;
 
     return (
