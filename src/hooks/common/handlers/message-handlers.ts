@@ -170,9 +170,15 @@ export const handleRegularMessage = async (
     const newChatMessage: MessageProps = {
         chatType: newMessage.chatType,
         systemUserId: newMessage.systemUserId,
+        // PM is keyed by task (one bubble per task — a task update PUTs the
+        // same row). Normalize null/undefined taskId to -1 so the FE key
+        // matches the backend serializer in pm_delta_views.py; otherwise a
+        // socket-cached row at "{chatId}-null" would not collide with the
+        // delta-fetched row at "{chatId}--1" and the bubble would duplicate
+        // after the next reload.
         messageIdWithChatId:
             newMessage.chatType === 3
-                ? `${newMessage.chatId}-${newMessage.taskId}`
+                ? `${newMessage.chatId}-${newMessage.taskId ?? -1}`
                 : `${newMessage.chatId}-${newMessage.messageId}`,
         chatId: newMessage.chatId,
         messageId: newMessage.messageId,
