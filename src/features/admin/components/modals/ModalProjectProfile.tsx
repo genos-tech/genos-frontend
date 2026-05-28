@@ -682,101 +682,96 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                 >
                                                     {t.admin.projectProfile.owner}
                                                 </FormLabel>
+                                                {/* Name + email on one (wrap-friendly) row,
+                                                    Transfer button on its own row below. */}
                                                 <Stack
-                                                    direction={{ xs: "column", sm: "row" }}
-                                                    alignItems={{
-                                                        xs: "flex-start",
-                                                        sm: "center",
-                                                    }}
-                                                    justifyContent="space-between"
-                                                    spacing={{ xs: 1, sm: 2 }}
-                                                    sx={{ width: "100%" }}
+                                                    direction="row"
+                                                    alignItems="center"
+                                                    spacing={2}
+                                                    sx={{ flexWrap: "wrap", rowGap: 0.5 }}
                                                 >
-                                                    <Stack
-                                                        direction={{ xs: "column", sm: "row" }}
-                                                        alignItems={{
-                                                            xs: "flex-start",
-                                                            sm: "center",
+                                                    <Button
+                                                        color="neutral"
+                                                        variant="plain"
+                                                        sx={{
+                                                            justifyContent: "flex-start",
+                                                            px: 1.5,
+                                                            py: 0.5,
+                                                            borderRadius: "8px",
+                                                            transition: "all 0.2s ease",
+                                                            "&:hover": {
+                                                                background: styles.hoverBg,
+                                                            },
                                                         }}
-                                                        spacing={{ xs: 0.5, sm: 2 }}
-                                                    >
-                                                        <Button
-                                                            color="neutral"
-                                                            variant="plain"
-                                                            sx={{
-                                                                justifyContent: "flex-start",
-                                                                px: 1.5,
-                                                                py: 0.5,
-                                                                borderRadius: "8px",
-                                                                transition: "all 0.2s ease",
-                                                                "&:hover": {
-                                                                    background: styles.hoverBg,
-                                                                },
-                                                            }}
-                                                            onClick={() => {
-                                                                if (projectProfile?.ownerUserId) {
-                                                                    setAvatarUserId(
-                                                                        projectProfile.ownerUserId
-                                                                    );
-                                                                    setOpenUserProfile(true);
-                                                                }
-                                                            }}
-                                                        >
-                                                            <Typography
-                                                                fontWeight="bold"
-                                                                sx={{
-                                                                    userSelect: "text",
-                                                                    fontSize: "20px",
-                                                                    color: styles.valueColor,
-                                                                }}
-                                                            >
-                                                                {projectProfile
-                                                                    ? useTEM.teamMemberProfiles[
-                                                                          projectProfile
-                                                                              ?.ownerUserId
-                                                                      ]?.userName
-                                                                    : t.admin.projectProfile
-                                                                          .notAvailable}
-                                                            </Typography>
-                                                        </Button>
-                                                        <Typography
-                                                            component="a"
-                                                            href={`mailto:${
-                                                                projectProfile
-                                                                    ? useTEM.teamMemberProfiles[
-                                                                          projectProfile
-                                                                              ?.ownerUserId
-                                                                      ]?.userEmail
-                                                                    : t.admin.projectProfile
-                                                                          .notAvailable
-                                                            }`}
-                                                            startDecorator={
-                                                                <EmailRoundedIcon
-                                                                    fontSize="small"
-                                                                    sx={{
-                                                                        color: styles.accentColor,
-                                                                    }}
-                                                                />
+                                                        onClick={() => {
+                                                            if (projectProfile?.ownerUserId) {
+                                                                setAvatarUserId(
+                                                                    projectProfile.ownerUserId
+                                                                );
+                                                                setOpenUserProfile(true);
                                                             }
+                                                        }}
+                                                    >
+                                                        <Typography
+                                                            fontWeight="bold"
                                                             sx={{
-                                                                textDecoration: "none",
+                                                                userSelect: "text",
+                                                                fontSize: "20px",
                                                                 color: styles.valueColor,
-                                                                cursor: "pointer",
-                                                                transition: "all 0.2s ease",
-                                                                "&:hover": {
-                                                                    color: styles.accentColor,
-                                                                },
+                                                                whiteSpace: "nowrap",
                                                             }}
                                                         >
                                                             {projectProfile
                                                                 ? useTEM.teamMemberProfiles[
                                                                       projectProfile?.ownerUserId
-                                                                  ]?.userEmail
+                                                                  ]?.userName
                                                                 : t.admin.projectProfile
                                                                       .notAvailable}
                                                         </Typography>
-                                                    </Stack>
-                                                    {isProjectOwner && (
+                                                    </Button>
+                                                    <Typography
+                                                        component="a"
+                                                        href={`mailto:${
+                                                            projectProfile
+                                                                ? useTEM.teamMemberProfiles[
+                                                                      projectProfile?.ownerUserId
+                                                                  ]?.userEmail
+                                                                : t.admin.projectProfile
+                                                                      .notAvailable
+                                                        }`}
+                                                        startDecorator={
+                                                            <EmailRoundedIcon
+                                                                fontSize="small"
+                                                                sx={{
+                                                                    color: styles.accentColor,
+                                                                }}
+                                                            />
+                                                        }
+                                                        sx={{
+                                                            textDecoration: "none",
+                                                            color: styles.valueColor,
+                                                            cursor: "pointer",
+                                                            transition: "all 0.2s ease",
+                                                            "&:hover": {
+                                                                color: styles.accentColor,
+                                                            },
+                                                        }}
+                                                    >
+                                                        {projectProfile
+                                                            ? useTEM.teamMemberProfiles[
+                                                                  projectProfile?.ownerUserId
+                                                              ]?.userEmail
+                                                            : t.admin.projectProfile.notAvailable}
+                                                    </Typography>
+                                                </Stack>
+                                                {isProjectOwner && (
+                                                    <Box
+                                                        sx={{
+                                                            display: "flex",
+                                                            justifyContent: "flex-end",
+                                                            mt: 1,
+                                                        }}
+                                                    >
                                                         <Button
                                                             size="sm"
                                                             variant="outlined"
@@ -787,15 +782,12 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                                 />
                                                             }
                                                             onClick={() => setOpenTransfer(true)}
-                                                            sx={{
-                                                                borderRadius: "8px",
-                                                                flexShrink: 0,
-                                                            }}
+                                                            sx={{ borderRadius: "8px" }}
                                                         >
                                                             {t.common.profileEdit.transferOwner}
                                                         </Button>
-                                                    )}
-                                                </Stack>
+                                                    </Box>
+                                                )}
                                             </FormControl>
 
                                             <FormControl>
