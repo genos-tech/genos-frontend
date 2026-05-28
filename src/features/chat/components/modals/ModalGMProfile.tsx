@@ -723,6 +723,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                             display: "flex",
                                                             justifyContent: "flex-end",
                                                             mt: 1,
+                                                            mb: 1.5,
                                                         }}
                                                     >
                                                         <Button
