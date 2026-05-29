@@ -49,6 +49,34 @@ export function V3ChatShell() {
         };
     }, []);
 
+    // When a channel is selected, fetch its message delta if we don't
+    // already have it cached. The fetch is `?since=` aware — passing
+    // no `since` returns a full load; subsequent re-opens with the
+    // checkpoint return only deltas.
+    useEffect(() => {
+        if (!selected) return;
+        let cancelled = false;
+        // The store doesn't currently track per-channel sync checkpoints
+        // (TODO: persist `server_time` in SYNC_CHECKPOINTS and pass on
+        // re-open). For now, every selection triggers a full load. This
+        // is cheap thanks to the per-channel cap on the backend; later
+        // we'll only fetch the tail.
+        void channelService
+            .fetchMessagesDelta(selected)
+            .then((env) => {
+                if (cancelled) return;
+                for (const m of env.data.messages ?? []) {
+                    channelService.handleMessageCreated(m);
+                }
+            })
+            .catch(() => {
+                /* network error — pane stays on whatever's cached */
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, [selected]);
+
     return (
         <div
             style={{

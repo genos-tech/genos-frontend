@@ -47,7 +47,23 @@ import type {
     Pin,
     ReadCursor,
 } from "../../types/channel";
-import { authApi } from "../api";
+
+/**
+ * v3 REST base URL.
+ *
+ * NOT the legacy `VITE_API_BASE_URL` — that env points at `/api/v2`, so
+ * `authApi(...).get("/api/v3/...")` would land at `/api/v2/api/v3/...`.
+ * We use `VITE_DJANGO_URL` (the Django host root) so v3 paths resolve
+ * cleanly to `/api/v3/...`. Falls back to the legacy env minus the
+ * `/api/v2` suffix in case `VITE_DJANGO_URL` is unset in some
+ * environments.
+ */
+function v3BaseURL(): string {
+    const explicit = import.meta.env.VITE_DJANGO_URL;
+    if (explicit) return explicit.replace(/\/$/, "");
+    const legacy = import.meta.env.VITE_API_BASE_URL ?? "";
+    return legacy.replace(/\/api\/v\d+$/, "").replace(/\/$/, "");
+}
 
 /**
  * Errors raised by `ChannelService` REST + socket methods.
@@ -253,15 +269,30 @@ export class ChannelService {
         this.socket = socket;
     }
 
+    /** Memoized axios instance for v3 REST. Rebuilt only when the
+     *  access token actually changes — re-using the instance reduces
+     *  per-call overhead and keeps the underlying keep-alive connection
+     *  pool warm. */
+    private _axios: ReturnType<typeof axios.create> | null = null;
+    private _axiosToken: string | null = null;
+
     private api() {
-        const inst = authApi(this.accessToken);
-        if (!inst) {
+        if (!this.accessToken) {
             throw new ChannelServiceError(
                 "UNAUTHENTICATED",
                 "No access token set on ChannelService."
             );
         }
-        return inst;
+        if (this._axios && this._axiosToken === this.accessToken) {
+            return this._axios;
+        }
+        this._axios = axios.create({
+            baseURL: v3BaseURL(),
+            headers: { Authorization: `Bearer ${this.accessToken}` },
+            withCredentials: true,
+        });
+        this._axiosToken = this.accessToken;
+        return this._axios;
     }
 
     private socketEmit<TData>(
