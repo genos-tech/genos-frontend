@@ -1527,11 +1527,41 @@ export class ChannelService {
         // server already enforces forward-only; trust it.
         if (cursor.threadRootId == null) {
             this._cursors.set(cursor.channelId, cursor);
-            // Reset unread to 0 for the main timeline — the precise
-            // count flows through on the next chat-list refresh.
+            // Recompute unreadCount from the cursor + known messages.
+            //
+            // The naive "set unreadCount=0" reset was a cross-tab bug:
+            // if a NEW message arrived (bumping unread to N+1) in the
+            // gap between Tab A's emit and Tab B's receive, Tab B
+            // would zero out unread even though the new message is
+            // genuinely unread. Recomputing from the known messages
+            // avoids that race — any message with `seq > cursor.seq`
+            // stays counted as unread.
+            //
+            // Three cases:
+            //   (a) Cursor points at a message in our store: count
+            //       non-thread-reply messages with higher seq. Exact.
+            //   (b) Cursor points at a message we haven't loaded yet
+            //       (cursor advanced past our local data): fall back
+            //       to the optimistic 0. The next chat-list refresh
+            //       corrects.
+            //   (c) Cursor is null (initial state, never read anything):
+            //       all known non-thread-reply messages are unread.
             const ch = this._channels.get(cursor.channelId);
             if (ch) {
-                this._channels.set(cursor.channelId, { ...ch, unreadCount: 0 });
+                const arr = this._messages.get(cursor.channelId) ?? [];
+                const topLevel = arr.filter((m) => !m.isThreadReply);
+                let unread: number;
+                if (cursor.lastReadMessageId == null) {
+                    unread = topLevel.length;
+                } else {
+                    const cursorMsg = arr.find((m) => m.id === cursor.lastReadMessageId);
+                    if (!cursorMsg) {
+                        unread = 0;
+                    } else {
+                        unread = topLevel.filter((m) => m.seq > cursorMsg.seq).length;
+                    }
+                }
+                this._channels.set(cursor.channelId, { ...ch, unreadCount: unread });
             }
         }
         this._notify();
