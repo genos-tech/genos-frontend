@@ -1212,6 +1212,41 @@ export class ChannelService {
         });
     }
 
+    /**
+     * Edit channel metadata (title / profile image / visibility).
+     *
+     * Authz is enforced server-side (owner-only). Pass only the fields
+     * the user is changing; omitted fields stay untouched.
+     *
+     * DM channels can't be renamed (their identity is the user pair).
+     * PM channels mirror the project's title/avatar — the server returns
+     * 400 / `BACKEND_ERROR` and the caller should redirect through the
+     * project edit flow.
+     */
+    updateChannel(
+        channelId: string,
+        channelKind: ChannelKind,
+        patch: {
+            title?: string;
+            profileImageUrl?: string;
+            isPrivate?: boolean;
+        }
+    ): Promise<Channel | undefined> {
+        // Map camelCase → snake_case for the wire (matches the rest of
+        // the v3 emit conventions). Skip undefined fields so the server
+        // doesn't write nullable columns to empty.
+        const payload: Record<string, unknown> = {
+            channel_id: channelId,
+            channel_kind: channelKind,
+        };
+        if (patch.title !== undefined) payload.title = patch.title;
+        if (patch.profileImageUrl !== undefined) {
+            payload.profile_image_url = patch.profileImageUrl;
+        }
+        if (patch.isPrivate !== undefined) payload.is_private = patch.isPrivate;
+        return this.socketEmitOrThrow<Channel>("channel.update", payload);
+    }
+
     addMembers(
         channelId: string,
         userIds: string[]
@@ -1582,6 +1617,37 @@ export class ChannelService {
         }
         this._notify();
         void this._persistChannel(channel);
+    }
+
+    /**
+     * Apply a `channel.updated` broadcast (title / profile / visibility
+     * changed by the owner). Merge into the existing row rather than
+     * full-replace so we preserve client-side denorms (`latestMessage`,
+     * `unreadCount`) that the patch endpoint doesn't carry.
+     *
+     * If the channel isn't in the store at all, this is a no-op — we
+     * don't have enough context (e.g. unread / latestMessage) to
+     * synthesize a fresh row. The next `listChannels()` refresh will
+     * pick it up.
+     */
+    handleChannelUpdated(channel: Channel): void {
+        const existing = this._channels.get(channel.id);
+        if (!existing) return;
+        this._channels.set(channel.id, {
+            ...existing,
+            // Pull in the server-authoritative metadata fields. Keep
+            // the existing latestMessage/unreadCount/tsCreated denorms
+            // intact because the PATCH response doesn't include them
+            // (they're populated by the list view's annotation, not
+            // the detail view).
+            title: channel.title,
+            profileImageUrl: channel.profileImageUrl,
+            isPrivate: channel.isPrivate,
+            ownerId: channel.ownerId,
+            tsUpdated: channel.tsUpdated,
+        });
+        this._notify();
+        void this._persistChannel(this._channels.get(channel.id)!);
     }
 
     handleChannelMemberAdded(event: ChannelMemberAddedPayload): void {

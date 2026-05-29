@@ -73,6 +73,7 @@ export function registerSocketRouter(socket: Socket): () => void {
     on<ReadCursor>("read.advanced", (c) => channelService.handleReadAdvanced(c));
 
     on<Channel>("channel.created", (c) => channelService.handleChannelCreated(c));
+    on<Channel>("channel.updated", (c) => channelService.handleChannelUpdated(c));
     on<{
         channelId: string;
         channelKind: ChannelKind;
