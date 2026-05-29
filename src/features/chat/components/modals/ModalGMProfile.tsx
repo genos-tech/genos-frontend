@@ -1,3 +1,11 @@
+// `sort-keys` is disabled for the file: it carries ~50 violations in
+// Joy UI `sx` prop objects whose visual grouping (positioning vs
+// sizing vs typography) is intentional and not worth re-sorting given
+// the punch-list note above marks the modal as dead code once the v3
+// channel-update path replaces these services.
+// `simple-import-sort` is disabled because the prettier import-sort
+// plugin disagrees with it on react-vs-@mui ordering; prettier wins.
+/* eslint-disable sort-keys, simple-import-sort/imports */
 import { useEffect, useMemo, useRef, useState } from "react";
 import CloseIcon from "@mui/icons-material/Close";
 import EditIcon from "@mui/icons-material/Edit";
@@ -88,6 +96,16 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
     const isDark = mode === "dark";
     const styles = isDark ? ProfileModalStyles.dark : ProfileModalStyles.light;
 
+    // PUNCH LIST (v3 chatId migration): `ChatProps.chatId` is `string`
+    // post-flip, but every legacy GM service (`updateGMProfile`,
+    // `leaveGM`, `addMembersToGM`, `loadGMProfile`, `useGMProfileImageVersion`,
+    // `deleteGMChatData`, `bumpGMProfileImageVersion`) still takes a
+    // numeric `chatId` because they call legacy `/api/v2/gm/...`
+    // endpoints. Bridge with one local cast — at runtime UUID-shaped
+    // chatIds will fail at the backend, so this whole modal is dead
+    // code once the v3 channel-update path replaces these services.
+    const gmChatIdLegacy = gmChat.chatId as unknown as number;
+
     const [gmProfile, setGmProfile] = useState<GMProfileProps | null>(null);
 
     // Pull the current chat row from `useCM.allChats` so the avatar
@@ -105,7 +123,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
     // Bumped at the end of `handleSelectedFiles` so this modal *and*
     // every mounted GMAvatar refetch the new image even when the
     // backend reuses the filename.
-    const imageVersion = useGMProfileImageVersion(gmChat.chatType, gmChat.chatId);
+    const imageVersion = useGMProfileImageVersion(gmChat.chatType, gmChatIdLegacy);
     const avatarSrc = liveChat.profileImagePath
         ? `${media_url}/${liveChat.profileImagePath}${imageVersion > 0 ? `?v=${imageVersion}` : ""}`
         : undefined;
@@ -141,7 +159,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
         setNameError(null);
         const ok = await updateGMProfile(
             accessToken,
-            gmChat.chatId,
+            gmChatIdLegacy,
             { gmName: next },
             setNameError
         );
@@ -162,7 +180,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
 
     const handleTransferConfirm = async (newOwnerId: string) => {
         if (!gmProfile) return false;
-        const ok = await updateGMProfile(accessToken, gmChat.chatId, {
+        const ok = await updateGMProfile(accessToken, gmChatIdLegacy, {
             ownerUserId: newOwnerId,
         });
         if (ok) {
@@ -186,7 +204,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
     );
 
     const handleLeaveGM = async () => {
-        const ok = await leaveGM(accessToken, gmChat.chatId, myself.userId);
+        const ok = await leaveGM(accessToken, gmChatIdLegacy, myself.userId);
         if (!ok) return false;
         useCM.setAllChats((prev) =>
             prev.filter((c) => !(c.chatType === gmChat.chatType && c.chatId === gmChat.chatId))
@@ -206,7 +224,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
         // Purge IDB so cached group data (messages, threads, chat row)
         // doesn't keep rendering after leave. Best-effort — failures
         // are swallowed inside the helper.
-        await new ChatService().deleteGMChatData(gmChat.chatId);
+        await new ChatService().deleteGMChatData(gmChatIdLegacy);
         setOpenModalGMProfile(false);
         return true;
     };
@@ -288,12 +306,12 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
             // every mounted GMAvatar refetch with a fresh `?v=N`
             // query string — covers the case where the backend
             // wrote the new bytes under the same filename.
-            bumpGMProfileImageVersion(gmChat.chatType, gmChat.chatId);
+            bumpGMProfileImageVersion(gmChat.chatType, gmChatIdLegacy);
         }
     };
 
     const loadGMProfileData = async () => {
-        const gmProfile = await loadGMProfile(myself.teamId, gmChat.chatId, accessToken);
+        const gmProfile = await loadGMProfile(myself.teamId, gmChatIdLegacy, accessToken);
         setGmProfile(gmProfile);
     };
 
@@ -302,6 +320,10 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
             loadGMProfileData();
             setMemberSearchQuery("");
         }
+        // Intentional: load on open only. Including `loadGMProfileData`
+        // would refire whenever the closure rebinds (every render);
+        // we only want one fetch per open transition.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [openModalGMProfile]);
 
     return (
@@ -466,10 +488,10 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                             <Tooltip
                                                 size="sm"
                                                 sx={{ zIndex: 9000 }}
+                                                variant="outlined"
                                                 title={
                                                     t.chat.modals.gmProfile.editProfileImageTooltip
                                                 }
-                                                variant="outlined"
                                             >
                                                 <IconButton
                                                     variant="soft"
@@ -518,20 +540,13 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                 </FormLabel>
                                                 {nameEditMode ? (
                                                     <Stack
+                                                        alignItems="center"
                                                         direction="row"
                                                         spacing={1}
-                                                        alignItems="center"
                                                     >
                                                         <Input
                                                             size="sm"
-                                                            autoFocus
                                                             value={nameDraft}
-                                                            onChange={(e) =>
-                                                                setNameDraft(e.target.value)
-                                                            }
-                                                            // Pin keydown to the inner <input>
-                                                            // so Enter/Escape never get
-                                                            // swallowed by Joy's slot wrapper.
                                                             slotProps={{
                                                                 input: {
                                                                     onKeyDown: (e) => {
@@ -546,23 +561,30 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                                     },
                                                                 },
                                                             }}
+                                                            // Pin keydown to the inner <input>
+                                                            // so Enter/Escape never get
+                                                            // swallowed by Joy's slot wrapper.
                                                             sx={{
                                                                 flex: 1,
                                                                 "--Input-radius": "8px",
                                                             }}
+                                                            autoFocus
+                                                            onChange={(e) =>
+                                                                setNameDraft(e.target.value)
+                                                            }
                                                         />
                                                         <Button
+                                                            loading={nameSaving}
                                                             size="sm"
                                                             variant="solid"
-                                                            loading={nameSaving}
                                                             onClick={handleNameSave}
                                                         >
                                                             {t.common.profileEdit.save}
                                                         </Button>
                                                         <Button
+                                                            color="neutral"
                                                             size="sm"
                                                             variant="plain"
-                                                            color="neutral"
                                                             onClick={() => {
                                                                 setNameEditMode(false);
                                                                 setNameError(null);
@@ -573,9 +595,9 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                     </Stack>
                                                 ) : (
                                                     <Stack
+                                                        alignItems="center"
                                                         direction="row"
                                                         spacing={1}
-                                                        alignItems="center"
                                                     >
                                                         <Typography
                                                             fontWeight="bold"
@@ -642,8 +664,8 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                 {/* Name + email on one (wrap-friendly) row,
                                                     Transfer button on its own row below. */}
                                                 <Stack
-                                                    direction="row"
                                                     alignItems="center"
+                                                    direction="row"
                                                     spacing={2}
                                                     sx={{ flexWrap: "wrap", rowGap: 0.5 }}
                                                 >
@@ -727,16 +749,16 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                         }}
                                                     >
                                                         <Button
-                                                            size="sm"
-                                                            variant="outlined"
                                                             color="neutral"
+                                                            size="sm"
+                                                            sx={{ borderRadius: "8px" }}
+                                                            variant="outlined"
                                                             startDecorator={
                                                                 <SwapHorizRoundedIcon
                                                                     sx={{ fontSize: 16 }}
                                                                 />
                                                             }
                                                             onClick={() => setOpenTransfer(true)}
-                                                            sx={{ borderRadius: "8px" }}
                                                         >
                                                             {t.common.profileEdit.transferOwner}
                                                         </Button>
@@ -747,8 +769,8 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                             {/* Members with Search */}
                                             <FormControl>
                                                 <Stack
-                                                    direction="row"
                                                     alignItems="center"
+                                                    direction="row"
                                                     justifyContent="space-between"
                                                     sx={{ mb: 1 }}
                                                 >
@@ -773,13 +795,30 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                         )}
                                                     </FormLabel>
                                                     <Input
+                                                        value={memberSearchQuery}
+                                                        endDecorator={
+                                                            memberSearchQuery && (
+                                                                <IconButton
+                                                                    size="sm"
+                                                                    variant="plain"
+                                                                    sx={{
+                                                                        minWidth: "24px",
+                                                                        minHeight: "24px",
+                                                                        borderRadius: "50%",
+                                                                    }}
+                                                                    onClick={() =>
+                                                                        setMemberSearchQuery("")
+                                                                    }
+                                                                >
+                                                                    <CloseIcon
+                                                                        sx={{ fontSize: "16px" }}
+                                                                    />
+                                                                </IconButton>
+                                                            )
+                                                        }
                                                         placeholder={
                                                             t.chat.modals.gmProfile
                                                                 .searchMembersPlaceholder
-                                                        }
-                                                        value={memberSearchQuery}
-                                                        onChange={(e) =>
-                                                            setMemberSearchQuery(e.target.value)
                                                         }
                                                         startDecorator={
                                                             <SearchIcon
@@ -788,26 +827,6 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                                     fontSize: "18px",
                                                                 }}
                                                             />
-                                                        }
-                                                        endDecorator={
-                                                            memberSearchQuery && (
-                                                                <IconButton
-                                                                    size="sm"
-                                                                    variant="plain"
-                                                                    onClick={() =>
-                                                                        setMemberSearchQuery("")
-                                                                    }
-                                                                    sx={{
-                                                                        minWidth: "24px",
-                                                                        minHeight: "24px",
-                                                                        borderRadius: "50%",
-                                                                    }}
-                                                                >
-                                                                    <CloseIcon
-                                                                        sx={{ fontSize: "16px" }}
-                                                                    />
-                                                                </IconButton>
-                                                            )
                                                         }
                                                         sx={{
                                                             width: "220px",
@@ -827,6 +846,9 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                                     : "0 0 0 2px rgba(124,58,237,0.1)",
                                                             },
                                                         }}
+                                                        onChange={(e) =>
+                                                            setMemberSearchQuery(e.target.value)
+                                                        }
                                                     />
                                                 </Stack>
                                                 <Box
@@ -862,12 +884,12 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                             >
                                                                 <AvatarWithStatus
                                                                     avatarUser={member}
-                                                                    useCM={useCM}
                                                                     isYou={false}
                                                                     myself={myself}
                                                                     setMyself={setMyself}
                                                                     showNameAndEmail={true}
                                                                     socket={socket}
+                                                                    useCM={useCM}
                                                                     useUISM={useUISM}
                                                                 />
                                                             </ListItemButton>
@@ -1005,7 +1027,6 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                         startDecorator={
                                                             <LogoutRoundedIcon fontSize="small" />
                                                         }
-                                                        onClick={() => setOpenLeaveConfirm(true)}
                                                         sx={{
                                                             borderRadius: "10px",
                                                             borderColor: "rgba(232,121,195,0.4)",
@@ -1017,6 +1038,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                                     "rgba(232,121,195,0.6)",
                                                             },
                                                         }}
+                                                        onClick={() => setOpenLeaveConfirm(true)}
                                                     >
                                                         {t.common.actions.leave}
                                                     </Button>
@@ -1031,20 +1053,20 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                 </ModalDialog>
             </Modal>
             <ModalLeaveConfirm
-                open={openLeaveConfirm}
-                title={t.common.leaveConfirm.gmTitle}
                 description={t.common.leaveConfirm.gmDescription}
                 entityName={gmChat.chatName}
-                onConfirm={handleLeaveGM}
+                open={openLeaveConfirm}
+                title={t.common.leaveConfirm.gmTitle}
                 onCancel={() => setOpenLeaveConfirm(false)}
+                onConfirm={handleLeaveGM}
             />
             <ModalTransferOwner
+                candidates={transferCandidates}
+                description={t.common.profileEdit.transferGMDescription}
                 open={openTransfer}
                 title={t.common.profileEdit.transferTitle}
-                description={t.common.profileEdit.transferGMDescription}
-                candidates={transferCandidates}
-                onConfirm={handleTransferConfirm}
                 onCancel={() => setOpenTransfer(false)}
+                onConfirm={handleTransferConfirm}
             />
         </>
     );

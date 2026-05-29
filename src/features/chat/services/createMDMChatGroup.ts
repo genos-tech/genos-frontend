@@ -1,3 +1,14 @@
+/*
+ * PUNCH LIST (v3 chatId migration):
+ * This legacy "create MDM" path runs against the legacy `/` socket and
+ * legacy REST (`createMDMChat`, `loadMDMHistory`). Those still operate
+ * on integer `mdm_id` / `chat_id` keys. The v3-flipped `ChatProps.chatId`
+ * is `string`, so we bridge with `String(...)` at the boundary —
+ * comparisons and construction sites. Numeric callbacks (the socket
+ * `joiningCGId`, the legacy services) keep receiving the original
+ * `number`. This whole file is dead code once the v3 `channel.create`
+ * path replaces it.
+ */
 import { Socket } from "socket.io-client";
 
 import { ChatService } from "../../../db/services/chat.service";
@@ -14,12 +25,13 @@ import { loadMDMHistory } from "./loadMDMHistory";
 import { popSpecificMessages } from "./popSpecificMessages";
 
 const getMdmCreatedMessage = () => getMessages().chat.system.startedConversation;
+// Keys sorted alphabetically (case-insensitive) per `sort-keys`.
 const getCreateMDMMessage = () => [
     {
+        content: [{ styles: {}, text: getMdmCreatedMessage(), type: "text" }],
         type: "paragraph",
-        content: [{ type: "text", text: getMdmCreatedMessage(), styles: {} }],
     },
-    { type: "paragraph", content: [{ type: "text", text: "", styles: {} }] },
+    { content: [{ styles: {}, text: "", type: "text" }], type: "paragraph" },
 ];
 
 const addMDMChatAndMessage = async (
@@ -33,51 +45,56 @@ const addMDMChatAndMessage = async (
     const createMDMMessage = getCreateMDMMessage();
     const ts = getLocalCurrentTimestamp();
 
+    // MessageProps.chatId is still `number`; no cast needed here.
+    // Keys sorted alphabetically (case-insensitive) per `sort-keys`.
     const newMessage: MessageProps = {
-        chatType: 4,
-        messageIdWithChatId: `${chatId}-1`,
         chatId: chatId,
-        messageId: 1,
+        chatType: 4,
         content: createMDMMessage,
         contentText: mdmCreatedMessage,
-        sender: myself,
-        tsSent: ts,
-        tsUpdated: ts,
+        messageId: 1,
+        messageIdWithChatId: `${chatId}-1`,
         numReplies: 0,
+        sender: myself,
         taskId: null,
         taskStatus: null,
+        tsSent: ts,
+        tsUpdated: ts,
     };
 
+    // `AllChatProps.chatId` and `lastReadMessageId` are `string` post-flip.
+    // `""` is the v3-flipped "no last-read" sentinel.
     const newAllChat: AllChatProps = {
-        chatId: chatId,
+        chatId: String(chatId),
         chatName: chatName,
         chatType: 4,
         dmPartnerUser: defaultDmPartner,
-        lastReadMessageId: -1,
+        lastReadMessageId: "",
         latestMessage: newMessage,
         latestMessageText: mdmCreatedMessage,
-        TSLastMessage: ts,
         mdmMembers: mdmMembers,
+        TSLastMessage: ts,
     };
 
     await addChat(newAllChat, 4);
     await addMessage(newMessage, 4);
 
+    // Same string-shape for `ChatProps.chatId / lastReadMessageId`.
     const newChat: ChatProps = {
-        chatId: chatId,
+        chatId: String(chatId),
         chatName: chatName,
         chatType: 4,
         dmPartnerUser: defaultDmPartner,
-        lastReadMessageId: 1,
-        messages: [newMessage],
+        lastReadMessageId: "1",
         latestMessage: newMessage,
         latestMessageText: mdmCreatedMessage,
+        messages: [newMessage],
         TSLastMessage: ts,
     };
 
     useCM.setCurrentMainChat(newChat);
     useCM.setAllChats((prev: AllChatProps[]) => {
-        const exists = prev.some((c) => c.chatId === chatId && c.chatType === 4);
+        const exists = prev.some((c) => c.chatId === String(chatId) && c.chatType === 4);
         if (exists) return prev;
         return [newAllChat, ...prev];
     });
@@ -91,20 +108,24 @@ const openExistingMDM = async (
     accessToken: string
 ) => {
     const existingAllChat = useCM.allChats.find(
-        (c) => c.chatType === 4 && c.chatId === mdmId
+        (c) => c.chatType === 4 && c.chatId === String(mdmId)
     );
 
     if (existingAllChat) {
         const messages = await popSpecificMessages(mdmId, 4);
+        // `lastReadMessageId` is `string` post-flip; `""` is the
+        // "no messages yet" sentinel (replaces legacy `-1`). Keys
+        // sorted alphabetically per `sort-keys`.
         const existingChat: ChatProps = {
             chatId: existingAllChat.chatId,
             chatName: existingAllChat.chatName,
             chatType: 4,
             dmPartnerUser: existingAllChat.dmPartnerUser,
-            lastReadMessageId: messages.length > 0 ? messages[messages.length - 1].messageId : -1,
-            messages: messages,
+            lastReadMessageId:
+                messages.length > 0 ? String(messages[messages.length - 1].messageId) : "",
             latestMessage: existingAllChat.latestMessage,
             latestMessageText: existingAllChat.latestMessageText,
+            messages: messages,
             TSLastMessage: existingAllChat.TSLastMessage,
         };
         useCM.setCurrentMainChat(existingChat);
@@ -124,16 +145,22 @@ const openExistingMDM = async (
         const sortedMessages = mdmChat.messages.sort(
             (a: MessageProps, b: MessageProps) => a.messageId - b.messageId
         );
+        // Keys sorted alphabetically per `sort-keys`. The
+        // `mdmMembers` cast bridges a legacy quirk: `ChatProps` doesn't
+        // declare `mdmMembers`, but `loadMDMHistory` includes it on
+        // the wire payload because the same row also flows through
+        // `AllChatProps`. Reading via the intersection cast preserves
+        // the field without widening `ChatProps`.
         const newAllChat: AllChatProps = {
-            chatType: 4,
             chatId: mdmChat.chatId,
             chatName: mdmChat.chatName,
-            lastReadMessageId: mdmChat.lastReadMessageId,
+            chatType: 4,
             dmPartnerUser: defaultDmPartner,
+            lastReadMessageId: mdmChat.lastReadMessageId,
             latestMessage: mdmChat.latestMessage,
             latestMessageText: mdmChat.latestMessageText,
+            mdmMembers: (mdmChat as ChatProps & { mdmMembers?: MDMMemberProps[] }).mdmMembers,
             TSLastMessage: mdmChat.TSLastMessage,
-            mdmMembers: (mdmChat as any).mdmMembers,
         };
 
         await addChat(newAllChat, 4);
@@ -141,17 +168,17 @@ const openExistingMDM = async (
 
         useCM.setCurrentMainChat({ ...newAllChat, messages: sortedMessages });
         useCM.setAllChats((prev: AllChatProps[]) => {
-            const exists = prev.some((c) => c.chatId === mdmId && c.chatType === 4);
+            const exists = prev.some((c) => c.chatId === String(mdmId) && c.chatType === 4);
             if (exists) return prev;
             return [newAllChat, ...prev];
         });
 
         if (socket) {
             socket.emit("join", {
-                joiningCGId: mdmId,
-                joiningCGName: mdmChat.chatName,
                 chatType: 4,
                 dmPartnerUser: defaultDmPartner,
+                joiningCGId: mdmId,
+                joiningCGName: mdmChat.chatName,
             });
         }
     }
@@ -168,13 +195,7 @@ export const createMDMChatGroup = async (
     selectedMembers?: UserProps[]
 ) => {
     const createMDMMessage = getCreateMDMMessage();
-    const data = await createMDMChat(
-        accessToken,
-        myself,
-        memberIds,
-        undefined,
-        setErrorMessage
-    );
+    const data = await createMDMChat(accessToken, myself, memberIds, undefined, setErrorMessage);
 
     if (!data) return;
 
@@ -192,47 +213,51 @@ export const createMDMChatGroup = async (
     const chatName = data.chatName;
 
     if (socket !== null) {
+        // Keys sorted alphabetically (case-insensitive) per `sort-keys`.
+        // The join ack is fired-and-forgotten — we just chain the
+        // first message emit after the join completes.
         socket.emit(
             "join",
             {
-                joiningCGId: chatId,
-                joiningCGName: chatName,
                 chatType: 4,
                 dmPartnerUser: defaultDmPartner,
+                joiningCGId: chatId,
+                joiningCGName: chatName,
             },
-            (ack: any) => {
+            () => {
                 socket.emit("message", {
-                    methodType: "POST",
-                    message: createMDMMessage,
-                    destCGName: chatName,
-                    destCGId: chatId,
                     chatType: 4,
+                    destCGId: chatId,
+                    destCGName: chatName,
                     dmPartnerUserId: null,
+                    message: createMDMMessage,
+                    messageIdForPut: null,
+                    methodType: "POST",
+                    systemUserId: null,
                     taskId: null,
                     taskStatus: null,
-                    systemUserId: null,
-                    messageIdForPut: null,
                 });
             }
         );
     }
 
+    // Keys sorted alphabetically per `sort-keys`.
     const allMembers: MDMMemberProps[] = [
         {
-            userId: myself.userId,
-            userName: myself.userName,
-            userEmail: myself.userEmail,
             avatarImgPath: myself.avatarImgPath,
             teamId: myself.teamId,
             teamName: myself.teamName,
+            userEmail: myself.userEmail,
+            userId: myself.userId,
+            userName: myself.userName,
         },
         ...(selectedMembers || []).map((m) => ({
-            userId: m.userId,
-            userName: m.userName,
-            userEmail: m.userEmail,
             avatarImgPath: m.avatarImgPath,
             teamId: m.teamId,
             teamName: m.teamName,
+            userEmail: m.userEmail,
+            userId: m.userId,
+            userName: m.userName,
         })),
     ];
     await addMDMChatAndMessage(myself, chatId, chatName, useCM, allMembers);
