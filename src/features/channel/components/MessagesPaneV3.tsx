@@ -20,6 +20,7 @@ import { channelService, ChannelServiceError } from "../../../services/channel/c
 import type { Message } from "../../../types/channel";
 import { useChannel } from "../hooks/useChannel";
 import { candidatesFromMessages, useMentionDraft } from "../hooks/useMentionDraft";
+import { MessageAttachments } from "./MessageAttachments";
 import { MessageBody } from "./MessageBody";
 
 interface MessagesPaneV3Props {
@@ -434,6 +435,9 @@ function MessageRow({ message, channelId, channelKind, onError, onOpenThread }: 
                         </button>
                     ))}
                 </div>
+            )}
+            {!message.deletedAt && message.attachments.length > 0 && (
+                <MessageAttachments messageId={message.id} attachments={message.attachments} />
             )}
             {message.reactions.length > 0 && !message.deletedAt && (
                 <ReactionChips

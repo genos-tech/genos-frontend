@@ -15,6 +15,7 @@ import { useMemo, useState } from "react";
 import { ChannelServiceError } from "../../../services/channel/channelService";
 import { useChannelThread } from "../hooks/useChannelThread";
 import { candidatesFromMessages, useMentionDraft } from "../hooks/useMentionDraft";
+import { MessageAttachments } from "./MessageAttachments";
 import { MessageBody } from "./MessageBody";
 
 interface ThreadPanelV3Props {
@@ -114,6 +115,12 @@ export function ThreadPanelV3({ channelId, rootMessageId, onClose }: ThreadPanel
                                     currentUserId={currentUserId}
                                 />
                             )}
+                            {!root.deletedAt && root.attachments.length > 0 && (
+                                <MessageAttachments
+                                    messageId={root.id}
+                                    attachments={root.attachments}
+                                />
+                            )}
                         </div>
                         <ul
                             style={{ listStyle: "none", margin: 0, padding: 0 }}
@@ -148,6 +155,12 @@ export function ThreadPanelV3({ channelId, rootMessageId, onClose }: ThreadPanel
                                         >
                                             (edited)
                                         </span>
+                                    )}
+                                    {!r.deletedAt && r.attachments.length > 0 && (
+                                        <MessageAttachments
+                                            messageId={r.id}
+                                            attachments={r.attachments}
+                                        />
                                     )}
                                 </li>
                             ))}
