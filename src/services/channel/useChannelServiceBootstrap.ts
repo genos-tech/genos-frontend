@@ -87,11 +87,46 @@ export function useChannelServiceBootstrap(
         channelService.setSocket(next);
         setSocket(next);
 
+        // Auto-resync on RECONNECT (not initial connect). The initial
+        // socket open is followed by the v3 connect handler joining
+        // every channel room AND a separate cold REST load via
+        // `listChannels()` / `syncChannel(channelId)`, so triggering
+        // a resync at that point is redundant.
+        //
+        // On reconnect (network blip, laptop sleep, mobile background),
+        // the rooms are re-joined but events that fired during the gap
+        // are gone — the server doesn't buffer them. `triggerResync()`
+        // reads the persisted per-channel checkpoints, sends a single
+        // `resync` emit with the earliest as `since`, and applies the
+        // batch (which includes top-level messages, thread replies,
+        // and hard-deletes), then advances every channel's checkpoint
+        // to the envelope's `server_time` so the next `syncChannel`
+        // call only pulls truly-new rows.
+        //
+        // We track `hasConnectedBefore` outside the listener so the
+        // first `connect` is a no-op and subsequent ones (reconnects)
+        // fire the resync. socket.io-client emits `connect` for both,
+        // so this gate is necessary.
+        let hasConnectedBefore = false;
+        const onConnect = () => {
+            if (!hasConnectedBefore) {
+                hasConnectedBefore = true;
+                return;
+            }
+            void channelService.triggerResync().catch(() => {
+                // Resync failure is non-fatal — the next channel select
+                // will trigger `syncChannel` which fetches the same
+                // window via REST.
+            });
+        };
+        next.on("connect", onConnect);
+
         // Best-effort cache load. Doesn't block the socket — hooks
         // can start rendering off whatever lands first (cache or live).
         void channelService.hydrateFromIDB();
 
         return () => {
+            next.off("connect", onConnect);
             unsubscribeRouter();
             next.disconnect();
             channelService.setSocket(null);

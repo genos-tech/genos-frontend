@@ -175,8 +175,17 @@ type ChannelMemberRemovedPayload = {
     userId: string;
     correlation_id?: string;
 };
+/** Resync envelope `data` shape — the backend's per-channel resync
+ *  merge includes BOTH top-level messages AND thread replies in one
+ *  envelope (see backend `_merge_envelope_per_channel`). The extra
+ *  `thread_messages` field is what distinguishes this from the
+ *  per-stream `MessagesDeltaData` used by `fetchMessagesDelta` /
+ *  `fetchThreadsDelta`. */
+type ResyncDeltaData = MessagesDeltaData & {
+    thread_messages?: Message[];
+};
 type ResyncBatch = {
-    channels: Array<{ channel_id: string; envelope: DeltaEnvelope<MessagesDeltaData> }>;
+    channels: Array<{ channel_id: string; envelope: DeltaEnvelope<ResyncDeltaData> }>;
     errors?: Array<{ channel_id: string; error: string }>;
 };
 
@@ -791,11 +800,84 @@ export class ChannelService {
         }) as Promise<void>;
     }
 
+    /** Raw resync emit. Used by `triggerResync` and exposed for tests/
+     *  dev tools that want to fire a resync with explicit channel ids
+     *  + a custom `since`. Most callers should use `triggerResync()`. */
     resync(channelIds: string[], since?: string): Promise<ResyncBatch | undefined> {
         return this.socketEmitOrThrow<ResyncBatch>("resync", {
             channel_ids: channelIds,
             since: since ?? null,
         });
+    }
+
+    /**
+     * Reconnect-resync orchestrator: read the persisted per-channel
+     * checkpoints, send a `resync` emit with the EARLIEST one as the
+     * `since`, then apply the returned batch to the store + IDB.
+     *
+     * Why a single global `since` (and not a per-channel sinces map):
+     *   - The backend currently takes a single `?since=` and reuses it
+     *     for every channel in the batch. Sending the earliest checkpoint
+     *     means no channel under-fetches; channels whose checkpoint is
+     *     newer than the global since just receive a few extra (already
+     *     known) rows that the store-level upsert dedupes for free.
+     *   - This trades a slightly larger network response for a much
+     *     simpler protocol. A per-channel `sinces` map is a follow-up if
+     *     the over-fetch ever becomes measurable.
+     *
+     * Mutex'd via `_resyncInflight` so two rapid `connect` events
+     * (e.g. socket transport upgrade firing twice) don't double-fetch.
+     */
+    private _resyncInflight: Promise<number> | null = null;
+
+    triggerResync(): Promise<number> {
+        if (this._resyncInflight) return this._resyncInflight;
+        const promise = this._doTriggerResync();
+        this._resyncInflight = promise;
+        promise
+            .finally(() => {
+                if (this._resyncInflight === promise) this._resyncInflight = null;
+            })
+            .catch(() => {
+                /* caller's promise still rejects; this catch just
+                 * keeps the cleanup chain from logging unhandled. */
+            });
+        return promise;
+    }
+
+    private async _doTriggerResync(): Promise<number> {
+        const channelIds = Array.from(this._channels.keys());
+        if (channelIds.length === 0) return 0;
+
+        // Pick the EARLIEST checkpoint across all channels' messages
+        // AND threads checkpoints. ISO 8601 strings sort temporally
+        // when normalized to UTC `Z`, which our backend always emits.
+        // A missing checkpoint (channel never synced) collapses to
+        // "no since" so the server returns the full backlog for it.
+        const repo = this._checkpoints();
+        let earliest: string | null = null;
+        let anyMissing = false;
+        for (const id of channelIds) {
+            const cps = await Promise.all([
+                repo.getCheckpoint(this._checkpointKeyMessages(id)),
+                repo.getCheckpoint(this._checkpointKeyThreads(id)),
+            ]);
+            for (const cp of cps) {
+                if (!cp) {
+                    anyMissing = true;
+                    continue;
+                }
+                if (earliest === null || cp < earliest) earliest = cp;
+            }
+        }
+        // If ANY channel has no checkpoint, omitting `since` falls back
+        // to "give me everything you have." That matches the semantics
+        // the server already expects.
+        const since = anyMissing ? undefined : (earliest ?? undefined);
+
+        const batch = await this.resync(channelIds, since);
+        if (!batch) return 0;
+        return this.applyResyncBatch(batch);
     }
 
     // ---- Pin / Flag (socket emit, optimistic store update) ----------------
@@ -1052,34 +1134,76 @@ export class ChannelService {
         this._notify();
     }
 
-    /** Apply a `resync.batch` envelope to in-memory state + IDB. */
-    applyResyncBatch(batch: ResyncBatch): void {
-        let dirty = false;
+    /**
+     * Apply a `resync.batch` envelope to in-memory state + IDB.
+     *
+     * Each entry in `batch.channels` is one channel's combined delta —
+     * top-level messages, thread replies, hard-deletes — captured by
+     * the backend resync handler. We:
+     *
+     *   1. Evict the channel's data if `envelope.force_full_reload`
+     *      is true. This blows away BOTH top-level + thread stores
+     *      for the channel (one of them being too stale to incrementally
+     *      catch up is usually a signal both are).
+     *   2. Upsert each message (top-level and thread). `handleMessageCreated`
+     *      is idempotent so re-applying a row we already had is a no-op.
+     *      Tombstones (soft-deletes) arrive as rows with `deletedAt` set
+     *      and the upsert overwrites the local copy correctly.
+     *   3. Hard-delete the ids in `data.deletes` via the same path as
+     *      `syncChannel`.
+     *   4. Advance BOTH per-channel checkpoints (`v3:msgs:<id>` and
+     *      `v3:thrd:<id>`) to `envelope.server_time` so the next call
+     *      to `syncChannel(id)` only pulls newer rows. The same value
+     *      is written to both because the backend already picked the
+     *      EARLIER of the two upstream server_times when merging — so
+     *      no information is lost.
+     *
+     * Returns the count of channels successfully applied so callers
+     * can log throughput / surface a "synced N channels" indicator.
+     */
+    async applyResyncBatch(batch: ResyncBatch): Promise<number> {
+        const repo = this._checkpoints();
+        let applied = 0;
         for (const entry of batch.channels) {
+            const channelId = entry.channel_id;
             const env = entry.envelope;
-            const messages = env?.data?.messages ?? [];
-            const deletes = env?.data?.deletes ?? [];
-            for (const m of messages) {
-                this._upsertMessage(m);
-                this._bumpChannelLatest(m);
-                dirty = true;
-                void this._persistMessage(m);
+            if (!env) continue;
+
+            if (env.force_full_reload) {
+                // Clear both streams in one shot — see method docstring.
+                // Sync evictions need to await so the next upsert doesn't
+                // race a pending IDB cursor delete on the same row.
+                await this._evictChannelMessages(channelId, "all");
             }
-            for (const id of deletes) {
-                const arr = this._messages.get(entry.channel_id);
-                if (arr) {
-                    this._messages.set(
-                        entry.channel_id,
-                        arr.map((m) =>
-                            m.id === id ? { ...m, deletedAt: new Date().toISOString() } : m
-                        )
-                    );
-                    dirty = true;
-                    void this._persistDeletedById(id, entry.channel_id);
+
+            const messages = env.data?.messages ?? [];
+            const threadMessages = env.data?.thread_messages ?? [];
+            const deletes = env.data?.deletes ?? [];
+
+            for (const m of messages) this.handleMessageCreated(m);
+            for (const m of threadMessages) this.handleMessageCreated(m);
+            for (const id of deletes) this.handleMessageHardDelete(channelId, id);
+
+            if (env.server_time) {
+                try {
+                    await Promise.all([
+                        repo.setCheckpoint(
+                            this._checkpointKeyMessages(channelId),
+                            env.server_time
+                        ),
+                        repo.setCheckpoint(this._checkpointKeyThreads(channelId), env.server_time),
+                    ]);
+                } catch (e) {
+                    // IDB write failed but the in-memory store is
+                    // already updated — log and move on. Next sync
+                    // will refetch the window from the old checkpoint.
+                    // eslint-disable-next-line no-console
+                    console.warn("[ChannelService] applyResyncBatch checkpoint write failed:", e);
                 }
             }
+            applied += 1;
         }
-        if (dirty) this._notify();
+        return applied;
     }
 
     // ---- Hydration --------------------------------------------------------

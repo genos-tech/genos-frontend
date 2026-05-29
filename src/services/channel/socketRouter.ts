@@ -87,9 +87,16 @@ export function registerSocketRouter(socket: Socket): () => void {
     on<{
         channels: Array<{
             channel_id: string;
-            envelope: DeltaEnvelope<MessagesDeltaData>;
+            envelope: DeltaEnvelope<MessagesDeltaData & { thread_messages?: Message[] }>;
         }>;
-    }>("resync.batch", (b) => channelService.applyResyncBatch(b));
+    }>("resync.batch", (b) => {
+        // Fire-and-forget: applyResyncBatch is async (checkpoint writes
+        // hit IDB), but the synchronous prefix already lands every
+        // upsert into the in-memory store, so subscribers see the
+        // updated messages immediately. The trailing IDB writes catch
+        // up in the next microtask.
+        void channelService.applyResyncBatch(b);
+    });
 
     // Pin / Flag broadcasts arrive on the `user:<userId>` room so every
     // tab the same user has open stays in sync. Self-emitted events
