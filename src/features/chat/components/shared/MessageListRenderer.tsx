@@ -224,7 +224,17 @@ export const MessageListRenderer = ({
                 totalCount={messages.length}
                 itemContent={(index, _, { isScrolling }) => {
                     const message = messages[index];
-                    const isYou = myself.userId === message.sender.userId;
+                    // PM bubbles are task cards — always render received-
+                    // aligned (left), even when `message.sender.userId`
+                    // matches the viewer. The legacy task-creation path
+                    // stamps `sender_id` to the task creator (not the
+                    // project's system user), so a naive `myself.userId
+                    // === sender.userId` flips PM bubbles to "sent" /
+                    // right-aligned for tasks the viewer created. The
+                    // bubble's task-card layout (no avatar, displayId
+                    // badge, status chip) is the same regardless.
+                    const isYou =
+                        chat.chatType === 3 ? false : myself.userId === message.sender.userId;
                     const isFocused = resolveFocusedState(message);
                     const meta = itemMetas[index];
                     const dateSeparator = meta.showDateSeparator ? (

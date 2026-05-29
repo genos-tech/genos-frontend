@@ -95,7 +95,17 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
     const isCompact = style === "compact";
     const { enabled: doubleClickTodoEnabled } = useDoubleClickTodoPreference();
     const isSystemUser = message.sender.isSystemUser === true;
-    const hideAvatarSlot = (chat.chatType === 3 || chat.chatType === 4) && isSystemUser;
+    // PM bubbles are task cards — they should NEVER show a user
+    // avatar regardless of `sender.userId`. The legacy task-creation
+    // path stamped `sender_id` to whoever created the task (not the
+    // project's system user), so checking `isSystemUser` alone would
+    // render those bubbles with the creator's avatar + "(You)" badge
+    // instead of as a task card. Hide unconditionally for PM.
+    //
+    // MDM still keys on `isSystemUser` — MDM channels mix real-user
+    // messages with system "X has joined" notices, and only the
+    // latter should hide the slot.
+    const hideAvatarSlot = chat.chatType === 3 || (chat.chatType === 4 && isSystemUser);
 
     // Get bubble colors based on variant and theme
     const bubbleColors = isSent ? BUBBLE_COLORS.sent : BUBBLE_COLORS.received;
@@ -865,10 +875,7 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
 
                                 {isSimpleBubble === false && (
                                     <Stack alignItems="flex-start" direction="row" spacing={1.5}>
-                                        {!(
-                                            (chat.chatType === 3 || chat.chatType === 4) &&
-                                            message.sender.isSystemUser === true
-                                        ) && (
+                                        {!hideAvatarSlot && (
                                             <Box sx={{ flexShrink: 0 }}>
                                                 <UserAvatar
                                                     userId={

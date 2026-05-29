@@ -57,6 +57,7 @@ import { addChat } from "../../services/addChat";
 import { leaveGM } from "../../services/leaveGM";
 import { loadGMProfile } from "../../services/loadGMProfile";
 import { updateGMProfile } from "../../services/updateGMProfile";
+import { resolveLegacyChatId } from "../../utils/channelIdResolvers";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
@@ -96,15 +97,20 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
     const isDark = mode === "dark";
     const styles = isDark ? ProfileModalStyles.dark : ProfileModalStyles.light;
 
-    // PUNCH LIST (v3 chatId migration): `ChatProps.chatId` is `string`
-    // post-flip, but every legacy GM service (`updateGMProfile`,
-    // `leaveGM`, `addMembersToGM`, `loadGMProfile`, `useGMProfileImageVersion`,
-    // `deleteGMChatData`, `bumpGMProfileImageVersion`) still takes a
-    // numeric `chatId` because they call legacy `/api/v2/gm/...`
-    // endpoints. Bridge with one local cast — at runtime UUID-shaped
-    // chatIds will fail at the backend, so this whole modal is dead
-    // code once the v3 channel-update path replaces these services.
-    const gmChatIdLegacy = gmChat.chatId as unknown as number;
+    // Resolve the legacy integer `gm_id` from the v3 channel UUID via
+    // `Channel.legacyChatId` (denormalized into the v3 channel list by
+    // the Track D ChannelSerializer change). Every legacy GM service
+    // this modal calls (`updateGMProfile`, `leaveGM`, `loadGMProfile`,
+    // `useGMProfileImageVersion`, `deleteGMChatData`,
+    // `bumpGMProfileImageVersion`, the image upload below) binds its
+    // backend URL param to a Django `IntegerField` — passing the UUID
+    // there yields `ValueError: Field 'gm_id' expected a number`.
+    //
+    // Returns `-1` when no v3 mirror exists (the backfill hasn't
+    // reached this chat). All downstream calls will fail benignly
+    // (Django 404) rather than 500-with-traceback; the user sees a
+    // clear "load failed" rather than a broken modal.
+    const gmChatIdLegacy = resolveLegacyChatId(gmChat.chatId) ?? -1;
 
     const [gmProfile, setGmProfile] = useState<GMProfileProps | null>(null);
 
@@ -275,7 +281,9 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
 
         const formData = new FormData();
         formData.append("profile_image", userProfileImage);
-        formData.append("gm_id", gmChat.chatId.toString());
+        // Legacy backend binds `gm_id` to an IntegerField. Use the
+        // resolved legacy id, not the v3 UUID.
+        formData.append("gm_id", gmChatIdLegacy.toString());
         const uploadProfileImageResponse = await fetch(`${base_url}/gm/profile/image/`, {
             method: "PUT",
             headers: {

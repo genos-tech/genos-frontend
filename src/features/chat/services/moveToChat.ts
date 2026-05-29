@@ -27,28 +27,9 @@ import { defineNewChat } from "../services/defineNewChat";
 import { loadMDMHistory } from "../services/loadMDMHistory";
 import { loadV3SpecificMessages } from "../services/loadV3SpecificMessages";
 import { popSpecificMessages } from "../services/popSpecificMessages";
+import { resolveV3ChannelId } from "../utils/channelIdResolvers";
 import { defaultDmPartner } from "./constants";
 import { loadSpecificGM } from "./loadSpecificGM";
-
-/**
- * Look up the v3 Channel UUID for a legacy integer chat id by scanning
- * the cached channel list. Returns the UUID string, or null when no
- * mirror exists yet (the backfill hasn't reached this chat, or the
- * channel was just created legacy-side without a v3 row).
- *
- * Used by every entry point that still receives a legacy `chat_id`
- * (Spotlight / ChatSearch search results, activity / flagged sidebar
- * items) so it can hand a UUID off to `channelService.send`.
- */
-function resolveV3ChannelId(legacyChatId: number, chatType: number): string | null {
-    const snapshot = channelService.getSnapshot();
-    for (const ch of snapshot.channels.values()) {
-        if (ch.legacyChatId === legacyChatId && (ch.kind as number) === chatType) {
-            return ch.id;
-        }
-    }
-    return null;
-}
 
 export const moveToDMChat = async (
     socket: Socket | null,
@@ -81,9 +62,7 @@ export const moveToDMChat = async (
     // keeps working unchanged.
     const v3ChannelId = resolveV3ChannelId(chatId, 1);
     if (!v3ChannelId) {
-        console.warn(
-            `[moveToDMChat] no v3 mirror for legacy dmId=${chatId}; run backfill.`
-        );
+        console.warn(`[moveToDMChat] no v3 mirror for legacy dmId=${chatId}; run backfill.`);
         return;
     }
     const fetchedMessages: MessageProps[] = await loadV3SpecificMessages(v3ChannelId, 1);
@@ -103,14 +82,10 @@ export const moveToGMChat = async (
     // leaked legacy integer chatIds into `currentMainChat`.
     const v3ChannelId = resolveV3ChannelId(chatId, 2);
     if (!v3ChannelId) {
-        console.warn(
-            `[moveToGMChat] no v3 mirror for legacy gmId=${chatId}; run backfill.`
-        );
+        console.warn(`[moveToGMChat] no v3 mirror for legacy gmId=${chatId}; run backfill.`);
         return;
     }
-    const existingChat = useCM.allChats?.find(
-        (c) => c.chatId === v3ChannelId && c.chatType === 2
-    );
+    const existingChat = useCM.allChats?.find((c) => c.chatId === v3ChannelId && c.chatType === 2);
     const fetchedMessages: MessageProps[] = await loadV3SpecificMessages(v3ChannelId, 2);
     useCM.setCurrentMainChat(
         defineNewChat(

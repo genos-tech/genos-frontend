@@ -83,6 +83,16 @@ export interface Message {
     mentions: MessageMention[];
     attachments: MessageAttachment[];
     metadata: Record<string, unknown>;
+    /** PM-only FK to the legacy `TaskMaster` row this message renders.
+     *  Drives `MessageBubble`'s click-opens-task behavior and the
+     *  task-status chip in `BubbleUnderBar`. Null on DM/GM/MDM. */
+    taskId: number | null;
+    /** PM-only human-readable task code ("PRJ-42"). Derived server-side
+     *  from `TaskMaster.display_id`. Null on DM/GM/MDM. */
+    displayId: string | null;
+    /** PM-only task status string ("Open" / "Closed" / etc.). Drives the
+     *  colored chip in BubbleUnderBar. Null on DM/GM/MDM. */
+    taskStatus: string | null;
     editedAt: string | null;
     deletedAt: string | null;
     tsSent: string;

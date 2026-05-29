@@ -53,6 +53,7 @@ import { ProjectProfileProps, UserProps } from "../../../../types/admin";
 import { AllChatProps } from "../../../../types/chat";
 import { extractYYYYMMDD } from "../../../../utils/dateUtils";
 import { addChat } from "../../../chat/services/addChat";
+import { resolveLegacyChatId } from "../../../chat/utils/channelIdResolvers";
 import { leaveProject } from "../../services/leaveProject";
 import { updateProjectProfile } from "../../services/updateProjectProfile";
 
@@ -94,15 +95,16 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
     const styles = isDark ? ProfileModalStyles.dark : ProfileModalStyles.light;
     const palette = isDark ? purplePalette.dark : purplePalette.light;
 
-    // PUNCH LIST (v3 chatId migration): every project service this
+    // Resolve the legacy integer `project_id` from the v3 channel UUID
+    // via `Channel.legacyChatId`. Every legacy project service this
     // modal calls (`updateProjectProfile`, `leaveProject`,
-    // `deletePMChatData`, `loadProjectProfile`, the image-version hook)
-    // still takes `chatId: number` because they hit legacy
-    // `/api/v2/project/...` endpoints. v3 `AllChatProps.chatId` is
-    // `string` post-flip — bridge with one local cast. At runtime
-    // UUID-shaped chatIds will 400 at the backend; this whole modal
-    // is dead code once the v3 channel-update path replaces it.
-    const pmChatIdLegacy = pmChat.chatId as unknown as number;
+    // `deletePMChatData`, `loadProjectProfile`, and the inline image
+    // / code PUT below) binds its backend URL param to a Django
+    // `IntegerField`. Passing a UUID 500s.
+    //
+    // Returns `-1` when no v3 mirror exists; downstream calls 404
+    // benignly rather than 500-with-traceback.
+    const pmChatIdLegacy = resolveLegacyChatId(pmChat.chatId) ?? -1;
 
     const [projectProfile, setProjectProfile] = useState<ProjectProfileProps | null>(null);
 

@@ -142,6 +142,12 @@ function v3MessageToLegacyPreview(m: Message): MessageProps {
             avatarImgPath: m.sender?.avatarImgPath ?? "",
             tsLastSeen: "",
             tsJoined: "",
+            // Propagate the system-user flag. PM (and MDM) bubbles
+            // hide the avatar slot + skip the username header when the
+            // sender is the per-project system user that posts the
+            // task-card headers — MessageBubble reads
+            // `message.sender.isSystemUser === true` to do that.
+            isSystemUser: m.sender?.isSystemUser ?? false,
         },
         tsSent: m.tsSent,
         tsUpdated: m.tsUpdated,
@@ -355,9 +361,29 @@ export function v3MessageToLegacy(args: {
 }): MessageProps {
     const { message: m, channelId, chatType } = args;
     const meta = (m.metadata ?? {}) as Record<string, unknown>;
-    const taskId = typeof meta.taskId === "number" ? (meta.taskId as number) : null;
-    const displayId = typeof meta.displayId === "string" ? (meta.displayId as string) : undefined;
-    const taskStatus = typeof meta.taskStatus === "string" ? (meta.taskStatus as string) : null;
+    // Prefer top-level fields (sourced server-side from the linked
+    // `TaskMaster` row via the v3 `MessageSerializer.displayId /
+    // taskStatus / taskId` methods). Fall back to `metadata.*` for
+    // messages written before the serializer changes shipped, in case
+    // any IDB-cached row still carries the older shape.
+    const taskId =
+        typeof m.taskId === "number"
+            ? m.taskId
+            : typeof meta.taskId === "number"
+              ? (meta.taskId as number)
+              : null;
+    const displayId =
+        typeof m.displayId === "string"
+            ? m.displayId
+            : typeof meta.displayId === "string"
+              ? (meta.displayId as string)
+              : undefined;
+    const taskStatus =
+        typeof m.taskStatus === "string"
+            ? m.taskStatus
+            : typeof meta.taskStatus === "string"
+              ? (meta.taskStatus as string)
+              : null;
     const taskCommentCount =
         typeof meta.taskCommentCount === "number" ? (meta.taskCommentCount as number) : undefined;
     return {
@@ -382,6 +408,12 @@ export function v3MessageToLegacy(args: {
             avatarImgPath: m.sender?.avatarImgPath ?? "",
             tsLastSeen: "",
             tsJoined: "",
+            // Required for PM (and MDM) bubbles to hide the avatar
+            // slot + skip the username header when a task-card header
+            // posted by the per-project system user lands in the
+            // pane — `MessageBubble` reads
+            // `message.sender.isSystemUser === true` to do that.
+            isSystemUser: m.sender?.isSystemUser ?? false,
         },
         tsSent: m.tsSent,
         tsUpdated: m.tsUpdated,
@@ -410,10 +442,18 @@ export function v3MessagesToLegacy(args: {
     chatType: number;
 }): MessageProps[] {
     const { messages, channelId, chatType } = args;
+    // For PM channels, top-level messages are task-card headers — one
+    // per task. Anything without a `taskId` is an orphan row (legacy
+    // junk: task was deleted via `on_delete=SET_NULL`, or a non-task
+    // PM message slipped through some pre-task-feature path). Hide
+    // them so the PM pane only renders real task cards. Other kinds
+    // (DM/GM/MDM) keep every top-level non-deleted row.
+    const isPm = chatType === 3;
     const out: MessageProps[] = [];
     for (const m of messages) {
         if (m.isThreadReply) continue;
         if (m.deletedAt) continue;
+        if (isPm && m.taskId == null) continue;
         out.push(v3MessageToLegacy({ message: m, channelId, chatType }));
     }
     out.sort((a, b) => (a.tsSent || "").localeCompare(b.tsSent || ""));
