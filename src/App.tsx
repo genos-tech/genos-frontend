@@ -30,6 +30,7 @@ import { AvatarContextProvider } from "./components/ui/avatars/AvatarContext";
 import { InitialLoad } from "./components/ui/misc/InitialLoad";
 import { RouteLoadingFallback } from "./components/ui/misc/RouteLoadingFallback";
 import { CalendarModal } from "./features/calendar/components/CalendarModal";
+import { isV3ChatEnabled, V3ChatShell } from "./features/channel/V3ChatShell";
 import { OAUTH_INTEGRATIONS_ENABLED } from "./features/integrations/featureFlags";
 import { SpotlightOverlay } from "./features/spotlight/SpotlightOverlay";
 import { CHAT_TYPE_CODE, SpotlightResult } from "./features/spotlight/types";
@@ -57,12 +58,11 @@ import { useWakeRefresh } from "./hooks/common/useWakeRefresh";
 import { useWebSocket } from "./hooks/common/useWebSocket";
 import { useWindowSize } from "./hooks/common/useWindowSize";
 import { registerApiHealthListener, unregisterApiHealthListener } from "./services/api";
+import { useChannelServiceBootstrap } from "./services/channel/useChannelServiceBootstrap";
 import { NotificationsProvider } from "./services/notifications/NotificationsContext";
 import { NotificationToastHost } from "./services/notifications/NotificationToastHost";
 import { PermissionBanner } from "./services/notifications/PermissionBanner";
 import { NotificationIntent } from "./services/notifications/types";
-import { isV3ChatEnabled, V3ChatShell } from "./features/channel/V3ChatShell";
-import { useChannelServiceBootstrap } from "./services/channel/useChannelServiceBootstrap";
 import { refreshAllData } from "./services/refreshAllData";
 
 import { I18nProvider } from "./i18n";
@@ -1106,11 +1106,21 @@ export const App = () => {
                                                                                         <>
                                                                                             <Route
                                                                                                 path="v3"
-                                                                                                element={<V3ChatShell />}
+                                                                                                element={
+                                                                                                    <V3ChatShell />
+                                                                                                }
                                                                                             />
                                                                                             <Route
                                                                                                 path="v3/:channelId"
-                                                                                                element={<V3ChatShell />}
+                                                                                                element={
+                                                                                                    <V3ChatShell />
+                                                                                                }
+                                                                                            />
+                                                                                            <Route
+                                                                                                path="v3/:channelId/t/:rootMessageId"
+                                                                                                element={
+                                                                                                    <V3ChatShell />
+                                                                                                }
                                                                                             />
                                                                                         </>
                                                                                     )}

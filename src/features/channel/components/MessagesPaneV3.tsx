@@ -22,13 +22,20 @@ import { useChannel } from "../hooks/useChannel";
 
 interface MessagesPaneV3Props {
     channelId: string;
+    /** Optional: called when the user clicks the "Reply in thread"
+     *  button on a message. The shell wires this to navigate to
+     *  /workspace/v3/:channelId/t/:rootMessageId so the thread panel
+     *  opens beside the main pane. When omitted, the thread button
+     *  is hidden (still useful for embedded contexts that don't have
+     *  room for a side panel). */
+    onOpenThread?: (rootMessageId: string) => void;
 }
 
 /** Common emojis for the quick-react row. Kept short so it doesn't
  *  overwhelm the proof-of-life UI. */
 const QUICK_EMOJI = ["👍", "❤️", "🎉", "🤔", "😄"];
 
-export function MessagesPaneV3({ channelId }: MessagesPaneV3Props) {
+export function MessagesPaneV3({ channelId, onOpenThread }: MessagesPaneV3Props) {
     const { channel, messages, readCursor, isLoading } = useChannel(channelId);
     const [draft, setDraft] = useState("");
     const [busy, setBusy] = useState(false);
@@ -63,7 +70,7 @@ export function MessagesPaneV3({ channelId }: MessagesPaneV3Props) {
             await channelService.send(
                 channelId,
                 [{ type: "paragraph", content: [{ type: "text", text }] }],
-                { bodyText: text },
+                { bodyText: text }
             );
             setDraft("");
         } catch (e) {
@@ -112,6 +119,7 @@ export function MessagesPaneV3({ channelId }: MessagesPaneV3Props) {
                         channelId={channelId}
                         channelKind={channel.kind}
                         onError={setError}
+                        onOpenThread={onOpenThread}
                     />
                 ))}
                 {messages.length === 0 && <li style={{ opacity: 0.5 }}>No messages yet.</li>}
@@ -169,12 +177,15 @@ interface MessageRowProps {
     channelId: string;
     channelKind: number;
     onError: (msg: string) => void;
+    /** Forwarded from the pane. When set, each row renders a thread
+     *  entry-point button + a reply-count chip when `replyCount > 0`. */
+    onOpenThread?: (rootMessageId: string) => void;
 }
 
 /** Per-message row. Owns the edit-mode toggle, the inline editor, and
  *  the per-row interaction buttons. Pulled out so a re-render of one
  *  row's edit state doesn't re-render the whole list. */
-function MessageRow({ message, channelId, channelKind, onError }: MessageRowProps) {
+function MessageRow({ message, channelId, channelKind, onError, onOpenThread }: MessageRowProps) {
     const [editing, setEditing] = useState(false);
     const [editDraft, setEditDraft] = useState(message.bodyText);
     const [showEmoji, setShowEmoji] = useState(false);
@@ -184,7 +195,7 @@ function MessageRow({ message, channelId, channelKind, onError }: MessageRowProp
             const err = e as ChannelServiceError;
             onError(`${err.code ?? "INTERNAL"}: ${err.message ?? String(err)}`);
         },
-        [onError],
+        [onError]
     );
 
     const handleSaveEdit = useCallback(async () => {
@@ -194,7 +205,7 @@ function MessageRow({ message, channelId, channelKind, onError }: MessageRowProp
             await channelService.edit(
                 message.id,
                 [{ type: "paragraph", content: [{ type: "text", text }] }],
-                text,
+                text
             );
             setEditing(false);
         } catch (e) {
@@ -223,9 +234,7 @@ function MessageRow({ message, channelId, channelKind, onError }: MessageRowProp
             // wherever the legacy `userId` localStorage entry lives —
             // every existing surface reads it that way.
             const me = localStorage.getItem("userId");
-            const mine = message.reactions.find(
-                (r) => r.user.userId === me && r.emoji === emoji,
-            );
+            const mine = message.reactions.find((r) => r.user.userId === me && r.emoji === emoji);
             try {
                 if (mine) {
                     await channelService.unreact(message.id, channelId, channelKind, emoji);
@@ -237,7 +246,7 @@ function MessageRow({ message, channelId, channelKind, onError }: MessageRowProp
                 reportError(e);
             }
         },
-        [channelId, channelKind, message.id, message.reactions, reportError],
+        [channelId, channelKind, message.id, message.reactions, reportError]
     );
 
     const isMine = (() => {
@@ -302,6 +311,17 @@ function MessageRow({ message, channelId, channelKind, onError }: MessageRowProp
                         >
                             🙂+
                         </button>
+                        {onOpenThread && !message.isThreadReply && (
+                            <button
+                                type="button"
+                                onClick={() => onOpenThread(message.id)}
+                                data-testid={`message-row-thread-${message.id}`}
+                                style={{ fontSize: 11 }}
+                                title="Reply in thread"
+                            >
+                                💬{message.replyCount > 0 ? ` ${message.replyCount}` : ""}
+                            </button>
+                        )}
                         {isMine && (
                             <>
                                 <button
@@ -381,10 +401,7 @@ interface ReactionChipsProps {
  *  per-emoji count + a tooltip listing the reactors. */
 function ReactionChips({ messageId, reactions, onToggle }: ReactionChipsProps) {
     const me = localStorage.getItem("userId");
-    const byEmoji = new Map<
-        string,
-        { count: number; mine: boolean; names: string[] }
-    >();
+    const byEmoji = new Map<string, { count: number; mine: boolean; names: string[] }>();
     for (const r of reactions) {
         const cur = byEmoji.get(r.emoji) ?? { count: 0, mine: false, names: [] };
         cur.count += 1;

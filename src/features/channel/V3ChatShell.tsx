@@ -2,12 +2,14 @@
  * `V3ChatShell` — the proof-of-life mount point for the v3 messaging
  * surfaces.
  *
- * Wires `ChannelListV3` + `MessagesPaneV3` side-by-side. Behind the
- * `VITE_USE_V3_CHAT` flag — `isV3ChatEnabled()` returns false in
+ * Routes:
+ *   /workspace/v3                           — channel list, no pane
+ *   /workspace/v3/:channelId                — channel open in main pane
+ *   /workspace/v3/:channelId/t/:rootId      — channel + thread side panel
+ *
+ * Behind `VITE_USE_V3_CHAT` — `isV3ChatEnabled()` returns false in
  * production builds where the flag isn't set, so this entire surface
- * is dormant. Once the v3 architecture is verified end-to-end the
- * legacy `MainChatPane`/`SubChatPane` paths get retired in favor of
- * these (after polish — see plan §4).
+ * is dormant.
  */
 
 import { useCallback, useEffect } from "react";
@@ -15,6 +17,7 @@ import { useNavigate, useParams } from "react-router-dom";
 
 import { ChannelListV3 } from "./components/ChannelListV3";
 import { MessagesPaneV3 } from "./components/MessagesPaneV3";
+import { ThreadPanelV3 } from "./components/ThreadPanelV3";
 
 import { channelService } from "../../services/channel/channelService";
 
@@ -28,17 +31,32 @@ export function isV3ChatEnabled(): boolean {
 }
 
 export function V3ChatShell() {
-    // Channel selection lives in the URL so it survives reloads and the
-    // browser back button does the right thing. `/workspace/v3` → no
-    // selection; `/workspace/v3/<uuid>` → that channel is open.
-    const { channelId } = useParams<{ channelId?: string }>();
+    // Channel + thread selection live in the URL so they survive
+    // reloads and the browser back button does the right thing.
+    const { channelId, rootMessageId } = useParams<{
+        channelId?: string;
+        rootMessageId?: string;
+    }>();
     const navigate = useNavigate();
     const selected = channelId ?? null;
+    const openThread = rootMessageId ?? null;
+
     const setSelected = useCallback(
         (id: string) => {
             navigate(`/workspace/v3/${id}`);
         },
-        [navigate],
+        [navigate]
+    );
+
+    const closeThread = useCallback(() => {
+        if (selected) navigate(`/workspace/v3/${selected}`);
+    }, [selected, navigate]);
+
+    const openThreadFor = useCallback(
+        (rootId: string) => {
+            if (selected) navigate(`/workspace/v3/${selected}/t/${rootId}`);
+        },
+        [selected, navigate]
     );
 
     // Best-effort REST refresh on mount so the chat list has fresh
@@ -61,23 +79,27 @@ export function V3ChatShell() {
         };
     }, []);
 
-    // When a channel is selected, fetch its message delta if we don't
-    // already have it cached. The fetch is `?since=` aware — passing
-    // no `since` returns a full load; subsequent re-opens with the
-    // checkpoint return only deltas.
+    // When a channel is selected, fetch its message + thread deltas in
+    // parallel. The `/messages/` endpoint returns top-level messages;
+    // `/threads/` returns thread replies. Both flow into the same
+    // store via handleMessageCreated and the hooks filter by
+    // isThreadReply.
     useEffect(() => {
         if (!selected) return;
         let cancelled = false;
         // The store doesn't currently track per-channel sync checkpoints
         // (TODO: persist `server_time` in SYNC_CHECKPOINTS and pass on
-        // re-open). For now, every selection triggers a full load. This
-        // is cheap thanks to the per-channel cap on the backend; later
-        // we'll only fetch the tail.
-        void channelService
-            .fetchMessagesDelta(selected)
-            .then((env) => {
+        // re-open). For now, every selection triggers a full load.
+        void Promise.all([
+            channelService.fetchMessagesDelta(selected),
+            channelService.fetchThreadsDelta(selected),
+        ])
+            .then(([msgs, threads]) => {
                 if (cancelled) return;
-                for (const m of env.data.messages ?? []) {
+                for (const m of msgs.data.messages ?? []) {
+                    channelService.handleMessageCreated(m);
+                }
+                for (const m of threads.data.messages ?? []) {
                     channelService.handleMessageCreated(m);
                 }
             })
@@ -99,9 +121,36 @@ export function V3ChatShell() {
             data-testid="v3-chat-shell"
         >
             <ChannelListV3 selectedChannelId={selected} onSelect={setSelected} />
-            <main style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+            <main style={{ flex: 1, display: "flex", minWidth: 0 }}>
                 {selected ? (
-                    <MessagesPaneV3 channelId={selected} />
+                    <>
+                        <div
+                            style={{
+                                flex: 1,
+                                display: "flex",
+                                flexDirection: "column",
+                                minWidth: 0,
+                            }}
+                        >
+                            <MessagesPaneV3 channelId={selected} onOpenThread={openThreadFor} />
+                        </div>
+                        {openThread && (
+                            <div
+                                style={{
+                                    width: 360,
+                                    borderLeft: "1px solid #ddd",
+                                    display: "flex",
+                                    flexDirection: "column",
+                                }}
+                            >
+                                <ThreadPanelV3
+                                    channelId={selected}
+                                    rootMessageId={openThread}
+                                    onClose={closeThread}
+                                />
+                            </div>
+                        )}
+                    </>
                 ) : (
                     <div style={{ padding: 16, opacity: 0.5 }}>
                         Select a channel from the left.
