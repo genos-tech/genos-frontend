@@ -15,8 +15,10 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { Box, Button, IconButton, Input, Sheet, Stack, Typography } from "@mui/joy";
 
 import { channelService, ChannelServiceError } from "../../../services/channel/channelService";
+import { purplePalette } from "../../../theme/purplePalette";
 import type { Message } from "../../../types/channel";
 import { useAttachmentDraft } from "../hooks/useAttachmentDraft";
 import { useChannel } from "../hooks/useChannel";
@@ -24,6 +26,9 @@ import { candidatesFromMessages, useMentionDraft } from "../hooks/useMentionDraf
 import { MessageAttachments } from "./MessageAttachments";
 import { MessageBody } from "./MessageBody";
 import { PendingAttachmentStrip } from "./PendingAttachmentStrip";
+
+/** Pinned to dark palette — see ChannelListV3.tsx for the rationale. */
+const p = purplePalette.dark;
 
 interface MessagesPaneV3Props {
     channelId: string;
@@ -74,10 +79,32 @@ export function MessagesPaneV3({ channelId, onOpenThread }: MessagesPaneV3Props)
     }, [channelId, channel, messages, readCursor]);
 
     if (isLoading) {
-        return <div style={{ padding: 16 }}>Loading channel {channelId}…</div>;
+        return (
+            <Sheet
+                sx={{
+                    p: 2,
+                    flex: 1,
+                    color: p.textMuted,
+                    background: p.surface,
+                }}
+            >
+                Loading channel {channelId}…
+            </Sheet>
+        );
     }
     if (!channel) {
-        return <div style={{ padding: 16 }}>Channel {channelId} not in store.</div>;
+        return (
+            <Sheet
+                sx={{
+                    p: 2,
+                    flex: 1,
+                    color: p.textMuted,
+                    background: p.surface,
+                }}
+            >
+                Channel {channelId} not in store.
+            </Sheet>
+        );
     }
 
     async function send() {
@@ -122,35 +149,47 @@ export function MessagesPaneV3({ channelId, onOpenThread }: MessagesPaneV3Props)
     }
 
     return (
-        <div
-            style={{
+        <Sheet
+            data-testid="messages-pane-v3"
+            sx={{
                 display: "flex",
                 flexDirection: "column",
                 height: "100%",
-                fontFamily: "system-ui, sans-serif",
+                background: p.bg,
+                color: p.text,
             }}
-            data-testid="messages-pane-v3"
         >
-            <header
-                style={{
-                    padding: "8px 12px",
-                    borderBottom: "1px solid #ddd",
-                    background: "#fafafa",
-                    fontWeight: 600,
+            <Box
+                component="header"
+                sx={{
+                    px: 1.5,
+                    py: 1,
+                    borderBottom: `1px solid ${p.divider}`,
+                    background: p.surfaceElevated,
+                    display: "flex",
+                    alignItems: "baseline",
+                    gap: 1,
                 }}
             >
-                {channel.title || channel.id} <span style={{ opacity: 0.6 }}>(v3)</span>
-            </header>
+                <Typography level="title-md" sx={{ color: p.text, fontWeight: 700 }}>
+                    {channel.title || channel.id}
+                </Typography>
+                <Typography level="body-xs" sx={{ color: p.textSubtle }}>
+                    (v3)
+                </Typography>
+            </Box>
 
-            <ul
-                style={{
+            <Box
+                component="ul"
+                data-testid="messages-pane-v3-list"
+                sx={{
                     flex: 1,
                     overflowY: "auto",
                     margin: 0,
-                    padding: "8px 12px",
+                    px: 1.5,
+                    py: 1,
                     listStyle: "none",
                 }}
-                data-testid="messages-pane-v3-list"
             >
                 {messages.map((m) => (
                     <MessageRow
@@ -163,21 +202,32 @@ export function MessagesPaneV3({ channelId, onOpenThread }: MessagesPaneV3Props)
                         onOpenThread={onOpenThread}
                     />
                 ))}
-                {messages.length === 0 && <li style={{ opacity: 0.5 }}>No messages yet.</li>}
-            </ul>
+                {messages.length === 0 && (
+                    <Box component="li" sx={{ color: p.textSubtle }}>
+                        No messages yet.
+                    </Box>
+                )}
+            </Box>
 
             {error && (
-                <div
-                    style={{
-                        color: "crimson",
-                        padding: "4px 12px",
-                        fontSize: 12,
-                    }}
+                <Box
                     role="alert"
                     onClick={() => setError(null)}
+                    sx={{
+                        color: p.dangerTint,
+                        background: p.dangerTintBg,
+                        border: `1px solid ${p.dangerTintBorder}`,
+                        borderRadius: 6,
+                        mx: 1.5,
+                        my: 0.5,
+                        px: 1,
+                        py: 0.5,
+                        fontSize: 12,
+                        cursor: "pointer",
+                    }}
                 >
                     {error} (click to dismiss)
-                </div>
+                </Box>
             )}
 
             <PendingAttachmentStrip
@@ -185,16 +235,20 @@ export function MessagesPaneV3({ channelId, onOpenThread }: MessagesPaneV3Props)
                 onRemove={attachments.removeAt}
                 testIdPrefix="messages-pane-v3"
             />
-            <form
-                onSubmit={(e) => {
+            <Box
+                component="form"
+                onSubmit={(e: React.FormEvent) => {
                     e.preventDefault();
                     void send();
                 }}
-                style={{
+                sx={{
                     display: "flex",
-                    gap: 8,
-                    padding: "8px 12px",
-                    borderTop: "1px solid #ddd",
+                    alignItems: "center",
+                    gap: 1,
+                    px: 1.5,
+                    py: 1,
+                    borderTop: `1px solid ${p.divider}`,
+                    background: p.surface,
                     position: "relative",
                 }}
             >
@@ -218,40 +272,56 @@ export function MessagesPaneV3({ channelId, onOpenThread }: MessagesPaneV3Props)
                     style={{ display: "none" }}
                     data-testid="messages-pane-v3-file-input"
                 />
-                <button
-                    type="button"
+                <IconButton
+                    size="sm"
+                    variant="plain"
                     onClick={() => fileInputRef.current?.click()}
                     disabled={busy}
-                    style={{ fontSize: 14 }}
                     title="Attach file(s)"
                     data-testid="messages-pane-v3-attach"
+                    sx={{
+                        fontSize: 16,
+                        color: p.textMuted,
+                        "&:hover": { background: p.hoverBg, color: p.text },
+                    }}
                 >
                     📎
-                </button>
-                <input
-                    type="text"
-                    value={mention.draft}
-                    onChange={(e) => {
-                        mention.setDraft(e.target.value);
-                        mention.setCaret(e.target.selectionStart ?? e.target.value.length);
+                </IconButton>
+                <Input
+                    slotProps={{
+                        input: {
+                            "data-testid": "messages-pane-v3-input",
+                            value: mention.draft,
+                            onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
+                                mention.setDraft(e.target.value);
+                                mention.setCaret(e.target.selectionStart ?? e.target.value.length);
+                            },
+                            onKeyUp: (e: React.KeyboardEvent<HTMLInputElement>) =>
+                                mention.setCaret(
+                                    e.currentTarget.selectionStart ?? e.currentTarget.value.length
+                                ),
+                            onClick: (e: React.MouseEvent<HTMLInputElement>) =>
+                                mention.setCaret(
+                                    e.currentTarget.selectionStart ?? e.currentTarget.value.length
+                                ),
+                        },
                     }}
-                    onKeyUp={(e) =>
-                        mention.setCaret(
-                            e.currentTarget.selectionStart ?? e.currentTarget.value.length
-                        )
-                    }
-                    onClick={(e) =>
-                        mention.setCaret(
-                            e.currentTarget.selectionStart ?? e.currentTarget.value.length
-                        )
-                    }
                     placeholder="Message…  (type @ to mention)"
                     disabled={busy}
-                    style={{ flex: 1, padding: "4px 8px" }}
-                    data-testid="messages-pane-v3-input"
+                    sx={{
+                        flex: 1,
+                        background: p.inputBg,
+                        borderColor: p.inputBorder,
+                        color: p.text,
+                        "&:focus-within": {
+                            borderColor: p.inputFocusBorder,
+                            boxShadow: p.inputFocusShadow,
+                        },
+                    }}
                 />
-                <button
+                <Button
                     type="submit"
+                    size="sm"
                     disabled={
                         busy ||
                         attachments.isUploading ||
@@ -259,11 +329,18 @@ export function MessagesPaneV3({ channelId, onOpenThread }: MessagesPaneV3Props)
                             !attachments.pending.some((p) => p.error === null))
                     }
                     data-testid="messages-pane-v3-send"
+                    sx={{
+                        background: p.primaryButtonBg,
+                        color: "#fff",
+                        boxShadow: p.primaryButtonShadow,
+                        "&:hover": { background: p.primaryButtonHover },
+                        "&:disabled": { opacity: 0.5 },
+                    }}
                 >
                     {attachments.isUploading ? "Uploading…" : "Send"}
-                </button>
-            </form>
-        </div>
+                </Button>
+            </Box>
+        </Sheet>
     );
 }
 
@@ -368,44 +445,87 @@ function MessageRow({
         return me && message.sender?.userId === me;
     })();
 
+    const rowActionBtn = {
+        background: "transparent",
+        border: `1px solid transparent`,
+        color: p.textMuted,
+        fontSize: 11,
+        cursor: "pointer",
+        padding: "2px 6px",
+        borderRadius: 4,
+        "&:hover": { background: p.hoverBg, color: p.text },
+    } as const;
+
     return (
-        <li
+        <Box
+            component="li"
             data-testid={`message-row-${message.id}`}
-            style={{
-                padding: "6px 0",
+            sx={{
+                py: 0.75,
                 opacity: message.deletedAt ? 0.4 : 1,
                 fontStyle: message.deletedAt ? "italic" : "normal",
+                borderRadius: 6,
+                px: 0.5,
+                "&:hover": { background: p.hoverBg },
+                transition: "background 120ms ease",
             }}
         >
-            <div style={{ display: "flex", gap: 6, alignItems: "baseline" }}>
-                <strong>{message.sender?.userName ?? "system"}:</strong>{" "}
+            <Box sx={{ display: "flex", gap: 1, alignItems: "baseline" }}>
+                <Typography
+                    component="strong"
+                    level="title-sm"
+                    sx={{ color: p.accentSoft, fontWeight: 700 }}
+                >
+                    {message.sender?.userName ?? "system"}:
+                </Typography>
                 {editing ? (
-                    <span style={{ display: "flex", gap: 4, flex: 1 }}>
-                        <input
-                            type="text"
-                            value={editDraft}
-                            onChange={(e) => setEditDraft(e.target.value)}
-                            onKeyDown={(e) => {
-                                if (e.key === "Enter") void handleSaveEdit();
-                                if (e.key === "Escape") handleCancelEdit();
+                    <Box sx={{ display: "flex", gap: 0.5, flex: 1 }}>
+                        <Input
+                            slotProps={{
+                                input: {
+                                    "data-testid": `message-row-edit-input-${message.id}`,
+                                    value: editDraft,
+                                    autoFocus: true,
+                                    onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
+                                        setEditDraft(e.target.value),
+                                    onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => {
+                                        if (e.key === "Enter") void handleSaveEdit();
+                                        if (e.key === "Escape") handleCancelEdit();
+                                    },
+                                },
                             }}
-                            autoFocus
-                            style={{ flex: 1, padding: "2px 6px" }}
-                            data-testid={`message-row-edit-input-${message.id}`}
+                            size="sm"
+                            sx={{
+                                flex: 1,
+                                background: p.inputBg,
+                                borderColor: p.inputBorder,
+                                color: p.text,
+                            }}
                         />
-                        <button
-                            type="button"
+                        <Button
+                            size="sm"
+                            variant="soft"
                             onClick={() => void handleSaveEdit()}
                             data-testid={`message-row-edit-save-${message.id}`}
+                            sx={{
+                                background: p.buttonBg,
+                                color: p.text,
+                                "&:hover": { background: p.buttonBgHover },
+                            }}
                         >
                             Save
-                        </button>
-                        <button type="button" onClick={handleCancelEdit}>
+                        </Button>
+                        <Button
+                            size="sm"
+                            variant="plain"
+                            onClick={handleCancelEdit}
+                            sx={{ color: p.textMuted }}
+                        >
                             Cancel
-                        </button>
-                    </span>
+                        </Button>
+                    </Box>
                 ) : (
-                    <>
+                    <Box component="span" sx={{ color: p.text, lineHeight: 1.4 }}>
                         {message.deletedAt ? (
                             "(deleted)"
                         ) : (
@@ -420,127 +540,152 @@ function MessageRow({
                             />
                         )}
                         {!message.deletedAt && mentionsMe(message) && (
-                            <span
+                            <Box
+                                component="span"
                                 data-testid={`message-row-mention-me-${message.id}`}
-                                style={{
-                                    marginLeft: 6,
-                                    padding: "0 4px",
-                                    background: "rgba(239, 68, 68, 0.18)",
-                                    color: "#b91c1c",
+                                title="This message mentions you"
+                                sx={{
+                                    ml: 0.75,
+                                    px: 0.5,
+                                    background: p.dangerTintBg,
+                                    color: p.dangerTint,
+                                    border: `1px solid ${p.dangerTintBorder}`,
                                     borderRadius: 3,
                                     fontSize: 10,
                                     fontWeight: 700,
                                     textTransform: "uppercase",
                                 }}
-                                title="This message mentions you"
                             >
                                 @you
-                            </span>
+                            </Box>
                         )}
                         {message.editedAt && !message.deletedAt && (
-                            <span style={{ marginLeft: 8, opacity: 0.5, fontSize: 12 }}>
+                            <Typography
+                                component="span"
+                                level="body-xs"
+                                sx={{ ml: 1, color: p.textSubtle }}
+                            >
                                 (edited)
-                            </span>
+                            </Typography>
                         )}
-                    </>
+                    </Box>
                 )}
                 {!editing && !message.deletedAt && isFlagged && (
-                    <span
+                    <Box
+                        component="span"
                         data-testid={`message-row-flagged-indicator-${message.id}`}
-                        style={{ marginLeft: 6, fontSize: 12 }}
                         title="You flagged this message"
+                        sx={{ ml: 0.75, fontSize: 12 }}
                     >
                         ⭐
-                    </span>
+                    </Box>
                 )}
                 {!editing && !message.deletedAt && (
-                    <span style={{ marginLeft: "auto", display: "flex", gap: 4 }}>
-                        <button
+                    <Stack
+                        direction="row"
+                        spacing={0.25}
+                        sx={{ ml: "auto", alignItems: "center" }}
+                    >
+                        <Box
+                            component="button"
                             type="button"
                             onClick={() => void handleToggleFlag()}
                             data-testid={`message-row-flag-${message.id}`}
-                            style={{ fontSize: 11, opacity: isFlagged ? 1 : 0.45 }}
                             title={isFlagged ? "Unflag message" : "Flag message"}
+                            sx={{
+                                ...rowActionBtn,
+                                opacity: isFlagged ? 1 : 0.45,
+                            }}
                         >
                             ⭐
-                        </button>
-                        <button
+                        </Box>
+                        <Box
+                            component="button"
                             type="button"
                             onClick={() => setShowEmoji((v) => !v)}
                             data-testid={`message-row-react-${message.id}`}
-                            style={{ fontSize: 11 }}
                             title="Add reaction"
+                            sx={rowActionBtn}
                         >
                             🙂+
-                        </button>
+                        </Box>
                         {onOpenThread && !message.isThreadReply && (
-                            <button
+                            <Box
+                                component="button"
                                 type="button"
                                 onClick={() => onOpenThread(message.id)}
                                 data-testid={`message-row-thread-${message.id}`}
-                                style={{ fontSize: 11 }}
                                 title="Reply in thread"
+                                sx={rowActionBtn}
                             >
                                 💬{message.replyCount > 0 ? ` ${message.replyCount}` : ""}
-                            </button>
+                            </Box>
                         )}
                         {isMine && (
                             <>
-                                <button
+                                <Box
+                                    component="button"
                                     type="button"
                                     onClick={() => {
                                         setEditDraft(message.bodyText);
                                         setEditing(true);
                                     }}
-                                    style={{ fontSize: 11 }}
                                     data-testid={`message-row-edit-${message.id}`}
+                                    sx={rowActionBtn}
                                 >
                                     Edit
-                                </button>
-                                <button
+                                </Box>
+                                <Box
+                                    component="button"
                                     type="button"
                                     onClick={() => void handleDelete()}
-                                    style={{ fontSize: 11 }}
                                     data-testid={`message-row-delete-${message.id}`}
+                                    sx={rowActionBtn}
                                 >
                                     Delete
-                                </button>
+                                </Box>
                             </>
                         )}
-                    </span>
+                    </Stack>
                 )}
-            </div>
+            </Box>
             {showEmoji && !editing && !message.deletedAt && (
-                <div
-                    style={{
-                        marginTop: 4,
+                <Box
+                    data-testid={`message-row-emoji-picker-${message.id}`}
+                    sx={{
+                        mt: 0.5,
                         display: "flex",
-                        gap: 4,
-                        padding: "4px 6px",
-                        background: "#f4f4f4",
-                        borderRadius: 4,
+                        gap: 0.5,
+                        px: 0.75,
+                        py: 0.5,
+                        background: p.chipBg,
+                        border: `1px solid ${p.chipBorder}`,
+                        borderRadius: 6,
                         width: "fit-content",
                     }}
-                    data-testid={`message-row-emoji-picker-${message.id}`}
                 >
                     {QUICK_EMOJI.map((e) => (
-                        <button
+                        <Box
                             key={e}
+                            component="button"
                             type="button"
                             onClick={() => void handleToggleReaction(e)}
-                            style={{
-                                fontSize: 14,
-                                padding: "2px 6px",
+                            data-testid={`message-row-emoji-${message.id}-${e}`}
+                            sx={{
+                                fontSize: 16,
+                                px: 0.75,
+                                py: 0.25,
                                 background: "transparent",
                                 border: "1px solid transparent",
                                 cursor: "pointer",
+                                borderRadius: 4,
+                                "&:hover": { background: p.hoverBg },
                             }}
-                            data-testid={`message-row-emoji-${message.id}-${e}`}
                         >
                             {e}
-                        </button>
+                        </Box>
                     ))}
-                </div>
+                </Box>
             )}
             {!message.deletedAt && message.attachments.length > 0 && (
                 <MessageAttachments messageId={message.id} attachments={message.attachments} />
@@ -552,7 +697,7 @@ function MessageRow({
                     onToggle={handleToggleReaction}
                 />
             )}
-        </li>
+        </Box>
     );
 }
 
@@ -576,27 +721,31 @@ interface MentionPickerProps {
  *  is active. Clicking a row inserts the mention chip via the hook. */
 function MentionPicker({ testIdPrefix, suggestions, onSelect }: MentionPickerProps) {
     return (
-        <div
+        <Sheet
+            variant="outlined"
             data-testid={`${testIdPrefix}-mention-picker`}
-            style={{
+            sx={{
                 position: "absolute",
                 bottom: "100%",
                 left: 12,
-                marginBottom: 4,
-                background: "#fff",
-                border: "1px solid #ccc",
-                borderRadius: 4,
-                boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+                mb: 0.5,
+                background: p.surfaceSolid,
+                borderColor: p.border,
+                color: p.text,
+                borderRadius: 6,
+                boxShadow: p.shadow,
                 fontSize: 13,
-                minWidth: 160,
+                minWidth: 180,
                 zIndex: 10,
+                overflow: "hidden",
             }}
         >
             {suggestions.map((s) => (
-                <button
+                <Box
                     key={s.userId}
+                    component="button"
                     type="button"
-                    onMouseDown={(e) => {
+                    onMouseDown={(e: React.MouseEvent) => {
                         // onMouseDown (not onClick) so we fire before
                         // the input loses focus and the picker unmounts
                         // mid-click. Without this, the trigger char
@@ -605,20 +754,23 @@ function MentionPicker({ testIdPrefix, suggestions, onSelect }: MentionPickerPro
                         onSelect(s);
                     }}
                     data-testid={`${testIdPrefix}-mention-option-${s.userId}`}
-                    style={{
+                    sx={{
                         display: "block",
                         width: "100%",
                         textAlign: "left",
-                        padding: "4px 8px",
+                        px: 1,
+                        py: 0.75,
                         background: "transparent",
                         border: "none",
+                        color: p.text,
                         cursor: "pointer",
+                        "&:hover": { background: p.hoverBg },
                     }}
                 >
                     @{s.userName}
-                </button>
+                </Box>
             ))}
-        </div>
+        </Sheet>
     );
 }
 
@@ -641,29 +793,36 @@ function ReactionChips({ messageId, reactions, onToggle }: ReactionChipsProps) {
         byEmoji.set(r.emoji, cur);
     }
     return (
-        <div
-            style={{ display: "flex", gap: 4, marginTop: 4 }}
+        <Box
             data-testid={`message-row-reactions-${messageId}`}
+            sx={{ display: "flex", gap: 0.5, mt: 0.5 }}
         >
             {Array.from(byEmoji.entries()).map(([emoji, info]) => (
-                <button
+                <Box
                     key={emoji}
+                    component="button"
                     type="button"
                     onClick={() => onToggle(emoji)}
                     title={info.names.join(", ")}
                     data-testid={`message-row-reaction-chip-${messageId}-${emoji}`}
-                    style={{
+                    sx={{
                         fontSize: 12,
-                        padding: "0 6px",
-                        borderRadius: 10,
-                        border: info.mine ? "1px solid #44a" : "1px solid #ccc",
-                        background: info.mine ? "#eaf" : "#f4f4f4",
+                        px: 0.75,
+                        py: 0.25,
+                        borderRadius: 12,
+                        border: `1px solid ${info.mine ? p.accentSoft : p.border}`,
+                        background: info.mine ? p.activeBg : p.chipBg,
+                        color: p.text,
                         cursor: "pointer",
+                        "&:hover": {
+                            background: info.mine ? p.activeBg : p.hoverBg,
+                            borderColor: p.accentSoft,
+                        },
                     }}
                 >
                     {emoji} {info.count}
-                </button>
+                </Box>
             ))}
-        </div>
+        </Box>
     );
 }

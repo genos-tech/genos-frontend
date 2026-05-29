@@ -16,7 +16,11 @@
 
 import type { CSSProperties } from "react";
 
+import { purplePalette } from "../../../theme/purplePalette";
 import type { MessageAttachment } from "../../../types/channel";
+
+/** Pinned to dark palette — see ChannelListV3.tsx for the rationale. */
+const p = purplePalette.dark;
 
 interface MessageAttachmentsProps {
     messageId: string;
@@ -34,12 +38,12 @@ const CHIP_STYLE: CSSProperties = {
     display: "inline-flex",
     alignItems: "center",
     gap: 6,
-    padding: "4px 8px",
-    background: "#f4f4f4",
-    border: "1px solid #ddd",
-    borderRadius: 4,
+    padding: "4px 10px",
+    background: p.chipBg,
+    border: `1px solid ${p.chipBorder}`,
+    borderRadius: 6,
     fontSize: 12,
-    color: "#222",
+    color: p.text,
     textDecoration: "none",
     maxWidth: 280,
 };
@@ -48,8 +52,8 @@ const PREVIEW_STYLE: CSSProperties = {
     display: "block",
     maxWidth: 240,
     maxHeight: 180,
-    borderRadius: 4,
-    border: "1px solid #ddd",
+    borderRadius: 6,
+    border: `1px solid ${p.border}`,
     marginBottom: 4,
 };
 
