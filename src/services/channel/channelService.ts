@@ -400,10 +400,16 @@ export class ChannelService {
         form.append("file", file);
         if (file.type) form.append("mime", file.type);
         try {
+            // IMPORTANT: do NOT set Content-Type manually here. axios
+            // (and the browser's XHR/fetch under the hood) generates a
+            // `multipart/form-data; boundary=...` header automatically
+            // when the body is a FormData. Manually setting
+            // `Content-Type: multipart/form-data` strips the boundary,
+            // and the server's multipart parser then can't split the
+            // parts → 400 "Missing multipart field 'file'."
             const res = await this.api().post<MessageAttachment>(
                 `/api/v3/messages/${messageId}/attachments/`,
-                form,
-                { headers: { "Content-Type": "multipart/form-data" } }
+                form
             );
             return res.data;
         } catch (e) {
