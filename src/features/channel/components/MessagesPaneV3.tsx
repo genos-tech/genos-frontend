@@ -14,14 +14,16 @@
  * inherit from once we've validated the UX end-to-end.
  */
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { channelService, ChannelServiceError } from "../../../services/channel/channelService";
 import type { Message } from "../../../types/channel";
+import { useAttachmentDraft } from "../hooks/useAttachmentDraft";
 import { useChannel } from "../hooks/useChannel";
 import { candidatesFromMessages, useMentionDraft } from "../hooks/useMentionDraft";
 import { MessageAttachments } from "./MessageAttachments";
 import { MessageBody } from "./MessageBody";
+import { PendingAttachmentStrip } from "./PendingAttachmentStrip";
 
 interface MessagesPaneV3Props {
     channelId: string;
@@ -46,6 +48,8 @@ export function MessagesPaneV3({ channelId, onOpenThread }: MessagesPaneV3Props)
         [messages, currentUserId]
     );
     const mention = useMentionDraft(candidates);
+    const attachments = useAttachmentDraft();
+    const fileInputRef = useRef<HTMLInputElement | null>(null);
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -71,13 +75,37 @@ export function MessagesPaneV3({ channelId, onOpenThread }: MessagesPaneV3Props)
 
     async function send() {
         const text = mention.draft.trim();
-        if (!text) return;
+        const hasAttachments = attachments.pending.some((p) => p.error === null);
+        // Allow sending if there's text OR at least one valid attachment.
+        // An empty text + valid file → the message exists as an "attachment-
+        // only" post, matching how the production composer behaves.
+        if (!text && !hasAttachments) return;
         setBusy(true);
         setError(null);
         try {
             const body = mention.buildBody();
-            await channelService.send(channelId, body, { bodyText: text });
+            const msg = await channelService.send(channelId, body, { bodyText: text });
+            // The send ack returns the created message; we need its id to
+            // attach files. If the server didn't echo the message (older
+            // server / ack shape mismatch), skip the uploads and let the
+            // user retry once the message round-trips back via the
+            // broadcast.
+            if (msg && hasAttachments) {
+                const report = await attachments.uploadAll(channelId, msg.id);
+                if (report.failed.length > 0) {
+                    setError(
+                        `Uploaded ${report.succeeded}, ${report.failed.length} failed: ` +
+                            report.failed.map((f) => f.error).join("; ")
+                    );
+                }
+            }
             mention.reset();
+            // Clear the pending strip only if every upload landed —
+            // failures stay visible so the user can retry without
+            // re-picking the files.
+            if (!hasAttachments || attachments.pending.length === 0) {
+                attachments.reset();
+            }
         } catch (e) {
             const err = e as ChannelServiceError;
             setError(`${err.code}: ${err.message}`);
@@ -144,6 +172,11 @@ export function MessagesPaneV3({ channelId, onOpenThread }: MessagesPaneV3Props)
                 </div>
             )}
 
+            <PendingAttachmentStrip
+                pending={attachments.pending}
+                onRemove={attachments.removeAt}
+                testIdPrefix="messages-pane-v3"
+            />
             <form
                 onSubmit={(e) => {
                     e.preventDefault();
@@ -164,6 +197,29 @@ export function MessagesPaneV3({ channelId, onOpenThread }: MessagesPaneV3Props)
                         onSelect={mention.selectCandidate}
                     />
                 )}
+                <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    onChange={(e) => {
+                        attachments.addFiles(e.target.files);
+                        // Reset the input so the same file can be re-picked
+                        // after a remove + re-pick.
+                        e.target.value = "";
+                    }}
+                    style={{ display: "none" }}
+                    data-testid="messages-pane-v3-file-input"
+                />
+                <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={busy}
+                    style={{ fontSize: 14 }}
+                    title="Attach file(s)"
+                    data-testid="messages-pane-v3-attach"
+                >
+                    📎
+                </button>
                 <input
                     type="text"
                     value={mention.draft}
@@ -188,10 +244,15 @@ export function MessagesPaneV3({ channelId, onOpenThread }: MessagesPaneV3Props)
                 />
                 <button
                     type="submit"
-                    disabled={busy || !mention.draft.trim()}
+                    disabled={
+                        busy ||
+                        attachments.isUploading ||
+                        (!mention.draft.trim() &&
+                            !attachments.pending.some((p) => p.error === null))
+                    }
                     data-testid="messages-pane-v3-send"
                 >
-                    Send
+                    {attachments.isUploading ? "Uploading…" : "Send"}
                 </button>
             </form>
         </div>

@@ -10,13 +10,15 @@
  * proof-of-life only.
  */
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
 import { ChannelServiceError } from "../../../services/channel/channelService";
+import { useAttachmentDraft } from "../hooks/useAttachmentDraft";
 import { useChannelThread } from "../hooks/useChannelThread";
 import { candidatesFromMessages, useMentionDraft } from "../hooks/useMentionDraft";
 import { MessageAttachments } from "./MessageAttachments";
 import { MessageBody } from "./MessageBody";
+import { PendingAttachmentStrip } from "./PendingAttachmentStrip";
 
 interface ThreadPanelV3Props {
     channelId: string;
@@ -35,17 +37,32 @@ export function ThreadPanelV3({ channelId, rootMessageId, onClose }: ThreadPanel
         [root, replies, currentUserId]
     );
     const mention = useMentionDraft(candidates);
+    const attachments = useAttachmentDraft();
+    const fileInputRef = useRef<HTMLInputElement | null>(null);
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     async function send() {
         const text = mention.draft.trim();
-        if (!text) return;
+        const hasAttachments = attachments.pending.some((p) => p.error === null);
+        if (!text && !hasAttachments) return;
         setBusy(true);
         setError(null);
         try {
-            await replyInThread(mention.buildBody(), { bodyText: text });
+            const reply = await replyInThread(mention.buildBody(), { bodyText: text });
+            if (reply && hasAttachments) {
+                const report = await attachments.uploadAll(channelId, reply.id);
+                if (report.failed.length > 0) {
+                    setError(
+                        `Uploaded ${report.succeeded}, ${report.failed.length} failed: ` +
+                            report.failed.map((f) => f.error).join("; ")
+                    );
+                }
+            }
             mention.reset();
+            if (!hasAttachments || attachments.pending.length === 0) {
+                attachments.reset();
+            }
         } catch (e) {
             const err = e as ChannelServiceError;
             setError(`${err.code ?? "INTERNAL"}: ${err.message ?? String(err)}`);
@@ -189,6 +206,11 @@ export function ThreadPanelV3({ channelId, rootMessageId, onClose }: ThreadPanel
                 </div>
             )}
 
+            <PendingAttachmentStrip
+                pending={attachments.pending}
+                onRemove={attachments.removeAt}
+                testIdPrefix="thread-panel-v3"
+            />
             <form
                 onSubmit={(e) => {
                     e.preventDefault();
@@ -244,6 +266,27 @@ export function ThreadPanelV3({ channelId, rootMessageId, onClose }: ThreadPanel
                     </div>
                 )}
                 <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    onChange={(e) => {
+                        attachments.addFiles(e.target.files);
+                        e.target.value = "";
+                    }}
+                    style={{ display: "none" }}
+                    data-testid="thread-panel-v3-file-input"
+                />
+                <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={busy || !root}
+                    style={{ fontSize: 14 }}
+                    title="Attach file(s)"
+                    data-testid="thread-panel-v3-attach"
+                >
+                    📎
+                </button>
+                <input
                     type="text"
                     value={mention.draft}
                     onChange={(e) => {
@@ -267,10 +310,16 @@ export function ThreadPanelV3({ channelId, rootMessageId, onClose }: ThreadPanel
                 />
                 <button
                     type="submit"
-                    disabled={busy || !mention.draft.trim() || !root}
+                    disabled={
+                        busy ||
+                        !root ||
+                        attachments.isUploading ||
+                        (!mention.draft.trim() &&
+                            !attachments.pending.some((p) => p.error === null))
+                    }
                     data-testid="thread-panel-v3-send"
                 >
-                    Reply
+                    {attachments.isUploading ? "Uploading…" : "Reply"}
                 </button>
             </form>
         </div>

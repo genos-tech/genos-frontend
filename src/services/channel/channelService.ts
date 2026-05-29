@@ -42,6 +42,7 @@ import type {
     DeltaEnvelope,
     Flag,
     Message,
+    MessageAttachment,
     MessageReaction,
     MessagesDeltaData,
     Pin,
@@ -378,6 +379,38 @@ export class ChannelService {
         }
     }
 
+    /**
+     * Upload one file as a `MessageAttachment` against an existing
+     * message. The server validates that the requesting user is the
+     * sender; we do not pre-check that here because the auth/permission
+     * model is owned by the server and a stale cache shouldn't gate the
+     * UI from trying.
+     *
+     * Returns the serialized `MessageAttachment`. Callers should
+     * pipeline this into the channel store via `handleMessageUpdated`
+     * (or just trust the next `fetchMessagesDelta` to pick it up via
+     * the bumped `ts_updated_at`).
+     *
+     * Multi-file uploads are NOT batched server-side; callers should
+     * `Promise.all` over their pending list. Partial failure on one
+     * file leaves the others attached.
+     */
+    async uploadAttachment(messageId: string, file: File): Promise<MessageAttachment> {
+        const form = new FormData();
+        form.append("file", file);
+        if (file.type) form.append("mime", file.type);
+        try {
+            const res = await this.api().post<MessageAttachment>(
+                `/api/v3/messages/${messageId}/attachments/`,
+                form,
+                { headers: { "Content-Type": "multipart/form-data" } }
+            );
+            return res.data;
+        } catch (e) {
+            throw unwrapAxiosError(e);
+        }
+    }
+
     // ---- Socket mutations (each emits + awaits ack) ----------------------
 
     /** Send a message. Optimistic UI lives in the caller (a thin pending
@@ -544,6 +577,24 @@ export class ChannelService {
         }
         this._notify();
         void this._persistMessage(message);
+    }
+
+    /**
+     * Splice a freshly uploaded attachment into the message's
+     * `attachments[]` so the row updates without waiting for the next
+     * delta-sync. Idempotent by attachment.id (same upload acknowledged
+     * twice — won't double-attach).
+     */
+    handleAttachmentAdded(
+        channelId: string,
+        messageId: string,
+        attachment: MessageAttachment
+    ): void {
+        this._mutateMessage(channelId, messageId, (m) => {
+            if (m.attachments.some((a) => a.id === attachment.id)) return m;
+            return { ...m, attachments: [...m.attachments, attachment] };
+        });
+        this._notify();
     }
 
     handleMessageDeleted(event: MessageDeletedPayload): void {
