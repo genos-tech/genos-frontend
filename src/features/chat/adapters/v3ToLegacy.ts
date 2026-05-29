@@ -26,7 +26,7 @@ import {
     type Message,
     type MessageReaction,
 } from "../../../types/channel";
-import type { AllChatProps, MessageProps } from "../../../types/chat";
+import type { AllChatProps, MDMMemberProps, MessageProps } from "../../../types/chat";
 import type { ReactionProps } from "../../../types/common";
 
 /** Map v3 `ChannelKind` to the legacy integer kind code. They happen
@@ -38,6 +38,27 @@ const KIND_TO_CHAT_TYPE: Record<ChannelKind, number> = {
     [ChannelKind.PM]: 3,
     [ChannelKind.MDM]: 4,
 };
+
+/**
+ * Normalize a v3 Message body for the legacy renderer. The legacy
+ * `BnChatPreview` does `content.slice(0, -1)` to drop the trailing
+ * empty paragraph the BlockNote editor auto-appends; this throws
+ * if `content` isn't an array OR has fewer than 2 blocks (slicing a
+ * 1-element array gives `[]` and BlockNote rejects "empty initial
+ * content"). Defensive coercion + tail pad so any malformed body
+ * (string, empty array, single block from a legacy import) still
+ * renders instead of crashing the whole MessageBubble.
+ */
+const EMPTY_PARAGRAPH = { type: "paragraph", content: [] };
+function normalizeBodyForLegacy(body: unknown): unknown[] {
+    const arr = Array.isArray(body) ? body : [];
+    if (arr.length >= 2) return arr;
+    if (arr.length === 1) return [...arr, EMPTY_PARAGRAPH];
+    // Empty array — give BnChatPreview two blocks so `.slice(0, -1)`
+    // leaves at least one element. Renders as a blank bubble (matches
+    // the legacy "deleted / empty message" rendering).
+    return [EMPTY_PARAGRAPH, EMPTY_PARAGRAPH];
+}
 
 /** A best-effort empty user — used for `dmPartnerUser` on non-DM
  *  channels (the legacy shape requires the field but UI code reads
@@ -66,22 +87,29 @@ function resolveDmPartner(
     currentUserId: string | null
 ): UserProps {
     if (!members || !currentUserId) return EMPTY_USER;
-    const partner = members.find((m) => m.userId !== currentUserId);
+    // For self-DMs (talking to yourself), every member is the current
+    // user — `find(m => m.userId !== currentUserId)` returns undefined.
+    // Fall through to the first member, which IS the current user.
+    // The downstream UI (`ChatListItemTitle`, `MainChatPaneHeader`,
+    // `ChatListItemAvatar`) detects the self-DM via
+    // `dmPartnerUser.userId === myself.userId` and renders the
+    // "(You)" badge + the user's own avatar — but only when we
+    // populate this field with a real user row instead of EMPTY_USER.
+    const partner = members.find((m) => m.userId !== currentUserId) ?? members[0];
     if (!partner) return EMPTY_USER;
-    // The v3 ChannelMember row only carries `userId / role / tsJoined`.
-    // Display name + avatar live on the user model and aren't joined
-    // into the member rows today. PUNCH LIST: extend `ChannelMember`
-    // (or expose a parallel user-cache off channelService) so the DM
-    // partner's name can resolve here. Until then we return a row
-    // with only the userId populated — the existing DM rendering
-    // resolves name via the team-member directory anyway.
+    // `member.user` (a `UserLite`) is denormalized into the v3
+    // ChannelMember row by the backend so we get name + avatar
+    // without a parallel `getTeamMembers` fetch. If the field is
+    // absent (older cached row pre-serializer-update, or the user
+    // got deleted), fall back to the userId-only shape.
+    const u = partner.user;
     return {
         userId: partner.userId,
-        userName: "",
-        userEmail: "",
+        userName: u?.userName ?? "",
+        userEmail: u?.userEmail ?? "",
         teamId: "",
         teamName: "",
-        avatarImgPath: "",
+        avatarImgPath: u?.avatarImgPath ?? "",
         tsLastSeen: "",
         tsJoined: partner.tsJoined ?? "",
     };
@@ -103,7 +131,7 @@ function v3MessageToLegacyPreview(m: Message): MessageProps {
         // tsc surfaces this — fix when MessageProps migrates.
         chatId: 0,
         messageId: m.seq ?? 0,
-        content: m.body ?? [],
+        content: normalizeBodyForLegacy(m.body),
         contentText: m.bodyText ?? "",
         sender: {
             userId: m.sender?.userId ?? "",
@@ -174,14 +202,21 @@ export function channelToLegacyChat(args: {
     const latest = channel.latestMessage
         ? v3MessageToLegacyPreview(channel.latestMessage)
         : emptyLatestMessage(channel);
+    // DM channels store no title (it's structurally redundant — the
+    // partner's name IS the title). Surface the partner's userName as
+    // chatName so the chat-list row and MainChatPaneHeader render
+    // something instead of "". Non-DM channels use their stored title.
+    const dmPartner =
+        channel.kind === ChannelKind.DM ? resolveDmPartner(members, currentUserId) : EMPTY_USER;
+    const chatName =
+        channel.kind === ChannelKind.DM
+            ? dmPartner.userName || channel.title || ""
+            : channel.title || "";
     return {
         chatType: KIND_TO_CHAT_TYPE[channel.kind] ?? 0,
         chatId: channel.id,
-        chatName: channel.title || "",
-        dmPartnerUser:
-            channel.kind === ChannelKind.DM
-                ? resolveDmPartner(members, currentUserId)
-                : EMPTY_USER,
+        chatName,
+        dmPartnerUser: dmPartner,
         // PUNCH LIST: lastReadMessageId in the legacy shape was the
         // integer message id. v3 carries a `ReadCursor` keyed on the
         // message UUID. Until the cursor migrates too, we emit empty
@@ -199,12 +234,35 @@ export function channelToLegacyChat(args: {
         // `projectId` on the channel; resolving the full ProjectProps
         // is its own migration step.
         project: undefined,
-        // MDM members come from the v3 channel member roster but the
-        // legacy `mdmMembers` shape is slightly different. Leaving
-        // undefined for now — MDM rendering paths get reconciled in
-        // a later session.
-        mdmMembers: undefined,
+        // For MDM channels, map the v3 ChannelMember[] roster to the
+        // legacy `MDMMemberProps[]` shape — populates `MDMAvatar`'s
+        // overlapping member-avatar render in the sidebar / header.
+        // Other kinds don't read this field, so leave it undefined.
+        mdmMembers: channel.kind === ChannelKind.MDM ? membersToMdmMembers(members) : undefined,
     };
+}
+
+/**
+ * Map v3 ChannelMember[] → legacy MDMMemberProps[]. The denormalized
+ * `user` field on each member carries name + avatar (added in Track D
+ * to the ChannelMemberSerializer), so this is a 1:1 projection.
+ *
+ * Returns `undefined` instead of `[]` when there are no members so
+ * downstream `Array.isArray && length > 0` guards match the legacy
+ * "no roster" shape.
+ */
+function membersToMdmMembers(
+    members: readonly ChannelMember[] | undefined
+): MDMMemberProps[] | undefined {
+    if (!members || members.length === 0) return undefined;
+    return members.map((m) => ({
+        userId: m.userId,
+        userName: m.user?.userName ?? "",
+        userEmail: m.user?.userEmail ?? "",
+        avatarImgPath: m.user?.avatarImgPath ?? "",
+        teamId: "",
+        teamName: "",
+    }));
 }
 
 /**
@@ -313,7 +371,7 @@ export function v3MessageToLegacy(args: {
         // arithmetic keeps working. The v3 UUID `m.id` is also carried
         // on `messageIdWithChatId` above.
         messageId: m.seq,
-        content: m.body ?? [],
+        content: normalizeBodyForLegacy(m.body),
         contentText: m.bodyText ?? "",
         sender: {
             userId: m.sender?.userId ?? "",

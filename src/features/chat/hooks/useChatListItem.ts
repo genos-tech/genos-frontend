@@ -6,9 +6,7 @@ import { UserProps } from "../../../types/admin";
 import { AllChatProps, ChatProps, MessageProps } from "../../../types/chat";
 import { toggleMessagesPane } from "../../../utils/sidebarUtils";
 import { addChat } from "../services/addChat";
-import { addMessage } from "../services/addMessage";
-import { loadMDMHistory } from "../services/loadMDMHistory";
-import { popSpecificMessages } from "../services/popSpecificMessages";
+import { loadV3SpecificMessages } from "../services/loadV3SpecificMessages";
 import { updatePinnedChats } from "../services/updatePinnedChats";
 
 interface UseChatListItemProps {
@@ -39,13 +37,11 @@ export const useChatListItem = ({
 
     const isYou = myself.userId === chat.dmPartnerUser.userId;
 
-    // PUNCH LIST (v3 chatId migration): `chat.chatId` is `string`
-    // post-flip; `popSpecificMessages` + `loadMDMHistory` still take
-    // `chatId: number` because they hit legacy `/api/v2/...` endpoints.
-    // Cast once at the boundary. `lastReadMessageId` is stringified
-    // to match the v3 `ChatProps.lastReadMessageId: string` shape;
-    // `""` is the new "no last-read" sentinel (replaces legacy `-1`).
-    const chatIdLegacy = chat.chatId as unknown as number;
+    // `chat.chatId` is the v3 UUID string. `lastReadMessageId` is
+    // stringified to match the v3 `ChatProps.lastReadMessageId: string`
+    // shape; `""` is the new "no last-read" sentinel (replaces legacy
+    // `-1`).
+    const v3ChannelId = chat.chatId;
 
     // Keys sorted alphabetically per `sort-keys`.
     const defineNewChat = (messages: MessageProps[]): ChatProps => {
@@ -68,31 +64,6 @@ export const useChatListItem = ({
         };
     };
 
-    const loadMDMMessagesFromBackend = async (chatId: number): Promise<MessageProps[]> => {
-        try {
-            const data = await loadMDMHistory(
-                myself.teamId,
-                myself.teamName,
-                myself.userId,
-                accessToken,
-                chatId
-            );
-            const mdmChat = data?.chat_history?.[0];
-            if (mdmChat?.messages?.length > 0) {
-                const sorted = [...mdmChat.messages].sort(
-                    (a: MessageProps, b: MessageProps) => a.messageId - b.messageId
-                );
-                for (const msg of sorted) {
-                    await addMessage(msg, 4);
-                }
-                return sorted;
-            }
-        } catch (e) {
-            console.error("Failed to load MDM messages from backend:", e);
-        }
-        return [];
-    };
-
     const onClickHandler = (useCM: ChatManagementState) => {
         if (
             useCM.isSubChatVisible === false ||
@@ -100,13 +71,15 @@ export const useChatListItem = ({
                 `${chat.chatType}-${chat.chatId}-${chat.chatName}`
         ) {
             toggleMessagesPane();
-            popSpecificMessages(chatIdLegacy, chat.chatType)
+            // v3 cutover: was `popSpecificMessages(chatIdLegacy, chatType)`
+            // (legacy worker IDB pop with `chat.chatId as unknown as number`,
+            // which NaN'd for UUIDs and returned `[]` — leaving the open
+            // chat empty). The legacy MDM `/history/` fallback for empty
+            // results is also gone; `loadV3SpecificMessages` handles every
+            // kind uniformly through channelService.
+            loadV3SpecificMessages(v3ChannelId, chat.chatType)
                 .then(async (messages) => {
-                    let finalMessages = messages;
-
-                    if (chat.chatType === 4 && finalMessages.length === 0) {
-                        finalMessages = await loadMDMMessagesFromBackend(chatIdLegacy);
-                    }
+                    const finalMessages = messages;
 
                     const newChat: ChatProps = defineNewChat(finalMessages);
                     useCM.setCurrentMainChat(newChat);
@@ -142,7 +115,7 @@ export const useChatListItem = ({
             `${chat.chatType}-${chat.chatId}-${chat.chatName}`
         ) {
             toggleMessagesPane();
-            popSpecificMessages(chatIdLegacy, chat.chatType)
+            loadV3SpecificMessages(v3ChannelId, chat.chatType)
                 .then((messages) => {
                     useCM.setCurrentSubChat(defineNewChat(messages));
                     useCM.setIsMainChatVisible(true);

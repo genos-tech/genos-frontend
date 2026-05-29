@@ -3,75 +3,63 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { deleteMessage } from "../../features/chat/services/deleteMessage";
 import { updateReadStatus } from "../../features/chat/services/updateReadStatus";
 import { authApi } from "../../services/api";
+import { channelService } from "../../services/channel/channelService";
 
 vi.mock("../../services/api", () => ({
     authApi: vi.fn(),
     nonAuthApi: vi.fn(),
 }));
 
-describe("deleteMessage", () => {
+// `deleteMessage` was rewired from the legacy per-type axios PUTs
+// (`/dm/message/`, `/gm/message/`, `/pm/message/`, `/mdm/message/`)
+// to a single `channelService.deleteMessage` call. The unit test now
+// asserts the v3 call shape — channelId + messageUuid + ChannelKind.
+describe("deleteMessage (v3)", () => {
     beforeEach(() => {
         vi.clearAllMocks();
     });
 
-    it("should call PUT /dm/message/ with is_deleted for DM (chatType=1)", async () => {
-        const mockPut = vi.fn().mockResolvedValue({ data: { success: true } });
-        (authApi as ReturnType<typeof vi.fn>).mockReturnValue({ put: mockPut });
+    it("forwards (channelId, messageUuid, ChannelKind) to channelService.deleteMessage", async () => {
+        const spy = vi
+            .spyOn(channelService, "deleteMessage")
+            .mockResolvedValue(undefined as unknown as void);
 
-        const result = await deleteMessage("token123", 1, 42, 7);
+        await deleteMessage("token123", 1, "channel-uuid-abc", "msg-uuid-7");
 
-        expect(mockPut).toHaveBeenCalledWith("/dm/message/", {
-            dm_id: 42,
-            message_id: 7,
-            is_deleted: true,
-        });
-        expect(result).toEqual({ success: true });
+        expect(spy).toHaveBeenCalledWith("msg-uuid-7", "channel-uuid-abc", 1);
+        spy.mockRestore();
     });
 
-    it("should call PUT /gm/message/ for GM (chatType=2)", async () => {
-        const mockPut = vi.fn().mockResolvedValue({ data: { success: true } });
-        (authApi as ReturnType<typeof vi.fn>).mockReturnValue({ put: mockPut });
+    it("forwards GM kind code 2 through unchanged (channelService kind is the same int)", async () => {
+        const spy = vi
+            .spyOn(channelService, "deleteMessage")
+            .mockResolvedValue(undefined as unknown as void);
 
-        await deleteMessage("token123", 2, 10, 3);
+        await deleteMessage("token123", 2, "channel-uuid-gm", "msg-uuid-gm");
 
-        expect(mockPut).toHaveBeenCalledWith("/gm/message/", {
-            gm_id: 10,
-            message_id: 3,
-            is_deleted: true,
-        });
+        expect(spy).toHaveBeenCalledWith("msg-uuid-gm", "channel-uuid-gm", 2);
+        spy.mockRestore();
     });
 
-    it("should call PUT /pm/message/ for PM (chatType=3)", async () => {
-        const mockPut = vi.fn().mockResolvedValue({ data: { success: true } });
-        (authApi as ReturnType<typeof vi.fn>).mockReturnValue({ put: mockPut });
-
-        await deleteMessage("token123", 3, 5, 1);
-
-        expect(mockPut).toHaveBeenCalledWith("/pm/message/", {
-            project_id: 5,
-            message_id: 1,
-            is_deleted: true,
-        });
-    });
-
-    it("should return undefined for null token", async () => {
-        (authApi as ReturnType<typeof vi.fn>).mockReturnValue(null);
-
+    it("no-ops with a setErrorMessage call when messageUuid is empty", async () => {
+        const spy = vi.spyOn(channelService, "deleteMessage");
         const setError = vi.fn();
-        const result = await deleteMessage(null, 1, 1, 1, setError);
 
-        expect(result).toBeUndefined();
-        expect(setError).toHaveBeenCalledWith("Unauthorized. Auth toke is not found.");
+        await deleteMessage("token123", 1, "channel-uuid", "", setError);
+
+        expect(spy).not.toHaveBeenCalled();
+        expect(setError).toHaveBeenCalledWith("Could not delete: message id unavailable.");
+        spy.mockRestore();
     });
 
-    it("should handle unexpected chatType gracefully", async () => {
-        const mockPut = vi.fn();
-        (authApi as ReturnType<typeof vi.fn>).mockReturnValue({ put: mockPut });
+    it("surfaces channelService failures via setErrorMessage", async () => {
+        const spy = vi.spyOn(channelService, "deleteMessage").mockRejectedValue(new Error("boom"));
+        const setError = vi.fn();
 
-        const result = await deleteMessage("token123", 99, 1, 1);
+        await deleteMessage("token123", 1, "channel-uuid", "msg-uuid", setError);
 
-        expect(mockPut).not.toHaveBeenCalled();
-        expect(result).toBeUndefined();
+        expect(setError).toHaveBeenCalledWith("Failed to delete message.");
+        spy.mockRestore();
     });
 });
 

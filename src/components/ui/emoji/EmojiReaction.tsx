@@ -4,7 +4,9 @@ import { Box, Button, IconButton, useColorScheme } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { useTranslation } from "../../../i18n";
+import { channelService } from "../../../services/channel/channelService";
 import { UserProps } from "../../../types/admin";
+import { ChannelKind } from "../../../types/channel";
 import { MessageProps, ThreadMessageProps } from "../../../types/chat";
 import { GroupedReactionProps, ReactionProps } from "../../../types/common";
 import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
@@ -88,8 +90,48 @@ export const EmojiReaction = (props: EmojiReactionProps) => {
     }, [reactions]);
 
     const handleAddReaction = (selectedEmoji: string) => {
-        // Backend's reaction handler skips its 8-way Django refetch when this
-        // is present (see backend/socketio_events/message_reaction_handlers.py).
+        // v3 cutover for top-level (non-thread) reactions. The legacy
+        // multi-emit `message_reaction` path (one for the bubble, one
+        // for the "first thread message" mirror at messageId === 1, one
+        // for the thread-reply count broadcast at numReplies > 0)
+        // collapses to a single `channelService.react / .unreact` call
+        // because the v3 backend's `reaction.added` / `reaction.removed`
+        // broadcast covers every visible surface (main pane, thread
+        // panel, bubble counts) off a single Message row.
+        //
+        // Thread reactions stay on the legacy emit until the thread
+        // loader migrates to v3 — thread messages don't yet carry the
+        // v3 UUID required by `channelService.react`.
+        const useV3 = !isThread;
+        const v3MessageId = useV3 ? (message as MessageProps).messageIdWithChatId : undefined;
+        if (useV3 && v3MessageId) {
+            const v3ChannelId = (message as MessageProps).chatId as unknown as string;
+            const channelKind = chatType as ChannelKind;
+            const existingIndex = reactions.findIndex(
+                (r) => r.emoji === selectedEmoji && r.sender.userId === myself.userId
+            );
+            if (existingIndex !== -1) {
+                setReactions(reactions.filter((_, idx) => idx !== existingIndex));
+                void channelService
+                    .unreact(v3MessageId, v3ChannelId, channelKind, selectedEmoji)
+                    .catch((e) => console.error("[EmojiReaction] unreact failed:", e));
+            } else {
+                setReactions([
+                    ...reactions,
+                    {
+                        id: -1,
+                        emoji: selectedEmoji,
+                        sender: myself,
+                        tsSent: getLocalCurrentTimestamp(),
+                    },
+                ]);
+                void channelService
+                    .react(v3MessageId, v3ChannelId, channelKind, selectedEmoji)
+                    .catch((e) => console.error("[EmojiReaction] react failed:", e));
+            }
+            return;
+        }
+        // ───── legacy thread reactions ─────
         const emptyUser = {
             userName: "",
             userId: "",

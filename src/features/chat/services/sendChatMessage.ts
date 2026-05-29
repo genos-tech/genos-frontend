@@ -1,129 +1,82 @@
 import { Socket } from "socket.io-client";
 
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
+import { channelService } from "../../../services/channel/channelService";
 import { UserProps } from "../../../types/admin";
-import { AllChatProps, ChatProps, MessageProps } from "../../../types/chat";
-import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
+import { ChatProps } from "../../../types/chat";
+import { isV3Uuid } from "../../../utils/legacyId";
 import { getFirstLine } from "../utils/common";
-import { addChat } from "./addChat";
-import { addMessage } from "./addMessage";
 
 /**
- * Emit a chat "message" POST over the socket AND apply the sender's
- * optimistic local update. Centralized so callers outside the BlockNote
- * editor (e.g. Quick Meet's share-link modal) get the same in-pane
- * append + IDB persistence + chat-list refresh behavior — the live
- * receive path skips `context.fromMe` for GM/PM/MDM and post-1 DM
- * messages, so without this the sender's own message never renders.
+ * Post a chat message via the v3 channelService.
  *
- * `content` is a BlockNote document (array of blocks). `setCurrentChat`
- * is the setter for the pane that owns this chat (main vs sub) so the
- * append lands on the right pane.
+ * Replaces the legacy socket-emit + manual optimistic state path. The
+ * v3 path is:
+ *
+ *   1. `channelService.send(channelId, content, {bodyText})` enqueues
+ *      a `PendingMessage` with a fresh `correlation_id`, emits
+ *      `message.send` on the `/v3` namespace, and returns a Promise
+ *      that resolves with the server-confirmed `Message` (or rejects
+ *      with a `ChannelServiceError`).
+ *
+ *   2. On ack, channelService.handleMessageCreated upserts the row in
+ *      `_messages` and notifies React. The live-update subscription
+ *      on `useChatManagement` (added in the same Track D session)
+ *      picks up the change for the current main / sub chat and
+ *      patches `currentMainChat.messages` / `currentSubChat.messages`
+ *      automatically — no `setCurrentChat` call needed here.
+ *
+ *   3. `useCM.funcSetAllChats()` refreshes the chat-list ordering so
+ *      the just-active channel floats to the top. (The chat list
+ *      itself is also v3-backed by `loadV3Chats`.)
+ *
+ * Unused params (`socket`, `myself`, `setCurrentChat`) are kept on the
+ * signature for back-compat with existing callers (MainChatPaneHeader,
+ * bnChatEditor). They were load-bearing on the legacy path; on v3 the
+ * pending queue + live subscription handle the work they did.
  */
-export const sendChatMessage = ({
-    socket,
+export const sendChatMessage = async ({
     chat,
     content,
-    myself,
     useCM,
-    setCurrentChat,
 }: {
     socket: Socket;
     chat: ChatProps;
-    // `any[]` matches the existing call-site (BlockNote editor passes
-    // its raw block array); tightening to `PartialBlock[]` cascades
-    // into the editor wrapper. Re-tightened during the unified
-    // messaging rewrite.
+    // `any[]` matches the BlockNote editor's raw block array.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     content: any[];
     myself: UserProps;
     useCM: ChatManagementState;
     setCurrentChat: (chat: ChatProps) => void;
 }): Promise<void> => {
-    return new Promise((resolve) => {
-        const contentText = getFirstLine(content[0]);
-        const nextMessageId = Number(chat.latestMessage?.messageId) + 1;
-        const timestamp = getLocalCurrentTimestamp();
-
-        // PUNCH LIST (v3 chatId migration): `ChatProps.chatId` /
-        // `lastReadMessageId` are `string` post-flip; `MessageProps.chatId`
-        // is still `number` (legacy message schema). Cast once at the
-        // boundary. `lastReadMessageId` is the just-sent message id
-        // stringified — the previous code did `chat.lastReadMessageId + 1`
-        // (now string concat → `"12" + 1 === "121"`) and
-        // `messages[last].messageId + 1` (number + 1, wrong final type).
-        // Both branches converge to `String(nextMessageId)`.
-        const legacyChatId = chat.chatId as unknown as number;
-        const nextMessageIdStr = String(nextMessageId);
-
-        socket.emit(
-            "message",
-            {
-                chatType: chat.chatType,
-                destCGId: chat.chatId,
-                destCGName: chat.chatName,
-                dmPartnerUserId: chat.dmPartnerUser.userId,
-                message: content,
-                messageIdForPut: null,
-                methodType: "POST",
-                systemUserId: null,
-                taskId: null,
-                taskStatus: null,
-            },
-            async () => {
-                const newMessage: MessageProps = {
-                    chatId: legacyChatId,
-                    chatType: chat.chatType,
-                    content,
-                    contentText,
-                    messageId: nextMessageId,
-                    messageIdWithChatId: `${chat.chatId}-${nextMessageIdStr}`,
-                    numReplies: 0,
-                    sender: myself,
-                    systemUserId: chat.systemUserId,
-                    taskId: null,
-                    taskStatus: null,
-                    tsSent: timestamp,
-                    tsUpdated: timestamp,
-                };
-
-                const updatedChat: ChatProps = {
-                    chatId: chat.chatId,
-                    chatName: chat.chatName,
-                    chatType: chat.chatType,
-                    dmPartnerUser: chat.dmPartnerUser,
-                    lastReadMessageId: nextMessageIdStr,
-                    latestMessage: newMessage,
-                    latestMessageText: contentText,
-                    messages: [...chat.messages, newMessage],
-                    profileImagePath: chat.profileImagePath,
-                    systemUserId: chat.systemUserId,
-                    TSLastMessage: timestamp,
-                };
-                setCurrentChat(updatedChat);
-
-                const existingAllChat = useCM.allChats.find(
-                    (c) => c.chatId === chat.chatId && c.chatType === chat.chatType
-                );
-                const newAllChat: AllChatProps = {
-                    chatId: chat.chatId,
-                    chatName: chat.chatName,
-                    chatType: chat.chatType,
-                    dmPartnerUser: chat.dmPartnerUser,
-                    lastReadMessageId: nextMessageIdStr,
-                    latestMessage: newMessage,
-                    latestMessageText: contentText,
-                    mdmMembers: existingAllChat?.mdmMembers,
-                    profileImagePath: chat.profileImagePath,
-                    systemUserId: chat.systemUserId,
-                    TSLastMessage: timestamp,
-                };
-
-                await addMessage(newMessage, newAllChat.chatType);
-                await addChat(newAllChat, newAllChat.chatType);
-                await useCM.funcSetAllChats();
-                resolve();
-            }
+    const bodyText = getFirstLine(content[0]);
+    // Fail fast on stale legacy-integer chatIds. A non-UUID chatId
+    // would land at `/api/v3/channels/{int}/messages/` which Django's
+    // `<uuid:channel_id>` URL pattern rejects with a 404 — surfaces
+    // server-side as an opaque BackendError trace. Better to refuse
+    // the send here with a clear console hint pointing at the v3
+    // backfill / fresh-start path.
+    if (!isV3Uuid(chat.chatId)) {
+        console.error(
+            `[sendChatMessage] chat.chatId is not a v3 UUID (got ${JSON.stringify(chat.chatId)}). ` +
+                "This usually means the chat was loaded from a legacy path with no v3 Channel " +
+                "mirror. Run the backfill (`backfill_v3_channels`) or wipe legacy data + reload."
         );
-    });
+        return;
+    }
+    try {
+        await channelService.send(chat.chatId, content, { bodyText });
+    } catch (e) {
+        // channelService already records the failure on the pending
+        // entry; the dev panel can surface it. Re-throwing here would
+        // bubble into the BlockNote editor's `await`, which has no
+        // user-facing recovery path, so swallow it here (mirrors the
+        // legacy code's silent-on-error contract for editor sends).
+        console.error("[sendChatMessage] channelService.send failed:", e);
+        return;
+    }
+    // Refresh the chat-list so the just-active channel re-sorts to
+    // top. The live-update subscription keeps the open pane in sync;
+    // this only catches the sidebar.
+    await useCM.funcSetAllChats();
 };

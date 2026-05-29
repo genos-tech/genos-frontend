@@ -1,30 +1,38 @@
-/*
- * PUNCH LIST (v3 chatId migration):
- * The worker IDB still uses integer `chatId` and integer
- * `lastReadMessageId` (its `updateReadStatus` / `popSpecificChat` /
- * `addChat` contracts haven't been migrated yet). `ChatProps` /
- * `AllChatProps.chatId` are `string` post-v3 flip, and
- * `lastReadMessageId` is `string` too. The casts below bridge the
- * boundary. At runtime UUID-shaped ids passed to the worker will
- * land in the integer-keyed IDB store as string values — the read
- * path round-trips them, so the hook still functions for legacy
- * chats during the transition. Whole file is replaced by
- * `channelService.markRead` once the v3 read-cursor path is wired
- * into MainChatPane.
+/**
+ * Read-status throttling + advance hook.
+ *
+ * Forwards "last visible bubble" to the server as the read cursor for
+ * the open chat. Replaces the legacy chain
+ * (`chatChannel.request("updateReadStatus", ...)` → axios PUT
+ * `/api/v2/chat/read/` with integer chat_id) with a single
+ * `channelService.markRead(channelUuid, messageUuid)` emit on the
+ * `/v3` namespace. The v3 backend:
+ *
+ *   1. Acks back the updated `ReadCursor`.
+ *   2. Broadcasts `read.advanced` to the user's `user:{userId}` room
+ *      so OTHER tabs of the same user see the cursor advance.
+ *   3. channelService.handleReadAdvanced updates `cursorsByChannel`
+ *      in the snapshot, which the chat-list hook reads to recompute
+ *      the unread badge.
+ *
+ * Throttle is unchanged — fast scrolls debounce so we don't flood the
+ * socket with one emit per pixel.
  */
 import { useRef } from "react";
 
-import { useAuth } from "../../../context/AuthContext";
-import { chatChannel } from "../../../db/workers/channels";
-import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
+import { channelService } from "../../../services/channel/channelService";
 import { UserProps } from "../../../types/admin";
-import { AllChatProps, ChatProps, ThreadProps } from "../../../types/chat";
-import { addChat } from "../services/addChat";
+import { ChatProps, ThreadProps } from "../../../types/chat";
 
 interface UseReadStatusManagementProps {
     currentChat: ChatProps | ThreadProps;
     myself: UserProps;
-    useCM: ChatManagementState;
+    // useCM was used by the legacy path to manually refresh the chat
+    // list after the read cursor advanced. With v3 the chat-list hook
+    // subscribes to channelService directly, so the refresh fires
+    // automatically — keeping the param on the type for back-compat
+    // with existing callers.
+    useCM: unknown;
     isThread?: boolean;
 }
 
@@ -34,12 +42,9 @@ const MAIN_THROTTLE_MS = 500;
 const THREAD_THROTTLE_MS = 1000;
 
 export const useReadStatusManagement = ({
-    useCM,
     currentChat,
-    myself,
     isThread = false,
 }: UseReadStatusManagementProps) => {
-    const { accessToken } = useAuth();
     // Promoted from `useState` to `useRef`: these are throttle bookkeeping
     // that's read by the next scroll handler and never rendered. Keeping
     // them in state caused a re-render after every accepted tick — i.e.
@@ -49,69 +54,38 @@ export const useReadStatusManagement = ({
     const indexLastReadStatusUpdatedRef = useRef<number>(-1);
 
     const updateReadStatus = (indexForLastReadMessageId: number) => {
-        if (!accessToken || !currentChat.messages[indexForLastReadMessageId]) {
+        const message = currentChat.messages[indexForLastReadMessageId];
+        if (!message) return;
+        // v3 markRead takes the v3 message UUID. After the v3 → legacy
+        // adapter (`v3MessageToLegacy`) populates `messageIdWithChatId`
+        // with `m.id`, that field IS the UUID we need.
+        const messageUuid = (message as { messageIdWithChatId?: string }).messageIdWithChatId;
+        const channelUuid = currentChat.chatId;
+        if (!messageUuid || typeof channelUuid !== "string") {
+            // Legacy-shaped chat (UUID adapter didn't run) — silently
+            // skip rather than 500ing against the legacy endpoint.
+            // Surfaces in console for diagnostics.
+            console.warn(
+                "[useReadStatusManagement] skipped: missing v3 ids " +
+                    `(channelUuid=${JSON.stringify(channelUuid)}, ` +
+                    `messageUuid=${JSON.stringify(messageUuid)})`
+            );
             return;
         }
-        const lastReadMessageId: number =
-            currentChat.messages[indexForLastReadMessageId].messageId;
-
-        // See file-header note: `chatId` is cast to number at the
-        // worker-contract boundary.
-        const legacyChatId = currentChat.chatId as unknown as number;
-        // Keys sorted alphabetically per `sort-keys`.
-        chatChannel
-            .request("updateReadStatus", {
-                accessToken,
-                chatId: legacyChatId,
-                chatType: currentChat.chatType,
-                isThread,
-                lastReadMessageId,
-                myself,
-                threadId: isThread ? (currentChat as ThreadProps).threadId : 0,
-            })
-            .then(async () => {
-                // `lastReadMessageId` is string post-flip; the legacy
-                // values are stringified ints so `Number(...)` round-
-                // trips. UUID-shaped cursors NaN and the strict-less
-                // check below fails — which is the safer side
-                // (under-update beats double-write).
-                const previousLastRead = Number(
-                    (currentChat as ChatProps).lastReadMessageId || "0"
-                );
-                if (previousLastRead < lastReadMessageId) {
-                    // Merge into the persisted row rather than spreading
-                    // `currentChat` (which is `ChatProps` and does not
-                    // carry `mdmMembers`, `profileImagePath`,
-                    // `tsLastAllReadActivity`, etc.). Spreading the
-                    // narrower type would silently clobber those fields
-                    // in IDB — the subsequent `funcSetAllChats()` then
-                    // surfaces the corrupted row to the UI, which for
-                    // MDM chats is observable as the avatar reverting
-                    // to the generic People icon.
-                    const existing = (await chatChannel.request("popSpecificChat", {
-                        chatId: legacyChatId,
-                        chatType: currentChat.chatType,
-                    })) as AllChatProps | null;
-                    // `lastReadMessageId` is `string` on AllChatProps —
-                    // stringify the numeric `lastReadMessageId` we just
-                    // forwarded to the worker. `as unknown as AllChatProps`
-                    // for the fallback path because `ChatProps` and
-                    // `AllChatProps` share most fields but TS treats the
-                    // spread shape as non-overlapping.
-                    const lastReadStr = String(lastReadMessageId);
-                    const updatedChat: AllChatProps = existing
-                        ? { ...existing, lastReadMessageId: lastReadStr }
-                        : ({
-                              ...currentChat,
-                              lastReadMessageId: lastReadStr,
-                          } as unknown as AllChatProps);
-                    await addChat(updatedChat, updatedChat.chatType);
-                    await useCM.funcSetAllChats();
-                }
-            })
-            .catch((err) => {
-                console.error("Failed to update read status", err);
-            });
+        // For a thread cursor, v3 distinguishes the main timeline cursor
+        // from per-thread cursors via `thread_root_id`. The thread root
+        // UUID lives on the thread's first message — pull from the
+        // current thread's `messages[0].messageIdWithChatId` if present.
+        const threadRootId = isThread
+            ? (
+                  (currentChat as ThreadProps).messages?.[0] as
+                      | { messageIdWithChatId?: string }
+                      | undefined
+              )?.messageIdWithChatId
+            : undefined;
+        void channelService.markRead(channelUuid, messageUuid, threadRootId).catch((err) => {
+            console.error("[useReadStatusManagement] markRead failed", err);
+        });
     };
 
     const handleReadStatusUpdate = (targetIndex: number) => {

@@ -20,7 +20,9 @@ import { TeamManagementState } from "../../../../hooks/common/useTeamManagement"
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { fmt, useTranslation } from "../../../../i18n";
+import { channelService } from "../../../../services/channel/channelService";
 import { UserProps } from "../../../../types/admin";
+import { ChannelKind } from "../../../../types/channel";
 import { ChatProps, MessageProps, ThreadMessageProps, ThreadProps } from "../../../../types/chat";
 import { ReactionProps } from "../../../../types/common";
 import { TaskCommentProps, TaskProps } from "../../../../types/tasks";
@@ -406,190 +408,61 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
     }, [mobileToolbarOpen]);
 
     useEffect(() => {
-        if (selectedEmoji !== null) {
-            // Backend's reaction handler skips its 8-way Django refetch when this
-            // is present (see backend/socketio_events/message_reaction_handlers.py).
-            const emptyUser = {
-                userName: "",
-                userId: "",
-                avatarImgPath: "",
-                tsLastSeen: "",
-                tsJoined: "",
-                customStatus: "",
-            };
-            const messageSnapshot = {
-                sender: message.sender,
-                receiver:
-                    chat.chatType === 1
-                        ? message.sender.userId === myself.userId
-                            ? chat.dmPartnerUser
-                            : myself
-                        : emptyUser,
-                dmPartnerUser: chat.chatType === 1 ? chat.dmPartnerUser : emptyUser,
-                taskId: message.taskId,
-                taskStatus: message.taskStatus,
-                content: message.content,
-                // Forwarded to the reaction handler so its derived
-                // activity broadcast carries the same human-readable
-                // task id ("<code>-<n>") the live PM bubble shows.
-                // Without this the chat activity sidebar item for the
-                // reaction falls back to "#<taskId>".
-                displayId: message.displayId,
-                tsSent: message.tsSent,
-                tsUpdated: message.tsUpdated,
-            };
-
-            const existingIndex = reactions.findIndex(
-                (r) => r.emoji === selectedEmoji && r.sender.userId === myself.userId
-            );
-            if (existingIndex !== -1) {
-                const updatedReactions = reactions.filter((_, idx) => idx !== existingIndex);
-                setReactions(updatedReactions);
-                if (socket) {
-                    socket.emit("message_reaction", {
-                        method_type: "DELETE",
-                        team_id: myself.teamId,
-                        chat_type: chat.chatType,
-                        chat_name: chat.chatName,
-                        chat_id: message.chatId,
-                        thread_id: 0,
-                        message_id: message.messageId,
-                        message_body: message.content,
-                        message_sender: message.sender,
-                        dm_partner_user_id:
-                            message.sender.userId === myself.userId
-                                ? chat.dmPartnerUser.userId
-                                : myself.userId,
-                        is_thread_binary: 0,
-                        reaction_emoji: selectedEmoji,
-                        current_emojis: reactions,
-                        messageSnapshot,
-                    });
-
-                    if (message.messageId === 1 && chat.chatType !== 3) {
-                        socket.emit("message_reaction", {
-                            method_type: "DELETE",
-                            team_id: myself.teamId,
-                            chat_type: chat.chatType,
-                            chat_name: chat.chatName,
-                            chat_id: message.chatId,
-                            thread_id: 0,
-                            message_id: message.threadId,
-                            message_body: message.content,
-                            message_sender: message.sender,
-                            dm_partner_user_id:
-                                message.sender.userId === myself.userId
-                                    ? chat.dmPartnerUser.userId
-                                    : myself.userId,
-                            is_thread_binary: 0,
-                            reaction_emoji: selectedEmoji,
-                            current_emojis: reactions,
-                            messageSnapshot,
-                        });
-                    }
-
-                    if (message.numReplies > 0 && chat.chatType !== 3) {
-                        socket.emit("message_reaction", {
-                            method_type: "DELETE",
-                            team_id: myself.teamId,
-                            chat_type: chat.chatType,
-                            chat_name: chat.chatName,
-                            chat_id: message.chatId,
-                            thread_id: message.messageId,
-                            message_id: 1,
-                            message_body: message.content,
-                            message_sender: message.sender,
-                            dm_partner_user_id:
-                                message.sender.userId === myself.userId
-                                    ? chat.dmPartnerUser.userId
-                                    : myself.userId,
-                            is_thread_binary: 1,
-                            reaction_emoji: selectedEmoji,
-                            current_emojis: reactions,
-                            messageSnapshot,
-                        });
-                    }
-                }
-            } else {
-                setReactions([
-                    ...reactions,
-                    {
-                        id: -1,
-                        emoji: selectedEmoji,
-                        sender: myself,
-                        tsSent: getLocalCurrentTimestamp(),
-                    },
-                ]);
-                if (socket) {
-                    socket.emit("message_reaction", {
-                        method_type: "POST",
-                        team_id: myself.teamId,
-                        chat_type: chat.chatType,
-                        chat_name: chat.chatName,
-                        chat_id: message.chatId,
-                        thread_id: 0,
-                        message_id: message.messageId,
-                        message_body: message.content,
-                        message_sender: message.sender,
-                        dm_partner_user_id:
-                            message.sender.userId === myself.userId
-                                ? chat.dmPartnerUser.userId
-                                : myself.userId,
-                        is_thread_binary: 0,
-                        reaction_emoji: selectedEmoji,
-                        current_emojis: reactions,
-                        messageSnapshot,
-                    });
-
-                    if (message.messageId === 1 && chat.chatType !== 3) {
-                        socket.emit("message_reaction", {
-                            method_type: "POST",
-                            team_id: myself.teamId,
-                            chat_type: chat.chatType,
-                            chat_name: chat.chatName,
-                            chat_id: message.chatId,
-                            thread_id: 0,
-                            message_id: message.threadId,
-                            message_body: message.content,
-                            message_sender: message.sender,
-                            dm_partner_user_id:
-                                message.sender.userId === myself.userId
-                                    ? chat.dmPartnerUser.userId
-                                    : myself.userId,
-                            is_thread_binary: 0,
-                            reaction_emoji: selectedEmoji,
-                            current_emojis: reactions,
-                            messageSnapshot,
-                            send_activity: false,
-                        });
-                    }
-
-                    if (chat.chatType !== 3 && message.numReplies > 0) {
-                        socket.emit("message_reaction", {
-                            method_type: "POST",
-                            team_id: myself.teamId,
-                            chat_type: chat.chatType,
-                            chat_name: chat.chatName,
-                            chat_id: message.chatId,
-                            thread_id: message.messageId,
-                            message_id: 1,
-                            message_body: message.content,
-                            message_sender: message.sender,
-                            dm_partner_user_id:
-                                message.sender.userId === myself.userId
-                                    ? chat.dmPartnerUser.userId
-                                    : myself.userId,
-                            is_thread_binary: 1,
-                            reaction_emoji: selectedEmoji,
-                            current_emojis: reactions,
-                            messageSnapshot,
-                            send_activity: false,
-                        });
-                    }
-                }
-            }
+        if (selectedEmoji === null) return;
+        // v3 channelService.react / .unreact replaces the legacy
+        // multi-emit reaction path. The legacy code fired up to THREE
+        // `socket.emit("message_reaction", ...)` calls per click — one
+        // for the message itself, one for the synthetic "first thread
+        // message" mirror (when messageId === 1), and one for the
+        // thread-reply count broadcast (when numReplies > 0). The v3
+        // unified Message model treats top-level rows and thread
+        // replies as the same Message — the server broadcasts
+        // `reaction.added` / `reaction.removed` to the channel room
+        // exactly once and the open chat's live-update subscription
+        // patches every visible surface (main pane, thread panel,
+        // bubble counts) from one event.
+        //
+        // The legacy `messageSnapshot` payload (sender / receiver /
+        // dmPartnerUser / taskId / displayId / tsSent / tsUpdated /
+        // content) was the backend's hint to skip its 8-way Django
+        // refetch — the v3 backend's `reaction.add` / `.remove`
+        // handlers do a single targeted query so the hint isn't
+        // needed.
+        const v3MessageId = message.messageIdWithChatId;
+        if (!v3MessageId) {
+            console.warn("[MessageBubble] missing v3 messageUuid — cannot react");
             setSelectedEmoji(null);
+            return;
         }
+        const channelKind = chat.chatType as ChannelKind;
+        const v3ChannelId = chat.chatId;
+        const existingIndex = reactions.findIndex(
+            (r) => r.emoji === selectedEmoji && r.sender.userId === myself.userId
+        );
+        if (existingIndex !== -1) {
+            // Optimistic remove — live-update subscription will
+            // converge with the server's `reaction.removed` broadcast.
+            setReactions(reactions.filter((_, idx) => idx !== existingIndex));
+            void channelService
+                .unreact(v3MessageId, v3ChannelId, channelKind, selectedEmoji)
+                .catch((e) => console.error("[MessageBubble] unreact failed:", e));
+        } else {
+            // Optimistic add. The fabricated `id: -1` is a transient
+            // placeholder until the server-broadcast row replaces it.
+            setReactions([
+                ...reactions,
+                {
+                    id: -1,
+                    emoji: selectedEmoji,
+                    sender: myself,
+                    tsSent: getLocalCurrentTimestamp(),
+                },
+            ]);
+            void channelService
+                .react(v3MessageId, v3ChannelId, channelKind, selectedEmoji)
+                .catch((e) => console.error("[MessageBubble] react failed:", e));
+        }
+        setSelectedEmoji(null);
     }, [selectedEmoji]);
 
     // Same chip-count rules as `BubbleUnderBar` — kept in sync because

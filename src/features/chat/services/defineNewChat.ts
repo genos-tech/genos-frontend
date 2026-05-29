@@ -1,14 +1,14 @@
 import { UserProps } from "../../../types/admin";
 import { ChatProps, MessageProps } from "../../../types/chat";
 
-// PUNCH LIST (v3 chatId migration): callers (see `moveToChat.ts`) still
-// pass `chatId: number` because the chat-discovery / join path is
-// legacy. `ChatProps.chatId` and `lastReadMessageId` are `string` post-
-// flip, so we stringify at this construction boundary. `""` is the new
-// "no last-read" sentinel (replaces legacy `-1`).
+// `chatId` widened to `string | number` for the v3 migration. v3
+// callers (post-Track-D `moveToDMChat` / `moveToGMChat`) resolve the
+// v3 UUID string and pass it through; legacy callers still hand in
+// integers. `String(chatId)` is idempotent over both — UUIDs stringify
+// to themselves. `""` is the "no last-read" sentinel (replaces legacy `-1`).
 // Keys sorted alphabetically per `sort-keys` (case-insensitive).
 export const defineNewChat = (
-    chatId: number,
+    chatId: string | number,
     chatName: string,
     chatType: number,
     dmPartnerUser: UserProps,

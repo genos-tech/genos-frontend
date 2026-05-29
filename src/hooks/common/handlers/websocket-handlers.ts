@@ -57,22 +57,29 @@ export const setupWebSocketHandlers = (
         }
 
         if (message.wsType === "chat") {
-            // console.log("chat_message:", message);
-            if (message.chatId !== null) {
-                if (message.isThread === true) {
-                    await handleThreadMessage(message, myself, accessToken, useCM);
-                } else {
-                    await handleRegularMessage(
-                        message,
-                        myself,
-                        currentProject,
-                        currentPreviewTaskId,
-                        setIsTaskUpdatedBySomeone,
-                        useCM,
-                        socket
-                    );
-                }
-            }
+            // v3 cutover: chat events now flow through the `/v3`
+            // namespace via channelService — this legacy `/` namespace
+            // dispatch is disabled to prevent bleed. The bleed bug
+            // it caused: handleRegularMessage / handleThreadMessage
+            // call `useCM.setAllChats((prev) => [legacyChat, ...prev])`
+            // with `chatId: String(legacy_int)`. Those integer-keyed
+            // AllChatProps would then live alongside v3 UUID-keyed
+            // chats in the same list. Any subsequent
+            // `channelService.send(chat.chatId, ...)` against one of
+            // those legacy-keyed entries 404'd at
+            // `/api/v3/channels/{int}/messages/` because the v3 URL
+            // pattern is `<uuid:channel_id>`.
+            //
+            // Trade-off: legacy-only chats (no v3 Channel mirror row)
+            // will no longer appear in the chat list. Resolution:
+            // either run `backfill_v3_channels` (Track B) so each
+            // legacy chat gets a v3 Channel UUID, or wipe legacy data
+            // and start fresh via the v3 creation path.
+            //
+            // Notification routing above still runs — the
+            // notificationManager.notify call doesn't mutate React
+            // state and only surfaces toasts / push notifications.
+            return;
         } else if (message.wsType === "task") {
             // console.log("Got a task comment");
             // console.log("task_message:", message);

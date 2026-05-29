@@ -14,17 +14,41 @@ import { Socket } from "socket.io-client";
 import { ChatService } from "../../../db/services/chat.service";
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { getMessages } from "../../../i18n";
+import { channelService } from "../../../services/channel/channelService";
 import { UserProps } from "../../../types/admin";
+import { ChannelKind } from "../../../types/channel";
 import { AllChatProps, ChatProps, MessageProps } from "../../../types/chat";
 import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
+import { v3MessagesToLegacy } from "../adapters/v3ToLegacy";
 import { addChat } from "../services/addChat";
 import { addMessage } from "../services/addMessage";
 import { checkKnownChat } from "../services/checkKnownChat";
 import { defineNewChat } from "../services/defineNewChat";
 import { loadMDMHistory } from "../services/loadMDMHistory";
+import { loadV3SpecificMessages } from "../services/loadV3SpecificMessages";
 import { popSpecificMessages } from "../services/popSpecificMessages";
 import { defaultDmPartner } from "./constants";
 import { loadSpecificGM } from "./loadSpecificGM";
+
+/**
+ * Look up the v3 Channel UUID for a legacy integer chat id by scanning
+ * the cached channel list. Returns the UUID string, or null when no
+ * mirror exists yet (the backfill hasn't reached this chat, or the
+ * channel was just created legacy-side without a v3 row).
+ *
+ * Used by every entry point that still receives a legacy `chat_id`
+ * (Spotlight / ChatSearch search results, activity / flagged sidebar
+ * items) so it can hand a UUID off to `channelService.send`.
+ */
+function resolveV3ChannelId(legacyChatId: number, chatType: number): string | null {
+    const snapshot = channelService.getSnapshot();
+    for (const ch of snapshot.channels.values()) {
+        if (ch.legacyChatId === legacyChatId && (ch.kind as number) === chatType) {
+            return ch.id;
+        }
+    }
+    return null;
+}
 
 export const moveToDMChat = async (
     socket: Socket | null,
@@ -40,16 +64,32 @@ export const moveToDMChat = async (
             joiningCGId: -1, // dm_id or gm_id
             joiningCGName: chatName, // dm_name or gm_name
         });
+        return;
     }
 
-    const fetchedMessages: MessageProps[] = await popSpecificMessages(chatId, 1);
-    if (fetchedMessages) {
-        useCM.setCurrentMainChat(
-            defineNewChat(chatId, chatName, 1, dmPartnerUser, fetchedMessages, false)
+    // v3 cutover: was `popSpecificMessages` → legacy worker IDB pop
+    // + `defineNewChat(legacyChatId, ...)` which set
+    // `currentMainChat.chatId` to the legacy integer. Any subsequent
+    // `channelService.send` against that chat then 404'd at the
+    // `<uuid:channel_id>` Django URL pattern.
+    //
+    // Resolve the v3 UUID via `legacyChatId === N` against the
+    // cached channel list, then drive the open path through the v3
+    // message loader. The adapter inside `loadV3SpecificMessages`
+    // bridges back to legacy `MessageProps[]` so `defineNewChat`
+    // (which builds the legacy `ChatProps` shape consumed by the UI)
+    // keeps working unchanged.
+    const v3ChannelId = resolveV3ChannelId(chatId, 1);
+    if (!v3ChannelId) {
+        console.warn(
+            `[moveToDMChat] no v3 mirror for legacy dmId=${chatId}; run backfill.`
         );
-    } else {
-        console.error("Failed to fetch thread DM fetchedMessages:", fetchedMessages);
+        return;
     }
+    const fetchedMessages: MessageProps[] = await loadV3SpecificMessages(v3ChannelId, 1);
+    useCM.setCurrentMainChat(
+        defineNewChat(v3ChannelId, chatName, 1, dmPartnerUser, fetchedMessages, false)
+    );
 };
 
 export const moveToGMChat = async (
@@ -58,25 +98,31 @@ export const moveToGMChat = async (
     isPrivate: boolean,
     useCM: ChatManagementState
 ) => {
-    const existingChat = useCM.allChats?.find(
-        (c) => c.chatId === String(chatId) && c.chatType === 2
-    );
-    const fetchedMessages: MessageProps[] = await popSpecificMessages(chatId, 2);
-    if (fetchedMessages) {
-        useCM.setCurrentMainChat(
-            defineNewChat(
-                chatId,
-                chatName,
-                2,
-                defaultDmPartner,
-                fetchedMessages,
-                isPrivate,
-                existingChat?.profileImagePath
-            )
+    // Same v3 lookup pattern as `moveToDMChat`. See that function for
+    // the rationale on why the legacy `popSpecificMessages` path
+    // leaked legacy integer chatIds into `currentMainChat`.
+    const v3ChannelId = resolveV3ChannelId(chatId, 2);
+    if (!v3ChannelId) {
+        console.warn(
+            `[moveToGMChat] no v3 mirror for legacy gmId=${chatId}; run backfill.`
         );
-    } else {
-        console.error("Failed to fetch thread GM fetchedMessages:", fetchedMessages);
+        return;
     }
+    const existingChat = useCM.allChats?.find(
+        (c) => c.chatId === v3ChannelId && c.chatType === 2
+    );
+    const fetchedMessages: MessageProps[] = await loadV3SpecificMessages(v3ChannelId, 2);
+    useCM.setCurrentMainChat(
+        defineNewChat(
+            v3ChannelId,
+            chatName,
+            2,
+            defaultDmPartner,
+            fetchedMessages,
+            isPrivate,
+            existingChat?.profileImagePath
+        )
+    );
 };
 
 // Keys sorted alphabetically per `sort-keys`.

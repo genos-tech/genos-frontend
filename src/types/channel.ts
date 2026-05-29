@@ -31,6 +31,11 @@ export interface ChannelMember {
     userId: string;
     role: "owner" | "admin" | "member" | "system";
     tsJoined: string;
+    /** Denormalized user display info. Present on every member row so
+     *  the FE sidebar avatar/name rendering doesn't need a parallel
+     *  `/api/v2/team/getTeamMembers/` fetch. Backend populates via
+     *  `select_related("user")` + `UserLiteSerializer`. */
+    user: UserLite | null;
 }
 
 export interface MessageReaction {
@@ -92,6 +97,12 @@ export interface Channel {
     projectId: number | null;
     ownerId: string | null;
     isPrivate: boolean;
+    /** The legacy per-kind integer chat id this channel was backfilled
+     *  from. Null for v3-native channels. Surfaced so FE entry points
+     *  that still carry legacy ids (Spotlight, ChatSearch, activity /
+     *  flagged sidebars) can resolve the v3 UUID by `legacyChatId === N`
+     *  lookup against the cached channel list. */
+    legacyChatId: number | null;
     latestMessage: Message | null;
     unreadCount: number;
     tsCreated: string;

@@ -318,10 +318,15 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
         if (currentMainChatId === chatId && messageId && threadId === undefined) {
             const newMoveIndex = `${chatId}-${messageId}`;
             if (useCM.currentMainChat!.moveToSpecificIndex !== newMoveIndex) {
-                useCM.setCurrentMainChat({
-                    ...useCM.currentMainChat!,
-                    moveToSpecificIndex: newMoveIndex,
-                });
+                // Functional updater. The closure-captured
+                // `useCM.currentMainChat` lags behind the channelService
+                // live-update subscription (`useChatManagement.ts`
+                // main-pane apply), so spreading it can revert message
+                // deletes / edits between when this effect armed and
+                // when React processes it.
+                useCM.setCurrentMainChat((prev) =>
+                    prev ? { ...prev, moveToSpecificIndex: newMoveIndex } : prev
+                );
             }
         }
         // If it's a different chat, load it

@@ -130,14 +130,22 @@ export const ModalDeleteMessage: React.FC<Props> = ({
                 messageIdForDelete: message.messageId,
             });
 
-            // Backend & IndexedDB cleanup (non-blocking for UI)
+            // PUNCH LIST: thread delete is still on the legacy axios
+            // path (deleteThreadMessage falls through silently for v3
+            // UUID chatIds). Thread messages don't yet carry the v3
+            // message UUID required by `channelService.deleteMessage`
+            // — flip happens once the thread loader migrates to v3
+            // (`loadV3SpecificThreadMessages` + ThreadMessageProps
+            // gaining a UUID field). Until then this no-ops on v3
+            // channels.
             try {
                 await deleteThreadMessage(
                     accessToken,
                     message.chatType,
-                    message.chatId,
+                    message.chatId as unknown as string,
                     message.threadId,
-                    message.messageId
+                    "",
+                    setErrorMessage
                 );
                 if (message.chatType === 1) {
                     await chatService.deleteDMThreadMessage(message.chatId, message.messageId);
@@ -158,45 +166,40 @@ export const ModalDeleteMessage: React.FC<Props> = ({
                 return;
             }
 
-            // Update UI immediately
-            setCurrentChat({
-                ...currentChat,
-                messages: currentChat.messages.filter(
-                    (m) => m.messageId !== message.messageId
-                ) as MessageProps[],
-                notMove: true,
-            });
             setOpenDeleteMessage(false);
 
             // Remove from flagged messages if flagged
             cleanupFlaggedMessage(message.chatType, message.chatId, 0, message.messageId);
             setErrorMessage(null);
 
-            // Broadcast delete to other members
-            socket.emit("message", {
-                methodType: "DELETE",
-                chatType: message.chatType,
-                destCGId: message.chatId,
-                messageIdForDelete: message.messageId,
-            });
-
-            // Backend & IndexedDB cleanup (non-blocking for UI)
+            // v3 channelService.deleteMessage handles BOTH the
+            // server-side soft-delete (Django) AND the broadcast to
+            // other members (`message.deleted` on the channel room).
+            // The legacy socket.emit("message", DELETE) + axios PUT +
+            // per-type IDB chatService cleanups all collapse into one
+            // call; the v3 store + IDB writes happen inside
+            // channelService.handleMessageDeleted, and the open chat's
+            // live-update subscription picks up the new state.
+            //
+            // No optimistic local filter: a previous version
+            // pre-emptively filtered the message out of
+            // `currentChat.messages` for snappier UI, but any
+            // unrelated event (typing, reaction) that fires the
+            // useSyncExternalStore subscription between the filter
+            // and the server's `message.deleted` broadcast would
+            // regenerate `currentChat.messages` from the still-
+            // present-in-store row and visibly resurrect the
+            // bubble. The v3 ack-then-broadcast roundtrip is fast
+            // enough that the subscription-driven update is
+            // imperceptible in practice.
             try {
                 await deleteMessage(
                     accessToken,
                     message.chatType,
-                    message.chatId,
-                    message.messageId
+                    message.chatId as unknown as string,
+                    message.messageIdWithChatId ?? "",
+                    setErrorMessage
                 );
-                if (message.chatType === 1) {
-                    await chatService.deleteDMMessage(message.chatId, message.messageId);
-                } else if (message.chatType === 2) {
-                    await chatService.deleteGMMessage(message.chatId, message.messageId);
-                } else if (message.chatType === 3) {
-                    await chatService.deletePMMessage(message.chatId, message.messageId);
-                } else if (message.chatType === 4) {
-                    await chatService.deleteMDMMessage(message.chatId, message.messageId);
-                }
             } catch (err) {
                 console.error("Failed to delete message from backend/IndexedDB:", err);
             }
