@@ -1043,10 +1043,25 @@ export class ChannelService {
     }
 
     deleteMessage(messageId: string, channelId: string, channelKind: ChannelKind): Promise<void> {
+        // Look up the message in the in-memory store to find out whether
+        // it's a thread reply. If so, we forward `parent_id` to the
+        // server so it can broadcast the parent's freshly-decremented
+        // `reply_count` as a `message.updated` — closing the
+        // stale-reply-count gap symmetrically with the send path.
+        //
+        // We don't require the caller to remember whether the message
+        // is a thread reply (or to look it up themselves) — the service
+        // owns the store and can derive it cheaply. Missing the lookup
+        // is non-fatal: the server falls back to "no parent broadcast",
+        // and the next delta sync still surfaces the new replyCount.
+        const arr = this._messages.get(channelId) ?? [];
+        const target = arr.find((m) => m.id === messageId);
+        const parentId = target?.isThreadReply ? target.parentId : null;
         return this.socketEmitOrThrow<void>("message.delete", {
             message_id: messageId,
             channel_id: channelId,
             channel_kind: channelKind,
+            parent_id: parentId,
         }) as Promise<void>;
     }
 
