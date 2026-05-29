@@ -798,17 +798,33 @@ export class ChannelService {
         });
     }
 
-    // ---- Pin / Flag (REST, optimistic store update) -----------------------
+    // ---- Pin / Flag (socket emit, optimistic store update) ----------------
     //
     // Pin/Flag are per-user "bookmarks": a Pin marks a channel as a
-    // favorite (typically rendered at the top of the chat list); a Flag
-    // marks a specific message as worth coming back to. Both are
-    // idempotent on the server. We update the store optimistically and
-    // roll back on failure so the button feels instant.
+    // favorite (top of the chat list); a Flag marks a message as worth
+    // coming back to. Both are idempotent on the server.
+    //
+    // Wire path:
+    //   1. We optimistically update the local store so the button flips
+    //      instantly.
+    //   2. We emit a `pin.add` / `pin.remove` / `flag.add` / `flag.remove`
+    //      socket event and await the ack.
+    //   3. On ack=ok: the server broadcasts `pin.added` / `pin.removed`
+    //      (etc.) to the `user:<userId>` room — every tab the same user
+    //      has open, INCLUDING this one, receives it and reconciles via
+    //      `handlePinAdded` (which is idempotent against the optimistic
+    //      row by replacing-on-channelId).
+    //   4. On ack=err: we roll back the optimistic update so the UI
+    //      doesn't drift from server truth.
+    //
+    // Cross-tab sync is the whole point of going through the socket
+    // (instead of the REST endpoint directly): another tab pinning a
+    // channel reaches this tab via the same broadcast loop, no reload
+    // needed.
 
-    async pinChannel(channelId: string): Promise<Pin> {
-        // Optimistic placeholder so the button flips instantly. The
-        // server-issued Pin replaces it on success.
+    async pinChannel(channelId: string): Promise<Pin | undefined> {
+        // Optimistic placeholder — replaced by the server-issued Pin
+        // when the `pin.added` broadcast comes back.
         const optimistic: Pin = {
             id: `optimistic-${channelId}`,
             channelId,
@@ -816,30 +832,29 @@ export class ChannelService {
         };
         this._upsertPin(optimistic);
         try {
-            const res = await this.api().post<Pin>(`/api/v3/channels/${channelId}/pin/`);
-            this._removePinByChannel(channelId);
-            this._upsertPin(res.data);
-            return res.data;
+            return await this.socketEmitOrThrow<Pin>("pin.add", {
+                channel_id: channelId,
+            });
         } catch (e) {
             this._removePinByChannel(channelId);
-            throw unwrapAxiosError(e);
+            throw e;
         }
     }
 
     async unpinChannel(channelId: string): Promise<void> {
         const existing = this._pinByChannelId.get(channelId);
-        // Optimistic removal so the button flips instantly.
         this._removePinByChannel(channelId);
         try {
-            await this.api().delete(`/api/v3/channels/${channelId}/pin/`);
+            await this.socketEmitOrThrow<void>("pin.remove", {
+                channel_id: channelId,
+            });
         } catch (e) {
-            // Restore on failure so the UI doesn't drift from server state.
             if (existing) this._upsertPin(existing);
-            throw unwrapAxiosError(e);
+            throw e;
         }
     }
 
-    async flagMessage(messageId: string): Promise<Flag> {
+    async flagMessage(messageId: string): Promise<Flag | undefined> {
         const optimistic: Flag = {
             id: `optimistic-${messageId}`,
             messageId,
@@ -847,13 +862,12 @@ export class ChannelService {
         };
         this._upsertFlag(optimistic);
         try {
-            const res = await this.api().post<Flag>(`/api/v3/messages/${messageId}/flag/`);
-            this._removeFlagByMessage(messageId);
-            this._upsertFlag(res.data);
-            return res.data;
+            return await this.socketEmitOrThrow<Flag>("flag.add", {
+                message_id: messageId,
+            });
         } catch (e) {
             this._removeFlagByMessage(messageId);
-            throw unwrapAxiosError(e);
+            throw e;
         }
     }
 
@@ -861,11 +875,38 @@ export class ChannelService {
         const existing = this._flagByMessageId.get(messageId);
         this._removeFlagByMessage(messageId);
         try {
-            await this.api().delete(`/api/v3/messages/${messageId}/flag/`);
+            await this.socketEmitOrThrow<void>("flag.remove", {
+                message_id: messageId,
+            });
         } catch (e) {
             if (existing) this._upsertFlag(existing);
-            throw unwrapAxiosError(e);
+            throw e;
         }
+    }
+
+    // ---- Inbound pin / flag socket handlers -------------------------------
+    //
+    // `pin.added` / `pin.removed` / `flag.added` / `flag.removed` arrive
+    // on the `user:<userId>` room — including from this tab's own
+    // emits. Re-applying our own broadcast is the reconciliation that
+    // replaces the optimistic placeholder with the server-issued row.
+    // The `_upsert*` helpers handle that swap idempotently by keying
+    // the secondary index on channelId / messageId.
+
+    handlePinAdded(pin: Pin): void {
+        this._upsertPin(pin);
+    }
+
+    handlePinRemoved(channelId: string): void {
+        this._removePinByChannel(channelId);
+    }
+
+    handleFlagAdded(flag: Flag): void {
+        this._upsertFlag(flag);
+    }
+
+    handleFlagRemoved(messageId: string): void {
+        this._removeFlagByMessage(messageId);
     }
 
     // ---- Inbound socket event handlers (called by socketRouter) ----------

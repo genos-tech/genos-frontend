@@ -23,9 +23,11 @@ import type {
     ChannelKind,
     ChannelMember,
     DeltaEnvelope,
+    Flag,
     Message,
     MessageReaction,
     MessagesDeltaData,
+    Pin,
     ReadCursor,
 } from "../../types/channel";
 import { channelService } from "./channelService";
@@ -88,6 +90,19 @@ export function registerSocketRouter(socket: Socket): () => void {
             envelope: DeltaEnvelope<MessagesDeltaData>;
         }>;
     }>("resync.batch", (b) => channelService.applyResyncBatch(b));
+
+    // Pin / Flag broadcasts arrive on the `user:<userId>` room so every
+    // tab the same user has open stays in sync. Self-emitted events
+    // come back through here too — the service's _upsert* helpers
+    // reconcile the optimistic placeholder against the server-issued
+    // row via the secondary index, so re-receiving our own emit is a
+    // no-op except for replacing the placeholder id.
+    on<{ pin: Pin }>("pin.added", (e) => channelService.handlePinAdded(e.pin));
+    on<{ channelId: string }>("pin.removed", (e) => channelService.handlePinRemoved(e.channelId));
+    on<{ flag: Flag }>("flag.added", (e) => channelService.handleFlagAdded(e.flag));
+    on<{ messageId: string }>("flag.removed", (e) =>
+        channelService.handleFlagRemoved(e.messageId)
+    );
 
     return () => {
         offs.forEach((off) => off());
