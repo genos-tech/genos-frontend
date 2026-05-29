@@ -30,7 +30,7 @@ import { AvatarContextProvider } from "./components/ui/avatars/AvatarContext";
 import { InitialLoad } from "./components/ui/misc/InitialLoad";
 import { RouteLoadingFallback } from "./components/ui/misc/RouteLoadingFallback";
 import { CalendarModal } from "./features/calendar/components/CalendarModal";
-import { isV3ChatEnabled, V3ChatShell } from "./features/channel/V3ChatShell";
+import { useIsV3ChatEnabled, V3ChatShell } from "./features/channel/V3ChatShell";
 import { OAUTH_INTEGRATIONS_ENABLED } from "./features/integrations/featureFlags";
 import { SpotlightOverlay } from "./features/spotlight/SpotlightOverlay";
 import { CHAT_TYPE_CODE, SpotlightResult } from "./features/spotlight/types";
@@ -167,6 +167,12 @@ export const App = () => {
     // 60s. Source of truth for the per-chat-type v3 rollout flags and
     // the panic switch. Silent / fail-closed if the endpoint errors.
     useRuntimeConfigBootstrap(accessToken, myself.userId || null);
+
+    // v3 chat gate. True iff build-time env var OR a per-chat-kind
+    // runtime flag is rolled out to this user (panic switch overrides).
+    // Re-evaluates on each config poll so a server-side rollout flip
+    // propagates within ≤60s without a reload.
+    const v3ChatEnabled = useIsV3ChatEnabled();
 
     // API server health tracking
     const [showApiDown, setShowApiDown] = useState(false);
@@ -1108,7 +1114,7 @@ export const App = () => {
                                                                                         the chat list with no pane; `/v3/<uuid>` opens
                                                                                         that channel. Selecting a channel from the
                                                                                         sidebar navigates between them. */}
-                                                                                    {isV3ChatEnabled() && (
+                                                                                    {v3ChatEnabled && (
                                                                                         <>
                                                                                             <Route
                                                                                                 path="v3"
