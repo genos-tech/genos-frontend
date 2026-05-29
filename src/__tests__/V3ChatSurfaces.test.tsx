@@ -138,8 +138,11 @@ describe("ChannelListV3", () => {
         // Per-channel unread badges
         expect(screen.getByText("3")).toBeInTheDocument();
         expect(screen.getByText("1")).toBeInTheDocument();
-        // Total in header (3 + 1 = 4)
-        expect(screen.getByText("4")).toBeInTheDocument();
+        // Total in header (3 + 1 = 4). Use the explicit testid because
+        // the session-3 sidebar now also renders per-kind section
+        // unread badges, and both channels here are GM → the GM
+        // section badge would also read "4".
+        expect(screen.getByTestId("channel-list-v3-total-unread")).toHaveTextContent("4");
     });
 
     it("sorts channels by latestMessage.tsSent desc", () => {

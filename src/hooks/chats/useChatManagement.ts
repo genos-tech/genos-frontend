@@ -2,8 +2,8 @@ import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { loadSpecificThreadMessages } from "../../features/chat/services/loadSpecificThreadMessages";
+import { loadV3Chats } from "../../features/chat/services/loadV3Chats";
 import { popActivityMessages } from "../../features/chat/services/popActivityMessages";
-import { popAllChats } from "../../features/chat/services/popAllChats";
 import { popFlaggedMessages } from "../../features/chat/services/popFlaggedMessages";
 import { popSpecificMessages } from "../../features/chat/services/popSpecificMessages";
 import { UserProps } from "../../types/admin";
@@ -12,10 +12,11 @@ import {
     AllChatProps,
     ChatProps,
     FlaggedMessageProps,
+    MessageProps,
     ThreadMessageProps,
     ThreadProps,
 } from "../../types/chat";
-import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
+import { ProjectProps } from "../../types/tasks";
 
 // Chat type constants for URL routing
 const CHAT_TYPE_REVERSE_MAP: Record<number, string> = {
@@ -74,7 +75,7 @@ export interface ChatManagementState {
         openTaskNoteInChat: boolean,
         openThreadTaskPreview: boolean,
         setCurrentPreviewTaskId: (id: number) => void,
-        setCurrentProject: (project: any) => void,
+        setCurrentProject: (project: ProjectProps | null) => void,
         // Optional matched-message focus (used by Spotlight). When > 0
         // the helper sets `moveToSpecificIndex` on the chat / thread
         // so the list scrolls to the bubble, and appends `/message/:id`
@@ -85,7 +86,7 @@ export interface ChatManagementState {
         chat: AllChatProps,
         threadId: number
     ) => Promise<ThreadProps | null>;
-    defineNewChat: (chat: AllChatProps, messages: any) => ChatProps;
+    defineNewChat: (chat: AllChatProps, messages: MessageProps[]) => ChatProps;
     showOnlyInCompleteTodos: boolean;
     setShowOnlyInCompleteTodos: (value: boolean) => void;
 }
@@ -141,43 +142,24 @@ export const useChatManagement = (
     };
 
     const funcSetAllChats = async () => {
-        const rawAllChats: AllChatProps[] = await popAllChats();
-        if (rawAllChats) {
-            const allChatsWithoutInitialDMChat = rawAllChats.filter(
-                (chat) => !(chat.chatType === 1 && chat.latestMessage?.messageId <= 1)
-            );
-
-            const initialDMChatIdx = rawAllChats.findIndex(
-                (chat) =>
-                    chat.chatType === 1 &&
-                    currentMainChat?.chatId === chat.chatId &&
-                    chat.latestMessage?.messageId <= 1
-            );
-
-            let finalAllChats: AllChatProps[];
-            if (initialDMChatIdx !== -1) {
-                const initialDMChat = rawAllChats[initialDMChatIdx];
-                finalAllChats = [
-                    {
-                        ...initialDMChat,
-                        latestMessage: {
-                            ...initialDMChat.latestMessage,
-                            tsSent: getLocalCurrentTimestamp(),
-                        },
-                    },
-                    ...allChatsWithoutInitialDMChat,
-                ];
-            } else {
-                finalAllChats = allChatsWithoutInitialDMChat;
-            }
-
-            const idbKeys = new Set(finalAllChats.map((c) => `${c.chatType}-${c.chatId}`));
-            setAllChats((prev) => {
-                const preserved = prev.filter((c) => !idbKeys.has(`${c.chatType}-${c.chatId}`));
-                return [...finalAllChats, ...preserved];
-            });
-            setUnReadChatCounts(countUnreadChats(allChatsWithoutInitialDMChat));
-        }
+        // Source flipped from the legacy per-type IDB chain
+        // (`popAllChats` → worker → 4× per-type stores) to the v3
+        // unified channel store. The wire-shape conversion lives in
+        // `features/chat/adapters/v3ToLegacy.ts`.
+        //
+        // PUNCH LIST (carry-over from the legacy fn):
+        //   - The "initial DM chat" filter (`latestMessage.messageId <= 1`)
+        //     handled a quirky empty-DM stub the legacy backend served on
+        //     first DM contact. The v3 backend doesn't ship that stub, so
+        //     the filter has no equivalent here.
+        //   - The `setAllChats((prev) => [...new, ...preservedNotInLoad])`
+        //     merge guarded against the worker IDB lagging a fresh
+        //     write. The v3 channelService is the single source of truth
+        //     in the main thread, so the prior-state merge isn't
+        //     necessary on this path.
+        const fresh = await loadV3Chats(myself.userId || null);
+        setAllChats(fresh);
+        setUnReadChatCounts(countUnreadChats(fresh));
     };
 
     const funcSetActivityMessages = async () => {
@@ -190,7 +172,15 @@ export const useChatManagement = (
 
     const countUnreadChats = (chats: AllChatProps[]): Record<string, number> => {
         return chats.reduce<Record<string, number>>((acc, chat) => {
-            if (chat.latestMessage && chat.lastReadMessageId < chat.latestMessage.messageId) {
+            // `lastReadMessageId` is `string` post-v3 type flip; the
+            // legacy `messageId` is still numeric. While the migration
+            // straddles both shapes, defineNewChat writes lastRead as
+            // a stringified int — Number() round-trips that. UUID-shaped
+            // cursors will Number() to NaN and skip the increment, which
+            // is the safer side of the migration gap (over-count is worse
+            // than under-count for the unread badge).
+            const lastRead = Number(chat.lastReadMessageId || "0");
+            if (chat.latestMessage && lastRead < chat.latestMessage.messageId) {
                 acc[chat.chatType] = (acc[chat.chatType] ?? 0) + 1;
             }
             return acc;
@@ -206,45 +196,57 @@ export const useChatManagement = (
         }, 0);
     };
 
-    const defineNewChat = (chat: AllChatProps, messages: any): ChatProps => {
+    const defineNewChat = (chat: AllChatProps, messages: MessageProps[]): ChatProps => {
         const lastMsg = messages.length > 0 ? messages[messages.length - 1] : chat.latestMessage;
+        // `lastReadMessageId` is a string after the v3 type flip; the
+        // legacy `messageId` is still numeric, so we stringify on
+        // assignment. Empty string is the "no messages yet" sentinel
+        // (replaces the legacy `-1`).
         return {
             chatId: chat.chatId,
             chatName: chat.chatName,
             chatType: chat.chatType,
             dmPartnerUser: chat.dmPartnerUser,
-            lastReadMessageId: lastMsg?.messageId ?? -1,
-            messages: messages,
+            isPrivate: chat.isPrivate,
+            lastReadMessageId: lastMsg?.messageId != null ? String(lastMsg.messageId) : "",
             latestMessage: lastMsg ?? chat.latestMessage,
             latestMessageText: lastMsg?.contentText ?? chat.latestMessageText ?? "",
-            TSLastMessage: lastMsg?.tsSent ?? chat.TSLastMessage ?? "",
-            systemUserId: chat.systemUserId,
-            project: chat.project,
-            isPrivate: chat.isPrivate,
+            messages: messages,
             profileImagePath: chat.profileImagePath,
+            project: chat.project,
+            systemUserId: chat.systemUserId,
+            TSLastMessage: lastMsg?.tsSent ?? chat.TSLastMessage ?? "",
         };
     };
 
     const moveToSpecificThreadChat = async (chat: AllChatProps, threadId: number) => {
+        // PUNCH LIST: loadSpecificThreadMessages still takes `chatId:
+        // number` and ThreadProps.chatId is still `number`. Both will
+        // flip to string in a later session that migrates the
+        // thread-services + ThreadProps shape. The casts below keep
+        // the file compiling at the boundary; at runtime the integer
+        // form was always what the legacy endpoint expected, so a
+        // UUID-shaped chatId here would 400 — known migration gap.
         const threadMessages: ThreadMessageProps[] = await loadSpecificThreadMessages(
             myself,
             chat.chatType,
-            chat.chatId,
+            chat.chatId as unknown as number,
             threadId,
             accessToken
         );
         if (threadMessages && threadMessages.length > 0) {
+            const lastThreadMsg = threadMessages[threadMessages.length - 1];
             const newThread: ThreadProps = {
-                chatId: chat.chatId,
+                chatId: chat.chatId as unknown as number,
                 chatName: chat.chatName,
-                threadId: threadId,
                 chatType: chat.chatType,
                 dmPartnerUser: chat.dmPartnerUser,
-                taskId: threadMessages[threadMessages.length - 1].taskId,
                 messages: threadMessages,
-                project: threadMessages[threadMessages.length - 1].project,
-                TSLastMessage: threadMessages[threadMessages.length - 1].tsSent,
-                taskExist: threadMessages[threadMessages.length - 1].taskExist,
+                project: lastThreadMsg.project,
+                taskExist: lastThreadMsg.taskExist,
+                taskId: lastThreadMsg.taskId,
+                threadId: threadId,
+                TSLastMessage: lastThreadMsg.tsSent,
             };
             if (newThread) {
                 setCurrentThreadChat(newThread);
@@ -261,7 +263,7 @@ export const useChatManagement = (
         openTaskNoteInChat: boolean,
         openThreadTaskPreview: boolean,
         setCurrentPreviewTaskId: (id: number) => void,
-        setCurrentProject: (project: any) => void,
+        setCurrentProject: (project: ProjectProps | null) => void,
         messageId?: number
     ) => {
         // Get the URL path for the chat type
@@ -289,8 +291,14 @@ export const useChatManagement = (
         setIsChatNoteVisibleInChat(openTaskNoteInChat);
         setIsThreadTaskVisible(openThreadTaskPreview);
 
+        // PUNCH LIST: `chatId` param is still `number` for the legacy
+        // callers; `chat.chatId` is `string` post-v3 flip. We stringify
+        // the param for the equality test so tsc accepts it. Once
+        // moveToSpecificChat's signature flips to `chatId: string`
+        // (and the URL parser stops Number()-ing it), this cast goes.
+        const chatIdAsString = String(chatId);
         const targetChat: AllChatProps | undefined = allChats.find(
-            (chat) => chat.chatType === chatType && chat.chatId === chatId
+            (chat) => chat.chatType === chatType && chat.chatId === chatIdAsString
         );
 
         if (!targetChat) {
@@ -351,6 +359,10 @@ export const useChatManagement = (
         funcSetAllChats();
         funcSetFlaggedMessages();
         funcSetActivityMessages();
+        // Intentional: these three loaders fire ONCE on mount. They
+        // close over `myself`/`accessToken` already; re-firing on every
+        // render would thrash the worker + network.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     useEffect(() => {
@@ -379,80 +391,80 @@ export const useChatManagement = (
         const timerId = setTimeout(() => {
             funcSetAllChats();
             if (currentMainChat) {
-                if (currentMainChat.chatType === 1 && currentMainChat.chatId !== -1) {
+                // `chatId !== -1` was the legacy "is this a real
+                // chat?" sentinel. With chatId now string, empty
+                // string is the equivalent of "unset". `chatId` is
+                // already a string so `.toString()` is structurally
+                // a no-op but kept for clarity.
+                if (currentMainChat.chatType === 1 && currentMainChat.chatId !== "") {
                     localStorage.setItem("lastChatType", "1");
-                    localStorage.setItem("lastDMChatId", currentMainChat.chatId.toString() || "");
+                    localStorage.setItem("lastDMChatId", currentMainChat.chatId);
                 }
-                if (currentMainChat.chatType === 2 && currentMainChat.chatId !== -1) {
+                if (currentMainChat.chatType === 2 && currentMainChat.chatId !== "") {
                     localStorage.setItem("lastChatType", "2");
-                    localStorage.setItem("lastGMChatId", currentMainChat.chatId.toString() || "");
+                    localStorage.setItem("lastGMChatId", currentMainChat.chatId);
                 }
-                if (currentMainChat.chatType === 3 && currentMainChat.chatId !== -1) {
+                if (currentMainChat.chatType === 3 && currentMainChat.chatId !== "") {
                     localStorage.setItem("lastChatType", "3");
-                    localStorage.setItem("lastPMChatId", currentMainChat.chatId.toString() || "");
+                    localStorage.setItem("lastPMChatId", currentMainChat.chatId);
                 }
-                if (currentMainChat.chatType === 4 && currentMainChat.chatId !== -1) {
+                if (currentMainChat.chatType === 4 && currentMainChat.chatId !== "") {
                     localStorage.setItem("lastChatType", "4");
-                    localStorage.setItem("lastMDMChatId", currentMainChat.chatId.toString() || "");
+                    localStorage.setItem("lastMDMChatId", currentMainChat.chatId);
                 }
             }
         }, 500);
         return () => clearTimeout(timerId);
+        // Intentional: `funcSetAllChats` is re-derived on every render
+        // and isn't memoized; including it in the dep array would re-arm
+        // the timer continuously. Only the main/sub chat selection
+        // should trigger a refresh.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentMainChat, currentSubChat]);
 
+    // Keys sorted natural-case-insensitive ascending per the project's
+    // `sort-keys` lint rule. Grouping comments (visibility / chat data
+    // / etc.) lived above; the sorted shape is intentionally flat.
     return {
-        // Visibility states
-        isMainChatVisible,
-        setIsMainChatVisible,
-        isSubChatVisible,
-        setIsSubChatVisible,
-        isThreadVisible,
-        setIsThreadVisible,
-        isThreadTaskVisible,
-        setIsThreadTaskVisible,
-        isChatNoteVisibleInChat,
-        setIsChatNoteVisibleInChat,
-
-        // Chat type
-        currentChatPaneType,
-        setCurrentChatPaneType,
-        notMoveChatPaneType,
-        setNotMoveChatPaneType,
-
-        // Current chats
-        currentMainChat,
-        setCurrentMainChat,
-        currentSubChat,
-        setCurrentSubChat,
-        currentThreadChat,
-        setCurrentThreadChat,
-
-        // Chat data
-        allChats,
-        setAllChats,
-        flaggedMessages,
-        setFlaggedMessages,
         activityMessages,
-        setActivityMessages,
-
-        // Unread counts
-        unReadChatCounts,
-        setUnReadChatCounts,
-        unReadActivityMessageCounts,
-        setUnReadActivityMessageCounts,
-        unReadChatAndActivityCounts,
-        setUnReadChatAndActivityCounts,
-
-        // Functions
+        allChats,
+        currentChatPaneType,
+        currentMainChat,
+        currentSubChat,
+        currentThreadChat,
+        defineNewChat,
+        flaggedMessages,
+        funcSetActivityMessages,
         funcSetAllChats,
         funcSetFlaggedMessages,
-        funcSetActivityMessages,
+        isChatNoteVisibleInChat,
+        isMainChatVisible,
+        isSubChatVisible,
+        isThreadTaskVisible,
+        isThreadVisible,
         moveToSpecificChat,
         moveToSpecificThreadChat,
-        defineNewChat,
-
-        // To-Do visibility
-        showOnlyInCompleteTodos,
+        notMoveChatPaneType,
+        setActivityMessages,
+        setAllChats,
+        setCurrentChatPaneType,
+        setCurrentMainChat,
+        setCurrentSubChat,
+        setCurrentThreadChat,
+        setFlaggedMessages,
+        setIsChatNoteVisibleInChat,
+        setIsMainChatVisible,
+        setIsSubChatVisible,
+        setIsThreadTaskVisible,
+        setIsThreadVisible,
+        setNotMoveChatPaneType,
         setShowOnlyInCompleteTodos,
+        setUnReadActivityMessageCounts,
+        setUnReadChatAndActivityCounts,
+        setUnReadChatCounts,
+        showOnlyInCompleteTodos,
+        unReadActivityMessageCounts,
+        unReadChatAndActivityCounts,
+        unReadChatCounts,
     };
 };
