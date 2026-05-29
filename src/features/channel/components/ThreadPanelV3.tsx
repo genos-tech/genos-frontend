@@ -10,10 +10,12 @@
  * proof-of-life only.
  */
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import { ChannelServiceError } from "../../../services/channel/channelService";
 import { useChannelThread } from "../hooks/useChannelThread";
+import { candidatesFromMessages, useMentionDraft } from "../hooks/useMentionDraft";
+import { MessageBody } from "./MessageBody";
 
 interface ThreadPanelV3Props {
     channelId: string;
@@ -23,20 +25,26 @@ interface ThreadPanelV3Props {
 
 export function ThreadPanelV3({ channelId, rootMessageId, onClose }: ThreadPanelV3Props) {
     const { root, replies, replyInThread, isLoading } = useChannelThread(channelId, rootMessageId);
-    const [draft, setDraft] = useState("");
+    const currentUserId = typeof window === "undefined" ? null : localStorage.getItem("userId");
+    // Picker candidates come from the people we've already seen in this
+    // thread — root + replies. That keeps the mention scope tight to
+    // the thread participants, not the whole channel.
+    const candidates = useMemo(
+        () => candidatesFromMessages(root ? [root, ...replies] : replies, currentUserId),
+        [root, replies, currentUserId]
+    );
+    const mention = useMentionDraft(candidates);
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     async function send() {
-        const text = draft.trim();
+        const text = mention.draft.trim();
         if (!text) return;
         setBusy(true);
         setError(null);
         try {
-            await replyInThread([{ type: "paragraph", content: [{ type: "text", text }] }], {
-                bodyText: text,
-            });
-            setDraft("");
+            await replyInThread(mention.buildBody(), { bodyText: text });
+            mention.reset();
         } catch (e) {
             const err = e as ChannelServiceError;
             setError(`${err.code ?? "INTERNAL"}: ${err.message ?? String(err)}`);
@@ -97,7 +105,15 @@ export function ThreadPanelV3({ channelId, rootMessageId, onClose }: ThreadPanel
                             data-testid="thread-panel-v3-root"
                         >
                             <strong>{root.sender?.userName ?? "system"}:</strong>{" "}
-                            {root.deletedAt ? "(deleted)" : root.bodyText}
+                            {root.deletedAt ? (
+                                "(deleted)"
+                            ) : (
+                                <MessageBody
+                                    body={root.body}
+                                    bodyText={root.bodyText}
+                                    currentUserId={currentUserId}
+                                />
+                            )}
                         </div>
                         <ul
                             style={{ listStyle: "none", margin: 0, padding: 0 }}
@@ -113,7 +129,15 @@ export function ThreadPanelV3({ channelId, rootMessageId, onClose }: ThreadPanel
                                     data-testid={`thread-panel-v3-reply-${r.id}`}
                                 >
                                     <strong>{r.sender?.userName ?? "system"}:</strong>{" "}
-                                    {r.deletedAt ? "(deleted)" : r.bodyText}
+                                    {r.deletedAt ? (
+                                        "(deleted)"
+                                    ) : (
+                                        <MessageBody
+                                            body={r.body}
+                                            bodyText={r.bodyText}
+                                            currentUserId={currentUserId}
+                                        />
+                                    )}
                                     {r.editedAt && !r.deletedAt && (
                                         <span
                                             style={{
@@ -162,20 +186,75 @@ export function ThreadPanelV3({ channelId, rootMessageId, onClose }: ThreadPanel
                     gap: 8,
                     padding: "8px 12px",
                     borderTop: "1px solid #ddd",
+                    position: "relative",
                 }}
             >
+                {mention.pickerOpen && (
+                    <div
+                        data-testid="thread-panel-v3-mention-picker"
+                        style={{
+                            position: "absolute",
+                            bottom: "100%",
+                            left: 12,
+                            marginBottom: 4,
+                            background: "#fff",
+                            border: "1px solid #ccc",
+                            borderRadius: 4,
+                            boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+                            fontSize: 13,
+                            minWidth: 160,
+                            zIndex: 10,
+                        }}
+                    >
+                        {mention.suggestions.map((s) => (
+                            <button
+                                key={s.userId}
+                                type="button"
+                                onMouseDown={(e) => {
+                                    e.preventDefault();
+                                    mention.selectCandidate(s);
+                                }}
+                                data-testid={`thread-panel-v3-mention-option-${s.userId}`}
+                                style={{
+                                    display: "block",
+                                    width: "100%",
+                                    textAlign: "left",
+                                    padding: "4px 8px",
+                                    background: "transparent",
+                                    border: "none",
+                                    cursor: "pointer",
+                                }}
+                            >
+                                @{s.userName}
+                            </button>
+                        ))}
+                    </div>
+                )}
                 <input
                     type="text"
-                    value={draft}
-                    onChange={(e) => setDraft(e.target.value)}
-                    placeholder="Reply…"
+                    value={mention.draft}
+                    onChange={(e) => {
+                        mention.setDraft(e.target.value);
+                        mention.setCaret(e.target.selectionStart ?? e.target.value.length);
+                    }}
+                    onKeyUp={(e) =>
+                        mention.setCaret(
+                            e.currentTarget.selectionStart ?? e.currentTarget.value.length
+                        )
+                    }
+                    onClick={(e) =>
+                        mention.setCaret(
+                            e.currentTarget.selectionStart ?? e.currentTarget.value.length
+                        )
+                    }
+                    placeholder="Reply…  (type @ to mention)"
                     disabled={busy || !root}
                     style={{ flex: 1, padding: "4px 8px" }}
                     data-testid="thread-panel-v3-input"
                 />
                 <button
                     type="submit"
-                    disabled={busy || !draft.trim() || !root}
+                    disabled={busy || !mention.draft.trim() || !root}
                     data-testid="thread-panel-v3-send"
                 >
                     Reply

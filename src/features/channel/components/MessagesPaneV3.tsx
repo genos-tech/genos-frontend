@@ -14,11 +14,13 @@
  * inherit from once we've validated the UX end-to-end.
  */
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { channelService, ChannelServiceError } from "../../../services/channel/channelService";
 import type { Message } from "../../../types/channel";
 import { useChannel } from "../hooks/useChannel";
+import { candidatesFromMessages, useMentionDraft } from "../hooks/useMentionDraft";
+import { MessageBody } from "./MessageBody";
 
 interface MessagesPaneV3Props {
     channelId: string;
@@ -37,7 +39,12 @@ const QUICK_EMOJI = ["👍", "❤️", "🎉", "🤔", "😄"];
 
 export function MessagesPaneV3({ channelId, onOpenThread }: MessagesPaneV3Props) {
     const { channel, messages, readCursor, isLoading } = useChannel(channelId);
-    const [draft, setDraft] = useState("");
+    const currentUserId = typeof window === "undefined" ? null : localStorage.getItem("userId");
+    const candidates = useMemo(
+        () => candidatesFromMessages(messages, currentUserId),
+        [messages, currentUserId]
+    );
+    const mention = useMentionDraft(candidates);
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -62,17 +69,14 @@ export function MessagesPaneV3({ channelId, onOpenThread }: MessagesPaneV3Props)
     }
 
     async function send() {
-        const text = draft.trim();
+        const text = mention.draft.trim();
         if (!text) return;
         setBusy(true);
         setError(null);
         try {
-            await channelService.send(
-                channelId,
-                [{ type: "paragraph", content: [{ type: "text", text }] }],
-                { bodyText: text }
-            );
-            setDraft("");
+            const body = mention.buildBody();
+            await channelService.send(channelId, body, { bodyText: text });
+            mention.reset();
         } catch (e) {
             const err = e as ChannelServiceError;
             setError(`${err.code}: ${err.message}`);
@@ -149,20 +153,41 @@ export function MessagesPaneV3({ channelId, onOpenThread }: MessagesPaneV3Props)
                     gap: 8,
                     padding: "8px 12px",
                     borderTop: "1px solid #ddd",
+                    position: "relative",
                 }}
             >
+                {mention.pickerOpen && (
+                    <MentionPicker
+                        testIdPrefix="messages-pane-v3"
+                        suggestions={mention.suggestions}
+                        onSelect={mention.selectCandidate}
+                    />
+                )}
                 <input
                     type="text"
-                    value={draft}
-                    onChange={(e) => setDraft(e.target.value)}
-                    placeholder="Message…"
+                    value={mention.draft}
+                    onChange={(e) => {
+                        mention.setDraft(e.target.value);
+                        mention.setCaret(e.target.selectionStart ?? e.target.value.length);
+                    }}
+                    onKeyUp={(e) =>
+                        mention.setCaret(
+                            e.currentTarget.selectionStart ?? e.currentTarget.value.length
+                        )
+                    }
+                    onClick={(e) =>
+                        mention.setCaret(
+                            e.currentTarget.selectionStart ?? e.currentTarget.value.length
+                        )
+                    }
+                    placeholder="Message…  (type @ to mention)"
                     disabled={busy}
                     style={{ flex: 1, padding: "4px 8px" }}
                     data-testid="messages-pane-v3-input"
                 />
                 <button
                     type="submit"
-                    disabled={busy || !draft.trim()}
+                    disabled={busy || !mention.draft.trim()}
                     data-testid="messages-pane-v3-send"
                 >
                     Send
@@ -292,7 +317,37 @@ function MessageRow({ message, channelId, channelKind, onError, onOpenThread }: 
                     </span>
                 ) : (
                     <>
-                        {message.deletedAt ? "(deleted)" : message.bodyText}
+                        {message.deletedAt ? (
+                            "(deleted)"
+                        ) : (
+                            <MessageBody
+                                body={message.body}
+                                bodyText={message.bodyText}
+                                currentUserId={
+                                    typeof window === "undefined"
+                                        ? null
+                                        : localStorage.getItem("userId")
+                                }
+                            />
+                        )}
+                        {!message.deletedAt && mentionsMe(message) && (
+                            <span
+                                data-testid={`message-row-mention-me-${message.id}`}
+                                style={{
+                                    marginLeft: 6,
+                                    padding: "0 4px",
+                                    background: "rgba(239, 68, 68, 0.18)",
+                                    color: "#b91c1c",
+                                    borderRadius: 3,
+                                    fontSize: 10,
+                                    fontWeight: 700,
+                                    textTransform: "uppercase",
+                                }}
+                                title="This message mentions you"
+                            >
+                                @you
+                            </span>
+                        )}
                         {message.editedAt && !message.deletedAt && (
                             <span style={{ marginLeft: 8, opacity: 0.5, fontSize: 12 }}>
                                 (edited)
@@ -388,6 +443,72 @@ function MessageRow({ message, channelId, channelKind, onError, onOpenThread }: 
                 />
             )}
         </li>
+    );
+}
+
+/** True iff any mention in this message points at the current viewer.
+ *  Used to decorate rows with a small `@you` tag so a long timeline
+ *  surfaces "this one's for you" at a glance. */
+function mentionsMe(message: Message): boolean {
+    if (typeof window === "undefined") return false;
+    const me = localStorage.getItem("userId");
+    if (!me) return false;
+    return message.mentions.some((m) => m.mentionedUserId === me);
+}
+
+interface MentionPickerProps {
+    testIdPrefix: string;
+    suggestions: { userId: string; userName: string }[];
+    onSelect: (c: { userId: string; userName: string }) => void;
+}
+
+/** Floating dropdown rendered above the composer when an `@` trigger
+ *  is active. Clicking a row inserts the mention chip via the hook. */
+function MentionPicker({ testIdPrefix, suggestions, onSelect }: MentionPickerProps) {
+    return (
+        <div
+            data-testid={`${testIdPrefix}-mention-picker`}
+            style={{
+                position: "absolute",
+                bottom: "100%",
+                left: 12,
+                marginBottom: 4,
+                background: "#fff",
+                border: "1px solid #ccc",
+                borderRadius: 4,
+                boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+                fontSize: 13,
+                minWidth: 160,
+                zIndex: 10,
+            }}
+        >
+            {suggestions.map((s) => (
+                <button
+                    key={s.userId}
+                    type="button"
+                    onMouseDown={(e) => {
+                        // onMouseDown (not onClick) so we fire before
+                        // the input loses focus and the picker unmounts
+                        // mid-click. Without this, the trigger char
+                        // changes before selectCandidate runs.
+                        e.preventDefault();
+                        onSelect(s);
+                    }}
+                    data-testid={`${testIdPrefix}-mention-option-${s.userId}`}
+                    style={{
+                        display: "block",
+                        width: "100%",
+                        textAlign: "left",
+                        padding: "4px 8px",
+                        background: "transparent",
+                        border: "none",
+                        cursor: "pointer",
+                    }}
+                >
+                    @{s.userName}
+                </button>
+            ))}
+        </div>
     );
 }
 
