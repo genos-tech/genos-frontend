@@ -312,10 +312,22 @@ describe("channelService reactive store", () => {
         expect(arr.map((m) => m.id)).toEqual(["m-replay-1", "m-replay-2"]);
     });
 
-    it("mutation methods reject when the socket is not connected", async () => {
-        // No socket set → send should reject.
-        await expect(svc.send("ch-1", [{ t: "p" }])).rejects.toMatchObject({
-            code: "DISCONNECTED",
-        });
+    it("send() queues instead of rejecting when the socket is not connected", () => {
+        // Previously: `send()` rejected with DISCONNECTED when no socket.
+        // New contract (pending-queue): the message is enqueued at status
+        // "queued" and the returned Promise stays pending until a later
+        // `flushPendingQueue()` (on reconnect) drains it.
+        const promise = svc.send("ch-1", [{ t: "p" }]);
+        // Promise hangs — no synchronous rejection.
+        expect(promise).toBeInstanceOf(Promise);
+        const snap = svc.getSnapshot();
+        const pending = snap.pendingByChannel.get("ch-1") ?? [];
+        expect(pending).toHaveLength(1);
+        expect(pending[0]?.status).toBe("queued");
+        // Clean up so the dangling Promise doesn't leak into the next test.
+        svc.discardPending(pending[0]!.correlationId);
+        // Attach a no-op catch so the rejection-from-discard doesn't
+        // log as unhandled.
+        promise.catch(() => undefined);
     });
 });

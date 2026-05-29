@@ -101,6 +101,55 @@ function unwrapAxiosError(err: unknown): ChannelServiceError {
 }
 
 /**
+ * A `send()` call that hasn't yet been confirmed by the server.
+ *
+ * Pending entries serve three purposes:
+ *
+ *   1. Optimistic "sending…" UI: the chat pane can render
+ *      `pendingByChannel.get(channelId)` as a strip of bubbles below
+ *      the real message timeline so the user sees their message
+ *      immediately instead of after the socket round-trip.
+ *
+ *   2. Offline queue: if the socket is disconnected at send time,
+ *      the entry sits in the map (status = "queued"). On socket
+ *      reconnect the bootstrap calls `flushPendingQueue()` to drain
+ *      it. The caller's `await send()` promise stays pending across
+ *      the whole gap and resolves when the eventual ack lands.
+ *
+ *   3. Retry-on-failure: if the ack returns `ok=false`, the entry
+ *      transitions to "failed" with `lastError` populated. A future
+ *      dev panel / chat row can offer a "retry" button that calls
+ *      `retryPending(correlationId)` to re-emit with the same id.
+ *
+ * The map is keyed by `correlationId` because that's how the server
+ * round-trips the identity — the broadcast on `message.created` echoes
+ * the same id, which is how `handleMessageCreated` removes the entry
+ * even when the ack itself raced the broadcast and got lost.
+ *
+ * NOT a retry queue in the auto-retry sense: the server does NOT
+ * de-dup by correlation_id, so silently re-emitting a "failed"
+ * message would create duplicate Message rows. Retry is user-driven.
+ */
+export interface PendingMessage {
+    correlationId: string;
+    channelId: string;
+    body: unknown[];
+    bodyText: string;
+    parentId: string | null;
+    metadata: Record<string, unknown>;
+    /**
+     * - `queued`: created but not yet emitted (socket was down).
+     * - `sending`: emit has gone out, waiting on ack.
+     * - `failed`: emit returned `ok=false` (BACKEND_ERROR, VALIDATION,
+     *   etc.) OR the ack timed out / the socket dropped mid-flight.
+     */
+    status: "queued" | "sending" | "failed";
+    enqueuedAt: string;
+    attempts: number;
+    lastError: { code: string; message: string; at: string } | null;
+}
+
+/**
  * Health of the IDB cache layer. Updated whenever any `_persist*`
  * method (or `hydrateFromIDB`, `_evictChannelMessages`, the resync
  * checkpoint write, etc.) raises. The in-memory store is the
@@ -160,6 +209,12 @@ export interface ChannelStoreSnapshot {
     flagByMessageId: ReadonlyMap<string, Flag>;
     /** Cache-layer health. See `IdbHealth` for state semantics. */
     idbHealth: IdbHealth;
+    /** Unconfirmed sends keyed by correlation_id. See `PendingMessage`. */
+    pendingByCorrelationId: ReadonlyMap<string, PendingMessage>;
+    /** Secondary index: pending entries grouped by channel for the UI
+     *  to render below the timeline. Maintained in lockstep with the
+     *  primary map; ordered by `enqueuedAt` asc. */
+    pendingByChannel: ReadonlyMap<string, readonly PendingMessage[]>;
 }
 
 /** correlation_id generator — uses uuidv4-ish style without adding a dep. */
@@ -245,6 +300,24 @@ export class ChannelService {
     /** IDB cache health tracking — see `IdbHealth` for the contract. */
     private _idbErrorCount = 0;
     private _lastIdbError: IdbHealth["lastError"] = null;
+    /** Pending sends — see `PendingMessage` for the contract. The
+     *  primary `_pendingByCorrelationId` map is authoritative; the
+     *  secondary `_pendingByChannel` is maintained in lockstep for
+     *  O(1) per-channel lookup by the UI. */
+    private _pendingByCorrelationId = new Map<string, PendingMessage>();
+    private _pendingByChannel = new Map<string, PendingMessage[]>();
+    /**
+     * Resolver callbacks for in-flight `send()` Promises, keyed by
+     * `correlationId`. NOT exposed on the snapshot (functions don't
+     * belong in user-visible state) — held privately so the ack OR
+     * the matching broadcast can resolve the caller's Promise even
+     * when the two race or the ack gets dropped on the floor by a
+     * connection blip.
+     */
+    private _pendingResolvers = new Map<
+        string,
+        { resolve: (m: Message) => void; reject: (e: Error) => void }
+    >();
     /** Flipped to true once `hydrateFromIDB()` settles (whether
      *  successfully or with an IDB failure). Hooks read this off the
      *  snapshot to render "loaded empty" instead of a perpetual
@@ -277,6 +350,8 @@ export class ChannelService {
                 lastError: this._lastIdbError,
                 errorCount: this._idbErrorCount,
             },
+            pendingByCorrelationId: this._pendingByCorrelationId,
+            pendingByChannel: this._pendingByChannel,
         };
     }
 
@@ -737,23 +812,226 @@ export class ChannelService {
         }
     }
 
+    // ---- Pending send queue ----------------------------------------------
+    //
+    // See the `PendingMessage` interface for the full contract. The
+    // four helpers below keep the primary/secondary maps in lockstep
+    // and notify subscribers on every mutation so consumers re-render.
+
+    private _upsertPending(p: PendingMessage): void {
+        this._pendingByCorrelationId.set(p.correlationId, p);
+        const arr = this._pendingByChannel.get(p.channelId) ?? [];
+        const idx = arr.findIndex((x) => x.correlationId === p.correlationId);
+        const next = idx >= 0 ? arr.map((x, i) => (i === idx ? p : x)) : [...arr, p];
+        // Stable ascending order by enqueuedAt so the UI renders the
+        // pending strip in the same order the user clicked send.
+        next.sort((a, b) => (a.enqueuedAt < b.enqueuedAt ? -1 : 1));
+        this._pendingByChannel.set(p.channelId, next);
+        this._notify();
+    }
+
+    private _removePending(correlationId: string): PendingMessage | undefined {
+        const existing = this._pendingByCorrelationId.get(correlationId);
+        if (!existing) return undefined;
+        this._pendingByCorrelationId.delete(correlationId);
+        const arr = this._pendingByChannel.get(existing.channelId);
+        if (arr) {
+            const next = arr.filter((x) => x.correlationId !== correlationId);
+            if (next.length === 0) this._pendingByChannel.delete(existing.channelId);
+            else this._pendingByChannel.set(existing.channelId, next);
+        }
+        this._notify();
+        return existing;
+    }
+
+    private _settlePending(
+        correlationId: string,
+        outcome: { ok: true; message: Message } | { ok: false; error: Error }
+    ): void {
+        const resolver = this._pendingResolvers.get(correlationId);
+        this._pendingResolvers.delete(correlationId);
+        if (resolver) {
+            if (outcome.ok) resolver.resolve(outcome.message);
+            else resolver.reject(outcome.error);
+        }
+    }
+
     // ---- Socket mutations (each emits + awaits ack) ----------------------
 
-    /** Send a message. Optimistic UI lives in the caller (a thin pending
-     *  map keyed by correlation_id, dropped when `message.created`
-     *  arrives back). */
+    /**
+     * Send a message.
+     *
+     * Three cases:
+     *
+     *   - Socket connected: the pending entry transitions through
+     *     `queued → sending → (removed on ack)`. The returned Promise
+     *     resolves with the server-issued Message when the ack lands.
+     *
+     *   - Socket disconnected: the pending entry stays at `queued`.
+     *     No emit goes out. The returned Promise stays pending across
+     *     the disconnect — when the socket reconnects, the bootstrap
+     *     calls `flushPendingQueue()` which drains every queued entry
+     *     in `enqueuedAt` order. The Promise then resolves like the
+     *     connected case.
+     *
+     *   - Ack returns `ok=false`: the pending entry transitions to
+     *     `failed` with `lastError` populated, and the returned Promise
+     *     rejects with that error. The user can call `retryPending(corr)`
+     *     to re-emit, or `discardPending(corr)` to drop it.
+     *
+     * The same correlation_id is used on retries (no auto-retry — the
+     * server does NOT de-dup by correlation_id, so a silent retry would
+     * create duplicate Message rows).
+     */
     send(
         channelId: string,
         body: unknown[],
         opts: { bodyText?: string; parentId?: string; metadata?: Record<string, unknown> } = {}
-    ): Promise<Message | undefined> {
-        return this.socketEmitOrThrow<Message>("message.send", {
-            channel_id: channelId,
+    ): Promise<Message> {
+        const correlationId = randomCorrelationId();
+        const pending: PendingMessage = {
+            correlationId,
+            channelId,
             body,
-            body_text: opts.bodyText ?? "",
-            parent_id: opts.parentId ?? null,
+            bodyText: opts.bodyText ?? "",
+            parentId: opts.parentId ?? null,
             metadata: opts.metadata ?? {},
+            status: "queued",
+            enqueuedAt: new Date().toISOString(),
+            attempts: 0,
+            lastError: null,
+        };
+        this._upsertPending(pending);
+
+        return new Promise<Message>((resolve, reject) => {
+            this._pendingResolvers.set(correlationId, { resolve, reject });
+            // Fire the emit if the socket is up; otherwise leave the
+            // entry queued for `flushPendingQueue` on reconnect. Either
+            // way, the resolver promise is the caller's handle on the
+            // eventual outcome.
+            void this._emitPending(correlationId).catch(() => {
+                /* `_emitPending` already settled the resolver on error */
+            });
         });
+    }
+
+    /**
+     * Emit the socket event for one queued entry + handle the ack.
+     * Idempotent against a missing entry (no-op) so a stray call from
+     * a flush race is harmless.
+     */
+    private async _emitPending(correlationId: string): Promise<void> {
+        const pending = this._pendingByCorrelationId.get(correlationId);
+        if (!pending) return;
+        if (!this.socket || !this.socket.connected) {
+            // Stay queued — flush on reconnect.
+            return;
+        }
+        this._upsertPending({
+            ...pending,
+            status: "sending",
+            attempts: pending.attempts + 1,
+        });
+        try {
+            const ack = await this.socketEmit<Message>(
+                "message.send",
+                {
+                    correlation_id: correlationId,
+                    channel_id: pending.channelId,
+                    body: pending.body,
+                    body_text: pending.bodyText,
+                    parent_id: pending.parentId,
+                    metadata: pending.metadata,
+                },
+                15000
+            );
+            if (ack.ok) {
+                this._removePending(correlationId);
+                // The broadcast also dedupes off the correlation id, but
+                // the ack data carries the same Message, so settle now
+                // rather than wait for the broadcast.
+                this._settlePending(correlationId, {
+                    ok: true,
+                    message: ack.data as Message,
+                });
+            } else {
+                const err = new ChannelServiceError(ack.code, ack.message);
+                this._markPendingFailed(correlationId, ack.code, ack.message);
+                this._settlePending(correlationId, { ok: false, error: err });
+            }
+        } catch (e) {
+            const err = e as ChannelServiceError;
+            const code = err?.code ?? "INTERNAL";
+            const msg = err?.message ?? String(e);
+            this._markPendingFailed(correlationId, code, msg);
+            this._settlePending(correlationId, { ok: false, error: err });
+        }
+    }
+
+    private _markPendingFailed(correlationId: string, code: string, message: string): void {
+        const existing = this._pendingByCorrelationId.get(correlationId);
+        if (!existing) return;
+        this._upsertPending({
+            ...existing,
+            status: "failed",
+            lastError: { code, message, at: new Date().toISOString() },
+        });
+    }
+
+    /**
+     * Re-emit a failed pending message with the SAME correlation id.
+     * The server does not de-dup by correlation_id, so the caller (or
+     * a dev panel) must decide whether to retry — if a previous
+     * attempt actually wrote a row on the server but the ack got
+     * lost, retrying creates a duplicate.
+     */
+    retryPending(correlationId: string): Promise<Message> {
+        const pending = this._pendingByCorrelationId.get(correlationId);
+        if (!pending) {
+            return Promise.reject(
+                new ChannelServiceError("NOT_FOUND", `No pending message ${correlationId}.`)
+            );
+        }
+        // Re-arm the resolver so callers awaiting `retryPending` see
+        // the next outcome instead of the dead one from the prior fail.
+        return new Promise<Message>((resolve, reject) => {
+            this._pendingResolvers.set(correlationId, { resolve, reject });
+            this._upsertPending({ ...pending, status: "queued", lastError: null });
+            void this._emitPending(correlationId).catch(() => {
+                /* settled by _emitPending */
+            });
+        });
+    }
+
+    /**
+     * Drop a pending entry without sending. The pending Promise
+     * rejects with `DISCARDED` so an awaiting caller can clean up.
+     */
+    discardPending(correlationId: string): void {
+        if (!this._pendingByCorrelationId.has(correlationId)) return;
+        this._removePending(correlationId);
+        this._settlePending(correlationId, {
+            ok: false,
+            error: new ChannelServiceError("DISCARDED", "Pending message discarded by user."),
+        });
+    }
+
+    /**
+     * Drain every queued/failed pending message via `_emitPending` in
+     * enqueuedAt order. Called by the bootstrap on socket reconnect.
+     * Sequential so the per-channel ordering matches what the user
+     * typed during the disconnect.
+     */
+    async flushPendingQueue(): Promise<void> {
+        const entries = Array.from(this._pendingByCorrelationId.values()).sort((a, b) =>
+            a.enqueuedAt < b.enqueuedAt ? -1 : 1
+        );
+        for (const p of entries) {
+            // Only retry queued + failed entries; `sending` ones are
+            // already in flight (or the previous attempt is racing).
+            if (p.status === "sending") continue;
+            await this._emitPending(p.correlationId);
+        }
     }
 
     edit(messageId: string, body: unknown[], bodyText = ""): Promise<Message | undefined> {
@@ -1060,6 +1338,21 @@ export class ChannelService {
     // ---- Inbound socket event handlers (called by socketRouter) ----------
 
     handleMessageCreated(message: Message): void {
+        // The broadcast payload from the v3 server includes the
+        // originating `correlation_id` (see `socketio_events_v3/
+        // message_handlers.py` — the broadcast envelope wraps the
+        // MessageSerializer with the corr id). If the server-pushed
+        // event matches one of OUR pending entries, drop it: the ack
+        // path has either already settled the resolver (no-op here)
+        // or this broadcast IS the catch-up after a dropped ack and
+        // we settle now. Either way, the upsert below replaces the
+        // optimistic bubble with the server-issued row.
+        const corr = (message as Message & { correlation_id?: string }).correlation_id;
+        if (corr && this._pendingByCorrelationId.has(corr)) {
+            this._removePending(corr);
+            this._settlePending(corr, { ok: true, message });
+        }
+
         this._upsertMessage(message);
         this._bumpChannelLatest(message);
         // Self-sent messages must not bump unread (server only knows

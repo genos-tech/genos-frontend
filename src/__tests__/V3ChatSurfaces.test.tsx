@@ -238,7 +238,11 @@ describe("MessagesPaneV3", () => {
         expect(send).not.toBeDisabled();
     });
 
-    it("surfaces a DISCONNECTED error when send is clicked with no socket", async () => {
+    it("queues the send when there's no socket (offline-mode behavior)", async () => {
+        // Previously `send()` rejected with `DISCONNECTED` if the socket
+        // was missing. The new pending-queue contract leaves the send
+        // in `queued` status instead so a later reconnect can flush it.
+        // Verify: no error banner appears AND a pending entry exists.
         channelService.handleChannelCreated(fakeChannel("c-1"));
         render(<MessagesPaneV3 channelId="c-1" />);
         const input = screen.getByTestId("messages-pane-v3-input") as HTMLInputElement;
@@ -246,8 +250,14 @@ describe("MessagesPaneV3", () => {
         fireEvent.click(screen.getByTestId("messages-pane-v3-send"));
 
         await waitFor(() => {
-            expect(screen.getByText(/DISCONNECTED/)).toBeInTheDocument();
+            const snap = channelService.getSnapshot();
+            const pending = snap.pendingByChannel.get("c-1") ?? [];
+            expect(pending).toHaveLength(1);
+            expect(pending[0]?.status).toBe("queued");
+            expect(pending[0]?.bodyText).toBe("hi");
         });
+        // No DISCONNECTED error banner — offline sends are silent.
+        expect(screen.queryByText(/DISCONNECTED/)).toBeNull();
     });
 });
 
@@ -293,12 +303,8 @@ describe("MessagesPaneV3 — interactions", () => {
 
     it("renders own-message edit + delete buttons, but only for own messages", () => {
         channelService.handleChannelCreated(fakeChannel("c-1"));
-        channelService.handleMessageCreated(
-            fakeMessage("m-mine", "c-1", "mine", "Me"),
-        );
-        channelService.handleMessageCreated(
-            fakeMessage("m-theirs", "c-1", "theirs", "Alice"),
-        );
+        channelService.handleMessageCreated(fakeMessage("m-mine", "c-1", "mine", "Me"));
+        channelService.handleMessageCreated(fakeMessage("m-theirs", "c-1", "theirs", "Alice"));
         // Override the "Me" sender ids so they match localStorage userId.
         channelService.handleMessageCreated({
             ...fakeMessage("m-mine", "c-1", "mine", "Me"),
@@ -334,9 +340,7 @@ describe("MessagesPaneV3 — interactions", () => {
 
         render(<MessagesPaneV3 channelId="c-1" />);
         fireEvent.click(screen.getByTestId("message-row-edit-m-1"));
-        const input = screen.getByTestId(
-            "message-row-edit-input-m-1",
-        ) as HTMLInputElement;
+        const input = screen.getByTestId("message-row-edit-input-m-1") as HTMLInputElement;
         fireEvent.change(input, { target: { value: "edited body" } });
         fireEvent.click(screen.getByTestId("message-row-edit-save-m-1"));
 
@@ -344,7 +348,7 @@ describe("MessagesPaneV3 — interactions", () => {
             expect(spy).toHaveBeenCalledWith(
                 "m-1",
                 [{ type: "paragraph", content: [{ type: "text", text: "edited body" }] }],
-                "edited body",
+                "edited body"
             );
         });
         spy.mockRestore();

@@ -111,8 +111,25 @@ export function useChannelServiceBootstrap(
         const onConnect = () => {
             if (!hasConnectedBefore) {
                 hasConnectedBefore = true;
+                // Even on first connect, flush any pending messages
+                // that were queued while the socket was constructed
+                // but before it finished handshaking. Typically a
+                // no-op; matters if the user clicked send during the
+                // sub-second handshake window.
+                void channelService.flushPendingQueue();
                 return;
             }
+            // Drain queued/failed pending messages first so the user's
+            // typed-during-disconnect sends fire in order, then resync
+            // to catch up on missed broadcasts (which includes any
+            // messages OTHER users sent in the gap). Order matters:
+            // sending our queued backlog before the resync means our
+            // own broadcasts come back through `handleMessageCreated`
+            // as part of the catch-up loop, naturally consistent.
+            void channelService.flushPendingQueue().catch(() => {
+                /* per-message failures already recorded as `failed`
+                 * pending entries — caller / dev panel surfaces them */
+            });
             void channelService.triggerResync().catch(() => {
                 // Resync failure is non-fatal — the next channel select
                 // will trigger `syncChannel` which fetches the same
