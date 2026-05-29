@@ -2,16 +2,14 @@ import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import { useAuth } from "../../../context/AuthContext";
-import { ChatService } from "../../../db/services/chat.service";
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { TaskManagementState } from "../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../types/admin";
 import { ChatProps, MessageProps, ThreadMessageProps, ThreadProps } from "../../../types/chat";
 import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
-import { loadMDMHistory } from "../services/loadMDMHistory";
 import { loadSpecificThreadMessages } from "../services/loadSpecificThreadMessages";
 import { loadSpecificThreadMessagesByTaskId } from "../services/loadSpecificThreadMessagesByTaskId";
-import { popSpecificMessages } from "../services/popSpecificMessages";
+import { loadV3SpecificMessages } from "../services/loadV3SpecificMessages";
 
 // Chat type constants matching the existing codebase.
 // Keys sorted alphabetically per `sort-keys` (the integer values are
@@ -335,35 +333,14 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
 
             isNavigatingFromUrl.current = true;
 
-            // PUNCH LIST: legacy services (`popSpecificMessages`,
-            // `loadMDMHistory`, `loadSpecificThreadMessages*`) still take
-            // `chatId: number`. The v3-flipped chatId is a UUID string,
-            // so these calls will fail at runtime once UUID URLs flow
-            // through. The cast keeps the compiler happy while the
-            // services are migrated in follow-on sessions.
-            popSpecificMessages(chatId as unknown as number, existingChat.chatType)
+            // v3 unified path: `loadV3SpecificMessages` handles every
+            // chat kind (DM/GM/PM/MDM) uniformly through channelService,
+            // so the legacy MDM `/history/` fallback for empty results
+            // is no longer needed — the v3 sync either returns rows or
+            // the channel genuinely has none.
+            loadV3SpecificMessages(chatId, existingChat.chatType)
                 .then(async (messages: MessageProps[]) => {
-                    let resolvedMessages = messages;
-                    if (resolvedMessages.length === 0 && existingChat.chatType === 4) {
-                        try {
-                            const data = await loadMDMHistory(
-                                myself.teamId,
-                                myself.teamName,
-                                myself.userId,
-                                accessToken,
-                                chatId as unknown as number
-                            );
-                            const mdmChat = data?.chat_history?.[0];
-                            if (mdmChat?.messages?.length > 0) {
-                                resolvedMessages = [...mdmChat.messages].sort(
-                                    (a: MessageProps, b: MessageProps) => a.messageId - b.messageId
-                                );
-                                await new ChatService().batchInsertMDMMessages(resolvedMessages);
-                            }
-                        } catch (e) {
-                            console.error("Failed to load MDM messages from backend:", e);
-                        }
-                    }
+                    const resolvedMessages = messages;
                     if (resolvedMessages.length === 0) return;
 
                     const lastMessage = resolvedMessages[resolvedMessages.length - 1];

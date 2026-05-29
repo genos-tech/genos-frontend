@@ -24,8 +24,10 @@ import {
     type Channel,
     type ChannelMember,
     type Message,
+    type MessageReaction,
 } from "../../../types/channel";
 import type { AllChatProps, MessageProps } from "../../../types/chat";
+import type { ReactionProps } from "../../../types/common";
 
 /** Map v3 `ChannelKind` to the legacy integer kind code. They happen
  *  to be the same integer values today (DM=1, GM=2, PM=3, MDM=4) —
@@ -237,5 +239,125 @@ export function v3ChannelsToLegacyChats(args: {
         const tb = b.TSLastMessage || "";
         return tb.localeCompare(ta);
     });
+    return out;
+}
+
+/**
+ * v3 `MessageReaction` → legacy `ReactionProps`. The legacy `id` field
+ * is `number` (DB row PK from the per-type reaction tables); v3 uses
+ * UUIDs. We emit `0` — no UI surface keys by it (reactions are grouped
+ * by `emoji` + `sender.userId` for collapse rendering).
+ */
+function v3ReactionToLegacy(r: MessageReaction): ReactionProps {
+    return {
+        id: 0,
+        emoji: r.emoji,
+        sender: {
+            userId: r.user?.userId ?? "",
+            userName: r.user?.userName ?? "",
+            userEmail: r.user?.userEmail ?? "",
+            teamId: "",
+            teamName: "",
+            avatarImgPath: r.user?.avatarImgPath ?? "",
+            tsLastSeen: "",
+            tsJoined: "",
+        },
+        tsSent: r.tsSent,
+    };
+}
+
+/**
+ * Full-shape v3 `Message` → legacy `MessageProps`. Used when a channel
+ * is opened (via `useChatManagement.moveToSpecificChat`) and we need
+ * to populate `ChatProps.messages`.
+ *
+ * Differences from `v3MessageToLegacyPreview` (the chat-list adapter):
+ *
+ *   - `messageIdWithChatId` is the v3 UUID directly. Globally unique
+ *     across channels, so the legacy `messageIdKey` index in
+ *     `useMessageManagement.indexMap` stays a one-to-one lookup. The
+ *     legacy format was `${chatId}-${seq}`; the new one drops the
+ *     chatId prefix because v3 message UUIDs are already unique.
+ *
+ *   - `chatId` carries the channel UUID through the legacy `number`
+ *     slot via a structural cast. The legacy type is mid-migration
+ *     (see `ChatProps.chatId: string` flip in `types/chat.ts`).
+ *
+ *   - `reactions` / `taskExist` / PM-specific fields are read from
+ *     v3 `metadata` JSON where the backend stashes them (`taskId`,
+ *     `displayId`, `taskStatus`, `taskCommentCount`).
+ */
+export function v3MessageToLegacy(args: {
+    message: Message;
+    /** The host channel's UUID — assigned to `MessageProps.chatId` via
+     *  a structural cast (legacy slot was `number`). */
+    channelId: string;
+    /** Legacy integer chat-type code (1=DM, 2=GM, 3=PM, 4=MDM). */
+    chatType: number;
+}): MessageProps {
+    const { message: m, channelId, chatType } = args;
+    const meta = (m.metadata ?? {}) as Record<string, unknown>;
+    const taskId = typeof meta.taskId === "number" ? (meta.taskId as number) : null;
+    const displayId = typeof meta.displayId === "string" ? (meta.displayId as string) : undefined;
+    const taskStatus = typeof meta.taskStatus === "string" ? (meta.taskStatus as string) : null;
+    const taskCommentCount =
+        typeof meta.taskCommentCount === "number" ? (meta.taskCommentCount as number) : undefined;
+    return {
+        chatType,
+        // PUNCH LIST: legacy slot is `number`; we carry the v3 UUID
+        // through. Same migration shim as `ChatProps.chatId`.
+        chatId: channelId as unknown as number,
+        messageIdWithChatId: m.id,
+        // PUNCH LIST: legacy slot is `number`; emit `seq` (per-channel
+        // monotonic int) so existing scroll-by-message and unread-count
+        // arithmetic keeps working. The v3 UUID `m.id` is also carried
+        // on `messageIdWithChatId` above.
+        messageId: m.seq,
+        content: m.body ?? [],
+        contentText: m.bodyText ?? "",
+        sender: {
+            userId: m.sender?.userId ?? "",
+            userName: m.sender?.userName ?? "",
+            userEmail: m.sender?.userEmail ?? "",
+            teamId: "",
+            teamName: "",
+            avatarImgPath: m.sender?.avatarImgPath ?? "",
+            tsLastSeen: "",
+            tsJoined: "",
+        },
+        tsSent: m.tsSent,
+        tsUpdated: m.tsUpdated,
+        numReplies: m.replyCount ?? 0,
+        taskCommentCount,
+        // The legacy `taskExist` is "this PM message is linked to a
+        // task" — proxied through `metadata.taskId !== null`. Non-PM
+        // channels never set the metadata so this falls to false.
+        taskExist: taskId != null,
+        taskId,
+        displayId,
+        taskStatus,
+        reactions: (m.reactions ?? []).map(v3ReactionToLegacy),
+        isFlagged: false, // resolved separately via channelService.snapshot.flagByMessageId
+    };
+}
+
+/**
+ * Plural form. Filters thread replies out (the legacy `ChatProps.messages`
+ * slot is top-level only; thread replies render through a different
+ * surface). Sorts by `tsSent` asc to mirror the legacy delta ordering.
+ */
+export function v3MessagesToLegacy(args: {
+    messages: readonly Message[];
+    channelId: string;
+    chatType: number;
+}): MessageProps[] {
+    const { messages, channelId, chatType } = args;
+    const out: MessageProps[] = [];
+    for (const m of messages) {
+        if (m.isThreadReply) continue;
+        if (m.deletedAt) continue;
+        out.push(v3MessageToLegacy({ message: m, channelId, chatType }));
+    }
+    out.sort((a, b) => (a.tsSent || "").localeCompare(b.tsSent || ""));
     return out;
 }

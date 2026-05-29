@@ -1,11 +1,13 @@
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import { v3MessagesToLegacy } from "../../features/chat/adapters/v3ToLegacy";
 import { loadSpecificThreadMessages } from "../../features/chat/services/loadSpecificThreadMessages";
 import { loadV3Chats } from "../../features/chat/services/loadV3Chats";
+import { loadV3SpecificMessages } from "../../features/chat/services/loadV3SpecificMessages";
 import { popActivityMessages } from "../../features/chat/services/popActivityMessages";
 import { popFlaggedMessages } from "../../features/chat/services/popFlaggedMessages";
-import { popSpecificMessages } from "../../features/chat/services/popSpecificMessages";
+import { channelService } from "../../services/channel/channelService";
 import { UserProps } from "../../types/admin";
 import {
     ActivityMessageProps,
@@ -42,9 +44,16 @@ export interface ChatManagementState {
     notMoveChatPaneType: boolean;
     setNotMoveChatPaneType: (value: boolean) => void;
     currentMainChat: ChatProps | undefined;
-    setCurrentMainChat: (value: ChatProps | undefined) => void;
+    // Widened to the full `Dispatch<SetStateAction<...>>` so the v3
+    // channelService subscription (and any future caller) can patch
+    // a single field via the functional updater without reading a
+    // stale closure value at render time.
+    setCurrentMainChat: Dispatch<SetStateAction<ChatProps | undefined>>;
     currentSubChat: ChatProps | undefined;
-    setCurrentSubChat: (value: ChatProps | undefined) => void;
+    // Same widening as `setCurrentMainChat` — the parallel v3
+    // channelService subscription on `currentSubChat` patches in
+    // place via functional updater.
+    setCurrentSubChat: Dispatch<SetStateAction<ChatProps | undefined>>;
     currentThreadChat: ThreadProps | undefined;
     // Widened to the full `Dispatch<SetStateAction<...>>` so callers can use
     // the functional updater form `setCurrentThreadChat((prev) => ...)` to
@@ -309,7 +318,14 @@ export const useChatManagement = (
         }
 
         try {
-            const messages = await popSpecificMessages(chatId, chatType);
+            // Source flipped from the legacy per-type worker IDB
+            // pop (`popSpecificMessages` → 4× per-kind stores) to the
+            // v3 unified channelService. The adapter inside
+            // `loadV3SpecificMessages` maps v3 Message[] back to legacy
+            // MessageProps[] so `defineNewChat` and downstream UI
+            // surfaces (MainChatPane, message bubbles, scroll manager)
+            // stay shape-compatible.
+            const messages = await loadV3SpecificMessages(chatIdAsString, chatType);
             const newChat: ChatProps = defineNewChat(targetChat, messages);
             // Spotlight may have asked us to focus a specific bubble in
             // the main channel. The chat list reads `moveToSpecificIndex`
@@ -421,6 +437,88 @@ export const useChatManagement = (
         // should trigger a refresh.
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentMainChat, currentSubChat]);
+
+    // v3 live-update bridge: subscribe to channelService for the
+    // currently-open main chat. Whenever a v3 socket event mutates
+    // `messagesByChannel` for this channelId (`message.created`,
+    // `message.updated`, `message.deleted`, reactions, etc.), we
+    // re-adapt the v3 Message[] slice to legacy MessageProps[] and
+    // patch `currentMainChat.messages` in place.
+    //
+    // Replaces the legacy `hooks/common/handlers/message-handlers.ts`
+    // dispatch path for the v3 socket events; the legacy handler is
+    // still wired for any legacy `/` namespace events the FE still
+    // receives during the rewrite window, but the unified path lives
+    // here.
+    //
+    // The `messagesSlice === lastSliceRef` short-circuit relies on
+    // channelService returning a new array reference on every mutation
+    // (see `_messages.set(channelId, next)` in `handleMessageCreated`),
+    // so equal-by-reference means "nothing changed for this channel."
+    useEffect(() => {
+        const channelId = currentMainChat?.chatId;
+        const chatType = currentMainChat?.chatType;
+        if (!channelId || chatType == null) return;
+        let lastSliceRef: readonly unknown[] | undefined;
+        const apply = () => {
+            const snapshot = channelService.getSnapshot();
+            const messagesSlice = snapshot.messagesByChannel.get(channelId);
+            if (messagesSlice === lastSliceRef) return;
+            lastSliceRef = messagesSlice;
+            if (!messagesSlice) return;
+            const legacyMessages = v3MessagesToLegacy({
+                messages: messagesSlice,
+                channelId,
+                chatType,
+            });
+            setCurrentMainChat((prev) => {
+                // Guard against a chat-switch race: by the time the
+                // notification fires, the user may have navigated to a
+                // different channel. Only patch if the chat that was
+                // open when this effect armed is still open.
+                if (!prev || prev.chatId !== channelId) return prev;
+                return { ...prev, messages: legacyMessages };
+            });
+        };
+        // Subscribe first; channelService runs the callback on every
+        // mutation. Re-apply once synchronously in case events landed
+        // between the `moveToSpecificChat` REST resolution and this
+        // effect arming.
+        const unsubscribe = channelService.subscribe(apply);
+        apply();
+        return unsubscribe;
+    }, [currentMainChat?.chatId, currentMainChat?.chatType]);
+
+    // Sub-pane mirror of the above. SubChatPane renders an independent
+    // chat in the side pane (e.g. a peek opened from Spotlight or the
+    // activity sidebar) — its messages need the same v3 live-update
+    // bridge as the main pane so a socket-delivered new message is
+    // reflected in both panes when the same channel is open in each.
+    useEffect(() => {
+        const channelId = currentSubChat?.chatId;
+        const chatType = currentSubChat?.chatType;
+        if (!channelId || chatType == null) return;
+        let lastSliceRef: readonly unknown[] | undefined;
+        const apply = () => {
+            const snapshot = channelService.getSnapshot();
+            const messagesSlice = snapshot.messagesByChannel.get(channelId);
+            if (messagesSlice === lastSliceRef) return;
+            lastSliceRef = messagesSlice;
+            if (!messagesSlice) return;
+            const legacyMessages = v3MessagesToLegacy({
+                messages: messagesSlice,
+                channelId,
+                chatType,
+            });
+            setCurrentSubChat((prev) => {
+                if (!prev || prev.chatId !== channelId) return prev;
+                return { ...prev, messages: legacyMessages };
+            });
+        };
+        const unsubscribe = channelService.subscribe(apply);
+        apply();
+        return unsubscribe;
+    }, [currentSubChat?.chatId, currentSubChat?.chatType]);
 
     // Keys sorted natural-case-insensitive ascending per the project's
     // `sort-keys` lint rule. Grouping comments (visibility / chat data
