@@ -1096,16 +1096,23 @@ export const App = () => {
                                                                                             }
                                                                                         />
                                                                                     )}
-                                                                                    {/* v3 proof-of-life route. Behind `VITE_USE_V3_CHAT`
+                                                                                    {/* v3 proof-of-life routes. Behind `VITE_USE_V3_CHAT`
                                                                                         — production builds without the env flag don't
-                                                                                        even register the route. Manual nav to
-                                                                                        `/workspace/v3` shows the unified chat list +
-                                                                                        message pane backed by `channelService`. */}
+                                                                                        even register the routes. The bare `/v3` shows
+                                                                                        the chat list with no pane; `/v3/<uuid>` opens
+                                                                                        that channel. Selecting a channel from the
+                                                                                        sidebar navigates between them. */}
                                                                                     {isV3ChatEnabled() && (
-                                                                                        <Route
-                                                                                            path="v3"
-                                                                                            element={<V3ChatShell />}
-                                                                                        />
+                                                                                        <>
+                                                                                            <Route
+                                                                                                path="v3"
+                                                                                                element={<V3ChatShell />}
+                                                                                            />
+                                                                                            <Route
+                                                                                                path="v3/:channelId"
+                                                                                                element={<V3ChatShell />}
+                                                                                            />
+                                                                                        </>
                                                                                     )}
                                                                                     {/* Default redirect to inbox */}
                                                                                     <Route

@@ -43,6 +43,21 @@ function fakeChannel(id: string, overrides: Partial<Channel> = {}): Channel {
     };
 }
 
+function fakeReaction(id: string, userId: string, userName: string, emoji: string) {
+    return {
+        id,
+        user: {
+            userId,
+            userName,
+            userEmail: `${userName}@x`,
+            avatarImgPath: null,
+            isSystemUser: false,
+        },
+        emoji,
+        tsSent: "2026-01-01T00:01:00Z",
+    };
+}
+
 function fakeMessage(id: string, channelId: string, text: string, sender = "Alice"): Message {
     return {
         id,
@@ -233,5 +248,229 @@ describe("MessagesPaneV3", () => {
         await waitFor(() => {
             expect(screen.getByText(/DISCONNECTED/)).toBeInTheDocument();
         });
+    });
+});
+
+describe("MessagesPaneV3 — interactions", () => {
+    beforeEach(async () => {
+        await resetService();
+        // The pane reads `userId` from localStorage to decide edit/delete
+        // visibility + reaction toggle direction. Stub it for "me".
+        localStorage.setItem("userId", "u-me");
+    });
+
+    it("calls markRead with the latest message id when the channel is opened", async () => {
+        channelService.handleChannelCreated(fakeChannel("c-1"));
+        channelService.handleMessageCreated(fakeMessage("m-1", "c-1", "first"));
+        channelService.handleMessageCreated(fakeMessage("m-2", "c-1", "second"));
+
+        const spy = vi.spyOn(channelService, "markRead").mockResolvedValue(undefined);
+        render(<MessagesPaneV3 channelId="c-1" />);
+
+        await waitFor(() => {
+            expect(spy).toHaveBeenCalledWith("c-1", "m-2");
+        });
+        spy.mockRestore();
+    });
+
+    it("does not call markRead again when the cursor already points at the latest", () => {
+        channelService.handleChannelCreated(fakeChannel("c-1"));
+        channelService.handleMessageCreated(fakeMessage("m-1", "c-1", "hi"));
+        channelService.handleReadAdvanced({
+            id: "cur-1",
+            channelId: "c-1",
+            threadRootId: null,
+            lastReadMessageId: "m-1",
+            lastReadAt: "2026-01-01T00:02:00Z",
+        });
+
+        const spy = vi.spyOn(channelService, "markRead").mockResolvedValue(undefined);
+        render(<MessagesPaneV3 channelId="c-1" />);
+
+        expect(spy).not.toHaveBeenCalled();
+        spy.mockRestore();
+    });
+
+    it("renders own-message edit + delete buttons, but only for own messages", () => {
+        channelService.handleChannelCreated(fakeChannel("c-1"));
+        channelService.handleMessageCreated(
+            fakeMessage("m-mine", "c-1", "mine", "Me"),
+        );
+        channelService.handleMessageCreated(
+            fakeMessage("m-theirs", "c-1", "theirs", "Alice"),
+        );
+        // Override the "Me" sender ids so they match localStorage userId.
+        channelService.handleMessageCreated({
+            ...fakeMessage("m-mine", "c-1", "mine", "Me"),
+            sender: {
+                userId: "u-me",
+                userName: "Me",
+                userEmail: "me@x",
+                avatarImgPath: null,
+                isSystemUser: false,
+            },
+        });
+
+        render(<MessagesPaneV3 channelId="c-1" />);
+        expect(screen.getByTestId("message-row-edit-m-mine")).toBeInTheDocument();
+        expect(screen.getByTestId("message-row-delete-m-mine")).toBeInTheDocument();
+        expect(screen.queryByTestId("message-row-edit-m-theirs")).toBeNull();
+        expect(screen.queryByTestId("message-row-delete-m-theirs")).toBeNull();
+    });
+
+    it("entering edit mode + saving calls channelService.edit with the new text", async () => {
+        channelService.handleChannelCreated(fakeChannel("c-1"));
+        channelService.handleMessageCreated({
+            ...fakeMessage("m-1", "c-1", "original", "Me"),
+            sender: {
+                userId: "u-me",
+                userName: "Me",
+                userEmail: "me@x",
+                avatarImgPath: null,
+                isSystemUser: false,
+            },
+        });
+        const spy = vi.spyOn(channelService, "edit").mockResolvedValue(undefined);
+
+        render(<MessagesPaneV3 channelId="c-1" />);
+        fireEvent.click(screen.getByTestId("message-row-edit-m-1"));
+        const input = screen.getByTestId(
+            "message-row-edit-input-m-1",
+        ) as HTMLInputElement;
+        fireEvent.change(input, { target: { value: "edited body" } });
+        fireEvent.click(screen.getByTestId("message-row-edit-save-m-1"));
+
+        await waitFor(() => {
+            expect(spy).toHaveBeenCalledWith(
+                "m-1",
+                [{ type: "paragraph", content: [{ type: "text", text: "edited body" }] }],
+                "edited body",
+            );
+        });
+        spy.mockRestore();
+    });
+
+    it("clicking delete prompts then calls channelService.deleteMessage on confirm", async () => {
+        channelService.handleChannelCreated(fakeChannel("c-1"));
+        channelService.handleMessageCreated({
+            ...fakeMessage("m-1", "c-1", "doomed", "Me"),
+            sender: {
+                userId: "u-me",
+                userName: "Me",
+                userEmail: "me@x",
+                avatarImgPath: null,
+                isSystemUser: false,
+            },
+        });
+        const spy = vi.spyOn(channelService, "deleteMessage").mockResolvedValue(undefined);
+        const confirmStub = vi.spyOn(window, "confirm").mockReturnValue(true);
+
+        render(<MessagesPaneV3 channelId="c-1" />);
+        fireEvent.click(screen.getByTestId("message-row-delete-m-1"));
+
+        await waitFor(() => {
+            expect(spy).toHaveBeenCalledWith("m-1", "c-1", ChannelKind.GM);
+        });
+        expect(confirmStub).toHaveBeenCalled();
+        spy.mockRestore();
+        confirmStub.mockRestore();
+    });
+
+    it("clicking delete and cancelling does NOT call deleteMessage", () => {
+        channelService.handleChannelCreated(fakeChannel("c-1"));
+        channelService.handleMessageCreated({
+            ...fakeMessage("m-1", "c-1", "safe", "Me"),
+            sender: {
+                userId: "u-me",
+                userName: "Me",
+                userEmail: "me@x",
+                avatarImgPath: null,
+                isSystemUser: false,
+            },
+        });
+        const spy = vi.spyOn(channelService, "deleteMessage").mockResolvedValue(undefined);
+        const confirmStub = vi.spyOn(window, "confirm").mockReturnValue(false);
+
+        render(<MessagesPaneV3 channelId="c-1" />);
+        fireEvent.click(screen.getByTestId("message-row-delete-m-1"));
+
+        expect(spy).not.toHaveBeenCalled();
+        spy.mockRestore();
+        confirmStub.mockRestore();
+    });
+
+    it("emoji-picker button reveals quick emojis; clicking one calls react()", async () => {
+        channelService.handleChannelCreated(fakeChannel("c-1"));
+        channelService.handleMessageCreated(fakeMessage("m-1", "c-1", "hi", "Alice"));
+        const spy = vi.spyOn(channelService, "react").mockResolvedValue(undefined);
+
+        render(<MessagesPaneV3 channelId="c-1" />);
+        // Quick-emoji row is hidden until the react button is pressed.
+        expect(screen.queryByTestId("message-row-emoji-picker-m-1")).toBeNull();
+        fireEvent.click(screen.getByTestId("message-row-react-m-1"));
+        expect(screen.getByTestId("message-row-emoji-picker-m-1")).toBeInTheDocument();
+
+        fireEvent.click(screen.getByTestId("message-row-emoji-m-1-🎉"));
+        await waitFor(() => {
+            expect(spy).toHaveBeenCalledWith("m-1", "c-1", ChannelKind.GM, "🎉");
+        });
+        spy.mockRestore();
+    });
+
+    it("clicking an existing reaction chip MINE toggles unreact()", async () => {
+        channelService.handleChannelCreated(fakeChannel("c-1"));
+        const msg = {
+            ...fakeMessage("m-1", "c-1", "hi", "Alice"),
+            reactions: [fakeReaction("r-1", "u-me", "Me", "👍")],
+        };
+        channelService.handleMessageCreated(msg);
+        const spy = vi.spyOn(channelService, "unreact").mockResolvedValue(undefined);
+
+        render(<MessagesPaneV3 channelId="c-1" />);
+        // The chip exists because of the existing reaction.
+        const chip = screen.getByTestId("message-row-reaction-chip-m-1-👍");
+        fireEvent.click(chip);
+
+        await waitFor(() => {
+            expect(spy).toHaveBeenCalledWith("m-1", "c-1", ChannelKind.GM, "👍");
+        });
+        spy.mockRestore();
+    });
+
+    it("clicking a reaction chip NOT mine adds my reaction via react()", async () => {
+        channelService.handleChannelCreated(fakeChannel("c-1"));
+        const msg = {
+            ...fakeMessage("m-1", "c-1", "hi", "Alice"),
+            reactions: [fakeReaction("r-1", "u-other", "Other", "👍")],
+        };
+        channelService.handleMessageCreated(msg);
+        const spy = vi.spyOn(channelService, "react").mockResolvedValue(undefined);
+
+        render(<MessagesPaneV3 channelId="c-1" />);
+        fireEvent.click(screen.getByTestId("message-row-reaction-chip-m-1-👍"));
+
+        await waitFor(() => {
+            expect(spy).toHaveBeenCalledWith("m-1", "c-1", ChannelKind.GM, "👍");
+        });
+        spy.mockRestore();
+    });
+
+    it("groups reactions by emoji and shows per-emoji counts", () => {
+        channelService.handleChannelCreated(fakeChannel("c-1"));
+        const msg = {
+            ...fakeMessage("m-1", "c-1", "hi", "Alice"),
+            reactions: [
+                fakeReaction("r-1", "u-a", "Alpha", "👍"),
+                fakeReaction("r-2", "u-b", "Beta", "👍"),
+                fakeReaction("r-3", "u-c", "Gamma", "🎉"),
+            ],
+        };
+        channelService.handleMessageCreated(msg);
+
+        render(<MessagesPaneV3 channelId="c-1" />);
+        const thumb = screen.getByTestId("message-row-reaction-chip-m-1-👍");
+        const party = screen.getByTestId("message-row-reaction-chip-m-1-🎉");
+        expect(thumb).toHaveTextContent("👍 2");
+        expect(party).toHaveTextContent("🎉 1");
     });
 });

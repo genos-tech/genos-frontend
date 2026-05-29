@@ -10,7 +10,8 @@
  * these (after polish — see plan §4).
  */
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 
 import { ChannelListV3 } from "./components/ChannelListV3";
 import { MessagesPaneV3 } from "./components/MessagesPaneV3";
@@ -27,7 +28,18 @@ export function isV3ChatEnabled(): boolean {
 }
 
 export function V3ChatShell() {
-    const [selected, setSelected] = useState<string | null>(null);
+    // Channel selection lives in the URL so it survives reloads and the
+    // browser back button does the right thing. `/workspace/v3` → no
+    // selection; `/workspace/v3/<uuid>` → that channel is open.
+    const { channelId } = useParams<{ channelId?: string }>();
+    const navigate = useNavigate();
+    const selected = channelId ?? null;
+    const setSelected = useCallback(
+        (id: string) => {
+            navigate(`/workspace/v3/${id}`);
+        },
+        [navigate],
+    );
 
     // Best-effort REST refresh on mount so the chat list has fresh
     // server-side `latestMessage` / `unreadCount` denorms. Each
