@@ -64,6 +64,7 @@ import { NotificationToastHost } from "./services/notifications/NotificationToas
 import { PermissionBanner } from "./services/notifications/PermissionBanner";
 import { NotificationIntent } from "./services/notifications/types";
 import { refreshAllData } from "./services/refreshAllData";
+import { useRuntimeConfigBootstrap } from "./services/runtimeConfig/useRuntimeConfig";
 
 import { I18nProvider } from "./i18n";
 import { purpleTheme } from "./theme/purplePalette";
@@ -161,6 +162,11 @@ export const App = () => {
     // `useChannel` / `useChannelList` hooks) consume `channelService`
     // directly. Side-by-side until the legacy paths are deleted.
     useChannelServiceBootstrap(accessToken, myself.userId || null);
+
+    // Runtime config: poll `/api/runtime-config` on auth ready and every
+    // 60s. Source of truth for the per-chat-type v3 rollout flags and
+    // the panic switch. Silent / fail-closed if the endpoint errors.
+    useRuntimeConfigBootstrap(accessToken, myself.userId || null);
 
     // API server health tracking
     const [showApiDown, setShowApiDown] = useState(false);
