@@ -2,6 +2,17 @@ import axios from "axios";
 
 import { authApi } from "../../../services/api";
 
+// PUNCH LIST (v3 chatId migration): the legacy `/api/v2/mdm/history/`
+// endpoint expects an integer `mdm_id`. Post-flip, MDM `chatId` is the
+// v3 Channel UUID at the type level; callers cast `string → number` to
+// satisfy TS but the value still rides through as a UUID at runtime.
+// Skip the call when the id isn't a legacy numeric string — the v3
+// channel sync path already populates the IDB for those channels.
+const isLegacyNumericId = (value: number | undefined): boolean => {
+    if (value === undefined) return true;
+    return /^\d+$/.test(String(value));
+};
+
 export const loadMDMHistory = async (
     teamId: string,
     teamName: string,
@@ -9,6 +20,10 @@ export const loadMDMHistory = async (
     accessToken: string | null,
     mdmId?: number
 ) => {
+    if (!isLegacyNumericId(mdmId)) {
+        // v3 UUID-shaped id; legacy endpoint can't serve it.
+        return { chat_history: [], flagged_messages: [] };
+    }
     try {
         const api = authApi(accessToken);
         if (api) {
