@@ -14,16 +14,14 @@
  * inherit from once we've validated the UX end-to-end.
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 
 import { channelService, ChannelServiceError } from "../../../services/channel/channelService";
 import type { Message } from "../../../types/channel";
-import { useAttachmentDraft } from "../hooks/useAttachmentDraft";
 import { useChannel } from "../hooks/useChannel";
-import { candidatesFromMessages, useMentionDraft } from "../hooks/useMentionDraft";
 import { MessageAttachments } from "./MessageAttachments";
 import { MessageBody } from "./MessageBody";
-import { PendingAttachmentStrip } from "./PendingAttachmentStrip";
+import { MessageComposerV3 } from "./MessageComposerV3";
 
 interface MessagesPaneV3Props {
     channelId: string;
@@ -50,14 +48,6 @@ export function MessagesPaneV3({ channelId, onOpenThread }: MessagesPaneV3Props)
         channelService.getSnapshot
     );
     const currentUserId = typeof window === "undefined" ? null : localStorage.getItem("userId");
-    const candidates = useMemo(
-        () => candidatesFromMessages(messages, currentUserId),
-        [messages, currentUserId]
-    );
-    const mention = useMentionDraft(candidates);
-    const attachments = useAttachmentDraft();
-    const fileInputRef = useRef<HTMLInputElement | null>(null);
-    const [busy, setBusy] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     // Mark-read on view: whenever the latest message in this channel
@@ -78,47 +68,6 @@ export function MessagesPaneV3({ channelId, onOpenThread }: MessagesPaneV3Props)
     }
     if (!channel) {
         return <div style={{ padding: 16 }}>Channel {channelId} not in store.</div>;
-    }
-
-    async function send() {
-        const text = mention.draft.trim();
-        const hasAttachments = attachments.pending.some((p) => p.error === null);
-        // Allow sending if there's text OR at least one valid attachment.
-        // An empty text + valid file → the message exists as an "attachment-
-        // only" post, matching how the production composer behaves.
-        if (!text && !hasAttachments) return;
-        setBusy(true);
-        setError(null);
-        try {
-            const body = mention.buildBody();
-            const msg = await channelService.send(channelId, body, { bodyText: text });
-            // The send ack returns the created message; we need its id to
-            // attach files. If the server didn't echo the message (older
-            // server / ack shape mismatch), skip the uploads and let the
-            // user retry once the message round-trips back via the
-            // broadcast.
-            if (msg && hasAttachments) {
-                const report = await attachments.uploadAll(channelId, msg.id);
-                if (report.failed.length > 0) {
-                    setError(
-                        `Uploaded ${report.succeeded}, ${report.failed.length} failed: ` +
-                            report.failed.map((f) => f.error).join("; ")
-                    );
-                }
-            }
-            mention.reset();
-            // Clear the pending strip only if every upload landed —
-            // failures stay visible so the user can retry without
-            // re-picking the files.
-            if (!hasAttachments || attachments.pending.length === 0) {
-                attachments.reset();
-            }
-        } catch (e) {
-            const err = e as ChannelServiceError;
-            setError(`${err.code}: ${err.message}`);
-        } finally {
-            setBusy(false);
-        }
     }
 
     return (
@@ -180,89 +129,12 @@ export function MessagesPaneV3({ channelId, onOpenThread }: MessagesPaneV3Props)
                 </div>
             )}
 
-            <PendingAttachmentStrip
-                pending={attachments.pending}
-                onRemove={attachments.removeAt}
+            <MessageComposerV3
+                channelId={channelId}
+                currentUserId={currentUserId}
+                onError={setError}
                 testIdPrefix="messages-pane-v3"
             />
-            <form
-                onSubmit={(e) => {
-                    e.preventDefault();
-                    void send();
-                }}
-                style={{
-                    display: "flex",
-                    gap: 8,
-                    padding: "8px 12px",
-                    borderTop: "1px solid #ddd",
-                    position: "relative",
-                }}
-            >
-                {mention.pickerOpen && (
-                    <MentionPicker
-                        testIdPrefix="messages-pane-v3"
-                        suggestions={mention.suggestions}
-                        onSelect={mention.selectCandidate}
-                    />
-                )}
-                <input
-                    ref={fileInputRef}
-                    type="file"
-                    multiple
-                    onChange={(e) => {
-                        attachments.addFiles(e.target.files);
-                        // Reset the input so the same file can be re-picked
-                        // after a remove + re-pick.
-                        e.target.value = "";
-                    }}
-                    style={{ display: "none" }}
-                    data-testid="messages-pane-v3-file-input"
-                />
-                <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={busy}
-                    style={{ fontSize: 14 }}
-                    title="Attach file(s)"
-                    data-testid="messages-pane-v3-attach"
-                >
-                    📎
-                </button>
-                <input
-                    type="text"
-                    value={mention.draft}
-                    onChange={(e) => {
-                        mention.setDraft(e.target.value);
-                        mention.setCaret(e.target.selectionStart ?? e.target.value.length);
-                    }}
-                    onKeyUp={(e) =>
-                        mention.setCaret(
-                            e.currentTarget.selectionStart ?? e.currentTarget.value.length
-                        )
-                    }
-                    onClick={(e) =>
-                        mention.setCaret(
-                            e.currentTarget.selectionStart ?? e.currentTarget.value.length
-                        )
-                    }
-                    placeholder="Message…  (type @ to mention)"
-                    disabled={busy}
-                    style={{ flex: 1, padding: "4px 8px" }}
-                    data-testid="messages-pane-v3-input"
-                />
-                <button
-                    type="submit"
-                    disabled={
-                        busy ||
-                        attachments.isUploading ||
-                        (!mention.draft.trim() &&
-                            !attachments.pending.some((p) => p.error === null))
-                    }
-                    data-testid="messages-pane-v3-send"
-                >
-                    {attachments.isUploading ? "Uploading…" : "Send"}
-                </button>
-            </form>
         </div>
     );
 }
@@ -564,62 +436,6 @@ function mentionsMe(message: Message): boolean {
     const me = localStorage.getItem("userId");
     if (!me) return false;
     return message.mentions.some((m) => m.mentionedUserId === me);
-}
-
-interface MentionPickerProps {
-    testIdPrefix: string;
-    suggestions: { userId: string; userName: string }[];
-    onSelect: (c: { userId: string; userName: string }) => void;
-}
-
-/** Floating dropdown rendered above the composer when an `@` trigger
- *  is active. Clicking a row inserts the mention chip via the hook. */
-function MentionPicker({ testIdPrefix, suggestions, onSelect }: MentionPickerProps) {
-    return (
-        <div
-            data-testid={`${testIdPrefix}-mention-picker`}
-            style={{
-                position: "absolute",
-                bottom: "100%",
-                left: 12,
-                marginBottom: 4,
-                background: "#fff",
-                border: "1px solid #ccc",
-                borderRadius: 4,
-                boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-                fontSize: 13,
-                minWidth: 160,
-                zIndex: 10,
-            }}
-        >
-            {suggestions.map((s) => (
-                <button
-                    key={s.userId}
-                    type="button"
-                    onMouseDown={(e) => {
-                        // onMouseDown (not onClick) so we fire before
-                        // the input loses focus and the picker unmounts
-                        // mid-click. Without this, the trigger char
-                        // changes before selectCandidate runs.
-                        e.preventDefault();
-                        onSelect(s);
-                    }}
-                    data-testid={`${testIdPrefix}-mention-option-${s.userId}`}
-                    style={{
-                        display: "block",
-                        width: "100%",
-                        textAlign: "left",
-                        padding: "4px 8px",
-                        background: "transparent",
-                        border: "none",
-                        cursor: "pointer",
-                    }}
-                >
-                    @{s.userName}
-                </button>
-            ))}
-        </div>
-    );
 }
 
 interface ReactionChipsProps {

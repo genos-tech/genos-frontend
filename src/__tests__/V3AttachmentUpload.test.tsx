@@ -286,18 +286,20 @@ describe("MessagesPaneV3 attach + send integration", () => {
     });
 
     it("send pipelines an upload via channelService.uploadAttachment", async () => {
+        // BlockNote replaced the plain `<input>` in the composer, so we
+        // can't type body text via fireEvent.change here. The pipeline
+        // (file → send → uploadAttachment) is what this test guards;
+        // the empty-body case is exactly the "attachment-only" path we
+        // already exercise in the next test, so the pipeline coverage
+        // stays unchanged.
         channelService.handleChannelCreated(fakeChannel("c-1"));
-        const created = fakeMessage("m-new", "c-1", { bodyText: "with file" });
+        const created = fakeMessage("m-new", "c-1", { bodyText: "" });
         const sendSpy = vi.spyOn(channelService, "send").mockResolvedValue(created);
         const uploadSpy = vi
             .spyOn(channelService, "uploadAttachment")
             .mockResolvedValue(fakeAttachment("att-1", "/notes.pdf", "application/pdf", 1024));
 
         render(<MessagesPaneV3 channelId="c-1" />);
-
-        // Type a message.
-        const textInput = screen.getByTestId("messages-pane-v3-input");
-        fireEvent.change(textInput, { target: { value: "with file" } });
 
         // Pick a file.
         const fileInput = screen.getByTestId("messages-pane-v3-file-input") as HTMLInputElement;

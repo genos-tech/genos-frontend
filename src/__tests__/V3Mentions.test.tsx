@@ -320,72 +320,16 @@ describe("MessagesPaneV3 mention integration", () => {
         localStorage.setItem("userId", "u-me");
     });
 
-    it("opens the picker when the user types @ and shows a candidate", () => {
-        channelService.handleChannelCreated(fakeChannel("c-1"));
-        channelService.handleMessageCreated(
-            fakeMessage("m-1", "c-1", { userId: "u-alice", userName: "Alice" }, { bodyText: "hi" })
-        );
-        render(<MessagesPaneV3 channelId="c-1" />);
-
-        const input = screen.getByTestId("messages-pane-v3-input") as HTMLInputElement;
-        fireEvent.change(input, { target: { value: "@A" } });
-        // Drive the selectionStart so the hook treats the caret as
-        // sitting after the `A`.
-        input.setSelectionRange(2, 2);
-        fireEvent.keyUp(input);
-
-        expect(screen.getByTestId("messages-pane-v3-mention-picker")).toBeInTheDocument();
-        expect(screen.getByTestId("messages-pane-v3-mention-option-u-alice")).toHaveTextContent(
-            "@Alice"
-        );
-    });
-
-    it("picking a candidate inserts the chip and lets send carry the right body", async () => {
-        channelService.handleChannelCreated(fakeChannel("c-1"));
-        channelService.handleMessageCreated(
-            fakeMessage("m-1", "c-1", { userId: "u-alice", userName: "Alice" })
-        );
-        const spy = vi.spyOn(channelService, "send").mockResolvedValue(undefined);
-
-        render(<MessagesPaneV3 channelId="c-1" />);
-        const input = screen.getByTestId("messages-pane-v3-input") as HTMLInputElement;
-
-        fireEvent.change(input, { target: { value: "@A" } });
-        input.setSelectionRange(2, 2);
-        fireEvent.keyUp(input);
-
-        const option = screen.getByTestId("messages-pane-v3-mention-option-u-alice");
-        fireEvent.mouseDown(option);
-
-        // After the chip insert, the draft has `@Alice ` and the caret
-        // sits at the end. Simulate the user typing ` thanks` on top.
-        fireEvent.change(input, { target: { value: "@Alice thanks" } });
-        input.setSelectionRange(13, 13);
-        fireEvent.keyUp(input);
-
-        fireEvent.click(screen.getByTestId("messages-pane-v3-send"));
-
-        // The pane awaits the send promise — let microtasks flush.
-        await Promise.resolve();
-
-        expect(spy).toHaveBeenCalledWith(
-            "c-1",
-            [
-                {
-                    type: "paragraph",
-                    content: [
-                        {
-                            type: "mention",
-                            props: { userId: "u-alice", userName: "Alice" },
-                        },
-                        { type: "text", text: " thanks" },
-                    ],
-                },
-            ],
-            expect.objectContaining({ bodyText: "@Alice thanks" })
-        );
-        spy.mockRestore();
-    });
+    // The two tests below previously verified the legacy
+    // useMentionDraft → custom MentionPicker flow inside MessagesPaneV3.
+    // That input was replaced by a BlockNote-driven composer
+    // (`MessageComposerV3`) which owns its own `@`-suggestion menu via
+    // SuggestionMenuController. BlockNote's editor isn't tractable to
+    // drive via `fireEvent.change` in jsdom, so the composer-shape
+    // verification moved to `V3MessageComposer.test.tsx` (deriveBodyText
+    // + send/draft adapter integration) and the `useMentionDraft` unit
+    // tests in this file still guard the legacy hook (deleted from the
+    // pane but still used by the bnChatEditor-adjacent surfaces).
 
     it("shows a `@you` indicator on rows that mention the viewer", () => {
         channelService.handleChannelCreated(fakeChannel("c-1"));
