@@ -100,6 +100,30 @@ function unwrapAxiosError(err: unknown): ChannelServiceError {
     return new ChannelServiceError("INTERNAL", String((err as Error)?.message ?? err));
 }
 
+/**
+ * Health of the IDB cache layer. Updated whenever any `_persist*`
+ * method (or `hydrateFromIDB`, `_evictChannelMessages`, the resync
+ * checkpoint write, etc.) raises. The in-memory store is the
+ * authoritative source of truth — IDB is best-effort cache for next
+ * page load — so a single failure doesn't crash the UI. Surfacing
+ * this state lets a dev tools panel render a "cache is degraded"
+ * indicator and an "Acknowledge" / "Force resync" button.
+ *
+ * Lifecycle:
+ *   - Starts at `"ok"` / `null` / `0`.
+ *   - Any IDB op that throws transitions to `"degraded"` and bumps
+ *     `errorCount` + sets `lastError` to the most recent failure.
+ *   - Successful IDB ops do NOT auto-clear the degraded state — a
+ *     burst of failures followed by one success doesn't mean the
+ *     cache is healthy. Use `resetIdbHealth()` (e.g. from a dev panel
+ *     "Acknowledge" button) to reset.
+ */
+export interface IdbHealth {
+    status: "ok" | "degraded";
+    lastError: { source: string; message: string; at: string } | null;
+    errorCount: number;
+}
+
 /** Shape of the in-memory store consumed by React via getSnapshot(). */
 export interface ChannelStoreSnapshot {
     /** Monotonically increasing mutation version. Guarantees
@@ -134,6 +158,8 @@ export interface ChannelStoreSnapshot {
     pinByChannelId: ReadonlyMap<string, Pin>;
     /** Secondary index: which Flag (if any) covers `messageId`. */
     flagByMessageId: ReadonlyMap<string, Flag>;
+    /** Cache-layer health. See `IdbHealth` for state semantics. */
+    idbHealth: IdbHealth;
 }
 
 /** correlation_id generator — uses uuidv4-ish style without adding a dep. */
@@ -216,6 +242,9 @@ export class ChannelService {
      *  remain authoritative for IDB persistence (keyPath: "id"). */
     private _pinByChannelId = new Map<string, Pin>();
     private _flagByMessageId = new Map<string, Flag>();
+    /** IDB cache health tracking — see `IdbHealth` for the contract. */
+    private _idbErrorCount = 0;
+    private _lastIdbError: IdbHealth["lastError"] = null;
     /** Flipped to true once `hydrateFromIDB()` settles (whether
      *  successfully or with an IDB failure). Hooks read this off the
      *  snapshot to render "loaded empty" instead of a perpetual
@@ -243,7 +272,47 @@ export class ChannelService {
             flags: this._flags,
             pinByChannelId: this._pinByChannelId,
             flagByMessageId: this._flagByMessageId,
+            idbHealth: {
+                status: this._idbErrorCount > 0 ? "degraded" : "ok",
+                lastError: this._lastIdbError,
+                errorCount: this._idbErrorCount,
+            },
         };
+    }
+
+    /**
+     * Record an IDB-layer failure. Bumps the snapshot so subscribers
+     * re-render with the degraded indicator visible. Also preserves
+     * the existing dev-console visibility so failures don't go silent
+     * for engineers running without the dev panel mounted.
+     *
+     * Once degraded, the cache stays that way until `resetIdbHealth()`
+     * is called explicitly — a burst of failures followed by a single
+     * success doesn't mean the cache is healthy.
+     */
+    private _recordIdbError(source: string, e: unknown): void {
+        this._idbErrorCount += 1;
+        this._lastIdbError = {
+            source,
+            message: e instanceof Error ? e.message : String(e),
+            at: new Date().toISOString(),
+        };
+        this._notify();
+        // eslint-disable-next-line no-console
+        console.warn(`[ChannelService] ${source} failed:`, e);
+    }
+
+    /**
+     * Reset the IDB health indicator back to `ok` / 0 errors.
+     * Intended for a dev panel "Acknowledge" button. Does not
+     * actually repair the cache — if the underlying problem
+     * persists, the next failed write flips the state back.
+     */
+    resetIdbHealth(): void {
+        if (this._idbErrorCount === 0 && this._lastIdbError === null) return;
+        this._idbErrorCount = 0;
+        this._lastIdbError = null;
+        this._notify();
     }
 
     private _notify(): void {
@@ -579,8 +648,7 @@ export class ChannelService {
             }
             await tx.done;
         } catch (e) {
-            // eslint-disable-next-line no-console
-            console.warn("[ChannelService] _evictChannelMessages failed:", e);
+            this._recordIdbError("_evictChannelMessages", e);
         }
 
         // Also reset the matching checkpoint so the next sync does a
@@ -601,8 +669,7 @@ export class ChannelService {
             // (Empty string falsy-checks the same as null at the call site.)
             for (const k of keysToClear) await repo.setCheckpoint(k, "");
         } catch (e) {
-            // eslint-disable-next-line no-console
-            console.warn("[ChannelService] checkpoint clear failed:", e);
+            this._recordIdbError("checkpoint_clear", e);
         }
     }
 
@@ -628,8 +695,7 @@ export class ChannelService {
             const db = await initDB();
             await db.delete(STORES.MESSAGES_V3, messageId);
         } catch (e) {
-            // eslint-disable-next-line no-console
-            console.warn("[ChannelService] _persistHardDelete failed:", e);
+            this._recordIdbError("_persistHardDelete", e);
         }
     }
 
@@ -1195,10 +1261,9 @@ export class ChannelService {
                     ]);
                 } catch (e) {
                     // IDB write failed but the in-memory store is
-                    // already updated — log and move on. Next sync
+                    // already updated — record and move on. Next sync
                     // will refetch the window from the old checkpoint.
-                    // eslint-disable-next-line no-console
-                    console.warn("[ChannelService] applyResyncBatch checkpoint write failed:", e);
+                    this._recordIdbError("applyResyncBatch_checkpoint", e);
                 }
             }
             applied += 1;
@@ -1260,10 +1325,10 @@ export class ChannelService {
             }
         } catch (e) {
             // IDB failure is non-fatal — the app keeps working off the
-            // live socket stream + REST cold reads. Log loudly so the
-            // problem doesn't go unnoticed.
-            // eslint-disable-next-line no-console
-            console.warn("[ChannelService] hydrateFromIDB failed:", e);
+            // live socket stream + REST cold reads. Record so the dev
+            // panel surfaces the degraded state without the user
+            // noticing only via missing cache.
+            this._recordIdbError("hydrateFromIDB", e);
         } finally {
             // Always flip the hydration flag, even when IDB failed —
             // an empty in-memory store is a valid "loaded empty" state
@@ -1377,8 +1442,7 @@ export class ChannelService {
             if (supersededId) await db.delete(STORES.PINS, supersededId);
             await db.put(STORES.PINS, pin);
         } catch (e) {
-            // eslint-disable-next-line no-console
-            console.warn("[ChannelService] _persistPin failed:", e);
+            this._recordIdbError("_persistPin", e);
         }
     }
 
@@ -1387,8 +1451,7 @@ export class ChannelService {
             const db = await initDB();
             await db.delete(STORES.PINS, pinId);
         } catch (e) {
-            // eslint-disable-next-line no-console
-            console.warn("[ChannelService] _persistPinDelete failed:", e);
+            this._recordIdbError("_persistPinDelete", e);
         }
     }
 
@@ -1398,8 +1461,7 @@ export class ChannelService {
             if (supersededId) await db.delete(STORES.FLAGS, supersededId);
             await db.put(STORES.FLAGS, flag);
         } catch (e) {
-            // eslint-disable-next-line no-console
-            console.warn("[ChannelService] _persistFlag failed:", e);
+            this._recordIdbError("_persistFlag", e);
         }
     }
 
@@ -1408,8 +1470,7 @@ export class ChannelService {
             const db = await initDB();
             await db.delete(STORES.FLAGS, flagId);
         } catch (e) {
-            // eslint-disable-next-line no-console
-            console.warn("[ChannelService] _persistFlagDelete failed:", e);
+            this._recordIdbError("_persistFlagDelete", e);
         }
     }
 
@@ -1433,8 +1494,7 @@ export class ChannelService {
                     : "";
             await db.put(STORES.MESSAGES_V3, { ...message, taskKey });
         } catch (e) {
-            // eslint-disable-next-line no-console
-            console.warn("[ChannelService] _persistMessage failed:", e);
+            this._recordIdbError("_persistMessage", e);
         }
     }
 
@@ -1450,8 +1510,7 @@ export class ChannelService {
             }
             void channelId; // referenced for signature parity
         } catch (e) {
-            // eslint-disable-next-line no-console
-            console.warn("[ChannelService] _persistDeletedById failed:", e);
+            this._recordIdbError("_persistDeletedById", e);
         }
     }
 
@@ -1468,8 +1527,7 @@ export class ChannelService {
             // the full row to keep this method narrow.
             await db.put(STORES.MESSAGE_REACTIONS, reaction);
         } catch (e) {
-            // eslint-disable-next-line no-console
-            console.warn("[ChannelService] _persistReaction failed:", e);
+            this._recordIdbError("_persistReaction", e);
         }
     }
 
@@ -1491,8 +1549,7 @@ export class ChannelService {
             }
             await tx.done;
         } catch (e) {
-            // eslint-disable-next-line no-console
-            console.warn("[ChannelService] _persistReactionRemoval failed:", e);
+            this._recordIdbError("_persistReactionRemoval", e);
         }
     }
 
@@ -1501,8 +1558,7 @@ export class ChannelService {
             const db = await initDB();
             await db.put(STORES.READ_CURSORS, cursor);
         } catch (e) {
-            // eslint-disable-next-line no-console
-            console.warn("[ChannelService] _persistCursor failed:", e);
+            this._recordIdbError("_persistCursor", e);
         }
     }
 
@@ -1511,8 +1567,7 @@ export class ChannelService {
             const db = await initDB();
             await db.put(STORES.CHANNELS, channel);
         } catch (e) {
-            // eslint-disable-next-line no-console
-            console.warn("[ChannelService] _persistChannel failed:", e);
+            this._recordIdbError("_persistChannel", e);
         }
     }
 
@@ -1526,8 +1581,7 @@ export class ChannelService {
             const db = await initDB();
             await db.delete(STORES.CHANNELS, channelId);
         } catch (e) {
-            // eslint-disable-next-line no-console
-            console.warn("[ChannelService] _persistChannelDelete failed:", e);
+            this._recordIdbError("_persistChannelDelete", e);
         }
     }
 
@@ -1537,8 +1591,7 @@ export class ChannelService {
             // Denormalize channelId onto the row for the by-channel index.
             await db.put(STORES.CHANNEL_MEMBERS, { ...member, channelId });
         } catch (e) {
-            // eslint-disable-next-line no-console
-            console.warn("[ChannelService] _persistMember failed:", e);
+            this._recordIdbError("_persistMember", e);
         }
     }
 }
