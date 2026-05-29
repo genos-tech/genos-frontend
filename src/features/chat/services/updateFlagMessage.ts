@@ -2,6 +2,7 @@ import axios from "axios";
 
 import { authApi } from "../../../services/api";
 import { UserProps } from "../../../types/admin";
+import { isLegacyNumericId } from "../../../utils/legacyId";
 
 export const updateFlagMessage = async (
     accessToken: string | null,
@@ -14,6 +15,16 @@ export const updateFlagMessage = async (
     },
     setErrorMessage?: (value: string) => void
 ) => {
+    // PUNCH LIST (v3 chatId migration): `/chat/master/` binds the
+    // nested `flagged_message.chat_id` and `message_id` to integer
+    // fields. v3 flags live on the unified `Flag` model.
+    if (
+        !isLegacyNumericId(flagged_message.chat_id) ||
+        !isLegacyNumericId(flagged_message.message_id)
+    ) {
+        console.warn("[updateFlagMessage] skipped: v3 UUID id, flag state not persisted");
+        return;
+    }
     try {
         const api = authApi(accessToken);
         if (api) {

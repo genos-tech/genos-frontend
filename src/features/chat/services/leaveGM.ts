@@ -1,6 +1,7 @@
 import axios from "axios";
 
 import { authApi } from "../../../services/api";
+import { isLegacyNumericId } from "../../../utils/legacyId";
 
 /**
  * Hard-delete the requester's GMMembers row. Owners are rejected
@@ -13,6 +14,14 @@ export const leaveGM = async (
     attendeeId: string,
     setErrorMessage?: (value: string) => void
 ): Promise<boolean> => {
+    // PUNCH LIST (v3 chatId migration): `/gm/leave/` binds `gm_id` to
+    // an integer field. v3 channel-leave goes through `channelService`
+    // membership ops.
+    if (!isLegacyNumericId(gmId)) {
+        console.warn("[leaveGM] skipped: v3 UUID gmId, leave not persisted");
+        setErrorMessage?.("This chat hasn't migrated yet — please retry from the v3 view.");
+        return false;
+    }
     try {
         const api = authApi(accessToken);
         if (!api) {

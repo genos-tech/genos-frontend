@@ -1,6 +1,7 @@
 import axios from "axios";
 
 import { authApi } from "../../../services/api";
+import { isLegacyNumericId } from "../../../utils/legacyId";
 
 export const updatePMMessage = async (
     accessToken: string | null,
@@ -10,6 +11,14 @@ export const updatePMMessage = async (
     messageBody: any[],
     setErrorMessage?: (value: string) => void
 ) => {
+    // PUNCH LIST (v3 chatId migration): `/pm/message/` binds
+    // `project_id` / `message_id` to integer fields. v3 PM edits go
+    // through `channelService.edit`.
+    if (!isLegacyNumericId(projectId) || (messageId !== null && !isLegacyNumericId(messageId))) {
+        console.warn("[updatePMMessage] skipped: v3 UUID id, edit not persisted");
+        setErrorMessage?.("This chat hasn't migrated yet — please retry from the v3 view.");
+        return;
+    }
     try {
         const api = authApi(accessToken);
         if (api) {

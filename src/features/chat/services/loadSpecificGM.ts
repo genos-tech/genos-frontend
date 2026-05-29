@@ -1,6 +1,7 @@
 import axios from "axios";
 
 import { authApi } from "../../../services/api";
+import { isLegacyNumericId } from "../../../utils/legacyId";
 
 export const loadSpecificGM = async (
     teamId: string,
@@ -9,6 +10,12 @@ export const loadSpecificGM = async (
     gmId: number,
     accessToken: string | null
 ) => {
+    // PUNCH LIST (v3 chatId migration): `/gm/history/` binds `gm_id`
+    // to an integer field. v3 GM history loads via the channel sync
+    // path.
+    if (!isLegacyNumericId(gmId)) {
+        return undefined;
+    }
     try {
         const api = authApi(accessToken);
         if (api) {

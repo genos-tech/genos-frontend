@@ -14,7 +14,7 @@
  *   - `data.deletes` hard-removes matching rows.
  */
 
-import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterAll, afterEach, beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 import { channelService } from "../services/channel/channelService";
 import {
@@ -37,8 +37,8 @@ afterAll(() => {
 /** Build the singleton `CheckpointRepository` instance the service
  *  lazily creates, then stub its read/write surface for assertions. */
 function stubCheckpoints(): {
-    getCheckpoint: ReturnType<typeof vi.fn>;
-    setCheckpoint: ReturnType<typeof vi.fn>;
+    getCheckpoint: Mock<(k: string) => Promise<string | null>>;
+    setCheckpoint: Mock<(k: string, v: string) => Promise<void>>;
 } {
     const store = new Map<string, string>();
     const stub = {

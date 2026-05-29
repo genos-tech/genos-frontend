@@ -11,7 +11,7 @@
  *   - Concurrent `triggerResync` calls share one in-flight promise.
  */
 
-import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterAll, afterEach, beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 import { channelService } from "../services/channel/channelService";
 import {
@@ -106,8 +106,8 @@ function envelope(
 }
 
 function stubCheckpoints(): {
-    getCheckpoint: ReturnType<typeof vi.fn>;
-    setCheckpoint: ReturnType<typeof vi.fn>;
+    getCheckpoint: Mock<(k: string) => Promise<string | null>>;
+    setCheckpoint: Mock<(k: string, v: string) => Promise<void>>;
     store: Map<string, string>;
 } {
     const store = new Map<string, string>();

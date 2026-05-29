@@ -171,15 +171,19 @@ describe("useAttachmentDraft", () => {
             .mockResolvedValueOnce(fakeAttachment("att-2", "/b.pdf", "application/pdf", 20));
         const splice = vi.spyOn(channelService, "handleAttachmentAdded");
 
-        let report: Awaited<ReturnType<typeof result.current.uploadAll>> | null = null;
+        // Definite-assignment `!` tells TS the variable is set inside
+        // the callback. Without it, the flow analyzer keeps the type
+        // pinned to `null` after the await (callback mutation isn't
+        // tracked) and accessors below narrow to `never`.
+        let report!: Awaited<ReturnType<typeof result.current.uploadAll>>;
         await act(async () => {
             report = await result.current.uploadAll("c-1", "m-1");
         });
 
         expect(spy).toHaveBeenCalledTimes(2);
         expect(splice).toHaveBeenCalledTimes(2);
-        expect(report?.succeeded).toBe(2);
-        expect(report?.failed).toHaveLength(0);
+        expect(report.succeeded).toBe(2);
+        expect(report.failed).toHaveLength(0);
         expect(result.current.pending).toHaveLength(0);
         spy.mockRestore();
         splice.mockRestore();
@@ -195,14 +199,18 @@ describe("useAttachmentDraft", () => {
             .mockResolvedValueOnce(fakeAttachment("att-1", "/a.pdf", "application/pdf", 10))
             .mockRejectedValueOnce(new Error("boom"));
 
-        let report: Awaited<ReturnType<typeof result.current.uploadAll>> | null = null;
+        // Definite-assignment `!` tells TS the variable is set inside
+        // the callback. Without it, the flow analyzer keeps the type
+        // pinned to `null` after the await (callback mutation isn't
+        // tracked) and accessors below narrow to `never`.
+        let report!: Awaited<ReturnType<typeof result.current.uploadAll>>;
         await act(async () => {
             report = await result.current.uploadAll("c-1", "m-1");
         });
 
-        expect(report?.succeeded).toBe(1);
-        expect(report?.failed).toHaveLength(1);
-        expect(report?.failed[0].error).toBe("boom");
+        expect(report.succeeded).toBe(1);
+        expect(report.failed).toHaveLength(1);
+        expect(report.failed[0].error).toBe("boom");
         // The failed file stays — user can retry or remove.
         expect(result.current.pending).toHaveLength(1);
         expect(result.current.pending[0].file.name).toBe("b.pdf");
@@ -218,13 +226,17 @@ describe("useAttachmentDraft", () => {
             .spyOn(channelService, "uploadAttachment")
             .mockResolvedValue(fakeAttachment("att-1", "/ok.pdf", "application/pdf", 10));
 
-        let report: Awaited<ReturnType<typeof result.current.uploadAll>> | null = null;
+        // Definite-assignment `!` tells TS the variable is set inside
+        // the callback. Without it, the flow analyzer keeps the type
+        // pinned to `null` after the await (callback mutation isn't
+        // tracked) and accessors below narrow to `never`.
+        let report!: Awaited<ReturnType<typeof result.current.uploadAll>>;
         await act(async () => {
             report = await result.current.uploadAll("c-1", "m-1");
         });
 
         expect(spy).toHaveBeenCalledTimes(1);
-        expect(report?.succeeded).toBe(1);
+        expect(report.succeeded).toBe(1);
         // The errored file remains since uploadAll never touched it.
         expect(result.current.pending).toHaveLength(1);
         expect(result.current.pending[0].file.name).toBe("big.bin");

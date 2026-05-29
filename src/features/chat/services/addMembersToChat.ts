@@ -6,6 +6,7 @@ import { authApi } from "../../../services/api";
 import { UserProps } from "../../../types/admin";
 import { AllChatProps, MDMMemberProps, MessageProps } from "../../../types/chat";
 import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
+import { isLegacyNumericId } from "../../../utils/legacyId";
 import { addChat } from "./addChat";
 import { defaultDmPartner } from "./constants";
 import { createMDMChat } from "./createMDMChat";
@@ -24,6 +25,14 @@ export const addMembersToMDM = async (
     myself: UserProps,
     socket: Socket | null
 ): Promise<boolean> => {
+    // PUNCH LIST (v3 chatId migration): `/mdm/join/` binds `mdm_id` to
+    // an integer field. Short-circuit when the id is a v3 UUID —
+    // member-add for v3 channels goes through `channelService` in
+    // Track D.
+    if (!isLegacyNumericId(mdmId)) {
+        console.warn("[addMembersToMDM] skipped: v3 UUID chatId, members not added");
+        return false;
+    }
     try {
         const api = authApi(accessToken);
         if (!api) {

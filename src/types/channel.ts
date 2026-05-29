@@ -141,3 +141,9 @@ export interface MessagesDeltaData {
 export type Ack<TData = unknown> =
     | { ok: true; data?: TData; correlation_id?: string }
     | { ok: false; code: string; message: string; correlation_id?: string };
+
+// Re-export the `PendingMessage` contract from the service so test
+// fixtures and other consumers can `import { PendingMessage } from
+// "../types/channel"`. Definition lives next to the queue
+// implementation in `channelService.ts`.
+export type { PendingMessage } from "../services/channel/channelService";

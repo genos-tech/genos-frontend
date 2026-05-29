@@ -1,6 +1,7 @@
 import axios from "axios";
 
 import { authApi } from "../../../services/api";
+import { isLegacyNumericId } from "../../../utils/legacyId";
 
 export const sendDMMessage = async (
     accessToken: string | null,
@@ -11,6 +12,14 @@ export const sendDMMessage = async (
     setErrorMessage?: (value: string) => void,
     isInit?: boolean
 ) => {
+    // PUNCH LIST (v3 chatId migration): `/dm/message/` binds `dm_id`
+    // to an integer field. v3 DM sends go through `channelService.send`
+    // — skip the legacy call with a warning rather than 500.
+    if (!isLegacyNumericId(dmId)) {
+        console.warn("[sendDMMessage] skipped: v3 UUID chatId, message not sent");
+        setErrorMessage?.("This chat hasn't migrated yet — please retry from the v3 view.");
+        return;
+    }
     try {
         const api = authApi(accessToken);
         if (api) {

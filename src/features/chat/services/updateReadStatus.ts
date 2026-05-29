@@ -2,6 +2,7 @@ import axios from "axios";
 
 import { authApi } from "../../../services/api";
 import { UserProps } from "../../../types/admin";
+import { isLegacyNumericId } from "../../../utils/legacyId";
 
 export const updateReadStatus = async (
     accessToken: string | null,
@@ -13,17 +14,24 @@ export const updateReadStatus = async (
     lastReadMessageId: number,
     setErrorMessage?: (value: string) => void
 ) => {
+    // PUNCH LIST (v3 chatId migration): `/chat/read/` binds `chat_id`
+    // / `last_read_message_id` to integer fields. v3 channels persist
+    // the read cursor via `channelService.markRead` (UUID-keyed) so
+    // skip the legacy call rather than 500 the request.
+    if (!isLegacyNumericId(chatId) || !isLegacyNumericId(lastReadMessageId)) {
+        return;
+    }
     try {
         const api = authApi(accessToken);
         if (api) {
             const res = await api.put("/chat/read/", {
-                team_id: myself.teamId,
-                user_id: myself.userId,
-                chat_type: chatType,
                 chat_id: chatId,
+                chat_type: chatType,
                 is_thread: isThread,
-                thread_id: threadId,
                 last_read_message_id: lastReadMessageId,
+                team_id: myself.teamId,
+                thread_id: threadId,
+                user_id: myself.userId,
             });
             return res.data;
         } else {

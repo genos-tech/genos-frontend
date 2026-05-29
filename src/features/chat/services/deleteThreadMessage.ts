@@ -1,6 +1,7 @@
 import axios from "axios";
 
 import { authApi } from "../../../services/api";
+import { isLegacyNumericId } from "../../../utils/legacyId";
 
 export const deleteThreadMessage = async (
     accessToken: string | null,
@@ -10,6 +11,18 @@ export const deleteThreadMessage = async (
     messageId: number,
     setErrorMessage?: (value: string) => void
 ) => {
+    // PUNCH LIST (v3 chatId migration): per-type threadMessage
+    // endpoints bind `{dm,gm,project,mdm}_id`, `thread_id`, `message_id`
+    // to integer fields. v3 deletes go through `channelService.delete`.
+    if (
+        !isLegacyNumericId(chatId) ||
+        !isLegacyNumericId(threadId) ||
+        !isLegacyNumericId(messageId)
+    ) {
+        console.warn("[deleteThreadMessage] skipped: v3 UUID id, delete not persisted");
+        setErrorMessage?.("This chat hasn't migrated yet — please retry from the v3 view.");
+        return;
+    }
     try {
         const api = authApi(accessToken);
         if (api) {

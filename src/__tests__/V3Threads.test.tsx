@@ -144,7 +144,11 @@ describe("useChannelThread", () => {
         channelService.handleChannelCreated(fakeChannel("c-1"));
         channelService.handleMessageCreated(fakeMessage("m-root", "c-1", "topic"));
 
-        const spy = vi.spyOn(channelService, "send").mockResolvedValue(undefined);
+        // Reply path doesn't read the return value; cast `undefined`
+        // through `Message` to satisfy the resolved-type contract.
+        const spy = vi
+            .spyOn(channelService, "send")
+            .mockResolvedValue(undefined as unknown as Message);
         const { result } = renderHook(() => useChannelThread("c-1", "m-root"));
         await result.current.replyInThread([{ t: "p" }], { bodyText: "hello" });
 
@@ -181,7 +185,11 @@ describe("ThreadPanelV3", () => {
     it("submitting the reply form calls channelService.send with parentId", async () => {
         channelService.handleChannelCreated(fakeChannel("c-1"));
         channelService.handleMessageCreated(fakeMessage("m-root", "c-1", "topic"));
-        const spy = vi.spyOn(channelService, "send").mockResolvedValue(undefined);
+        // Reply path doesn't read the return value; cast `undefined`
+        // through `Message` to satisfy the resolved-type contract.
+        const spy = vi
+            .spyOn(channelService, "send")
+            .mockResolvedValue(undefined as unknown as Message);
 
         render(<ThreadPanelV3 channelId="c-1" rootMessageId="m-root" onClose={() => {}} />);
         fireEvent.change(screen.getByTestId("thread-panel-v3-input"), {

@@ -1,6 +1,7 @@
 import axios from "axios";
 
 import { authApi } from "../../../services/api";
+import { isLegacyNumericId } from "../../../utils/legacyId";
 
 export const loadSpecificPM = async (
     teamId: string,
@@ -9,6 +10,12 @@ export const loadSpecificPM = async (
     projectId: number,
     accessToken: string | null
 ) => {
+    // PUNCH LIST (v3 chatId migration): `/pm/history/` binds
+    // `project_id` to an integer field. v3 PM history loads via the
+    // channel sync path.
+    if (!isLegacyNumericId(projectId)) {
+        return undefined;
+    }
     try {
         const api = authApi(accessToken);
         if (api) {
