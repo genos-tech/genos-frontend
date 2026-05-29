@@ -83,7 +83,17 @@ function unwrapAxiosError(err: unknown): ChannelServiceError {
 }
 
 /** Shape of the in-memory store consumed by React via getSnapshot(). */
-interface ChannelStoreSnapshot {
+export interface ChannelStoreSnapshot {
+    /** Monotonically increasing mutation version. Guarantees
+     *  `Object.is(prev, next) === false` after any state change so
+     *  React's `useSyncExternalStore` re-renders, even when the inner
+     *  Maps are mutated in place. Not consumed by React code other
+     *  than as a change beacon. */
+    version: number;
+    /** True once `hydrateFromIDB()` has resolved (success OR failure) AND
+     *  the first `listChannels()` REST refresh has landed. Hooks use
+     *  this to distinguish "still loading" from "loaded empty". */
+    hydrated: boolean;
     /** All channels by id. Keyed map for O(1) lookup; list views sort
      *  by `tsLastMessage`. */
     channels: ReadonlyMap<string, Channel>;
@@ -169,13 +179,25 @@ export class ChannelService {
     private _cursors = new Map<string, ReadCursor>();
     private _pins = new Map<string, Pin>();
     private _flags = new Map<string, Flag>();
+    /** Flipped to true once `hydrateFromIDB()` settles (whether
+     *  successfully or with an IDB failure). Hooks read this off the
+     *  snapshot to render "loaded empty" instead of a perpetual
+     *  spinner when the user has no channels. */
+    private _hydrated = false;
 
     private _listeners = new Set<() => void>();
+    /** Monotonically increasing version. Bumped on every mutation;
+     *  the snapshot embeds it so `Object.is(prev, next) === false` is
+     *  guaranteed even when nothing else about the snapshot changed.
+     *  This is what useSyncExternalStore checks. */
+    private _version = 0;
     /** Stable snapshot reference; bumped on every mutation. */
     private _snapshot: ChannelStoreSnapshot = this._buildSnapshot();
 
     private _buildSnapshot(): ChannelStoreSnapshot {
         return {
+            version: this._version,
+            hydrated: this._hydrated,
             channels: this._channels,
             membersByChannel: this._members,
             messagesByChannel: this._messages,
@@ -186,10 +208,11 @@ export class ChannelService {
     }
 
     private _notify(): void {
-        // New top-level reference so React's useSyncExternalStore
-        // re-renders. The inner Maps are mutated in place (cheaper
-        // than reconstructing every time), so the snapshot identity
-        // is what carries the change signal.
+        // Bump version + create a new top-level object so
+        // `useSyncExternalStore`'s `Object.is(prev, next)` returns
+        // false even when none of the inner Maps changed identity
+        // (they're mutated in place for cheaper writes).
+        this._version += 1;
         this._snapshot = this._buildSnapshot();
         for (const fn of this._listeners) fn();
     }
@@ -661,36 +684,46 @@ export class ChannelService {
             }
             for (const p of pinRows) this._pins.set(p.id, p);
             for (const f of flagRows) this._flags.set(f.id, f);
-
-            this._notify();
         } catch (e) {
             // IDB failure is non-fatal — the app keeps working off the
             // live socket stream + REST cold reads. Log loudly so the
             // problem doesn't go unnoticed.
             // eslint-disable-next-line no-console
             console.warn("[ChannelService] hydrateFromIDB failed:", e);
+        } finally {
+            // Always flip the hydration flag, even when IDB failed —
+            // an empty in-memory store is a valid "loaded empty" state
+            // that the hooks should render as such, not a perpetual
+            // spinner.
+            this._hydrated = true;
+            this._notify();
         }
     }
 
     // ---- Internal: in-memory helpers --------------------------------------
 
     private _upsertMessage(message: Message) {
-        const arr = this._messages.get(message.channelId) ?? [];
-        const idx = arr.findIndex((m) => m.id === message.id);
+        // Always produce a NEW array reference so `useMemo([allMessages])`
+        // in the hook re-derives. Mutating the existing array in place
+        // would keep its identity and skip the React re-derive.
+        const prev = this._messages.get(message.channelId) ?? [];
+        const idx = prev.findIndex((m) => m.id === message.id);
+        let next: Message[];
         if (idx === -1) {
             // Insert in ts-order. Most events arrive at the tail; do
             // the cheap append + lazy sort only when needed.
-            const last = arr[arr.length - 1];
+            const last = prev[prev.length - 1];
             if (!last || last.tsSent <= message.tsSent) {
-                arr.push(message);
+                next = [...prev, message];
             } else {
-                arr.push(message);
-                arr.sort((a, b) => (a.tsSent < b.tsSent ? -1 : a.tsSent > b.tsSent ? 1 : 0));
+                next = [...prev, message].sort((a, b) =>
+                    a.tsSent < b.tsSent ? -1 : a.tsSent > b.tsSent ? 1 : 0
+                );
             }
         } else {
-            arr[idx] = message;
+            next = prev.map((m, i) => (i === idx ? message : m));
         }
-        this._messages.set(message.channelId, arr);
+        this._messages.set(message.channelId, next);
     }
 
     private _mutateMessage(channelId: string, messageId: string, fn: (m: Message) => Message) {

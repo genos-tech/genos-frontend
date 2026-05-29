@@ -76,12 +76,10 @@ export function useChannelList(): UseChannelListResult {
         channels,
         unreadByKind,
         totalUnread: computeTotalUnread(unreadByKind),
-        // We treat the very first snapshot (no channels yet AND no
-        // listeners had a chance to populate via hydrate or REST) as
-        // "loading". After hydrateFromIDB() runs, even an empty list
-        // is a final state — so the consumer should call hydrate before
-        // mount, and the first non-default snapshot will mark loading
-        // done.
-        isLoading: snapshot.channels.size === 0,
+        // "Loading" is the period before `hydrateFromIDB()` has settled
+        // (or the bootstrap never ran, e.g. unit tests without a
+        // bootstrap mount). Once hydrated, an empty list is a final
+        // "no channels" state, not a spinner.
+        isLoading: !snapshot.hydrated,
     };
 }

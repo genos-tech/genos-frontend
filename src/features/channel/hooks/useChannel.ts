@@ -79,6 +79,9 @@ export function useChannel(channelId: string): UseChannelResult {
         threadReplies,
         readCursor,
         markRead,
-        isLoading: channel == null,
+        // "Loading" before hydration settles. After hydration, a
+        // missing channel means it's genuinely not in the store
+        // (consumers handle that case directly via `channel === null`).
+        isLoading: !snapshot.hydrated,
     };
 }

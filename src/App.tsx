@@ -61,6 +61,8 @@ import { NotificationsProvider } from "./services/notifications/NotificationsCon
 import { NotificationToastHost } from "./services/notifications/NotificationToastHost";
 import { PermissionBanner } from "./services/notifications/PermissionBanner";
 import { NotificationIntent } from "./services/notifications/types";
+import { isV3ChatEnabled, V3ChatShell } from "./features/channel/V3ChatShell";
+import { useChannelServiceBootstrap } from "./services/channel/useChannelServiceBootstrap";
 import { refreshAllData } from "./services/refreshAllData";
 
 import { I18nProvider } from "./i18n";
@@ -150,6 +152,15 @@ export const App = () => {
         myself,
         useTEM.currentTeamId
     );
+
+    // v3 messaging stack: opens a parallel `/v3` namespace socket,
+    // wires `channelService` (token / user id / socket), registers
+    // the inbound event router, and hydrates the in-memory store
+    // from IDB. The legacy chat surfaces continue using
+    // `socketInstance` above; v3-aware surfaces (mounted via the
+    // `useChannel` / `useChannelList` hooks) consume `channelService`
+    // directly. Side-by-side until the legacy paths are deleted.
+    useChannelServiceBootstrap(accessToken, myself.userId || null);
 
     // API server health tracking
     const [showApiDown, setShowApiDown] = useState(false);
@@ -1083,6 +1094,17 @@ export const App = () => {
                                                                                                     </Suspense>
                                                                                                 </FeatureErrorBoundary>
                                                                                             }
+                                                                                        />
+                                                                                    )}
+                                                                                    {/* v3 proof-of-life route. Behind `VITE_USE_V3_CHAT`
+                                                                                        — production builds without the env flag don't
+                                                                                        even register the route. Manual nav to
+                                                                                        `/workspace/v3` shows the unified chat list +
+                                                                                        message pane backed by `channelService`. */}
+                                                                                    {isV3ChatEnabled() && (
+                                                                                        <Route
+                                                                                            path="v3"
+                                                                                            element={<V3ChatShell />}
                                                                                         />
                                                                                     )}
                                                                                     {/* Default redirect to inbox */}
