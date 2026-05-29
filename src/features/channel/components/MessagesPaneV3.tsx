@@ -22,6 +22,7 @@ import { useChannel } from "../hooks/useChannel";
 import { MessageAttachments } from "./MessageAttachments";
 import { MessageBody } from "./MessageBody";
 import { MessageComposerV3 } from "./MessageComposerV3";
+import { MessageRowHoverToolbar, useCopyMessageLink } from "./MessageRowHoverToolbar";
 
 interface MessagesPaneV3Props {
     channelId: string;
@@ -166,6 +167,7 @@ function MessageRow({
     const [editing, setEditing] = useState(false);
     const [editDraft, setEditDraft] = useState(message.bodyText);
     const [showEmoji, setShowEmoji] = useState(false);
+    const [hovered, setHovered] = useState(false);
 
     const reportError = useCallback(
         (e: unknown) => {
@@ -174,6 +176,8 @@ function MessageRow({
         },
         [onError]
     );
+
+    const copyLink = useCopyMessageLink(channelId, message.id, undefined, onError);
 
     const handleSaveEdit = useCallback(async () => {
         const text = editDraft.trim();
@@ -242,7 +246,19 @@ function MessageRow({
 
     return (
         <li
+            id={`message-${message.id}`}
             data-testid={`message-row-${message.id}`}
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
+            onFocus={() => setHovered(true)}
+            onBlur={(e) => {
+                // Keep the toolbar visible if focus moves to a child
+                // (e.g. clicking the react button to open the emoji
+                // popover). Only collapse when focus leaves the row.
+                if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                    setHovered(false);
+                }
+            }}
             style={{
                 padding: "6px 0",
                 opacity: message.deletedAt ? 0.4 : 1,
@@ -326,60 +342,31 @@ function MessageRow({
                     </span>
                 )}
                 {!editing && !message.deletedAt && (
-                    <span style={{ marginLeft: "auto", display: "flex", gap: 4 }}>
-                        <button
-                            type="button"
-                            onClick={() => void handleToggleFlag()}
-                            data-testid={`message-row-flag-${message.id}`}
-                            style={{ fontSize: 11, opacity: isFlagged ? 1 : 0.45 }}
-                            title={isFlagged ? "Unflag message" : "Flag message"}
-                        >
-                            ⭐
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setShowEmoji((v) => !v)}
-                            data-testid={`message-row-react-${message.id}`}
-                            style={{ fontSize: 11 }}
-                            title="Add reaction"
-                        >
-                            🙂+
-                        </button>
-                        {onOpenThread && !message.isThreadReply && (
-                            <button
-                                type="button"
-                                onClick={() => onOpenThread(message.id)}
-                                data-testid={`message-row-thread-${message.id}`}
-                                style={{ fontSize: 11 }}
-                                title="Reply in thread"
-                            >
-                                💬{message.replyCount > 0 ? ` ${message.replyCount}` : ""}
-                            </button>
-                        )}
-                        {isMine && (
-                            <>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setEditDraft(message.bodyText);
-                                        setEditing(true);
-                                    }}
-                                    style={{ fontSize: 11 }}
-                                    data-testid={`message-row-edit-${message.id}`}
-                                >
-                                    Edit
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => void handleDelete()}
-                                    style={{ fontSize: 11 }}
-                                    data-testid={`message-row-delete-${message.id}`}
-                                >
-                                    Delete
-                                </button>
-                            </>
-                        )}
-                    </span>
+                    <MessageRowHoverToolbar
+                        messageId={message.id}
+                        // The popover stays open after the reaction is
+                        // toggled (handleToggleReaction closes it), so
+                        // keep the toolbar visible while it's open even
+                        // if hover has moved away — otherwise the user
+                        // can't see what they're clicking on.
+                        visible={hovered || showEmoji}
+                        onFlag={() => void handleToggleFlag()}
+                        isFlagged={isFlagged}
+                        onReact={() => setShowEmoji((v) => !v)}
+                        onReply={
+                            onOpenThread && !message.isThreadReply
+                                ? () => onOpenThread(message.id)
+                                : undefined
+                        }
+                        replyCount={message.replyCount}
+                        onCopyLink={copyLink}
+                        isMine={!!isMine}
+                        onEdit={() => {
+                            setEditDraft(message.bodyText);
+                            setEditing(true);
+                        }}
+                        onDelete={() => void handleDelete()}
+                    />
                 )}
             </div>
             {showEmoji && !editing && !message.deletedAt && (
