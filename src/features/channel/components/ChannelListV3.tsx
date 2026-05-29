@@ -1,34 +1,21 @@
 /**
  * `ChannelListV3` — minimal v3 chat-list sidebar.
  *
- * Joy-UI styled now: the sidebar is a `Sheet` carrying the dark
- * purple surface; rows are styled `Box`es that visually echo the
- * legacy `MainChatPane`'s sidebar. All existing test ids are
- * preserved so the V3 test suite keeps passing.
+ * Proof-of-life surface for the unified v3 architecture. Renders the
+ * user's channels sorted by `latestMessage.tsSent` desc (pinned first),
+ * with per-kind unread badges. Click → calls the parent's
+ * `onSelect(channelId)`.
  *
- * Click a row → `onSelect(channelId)`. Each row has a pin toggle
- * (📌); pinned channels float to the top via `useChannelList`'s
- * sort comparator. `stopPropagation` on the pin button so toggling
- * pin doesn't also open the channel.
+ * Same caveats as `MessagesPaneV3`: intentionally unstyled, intended
+ * to verify the hook + service end-to-end before the production
+ * sidebar is migrated.
  */
 
 import { useSyncExternalStore } from "react";
-import { Box, IconButton, Sheet, Stack, Typography } from "@mui/joy";
 
 import { channelService } from "../../../services/channel/channelService";
-import { purplePalette } from "../../../theme/purplePalette";
 import { ChannelKind } from "../../../types/channel";
 import { useChannelList } from "../hooks/useChannelList";
-
-/** Single source of truth for the v3 chat surfaces' palette.
- *
- * Pinned to the dark variant because (a) the production chat panes
- * are dark-themed and (b) calling `useColorScheme()` here requires a
- * `CssVarsProvider` ancestor — the v3 component tests render in
- * isolation and would all crash otherwise. If light-mode support is
- * needed later, plumb the mode through props or wrap the tests in a
- * provider helper. */
-const p = purplePalette.dark;
 
 interface ChannelListV3Props {
     selectedChannelId: string | null;
@@ -60,166 +47,115 @@ export function ChannelListV3({ selectedChannelId, onSelect }: ChannelListV3Prop
     }
 
     return (
-        <Sheet
-            data-testid="channel-list-v3"
-            sx={{
+        <aside
+            style={{
                 display: "flex",
                 flexDirection: "column",
                 height: "100%",
-                width: 260,
-                borderRight: `1px solid ${p.border}`,
-                background: p.surface,
-                color: p.text,
+                width: 240,
+                borderRight: "1px solid #ddd",
+                fontFamily: "system-ui, sans-serif",
             }}
+            data-testid="channel-list-v3"
         >
-            <Box
-                sx={{
-                    px: 1.5,
-                    py: 1,
-                    borderBottom: `1px solid ${p.divider}`,
+            <header
+                style={{
+                    padding: "8px 12px",
+                    borderBottom: "1px solid #ddd",
+                    background: "#fafafa",
                     display: "flex",
-                    alignItems: "center",
                     justifyContent: "space-between",
-                    background: p.surfaceElevated,
                 }}
             >
-                <Typography level="title-sm" sx={{ color: p.text, fontWeight: 700 }}>
-                    Channels{" "}
-                    <Typography component="span" level="body-xs" sx={{ color: p.textSubtle }}>
-                        (v3)
-                    </Typography>
-                </Typography>
-                <Typography
-                    level="body-xs"
-                    sx={{
-                        color: p.textMuted,
-                        background: p.chipBg,
-                        border: `1px solid ${p.chipBorder}`,
-                        borderRadius: 12,
-                        px: 1,
-                        py: 0.25,
-                        minWidth: 24,
-                        textAlign: "center",
-                    }}
+                <strong>Channels (v3)</strong>
+                <span
                     title={`DM ${unreadByKind[ChannelKind.DM]} | GM ${unreadByKind[ChannelKind.GM]} | PM ${unreadByKind[ChannelKind.PM]} | MDM ${unreadByKind[ChannelKind.MDM]}`}
+                    style={{ opacity: 0.7 }}
                 >
                     {totalUnread}
-                </Typography>
-            </Box>
+                </span>
+            </header>
 
-            <Box
-                component="ul"
-                data-testid="channel-list-v3-list"
-                sx={{
+            <ul
+                style={{
                     flex: 1,
                     overflowY: "auto",
                     margin: 0,
                     padding: 0,
                     listStyle: "none",
                 }}
+                data-testid="channel-list-v3-list"
             >
-                {isLoading && (
-                    <Box component="li" sx={{ p: 1.5, color: p.textSubtle, fontSize: 13 }}>
-                        Loading…
-                    </Box>
-                )}
+                {isLoading && <li style={{ padding: 12, opacity: 0.5 }}>Loading…</li>}
                 {!isLoading && channels.length === 0 && (
-                    <Box component="li" sx={{ p: 1.5, color: p.textSubtle, fontSize: 13 }}>
-                        No channels yet.
-                    </Box>
+                    <li style={{ padding: 12, opacity: 0.5 }}>No channels yet.</li>
                 )}
                 {channels.map((c) => {
                     const selected = c.id === selectedChannelId;
                     const isPinned = snapshot.pinByChannelId.has(c.id);
                     return (
-                        <Box
-                            component="li"
+                        <li
                             key={c.id}
                             data-testid={`channel-list-v3-item-${c.id}`}
                             onClick={() => onSelect(c.id)}
-                            sx={{
-                                px: 1.5,
-                                py: 1,
-                                borderBottom: `1px solid ${p.divider}`,
+                            style={{
+                                padding: "8px 12px",
+                                borderBottom: "1px solid #eee",
+                                background: selected ? "#eef" : "transparent",
                                 cursor: "pointer",
                                 display: "flex",
+                                justifyContent: "space-between",
                                 alignItems: "center",
-                                gap: 1,
-                                background: selected ? p.activeBg : "transparent",
-                                "&:hover": {
-                                    background: selected ? p.activeBg : p.hoverBg,
-                                },
-                                transition: "background 120ms ease",
+                                gap: 8,
                             }}
                         >
-                            <Stack sx={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
-                                <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                                    <Typography
-                                        level="body-xs"
-                                        sx={{
-                                            color: p.textSubtle,
-                                            fontSize: 9,
-                                            fontWeight: 700,
-                                            letterSpacing: 0.5,
-                                        }}
+                            <span style={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
+                                <span
+                                    style={{
+                                        fontSize: 10,
+                                        opacity: 0.6,
+                                        marginRight: 6,
+                                    }}
+                                >
+                                    {KIND_LABEL[c.kind]}
+                                </span>
+                                {isPinned && (
+                                    <span
+                                        data-testid={`channel-list-v3-pinned-indicator-${c.id}`}
+                                        style={{ marginRight: 4, fontSize: 11 }}
+                                        title="Pinned"
                                     >
-                                        {KIND_LABEL[c.kind]}
-                                    </Typography>
-                                    {isPinned && (
-                                        <Typography
-                                            component="span"
-                                            data-testid={`channel-list-v3-pinned-indicator-${c.id}`}
-                                            level="body-xs"
-                                            sx={{ fontSize: 11 }}
-                                            title="Pinned"
-                                        >
-                                            📌
-                                        </Typography>
-                                    )}
-                                    <Typography
-                                        level="title-sm"
-                                        sx={{
-                                            color: p.text,
-                                            fontWeight: 600,
-                                            overflow: "hidden",
-                                            textOverflow: "ellipsis",
-                                            whiteSpace: "nowrap",
-                                        }}
-                                    >
-                                        {c.title || c.id.slice(0, 8)}
-                                    </Typography>
-                                </Box>
-                                <Typography
-                                    level="body-xs"
-                                    sx={{
-                                        color: p.textMuted,
+                                        📌
+                                    </span>
+                                )}
+                                <strong>{c.title || c.id.slice(0, 8)}</strong>
+                                <div
+                                    style={{
+                                        fontSize: 11,
+                                        opacity: 0.6,
                                         overflow: "hidden",
                                         textOverflow: "ellipsis",
                                         whiteSpace: "nowrap",
                                     }}
                                 >
                                     {c.latestMessage?.bodyText || "—"}
-                                </Typography>
-                            </Stack>
+                                </div>
+                            </span>
                             {c.unreadCount > 0 && (
-                                <Typography
-                                    level="body-xs"
-                                    sx={{
-                                        background: p.primaryButtonBg,
-                                        color: "#fff",
+                                <span
+                                    style={{
+                                        background: "#c33",
+                                        color: "white",
                                         borderRadius: 12,
-                                        px: 0.75,
-                                        py: 0.25,
-                                        fontWeight: 700,
-                                        boxShadow: p.shadowSoft,
+                                        padding: "1px 6px",
+                                        fontSize: 11,
                                     }}
                                 >
                                     {c.unreadCount}
-                                </Typography>
+                                </span>
                             )}
-                            <IconButton
-                                size="sm"
-                                variant="plain"
+                            <button
+                                type="button"
                                 onClick={(e) => {
                                     // Stop the row's click handler from firing
                                     // → toggling pin shouldn't ALSO open the
@@ -229,20 +165,21 @@ export function ChannelListV3({ selectedChannelId, onSelect }: ChannelListV3Prop
                                 }}
                                 data-testid={`channel-list-v3-pin-${c.id}`}
                                 title={isPinned ? "Unpin channel" : "Pin channel"}
-                                sx={{
-                                    minHeight: 24,
-                                    minWidth: 24,
+                                style={{
+                                    background: "transparent",
+                                    border: "none",
+                                    cursor: "pointer",
+                                    padding: 0,
                                     fontSize: 14,
                                     opacity: isPinned ? 1 : 0.35,
-                                    "&:hover": { opacity: 1, background: p.hoverBg },
                                 }}
                             >
                                 📌
-                            </IconButton>
-                        </Box>
+                            </button>
+                        </li>
                     );
                 })}
-            </Box>
-        </Sheet>
+            </ul>
+        </aside>
     );
 }

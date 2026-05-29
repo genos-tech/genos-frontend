@@ -10,12 +10,8 @@
 
 import type { CSSProperties } from "react";
 
-import { purplePalette } from "../../../theme/purplePalette";
 import type { PendingAttachment } from "../hooks/useAttachmentDraft";
 import { formatSize } from "./MessageAttachments";
-
-/** Pinned to dark palette — see ChannelListV3.tsx for the rationale. */
-const p = purplePalette.dark;
 
 interface PendingAttachmentStripProps {
     pending: readonly PendingAttachment[];
@@ -29,33 +25,33 @@ const STRIP_STYLE: CSSProperties = {
     display: "flex",
     flexWrap: "wrap",
     gap: 6,
-    padding: "8px 12px",
-    borderTop: `1px solid ${p.divider}`,
-    background: p.surfaceElevated,
+    padding: "6px 12px",
+    borderTop: "1px solid #eee",
+    background: "#fafafa",
 };
 
 const CHIP_BASE: CSSProperties = {
     display: "inline-flex",
     alignItems: "center",
     gap: 6,
-    padding: "4px 10px",
-    borderRadius: 6,
+    padding: "4px 8px",
+    borderRadius: 4,
     fontSize: 12,
     maxWidth: 260,
 };
 
 const CHIP_OK: CSSProperties = {
     ...CHIP_BASE,
-    background: p.chipBg,
-    border: `1px solid ${p.chipBorder}`,
-    color: p.text,
+    background: "#f4f4f4",
+    border: "1px solid #ddd",
+    color: "#222",
 };
 
 const CHIP_ERR: CSSProperties = {
     ...CHIP_BASE,
-    background: p.dangerTintBg,
-    border: `1px solid ${p.dangerTintBorder}`,
-    color: p.dangerTint,
+    background: "rgba(239, 68, 68, 0.10)",
+    border: "1px solid rgba(239, 68, 68, 0.5)",
+    color: "#b91c1c",
 };
 
 export function PendingAttachmentStrip({

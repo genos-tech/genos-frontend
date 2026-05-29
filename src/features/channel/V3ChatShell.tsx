@@ -79,33 +79,24 @@ export function V3ChatShell() {
         };
     }, []);
 
-    // When a channel is selected, fetch its message + thread deltas in
-    // parallel. The `/messages/` endpoint returns top-level messages;
-    // `/threads/` returns thread replies. Both flow into the same
-    // store via handleMessageCreated and the hooks filter by
-    // isThreadReply.
+    // When a channel is selected, kick the incremental sync. The
+    // service owns the checkpoint read/write loop — first selection
+    // does a full load, subsequent selections only pull rows updated
+    // since the persisted `server_time`. See `syncChannel` for the
+    // ordering guarantees.
+    //
+    // The effect cleanup just skips error reporting on unmount/switch;
+    // the underlying sync (and its checkpoint write) still completes
+    // because partial work is wasted otherwise — the data IS correct
+    // up to the captured server_time and the next sync would re-fetch
+    // exactly what we already wrote.
     useEffect(() => {
         if (!selected) return;
         let cancelled = false;
-        // The store doesn't currently track per-channel sync checkpoints
-        // (TODO: persist `server_time` in SYNC_CHECKPOINTS and pass on
-        // re-open). For now, every selection triggers a full load.
-        void Promise.all([
-            channelService.fetchMessagesDelta(selected),
-            channelService.fetchThreadsDelta(selected),
-        ])
-            .then(([msgs, threads]) => {
-                if (cancelled) return;
-                for (const m of msgs.data.messages ?? []) {
-                    channelService.handleMessageCreated(m);
-                }
-                for (const m of threads.data.messages ?? []) {
-                    channelService.handleMessageCreated(m);
-                }
-            })
-            .catch(() => {
-                /* network error — pane stays on whatever's cached */
-            });
+        void channelService.syncChannel(selected).catch(() => {
+            if (cancelled) return;
+            /* network error — pane stays on whatever's cached */
+        });
         return () => {
             cancelled = true;
         };

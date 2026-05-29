@@ -18,11 +18,6 @@
 
 import type { CSSProperties } from "react";
 
-import { purplePalette } from "../../../theme/purplePalette";
-
-/** Pinned to dark palette — see ChannelListV3.tsx for the rationale. */
-const p = purplePalette.dark;
-
 interface MessageBodyProps {
     body: unknown[];
     bodyText: string;
@@ -52,31 +47,22 @@ const MENTION_BASE: CSSProperties = {
     display: "inline-block",
 };
 
-/** Mentions of someone else — accent purple (matches the chat's
- *  primary brand color so a mention reads as a "link to a person"). */
 const MENTION_OTHER: CSSProperties = {
     ...MENTION_BASE,
-    background: p.chipBg,
-    color: p.accentSoft,
-    border: `1px solid ${p.chipBorder}`,
+    background: "rgba(59, 130, 246, 0.16)",
+    color: "#1d4ed8",
 };
 
-/** Self-mentions render in danger tint so the viewer's eye lands on
- *  them first while scanning a long timeline. */
 const MENTION_SELF: CSSProperties = {
     ...MENTION_BASE,
-    background: p.dangerTintBg,
-    color: p.dangerTint,
-    border: `1px solid ${p.dangerTintBorder}`,
+    background: "rgba(239, 68, 68, 0.18)",
+    color: "#b91c1c",
 };
 
-/** Group mentions render in success tint to distinguish them from
- *  user mentions at a glance (one chip = many people). */
 const MENTION_GROUP: CSSProperties = {
     ...MENTION_BASE,
-    background: p.successTintBg,
-    color: p.successTint,
-    border: `1px solid ${p.successTintBorder}`,
+    background: "rgba(34, 197, 94, 0.16)",
+    color: "#16a34a",
 };
 
 export function MessageBody({ body, bodyText, currentUserId }: MessageBodyProps) {

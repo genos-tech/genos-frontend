@@ -32,8 +32,9 @@
 import axios from "axios";
 import type { Socket } from "socket.io-client";
 
-import { STORES } from "../../db/config/constants";
+import { INDEX_NAMES, STORES } from "../../db/config/constants";
 import { initDB } from "../../db/config/schema";
+import { CheckpointRepository } from "../../db/repositories/checkpoints";
 import type {
     Ack,
     Channel,
@@ -388,6 +389,238 @@ export class ChannelService {
             return res.data;
         } catch (e) {
             throw unwrapAxiosError(e);
+        }
+    }
+
+    // ---- Per-channel incremental sync ------------------------------------
+    //
+    // `syncChannel(channelId)` is the single entry point that callers
+    // (V3ChatShell, future deep-link routes) should use. It:
+    //   1. Reads the persisted `serverTime` checkpoint for both the
+    //      messages stream and the threads stream from IDB.
+    //   2. Fetches both deltas in parallel with `?since=<checkpoint>`.
+    //   3. If the server responded with `force_full_reload`, evicts
+    //      the corresponding in-memory + IDB rows for the channel BEFORE
+    //      applying the payload (so a stale row doesn't survive the reset).
+    //   4. Applies the payload (`messages` → handleMessageCreated,
+    //      `deletes` → handleMessageHardDelete).
+    //   5. ONLY THEN persists the new checkpoints. If steps 1–4 fail, the
+    //      old checkpoint stays put so the next sync retries the same
+    //      window (idempotent at the cost of a re-fetch).
+    //
+    // Concurrency: per-channel mutex via `_inflightSyncByChannel` so two
+    // re-renders or a rapid select→select→select don't issue overlapping
+    // requests for the same channel. Cross-channel calls run in parallel.
+    private _inflightSyncByChannel = new Map<string, Promise<void>>();
+    private _checkpointRepo: CheckpointRepository | null = null;
+
+    /** Stable per-channel + per-stream checkpoint keys. The `v3:` prefix
+     *  namespaces the v3 incremental keys away from the legacy ones
+     *  (e.g. plain `"dm"`) that share the same IDB store. */
+    private _checkpointKeyMessages(channelId: string): string {
+        return `v3:msgs:${channelId}`;
+    }
+    private _checkpointKeyThreads(channelId: string): string {
+        return `v3:thrd:${channelId}`;
+    }
+
+    private _checkpoints(): CheckpointRepository {
+        if (!this._checkpointRepo) this._checkpointRepo = new CheckpointRepository();
+        return this._checkpointRepo;
+    }
+
+    /**
+     * Incrementally sync one channel (top-level + thread streams). Idempotent;
+     * safe to call repeatedly. The returned promise resolves once the store
+     * has been updated AND the new checkpoint persisted.
+     *
+     * On network failure, the promise rejects and the old checkpoint is
+     * preserved so the next attempt fetches the same window again. Callers
+     * that care about "did the sync land?" should `.catch` and surface it;
+     * passive callers (e.g. mount effects) can fire-and-forget.
+     */
+    syncChannel(channelId: string): Promise<void> {
+        const existing = this._inflightSyncByChannel.get(channelId);
+        if (existing) return existing;
+
+        const promise = this._doSyncChannel(channelId);
+        this._inflightSyncByChannel.set(channelId, promise);
+        // Release the mutex once the work settles, regardless of outcome.
+        // `.finally(...)` chains a derived promise that re-throws on
+        // rejection — swallow it with `.catch` so the cleanup doesn't
+        // produce an unhandled-rejection log. The ORIGINAL `promise`
+        // still rejects normally and propagates to callers via `return`.
+        // Identity-compare so we don't accidentally drop a replacement
+        // entry queued by a later call.
+        promise
+            .finally(() => {
+                if (this._inflightSyncByChannel.get(channelId) === promise) {
+                    this._inflightSyncByChannel.delete(channelId);
+                }
+            })
+            .catch(() => {
+                /* original rejection is the caller's to handle */
+            });
+        return promise;
+    }
+
+    private async _doSyncChannel(channelId: string): Promise<void> {
+        const repo = this._checkpoints();
+        const [rawMsgsCp, rawThreadsCp] = await Promise.all([
+            repo.getCheckpoint(this._checkpointKeyMessages(channelId)),
+            repo.getCheckpoint(this._checkpointKeyThreads(channelId)),
+        ]);
+        // Normalize: an empty-string checkpoint (the `_evictChannelMessages`
+        // convention for "no watermark — treat as first load") collapses
+        // to undefined so the REST helper omits `?since=` entirely.
+        const sinceMsgs = rawMsgsCp ? rawMsgsCp : undefined;
+        const sinceThreads = rawThreadsCp ? rawThreadsCp : undefined;
+
+        const [msgsRes, threadsRes] = await Promise.all([
+            this.fetchMessagesDelta(channelId, sinceMsgs),
+            this.fetchThreadsDelta(channelId, sinceThreads),
+        ]);
+
+        // force_full_reload: server is telling us our checkpoint is
+        // too old (or first load). Evict the channel's matching
+        // stream from the store + IDB BEFORE applying the payload
+        // so a row that the server has hard-deleted in the gap
+        // doesn't survive the reset.
+        if (msgsRes.force_full_reload) {
+            await this._evictChannelMessages(channelId, "top-level");
+        }
+        if (threadsRes.force_full_reload) {
+            await this._evictChannelMessages(channelId, "threads");
+        }
+
+        // Apply messages. `handleMessageCreated` is idempotent
+        // (upsert by id), so re-applying the same row from a
+        // retried sync is a no-op. Soft-deleted rows arrive as
+        // tombstones (`deletedAt` set) and the upsert path
+        // overwrites the local copy correctly.
+        for (const m of msgsRes.data.messages ?? []) {
+            this.handleMessageCreated(m);
+        }
+        for (const m of threadsRes.data.messages ?? []) {
+            this.handleMessageCreated(m);
+        }
+
+        // Apply hard-deletes. `data.deletes` is reserved for rows
+        // that have been purged (not just soft-deleted) — usually
+        // empty, but wire the path so the day a purge job runs the
+        // client doesn't strand orphan rows.
+        for (const id of msgsRes.data.deletes ?? []) {
+            this.handleMessageHardDelete(channelId, id);
+        }
+        for (const id of threadsRes.data.deletes ?? []) {
+            this.handleMessageHardDelete(channelId, id);
+        }
+
+        // Persist new checkpoints last. Use the server-issued
+        // `server_time` (NOT max(ts_updated_at) of returned rows)
+        // because the server is the authority on "as-of when did
+        // I last serve this channel" — using a server timestamp
+        // makes this race-safe against concurrent writes.
+        await Promise.all([
+            repo.setCheckpoint(this._checkpointKeyMessages(channelId), msgsRes.server_time),
+            repo.setCheckpoint(this._checkpointKeyThreads(channelId), threadsRes.server_time),
+        ]);
+    }
+
+    /**
+     * Reset all messages for a channel (either top-level or threads),
+     * both in-memory and in IDB. Used by `syncChannel` when the server
+     * signals `force_full_reload`, and exposed for the dev tools panel
+     * to manually evict on demand.
+     *
+     * Does NOT reset the channel row itself, members, read cursor,
+     * pins, or flags — those are managed by their own delta paths.
+     */
+    async _evictChannelMessages(
+        channelId: string,
+        scope: "top-level" | "threads" | "all"
+    ): Promise<void> {
+        const arr = this._messages.get(channelId) ?? [];
+        const kept = arr.filter((m) => {
+            if (scope === "all") return false;
+            if (scope === "threads") return !m.isThreadReply;
+            return m.isThreadReply; // scope === "top-level" → keep replies
+        });
+        this._messages.set(channelId, kept);
+        this._notify();
+
+        try {
+            const db = await initDB();
+            const tx = db.transaction(STORES.MESSAGES_V3, "readwrite");
+            const store = tx.objectStore(STORES.MESSAGES_V3);
+            // Walk only this channel's rows via the by-channel index so
+            // we don't scan the entire messages store per evict.
+            const index = store.index(INDEX_NAMES.MESSAGES_V3_BY_CHANNEL);
+            let cursor = await index.openCursor(IDBKeyRange.only(channelId));
+            while (cursor) {
+                const row = cursor.value as Message;
+                const matchesScope =
+                    scope === "all"
+                        ? true
+                        : scope === "threads"
+                          ? row.isThreadReply
+                          : !row.isThreadReply;
+                if (matchesScope) await cursor.delete();
+                cursor = await cursor.continue();
+            }
+            await tx.done;
+        } catch (e) {
+            // eslint-disable-next-line no-console
+            console.warn("[ChannelService] _evictChannelMessages failed:", e);
+        }
+
+        // Also reset the matching checkpoint so the next sync does a
+        // full reload (otherwise we'd ask the server for "everything
+        // since <stale ts>" and get nothing).
+        try {
+            const repo = this._checkpoints();
+            const keysToClear: string[] = [];
+            if (scope === "top-level" || scope === "all") {
+                keysToClear.push(this._checkpointKeyMessages(channelId));
+            }
+            if (scope === "threads" || scope === "all") {
+                keysToClear.push(this._checkpointKeyThreads(channelId));
+            }
+            // CheckpointRepository doesn't expose a delete; setting to
+            // empty string is the convention used by other v3 paths to
+            // mean "no watermark — treat as first load on next sync."
+            // (Empty string falsy-checks the same as null at the call site.)
+            for (const k of keysToClear) await repo.setCheckpoint(k, "");
+        } catch (e) {
+            // eslint-disable-next-line no-console
+            console.warn("[ChannelService] checkpoint clear failed:", e);
+        }
+    }
+
+    /**
+     * Hard-delete a single message from the store + IDB. Used by the
+     * delta-sync `deletes` path (purge / GDPR scrubbing) — distinct
+     * from `handleMessageDeleted` which sets a tombstone via `deletedAt`.
+     */
+    handleMessageHardDelete(channelId: string, messageId: string): void {
+        const arr = this._messages.get(channelId);
+        if (arr) {
+            const next = arr.filter((m) => m.id !== messageId);
+            if (next.length !== arr.length) {
+                this._messages.set(channelId, next);
+                this._notify();
+            }
+        }
+        void this._persistHardDelete(messageId);
+    }
+
+    private async _persistHardDelete(messageId: string) {
+        try {
+            const db = await initDB();
+            await db.delete(STORES.MESSAGES_V3, messageId);
+        } catch (e) {
+            // eslint-disable-next-line no-console
+            console.warn("[ChannelService] _persistHardDelete failed:", e);
         }
     }
 

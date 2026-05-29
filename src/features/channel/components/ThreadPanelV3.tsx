@@ -11,19 +11,14 @@
  */
 
 import { useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { Box, Button, IconButton, Input, Sheet, Stack, Typography } from "@mui/joy";
 
 import { channelService, ChannelServiceError } from "../../../services/channel/channelService";
-import { purplePalette } from "../../../theme/purplePalette";
 import { useAttachmentDraft } from "../hooks/useAttachmentDraft";
 import { useChannelThread } from "../hooks/useChannelThread";
 import { candidatesFromMessages, useMentionDraft } from "../hooks/useMentionDraft";
 import { MessageAttachments } from "./MessageAttachments";
 import { MessageBody } from "./MessageBody";
 import { PendingAttachmentStrip } from "./PendingAttachmentStrip";
-
-/** Pinned to dark palette — see ChannelListV3.tsx for the rationale. */
-const p = purplePalette.dark;
 
 interface ThreadPanelV3Props {
     channelId: string;
@@ -91,81 +86,58 @@ export function ThreadPanelV3({ channelId, rootMessageId, onClose }: ThreadPanel
         }
     }
 
-    const flagBtn = (id: string) => ({
-        ml: 0.75,
-        background: "transparent",
-        border: "none",
-        cursor: "pointer",
-        fontSize: 12,
-        opacity: snapshot.flagByMessageId.has(id) ? 1 : 0.45,
-        color: p.textMuted,
-        "&:hover": { color: p.text },
-    });
-
     return (
-        <Sheet
-            data-testid="thread-panel-v3"
-            sx={{
+        <div
+            style={{
                 display: "flex",
                 flexDirection: "column",
                 height: "100%",
-                background: p.bg,
-                color: p.text,
+                fontFamily: "system-ui, sans-serif",
             }}
+            data-testid="thread-panel-v3"
         >
-            <Box
-                component="header"
-                sx={{
-                    px: 1.5,
-                    py: 1,
-                    borderBottom: `1px solid ${p.divider}`,
-                    background: p.surfaceElevated,
+            <header
+                style={{
+                    padding: "8px 12px",
+                    borderBottom: "1px solid #ddd",
+                    background: "#fafafa",
+                    fontWeight: 600,
                     display: "flex",
                     justifyContent: "space-between",
                     alignItems: "center",
                 }}
             >
-                <Typography level="title-sm" sx={{ color: p.text, fontWeight: 700 }}>
-                    Thread
-                </Typography>
-                <Button
-                    size="sm"
-                    variant="plain"
+                <span>Thread</span>
+                <button
+                    type="button"
                     onClick={onClose}
+                    style={{ fontSize: 12 }}
                     data-testid="thread-panel-v3-close"
-                    sx={{ color: p.textMuted, "&:hover": { color: p.text } }}
                 >
                     Close
-                </Button>
-            </Box>
+                </button>
+            </header>
 
-            <Box
-                data-testid="thread-panel-v3-body"
-                sx={{
+            <div
+                style={{
                     flex: 1,
                     overflowY: "auto",
-                    px: 1.5,
-                    py: 1,
+                    padding: "8px 12px",
                 }}
+                data-testid="thread-panel-v3-body"
             >
-                {isLoading && <Box sx={{ color: p.textSubtle }}>Loading thread…</Box>}
+                {isLoading && <div style={{ opacity: 0.5 }}>Loading thread…</div>}
                 {!isLoading && root && (
                     <>
-                        <Box
-                            data-testid="thread-panel-v3-root"
-                            sx={{
-                                pb: 1,
-                                mb: 1,
-                                borderBottom: `1px solid ${p.divider}`,
+                        <div
+                            style={{
+                                paddingBottom: 8,
+                                borderBottom: "1px solid #eee",
+                                marginBottom: 8,
                             }}
+                            data-testid="thread-panel-v3-root"
                         >
-                            <Typography
-                                component="strong"
-                                level="title-sm"
-                                sx={{ color: p.accentSoft, fontWeight: 700 }}
-                            >
-                                {root.sender?.userName ?? "system"}:
-                            </Typography>{" "}
+                            <strong>{root.sender?.userName ?? "system"}:</strong>{" "}
                             {root.deletedAt ? (
                                 "(deleted)"
                             ) : (
@@ -176,8 +148,7 @@ export function ThreadPanelV3({ channelId, rootMessageId, onClose }: ThreadPanel
                                 />
                             )}
                             {!root.deletedAt && (
-                                <Box
-                                    component="button"
+                                <button
                                     type="button"
                                     onClick={() =>
                                         void toggleFlag(
@@ -186,13 +157,20 @@ export function ThreadPanelV3({ channelId, rootMessageId, onClose }: ThreadPanel
                                         )
                                     }
                                     data-testid={`thread-panel-v3-flag-${root.id}`}
+                                    style={{
+                                        marginLeft: 6,
+                                        background: "transparent",
+                                        border: "none",
+                                        cursor: "pointer",
+                                        fontSize: 12,
+                                        opacity: snapshot.flagByMessageId.has(root.id) ? 1 : 0.45,
+                                    }}
                                     title={
                                         snapshot.flagByMessageId.has(root.id) ? "Unflag" : "Flag"
                                     }
-                                    sx={flagBtn(root.id)}
                                 >
                                     ⭐
-                                </Box>
+                                </button>
                             )}
                             {!root.deletedAt && root.attachments.length > 0 && (
                                 <MessageAttachments
@@ -200,32 +178,21 @@ export function ThreadPanelV3({ channelId, rootMessageId, onClose }: ThreadPanel
                                     attachments={root.attachments}
                                 />
                             )}
-                        </Box>
-                        <Box
-                            component="ul"
+                        </div>
+                        <ul
+                            style={{ listStyle: "none", margin: 0, padding: 0 }}
                             data-testid="thread-panel-v3-replies"
-                            sx={{ listStyle: "none", m: 0, p: 0 }}
                         >
                             {replies.map((r) => (
-                                <Box
-                                    component="li"
+                                <li
                                     key={r.id}
-                                    data-testid={`thread-panel-v3-reply-${r.id}`}
-                                    sx={{
-                                        py: 0.5,
+                                    style={{
+                                        padding: "4px 0",
                                         opacity: r.deletedAt ? 0.4 : 1,
-                                        borderRadius: 4,
-                                        px: 0.5,
-                                        "&:hover": { background: p.hoverBg },
                                     }}
+                                    data-testid={`thread-panel-v3-reply-${r.id}`}
                                 >
-                                    <Typography
-                                        component="strong"
-                                        level="title-sm"
-                                        sx={{ color: p.accentSoft, fontWeight: 700 }}
-                                    >
-                                        {r.sender?.userName ?? "system"}:
-                                    </Typography>{" "}
+                                    <strong>{r.sender?.userName ?? "system"}:</strong>{" "}
                                     {r.deletedAt ? (
                                         "(deleted)"
                                     ) : (
@@ -236,17 +203,18 @@ export function ThreadPanelV3({ channelId, rootMessageId, onClose }: ThreadPanel
                                         />
                                     )}
                                     {r.editedAt && !r.deletedAt && (
-                                        <Typography
-                                            component="span"
-                                            level="body-xs"
-                                            sx={{ ml: 1, color: p.textSubtle }}
+                                        <span
+                                            style={{
+                                                marginLeft: 8,
+                                                opacity: 0.5,
+                                                fontSize: 12,
+                                            }}
                                         >
                                             (edited)
-                                        </Typography>
+                                        </span>
                                     )}
                                     {!r.deletedAt && (
-                                        <Box
-                                            component="button"
+                                        <button
                                             type="button"
                                             onClick={() =>
                                                 void toggleFlag(
@@ -255,15 +223,24 @@ export function ThreadPanelV3({ channelId, rootMessageId, onClose }: ThreadPanel
                                                 )
                                             }
                                             data-testid={`thread-panel-v3-flag-${r.id}`}
+                                            style={{
+                                                marginLeft: 6,
+                                                background: "transparent",
+                                                border: "none",
+                                                cursor: "pointer",
+                                                fontSize: 12,
+                                                opacity: snapshot.flagByMessageId.has(r.id)
+                                                    ? 1
+                                                    : 0.45,
+                                            }}
                                             title={
                                                 snapshot.flagByMessageId.has(r.id)
                                                     ? "Unflag"
                                                     : "Flag"
                                             }
-                                            sx={flagBtn(r.id)}
                                         >
                                             ⭐
-                                        </Box>
+                                        </button>
                                     )}
                                     {!r.deletedAt && r.attachments.length > 0 && (
                                         <MessageAttachments
@@ -271,40 +248,31 @@ export function ThreadPanelV3({ channelId, rootMessageId, onClose }: ThreadPanel
                                             attachments={r.attachments}
                                         />
                                     )}
-                                </Box>
+                                </li>
                             ))}
                             {replies.length === 0 && (
-                                <Box component="li" sx={{ color: p.textSubtle }}>
-                                    No replies yet.
-                                </Box>
+                                <li style={{ opacity: 0.5 }}>No replies yet.</li>
                             )}
-                        </Box>
+                        </ul>
                     </>
                 )}
                 {!isLoading && !root && (
-                    <Box sx={{ color: p.textSubtle }}>Thread root not loaded.</Box>
+                    <div style={{ opacity: 0.5 }}>Thread root not loaded.</div>
                 )}
-            </Box>
+            </div>
 
             {error && (
-                <Box
+                <div
+                    style={{
+                        color: "crimson",
+                        padding: "4px 12px",
+                        fontSize: 12,
+                    }}
                     role="alert"
                     onClick={() => setError(null)}
-                    sx={{
-                        color: p.dangerTint,
-                        background: p.dangerTintBg,
-                        border: `1px solid ${p.dangerTintBorder}`,
-                        borderRadius: 6,
-                        mx: 1.5,
-                        my: 0.5,
-                        px: 1,
-                        py: 0.5,
-                        fontSize: 12,
-                        cursor: "pointer",
-                    }}
                 >
                     {error} (click to dismiss)
-                </Box>
+                </div>
             )}
 
             <PendingAttachmentStrip
@@ -312,70 +280,59 @@ export function ThreadPanelV3({ channelId, rootMessageId, onClose }: ThreadPanel
                 onRemove={attachments.removeAt}
                 testIdPrefix="thread-panel-v3"
             />
-            <Box
-                component="form"
-                onSubmit={(e: React.FormEvent) => {
+            <form
+                onSubmit={(e) => {
                     e.preventDefault();
                     void send();
                 }}
-                sx={{
+                style={{
                     display: "flex",
-                    alignItems: "center",
-                    gap: 1,
-                    px: 1.5,
-                    py: 1,
-                    borderTop: `1px solid ${p.divider}`,
-                    background: p.surface,
+                    gap: 8,
+                    padding: "8px 12px",
+                    borderTop: "1px solid #ddd",
                     position: "relative",
                 }}
             >
                 {mention.pickerOpen && (
-                    <Sheet
-                        variant="outlined"
+                    <div
                         data-testid="thread-panel-v3-mention-picker"
-                        sx={{
+                        style={{
                             position: "absolute",
                             bottom: "100%",
                             left: 12,
-                            mb: 0.5,
-                            background: p.surfaceSolid,
-                            borderColor: p.border,
-                            color: p.text,
-                            borderRadius: 6,
-                            boxShadow: p.shadow,
+                            marginBottom: 4,
+                            background: "#fff",
+                            border: "1px solid #ccc",
+                            borderRadius: 4,
+                            boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
                             fontSize: 13,
-                            minWidth: 180,
+                            minWidth: 160,
                             zIndex: 10,
-                            overflow: "hidden",
                         }}
                     >
                         {mention.suggestions.map((s) => (
-                            <Box
+                            <button
                                 key={s.userId}
-                                component="button"
                                 type="button"
-                                onMouseDown={(e: React.MouseEvent) => {
+                                onMouseDown={(e) => {
                                     e.preventDefault();
                                     mention.selectCandidate(s);
                                 }}
                                 data-testid={`thread-panel-v3-mention-option-${s.userId}`}
-                                sx={{
+                                style={{
                                     display: "block",
                                     width: "100%",
                                     textAlign: "left",
-                                    px: 1,
-                                    py: 0.75,
+                                    padding: "4px 8px",
                                     background: "transparent",
                                     border: "none",
-                                    color: p.text,
                                     cursor: "pointer",
-                                    "&:hover": { background: p.hoverBg },
                                 }}
                             >
                                 @{s.userName}
-                            </Box>
+                            </button>
                         ))}
-                    </Sheet>
+                    </div>
                 )}
                 <input
                     ref={fileInputRef}
@@ -388,75 +345,52 @@ export function ThreadPanelV3({ channelId, rootMessageId, onClose }: ThreadPanel
                     style={{ display: "none" }}
                     data-testid="thread-panel-v3-file-input"
                 />
-                <IconButton
-                    size="sm"
-                    variant="plain"
+                <button
+                    type="button"
                     onClick={() => fileInputRef.current?.click()}
                     disabled={busy || !root}
+                    style={{ fontSize: 14 }}
                     title="Attach file(s)"
                     data-testid="thread-panel-v3-attach"
-                    sx={{
-                        fontSize: 16,
-                        color: p.textMuted,
-                        "&:hover": { background: p.hoverBg, color: p.text },
-                    }}
                 >
                     📎
-                </IconButton>
-                <Input
-                    slotProps={{
-                        input: {
-                            "data-testid": "thread-panel-v3-input",
-                            value: mention.draft,
-                            onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
-                                mention.setDraft(e.target.value);
-                                mention.setCaret(e.target.selectionStart ?? e.target.value.length);
-                            },
-                            onKeyUp: (e: React.KeyboardEvent<HTMLInputElement>) =>
-                                mention.setCaret(
-                                    e.currentTarget.selectionStart ?? e.currentTarget.value.length
-                                ),
-                            onClick: (e: React.MouseEvent<HTMLInputElement>) =>
-                                mention.setCaret(
-                                    e.currentTarget.selectionStart ?? e.currentTarget.value.length
-                                ),
-                        },
+                </button>
+                <input
+                    type="text"
+                    value={mention.draft}
+                    onChange={(e) => {
+                        mention.setDraft(e.target.value);
+                        mention.setCaret(e.target.selectionStart ?? e.target.value.length);
                     }}
+                    onKeyUp={(e) =>
+                        mention.setCaret(
+                            e.currentTarget.selectionStart ?? e.currentTarget.value.length
+                        )
+                    }
+                    onClick={(e) =>
+                        mention.setCaret(
+                            e.currentTarget.selectionStart ?? e.currentTarget.value.length
+                        )
+                    }
                     placeholder="Reply…  (type @ to mention)"
                     disabled={busy || !root}
-                    sx={{
-                        flex: 1,
-                        background: p.inputBg,
-                        borderColor: p.inputBorder,
-                        color: p.text,
-                        "&:focus-within": {
-                            borderColor: p.inputFocusBorder,
-                            boxShadow: p.inputFocusShadow,
-                        },
-                    }}
+                    style={{ flex: 1, padding: "4px 8px" }}
+                    data-testid="thread-panel-v3-input"
                 />
-                <Button
+                <button
                     type="submit"
-                    size="sm"
                     disabled={
                         busy ||
                         !root ||
                         attachments.isUploading ||
                         (!mention.draft.trim() &&
-                            !attachments.pending.some((q) => q.error === null))
+                            !attachments.pending.some((p) => p.error === null))
                     }
                     data-testid="thread-panel-v3-send"
-                    sx={{
-                        background: p.primaryButtonBg,
-                        color: "#fff",
-                        boxShadow: p.primaryButtonShadow,
-                        "&:hover": { background: p.primaryButtonHover },
-                        "&:disabled": { opacity: 0.5 },
-                    }}
                 >
                     {attachments.isUploading ? "Uploading…" : "Reply"}
-                </Button>
-            </Box>
-        </Sheet>
+                </button>
+            </form>
+        </div>
     );
 }
