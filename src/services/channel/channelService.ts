@@ -545,6 +545,57 @@ export class ChannelService {
         }
     }
 
+    /**
+     * Cold-fetch the full member roster for a channel. Used by
+     * `syncChannel` so the FE has a populated member list on first
+     * channel open this session — before that, `_members` only
+     * contained whatever `channel.member_added` events landed live.
+     *
+     * NOT a delta endpoint: the response is the full current set.
+     * Member additions / removals during the session flow through
+     * the live `channel.member_added` / `channel.member_removed`
+     * socket events (which append/remove from `_members` rather than
+     * replacing the whole list).
+     */
+    async fetchChannelMembers(channelId: string): Promise<ChannelMember[]> {
+        try {
+            const res = await this.api().get<{ members: ChannelMember[] }>(
+                `/api/v3/channels/${channelId}/members/`
+            );
+            return res.data.members ?? [];
+        } catch (e) {
+            throw unwrapAxiosError(e);
+        }
+    }
+
+    /**
+     * Replace the entire member list for a channel atomically (under
+     * one notify). Used by `syncChannel`'s cold-load path. Differs
+     * from `handleChannelMemberAdded` (which appends a single member)
+     * because we want the live-event-driven adds that happened during
+     * the fetch to NOT be overwritten — we union the fetch result with
+     * anything already in `_members` keyed by member.id, so a race
+     * between the REST response and a `channel.member_added` socket
+     * event preserves both views.
+     */
+    handleChannelMembersReplaced(channelId: string, members: ChannelMember[]): void {
+        const existing = this._members.get(channelId) ?? [];
+        const byId = new Map<string, ChannelMember>();
+        for (const m of members) byId.set(m.id, m);
+        // Union with any live-event entries that arrived during the
+        // fetch and aren't represented in the server snapshot.
+        for (const m of existing) {
+            if (!byId.has(m.id)) byId.set(m.id, m);
+        }
+        const next = Array.from(byId.values());
+        this._members.set(channelId, next);
+        this._notify();
+        // Persist each row — `_persistMember` is idempotent on member.id
+        // so a duplicate write from a follow-up `channel.member_added`
+        // is harmless.
+        for (const m of next) void this._persistMember(m, channelId);
+    }
+
     // ---- Per-channel incremental sync ------------------------------------
     //
     // `syncChannel(channelId)` is the single entry point that callers
@@ -629,10 +680,30 @@ export class ChannelService {
         const sinceMsgs = rawMsgsCp ? rawMsgsCp : undefined;
         const sinceThreads = rawThreadsCp ? rawThreadsCp : undefined;
 
-        const [msgsRes, threadsRes] = await Promise.all([
+        // Fetch the member roster only on the FIRST sync of the
+        // session — once `_members.get(channelId)` is non-empty, live
+        // `channel.member_added` / `_removed` events keep it in sync
+        // without a re-fetch. Subsequent syncs skip the roster call
+        // to save a Django round-trip. If the live events somehow
+        // drift the roster out of sync, the user will notice on next
+        // page reload (which re-syncs from scratch).
+        const needsMembers = (this._members.get(channelId) ?? []).length === 0;
+
+        const [msgsRes, threadsRes, members] = await Promise.all([
             this.fetchMessagesDelta(channelId, sinceMsgs),
             this.fetchThreadsDelta(channelId, sinceThreads),
+            needsMembers
+                ? this.fetchChannelMembers(channelId).catch(() => {
+                      // Non-fatal: an empty roster is the existing
+                      // behavior anyway. The messages still load.
+                      return null;
+                  })
+                : Promise.resolve(null),
         ]);
+
+        if (members) {
+            this.handleChannelMembersReplaced(channelId, members);
+        }
 
         // force_full_reload: server is telling us our checkpoint is
         // too old (or first load). Evict the channel's matching
