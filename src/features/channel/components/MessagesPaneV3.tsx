@@ -14,7 +14,7 @@
  * inherit from once we've validated the UX end-to-end.
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 
 import { channelService, ChannelServiceError } from "../../../services/channel/channelService";
 import type { Message } from "../../../types/channel";
@@ -42,6 +42,13 @@ const QUICK_EMOJI = ["👍", "❤️", "🎉", "🤔", "😄"];
 
 export function MessagesPaneV3({ channelId, onOpenThread }: MessagesPaneV3Props) {
     const { channel, messages, readCursor, isLoading } = useChannel(channelId);
+    // Separate subscription for the flag index so each row knows
+    // whether it's flagged without a prop dance from useChannel.
+    const snapshot = useSyncExternalStore(
+        channelService.subscribe,
+        channelService.getSnapshot,
+        channelService.getSnapshot
+    );
     const currentUserId = typeof window === "undefined" ? null : localStorage.getItem("userId");
     const candidates = useMemo(
         () => candidatesFromMessages(messages, currentUserId),
@@ -151,6 +158,7 @@ export function MessagesPaneV3({ channelId, onOpenThread }: MessagesPaneV3Props)
                         message={m}
                         channelId={channelId}
                         channelKind={channel.kind}
+                        isFlagged={snapshot.flagByMessageId.has(m.id)}
                         onError={setError}
                         onOpenThread={onOpenThread}
                     />
@@ -263,6 +271,9 @@ interface MessageRowProps {
     message: Message;
     channelId: string;
     channelKind: number;
+    /** True iff the current viewer has flagged this message. The row
+     *  reads it from the parent's `flagByMessageId` lookup. */
+    isFlagged: boolean;
     onError: (msg: string) => void;
     /** Forwarded from the pane. When set, each row renders a thread
      *  entry-point button + a reply-count chip when `replyCount > 0`. */
@@ -272,7 +283,14 @@ interface MessageRowProps {
 /** Per-message row. Owns the edit-mode toggle, the inline editor, and
  *  the per-row interaction buttons. Pulled out so a re-render of one
  *  row's edit state doesn't re-render the whole list. */
-function MessageRow({ message, channelId, channelKind, onError, onOpenThread }: MessageRowProps) {
+function MessageRow({
+    message,
+    channelId,
+    channelKind,
+    isFlagged,
+    onError,
+    onOpenThread,
+}: MessageRowProps) {
     const [editing, setEditing] = useState(false);
     const [editDraft, setEditDraft] = useState(message.bodyText);
     const [showEmoji, setShowEmoji] = useState(false);
@@ -313,6 +331,15 @@ function MessageRow({ message, channelId, channelKind, onError, onOpenThread }: 
             reportError(e);
         }
     }, [channelId, channelKind, message.id, reportError]);
+
+    const handleToggleFlag = useCallback(async () => {
+        try {
+            if (isFlagged) await channelService.unflagMessage(message.id);
+            else await channelService.flagMessage(message.id);
+        } catch (e) {
+            reportError(e);
+        }
+    }, [isFlagged, message.id, reportError]);
 
     const handleToggleReaction = useCallback(
         async (emoji: string) => {
@@ -417,8 +444,26 @@ function MessageRow({ message, channelId, channelKind, onError, onOpenThread }: 
                         )}
                     </>
                 )}
+                {!editing && !message.deletedAt && isFlagged && (
+                    <span
+                        data-testid={`message-row-flagged-indicator-${message.id}`}
+                        style={{ marginLeft: 6, fontSize: 12 }}
+                        title="You flagged this message"
+                    >
+                        ⭐
+                    </span>
+                )}
                 {!editing && !message.deletedAt && (
                     <span style={{ marginLeft: "auto", display: "flex", gap: 4 }}>
+                        <button
+                            type="button"
+                            onClick={() => void handleToggleFlag()}
+                            data-testid={`message-row-flag-${message.id}`}
+                            style={{ fontSize: 11, opacity: isFlagged ? 1 : 0.45 }}
+                            title={isFlagged ? "Unflag message" : "Flag message"}
+                        >
+                            ⭐
+                        </button>
                         <button
                             type="button"
                             onClick={() => setShowEmoji((v) => !v)}

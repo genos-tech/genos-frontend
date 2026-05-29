@@ -128,6 +128,11 @@ export interface ChannelStoreSnapshot {
      *  are the requesting user's pins/flags only). */
     pins: ReadonlyMap<string, Pin>;
     flags: ReadonlyMap<string, Flag>;
+    /** Secondary index: which Pin (if any) covers `channelId`. The UI
+     *  reads this to render the per-row pin button's selected state. */
+    pinByChannelId: ReadonlyMap<string, Pin>;
+    /** Secondary index: which Flag (if any) covers `messageId`. */
+    flagByMessageId: ReadonlyMap<string, Flag>;
 }
 
 /** correlation_id generator — uses uuidv4-ish style without adding a dep. */
@@ -196,6 +201,11 @@ export class ChannelService {
     private _cursors = new Map<string, ReadCursor>();
     private _pins = new Map<string, Pin>();
     private _flags = new Map<string, Flag>();
+    /** Secondary indices, kept in lockstep with `_pins` / `_flags` so
+     *  UI lookups are O(1) instead of O(N). The primary id-keyed maps
+     *  remain authoritative for IDB persistence (keyPath: "id"). */
+    private _pinByChannelId = new Map<string, Pin>();
+    private _flagByMessageId = new Map<string, Flag>();
     /** Flipped to true once `hydrateFromIDB()` settles (whether
      *  successfully or with an IDB failure). Hooks read this off the
      *  snapshot to render "loaded empty" instead of a perpetual
@@ -221,6 +231,8 @@ export class ChannelService {
             cursorsByChannel: this._cursors,
             pins: this._pins,
             flags: this._flags,
+            pinByChannelId: this._pinByChannelId,
+            flagByMessageId: this._flagByMessageId,
         };
     }
 
@@ -553,6 +565,76 @@ export class ChannelService {
         });
     }
 
+    // ---- Pin / Flag (REST, optimistic store update) -----------------------
+    //
+    // Pin/Flag are per-user "bookmarks": a Pin marks a channel as a
+    // favorite (typically rendered at the top of the chat list); a Flag
+    // marks a specific message as worth coming back to. Both are
+    // idempotent on the server. We update the store optimistically and
+    // roll back on failure so the button feels instant.
+
+    async pinChannel(channelId: string): Promise<Pin> {
+        // Optimistic placeholder so the button flips instantly. The
+        // server-issued Pin replaces it on success.
+        const optimistic: Pin = {
+            id: `optimistic-${channelId}`,
+            channelId,
+            tsCreated: new Date().toISOString(),
+        };
+        this._upsertPin(optimistic);
+        try {
+            const res = await this.api().post<Pin>(`/api/v3/channels/${channelId}/pin/`);
+            this._removePinByChannel(channelId);
+            this._upsertPin(res.data);
+            return res.data;
+        } catch (e) {
+            this._removePinByChannel(channelId);
+            throw unwrapAxiosError(e);
+        }
+    }
+
+    async unpinChannel(channelId: string): Promise<void> {
+        const existing = this._pinByChannelId.get(channelId);
+        // Optimistic removal so the button flips instantly.
+        this._removePinByChannel(channelId);
+        try {
+            await this.api().delete(`/api/v3/channels/${channelId}/pin/`);
+        } catch (e) {
+            // Restore on failure so the UI doesn't drift from server state.
+            if (existing) this._upsertPin(existing);
+            throw unwrapAxiosError(e);
+        }
+    }
+
+    async flagMessage(messageId: string): Promise<Flag> {
+        const optimistic: Flag = {
+            id: `optimistic-${messageId}`,
+            messageId,
+            tsCreated: new Date().toISOString(),
+        };
+        this._upsertFlag(optimistic);
+        try {
+            const res = await this.api().post<Flag>(`/api/v3/messages/${messageId}/flag/`);
+            this._removeFlagByMessage(messageId);
+            this._upsertFlag(res.data);
+            return res.data;
+        } catch (e) {
+            this._removeFlagByMessage(messageId);
+            throw unwrapAxiosError(e);
+        }
+    }
+
+    async unflagMessage(messageId: string): Promise<void> {
+        const existing = this._flagByMessageId.get(messageId);
+        this._removeFlagByMessage(messageId);
+        try {
+            await this.api().delete(`/api/v3/messages/${messageId}/flag/`);
+        } catch (e) {
+            if (existing) this._upsertFlag(existing);
+            throw unwrapAxiosError(e);
+        }
+    }
+
     // ---- Inbound socket event handlers (called by socketRouter) ----------
 
     handleMessageCreated(message: Message): void {
@@ -770,8 +852,14 @@ export class ChannelService {
             for (const c of cursorRows) {
                 if (c.threadRootId == null) this._cursors.set(c.channelId, c);
             }
-            for (const p of pinRows) this._pins.set(p.id, p);
-            for (const f of flagRows) this._flags.set(f.id, f);
+            for (const p of pinRows) {
+                this._pins.set(p.id, p);
+                this._pinByChannelId.set(p.channelId, p);
+            }
+            for (const f of flagRows) {
+                this._flags.set(f.id, f);
+                this._flagByMessageId.set(f.messageId, f);
+            }
         } catch (e) {
             // IDB failure is non-fatal — the app keeps working off the
             // live socket stream + REST cold reads. Log loudly so the
@@ -838,6 +926,93 @@ export class ChannelService {
         const ch = this._channels.get(channelId);
         if (!ch) return;
         this._channels.set(channelId, { ...ch, unreadCount: ch.unreadCount + 1 });
+    }
+
+    // ---- Pin / Flag store helpers ---------------------------------------
+    //
+    // Keep both the id-keyed primary map (for IDB persistence) and the
+    // secondary index (for UI lookup) in lockstep. Each helper also
+    // notifies subscribers so a single mutation re-renders consumers.
+
+    private _upsertPin(pin: Pin) {
+        // If an existing pin for this channel is being replaced (e.g.
+        // optimistic → server-issued), drop the old id from `_pins`
+        // first so we don't leak entries.
+        const previous = this._pinByChannelId.get(pin.channelId);
+        if (previous && previous.id !== pin.id) this._pins.delete(previous.id);
+        this._pins.set(pin.id, pin);
+        this._pinByChannelId.set(pin.channelId, pin);
+        this._notify();
+        void this._persistPin(pin, previous?.id !== pin.id ? previous?.id : undefined);
+    }
+
+    private _removePinByChannel(channelId: string) {
+        const existing = this._pinByChannelId.get(channelId);
+        if (!existing) return;
+        this._pins.delete(existing.id);
+        this._pinByChannelId.delete(channelId);
+        this._notify();
+        void this._persistPinDelete(existing.id);
+    }
+
+    private _upsertFlag(flag: Flag) {
+        const previous = this._flagByMessageId.get(flag.messageId);
+        if (previous && previous.id !== flag.id) this._flags.delete(previous.id);
+        this._flags.set(flag.id, flag);
+        this._flagByMessageId.set(flag.messageId, flag);
+        this._notify();
+        void this._persistFlag(flag, previous?.id !== flag.id ? previous?.id : undefined);
+    }
+
+    private _removeFlagByMessage(messageId: string) {
+        const existing = this._flagByMessageId.get(messageId);
+        if (!existing) return;
+        this._flags.delete(existing.id);
+        this._flagByMessageId.delete(messageId);
+        this._notify();
+        void this._persistFlagDelete(existing.id);
+    }
+
+    private async _persistPin(pin: Pin, supersededId?: string) {
+        try {
+            const db = await initDB();
+            if (supersededId) await db.delete(STORES.PINS, supersededId);
+            await db.put(STORES.PINS, pin);
+        } catch (e) {
+            // eslint-disable-next-line no-console
+            console.warn("[ChannelService] _persistPin failed:", e);
+        }
+    }
+
+    private async _persistPinDelete(pinId: string) {
+        try {
+            const db = await initDB();
+            await db.delete(STORES.PINS, pinId);
+        } catch (e) {
+            // eslint-disable-next-line no-console
+            console.warn("[ChannelService] _persistPinDelete failed:", e);
+        }
+    }
+
+    private async _persistFlag(flag: Flag, supersededId?: string) {
+        try {
+            const db = await initDB();
+            if (supersededId) await db.delete(STORES.FLAGS, supersededId);
+            await db.put(STORES.FLAGS, flag);
+        } catch (e) {
+            // eslint-disable-next-line no-console
+            console.warn("[ChannelService] _persistFlag failed:", e);
+        }
+    }
+
+    private async _persistFlagDelete(flagId: string) {
+        try {
+            const db = await initDB();
+            await db.delete(STORES.FLAGS, flagId);
+        } catch (e) {
+            // eslint-disable-next-line no-console
+            console.warn("[ChannelService] _persistFlagDelete failed:", e);
+        }
     }
 
     // ---- Internal: IDB persistence (async, fire-and-forget) --------------

@@ -60,7 +60,13 @@ export function useChannelList(): UseChannelListResult {
 
     const { channels, unreadByKind } = useMemo(() => {
         const list = Array.from(snapshot.channels.values());
+        // Pinned channels float to the top; within each band (pinned
+        // vs not) we keep the recency sort. This matches the legacy
+        // sidebar's "pinned first" UX.
         list.sort((a, b) => {
+            const aPinned = snapshot.pinByChannelId.has(a.id);
+            const bPinned = snapshot.pinByChannelId.has(b.id);
+            if (aPinned !== bPinned) return aPinned ? -1 : 1;
             const ta = channelTimeKey(a);
             const tb = channelTimeKey(b);
             return tb.localeCompare(ta); // desc
@@ -70,7 +76,7 @@ export function useChannelList(): UseChannelListResult {
             counts[c.kind] = (counts[c.kind] ?? 0) + c.unreadCount;
         }
         return { channels: list, unreadByKind: counts };
-    }, [snapshot.channels]);
+    }, [snapshot.channels, snapshot.pinByChannelId]);
 
     return {
         channels,

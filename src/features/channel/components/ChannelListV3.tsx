@@ -10,6 +10,9 @@
  * sidebar is migrated.
  */
 
+import { useSyncExternalStore } from "react";
+
+import { channelService } from "../../../services/channel/channelService";
 import { ChannelKind } from "../../../types/channel";
 import { useChannelList } from "../hooks/useChannelList";
 
@@ -27,6 +30,24 @@ const KIND_LABEL: Record<ChannelKind, string> = {
 
 export function ChannelListV3({ selectedChannelId, onSelect }: ChannelListV3Props) {
     const { channels, unreadByKind, totalUnread, isLoading } = useChannelList();
+    // Subscribe to the store directly to get the pin index (the list
+    // hook already memoizes on `pinByChannelId`, but we re-read it
+    // here so each row's pin button knows whether to render as
+    // selected without a prop dance).
+    const snapshot = useSyncExternalStore(
+        channelService.subscribe,
+        channelService.getSnapshot,
+        channelService.getSnapshot
+    );
+
+    async function togglePin(channelId: string, isPinned: boolean) {
+        try {
+            if (isPinned) await channelService.unpinChannel(channelId);
+            else await channelService.pinChannel(channelId);
+        } catch {
+            /* optimistic UI rolls back on failure */
+        }
+    }
 
     return (
         <aside
@@ -74,6 +95,7 @@ export function ChannelListV3({ selectedChannelId, onSelect }: ChannelListV3Prop
                 )}
                 {channels.map((c) => {
                     const selected = c.id === selectedChannelId;
+                    const isPinned = snapshot.pinByChannelId.has(c.id);
                     return (
                         <li
                             key={c.id}
@@ -100,6 +122,15 @@ export function ChannelListV3({ selectedChannelId, onSelect }: ChannelListV3Prop
                                 >
                                     {KIND_LABEL[c.kind]}
                                 </span>
+                                {isPinned && (
+                                    <span
+                                        data-testid={`channel-list-v3-pinned-indicator-${c.id}`}
+                                        style={{ marginRight: 4, fontSize: 11 }}
+                                        title="Pinned"
+                                    >
+                                        📌
+                                    </span>
+                                )}
                                 <strong>{c.title || c.id.slice(0, 8)}</strong>
                                 <div
                                     style={{
@@ -126,6 +157,28 @@ export function ChannelListV3({ selectedChannelId, onSelect }: ChannelListV3Prop
                                     {c.unreadCount}
                                 </span>
                             )}
+                            <button
+                                type="button"
+                                onClick={(e) => {
+                                    // Stop the row's click handler from firing
+                                    // → toggling pin shouldn't ALSO open the
+                                    // channel.
+                                    e.stopPropagation();
+                                    void togglePin(c.id, isPinned);
+                                }}
+                                data-testid={`channel-list-v3-pin-${c.id}`}
+                                title={isPinned ? "Unpin channel" : "Pin channel"}
+                                style={{
+                                    background: "transparent",
+                                    border: "none",
+                                    cursor: "pointer",
+                                    padding: 0,
+                                    fontSize: 14,
+                                    opacity: isPinned ? 1 : 0.35,
+                                }}
+                            >
+                                📌
+                            </button>
                         </li>
                     );
                 })}

@@ -10,9 +10,9 @@
  * proof-of-life only.
  */
 
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, useSyncExternalStore } from "react";
 
-import { ChannelServiceError } from "../../../services/channel/channelService";
+import { channelService, ChannelServiceError } from "../../../services/channel/channelService";
 import { useAttachmentDraft } from "../hooks/useAttachmentDraft";
 import { useChannelThread } from "../hooks/useChannelThread";
 import { candidatesFromMessages, useMentionDraft } from "../hooks/useMentionDraft";
@@ -39,8 +39,23 @@ export function ThreadPanelV3({ channelId, rootMessageId, onClose }: ThreadPanel
     const mention = useMentionDraft(candidates);
     const attachments = useAttachmentDraft();
     const fileInputRef = useRef<HTMLInputElement | null>(null);
+    const snapshot = useSyncExternalStore(
+        channelService.subscribe,
+        channelService.getSnapshot,
+        channelService.getSnapshot
+    );
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    async function toggleFlag(messageId: string, isFlagged: boolean) {
+        try {
+            if (isFlagged) await channelService.unflagMessage(messageId);
+            else await channelService.flagMessage(messageId);
+        } catch (e) {
+            const err = e as ChannelServiceError;
+            setError(`${err.code ?? "INTERNAL"}: ${err.message ?? String(err)}`);
+        }
+    }
 
     async function send() {
         const text = mention.draft.trim();
@@ -132,6 +147,31 @@ export function ThreadPanelV3({ channelId, rootMessageId, onClose }: ThreadPanel
                                     currentUserId={currentUserId}
                                 />
                             )}
+                            {!root.deletedAt && (
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        void toggleFlag(
+                                            root.id,
+                                            snapshot.flagByMessageId.has(root.id)
+                                        )
+                                    }
+                                    data-testid={`thread-panel-v3-flag-${root.id}`}
+                                    style={{
+                                        marginLeft: 6,
+                                        background: "transparent",
+                                        border: "none",
+                                        cursor: "pointer",
+                                        fontSize: 12,
+                                        opacity: snapshot.flagByMessageId.has(root.id) ? 1 : 0.45,
+                                    }}
+                                    title={
+                                        snapshot.flagByMessageId.has(root.id) ? "Unflag" : "Flag"
+                                    }
+                                >
+                                    ⭐
+                                </button>
+                            )}
                             {!root.deletedAt && root.attachments.length > 0 && (
                                 <MessageAttachments
                                     messageId={root.id}
@@ -172,6 +212,35 @@ export function ThreadPanelV3({ channelId, rootMessageId, onClose }: ThreadPanel
                                         >
                                             (edited)
                                         </span>
+                                    )}
+                                    {!r.deletedAt && (
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                void toggleFlag(
+                                                    r.id,
+                                                    snapshot.flagByMessageId.has(r.id)
+                                                )
+                                            }
+                                            data-testid={`thread-panel-v3-flag-${r.id}`}
+                                            style={{
+                                                marginLeft: 6,
+                                                background: "transparent",
+                                                border: "none",
+                                                cursor: "pointer",
+                                                fontSize: 12,
+                                                opacity: snapshot.flagByMessageId.has(r.id)
+                                                    ? 1
+                                                    : 0.45,
+                                            }}
+                                            title={
+                                                snapshot.flagByMessageId.has(r.id)
+                                                    ? "Unflag"
+                                                    : "Flag"
+                                            }
+                                        >
+                                            ⭐
+                                        </button>
                                     )}
                                     {!r.deletedAt && r.attachments.length > 0 && (
                                         <MessageAttachments
