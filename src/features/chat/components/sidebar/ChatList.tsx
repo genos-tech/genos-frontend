@@ -1,3 +1,8 @@
+// `sort-keys` + `simple-import-sort/imports` disabled file-wide: this
+// legacy chat sidebar list carries Joy UI `sx` prop objects whose visual
+// grouping (positioning → sizing → typography → colors) is intentional,
+// and the file is slated for replacement by the v3 channel sidebar.
+/* eslint-disable sort-keys, simple-import-sort/imports */
 import { useEffect, useMemo, useRef, useState } from "react";
 import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
 import FlagOutlinedIcon from "@mui/icons-material/FlagOutlined";
@@ -617,6 +622,10 @@ export const ChatList = (props: ChatListProps) => {
             });
         }
         prevFirstNonPinnedKeyRef.current = key;
+        // Effect is keyed to `targetChats` reordering. `chatTypeLookup` /
+        // `targetChatType` are stable for a given tab; including them
+        // would cause unrelated re-scrolls on tab switches.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [targetChats]);
 
     // Scroll hooks
@@ -731,8 +740,11 @@ export const ChatList = (props: ChatListProps) => {
                 e.preventDefault();
 
                 const currentChat = useCM.currentMainChat;
+                // PUNCH LIST (v3 chatId migration): `chatId` is `string`
+                // post-flip; the legacy "no chat selected" sentinel was
+                // `-1`, now `""` (see `defaultChat` in `utils/defaults.ts`).
                 const currentIdx =
-                    currentChat && currentChat.chatId !== -1
+                    currentChat && currentChat.chatId !== ""
                         ? list.findIndex(
                               (c) =>
                                   c.chatId === currentChat.chatId &&
@@ -749,7 +761,11 @@ export const ChatList = (props: ChatListProps) => {
                 }
 
                 const next = list[nextIdx];
-                chatRouting.navigateToChat(next.chatType, next.chatId);
+                // PUNCH LIST (v3 chatId migration): `next.chatId` is
+                // `string` post-flip; `navigateToChat` still takes
+                // `chatId: number` because the route builder (`buildChatPath`)
+                // hasn't been migrated. Cast once at the boundary.
+                chatRouting.navigateToChat(next.chatType, next.chatId as unknown as number);
                 chatTypeLookup[targetChatType]?.current?.scrollToIndex({
                     index: nextIdx,
                     behavior: "smooth",

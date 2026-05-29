@@ -1,3 +1,7 @@
+/* eslint-disable simple-import-sort/imports */
+// `simple-import-sort` and the prettier import-sort plugin disagree on
+// the order of `react` vs the alphabetically-earlier `@mui/...` block.
+// Prettier wins (it reformats on save); disable simple-import-sort.
 import "./App.css";
 
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -24,7 +28,6 @@ import {
 } from "./components/layout/QuickMeetClipboardHost";
 import { ServiceSwitcherOverlay } from "./components/layout/ServiceSwitcherOverlay";
 import { Sidebar } from "./components/layout/sidebar";
-import { TooSmallScreen } from "./components/layout/TooSmallScreen";
 import { UrlLinkModal } from "./components/modals/UrlLinkModal";
 import { AvatarContextProvider } from "./components/ui/avatars/AvatarContext";
 import { InitialLoad } from "./components/ui/misc/InitialLoad";
@@ -135,7 +138,10 @@ const canonicalSpotlightHref = (r: SpotlightResult): string | null => {
 };
 
 export const App = () => {
-    const isTooSmall = useWindowSize();
+    // Call retained for the hook's resize-listener side effects; the
+    // `isTooSmall` gate around `<TooSmallScreen />` is currently
+    // commented out (see history) so the return value isn't read.
+    useWindowSize();
     const navigate = useNavigate();
 
     // Initialize app with authentication and basic setup
@@ -211,19 +217,19 @@ export const App = () => {
         };
     }, [handleApiHealth]);
 
-    // Project and task management
+    // Project and task management. Keys sorted per `sort-keys`.
     const { usePM, useTM, useSM } = useProjectTaskManagement({
-        myself,
         accessToken: accessToken || "",
         currentTeamId: useTEM.currentTeamId,
+        myself,
     });
 
-    // Service-specific initialization and management
+    // Service-specific initialization and management.
     const { useNM, useCM, useIM } = useServiceInitialization({
-        myself,
         accessToken: accessToken || "",
         currentTeamId: useTEM.currentTeamId,
         isLoading: useUISM.isLoading,
+        myself,
         socketInstance,
     });
 
@@ -235,9 +241,9 @@ export const App = () => {
     // happened while the WS was disconnected is silently missed.
     useWakeRefresh(() => {
         return refreshAllData({
-            myself,
             accessToken: accessToken || null,
             currentProjectId: usePM.currentProject?.projectId ?? null,
+            myself,
             onIDBRefreshed: async () => {
                 await Promise.allSettled([
                     useCM.funcSetAllChats(),
@@ -313,10 +319,10 @@ export const App = () => {
             if (!task?.id || !task.project?.projectId) return null;
             return {
                 projectId: task.project.projectId,
+                rootLabel: task.displayId ? `${task.displayId} · ${task.title}` : task.title,
                 // Walk up to the hierarchy root so the diagram shows the
                 // milestone / parent / siblings rather than a lone leaf.
                 rootTaskId: Number(task.rootTaskId ?? task.id),
-                rootLabel: task.displayId ? `${task.displayId} · ${task.title}` : task.title,
             };
         }
         if (useTM.currentPreviewKind === "milestone") {
@@ -330,11 +336,11 @@ export const App = () => {
             }
             return {
                 projectId: milestone.projectId,
-                rootTaskId: milestone.taskId,
                 // Match the label used by the in-pane button in
                 // MilestonePreviewInner so the shortcut and click paths
                 // open visually identical diagrams.
                 rootLabel: `${milestone.title || "Milestone"} · diagram`,
+                rootTaskId: milestone.taskId,
             };
         }
         return null;
@@ -348,21 +354,21 @@ export const App = () => {
 
     const { previewIndex: serviceSwitcherPreviewIndex, mruOrder: serviceSwitcherMruOrder } =
         useGlobalServiceShortcut({
-            onOpenTasksAndCreate: () => {
-                navigate("/workspace/tasks");
-                useTM.handleCreateTask();
-            },
+            onOpenCalendarModal: calendarModal.open,
+            onOpenHistory: openHistory,
             onOpenNotesAndCreate: () => {
                 navigate("/workspace/notes");
                 void useNM.handleCreateNewMyNote(null);
             },
-            onOpenCalendarModal: calendarModal.open,
-            onQuickMeetClipboard: () => meetClipboardRef.current?.trigger(),
-            onOpenHistory: openHistory,
             onOpenTaskDiagram: () => {
                 if (!taskDiagramTarget) return;
                 setTaskDiagramOpen(true);
             },
+            onOpenTasksAndCreate: () => {
+                navigate("/workspace/tasks");
+                useTM.handleCreateTask();
+            },
+            onQuickMeetClipboard: () => meetClipboardRef.current?.trigger(),
         });
 
     // Click-to-open: jump to the chat / thread / task / inbox that the
@@ -405,7 +411,7 @@ export const App = () => {
             // Defensive fallback: surface the chat service.
             navigate("/workspace/chat");
         },
-        [useCM, useTM, useUISM, usePM, navigate]
+        [useCM, useTM, usePM, navigate]
     );
 
     // Web notifications: hydrates prefs from backend, owns permission state,
@@ -564,9 +570,15 @@ export const App = () => {
                 localStorage.setItem("isToDoVisible", "true");
                 window.dispatchEvent(new CustomEvent("openTodoPane"));
                 if (selfDm) {
+                    // PUNCH LIST (v3 chatId migration): `selfDm.chatId`
+                    // is `string` post-flip; `moveToSpecificChat`'s
+                    // signature still takes `number` (its internal
+                    // legacy services do too — see the punch-list note
+                    // in `useChatManagement`). Cast at the boundary
+                    // until that hook's signature flips.
                     useCM.moveToSpecificChat(
                         1,
-                        selfDm.chatId,
+                        selfDm.chatId as unknown as number,
                         0,
                         false,
                         false,
@@ -583,6 +595,11 @@ export const App = () => {
                 return;
             }
         },
+        // `myself.userId` reads the auth-stable user id — it doesn't
+        // change for the lifetime of this component once auth settles,
+        // so including it would just churn the callback identity on
+        // every render with no behavior change.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
         [spotlight, navigate, useCM, useTM, usePM]
     );
 
@@ -618,14 +635,14 @@ export const App = () => {
     useEffect(() => {
         const current = useCM.currentThreadChat
             ? {
-                  chatType: useCM.currentThreadChat.chatType,
                   chatId: String(useCM.currentThreadChat.chatId),
+                  chatType: useCM.currentThreadChat.chatType,
                   threadId: useCM.currentThreadChat.threadId,
               }
             : useCM.currentMainChat
               ? {
-                    chatType: useCM.currentMainChat.chatType,
                     chatId: String(useCM.currentMainChat.chatId),
+                    chatType: useCM.currentMainChat.chatType,
                 }
               : useTM.currentPreviewTaskId
                 ? { taskId: useTM.currentPreviewTaskId }
@@ -633,20 +650,20 @@ export const App = () => {
         useNotif.setActiveSurface(current);
     }, [useCM.currentMainChat, useCM.currentThreadChat, useTM.currentPreviewTaskId, useNotif]);
 
-    // WebSocket synchronization
+    // WebSocket synchronization. Keys sorted per `sort-keys`.
     webSocketSync({
-        useCM: useCM,
         accessToken: accessToken,
         currentPreviewTaskId: useTM.currentPreviewTaskId,
         currentProject: usePM.currentProject,
         funcSetInboxItems: useIM.funcSetInboxItems,
         isLoading: useUISM.isLoading,
         myself: myself,
+        notificationManager: useNotif.manager,
         setIsTaskCommentUpdated: useTM.setIsTaskCommentUpdated,
         setIsTaskUpdatedBySomeone: useTM.setIsTaskUpdatedBySomeone,
         socket: socketInstance,
+        useCM: useCM,
         useTEM: useTEM,
-        notificationManager: useNotif.manager,
     });
 
     // if (isTooSmall) {
@@ -682,17 +699,21 @@ export const App = () => {
                                             <SpotlightOverlay
                                                 aiAnswersEnabled={spotlight.aiAnswersEnabled}
                                                 ask={spotlight.ask}
+                                                backToHistoryList={spotlight.backToHistoryList}
+                                                closeHistory={spotlight.closeHistory}
                                                 dailyUsage={spotlight.dailyUsage}
                                                 error={spotlight.error}
+                                                historyDetail={spotlight.historyDetail}
+                                                historyIsLoading={spotlight.historyIsLoading}
+                                                historyMode={spotlight.historyMode}
+                                                historySessions={spotlight.historySessions}
                                                 isLoading={spotlight.isLoading}
                                                 isOpen={spotlight.isOpen}
+                                                openHistory={spotlight.openHistory}
                                                 query={spotlight.query}
                                                 results={spotlight.results}
                                                 turns={spotlight.turns}
-                                                historyMode={spotlight.historyMode}
-                                                historySessions={spotlight.historySessions}
-                                                historyDetail={spotlight.historyDetail}
-                                                historyIsLoading={spotlight.historyIsLoading}
+                                                viewHistorySession={spotlight.viewHistorySession}
                                                 onApprove={spotlight.onApprove}
                                                 onAsk={spotlight.onAsk}
                                                 onCancel={spotlight.onCancel}
@@ -702,10 +723,6 @@ export const App = () => {
                                                 onQueryChange={spotlight.setQuery}
                                                 onReject={spotlight.onReject}
                                                 onSelect={handleSpotlightSelect}
-                                                openHistory={spotlight.openHistory}
-                                                viewHistorySession={spotlight.viewHistorySession}
-                                                backToHistoryList={spotlight.backToHistoryList}
-                                                closeHistory={spotlight.closeHistory}
                                             />
                                             <ConnectionStatusSnackbar
                                                 showApiDown={showApiDown}
@@ -749,11 +766,11 @@ export const App = () => {
                                                         value={{
                                                             myself,
                                                             setMyself,
-                                                            teamMemberProfiles:
-                                                                useTEM.teamMemberProfiles,
                                                             setTeamMemberProfiles:
                                                                 useTEM.setTeamMemberProfiles,
                                                             socket: socketInstance,
+                                                            teamMemberProfiles:
+                                                                useTEM.teamMemberProfiles,
                                                             useCM,
                                                             useUISM,
                                                         }}

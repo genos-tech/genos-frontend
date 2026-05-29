@@ -128,13 +128,18 @@ export const MobileChatHome = (props: MobileChatHomeProps) => {
         route.threadId !== undefined &&
         useCM.isThreadVisible === true &&
         !!useCM.currentThreadChat &&
+        // `ThreadProps.chatId` is still `number` (thread schema isn't
+        // part of the v3 chatId migration yet).
         useCM.currentThreadChat.chatId !== -1;
     const hasMain =
         !hasThread &&
         route.chatId !== undefined &&
         useCM.isMainChatVisible === true &&
         !!useCM.currentMainChat &&
-        useCM.currentMainChat.chatId !== -1;
+        // PUNCH LIST (v3 chatId migration): `ChatProps.chatId` is `string`
+        // post-flip; the legacy "no chat selected" sentinel was `-1`, now
+        // `""` (see `defaultChat` in `utils/defaults.ts`).
+        useCM.currentMainChat.chatId !== "";
     const showSidebar = !hasMain && !hasThread;
 
     return (

@@ -104,8 +104,11 @@ export const ModalChatView = (props: ModalChatViewProps) => {
         setModalChat(null);
         setModalThread(null);
 
+        // PUNCH LIST (v3 chatId migration): `AllChatProps.chatId` is
+        // `string` post-flip; `target.chatId` (history target) is still
+        // `number`. Stringify at the comparison.
         const summary = useCM.allChats.find(
-            (c) => c.chatId === target.chatId && c.chatType === target.chatType
+            (c) => c.chatId === String(target.chatId) && c.chatType === target.chatType
         );
         if (!summary) {
             setErrorMessage(t.common.modalView.chatUnavailable);
@@ -161,7 +164,8 @@ export const ModalChatView = (props: ModalChatViewProps) => {
                     chatType: summary.chatType,
                     dmPartnerUser: summary.dmPartnerUser,
                     isPrivate: summary.isPrivate,
-                    lastReadMessageId: lastMessage.messageId,
+                    // `ChatProps.lastReadMessageId` is `string` post-flip.
+                    lastReadMessageId: String(lastMessage.messageId),
                     latestMessage: summary.latestMessage,
                     latestMessageText: summary.latestMessageText,
                     messages,

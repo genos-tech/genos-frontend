@@ -1,3 +1,14 @@
+/*
+ * PUNCH LIST (v3 chatId migration):
+ * This legacy "move-to-chat" helper takes integer `chatId` params
+ * (callers are Spotlight / sidebar surfaces that still drive by
+ * `gm_id` / `dm_id`). v3 `AllChatProps.chatId` is `string` now, so
+ * comparisons and construction sites bridge with `String(...)`.
+ * Numeric services downstream (`popSpecificMessages`, `loadMDMHistory`,
+ * `loadSpecificGM`, the socket `joiningCGId` / `destCGId`) keep
+ * receiving the original integer. File is dead code once the v3
+ * channel-open + channel.create paths replace it.
+ */
 import { Socket } from "socket.io-client";
 
 import { ChatService } from "../../../db/services/chat.service";
@@ -24,10 +35,10 @@ export const moveToDMChat = async (
 ) => {
     if (chatId === -1 && socket !== null) {
         socket.emit("join", {
-            joiningCGId: -1, // dm_id or gm_id
-            joiningCGName: chatName, // dm_name or gm_name
             chatType: 1,
             dmPartnerUserId: dmPartnerUser.userId,
+            joiningCGId: -1, // dm_id or gm_id
+            joiningCGName: chatName, // dm_name or gm_name
         });
     }
 
@@ -47,7 +58,9 @@ export const moveToGMChat = async (
     isPrivate: boolean,
     useCM: ChatManagementState
 ) => {
-    const existingChat = useCM.allChats?.find((c) => c.chatId === chatId && c.chatType === 2);
+    const existingChat = useCM.allChats?.find(
+        (c) => c.chatId === String(chatId) && c.chatType === 2
+    );
     const fetchedMessages: MessageProps[] = await popSpecificMessages(chatId, 2);
     if (fetchedMessages) {
         useCM.setCurrentMainChat(
@@ -66,14 +79,15 @@ export const moveToGMChat = async (
     }
 };
 
+// Keys sorted alphabetically per `sort-keys`.
 const getJoinedMessage = () => {
     const msgs = getMessages();
     return [
         {
+            content: [{ styles: {}, text: msgs.chat.system.hasJoined, type: "text" }],
             type: "paragraph",
-            content: [{ type: "text", text: msgs.chat.system.hasJoined, styles: {} }],
         },
-        { type: "paragraph", content: [{ type: "text", text: "", styles: {} }] },
+        { content: [{ styles: {}, text: "", type: "text" }], type: "paragraph" },
     ];
 };
 
@@ -98,47 +112,54 @@ export const moveToSelectedChat = async (
 
         if (!isKnownChat && socket !== null && (chatType === 1 || chatType === 2)) {
             // If the chat is not known, send a message to the chat to join it.
+            // Socket emit payloads + the join ack callback. Keys
+            // sorted per `sort-keys`. The ack is not used — the work
+            // just runs in the next microtask after the server
+            // confirms the join.
             socket.emit(
                 "message",
                 {
-                    methodType: "POST",
-                    message: joinedMessage,
-                    destCGName: chatName,
-                    destCGId: chatId,
                     chatType: chatType,
+                    destCGId: chatId,
+                    destCGName: chatName,
                     dmPartnerUserId: chatType === 1 ? dmPartnerUser.userId : null,
-                    taskId: null,
-                    systemUserId: null,
-                    taskStatus: null,
+                    message: joinedMessage,
                     messageIdForPut: null,
+                    methodType: "POST",
+                    systemUserId: null,
+                    taskId: null,
+                    taskStatus: null,
                 },
-                async (ack: any) => {
+                async () => {
                     // For DM
                     if (chatType === 1) {
                         const message: MessageProps = {
-                            chatType: chatType,
-                            messageIdWithChatId: `${chatId}-1`,
                             chatId: chatId,
-                            messageId: 1,
+                            chatType: chatType,
                             content: joinedMessage,
                             contentText: msgs.chat.system.hasJoined,
-                            sender: myself,
-                            tsSent: getLocalCurrentTimestamp(),
-                            tsUpdated: getLocalCurrentTimestamp(),
+                            messageId: 1,
+                            messageIdWithChatId: `${chatId}-1`,
                             numReplies: 0,
+                            sender: myself,
                             taskId: null,
                             taskStatus: null,
+                            tsSent: getLocalCurrentTimestamp(),
+                            tsUpdated: getLocalCurrentTimestamp(),
                         };
+                        // `AllChatProps.chatId / lastReadMessageId` are
+                        // `string` post-v3 flip; `""` is the new "no
+                        // last-read" sentinel. Keys sorted per `sort-keys`.
                         const chat: AllChatProps = {
-                            chatId: chatId,
+                            chatId: String(chatId),
                             chatName: chatName,
                             chatType: chatType,
                             dmPartnerUser: dmPartnerUser,
-                            lastReadMessageId: -1,
+                            isPrivate: false,
+                            lastReadMessageId: "",
                             latestMessage: message,
                             latestMessageText: msgs.chat.system.hasJoined,
                             TSLastMessage: getLocalCurrentTimestamp(),
-                            isPrivate: false,
                         };
 
                         await addChat(chat, chat.chatType);
@@ -158,26 +179,26 @@ export const moveToSelectedChat = async (
                             accessToken
                         );
 
-                        const gmChat: ChatProps | undefined =
-                            loadedData?.chat_history?.[0];
+                        const gmChat: ChatProps | undefined = loadedData?.chat_history?.[0];
 
                         if (gmChat) {
                             const sortedMessages = gmChat.messages.sort(
                                 (a, b) => a.messageId - b.messageId
                             );
+                            // Keys sorted per `sort-keys`.
                             const newChat: AllChatProps = {
-                                chatType: chatType,
                                 chatId: gmChat.chatId,
                                 chatName: gmChat.chatName,
-                                lastReadMessageId: gmChat.lastReadMessageId,
+                                chatType: chatType,
                                 dmPartnerUser: gmChat.dmPartnerUser,
+                                isPinned: gmChat.isPinned,
+                                isPrivate: gmChat.isPrivate,
+                                lastReadMessageId: gmChat.lastReadMessageId,
                                 latestMessage: gmChat.latestMessage,
                                 latestMessageText: gmChat.latestMessageText,
-                                TSLastMessage: gmChat.TSLastMessage,
-                                isPrivate: gmChat.isPrivate,
                                 profileImagePath: gmChat.profileImagePath,
-                                isPinned: gmChat.isPinned,
                                 tsLastAllReadActivity: gmChat.tsLastAllReadActivity,
+                                TSLastMessage: gmChat.TSLastMessage,
                             };
                             await addChat(newChat, newChat.chatType);
                             await new ChatService().batchInsertGMMessages(sortedMessages);
@@ -193,7 +214,9 @@ export const moveToSelectedChat = async (
             if (chatType === 1) {
                 moveToDMChat(socket, chatId, chatName, dmPartnerUser, useCM);
             } else if (chatType === 4) {
-                const existingChat = useCM.allChats?.find((c) => c.chatId === chatId && c.chatType === 4);
+                const existingChat = useCM.allChats?.find(
+                    (c) => c.chatId === String(chatId) && c.chatType === 4
+                );
                 let fetchedMessages: MessageProps[] = await popSpecificMessages(chatId, 4);
                 if (fetchedMessages.length === 0) {
                     try {
@@ -201,8 +224,11 @@ export const moveToSelectedChat = async (
                         const teamName = existingChat?.dmPartnerUser?.teamName || "";
                         const userId = myself.userId;
                         const data = await loadMDMHistory(
-                            teamId || myself.teamId, teamName || myself.teamName,
-                            userId, accessToken, chatId
+                            teamId || myself.teamId,
+                            teamName || myself.teamName,
+                            userId,
+                            accessToken,
+                            chatId
                         );
                         const mdmChat = data?.chat_history?.[0];
                         if (mdmChat?.messages?.length > 0) {

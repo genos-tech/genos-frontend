@@ -703,9 +703,14 @@ export const ActivityDivider = (props: ActivityDividerProps) => {
                                             </Box>
                                         )}
                                         {chats.map((chat) => {
+                                            // PUNCH LIST (v3 chatId migration):
+                                            // `chat.chatId` is `string` post-flip;
+                                            // `makeInstanceKey` still keys by
+                                            // numeric chatId (legacy lookup).
+                                            // Cast once at the boundary.
                                             const key = makeInstanceKey(
                                                 chat.chatType,
-                                                chat.chatId
+                                                chat.chatId as unknown as number
                                             );
                                             const isChecked = selectedInstanceIds.has(key);
                                             const RowIcon = headerMeta?.icon;

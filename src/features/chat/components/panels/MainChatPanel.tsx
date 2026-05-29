@@ -1,5 +1,6 @@
 import { Box } from "@mui/joy";
 import { Panel } from "react-resizable-panels";
+import { Socket } from "socket.io-client";
 
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
@@ -32,7 +33,7 @@ interface MainChatPanelProps {
     isToDoVisible: boolean;
     setIsToDoVisible: (value: boolean) => void;
     useTG: UseTodoGroupsState;
-    socket: any;
+    socket: Socket | null;
     setMyself: (me: UserProps) => void;
     useUISM: UIStateManagementState;
 }
@@ -56,9 +57,12 @@ export const MainChatPanel = ({
     setMyself,
     useUISM,
 }: MainChatPanelProps) => {
+    // PUNCH LIST (v3 chatId migration): `chatId` is `string` post-flip;
+    // the legacy "no chat selected" sentinel was `-1`, now `""` (see
+    // `defaultChat` in `utils/defaults.ts`). Used twice below.
     return (
         <Panel id={"4"} maxSize={80} minSize={30} order={4} onResize={setMainChatPanelSize}>
-            {useCM.currentMainChat && useCM.currentMainChat.chatId !== -1 && (
+            {useCM.currentMainChat && useCM.currentMainChat.chatId !== "" && (
                 <MessagesPane
                     currentMainChatId={currentMainChatId}
                     currentWindowHeight={currentWindowHeight}
@@ -78,13 +82,13 @@ export const MainChatPanel = ({
                     useUISM={useUISM}
                 />
             )}
-            {!(useCM.currentMainChat && useCM.currentMainChat.chatId !== -1) && (
+            {!(useCM.currentMainChat && useCM.currentMainChat.chatId !== "") && (
                 <Box
                     sx={{
-                        height: "100%",
-                        display: "flex",
-                        justifyContent: "center",
                         alignItems: "center",
+                        display: "flex",
+                        height: "100%",
+                        justifyContent: "center",
                         width: "100%",
                     }}
                 >

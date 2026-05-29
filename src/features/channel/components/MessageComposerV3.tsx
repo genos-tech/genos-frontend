@@ -236,20 +236,27 @@ export function MessageComposerV3({
 
     const getMentionItems = useCallback(
         async (query: string): Promise<DefaultReactSuggestionItem[]> => {
-            const items: DefaultReactSuggestionItem[] = members.map((m) => ({
-                title: m.userName ?? m.userId,
-                onItemClick: () => {
-                    editor.insertInlineContent([
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        {
-                            type: "mention",
-                            props: { userId: m.userId, userName: m.userName ?? m.userId },
+            // PUNCH LIST: v3 `ChannelMember` only carries `userId / role /
+            // tsJoined` — display name isn't joined into the member row
+            // yet (see `v3ToLegacy.ts`). Read `userName` defensively so
+            // this picks up the field once `ChannelMember` is extended.
+            const items: DefaultReactSuggestionItem[] = members.map((m) => {
+                const displayName = (m as { userName?: string }).userName ?? m.userId;
+                return {
+                    title: displayName,
+                    onItemClick: () => {
+                        editor.insertInlineContent([
                             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        } as any,
-                        " ",
-                    ]);
-                },
-            }));
+                            {
+                                type: "mention",
+                                props: { userId: m.userId, userName: displayName },
+                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                            } as any,
+                            " ",
+                        ]);
+                    },
+                };
+            });
             return filterSuggestionItems(items, query);
         },
         [editor, members]

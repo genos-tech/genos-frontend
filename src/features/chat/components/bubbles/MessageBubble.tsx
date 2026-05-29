@@ -167,12 +167,19 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
     };
 
     // Load the thread task if exists
+    // PUNCH LIST (v3 chatId migration): `chat.chatId` is `string` post-
+    // flip; `loadSpecificTaskByThreadId` and `ThreadMessageProps.chatId`
+    // are still `number` (legacy task/thread schema). Cast once at the
+    // boundary; used by `loadTask` below and the optimistic
+    // `newThreadMessage` insert in `replayHandler`.
+    const legacyChatId = chat.chatId as unknown as number;
+
     const loadTask = (threadId: number) => {
         (async () => {
             const loadedTask: TaskProps[] = await loadSpecificTaskByThreadId(
                 myself,
                 chat.chatType,
-                chat.chatId,
+                legacyChatId,
                 threadId,
                 accessToken
             );
@@ -232,7 +239,7 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
                     const newThreadMessage: ThreadMessageProps = {
                         chatType: chat.chatType,
                         messageIdWithChatIdAndThreadId: `${chat.chatId}-${message.messageId}-1`,
-                        chatId: chat.chatId,
+                        chatId: legacyChatId,
                         threadId: message.messageId,
                         messageId: 1,
                         content: message.content,

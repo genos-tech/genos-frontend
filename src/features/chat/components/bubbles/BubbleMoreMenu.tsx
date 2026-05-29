@@ -1,5 +1,8 @@
+// `simple-import-sort` and the prettier import-sort plugin disagree on
+// the order of `react` vs `@mui/...`. Prettier wins (it reformats on
+// save); disable simple-import-sort.
+/* eslint-disable simple-import-sort/imports */
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
-import CodeIcon from "@mui/icons-material/Code";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
@@ -77,8 +80,9 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
         isSent,
         unwrapAll,
         setUnwrapAll,
-        unwrapCode,
-        setUnwrapCode,
+        // `unwrapCode` / `setUnwrapCode` are still on the prop shape
+        // (the wrap-code toggle menu item is commented out pending UX
+        // review). They are intentionally not destructured here.
     } = props;
 
     const { t } = useTranslation();
@@ -100,40 +104,35 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
         addMessage({ ...message, isFlagged: !isFlagged } as MessageProps, chat.chatType);
 
         if (!isFlagged) {
-            addFlaggedMessage({
-                flaggedMessageId: `${chat.chatType}-${chat.chatId}-${0}-${message.messageId}`,
-                chatType: chat.chatType,
+            // PUNCH LIST (v3 chatId migration): `FlaggedMessageProps.chatId`
+            // is still `number` (the persistence layer + the legacy
+            // `/chat/flagged-update/` endpoint key by integer ids).
+            // `chat.chatId` is `string` post-v3 flip — bridge via the
+            // `unknown` cast. Same runtime gap as `useHistoryTracker`:
+            // v3-shaped UUID chatIds round-trip as string-disguised-as-
+            // number through the flagged store. Fix properly by flipping
+            // `FlaggedMessageProps.chatId` to string in a follow-on.
+            // Keys sorted alphabetically per `sort-keys`.
+            const flaggedRow = {
                 chatId: chat.chatId,
-                threadId: 0,
-                messageId: message.messageId,
+                chatName: chat.chatName,
+                chatType: chat.chatType,
                 contentText: getFirstLine(message.content[0]),
-                sender: message.sender,
                 dmPartnerUser: chat.dmPartnerUser,
+                flaggedMessageId: `${chat.chatType}-${chat.chatId}-${0}-${message.messageId}`,
+                messageId: message.messageId,
                 project: chat.project,
+                sender: message.sender,
                 taskId: 0,
+                threadId: 0,
                 tsSent: message.tsSent,
-            } as FlaggedMessageProps);
+            } as unknown as FlaggedMessageProps;
+            addFlaggedMessage(flaggedRow);
 
             // Functional updater reads the latest list at call time — required
             // for the parent bubble's React.memo to remain safe (we no longer
             // close over `flaggedMessages` at render time).
-            setFlaggedMessages((prev) => [
-                ...prev,
-                {
-                    flaggedMessageId: `${chat.chatType}-${chat.chatId}-${0}-${message.messageId}`,
-                    chatType: chat.chatType,
-                    chatName: chat.chatName,
-                    chatId: chat.chatId,
-                    threadId: 0,
-                    messageId: message.messageId,
-                    contentText: getFirstLine(message.content[0]),
-                    sender: message.sender,
-                    dmPartnerUser: chat.dmPartnerUser,
-                    project: chat.project,
-                    taskId: 0,
-                    tsSent: message.tsSent,
-                },
-            ]);
+            setFlaggedMessages((prev) => [...prev, flaggedRow]);
         } else {
             const flaggedService = new FlaggedService();
             flaggedService.deleteFlaggedMessage(
@@ -150,11 +149,14 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
             );
         }
 
+        // PUNCH LIST: legacy `/chat/flagged-update/` endpoint takes
+        // `chat_id: number`. Cast at the boundary; UUID-shaped ids
+        // would 400 at the backend (same gap noted above).
         updateFlagMessage(accessToken, myself, {
+            chat_id: chat.chatId as unknown as number,
             chat_type: chat.chatType,
-            chat_id: chat.chatId,
-            thread_id: 0,
             message_id: message.messageId,
+            thread_id: 0,
         });
 
         setIsFlagged(!isFlagged);
@@ -204,43 +206,44 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
     const isProjectChat = chat.chatType === 3;
     const canDelete = message.numReplies < 2 && isOwnMessage;
 
+    // Keys sorted alphabetically (case-insensitive) per `sort-keys`.
     const items: MoreMenuItem[] = [
         {
+            icon: <OpenInNewRoundedIcon sx={{ fontSize: 18 }} />,
             id: "openTask",
             label: t.chat.messageActions.openTask,
-            icon: <OpenInNewRoundedIcon sx={{ fontSize: 18 }} />,
             onClick: handleOpenTaskClick,
             visible: isProjectChat && isSystemMessage && message.taskId !== null,
         },
         {
+            icon: <ReplyRoundedIcon sx={{ fontSize: 18 }} />,
             id: "reply",
             label: isProjectChat
                 ? t.chat.messageActions.addCommentToTask
                 : t.chat.messageActions.replyInThread,
-            icon: <ReplyRoundedIcon sx={{ fontSize: 18 }} />,
             onClick: handleReplyClick,
         },
         {
+            active: isFlagged,
+            icon: <FlagRoundedIcon sx={{ fontSize: 18 }} />,
             id: "flag",
             label: isFlagged
                 ? t.chat.messageActions.removeFlag
                 : t.chat.messageActions.flagForLater,
-            icon: <FlagRoundedIcon sx={{ fontSize: 18 }} />,
             onClick: handleFlagClick,
-            active: isFlagged,
         },
         {
+            icon: <ContentCopyRoundedIcon sx={{ fontSize: 18 }} />,
             id: "copyLink",
             label: t.chat.messageActions.copyMessageLink,
-            icon: <ContentCopyRoundedIcon sx={{ fontSize: 18 }} />,
             onClick: handleCopyLinkClick,
         },
         {
+            active: unwrapAll,
+            icon: <WrapTextIcon sx={{ fontSize: 18 }} />,
             id: "unwrapAll",
             label: unwrapAll ? t.chat.messageActions.wrapAll : t.chat.messageActions.unwrapAll,
-            icon: <WrapTextIcon sx={{ fontSize: 18 }} />,
             onClick: () => setUnwrapAll(!unwrapAll),
-            active: unwrapAll,
         },
         // {
         //     id: "unwrapCode",
@@ -250,19 +253,19 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
         //     active: unwrapCode,
         // },
         {
+            icon: <EditRoundedIcon sx={{ fontSize: 18 }} />,
             id: "edit",
             label: t.chat.messageActions.editMessage,
-            icon: <EditRoundedIcon sx={{ fontSize: 18 }} />,
             onClick: handleEditClick,
             visible: isOwnMessage,
         },
         {
+            danger: true,
+            icon: <DeleteOutlineRoundedIcon sx={{ fontSize: 18 }} />,
             id: "delete",
             label: t.chat.messageActions.deleteMessage,
-            icon: <DeleteOutlineRoundedIcon sx={{ fontSize: 18 }} />,
             onClick: handleDeleteClick,
             visible: canDelete,
-            danger: true,
         },
     ];
 
@@ -273,14 +276,14 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
             <ModalDeleteMessage
                 accessToken={accessToken}
                 currentChat={chat}
+                flaggedMessages={flaggedMessages}
                 isThread={false}
                 message={message}
                 openDeleteMessage={openDeleteMessage}
                 setCurrentChat={setCurrentChat}
+                setFlaggedMessages={setFlaggedMessages}
                 setOpenDeleteMessage={setOpenDeleteMessage}
                 socket={socket}
-                flaggedMessages={flaggedMessages}
-                setFlaggedMessages={setFlaggedMessages}
             />
         </Box>
     );

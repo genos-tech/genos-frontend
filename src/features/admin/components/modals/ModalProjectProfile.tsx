@@ -1,3 +1,11 @@
+// `sort-keys` is disabled file-wide: this 1200-line modal carries ~80
+// violations in Joy UI `sx` prop objects whose visual grouping
+// (positioning vs sizing vs typography) is intentional and not worth
+// re-sorting given the punch-list note above marks the modal as dead
+// code once the v3 channel-update path replaces these legacy services.
+// `simple-import-sort` is disabled because the prettier import-sort
+// plugin disagrees with it on react-vs-@mui ordering; prettier wins.
+/* eslint-disable sort-keys, simple-import-sort/imports, react/jsx-sort-props */
 import { useEffect, useMemo, useRef, useState } from "react";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import CloseIcon from "@mui/icons-material/Close";
@@ -86,6 +94,16 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
     const styles = isDark ? ProfileModalStyles.dark : ProfileModalStyles.light;
     const palette = isDark ? purplePalette.dark : purplePalette.light;
 
+    // PUNCH LIST (v3 chatId migration): every project service this
+    // modal calls (`updateProjectProfile`, `leaveProject`,
+    // `deletePMChatData`, `loadProjectProfile`, the image-version hook)
+    // still takes `chatId: number` because they hit legacy
+    // `/api/v2/project/...` endpoints. v3 `AllChatProps.chatId` is
+    // `string` post-flip — bridge with one local cast. At runtime
+    // UUID-shaped chatIds will 400 at the backend; this whole modal
+    // is dead code once the v3 channel-update path replaces it.
+    const pmChatIdLegacy = pmChat.chatId as unknown as number;
+
     const [projectProfile, setProjectProfile] = useState<ProjectProfileProps | null>(null);
 
     // Member search state
@@ -132,7 +150,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
         setNameError(null);
         const ok = await updateProjectProfile(
             accessToken,
-            pmChat.chatId,
+            pmChatIdLegacy,
             { projectName: next },
             setNameError
         );
@@ -155,7 +173,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
 
     const handleTransferConfirm = async (newOwnerId: string) => {
         if (!projectProfile) return false;
-        const ok = await updateProjectProfile(accessToken, pmChat.chatId, {
+        const ok = await updateProjectProfile(accessToken, pmChatIdLegacy, {
             ownerId: newOwnerId,
         });
         if (ok) {
@@ -180,7 +198,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
 
     const handleLeaveProject = async () => {
         if (!myself.teamId) return false;
-        const ok = await leaveProject(accessToken, myself.teamId, pmChat.chatId, myself.userId);
+        const ok = await leaveProject(accessToken, myself.teamId, pmChatIdLegacy, myself.userId);
         if (!ok) return false;
         // Drop the project chat from the in-memory list so the sidebar
         // updates immediately.
@@ -202,7 +220,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
         // Purge IDB so cached project data (messages, threads, chat row)
         // doesn't keep rendering after leave. Best-effort — failures are
         // swallowed inside the helper.
-        await new ChatService().deletePMChatData(pmChat.chatId);
+        await new ChatService().deletePMChatData(pmChatIdLegacy);
         setOpenModalProjectProfile(false);
         return true;
     };
@@ -235,7 +253,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
             }
             setProjectProfile({ ...projectProfile, code: next });
             setCodeEditMode(false);
-        } catch (_err) {
+        } catch {
             setCodeError("Network error.");
         } finally {
             setCodeSaving(false);
@@ -315,7 +333,11 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
     };
 
     const loadProjectProfileData = async () => {
-        const projectProfile = await loadProjectProfile(myself.teamId, pmChat.chatId, accessToken);
+        const projectProfile = await loadProjectProfile(
+            myself.teamId,
+            pmChatIdLegacy,
+            accessToken
+        );
         setProjectProfile(projectProfile);
     };
 
@@ -323,6 +345,10 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
         if (openModalProjectProfile) {
             loadProjectProfileData();
         }
+        // Intentional: load on open only. Including `loadProjectProfileData`
+        // would refire whenever the closure rebinds (every render); we
+        // only want one fetch per open transition.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [openModalProjectProfile]);
 
     return (

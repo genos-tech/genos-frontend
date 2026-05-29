@@ -116,11 +116,15 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
         }
     }, [useNM.currentTaskNote]);
 
+    // PUNCH LIST (v3 chatId migration): `AllChatProps.chatId` is `string`
+    // post-flip; `projectId` is still `number`. Legacy PM chats used the
+    // numeric project id as their chatId, so stringifying preserves the
+    // intended match.
     const pmChat = useCM.allChats.find(
         (chat) =>
             chat.chatType === 3 &&
             useNM.currentTaskNote &&
-            chat.chatId === useNM.currentTaskNote.projectId
+            chat.chatId === String(useNM.currentTaskNote.projectId)
     );
 
     // In task-page mode TaskNoteMain renders standalone — the editor

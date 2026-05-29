@@ -33,8 +33,8 @@ export const addMembersToMDM = async (
 
         for (const memberId of memberIds) {
             const res = await api.post("/mdm/join/", {
-                mdm_id: mdmId,
                 attendee_id: memberId,
+                mdm_id: mdmId,
                 team_id: myself.teamId,
                 team_name: myself.teamName,
             });
@@ -112,8 +112,8 @@ export const convertDMToMDM = async (
                         lastReadMessageId: mdmChat.lastReadMessageId ?? -1,
                         latestMessage: mdmChat.latestMessage,
                         latestMessageText: mdmChat.latestMessageText ?? "",
-                        TSLastMessage: mdmChat.TSLastMessage ?? getLocalCurrentTimestamp(),
                         mdmMembers: mdmChat.mdmMembers,
+                        TSLastMessage: mdmChat.TSLastMessage ?? getLocalCurrentTimestamp(),
                     };
                     await addChat(chatForState, 4);
                     useCM.setAllChats((prev: AllChatProps[]) => {
@@ -139,32 +139,32 @@ export const convertDMToMDM = async (
             socket.emit(
                 "join",
                 {
-                    joiningCGId: chatId,
-                    joiningCGName: chatName,
                     chatType: 4,
                     dmPartnerUser: defaultDmPartner,
+                    joiningCGId: chatId,
+                    joiningCGName: chatName,
                 },
                 () => {
                     socket.emit("message", {
-                        methodType: "POST",
+                        chatType: 4,
+                        destCGId: chatId,
+                        destCGName: chatName,
+                        dmPartnerUserId: null,
                         message: [
                             {
+                                content: [{ styles: {}, text: startedConversation, type: "text" }],
                                 type: "paragraph",
-                                content: [{ type: "text", text: startedConversation, styles: {} }],
                             },
                             {
+                                content: [{ styles: {}, text: "", type: "text" }],
                                 type: "paragraph",
-                                content: [{ type: "text", text: "", styles: {} }],
                             },
                         ],
-                        destCGName: chatName,
-                        destCGId: chatId,
-                        chatType: 4,
-                        dmPartnerUserId: null,
+                        messageIdForPut: null,
+                        methodType: "POST",
+                        systemUserId: null,
                         taskId: null,
                         taskStatus: null,
-                        systemUserId: null,
-                        messageIdForPut: null,
                     });
                 }
             );
@@ -173,28 +173,26 @@ export const convertDMToMDM = async (
         const ts = getLocalCurrentTimestamp();
         const allMembers: MDMMemberProps[] = [
             {
-                userId: myself.userId,
-                userName: myself.userName,
-                userEmail: myself.userEmail,
                 avatarImgPath: myself.avatarImgPath,
                 teamId: myself.teamId,
                 teamName: myself.teamName,
+                userEmail: myself.userEmail,
+                userId: myself.userId,
+                userName: myself.userName,
             },
             ...(selectedMembers || []).map((m) => ({
-                userId: m.userId,
-                userName: m.userName,
-                userEmail: m.userEmail,
                 avatarImgPath: m.avatarImgPath,
                 teamId: m.teamId,
                 teamName: m.teamName,
+                userEmail: m.userEmail,
+                userId: m.userId,
+                userName: m.userName,
             })),
         ];
 
         const initialMessage: MessageProps = {
-            chatType: 4,
-            messageIdWithChatId: `${chatId}-1`,
             chatId: chatId,
-            messageId: 1,
+            chatType: 4,
             // Two-block shape (text paragraph + trailing empty paragraph)
             // matches what the socket emit above sends and what the other
             // system messages produce (see `getCreateMDMMessage` /
@@ -203,30 +201,38 @@ export const convertDMToMDM = async (
             // single-block array becomes empty and BlockNote throws.
             content: [
                 {
+                    content: [{ styles: {}, text: startedConversation, type: "text" }],
                     type: "paragraph",
-                    content: [{ type: "text", text: startedConversation, styles: {} }],
                 },
-                { type: "paragraph", content: [{ type: "text", text: "", styles: {} }] },
+                { content: [{ styles: {}, text: "", type: "text" }], type: "paragraph" },
             ],
             contentText: startedConversation,
-            sender: myself,
+            messageId: 1,
+            messageIdWithChatId: `${chatId}-1`,
             numReplies: 0,
+            sender: myself,
             taskId: null,
             taskStatus: null,
             tsSent: ts,
             tsUpdated: ts,
         };
 
+        // PUNCH LIST (v3 chatId migration): `AllChatProps.chatId` and
+        // `lastReadMessageId` are `string` post-flip. The newly created
+        // MDM id from `data.chatId || data.mdm_id` is typed `any` here
+        // (untyped backend response), so it slides through; only the
+        // numeric `1` sentinel needs stringification.
+        // Keys sorted alphabetically per `sort-keys` (case-insensitive).
         const newChat: AllChatProps = {
             chatId: chatId,
-            chatType: 4,
             chatName: chatName,
+            chatType: 4,
             dmPartnerUser: defaultDmPartner,
-            lastReadMessageId: 1,
+            lastReadMessageId: "1",
             latestMessage: initialMessage,
             latestMessageText: startedConversation,
-            TSLastMessage: ts,
             mdmMembers: allMembers,
+            TSLastMessage: ts,
         };
 
         await addChat(newChat, 4);
@@ -280,9 +286,13 @@ export const addMembersToChat = async (
         );
         return result !== null;
     } else if (chat.chatType === 4) {
+        // PUNCH LIST (v3 chatId migration): `chat.chatId` is `string`
+        // post-flip; `addMembersToMDM` still takes `mdmId: number`
+        // because it hits the legacy `/mdm/join/` endpoint. Cast once
+        // at the boundary.
         const success = await addMembersToMDM(
             accessToken,
-            chat.chatId,
+            chat.chatId as unknown as number,
             newMemberIds,
             myself,
             socket
@@ -290,12 +300,12 @@ export const addMembersToChat = async (
 
         if (success) {
             const newMemberEntries: MDMMemberProps[] = (selectedMembers || []).map((m) => ({
-                userId: m.userId,
-                userName: m.userName,
-                userEmail: m.userEmail,
                 avatarImgPath: m.avatarImgPath,
                 teamId: m.teamId,
                 teamName: m.teamName,
+                userEmail: m.userEmail,
+                userId: m.userId,
+                userName: m.userName,
             }));
             const updatedMembers = [
                 ...(chat.mdmMembers || []),

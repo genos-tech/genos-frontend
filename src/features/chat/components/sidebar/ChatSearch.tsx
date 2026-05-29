@@ -225,8 +225,11 @@ export const ChatSearch = (props: ChatSearchProps) => {
                           : option.name
                 }
                 renderOption={(props, option) => {
+                    // PUNCH LIST (v3 chatId migration): `AllChatProps.chatId`
+                    // is `string` post-flip; `option.id` is the legacy
+                    // numeric GM id. Stringify at the comparison.
                     const gmChat: AllChatProps | undefined = useCM.allChats.find(
-                        (chat) => chat.chatId === option.id && chat.chatType === 2
+                        (chat) => chat.chatId === String(option.id) && chat.chatType === 2
                     );
                     return (
                         <AutocompleteOption

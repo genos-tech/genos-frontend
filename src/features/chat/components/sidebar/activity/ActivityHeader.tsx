@@ -45,10 +45,13 @@ export const ActivityHeader: React.FC<ActivityHeaderProps> = ({
     // from `useCM.allChats` when available. Other chat types carry a
     // viewer-independent title (group / project / task / note name) so
     // the activity payload value is fine for them.
+    // PUNCH LIST (v3 chatId migration): `AllChatProps.chatId` is `string`
+    // post-flip; `ActivityMessageProps.chatId` is still `number`.
+    // Stringify at the comparison.
     const resolvedChatName =
         activity.chatType === 1
             ? (useCM.allChats.find(
-                  (chat) => chat.chatType === 1 && chat.chatId === activity.chatId
+                  (chat) => chat.chatType === 1 && chat.chatId === String(activity.chatId)
               )?.chatName ?? activity.chatName)
             : activity.chatName;
 

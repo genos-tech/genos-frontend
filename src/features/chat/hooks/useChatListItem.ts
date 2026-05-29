@@ -1,6 +1,5 @@
 import { useState } from "react";
 
-import { ChatService } from "../../../db/services/chat.service";
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { TaskManagementState } from "../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../types/admin";
@@ -40,23 +39,32 @@ export const useChatListItem = ({
 
     const isYou = myself.userId === chat.dmPartnerUser.userId;
 
-    const defineNewChat = (messages: any): ChatProps => {
+    // PUNCH LIST (v3 chatId migration): `chat.chatId` is `string`
+    // post-flip; `popSpecificMessages` + `loadMDMHistory` still take
+    // `chatId: number` because they hit legacy `/api/v2/...` endpoints.
+    // Cast once at the boundary. `lastReadMessageId` is stringified
+    // to match the v3 `ChatProps.lastReadMessageId: string` shape;
+    // `""` is the new "no last-read" sentinel (replaces legacy `-1`).
+    const chatIdLegacy = chat.chatId as unknown as number;
+
+    // Keys sorted alphabetically per `sort-keys`.
+    const defineNewChat = (messages: MessageProps[]): ChatProps => {
         const lastMsg = messages.length > 0 ? messages[messages.length - 1] : chat.latestMessage;
         return {
             chatId: chat.chatId,
             chatName: chat.chatName,
             chatType: chat.chatType,
             dmPartnerUser: chat.dmPartnerUser,
-            lastReadMessageId: lastMsg?.messageId ?? -1,
-            messages: messages,
+            isPinned: chat.isPinned,
+            isPrivate: chat.isPrivate,
+            lastReadMessageId: lastMsg?.messageId != null ? String(lastMsg.messageId) : "",
             latestMessage: chat.latestMessage,
             latestMessageText: chat.latestMessageText,
-            TSLastMessage: chat.TSLastMessage,
-            systemUserId: chat.systemUserId,
-            project: chat.project,
-            isPrivate: chat.isPrivate,
+            messages: messages,
             profileImagePath: chat.profileImagePath,
-            isPinned: chat.isPinned,
+            project: chat.project,
+            systemUserId: chat.systemUserId,
+            TSLastMessage: chat.TSLastMessage,
         };
     };
 
@@ -92,12 +100,12 @@ export const useChatListItem = ({
                 `${chat.chatType}-${chat.chatId}-${chat.chatName}`
         ) {
             toggleMessagesPane();
-            popSpecificMessages(chat.chatId, chat.chatType)
+            popSpecificMessages(chatIdLegacy, chat.chatType)
                 .then(async (messages) => {
                     let finalMessages = messages;
 
                     if (chat.chatType === 4 && finalMessages.length === 0) {
-                        finalMessages = await loadMDMMessagesFromBackend(chat.chatId);
+                        finalMessages = await loadMDMMessagesFromBackend(chatIdLegacy);
                     }
 
                     const newChat: ChatProps = defineNewChat(finalMessages);
@@ -134,7 +142,7 @@ export const useChatListItem = ({
             `${chat.chatType}-${chat.chatId}-${chat.chatName}`
         ) {
             toggleMessagesPane();
-            popSpecificMessages(chat.chatId, chat.chatType)
+            popSpecificMessages(chatIdLegacy, chat.chatType)
                 .then((messages) => {
                     useCM.setCurrentSubChat(defineNewChat(messages));
                     useCM.setIsMainChatVisible(true);
@@ -160,13 +168,14 @@ export const useChatListItem = ({
         funcSetAllChats();
     };
 
+    // Keys sorted alphabetically per `sort-keys`.
     return {
         isPinned,
-        setIsPinned,
-        selected,
         isYou,
         onClickHandler,
-        splitOpenHandler,
         pinChatHandler,
+        selected,
+        setIsPinned,
+        splitOpenHandler,
     };
 };

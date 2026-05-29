@@ -48,8 +48,11 @@ export const ActivityAvatar: React.FC<ActivityAvatarProps> = ({
     const isTaskComment = activity.chatType === 4 && !!activity.taskId;
     const isMDM = activity.chatType === 4 && !activity.taskId;
     const lookupChatType = isTaskComment ? 3 : activity.chatType;
+    // PUNCH LIST (v3 chatId migration): `AllChatProps.chatId` is `string`
+    // post-flip; `ActivityMessageProps.chatId` is still `number` (legacy
+    // activity payload). Stringify at the comparison.
     const chat = useCM.allChats.find(
-        (chat) => chat.chatType === lookupChatType && chat.chatId === activity.chatId
+        (chat) => chat.chatType === lookupChatType && chat.chatId === String(activity.chatId)
     );
 
     // DM Avatar (chatType === 1).

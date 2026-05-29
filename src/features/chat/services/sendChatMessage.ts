@@ -30,6 +30,11 @@ export const sendChatMessage = ({
 }: {
     socket: Socket;
     chat: ChatProps;
+    // `any[]` matches the existing call-site (BlockNote editor passes
+    // its raw block array); tightening to `PartialBlock[]` cascades
+    // into the editor wrapper. Re-tightened during the unified
+    // messaging rewrite.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     content: any[];
     myself: UserProps;
     useCM: ChatManagementState;
@@ -40,49 +45,60 @@ export const sendChatMessage = ({
         const nextMessageId = Number(chat.latestMessage?.messageId) + 1;
         const timestamp = getLocalCurrentTimestamp();
 
+        // PUNCH LIST (v3 chatId migration): `ChatProps.chatId` /
+        // `lastReadMessageId` are `string` post-flip; `MessageProps.chatId`
+        // is still `number` (legacy message schema). Cast once at the
+        // boundary. `lastReadMessageId` is the just-sent message id
+        // stringified — the previous code did `chat.lastReadMessageId + 1`
+        // (now string concat → `"12" + 1 === "121"`) and
+        // `messages[last].messageId + 1` (number + 1, wrong final type).
+        // Both branches converge to `String(nextMessageId)`.
+        const legacyChatId = chat.chatId as unknown as number;
+        const nextMessageIdStr = String(nextMessageId);
+
         socket.emit(
             "message",
             {
-                methodType: "POST",
-                message: content,
-                destCGName: chat.chatName,
-                destCGId: chat.chatId,
                 chatType: chat.chatType,
+                destCGId: chat.chatId,
+                destCGName: chat.chatName,
                 dmPartnerUserId: chat.dmPartnerUser.userId,
+                message: content,
+                messageIdForPut: null,
+                methodType: "POST",
+                systemUserId: null,
                 taskId: null,
                 taskStatus: null,
-                systemUserId: null,
-                messageIdForPut: null,
             },
             async () => {
                 const newMessage: MessageProps = {
+                    chatId: legacyChatId,
                     chatType: chat.chatType,
-                    systemUserId: chat.systemUserId,
-                    messageIdWithChatId: `${chat.chatId}-${String(nextMessageId)}`,
-                    chatId: chat.chatId,
-                    messageId: nextMessageId,
                     content,
                     contentText,
-                    sender: myself,
-                    tsSent: timestamp,
-                    tsUpdated: timestamp,
+                    messageId: nextMessageId,
+                    messageIdWithChatId: `${chat.chatId}-${nextMessageIdStr}`,
                     numReplies: 0,
+                    sender: myself,
+                    systemUserId: chat.systemUserId,
                     taskId: null,
                     taskStatus: null,
+                    tsSent: timestamp,
+                    tsUpdated: timestamp,
                 };
 
                 const updatedChat: ChatProps = {
                     chatId: chat.chatId,
                     chatName: chat.chatName,
                     chatType: chat.chatType,
-                    systemUserId: chat.systemUserId,
                     dmPartnerUser: chat.dmPartnerUser,
-                    lastReadMessageId: chat.lastReadMessageId + 1,
-                    messages: [...chat.messages, newMessage],
+                    lastReadMessageId: nextMessageIdStr,
                     latestMessage: newMessage,
                     latestMessageText: contentText,
-                    TSLastMessage: timestamp,
+                    messages: [...chat.messages, newMessage],
                     profileImagePath: chat.profileImagePath,
+                    systemUserId: chat.systemUserId,
+                    TSLastMessage: timestamp,
                 };
                 setCurrentChat(updatedChat);
 
@@ -92,15 +108,15 @@ export const sendChatMessage = ({
                 const newAllChat: AllChatProps = {
                     chatId: chat.chatId,
                     chatName: chat.chatName,
-                    systemUserId: chat.systemUserId,
                     chatType: chat.chatType,
                     dmPartnerUser: chat.dmPartnerUser,
-                    lastReadMessageId: chat.messages[chat.messages.length - 1].messageId + 1,
+                    lastReadMessageId: nextMessageIdStr,
                     latestMessage: newMessage,
                     latestMessageText: contentText,
-                    TSLastMessage: timestamp,
-                    profileImagePath: chat.profileImagePath,
                     mdmMembers: existingAllChat?.mdmMembers,
+                    profileImagePath: chat.profileImagePath,
+                    systemUserId: chat.systemUserId,
+                    TSLastMessage: timestamp,
                 };
 
                 await addMessage(newMessage, newAllChat.chatType);

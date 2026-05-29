@@ -1,3 +1,11 @@
+// `sort-keys` + `react/jsx-sort-props` disabled file-wide: this 660+
+// line legacy activity list item carries ~45 violations in Joy UI
+// `sx` prop objects and prop lists whose visual grouping is intentional
+// and not worth re-sorting given the surface is legacy chat code
+// slated for replacement by the v3 channel UI. `simple-import-sort`
+// disabled because the prettier import-sort plugin disagrees with it
+// on react-vs-@mui ordering.
+/* eslint-disable sort-keys, react/jsx-sort-props, simple-import-sort/imports */
 import * as React from "react";
 import { Box, ListDivider, ListItem, Stack } from "@mui/joy";
 import ListItemButton from "@mui/joy/ListItemButton";
@@ -17,6 +25,7 @@ import {
     ActivityMessageProps,
     AllChatProps,
     ChatProps,
+    MessageProps,
     ThreadMessageProps,
     ThreadProps,
 } from "../../../../../types/chat";
@@ -132,10 +141,14 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
     };
     const noteTypeForActivity = NOTE_CHAT_TYPE_TO_NOTE_TYPE[activity.chatType];
 
-    const defineNewChat = (messages: any, moveToSpecificIndex: string) => {
+    const defineNewChat = (messages: MessageProps[], moveToSpecificIndex: string) => {
         const chatType: number = isTaskComment ? 3 : activity.chatType;
+        // PUNCH LIST (v3 chatId migration): activity payloads still carry
+        // numeric `chatId` (legacy `/` socket); `AllChatProps.chatId` is
+        // `string` post-flip. Stringify the legacy int once and reuse.
+        const activityChatIdStr = String(activity.chatId);
         const currentChat: AllChatProps = useCM.allChats.filter(
-            (chat) => chat.chatType === chatType && chat.chatId === activity.chatId
+            (chat) => chat.chatType === chatType && chat.chatId === activityChatIdStr
         )[0];
         // For DMs (and MDMs) the activity payload's `chatName` / `dmPartnerUser*`
         // are sender-centric: the sender's UI passes their own view of the
@@ -144,8 +157,16 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
         // (from `useCM.allChats`) is server-resolved per-user, so prefer it
         // whenever it's available — fall back to the activity payload only
         // when allChats hasn't synced yet.
+        // `lastReadMessageId` is `string` post-flip; compare-as-numbers
+        // for legacy stringified ints, fall back to the activity's
+        // messageId on first read. NaN-on-UUID lands on the activity
+        // side, which is the safer side of the migration gap.
+        const previousLastRead = Number(currentChat?.lastReadMessageId || "0");
+        const nextLastRead = Number.isFinite(previousLastRead)
+            ? Math.max(previousLastRead, activity.messageId)
+            : activity.messageId;
         const newChat: ChatProps = {
-            chatId: activity.chatId,
+            chatId: activityChatIdStr,
             chatName: currentChat?.chatName ?? activity.chatName,
             chatType: chatType,
             dmPartnerUser: currentChat?.dmPartnerUser ?? {
@@ -158,12 +179,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                 tsLastSeen: "",
                 tsJoined: "",
             },
-            lastReadMessageId:
-                currentChat && currentChat.lastReadMessageId
-                    ? activity.messageId > currentChat.lastReadMessageId
-                        ? activity.messageId
-                        : currentChat.lastReadMessageId
-                    : activity.messageId,
+            lastReadMessageId: String(nextLastRead),
             messages: messages,
             latestMessage: messages[messages.length - 1],
             latestMessageText: messages[messages.length - 1].contentText,
@@ -191,7 +207,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
             `${useCM.currentSubChat?.chatId}-${useCM.currentSubChat?.chatName}` ===
                 `${activity.chatId}-${activity.chatName}`;
 
-        const handleMessages = (messages: any) => {
+        const handleMessages = (messages: MessageProps[]) => {
             if (shouldUseMainChat) {
                 useCM.setCurrentMainChat(defineNewChat(messages, messageUniqueKey));
             } else if (shouldUseSubChat) {
@@ -330,9 +346,12 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                 // threads the activity payload's chatName + dmPartnerUser*
                 // are wrong from the receiver's POV. Prefer the server-
                 // resolved per-user fields from `useCM.allChats`.
+                // Same v3 chatId boundary as above — see note in
+                // `defineNewChat`.
                 const currentChat: AllChatProps | undefined = useCM.allChats.find(
                     (chat) =>
-                        chat.chatType === activity.chatType && chat.chatId === activity.chatId
+                        chat.chatType === activity.chatType &&
+                        chat.chatId === String(activity.chatId)
                 );
                 const newThread: ThreadProps = {
                     chatId: activity.chatId,

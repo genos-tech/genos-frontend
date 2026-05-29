@@ -1,3 +1,15 @@
+/*
+ * PUNCH LIST (v3 chatId migration):
+ * This legacy "create GM" path talks to the legacy `/` socket and
+ * legacy REST (`createGMChat`, `/gm/join/`). Those still issue
+ * integer `chatId` (it's the auto-incrementing `gm_id`). The v3-
+ * flipped `AllChatProps.chatId` / `ChatProps.chatId` are `string`, so
+ * we bridge with `String(...)` at the construction sites and cast
+ * numeric `chatId` args to legacy services accordingly. The socket
+ * `joiningCGId` and legacy `/gm/join/` payload keep the original
+ * `number` (those endpoints would reject UUIDs anyway). Whole file
+ * is dead code once the v3 `channel.create` path replaces it.
+ */
 import { Socket } from "socket.io-client";
 
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
@@ -14,12 +26,13 @@ import { createGMChat } from "./createGMChat";
 import { popSpecificMessages } from "./popSpecificMessages";
 
 const getGmCreatedMessage = () => getMessages().chat.system.hasCreatedGroup;
+// Keys sorted alphabetically (case-insensitive) per `sort-keys`.
 const getCreateGroupMessage = () => [
     {
+        content: [{ styles: {}, text: getGmCreatedMessage(), type: "text" }],
         type: "paragraph",
-        content: [{ type: "text", text: getGmCreatedMessage(), styles: {} }],
     },
-    { type: "paragraph", content: [{ type: "text", text: "", styles: {} }] },
+    { content: [{ styles: {}, text: "", type: "text" }], type: "paragraph" },
 ];
 
 const moveToGMChat = async (
@@ -27,20 +40,28 @@ const moveToGMChat = async (
     isPrivate: boolean,
     useCM: ChatManagementState
 ) => {
-    const fetchedMessages: MessageProps[] = await popSpecificMessages(chat.chatId, 2);
+    // `chat.chatId` is v3 string; `popSpecificMessages(chatId: number, ...)`
+    // is still the legacy service — see file-header note.
+    const fetchedMessages: MessageProps[] = await popSpecificMessages(
+        chat.chatId as unknown as number,
+        2
+    );
     if (fetchedMessages && fetchedMessages.length !== 0) {
+        const last = fetchedMessages[fetchedMessages.length - 1];
+        // Keys sorted alphabetically per `sort-keys`. `lastReadMessageId`
+        // is v3 string; stringify the legacy numeric `messageId`.
         const newChat: ChatProps = {
             chatId: chat.chatId,
             chatName: chat.chatName,
             chatType: 2,
             dmPartnerUser: defaultDmPartner,
-            lastReadMessageId: fetchedMessages[fetchedMessages.length - 1].messageId,
-            messages: fetchedMessages,
-            latestMessage: fetchedMessages[fetchedMessages.length - 1],
-            latestMessageText: fetchedMessages[fetchedMessages.length - 1].contentText,
-            TSLastMessage: fetchedMessages[fetchedMessages.length - 1].tsSent,
             isPrivate: isPrivate,
+            lastReadMessageId: String(last.messageId),
+            latestMessage: last,
+            latestMessageText: last.contentText,
+            messages: fetchedMessages,
             profileImagePath: chat.profileImagePath,
+            TSLastMessage: last.tsSent,
         };
         useCM.setCurrentMainChat(newChat);
     } else {
@@ -56,48 +77,56 @@ const addGMChatAndMessage = async (
 ) => {
     const gmCreatedMessage = getGmCreatedMessage();
     const createGroupMessage = getCreateGroupMessage();
+    // `MessageProps.chatId` is still `number`, so the legacy numeric
+    // `data.chatId` flows through unchanged here. Keys sorted
+    // alphabetically per `sort-keys`.
     const newMessage: MessageProps = {
-        chatType: 3,
-        messageIdWithChatId: `${data.chatId}-1`,
         chatId: data.chatId,
-        messageId: 1,
+        chatType: 3,
         content: createGroupMessage,
         contentText: gmCreatedMessage,
-        sender: myself,
-        tsSent: getLocalCurrentTimestamp(),
-        tsUpdated: getLocalCurrentTimestamp(),
+        messageId: 1,
+        messageIdWithChatId: `${data.chatId}-1`,
         numReplies: 0,
+        sender: myself,
         taskId: null,
         taskStatus: null,
+        tsSent: getLocalCurrentTimestamp(),
+        tsUpdated: getLocalCurrentTimestamp(),
     };
 
+    // `AllChatProps.chatId / lastReadMessageId` are `string` post-flip.
+    // `""` is the v3-flipped "no last-read" sentinel.
     const newChat: AllChatProps = {
-        chatId: data.chatId,
+        chatId: String(data.chatId),
         chatName: data.chatName,
         chatType: 2,
         dmPartnerUser: defaultDmPartner,
-        lastReadMessageId: -1,
+        isPrivate: isPrivate,
+        lastReadMessageId: "",
         latestMessage: newMessage,
         latestMessageText: gmCreatedMessage,
         TSLastMessage: getLocalCurrentTimestamp(),
-        isPrivate: isPrivate,
     };
 
     await addChat(newChat, 2);
     await addMessage(newMessage, 2);
 
+    // The append-to-allChats duplicate of `newChat` mirrors the legacy
+    // pattern. With AllChatProps now fully typed, just spread the row
+    // (the `newChat.chatId` is already the v3 string). Sorted keys.
     useCM.setAllChats([
         ...useCM.allChats,
         {
             chatId: newChat.chatId,
             chatName: newChat.chatName,
-            lastReadMessageId: -1,
             chatType: 2,
             dmPartnerUser: defaultDmPartner,
+            isPrivate: isPrivate,
+            lastReadMessageId: "",
             latestMessage: newChat.latestMessage,
             latestMessageText: newChat.latestMessageText,
             TSLastMessage: getLocalCurrentTimestamp(),
-            isPrivate: isPrivate,
         },
     ]);
 
@@ -127,27 +156,30 @@ export const createChatGroup = async (
     );
 
     if (data && socket !== null) {
+        // Socket emit payloads with keys sorted alphabetically per
+        // `sort-keys`. The join ack is fired-and-forgotten — chain
+        // the first message emit after the join completes.
         socket.emit(
             "join",
             {
-                joiningCGId: data.chatId, // gm_id
-                joiningCGName: data.chatName, // gm_name
                 chatType: 2,
                 dmPartnerUser: emptyDmPartnerUser,
+                joiningCGId: data.chatId, // gm_id
+                joiningCGName: data.chatName, // gm_name
             },
-            (ack: any) => {
+            () => {
                 socket.emit("message", {
-                    methodType: "POST",
-                    message: createGroupMessage,
-                    destCGName: chatName,
-                    destCGId: data.chatId,
                     chatType: 2,
+                    destCGId: data.chatId,
+                    destCGName: chatName,
                     dmPartnerUserId: emptyDmPartnerUser.userId,
+                    isPrivate: isPrivate,
+                    message: createGroupMessage,
+                    messageIdForPut: null,
+                    methodType: "POST",
+                    systemUserId: null,
                     taskId: null,
                     taskStatus: null,
-                    systemUserId: null,
-                    messageIdForPut: null,
-                    isPrivate: isPrivate,
                 });
             }
         );
@@ -157,8 +189,8 @@ export const createChatGroup = async (
                 const api = authApi(accessToken);
                 if (api) {
                     await api.post("/gm/join/", {
-                        gm_id: data.chatId,
                         attendee_id: memberId,
+                        gm_id: data.chatId,
                     });
                 }
             } catch (error) {
@@ -177,16 +209,16 @@ export const createChatGroup = async (
                 gmId: data.chatId,
                 gmName: data.chatName,
                 isPrivate: isPrivate,
-                memberIds: selectedMemberIds,
-                sender: myself,
                 joinMessage: {
-                    messageId: 1,
                     content: createGroupMessage,
                     contentText: gmCreatedMessage,
+                    messageId: 1,
+                    sender: myself,
                     tsSent: tsNow,
                     tsUpdated: tsNow,
-                    sender: myself,
                 },
+                memberIds: selectedMemberIds,
+                sender: myself,
             });
         }
 

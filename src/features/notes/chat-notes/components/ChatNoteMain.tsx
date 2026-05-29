@@ -170,12 +170,15 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
         }
     }, [isInChatPage, useNM.chatPanelApi.note]);
 
-    // Find the current chat
+    // Find the current chat.
+    // PUNCH LIST (v3 chatId migration): `AllChatProps.chatId` is `string`
+    // post-flip; `activeChatNote.chatId` is still `number` (legacy note
+    // schema). Stringify at the comparison.
     const chat = useCM.allChats.find(
         (c) =>
             c.chatType === activeChatNote?.chatType &&
             activeChatNote &&
-            c.chatId === activeChatNote.chatId
+            c.chatId === String(activeChatNote.chatId)
     );
 
     // In task-page mode ChatNoteMain renders standalone (the panel

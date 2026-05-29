@@ -30,7 +30,8 @@ const ChatPaneHeaderStyles = {
         primaryButtonBg: "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)",
         primaryButtonHover: "linear-gradient(135deg, #a78bfa 0%, #c084fc 100%)",
         dangerBg: "linear-gradient(135deg, rgba(232,121,195,0.12) 0%, rgba(192,38,168,0.12) 100%)",
-        dangerHover: "linear-gradient(135deg, rgba(232,121,195,0.22) 0%, rgba(192,38,168,0.22) 100%)",
+        dangerHover:
+            "linear-gradient(135deg, rgba(232,121,195,0.22) 0%, rgba(192,38,168,0.22) 100%)",
         dangerBorder: "rgba(232,121,195,0.3)",
         accentColor: "#a78bfa",
         glowColor: "rgba(124,58,237,0.25)",
@@ -46,7 +47,8 @@ const ChatPaneHeaderStyles = {
         primaryButtonBg: "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)",
         primaryButtonHover: "linear-gradient(135deg, #a78bfa 0%, #c084fc 100%)",
         dangerBg: "linear-gradient(135deg, rgba(232,121,195,0.08) 0%, rgba(192,38,168,0.08) 100%)",
-        dangerHover: "linear-gradient(135deg, rgba(232,121,195,0.15) 0%, rgba(192,38,168,0.15) 100%)",
+        dangerHover:
+            "linear-gradient(135deg, rgba(232,121,195,0.15) 0%, rgba(192,38,168,0.15) 100%)",
         dangerBorder: "rgba(232,121,195,0.2)",
         accentColor: "#7c3aed",
         glowColor: "rgba(124,58,237,0.15)",
@@ -143,17 +145,26 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
     const subChat = useCM.currentSubChat;
     const { markAllAsRead } = useMarkAllChatActivityRead({ myself, useCM });
 
+    // PUNCH LIST (v3 chatId migration): `subChat.chatId` is `string`
+    // post-flip; `ActivityMessageProps.chatId` and the `markAllAsRead`
+    // API are still `number`. Cast once; legacy `/` socket activity
+    // events carry numeric chatIds, so the comparison is meaningful for
+    // those rows. UUID-shaped v3 chatIds won't match the legacy activity
+    // store, which is the right behavior — the v3 read-cursor path
+    // handles its own state.
+    const subChatIdLegacy = subChat ? (subChat.chatId as unknown as number) : undefined;
+
     const unreadActivityCount = useMemo(
         () =>
             subChat
                 ? useCM.activityMessages.filter(
                       (a) =>
                           a.chatType === subChat.chatType &&
-                          a.chatId === subChat.chatId &&
+                          a.chatId === subChatIdLegacy &&
                           a.isRead === false
                   ).length
                 : 0,
-        [useCM.activityMessages, subChat?.chatType, subChat?.chatId]
+        [useCM.activityMessages, subChat?.chatType, subChatIdLegacy]
     );
 
     return (
@@ -195,7 +206,7 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                             size="sm"
                             variant="plain"
                             sx={actionButtonStyle}
-                            onClick={() => markAllAsRead(subChat.chatType, subChat.chatId)}
+                            onClick={() => markAllAsRead(subChat.chatType, subChatIdLegacy!)}
                             aria-label={t.chat.headers.markAllReadAria}
                         >
                             <DoneAllRoundedIcon sx={{ fontSize: 18, color: styles.accentColor }} />
@@ -311,7 +322,12 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                 )}
 
                 {/* Close Button */}
-                <Tooltip size="sm" title={t.chat.headers.close} variant="outlined" sx={{ borderRadius: "8px" }}>
+                <Tooltip
+                    size="sm"
+                    title={t.chat.headers.close}
+                    variant="outlined"
+                    sx={{ borderRadius: "8px" }}
+                >
                     <IconButton
                         size="sm"
                         variant="plain"

@@ -118,9 +118,14 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
             </AppTooltip>
 
             {/* Unread Indicator */}
-            {chat.latestMessage && chat.lastReadMessageId < chat.latestMessage?.messageId && (
-                <CircleIcon color="primary" sx={{ mr: 0.5, fontSize: 12, mt: 0.5 }} />
-            )}
+            {/* PUNCH LIST (v3 chatId migration): `lastReadMessageId` is */}
+            {/* `string` post-flip; `messageId` is still `number`. */}
+            {/* Round-trip via `Number(... || "0")` — UUID-shaped cursors */}
+            {/* NaN-compare to false (no false-positive unread dot). */}
+            {chat.latestMessage &&
+                Number(chat.lastReadMessageId || "0") < chat.latestMessage?.messageId && (
+                    <CircleIcon color="primary" sx={{ mr: 0.5, fontSize: 12, mt: 0.5 }} />
+                )}
 
             {/* More Options Menu */}
             <Dropdown>

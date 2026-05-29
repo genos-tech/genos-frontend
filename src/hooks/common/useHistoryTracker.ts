@@ -1,3 +1,16 @@
+/*
+ * PUNCH LIST (v3 chatId migration):
+ * `HistoryEntry.chatId` is still typed `number` in `useHistory.tsx`
+ * (the localStorage persistence layer + the `isHistoryEntry` runtime
+ * narrowing check assume integer ids). `ChatProps.chatId` is now
+ * `string` post-flip, so the boundary needs a cast — written as
+ * `as unknown as number` with this note. Runtime gap: v3-shaped UUID
+ * chatIds get persisted as string-disguised-as-number; the runtime
+ * narrowing check (`typeof o.chatId === "number"`) silently drops
+ * them on reload. Fix properly by flipping `HistoryEntry.chatId` to
+ * `string` and updating the consumers in `useHistory.tsx`,
+ * `HistoryShell.tsx`, and `HistoryModal.tsx` — follow-on session.
+ */
 import { useEffect, useRef } from "react";
 
 import { popSpecificMessages } from "../../features/chat/services/popSpecificMessages";
@@ -110,7 +123,9 @@ export const useHistoryTracker = ({ useCM, useTM, useSM, useNM, usePM }: Props) 
     // Chats
     const currentMainChat = useCM.currentMainChat;
     useEffect(() => {
-        if (!currentMainChat || currentMainChat.chatId == null || currentMainChat.chatId === -1) {
+        // `chatId === ""` is the v3-flipped "uninitialized chat"
+        // sentinel (replaces legacy `=== -1`).
+        if (!currentMainChat || currentMainChat.chatId == null || currentMainChat.chatId === "") {
             return;
         }
         // `moveToSpecificIndex` is the canonical "URL targets a specific
@@ -136,9 +151,11 @@ export const useHistoryTracker = ({ useCM, useTM, useSM, useNM, usePM }: Props) 
         const label =
             currentMainChat.chatName || (currentMainChat.dmPartnerUser?.userName ?? `#${chatId}`);
         record({
-            kind: "chat",
+            // See file-header punch-list note: HistoryEntry.chatId
+            // is still typed number; cast at the write boundary.
+            chatId: chatId as unknown as number,
             chatType,
-            chatId,
+            kind: "chat",
             label,
             messageId,
             messageText,
@@ -157,15 +174,18 @@ export const useHistoryTracker = ({ useCM, useTM, useSM, useNM, usePM }: Props) 
         // can find; `mergeAndCap` keys by (chat, messageId) so a late
         // record still lands on the right entry.
         if (messageId != null && messageText == null) {
-            void popSpecificMessages(chatId, chatType).then((all) => {
+            // Cast for `popSpecificMessages(chatId: number, ...)` and
+            // for the `HistoryEntry.chatId: number` record — both
+            // legacy boundaries flagged in the file-header note.
+            void popSpecificMessages(chatId as unknown as number, chatType).then((all) => {
                 const found = all.find((m) => Number(m.messageId) === messageId);
                 const text = found ? previewFromMessage(found) : null;
                 if (!text) return;
                 lastChatKeyRef.current = `chat:${chatType}:${chatId}:${messageId}:1`;
                 record({
-                    kind: "chat",
+                    chatId: chatId as unknown as number,
                     chatType,
-                    chatId,
+                    kind: "chat",
                     label,
                     messageId,
                     messageText: text,
@@ -212,21 +232,24 @@ export const useHistoryTracker = ({ useCM, useTM, useSM, useNM, usePM }: Props) 
         if (
             currentMainChat &&
             currentMainChat.chatType === chatType &&
-            currentMainChat.chatId === chatId
+            // `currentMainChat.chatId` is v3 string; `chatId` here is
+            // from `ThreadProps` (still legacy `number`). Compare as
+            // strings to bridge.
+            currentMainChat.chatId === String(chatId)
         ) {
             const parent = currentMainChat.messages.find((m) => m.threadId === threadId);
             if (parent) parentMessageText = firstLine(parent.contentText);
         }
         record({
-            kind: "thread",
-            chatType,
             chatId,
-            threadId,
-            parentMessageText,
+            chatType,
+            kind: "thread",
             label: parentName,
             messageId,
             messageText,
             openedAt: Date.now(),
+            parentMessageText,
+            threadId,
         });
         // Async IDB fallback for the targeted in-thread bubble — same
         // story as the chat effect: the in-memory `messages` slice is
@@ -239,15 +262,15 @@ export const useHistoryTracker = ({ useCM, useTM, useSM, useNM, usePM }: Props) 
                 if (!text) return;
                 lastThreadKeyRef.current = `thread:${chatType}:${chatId}:${threadId}:${messageId}:1`;
                 record({
-                    kind: "thread",
-                    chatType,
                     chatId,
-                    threadId,
-                    parentMessageText,
+                    chatType,
+                    kind: "thread",
                     label: parentName,
                     messageId,
                     messageText: text,
                     openedAt: Date.now(),
+                    parentMessageText,
+                    threadId,
                 });
             });
         }
@@ -287,11 +310,11 @@ export const useHistoryTracker = ({ useCM, useTM, useSM, useNM, usePM }: Props) 
                 : null;
         const entry: HistoryEntry = {
             kind: "task",
-            taskId: currentPreviewTaskId,
-            projectId,
-            projectName,
             label: title,
             openedAt: Date.now(),
+            projectId,
+            projectName,
+            taskId: currentPreviewTaskId,
         };
         record(entry);
     }, [
@@ -331,11 +354,11 @@ export const useHistoryTracker = ({ useCM, useTM, useSM, useNM, usePM }: Props) 
                 : null;
         const entry: HistoryEntry = {
             kind: "milestone",
+            label,
             milestoneId: currentPreviewMilestoneId,
+            openedAt: Date.now(),
             projectId,
             projectName,
-            label,
-            openedAt: Date.now(),
         };
         record(entry);
     }, [
@@ -358,9 +381,9 @@ export const useHistoryTracker = ({ useCM, useTM, useSM, useNM, usePM }: Props) 
         lastNoteKeyRef.current = key;
         const entry: HistoryEntry = {
             kind: "note",
-            noteType: currentMyNote.noteType,
-            noteId: currentMyNote.noteId,
             label: currentMyNote.title || `#${currentMyNote.noteId}`,
+            noteId: currentMyNote.noteId,
+            noteType: currentMyNote.noteType,
             openedAt: Date.now(),
         };
         record(entry);
@@ -385,14 +408,14 @@ export const useHistoryTracker = ({ useCM, useTM, useSM, useNM, usePM }: Props) 
                 : null;
         const entry: HistoryEntry = {
             kind: "note",
-            noteType: currentTaskNote.noteType,
-            noteId: currentTaskNote.noteId,
-            projectId: currentTaskNote.projectId ?? null,
-            taskId: currentTaskNote.taskId ?? null,
-            projectName,
-            taskTitle,
             label: currentTaskNote.title || `#${currentTaskNote.noteId}`,
+            noteId: currentTaskNote.noteId,
+            noteType: currentTaskNote.noteType,
             openedAt: Date.now(),
+            projectId: currentTaskNote.projectId ?? null,
+            projectName,
+            taskId: currentTaskNote.taskId ?? null,
+            taskTitle,
         };
         record(entry);
     }, [currentTaskNote, usePM.teamProjects, allTasksForNotes, record]);
@@ -409,20 +432,23 @@ export const useHistoryTracker = ({ useCM, useTM, useSM, useNM, usePM }: Props) 
                 ? (allChatsForNotes.find(
                       (c) =>
                           c.chatType === currentChatNote.chatType &&
-                          c.chatId === currentChatNote.chatId
+                          // `c.chatId` is v3 string; `currentChatNote.chatId`
+                          // is still legacy number on the note shape. Bridge
+                          // with String().
+                          c.chatId === String(currentChatNote.chatId)
                   )?.chatName ?? null)
                 : null;
         const entry: HistoryEntry = {
-            kind: "note",
-            noteType: currentChatNote.noteType,
-            noteId: currentChatNote.noteId,
-            chatType: currentChatNote.chatType ?? null,
             chatId: currentChatNote.chatId ?? null,
-            isThread: currentChatNote.isThread ?? null,
-            threadId: currentChatNote.threadId ?? null,
             chatName,
+            chatType: currentChatNote.chatType ?? null,
+            isThread: currentChatNote.isThread ?? null,
+            kind: "note",
             label: currentChatNote.title || `#${currentChatNote.noteId}`,
+            noteId: currentChatNote.noteId,
+            noteType: currentChatNote.noteType,
             openedAt: Date.now(),
+            threadId: currentChatNote.threadId ?? null,
         };
         record(entry);
     }, [currentChatNote, allChatsForNotes, record]);
