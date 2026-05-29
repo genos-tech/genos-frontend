@@ -1474,6 +1474,24 @@ export class ChannelService {
             ? existing
             : [...existing, event.member];
         this._members.set(event.channelId, next);
+        // If I'M the one being added (e.g. a peer's invite, or a
+        // recovery path where `channel.created` was missed), the
+        // primary subscribe path runs through `channel.created` →
+        // `handleChannelCreated.subscribeChannel`. But that event can
+        // be dropped on the floor between the server emit and our
+        // socket receive (transport blip, double-namespace mid-handshake).
+        // A redundant subscribe here closes the gap — the backend's
+        // `channel.subscribe` handler is idempotent against an already-
+        // joined room, so the extra emit is safe.
+        if (
+            this.currentUserId &&
+            event.member.userId === this.currentUserId &&
+            this.socket?.connected
+        ) {
+            void this.subscribeChannel(event.channelId).catch(() => {
+                /* room may already be joined; silent */
+            });
+        }
         this._notify();
         void this._persistMember(event.member, event.channelId);
     }
@@ -1483,8 +1501,20 @@ export class ChannelService {
         const next = existing.filter((m) => m.userId !== event.userId);
         this._members.set(event.channelId, next);
         // If it was ME being removed, drop the channel from the list
-        // entirely — my unread badge / chat list shouldn't show it.
+        // AND leave the socket room. Without the unsubscribe, the
+        // backend keeps emitting `message.created` / `reaction.added`
+        // etc. to the room and this client keeps receiving "ghost"
+        // events for a channel it no longer shows. The unsubscribe is
+        // best-effort — even if the emit fails, the in-memory store
+        // already dropped the channel so the UI is correct; the
+        // ghost events would just be ignored by the inbound handlers
+        // (the channel id won't match any known store entry).
         if (this.currentUserId && event.userId === this.currentUserId) {
+            if (this.socket?.connected) {
+                void this.unsubscribeChannel(event.channelId, event.channelKind).catch(() => {
+                    /* best-effort — store already dropped */
+                });
+            }
             this._channels.delete(event.channelId);
             this._messages.delete(event.channelId);
             this._cursors.delete(event.channelId);
