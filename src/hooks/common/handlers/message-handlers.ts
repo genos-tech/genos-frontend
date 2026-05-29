@@ -1,3 +1,13 @@
+/*
+ * PUNCH LIST (v3 chatId migration):
+ * Legacy WS events carry numeric `chatId` on `NewMessageProps` /
+ * `MessageProps`, but `ChatProps.chatId` is now `string`. Wherever the
+ * two cross we wrap the legacy int side with `String(...)` so the
+ * compiler is happy; at runtime the legacy `/` socket never carries
+ * UUIDs, so these handlers will never match against v3 chats. The
+ * whole file is slated for deletion when the v3 socket router (see
+ * `socketRouter.ts`) replaces the legacy `/` namespace handlers.
+ */
 import { Socket } from "socket.io-client";
 
 import { ChatService } from "../../../db/services/chat.service";
@@ -16,6 +26,7 @@ import {
     ThreadMessageProps,
     ThreadProps,
 } from "../../../types/chat";
+import { ProjectProps } from "../../../types/tasks";
 import { emptyDmPartnerUser } from "../../../utils/defaultProps";
 import { ChatManagementState } from "../../chats/useChatManagement";
 import {
@@ -24,7 +35,7 @@ import {
     makePMUpdatedChat,
     updateAllChat,
 } from "../utils/chat-updaters";
-import { analyzeMessageContext } from "../utils/message-context";
+import { analyzeMessageContext, MessageContext } from "../utils/message-context";
 
 export const handleThreadMessage = async (
     newMessage: NewThreadMessageProps,
@@ -33,22 +44,28 @@ export const handleThreadMessage = async (
     useCM: ChatManagementState
 ) => {
     const newThreadMessage: ThreadMessageProps = {
-        chatType: newMessage.chatType,
-        systemUserId: newMessage.systemUserId,
-        messageIdWithChatIdAndThreadId: `${newMessage.chatId}-${newMessage.threadId}-${newMessage.messageId}`,
         chatId: newMessage.chatId,
-        threadId: newMessage.threadId,
-        messageId: newMessage.messageId,
+        chatType: newMessage.chatType,
         content: newMessage.content,
         contentText: newMessage.contentText,
+        messageId: newMessage.messageId,
+        messageIdWithChatIdAndThreadId: `${newMessage.chatId}-${newMessage.threadId}-${newMessage.messageId}`,
         reactions: newMessage.reactions,
         sender: newMessage.sender,
+        systemUserId: newMessage.systemUserId,
+        taskId: newMessage.taskId,
+        threadId: newMessage.threadId,
         tsSent: newMessage.tsSent,
         tsUpdated: newMessage.tsUpdated,
-        taskId: newMessage.taskId,
     };
 
-    const context = analyzeMessageContext(newMessage as any, myself);
+    // PUNCH LIST: `analyzeMessageContext` types its first arg as
+    // `NewMessageProps`, but the legacy thread-message path passes
+    // `NewThreadMessageProps`. They share most fields used by the
+    // analyzer (sender, chatType, isReactionUpdated, etc.) — cast at
+    // the call site rather than widening the analyzer's signature
+    // until the thread shape is reconciled in a follow-on session.
+    const context = analyzeMessageContext(newMessage as unknown as NewMessageProps, myself);
 
     if (newMessage.isDeleted) {
         if (
@@ -140,17 +157,17 @@ export const handleThreadMessage = async (
                         newMessage.chatType === 1
                             ? newMessage.sender.userName
                             : newMessage.chatName,
-                    systemUserId: newMessage.systemUserId,
-                    threadId: newThreadMessage.threadId,
                     chatType: newMessage.chatType,
                     dmPartnerUser:
                         newMessage.chatType === 1
                             ? newMessage.sender
                             : useCM.currentThreadChat.dmPartnerUser,
-                    taskId: newThreadMessage.taskId,
                     messages: [...useCM.currentThreadChat.messages, newThreadMessage],
-                    TSLastMessage: newThreadMessage.tsSent,
                     notMove: true,
+                    systemUserId: newMessage.systemUserId,
+                    taskId: newThreadMessage.taskId,
+                    threadId: newThreadMessage.threadId,
+                    TSLastMessage: newThreadMessage.tsSent,
                 };
                 useCM.setCurrentThreadChat(updatedThreadChat);
             }
@@ -161,50 +178,51 @@ export const handleThreadMessage = async (
 export const handleRegularMessage = async (
     newMessage: NewMessageProps,
     myself: UserProps,
-    currentProject: any,
+    currentProject: ProjectProps | null,
     currentPreviewTaskId: number,
     setIsTaskUpdatedBySomeone: (value: boolean) => void,
     useCM: ChatManagementState,
     socket: Socket
 ) => {
+    // Keys sorted alphabetically (case-insensitive) per `sort-keys`.
+    // Annotation comments:
+    //   - `messageIdWithChatId`: PM is keyed by task (one bubble per
+    //     task; a task update PUTs the same row). Normalize null /
+    //     undefined `taskId` to -1 so the FE key matches the backend
+    //     serializer in `pm_delta_views.py`; otherwise a socket-cached
+    //     row at `{chatId}-null` would not collide with the delta-
+    //     fetched row at `{chatId}--1` and the bubble would duplicate
+    //     after the next reload.
+    //   - `displayId`: human-readable task id ("<code>-<n>") off the
+    //     wire. Without forwarding it, the chip on the PM task-card
+    //     bubble (`BubbleUserName`) falls back to "#<taskId>" for every
+    //     live-pushed PM message.
+    //   - `taskCommentCount`: PM under-bar chip refreshes without a
+    //     full page reload. Without this, `addMessage` writes IDB
+    //     without the field and the subsequent `makePMUpdatedChat`
+    //     rebuild reads a stale count, overriding the in-memory live-
+    //     bump from the `wsType: "task"` handler — chip flickers e.g.
+    //     6 → 7 → 6.
     const newChatMessage: MessageProps = {
+        chatId: newMessage.chatId,
         chatType: newMessage.chatType,
-        systemUserId: newMessage.systemUserId,
-        // PM is keyed by task (one bubble per task — a task update PUTs the
-        // same row). Normalize null/undefined taskId to -1 so the FE key
-        // matches the backend serializer in pm_delta_views.py; otherwise a
-        // socket-cached row at "{chatId}-null" would not collide with the
-        // delta-fetched row at "{chatId}--1" and the bubble would duplicate
-        // after the next reload.
+        content: newMessage.content,
+        contentText: newMessage.contentText,
+        displayId: newMessage.displayId,
+        messageId: newMessage.messageId,
         messageIdWithChatId:
             newMessage.chatType === 3
                 ? `${newMessage.chatId}-${newMessage.taskId ?? -1}`
                 : `${newMessage.chatId}-${newMessage.messageId}`,
-        chatId: newMessage.chatId,
-        messageId: newMessage.messageId,
-        content: newMessage.content,
-        contentText: newMessage.contentText,
+        numReplies: newMessage.numReplies,
         reactions: newMessage.reactions,
         sender: newMessage.sender,
-        numReplies: newMessage.numReplies,
-        // Forward `taskCommentCount` for PM bubbles so the under-bar
-        // chip can refresh without a full page reload. Without this,
-        // `addMessage` writes IDB without the field and the subsequent
-        // `makePMUpdatedChat` rebuild reads a stale count, which then
-        // overrides the in-memory live-bump from the `wsType: "task"`
-        // handler — making the chip flicker e.g. 6 → 7 → 6.
+        systemUserId: newMessage.systemUserId,
         taskCommentCount: newMessage.taskCommentCount,
-        tsSent: newMessage.tsSent,
-        tsUpdated: newMessage.tsUpdated,
-        // Forward the human-readable task id ("<code>-<n>") off the
-        // wire. Without this, the chip on the PM task-card bubble
-        // (`BubbleUserName`) falls back to "#<taskId>" for every
-        // live-pushed PM message — backend serializes it, the WS
-        // payload carries it, but the translation into the local
-        // `MessageProps` shape was dropping the field on the floor.
-        displayId: newMessage.displayId,
         taskId: newMessage.taskId,
         taskStatus: newMessage.taskStatus,
+        tsSent: newMessage.tsSent,
+        tsUpdated: newMessage.tsUpdated,
     };
 
     const context = analyzeMessageContext(newMessage, myself);
@@ -257,7 +275,7 @@ const handleMessageDeletion = async (newMessage: NewMessageProps, useCM: ChatMan
     if (
         useCM.currentMainChat &&
         newMessage.chatType === useCM.currentMainChat.chatType &&
-        newMessage.chatId === useCM.currentMainChat.chatId
+        String(newMessage.chatId) === useCM.currentMainChat.chatId
     ) {
         useCM.setCurrentMainChat({
             ...useCM.currentMainChat,
@@ -269,7 +287,7 @@ const handleMessageDeletion = async (newMessage: NewMessageProps, useCM: ChatMan
     } else if (
         useCM.currentSubChat &&
         newMessage.chatType === useCM.currentSubChat.chatType &&
-        newMessage.chatId === useCM.currentSubChat.chatId
+        String(newMessage.chatId) === useCM.currentSubChat.chatId
     ) {
         useCM.setCurrentSubChat({
             ...useCM.currentSubChat,
@@ -284,7 +302,7 @@ const handleMessageDeletion = async (newMessage: NewMessageProps, useCM: ChatMan
 const handleDMMessage = async (
     newMessage: NewMessageProps,
     newChatMessage: MessageProps,
-    context: any,
+    context: MessageContext,
     myself: UserProps,
     useCM: ChatManagementState,
     socket: Socket
@@ -316,10 +334,10 @@ const handleDMMessage = async (
 
             if (newMessage.messageId === 1 && updatedChat.dmPartnerUser) {
                 socket.emit("join", {
-                    joiningCGId: updatedChat.chatId,
-                    joiningCGName: updatedChat.chatName,
                     chatType: 1,
                     dmPartnerUserId: updatedChat.dmPartnerUser.userId,
+                    joiningCGId: updatedChat.chatId,
+                    joiningCGName: updatedChat.chatName,
                 });
             }
         } else if (context.fromMe && newMessage.messageId === 1) {
@@ -343,10 +361,10 @@ const handleDMMessage = async (
 
             if (newDMChat.dmPartnerUser) {
                 socket.emit("join", {
-                    joiningCGId: newDMChat.chatId,
-                    joiningCGName: newDMChat.chatName,
                     chatType: 1,
                     dmPartnerUserId: newDMChat.dmPartnerUser.userId,
+                    joiningCGId: newDMChat.chatId,
+                    joiningCGName: newDMChat.chatName,
                 });
             }
         }
@@ -356,7 +374,7 @@ const handleDMMessage = async (
 const handleGMMessage = async (
     newMessage: NewMessageProps,
     newChatMessage: MessageProps,
-    context: any,
+    context: MessageContext,
     useCM: ChatManagementState,
     socket: Socket
 ) => {
@@ -376,7 +394,7 @@ const handleGMMessage = async (
         // reconnect, so without this real-time messages would be missed
         // until the next refresh).
         const isNewGM = !useCM.allChats.some(
-            (c) => c.chatId === newMessage.chatId && c.chatType === 2
+            (c) => c.chatId === String(newMessage.chatId) && c.chatType === 2
         );
 
         if (useCM.allChats.length > 0 && !newMessage.isReactionUpdated) {
@@ -391,10 +409,10 @@ const handleGMMessage = async (
 
         if (isNewGM && socket) {
             socket.emit("join", {
-                joiningCGId: newMessage.chatId,
-                joiningCGName: newMessage.chatName,
                 chatType: 2,
                 dmPartnerUser: emptyDmPartnerUser,
+                joiningCGId: newMessage.chatId,
+                joiningCGName: newMessage.chatName,
             });
         }
     }
@@ -403,7 +421,7 @@ const handleGMMessage = async (
 const handleMDMMessage = async (
     newMessage: NewMessageProps,
     newChatMessage: MessageProps,
-    context: any,
+    context: MessageContext,
     useCM: ChatManagementState,
     socket: Socket
 ) => {
@@ -418,16 +436,16 @@ const handleMDMMessage = async (
         }
     } else {
         const isNewMDM = !useCM.allChats.some(
-            (c) => c.chatId === newMessage.chatId && c.chatType === 4
+            (c) => c.chatId === String(newMessage.chatId) && c.chatType === 4
         );
         await ensureMDMInAllChats(newMessage, newChatMessage, useCM);
         appendMDMMessageToCurrentChat(newMessage, newChatMessage, useCM);
 
         if (isNewMDM && socket) {
             socket.emit("join", {
+                chatType: 4,
                 joiningCGId: newMessage.chatId,
                 joiningCGName: newMessage.chatName,
-                chatType: 4,
             });
         }
     }
@@ -439,31 +457,37 @@ const ensureMDMInAllChats = async (
     useCM: ChatManagementState
 ) => {
     const defaultPartner = {
+        avatarImgPath: "",
+        customStatus: "",
         teamId: "",
         teamName: "",
-        userName: "",
-        userId: "",
-        userEmail: "",
-        avatarImgPath: "",
-        tsLastSeen: "",
         tsJoined: "",
-        customStatus: "",
+        tsLastSeen: "",
+        userEmail: "",
+        userId: "",
+        userName: "",
     };
 
+    // Keys sorted alphabetically (case-insensitive) per the project's
+    // `sort-keys` lint rule. Two inline notes carry forward:
+    //   - `chatId: String(newMessage.chatId)` — see file-header
+    //     punch-list note (v3 chatId boundary).
+    //   - `lastReadMessageId: ... || ""` — empty string is the
+    //     v3-flipped "no last-read" sentinel (replaces legacy `-1`).
     const buildAllChat = (existing?: AllChatProps): AllChatProps => ({
-        chatType: 4,
-        chatId: newMessage.chatId,
+        chatId: String(newMessage.chatId),
         chatName: newMessage.chatName,
-        systemUserId: newMessage.systemUserId || existing?.systemUserId,
+        chatType: 4,
         dmPartnerUser: existing?.dmPartnerUser || defaultPartner,
-        lastReadMessageId: existing?.lastReadMessageId || -1,
+        isPinned: existing?.isPinned,
+        lastReadMessageId: existing?.lastReadMessageId || "",
         latestMessage: newChatMessage,
         latestMessageText: newChatMessage.contentText,
-        TSLastMessage: newChatMessage.tsSent,
-        profileImagePath: existing?.profileImagePath,
-        isPinned: existing?.isPinned,
-        tsLastAllReadActivity: existing?.tsLastAllReadActivity,
         mdmMembers: existing?.mdmMembers,
+        profileImagePath: existing?.profileImagePath,
+        systemUserId: newMessage.systemUserId || existing?.systemUserId,
+        tsLastAllReadActivity: existing?.tsLastAllReadActivity,
+        TSLastMessage: newChatMessage.tsSent,
     });
 
     // Read the existing row from IDB rather than `useCM.allChats` — the
@@ -484,12 +508,14 @@ const ensureMDMInAllChats = async (
     await addChat(chatForIDB, 4);
 
     useCM.setAllChats((prev: AllChatProps[]) => {
-        const existing = prev.find((c) => c.chatId === newMessage.chatId && c.chatType === 4);
+        const existing = prev.find(
+            (c) => c.chatId === String(newMessage.chatId) && c.chatType === 4
+        );
         // Prefer the live React state when available, fall back to IDB.
         const updatedChat = buildAllChat(existing ?? existingFromIDB ?? undefined);
         if (existing) {
             return prev.map((c) =>
-                c.chatId === newMessage.chatId && c.chatType === 4 ? updatedChat : c
+                c.chatId === String(newMessage.chatId) && c.chatType === 4 ? updatedChat : c
             );
         }
         return [updatedChat, ...prev];
@@ -503,7 +529,7 @@ const updateMDMCurrentChatForInitialMessage = (
 ) => {
     if (
         useCM.currentMainChat &&
-        newMessage.chatId === useCM.currentMainChat.chatId &&
+        String(newMessage.chatId) === useCM.currentMainChat.chatId &&
         useCM.currentMainChat.chatType === 4
     ) {
         const hasMessage = useCM.currentMainChat.messages.some(
@@ -512,11 +538,11 @@ const updateMDMCurrentChatForInitialMessage = (
         if (!hasMessage) {
             useCM.setCurrentMainChat({
                 ...useCM.currentMainChat,
-                messages: [...useCM.currentMainChat.messages, newChatMessage],
                 latestMessage: newChatMessage,
                 latestMessageText: newMessage.contentText,
-                TSLastMessage: newMessage.tsSent,
+                messages: [...useCM.currentMainChat.messages, newChatMessage],
                 notMove: true,
+                TSLastMessage: newMessage.tsSent,
             });
         }
     }
@@ -529,7 +555,7 @@ const appendMDMMessageToCurrentChat = (
 ) => {
     if (
         useCM.currentMainChat &&
-        newMessage.chatId === useCM.currentMainChat.chatId &&
+        String(newMessage.chatId) === useCM.currentMainChat.chatId &&
         useCM.currentMainChat.chatType === 4
     ) {
         const hasMessage = useCM.currentMainChat.messages.some(
@@ -538,16 +564,16 @@ const appendMDMMessageToCurrentChat = (
         if (!hasMessage) {
             useCM.setCurrentMainChat({
                 ...useCM.currentMainChat,
-                messages: [...useCM.currentMainChat.messages, newChatMessage],
                 latestMessage: newChatMessage,
                 latestMessageText: newMessage.contentText,
-                TSLastMessage: newMessage.tsSent,
+                messages: [...useCM.currentMainChat.messages, newChatMessage],
                 notMove: true,
+                TSLastMessage: newMessage.tsSent,
             });
         }
     } else if (
         useCM.currentSubChat &&
-        newMessage.chatId === useCM.currentSubChat.chatId &&
+        String(newMessage.chatId) === useCM.currentSubChat.chatId &&
         useCM.currentSubChat.chatType === 4
     ) {
         const hasMessage = useCM.currentSubChat.messages.some(
@@ -556,11 +582,11 @@ const appendMDMMessageToCurrentChat = (
         if (!hasMessage) {
             useCM.setCurrentSubChat({
                 ...useCM.currentSubChat,
-                messages: [...useCM.currentSubChat.messages, newChatMessage],
                 latestMessage: newChatMessage,
                 latestMessageText: newMessage.contentText,
-                TSLastMessage: newMessage.tsSent,
+                messages: [...useCM.currentSubChat.messages, newChatMessage],
                 notMove: true,
+                TSLastMessage: newMessage.tsSent,
             });
         }
     }
@@ -573,7 +599,7 @@ const updateMDMMessageInCurrentChat = (
 ) => {
     if (
         useCM.currentMainChat &&
-        newMessage.chatId === useCM.currentMainChat.chatId &&
+        String(newMessage.chatId) === useCM.currentMainChat.chatId &&
         useCM.currentMainChat.chatType === 4
     ) {
         useCM.setCurrentMainChat({
@@ -585,7 +611,7 @@ const updateMDMMessageInCurrentChat = (
         });
     } else if (
         useCM.currentSubChat &&
-        newMessage.chatId === useCM.currentSubChat.chatId &&
+        String(newMessage.chatId) === useCM.currentSubChat.chatId &&
         useCM.currentSubChat.chatType === 4
     ) {
         useCM.setCurrentSubChat({
@@ -601,8 +627,8 @@ const updateMDMMessageInCurrentChat = (
 const handlePMMessage = async (
     newMessage: NewMessageProps,
     newChatMessage: MessageProps,
-    context: any,
-    currentProject: any,
+    context: MessageContext,
+    currentProject: ProjectProps | null,
     currentPreviewTaskId: number,
     setIsTaskUpdatedBySomeone: (value: boolean) => void,
     useCM: ChatManagementState
@@ -648,7 +674,7 @@ const handlePMMessage = async (
 const updateMessageInCurrentChat = (newChatMessage: MessageProps, useCM: ChatManagementState) => {
     if (
         useCM.currentMainChat &&
-        newChatMessage.chatId === useCM.currentMainChat.chatId &&
+        String(newChatMessage.chatId) === useCM.currentMainChat.chatId &&
         newChatMessage.chatType === useCM.currentMainChat.chatType
     ) {
         useCM.setCurrentMainChat({
@@ -660,7 +686,7 @@ const updateMessageInCurrentChat = (newChatMessage: MessageProps, useCM: ChatMan
         });
     } else if (
         useCM.currentSubChat &&
-        newChatMessage.chatId === useCM.currentSubChat.chatId &&
+        String(newChatMessage.chatId) === useCM.currentSubChat.chatId &&
         newChatMessage.chatType === useCM.currentSubChat.chatType
     ) {
         useCM.setCurrentSubChat({
@@ -673,18 +699,26 @@ const updateMessageInCurrentChat = (newChatMessage: MessageProps, useCM: ChatMan
     }
 };
 
-const updateCurrentChat = (updatedChat: any, useCM: ChatManagementState) => {
+const updateCurrentChat = (updatedChat: AllChatProps, useCM: ChatManagementState) => {
+    // PUNCH LIST (pre-existing latent gap surfaced by removing `any`):
+    // `makeXxxUpdatedChat` returns `AllChatProps`, but `setCurrentMainChat`
+    // expects `ChatProps` (which adds `messages: MessageProps[]`). The
+    // legacy code dropped this through an `any`; the consumer reads
+    // `currentMainChat.messages` as undefined, which the existing
+    // bubble-list code tolerates because it iterates with `?? []`.
+    // The set calls merge with the existing `currentMainChat` so the
+    // `messages` array is preserved across the update.
     if (
         useCM.currentMainChat &&
         updatedChat.chatId === useCM.currentMainChat.chatId &&
         updatedChat.chatType === useCM.currentMainChat.chatType
     ) {
-        useCM.setCurrentMainChat(updatedChat);
+        useCM.setCurrentMainChat({ ...useCM.currentMainChat, ...updatedChat });
     } else if (
         useCM.currentSubChat &&
         updatedChat.chatId === useCM.currentSubChat.chatId &&
         updatedChat.chatType === useCM.currentSubChat.chatType
     ) {
-        useCM.setCurrentSubChat(updatedChat);
+        useCM.setCurrentSubChat({ ...useCM.currentSubChat, ...updatedChat });
     }
 };
