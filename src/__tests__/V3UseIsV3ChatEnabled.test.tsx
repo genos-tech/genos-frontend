@@ -10,9 +10,10 @@
 import { renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { useIsV3ChatEnabled } from "../features/channel/V3ChatShell";
+import { useIsV3ChatEnabled, useV3ChatEnabledForKind } from "../features/channel/V3ChatShell";
 import { authApi } from "../services/api";
 import { runtimeConfigService } from "../services/runtimeConfig/runtimeConfigService";
+import { ChannelKind } from "../types/channel";
 
 vi.mock("../services/api", () => ({
     authApi: vi.fn(),
@@ -93,6 +94,56 @@ describe("useIsV3ChatEnabled", () => {
         // should still flip the hook on.
         vi.stubEnv("VITE_USE_V3_CHAT", "true");
         const { result } = renderHook(() => useIsV3ChatEnabled());
+        expect(result.current).toBe(true);
+    });
+});
+
+describe("useV3ChatEnabledForKind", () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+        vi.stubEnv("VITE_USE_V3_CHAT", "false");
+        runtimeConfigService._resetForTests();
+        runtimeConfigService.setAccessToken("tok-1");
+        runtimeConfigService.setUserId("u-alice");
+    });
+    afterEach(() => {
+        vi.unstubAllEnvs();
+        runtimeConfigService.stop();
+    });
+
+    it("flips on ONLY for the matching kind, not its siblings", async () => {
+        // DM at 100%, every other kind off.
+        mockGet({
+            version: 1,
+            use_new_chat: { dm: 10000, gm: 0, mdm: 0, pm: 0 },
+            panic_switch: false,
+        });
+        runtimeConfigService.start();
+        const dm = renderHook(() => useV3ChatEnabledForKind(ChannelKind.DM));
+        const gm = renderHook(() => useV3ChatEnabledForKind(ChannelKind.GM));
+        const mdm = renderHook(() => useV3ChatEnabledForKind(ChannelKind.MDM));
+        const pm = renderHook(() => useV3ChatEnabledForKind(ChannelKind.PM));
+        await waitFor(() => expect(dm.result.current).toBe(true));
+        expect(gm.result.current).toBe(false);
+        expect(mdm.result.current).toBe(false);
+        expect(pm.result.current).toBe(false);
+    });
+
+    it("panic_switch overrides per-kind rollout", async () => {
+        mockGet({
+            version: 1,
+            use_new_chat: { dm: 10000, gm: 10000, mdm: 10000, pm: 10000 },
+            panic_switch: true,
+        });
+        runtimeConfigService.start();
+        const { result } = renderHook(() => useV3ChatEnabledForKind(ChannelKind.DM));
+        await waitFor(() => expect(runtimeConfigService.getSnapshot().isLoaded).toBe(true));
+        expect(result.current).toBe(false);
+    });
+
+    it("build-time env var short-circuits per-kind to true", () => {
+        vi.stubEnv("VITE_USE_V3_CHAT", "true");
+        const { result } = renderHook(() => useV3ChatEnabledForKind(ChannelKind.PM));
         expect(result.current).toBe(true);
     });
 });

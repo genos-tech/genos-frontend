@@ -20,8 +20,12 @@ import { MessagesPaneV3 } from "./components/MessagesPaneV3";
 import { ThreadPanelV3 } from "./components/ThreadPanelV3";
 
 import { channelService } from "../../services/channel/channelService";
-import { runtimeConfigService } from "../../services/runtimeConfig/runtimeConfigService";
+import {
+    runtimeConfigService,
+    type RuntimeFlagName,
+} from "../../services/runtimeConfig/runtimeConfigService";
 import { useRuntimeConfig } from "../../services/runtimeConfig/useRuntimeConfig";
+import { ChannelKind } from "../../types/channel";
 
 /**
  * Build-time gate. Returns true iff the `VITE_USE_V3_CHAT` env var was
@@ -59,6 +63,36 @@ export function useIsV3ChatEnabled(): boolean {
         runtimeConfigService.isEnabled("use_new_chat.mdm") ||
         runtimeConfigService.isEnabled("use_new_chat.pm")
     );
+}
+
+const CHANNEL_KIND_TO_FLAG: Record<ChannelKind, RuntimeFlagName> = {
+    [ChannelKind.DM]: "use_new_chat.dm",
+    [ChannelKind.GM]: "use_new_chat.gm",
+    [ChannelKind.PM]: "use_new_chat.pm",
+    [ChannelKind.MDM]: "use_new_chat.mdm",
+};
+
+/**
+ * Per-kind v3 gate. Returns true iff:
+ *   - The build-time env var is `"true"`, OR
+ *   - The runtime config flag for THIS SPECIFIC kind is rolled out
+ *     to the current user (panic switch overrides).
+ *
+ * Use this inside the shell / legacy surfaces to decide whether the
+ * current channel should render via v3 paths. Important: this is
+ * STRICTLY per-kind — being bucketed for DM does not flip GM on.
+ * That lets the rollout shape match the plan (DM → GM → MDM → PM,
+ * each baked at 100% before the next starts).
+ *
+ * Returns false when called outside an authenticated session or before
+ * the first config poll completes.
+ */
+export function useV3ChatEnabledForKind(kind: ChannelKind): boolean {
+    useRuntimeConfig();
+    if (isV3ChatEnabled()) return true;
+    const flag = CHANNEL_KIND_TO_FLAG[kind];
+    if (!flag) return false;
+    return runtimeConfigService.isEnabled(flag);
 }
 
 export function V3ChatShell() {
