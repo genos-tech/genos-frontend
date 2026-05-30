@@ -2,6 +2,7 @@ import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import {
+    v3FlagsToLegacy,
     v3MessagesToLegacy,
     v3ThreadMessagesToLegacy,
 } from "../../features/chat/adapters/v3ToLegacy";
@@ -9,7 +10,6 @@ import { loadV3Chats } from "../../features/chat/services/loadV3Chats";
 import { loadV3SpecificMessages } from "../../features/chat/services/loadV3SpecificMessages";
 import { loadV3SpecificThreadMessages } from "../../features/chat/services/loadV3SpecificThreadMessages";
 import { popActivityMessages } from "../../features/chat/services/popActivityMessages";
-import { popFlaggedMessages } from "../../features/chat/services/popFlaggedMessages";
 import {
     resolveV3MessageUuid,
     resolveV3ThreadRootUuid,
@@ -151,10 +151,27 @@ export const useChatManagement = (
     const [unReadChatAndActivityCounts, setUnReadChatAndActivityCounts] = useState<number>(0);
 
     const funcSetFlaggedMessages = async () => {
-        const rawFlaggedMessages: FlaggedMessageProps[] = await popFlaggedMessages();
-        if (rawFlaggedMessages) {
-            setFlaggedMessages(rawFlaggedMessages);
-        }
+        // v3 source. The dedicated `channelService.subscribe` effect
+        // below pushes fresh `flaggedMessages` on every flag-add /
+        // flag-remove broadcast — this function exists for the legacy
+        // initialization / wake-refresh callers that still call it
+        // imperatively. It re-derives from the same v3 snapshot so the
+        // shape matches what the subscription emits.
+        //
+        // NOTE: the legacy `popFlaggedMessages` IDB pop is intentionally
+        // gone. Keeping it active raced with the v3 subscription —
+        // whichever finished last won, and the legacy result carried
+        // legacy-int chatId/messageId which broke the v3-shape
+        // assumptions in the click handler.
+        const snapshot = channelService.getSnapshot();
+        const next = v3FlagsToLegacy({
+            flags: snapshot.flags,
+            channels: snapshot.channels,
+            membersByChannel: snapshot.membersByChannel,
+            messagesByChannel: snapshot.messagesByChannel,
+            currentUserId: myself.userId || null,
+        });
+        setFlaggedMessages(next);
     };
 
     const funcSetAllChats = async () => {
@@ -582,6 +599,39 @@ export const useChatManagement = (
         apply();
         return unsubscribe;
     }, [currentThreadChat?.chatId, currentThreadChat?.threadId, currentThreadChat?.chatType]);
+
+    // Flagged-messages sidebar subscription. The legacy `popFlaggedMessages`
+    // path read from a per-user IDB store seeded by the legacy `/chat/master/`
+    // flag endpoint; v3 flags broadcast to `user:{userId}` and land in
+    // `channelService.snapshot.flags`. Derive `flaggedMessages` from that
+    // map + the cached `messagesByChannel` so flags toggled anywhere in
+    // the app (any tab, any bubble menu) refresh the sidebar list
+    // automatically without a manual `funcSetFlaggedMessages()` call.
+    //
+    // The legacy initial-load + the legacy chat-master endpoint stay in
+    // place for back-compat — they no longer overwrite the v3-derived
+    // list because this effect re-applies on every channelService notify.
+    useEffect(() => {
+        let lastFlagsRef: ReadonlyMap<string, unknown> | undefined;
+        const apply = () => {
+            const snapshot = channelService.getSnapshot();
+            if (snapshot.flags === lastFlagsRef) return;
+            lastFlagsRef = snapshot.flags;
+            const next = v3FlagsToLegacy({
+                flags: snapshot.flags,
+                channels: snapshot.channels,
+                membersByChannel: snapshot.membersByChannel,
+                messagesByChannel: snapshot.messagesByChannel,
+                currentUserId: myself.userId || null,
+            });
+            setFlaggedMessages(next);
+        };
+        const unsubscribe = channelService.subscribe(apply);
+        apply();
+        return unsubscribe;
+        // `myself.userId` is the only external input — re-arm if the
+        // signed-in user changes (rare; covers re-login flows).
+    }, [myself.userId]);
 
     // Keys sorted natural-case-insensitive ascending per the project's
     // `sort-keys` lint rule. Grouping comments (visibility / chat data

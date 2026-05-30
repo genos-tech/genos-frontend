@@ -39,11 +39,10 @@ import { extractYYYYMMDDHHMM, getLocalCurrentTimestamp } from "../../../../utils
 import { toggleMessagesPane } from "../../../../utils/sidebarUtils";
 import { formatTaskDisplayId } from "../../../tasks/utils/taskDisplayId";
 import { addMessage } from "../../services/addMessage";
-import { loadSpecificThreadMessages } from "../../services/loadSpecificThreadMessages";
 import { loadV3SpecificMessages } from "../../services/loadV3SpecificMessages";
+import { loadV3SpecificThreadMessages } from "../../services/loadV3SpecificThreadMessages";
 import { popSpecificMessages } from "../../services/popSpecificMessages";
 import { updateFlagMessage } from "../../services/updateFlagMessage";
-import { resolveV3ChannelId } from "../../utils/channelIdResolvers";
 
 // chat_type=4 carries two semantics in the wider codebase: legacy task
 // comments (live in the PM store, chat_id = project_id) and the newer MDM
@@ -122,27 +121,18 @@ const createChatFromMessages = (
     const currentChat = findChatForFlag(allChats, flaggedMessage);
     if (!currentChat || messages.length === 0) return null;
 
-    // `lastReadMessageId`: post-v3 flip the field is `string`.
-    // Numeric `Math.max(...)` against the legacy stringified-int
-    // cursor preserves the "advance to whichever is later" intent
-    // for legacy chats; for v3-shaped UUID cursors, `Number(uuid)` →
-    // NaN and the fallback `flaggedMessage.messageId` wins, which
-    // matches the UX (jumping to a flag sets that as the read mark).
-    const legacyLastRead = Number(currentChat.lastReadMessageId || "0");
-    const nextLastRead = Number.isNaN(legacyLastRead)
-        ? flaggedMessage.messageId
-        : Math.max(flaggedMessage.messageId, legacyLastRead);
+    // v3: cursor is the v3 read-cursor UUID (or empty when not synced).
+    // Don't try to compute a "later" cursor here — clicking a flag
+    // doesn't advance the read cursor; the chat-open path does that.
+    // Pass the existing cursor through unchanged so the unread-pip /
+    // banner state isn't perturbed by navigation.
     return {
-        // Prefer the v3 channel UUID when callers resolved it (so
-        // downstream `channelService.send` / live-update subscription
-        // wire up correctly); fall back to the legacy int for
-        // straggler legacy paths.
         chatId: v3ChannelUuid ?? String(flaggedMessage.chatId),
         chatName: flaggedMessage.chatName || currentChat.chatName,
         chatType: flaggedMessage.chatType,
         dmPartnerUser: flaggedMessage.dmPartnerUser,
         isPrivate: currentChat.isPrivate,
-        lastReadMessageId: String(nextLastRead),
+        lastReadMessageId: currentChat.lastReadMessageId,
         latestMessage: messages[messages.length - 1],
         latestMessageText: messages[messages.length - 1].contentText,
         mdmMembers: currentChat.mdmMembers,
@@ -285,18 +275,28 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
         target: MessageProps | undefined;
         v3ChannelUuid: string | null;
     }> => {
-        // v3 cutover. `flaggedMessage.chatId` is still a legacy int
-        // (flagged messages flow through the legacy IDB store);
-        // resolve to the v3 channel UUID, then load via channelService.
-        const v3ChannelUuid = resolveV3ChannelId(flaggedMessage.chatId, flaggedMessage.chatType);
-        if (!v3ChannelUuid) {
-            console.warn(
-                `[chatListItemForFlagMessages] no v3 mirror for legacy chatId=${flaggedMessage.chatId}`
-            );
+        // `FlaggedMessageProps.chatId` / `.messageId` slots are typed
+        // `number` for legacy compatibility, but `v3FlagsToLegacy`
+        // packs v3 UUIDs through them. Pull both out via the same
+        // structural cast the adapter uses on the way in.
+        const v3ChannelUuid = flaggedMessage.chatId as unknown as string;
+        const v3MessageUuid = flaggedMessage.messageId as unknown as string;
+        if (!v3ChannelUuid || !v3MessageUuid) {
             return { deleted: true, messages: [], target: undefined, v3ChannelUuid: null };
         }
         const messages = await loadV3SpecificMessages(v3ChannelUuid, flaggedMessage.chatType);
-        const target = messages.find((m) => m.messageId === flaggedMessage.messageId);
+        // `messageIdWithChatId` carries the v3 UUID. The legacy
+        // `messageId` field on v3-adapted messages is the per-channel
+        // `seq` integer, which won't match the UUID we're looking for.
+        const target = messages.find((m) => m.messageIdWithChatId === v3MessageUuid);
+        // TEMP DIAGNOSTIC: surface why a click resolves to "deleted".
+        console.warn("[flag-load]", {
+            foundTarget: !!target,
+            messagesCount: messages.length,
+            sampleIds: messages.slice(0, 5).map((m) => m.messageIdWithChatId),
+            v3ChannelUuid,
+            v3MessageUuid,
+        });
         return { deleted: !target, messages, target, v3ChannelUuid };
     };
 
@@ -320,9 +320,11 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                 return;
             }
 
+            // v3: `moveToSpecificIndex` is the bare message UUID
+            // (matches `indexMap` key, which is `messageIdWithChatId`).
             const newChat = createChatFromMessages(
                 messages,
-                `${flaggedMessage.chatId}-${flaggedMessage.messageId}`,
+                flaggedMessage.messageId as unknown as string,
                 flaggedMessage,
                 useCM.allChats,
                 v3ChannelUuid
@@ -349,12 +351,18 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
 
     const handleThreadMessage = async () => {
         try {
-            const threadMessages = await loadSpecificThreadMessages(
-                myself,
-                flaggedMessage.chatType,
-                flaggedMessage.chatId,
-                flaggedMessage.threadId,
-                accessToken
+            // v3 thread loader: takes channel + thread-root UUIDs.
+            // `FlaggedMessageProps.chatId` and `.threadId` slots are
+            // typed `number`, but `v3FlagsToLegacy` packs the channel
+            // UUID through `chatId` and the parent's UUID through
+            // `threadId`. Cast through the same shim.
+            const v3ChannelUuid = flaggedMessage.chatId as unknown as string;
+            const v3ThreadRootUuid = flaggedMessage.threadId as unknown as string;
+            const v3MessageUuid = flaggedMessage.messageId as unknown as string;
+            const threadMessages = await loadV3SpecificThreadMessages(
+                v3ChannelUuid,
+                v3ThreadRootUuid,
+                flaggedMessage.chatType
             );
 
             // Empty / missing thread response = thread was deleted upstream.
@@ -363,9 +371,22 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                 return;
             }
 
+            // v3: match on the message UUID (carried on
+            // `messageIdWithChatIdAndThreadId` by the v3 adapter), not
+            // the per-channel `seq` integer in `messageId`.
             const targetThreadMsg = threadMessages.find(
-                (m: ThreadMessageProps) => m.messageId === flaggedMessage.messageId
+                (m: ThreadMessageProps) => m.messageIdWithChatIdAndThreadId === v3MessageUuid
             );
+            // TEMP DIAGNOSTIC.
+            console.warn("[flag-load-thread]", {
+                foundTarget: !!targetThreadMsg,
+                sampleIds: threadMessages.slice(0, 5).map((m) => m.messageIdWithChatIdAndThreadId),
+                targetDeleted: targetThreadMsg?.isDeleted,
+                threadCount: threadMessages.length,
+                v3ChannelUuid,
+                v3MessageUuid,
+                v3ThreadRootUuid,
+            });
             if (!targetThreadMsg || targetThreadMsg.isDeleted === true) {
                 setSourceDeleted(true);
                 return;
@@ -409,7 +430,11 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                 userName: flaggedMessage.dmPartnerUser.userName,
             },
             messages: threadMessages,
-            moveToSpecificIndex: `${flaggedMessage.chatId}-${flaggedMessage.threadId}-${flaggedMessage.messageId}`,
+            // v3 `moveToSpecificIndex` is the bare message UUID;
+            // `indexMap` in the thread pane is keyed by
+            // `messageIdWithChatIdAndThreadId`, which the v3 adapter
+            // sets to the message's v3 UUID.
+            moveToSpecificIndex: flaggedMessage.messageId as unknown as string,
             project: flaggedMessage.project,
             taskExist: threadMessages[0].taskExist,
             taskId: flaggedMessage.taskId,
@@ -422,22 +447,19 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
         const isCurrentChatVisible = isCurrentChat(useCM.currentSubChat, flaggedMessage);
 
         try {
-            // v3 cutover. Resolve the legacy int chatId to its v3
-            // UUID, then load messages through channelService.
-            const v3ChannelUuid = resolveV3ChannelId(
-                flaggedMessage.chatId,
-                flaggedMessage.chatType
-            );
-            if (!v3ChannelUuid) {
-                console.warn(
-                    `[chatListItemForFlagMessages] no v3 mirror for thread nav, chatId=${flaggedMessage.chatId}`
-                );
-                return;
-            }
+            // v3: `flaggedMessage.chatId` is the channel UUID (packed
+            // through the legacy `number` slot by `v3FlagsToLegacy`).
+            const v3ChannelUuid = flaggedMessage.chatId as unknown as string;
+            const v3ThreadRootUuid = flaggedMessage.threadId as unknown as string;
+            if (!v3ChannelUuid) return;
             const messages = await loadV3SpecificMessages(v3ChannelUuid, flaggedMessage.chatType);
+            // Background nav lands on the main chat (the thread pane
+            // is what the user actually clicked into); the scroll
+            // target is the thread root, so its UUID drives the
+            // `indexMap` lookup in MainChatPane.
             const newChat = createChatFromMessages(
                 messages,
-                `${flaggedMessage.chatId}-${flaggedMessage.threadId}-${flaggedMessage.messageId}`,
+                v3ThreadRootUuid,
                 flaggedMessage,
                 useCM.allChats,
                 v3ChannelUuid
@@ -459,6 +481,20 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
     };
 
     const onClickHandler = async () => {
+        // TEMP DIAGNOSTIC: confirm the runtime shape at click time so
+        // we can tell whether the v3 subscription or the legacy
+        // popFlaggedMessages is the source. Remove after the flagged-
+        // sidebar v3 migration is verified end-to-end.
+        console.warn("[flag-click]", {
+            chatId: flaggedMessage.chatId,
+            chatIdType: typeof flaggedMessage.chatId,
+            chatType: flaggedMessage.chatType,
+            messageId: flaggedMessage.messageId,
+            messageIdType: typeof flaggedMessage.messageId,
+            threadId: flaggedMessage.threadId,
+            threadIdType: typeof flaggedMessage.threadId,
+        });
+
         // The chat (or the source message itself) has been removed since
         // this flag entry was created — short-circuit and let the user
         // unflag via the right-side icon. Selecting still gives the row a

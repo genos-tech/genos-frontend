@@ -23,11 +23,13 @@ import {
     ChannelKind,
     type Channel,
     type ChannelMember,
+    type Flag,
     type Message,
     type MessageReaction,
 } from "../../../types/channel";
 import type {
     AllChatProps,
+    FlaggedMessageProps,
     MDMMemberProps,
     MessageProps,
     ThreadMessageProps,
@@ -588,4 +590,122 @@ export function v3ThreadMessagesToLegacy(args: {
         v3ThreadMessageToLegacy({ message: root, channelId, threadRootUuid, chatType }),
         ...replies,
     ];
+}
+
+/**
+ * Locate the channel + message a v3 `Flag` points at. Scans every
+ * channel's messagesByChannel slice; bails on first hit. O(N) over
+ * total cached messages, but flagged messages are rare so the outer
+ * caller (`v3FlagsToLegacy`) keeps the perf bound at "small N".
+ *
+ * Returns `null` when the message isn't in the snapshot (channel not
+ * synced yet, or row was hard-deleted on the server). Callers should
+ * skip such flags rather than render a half-populated row.
+ */
+function locateFlaggedMessage(
+    flag: Flag,
+    channels: ReadonlyMap<string, Channel>,
+    messagesByChannel: ReadonlyMap<string, readonly Message[]>
+): { channel: Channel; message: Message } | null {
+    for (const [channelId, messages] of messagesByChannel) {
+        const m = messages.find((msg) => msg.id === flag.messageId);
+        if (!m) continue;
+        const ch = channels.get(channelId);
+        if (!ch) return null;
+        return { channel: ch, message: m };
+    }
+    return null;
+}
+
+/**
+ * v3 `Flag[]` → legacy `FlaggedMessageProps[]`. Each row is rebuilt by
+ * resolving the flagged message + its host channel in the snapshot.
+ * Flags whose channel/message hasn't synced yet are skipped (would
+ * render as a broken row otherwise).
+ *
+ * Slots typed `number` (chatId, threadId, messageId, taskId) carry the
+ * v3 UUID via `as unknown as number` casts — same migration shim used
+ * across the FE. Downstream consumers compare them as strings (chatId
+ * comparisons), look them up in indexMap, or pass through to v3
+ * mutation calls — none does integer arithmetic, so the cast is safe.
+ *
+ * `threadId`: thread membership for a flag is derived from whether
+ * the underlying Message is a thread reply. If `parentId` is set, the
+ * flagged row carries the parent's UUID as `threadId`; otherwise zero
+ * (a sentinel the legacy sidebar treats as "top-level message").
+ */
+export function v3FlagsToLegacy(args: {
+    flags: ReadonlyMap<string, Flag>;
+    channels: ReadonlyMap<string, Channel>;
+    membersByChannel: ReadonlyMap<string, readonly ChannelMember[]>;
+    messagesByChannel: ReadonlyMap<string, readonly Message[]>;
+    currentUserId: string | null;
+}): FlaggedMessageProps[] {
+    const { flags, channels, membersByChannel, messagesByChannel, currentUserId } = args;
+    const out: FlaggedMessageProps[] = [];
+    for (const flag of flags.values()) {
+        const located = locateFlaggedMessage(flag, channels, messagesByChannel);
+        if (!located) continue;
+        const { channel, message } = located;
+        const meta = (message.metadata ?? {}) as Record<string, unknown>;
+        const taskId =
+            typeof message.taskId === "number"
+                ? message.taskId
+                : typeof meta.taskId === "number"
+                  ? (meta.taskId as number)
+                  : 0;
+        const displayId =
+            typeof message.displayId === "string"
+                ? message.displayId
+                : typeof meta.displayId === "string"
+                  ? (meta.displayId as string)
+                  : undefined;
+        const dmPartner =
+            channel.kind === ChannelKind.DM
+                ? resolveDmPartner(membersByChannel.get(channel.id), currentUserId)
+                : EMPTY_USER;
+        const chatName =
+            channel.kind === ChannelKind.DM
+                ? dmPartner.userName || channel.title || ""
+                : channel.title || "";
+        const threadIdSlot =
+            message.isThreadReply && message.parentId
+                ? (message.parentId as unknown as number)
+                : 0;
+        out.push({
+            flaggedMessageId: flag.id,
+            chatType: KIND_TO_CHAT_TYPE[channel.kind] ?? 0,
+            chatName,
+            chatId: channel.id as unknown as number,
+            threadId: threadIdSlot,
+            messageId: message.id as unknown as number,
+            contentText: message.bodyText ?? "",
+            sender: {
+                userId: message.sender?.userId ?? "",
+                userName: message.sender?.userName ?? "",
+                userEmail: message.sender?.userEmail ?? "",
+                teamId: "",
+                teamName: "",
+                avatarImgPath: message.sender?.avatarImgPath ?? "",
+                tsLastSeen: "",
+                tsJoined: "",
+                isSystemUser: message.sender?.isSystemUser ?? false,
+            },
+            dmPartnerUser: dmPartner,
+            project:
+                channel.kind === ChannelKind.PM && channel.projectId != null
+                    ? ({
+                          projectId: channel.projectId,
+                          projectName: channel.title || "",
+                          projectTags: [],
+                      } as ProjectProps)
+                    : undefined,
+            taskId,
+            displayId,
+            tsSent: message.tsSent,
+        });
+    }
+    // Most-recent flag first — matches legacy sidebar ordering.
+    out.sort((a, b) => (b.tsSent || "").localeCompare(a.tsSent || ""));
+    return out;
 }
