@@ -408,9 +408,20 @@ export const useChatManagement = (
                     // without it; we add it here so a Spotlight match
                     // on a thread bubble actually scrolls.
                     if (hasMessage) {
+                        // Focus key is the bare v3 thread-reply UUID
+                        // (`messageIdWithChatIdAndThreadId`), NOT the legacy
+                        // `${chatId}-${threadId}-${messageId}` composite —
+                        // chatId/threadId are v3 UUIDs now, so that composite
+                        // never matches the indexMap/focus keys. Resolve the
+                        // reply by its numeric seq within the loaded thread
+                        // messages (mirrors the main-channel branch above
+                        // that resolves the UUID via resolveV3MessageUuid).
+                        const target = newThread.messages.find(
+                            (m) => Number(m.messageId) === messageId
+                        );
                         setCurrentThreadChat({
                             ...newThread,
-                            moveToSpecificIndex: `${chatId}-${threadId}-${messageId}`,
+                            moveToSpecificIndex: target?.messageIdWithChatIdAndThreadId,
                         });
                     }
                 }

@@ -394,7 +394,13 @@ export const App = () => {
             // Chat / thread: orchestrate via the existing helper which loads
             // the chat and pushes the right deep URL.
             if (src.chatType !== undefined && src.chatId !== undefined) {
-                const numericChatId = Number(src.chatId);
+                // `src.chatId` is the v3 channel UUID (string). Pass it
+                // through unchanged — `Number(uuid)` -> NaN here produced
+                // `/workspace/chat/dm/NaN` (same class as the Spotlight
+                // branch below; this notification-click branch was missed
+                // in that fix). The `as unknown as number` keeps
+                // moveToSpecificChat's legacy `chatId: number` param type.
+                const numericChatId = src.chatId as unknown as number;
                 const threadId = src.threadId ?? 0;
                 useCM.moveToSpecificChat(
                     src.chatType,
@@ -471,12 +477,29 @@ export const App = () => {
                 // `/message/:id` segment and the matching
                 // moveToSpecificIndex for scroll-target).
                 const chatTypeCode = CHAT_TYPE_CODE[r.chat_type];
-                const numericChatId = Number(r.chat_id);
-                const numericThreadId = r.thread_id ? Number(r.thread_id) : 0;
-                const numericMessageId = r.message_id ? Number(r.message_id) : undefined;
+                // `chat_id` is the v3 channel UUID (string). It used to be
+                // a legacy integer — hence the old `Number(r.chat_id)`,
+                // which now yields `NaN` for a UUID and produced
+                // `/workspace/chat/dm/NaN`. `moveToSpecificChat` matches on
+                // `String(chatId)` against the UUID-keyed chat list and
+                // interpolates the id straight into the URL, so pass it
+                // through unchanged. The `as unknown as number` keeps the
+                // helper's legacy `chatId: number` param type — the same
+                // migration shim used wherever v3 UUIDs ride the legacy
+                // numeric chat-id slot.
+                const chatId = r.chat_id as unknown as number;
+                // thread_id / message_id stay numeric: PM thread chips
+                // carry an integer task id (focusable), and the `> 0`
+                // guards inside `moveToSpecificChat` already drop a
+                // non-numeric (NaN) id, so a UUID thread id simply skips
+                // the thread/message focus instead of corrupting the URL.
+                // Coalesce NaN → 0 so a UUID thread id can't flip the
+                // `openThreadTaskPreview` flag on via `NaN !== 0`.
+                const numericThreadId = Number(r.thread_id) || 0;
+                const numericMessageId = Number(r.message_id) || undefined;
                 useCM.moveToSpecificChat(
                     chatTypeCode,
-                    numericChatId,
+                    chatId,
                     numericThreadId,
                     false,
                     numericThreadId !== 0,

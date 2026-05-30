@@ -255,9 +255,19 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
             };
 
             setTimeout(() => {
-                const newMoveIndex = messageId
-                    ? `${chatId}-${threadId}-${messageId}`
-                    : `${chatId}-${threadId}-1`;
+                // The thread indexMap + focus-highlight key on the bare v3
+                // reply UUID (`messageIdWithChatIdAndThreadId`). The old
+                // `${chatId}-${threadId}-${messageId}` composite embeds two
+                // UUIDs now (chatId + threadId are v3 UUIDs) and never
+                // matches a bare-UUID key, so a thread deep-link loaded the
+                // thread but never scrolled to / highlighted the reply.
+                // `messageId` is the still-numeric URL seq, so resolve the
+                // reply by it within the loaded thread messages.
+                const target =
+                    messageId !== undefined
+                        ? threadMessages.find((m) => Number(m.messageId) === messageId)
+                        : undefined;
+                const newMoveIndex = (target ?? threadMessages[0])?.messageIdWithChatIdAndThreadId;
                 useCM.setCurrentThreadChat({ ...newThread, moveToSpecificIndex: newMoveIndex });
             }, 250);
 
