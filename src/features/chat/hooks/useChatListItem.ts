@@ -2,12 +2,11 @@ import { useState } from "react";
 
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { TaskManagementState } from "../../../hooks/tasks/useTaskManagement";
+import { channelService } from "../../../services/channel/channelService";
 import { UserProps } from "../../../types/admin";
 import { AllChatProps, ChatProps, MessageProps } from "../../../types/chat";
 import { toggleMessagesPane } from "../../../utils/sidebarUtils";
-import { addChat } from "../services/addChat";
 import { loadV3SpecificMessages } from "../services/loadV3SpecificMessages";
-import { updatePinnedChats } from "../services/updatePinnedChats";
 
 interface UseChatListItemProps {
     chat: AllChatProps;
@@ -15,7 +14,6 @@ interface UseChatListItemProps {
     useCM: ChatManagementState;
     useTM: TaskManagementState;
     isPinnedChat: boolean;
-    accessToken: string;
 }
 
 export const useChatListItem = ({
@@ -24,7 +22,6 @@ export const useChatListItem = ({
     useCM,
     useTM,
     isPinnedChat,
-    accessToken,
 }: UseChatListItemProps) => {
     const [isPinned, setIsPinned] = useState(chat.isPinned);
 
@@ -83,16 +80,6 @@ export const useChatListItem = ({
 
                     const newChat: ChatProps = defineNewChat(finalMessages);
                     useCM.setCurrentMainChat(newChat);
-
-                    const chatForIDB: AllChatProps = {
-                        ...chat,
-                        lastReadMessageId: newChat.lastReadMessageId,
-                        latestMessage: newChat.latestMessage,
-                        latestMessageText: newChat.latestMessageText,
-                        TSLastMessage: newChat.TSLastMessage,
-                    };
-                    addChat(chatForIDB, chat.chatType);
-
                     useCM.setIsMainChatVisible(true);
 
                     if (useTM.isCreatingTask.flag === true || useTM.isTaskPreviewVisible) {
@@ -129,16 +116,23 @@ export const useChatListItem = ({
     };
 
     const pinChatHandler = async (
-        chatId: number,
-        chatType: number,
-        funcSetAllChats: () => Promise<void>
+        _chatId: number,
+        _chatType: number,
+        _funcSetAllChats: () => Promise<void>
     ) => {
-        await updatePinnedChats(accessToken, myself, {
-            chat_type: chatType,
-            chat_id: chatId,
-        });
-        await addChat({ ...chat, isPinned: !chat.isPinned }, chatType);
-        funcSetAllChats();
+        // v3 pin/unpin. The v3 subscription in `useChatManagement`
+        // re-derives `allChats` (with `isPinned` annotated by
+        // `channelToLegacyChat`) on the `pin.added` / `pin.removed`
+        // broadcast — no manual `funcSetAllChats` call needed.
+        try {
+            if (chat.isPinned) {
+                await channelService.unpinChannel(chat.chatId);
+            } else {
+                await channelService.pinChannel(chat.chatId);
+            }
+        } catch (e) {
+            console.error("[useChatListItem] pin toggle failed:", e);
+        }
     };
 
     // Keys sorted alphabetically per `sort-keys`.

@@ -52,7 +52,6 @@ import { purplePalette } from "../../../../theme/purplePalette";
 import { ProjectProfileProps, UserProps } from "../../../../types/admin";
 import { AllChatProps } from "../../../../types/chat";
 import { extractYYYYMMDD } from "../../../../utils/dateUtils";
-import { addChat } from "../../../chat/services/addChat";
 import { resolveLegacyChatId } from "../../../chat/utils/channelIdResolvers";
 import { leaveProject } from "../../services/leaveProject";
 import { updateProjectProfile } from "../../services/updateProjectProfile";
@@ -321,16 +320,13 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
 
             if (!uploadProfileImageResponse.ok) {
                 throw new Error(t.admin.projectProfile.uploadFailed);
-            } else {
-                addChat(
-                    {
-                        ...pmChat,
-                        profileImagePath: uploadProfileImageData.profile_image_file_name,
-                    },
-                    pmChat.chatType
-                );
-                await useCM.funcSetAllChats();
             }
+            // v3 source. The PM channel mirrors the ProjectMaster row;
+            // the v3 backend's project-update flow broadcasts
+            // `channel.updated` to all members, which `channelService`
+            // applies to `snapshot.channels`. `funcSetAllChats` re-derives
+            // from the snapshot — no legacy IDB write needed.
+            await useCM.funcSetAllChats();
         }
     };
 

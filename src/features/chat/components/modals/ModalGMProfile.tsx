@@ -53,7 +53,6 @@ import {
     bumpGMProfileImageVersion,
     useGMProfileImageVersion,
 } from "../../../../utils/gmProfileImageVersion";
-import { addChat } from "../../services/addChat";
 import { leaveGM } from "../../services/leaveGM";
 import { loadGMProfile } from "../../services/loadGMProfile";
 import { updateGMProfile } from "../../services/updateGMProfile";
@@ -296,26 +295,17 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
 
         if (!uploadProfileImageResponse.ok) {
             throw new Error(t.chat.modals.gmProfile.uploadImageError);
-        } else {
-            // Await both writes so `funcSetAllChats()` reads the
-            // updated IndexedDB row instead of racing the worker
-            // postMessage. Without this the in-memory `allChats`
-            // refresh can pick up the pre-upload row and the avatar
-            // stays stale even with the cache-buster.
-            await addChat(
-                {
-                    ...gmChat,
-                    profileImagePath: uploadProfileImageData.profile_image_file_name,
-                },
-                gmChat.chatType
-            );
-            await useCM.funcSetAllChats();
-            // Bump the per-chat image version so this modal and
-            // every mounted GMAvatar refetch with a fresh `?v=N`
-            // query string — covers the case where the backend
-            // wrote the new bytes under the same filename.
-            bumpGMProfileImageVersion(gmChat.chatType, gmChatIdLegacy);
         }
+        // v3 source. The avatar update broadcasts `channel.updated` to
+        // every member, which `channelService` applies to
+        // `snapshot.channels`. `funcSetAllChats` re-derives the legacy
+        // `allChats` list from the snapshot — no legacy IDB write.
+        await useCM.funcSetAllChats();
+        // Bump the per-chat image version so this modal and every
+        // mounted GMAvatar refetch with a fresh `?v=N` query string —
+        // covers the case where the backend wrote the new bytes under
+        // the same filename.
+        bumpGMProfileImageVersion(gmChat.chatType, gmChatIdLegacy);
     };
 
     const loadGMProfileData = async () => {

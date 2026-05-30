@@ -1,114 +1,22 @@
 // Chat-channel handlers — runs inside the chat worker.
 //
-// Consolidates the behavior of the 17 single-purpose chat workers into one
-// long-lived worker. Each handler corresponds to one request `type` from
-// the ChatRequests contract.
+// Post-v3 cutover, the only handlers that remain are the two
+// activity/read-status mutation paths that still hit the legacy
+// `/chat/activity/read/all/` and `/chat/read/` REST endpoints. All
+// per-type chat list / message / thread / flag IDB plumbing was
+// removed once the v3 `channelService` became the single source of
+// truth for chat-list, messages, threads, pins, flags, and read
+// cursors.
 
 import axios from "axios";
 
 import { authApi } from "../../../services/api";
-import {
-    ActivityMessageProps,
-    AllChatProps,
-    FlaggedMessageProps,
-    MessageProps,
-} from "../../../types/chat";
-import { STORES } from "../../config";
-import {
-    ChatRepository,
-    ChatRepositoryFactory,
-    FlaggedRepository,
-    MessageRepository,
-    ThreadMessageRepository,
-} from "../../repositories";
-import { ActivityService, ChatService } from "../../services";
+import { ActivityMessageProps } from "../../../types/chat";
+import { ActivityService } from "../../services";
 import type { ChatRequests } from "../contracts";
 import type { HandlerMap } from "../poolWorker";
-import { syncWithCheckpoint } from "../utils/syncWithCheckpoint";
-
-const BATCH_SIZE = 1000;
-
-const CHAT_STORE_BY_TYPE: Record<number, string> = {
-    1: STORES.DM_CHATS,
-    2: STORES.GM_CHATS,
-    3: STORES.PM_CHATS,
-    4: STORES.MDM_CHATS,
-};
-
-const MESSAGE_STORE_BY_TYPE: Record<number, string> = {
-    1: STORES.DM_MESSAGES,
-    2: STORES.GM_MESSAGES,
-    3: STORES.PM_MESSAGES,
-    4: STORES.MDM_MESSAGES,
-};
-
-const THREAD_STORE_BY_TYPE: Record<number, string> = {
-    1: STORES.DM_THREAD_MESSAGES,
-    2: STORES.GM_THREAD_MESSAGES,
-    3: STORES.PM_THREAD_MESSAGES,
-    4: STORES.MDM_THREAD_MESSAGES,
-};
-
-// Shared service instances — re-used across requests for the lifetime of the
-// worker. The previous one-shot workers allocated these per call.
-const chatService = new ChatService();
-const flaggedRepo = new FlaggedRepository();
-
-const sortByTSLastMessageDesc = (a: AllChatProps, b: AllChatProps): number =>
-    new Date(b.TSLastMessage).getTime() - new Date(a.TSLastMessage).getTime();
-
-const sortByMessageIdAsc = <T extends { messageId: number | string }>(a: T, b: T): number =>
-    Number(a.messageId) - Number(b.messageId);
 
 export const chatHandlers: HandlerMap<ChatRequests> = {
-    addChat: async ({ chat, chatType }) => {
-        const storeName = CHAT_STORE_BY_TYPE[chatType];
-        if (!storeName) return;
-        const repo = new ChatRepository(storeName);
-        await repo.put(chat);
-    },
-
-    addFlaggedMessage: async ({ message }) => {
-        await flaggedRepo.put(message);
-    },
-
-    addMessage: async ({ message, chatType }) => {
-        const storeName = MESSAGE_STORE_BY_TYPE[chatType];
-        if (!storeName) return;
-        const repo = new MessageRepository(storeName);
-
-        // For PM bubbles only, defend `taskCommentCount` from stale or
-        // missing values. See the comment in addMessageWorker.ts for why.
-        if (chatType === 3 && message.messageIdWithChatId) {
-            const existing = await repo.get(message.messageIdWithChatId);
-            const existingCount =
-                existing.success && existing.data?.taskCommentCount !== undefined
-                    ? existing.data.taskCommentCount
-                    : undefined;
-            const incomingCount = message.taskCommentCount;
-            if (existingCount !== undefined && incomingCount !== undefined) {
-                message.taskCommentCount = Math.max(existingCount, incomingCount);
-            } else if (existingCount !== undefined && incomingCount === undefined) {
-                message.taskCommentCount = existingCount;
-            }
-        }
-        await repo.put(message);
-    },
-
-    addThreadMessage: async ({ threadMessage, chatType }) => {
-        if (chatType === 1) await chatService.addDMThreadMessage(threadMessage);
-        else if (chatType === 2) await chatService.addGMThreadMessage(threadMessage);
-        else if (chatType === 3) await chatService.addPMThreadMessage(threadMessage);
-        // MDM thread storage is not wired in the legacy worker; leave a no-op.
-    },
-
-    checkKnownChat: async ({ chatId, chatType }) => {
-        if (chatType === 1) return chatService.isKnownDMChat(chatId);
-        if (chatType === 2) return chatService.isKnownGMChat(chatId);
-        if (chatType === 3) return chatService.isKnownPMChat(chatId);
-        if (chatType === 4) return chatService.isKnownMDMChat(chatId);
-        return false;
-    },
     markAllChatActivityAsRead: async ({
         accessToken,
         myself,
@@ -153,54 +61,6 @@ export const chatHandlers: HandlerMap<ChatRequests> = {
             }
             return { error: String(error) };
         }
-    },
-
-    popAllChats: async () => {
-        const [dm, gm, mdm, pm] = await Promise.all([
-            chatService.getDMChats(),
-            chatService.getGMChats(),
-            chatService.getMDMChats(),
-            chatService.getPMChats(),
-        ]);
-        return [...dm, ...gm, ...mdm, ...pm].sort(sortByTSLastMessageDesc);
-    },
-
-    popFlaggedMessages: async () => {
-        const result = await flaggedRepo.getAll();
-        const flagged: FlaggedMessageProps[] = result.success && result.data ? result.data : [];
-        return [...flagged].sort(
-            (a, b) => new Date(b.tsSent).getTime() - new Date(a.tsSent).getTime()
-        );
-    },
-
-    popLatestChat: async ({ chatType }) => {
-        if (chatType === 1) return chatService.getLatestDMChat();
-        if (chatType === 2) return chatService.getLatestGMChat();
-        if (chatType === 3) return chatService.getLatestPMChat();
-        return null;
-    },
-
-    popSpecificChat: async ({ chatId, chatType }) => {
-        const storeName = CHAT_STORE_BY_TYPE[chatType];
-        if (!storeName || !chatId) return null;
-        const repo = new ChatRepository(storeName);
-        return repo.getChat(chatId);
-    },
-
-    popSpecificMessages: async ({ chatId, chatType }) => {
-        const storeName = MESSAGE_STORE_BY_TYPE[chatType];
-        if (!storeName || !chatId) return [];
-        const repo = new MessageRepository(storeName);
-        const messages = await repo.getMessagesByChatId(chatType, chatId);
-        return [...messages].sort(sortByMessageIdAsc);
-    },
-
-    popSpecificThreadMessages: async ({ chatId, threadId, chatType }) => {
-        const storeName = THREAD_STORE_BY_TYPE[chatType];
-        if (!storeName || !chatId || !threadId) return [];
-        const repo = new ThreadMessageRepository(storeName);
-        const messages = await repo.getThreadMessages(chatType, chatId, threadId);
-        return [...messages].sort(sortByMessageIdAsc);
     },
 
     updateReadStatus: async ({

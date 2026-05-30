@@ -55,15 +55,13 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
         useCM,
         useTM,
         isPinnedChat,
-        accessToken: accessToken || "",
     });
 
     const handlePinClick = (event: React.MouseEvent) => {
         event.stopPropagation();
-        // PUNCH LIST (v3 chatId migration): `chat.chatId` is `string`
-        // post-flip; `pinChatHandler` (in `useChatListItem`) still hits
-        // the legacy `/updatePinnedChats/` endpoint with `chat_id: number`.
-        // Cast once at the boundary.
+        // v3 pin/unpin. The args are vestigial — `pinChatHandler`
+        // reads `chat.chatId` / `chat.isPinned` from the closure now,
+        // not from the call args. Kept for prop-shape compatibility.
         pinChatHandler(chat.chatId as unknown as number, chat.chatType, useCM.funcSetAllChats);
         setIsPinned(!isPinned);
     };

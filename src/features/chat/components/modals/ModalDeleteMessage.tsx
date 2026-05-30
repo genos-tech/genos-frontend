@@ -5,7 +5,6 @@ import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import { Alert, Box, Button, Modal, ModalDialog, Stack, Typography } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
-import { FlaggedService } from "../../../../db/services/flagged.service";
 import { useTranslation } from "../../../../i18n";
 import {
     ChatProps,
@@ -72,20 +71,13 @@ export const ModalDeleteMessage: React.FC<Props> = ({
         // list at call time — `flaggedMessages` (the prop) can be a render
         // or two behind once the parent message-bubble is memoized.
         // `hadMatch` is captured inside the updater and read after.
-        let hadMatch = false;
-        setFlaggedMessages((prev) => {
-            const next = prev.filter((fm) => fm.flaggedMessageId !== flaggedId);
-            hadMatch = next.length !== prev.length;
-            return hadMatch ? next : prev;
-        });
-        if (hadMatch) {
-            try {
-                const flaggedService = new FlaggedService();
-                await flaggedService.deleteFlaggedMessage(flaggedId);
-            } catch {
-                // Non-critical
-            }
-        }
+        // Optimistic local removal. The v3 `channelService.deleteMessage`
+        // chain also fires `_removeFlagByMessage`, which the
+        // `useChatManagement` subscription picks up to re-derive
+        // `flaggedMessages` from the snapshot — so even without this
+        // optimistic update the row would clear within one notify
+        // cycle, but updating eagerly avoids a one-frame flicker.
+        setFlaggedMessages((prev) => prev.filter((fm) => fm.flaggedMessageId !== flaggedId));
     };
 
     const handleDeleteMessage = async () => {

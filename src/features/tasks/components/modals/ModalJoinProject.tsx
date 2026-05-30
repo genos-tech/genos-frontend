@@ -15,8 +15,6 @@ import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps, ChatProps } from "../../../../types/chat";
 import { ProjectProps } from "../../../../types/tasks";
-import { addChat } from "../../../chat/services/addChat";
-import { addMessage } from "../../../chat/services/addMessage";
 
 const fadeIn = keyframes`
     from { opacity: 0; transform: scale(0.95) translateY(-10px); }
@@ -196,9 +194,13 @@ export const ModalJoinProject: React.FC<Props> = ({
                                         isPinned: loadedChat[0].isPinned,
                                         tsLastAllReadActivity: loadedChat[0].tsLastAllReadActivity,
                                     };
-                                    await addChat(newChat, newChat.chatType);
-                                    await addMessage(newChat.latestMessage, newChat.chatType);
-
+                                    // v3 source. The PM channel was created
+                                    // server-side as part of the join, and
+                                    // `channelService` picks it up via the
+                                    // `channel.created` broadcast. The
+                                    // existing `funcSetAllChats` subscription
+                                    // in `useChatManagement` then re-derives
+                                    // `allChats` from the v3 snapshot.
                                     useCM.setAllChats([newChat, ...useCM.allChats]);
                                 }
                             })();

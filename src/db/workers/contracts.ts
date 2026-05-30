@@ -8,13 +8,7 @@
 // needs (smaller bundle, faster startup).
 
 import type { UserProps } from "../../types/admin";
-import type {
-    ActivityMessageProps,
-    AllChatProps,
-    FlaggedMessageProps,
-    MessageProps,
-    ThreadMessageProps,
-} from "../../types/chat";
+import type { ActivityMessageProps } from "../../types/chat";
 import type { InboxItemProps } from "../../types/common";
 import type { ChatNoteProps, MyNoteProps, TaskNoteProps } from "../../types/notes";
 import type { TaskTableProps } from "../../types/tasks";
@@ -22,17 +16,13 @@ import type { TaskTableProps } from "../../types/tasks";
 type AnyNote = MyNoteProps | TaskNoteProps | ChatNoteProps;
 
 // ---- chat channel ---------------------------------------------------------
+//
+// Post-v3 cutover, only the two read-status mutation paths remain.
+// Everything else (chat list / messages / threads / flags / pins) lives
+// in `channelService` and persists via the v3 IDB hydrate/snapshot
+// pipeline.
 
 export type ChatRequests = {
-    addChat: { req: { chat: AllChatProps; chatType: number }; res: void };
-    addMessage: { req: { message: MessageProps; chatType: number }; res: void };
-    addThreadMessage: {
-        req: { threadMessage: ThreadMessageProps; chatType: number };
-        res: void;
-    };
-    addFlaggedMessage: { req: { message: FlaggedMessageProps }; res: void };
-    popFlaggedMessages: { req: Record<string, never>; res: FlaggedMessageProps[] };
-    checkKnownChat: { req: { chatId: number; chatType: number }; res: boolean };
     markAllChatActivityAsRead: {
         req: {
             accessToken: string;
@@ -42,20 +32,6 @@ export type ChatRequests = {
             activityMessages: ActivityMessageProps[];
         };
         res: ActivityMessageProps[] | { error: string };
-    };
-    popAllChats: { req: Record<string, never>; res: AllChatProps[] };
-    popLatestChat: { req: { chatType: number }; res: AllChatProps | null };
-    popSpecificChat: {
-        req: { chatId: number; chatType: number };
-        res: AllChatProps | null;
-    };
-    popSpecificMessages: {
-        req: { chatId: number; chatType: number };
-        res: MessageProps[];
-    };
-    popSpecificThreadMessages: {
-        req: { chatId: number; threadId: number; chatType: number };
-        res: ThreadMessageProps[];
     };
     updateReadStatus: {
         req: {

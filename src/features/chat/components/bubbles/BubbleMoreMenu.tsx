@@ -14,7 +14,6 @@ import { Box } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { MoreMenu, MoreMenuItem } from "../../../../components/ui/MoreMenu";
-import { FlaggedService } from "../../../../db/services/flagged.service";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
@@ -22,9 +21,6 @@ import { useTranslation } from "../../../../i18n";
 import { channelService } from "../../../../services/channel/channelService";
 import { UserProps } from "../../../../types/admin";
 import { ChatProps, FlaggedMessageProps, MessageProps } from "../../../../types/chat";
-import { addFlaggedMessage } from "../../services/addFlaggedMessage";
-import { addMessage } from "../../services/addMessage";
-import { getFirstLine } from "../../utils/common";
 import { ModalDeleteMessage } from "../modals/ModalDeleteMessage";
 
 type BubbleMoreMenuProps = {
@@ -94,83 +90,26 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
     }, [message]);
 
     const handleFlagClick = () => {
-        setCurrentChat({
-            ...chat,
-            messages: chat.messages.map((m) => ({
-                ...m,
-                isFlagged: m.messageId === message.messageId ? !m.isFlagged : m.isFlagged,
-            })),
-        });
-        addMessage({ ...message, isFlagged: !isFlagged } as MessageProps, chat.chatType);
-
-        if (!isFlagged) {
-            // PUNCH LIST (v3 chatId migration): `FlaggedMessageProps.chatId`
-            // is still `number` (the persistence layer + the legacy
-            // `/chat/flagged-update/` endpoint key by integer ids).
-            // `chat.chatId` is `string` post-v3 flip — bridge via the
-            // `unknown` cast. Same runtime gap as `useHistoryTracker`:
-            // v3-shaped UUID chatIds round-trip as string-disguised-as-
-            // number through the flagged store. Fix properly by flipping
-            // `FlaggedMessageProps.chatId` to string in a follow-on.
-            // Keys sorted alphabetically per `sort-keys`.
-            const flaggedRow = {
-                chatId: chat.chatId,
-                chatName: chat.chatName,
-                chatType: chat.chatType,
-                contentText: getFirstLine(message.content[0]),
-                dmPartnerUser: chat.dmPartnerUser,
-                flaggedMessageId: `${chat.chatType}-${chat.chatId}-${0}-${message.messageId}`,
-                messageId: message.messageId,
-                project: chat.project,
-                sender: message.sender,
-                taskId: 0,
-                threadId: 0,
-                tsSent: message.tsSent,
-            } as unknown as FlaggedMessageProps;
-            addFlaggedMessage(flaggedRow);
-
-            // Functional updater reads the latest list at call time — required
-            // for the parent bubble's React.memo to remain safe (we no longer
-            // close over `flaggedMessages` at render time).
-            setFlaggedMessages((prev) => [...prev, flaggedRow]);
-        } else {
-            const flaggedService = new FlaggedService();
-            flaggedService.deleteFlaggedMessage(
-                `${chat.chatType}-${chat.chatId}-${0}-${message.messageId}`
-            );
-
-            // Functional updater — see the spread case above for why.
-            setFlaggedMessages((prev) =>
-                prev.filter(
-                    (_message) =>
-                        _message.flaggedMessageId !==
-                        `${chat.chatType}-${chat.chatId}-${0}-${message.messageId}`
-                )
-            );
-        }
-
-        // v3 flag persistence routes through channelService — the v3
-        // backend's `Flag` model keys by the message UUID. Optimistic
-        // state above already toggled; broadcast to other tabs +
-        // persist via `flag.add` / `flag.remove`. The optimistic
-        // `_upsertFlag` inside channelService deduplicates against
-        // the server's `flag.added` echo, so re-receiving our own
-        // emit is a no-op.
+        // v3 owns the flag state end-to-end. `channelService.flagMessage`
+        // optimistically writes to `_flagByMessageId`, fires a notify,
+        // and the existing v3 subscriptions in `useChatManagement`
+        // re-derive `flaggedMessages` and re-adapt the current chat's
+        // bubble `isFlagged` flags. No legacy IDB / sidebar plumbing
+        // needed here.
         const v3MessageId = message.messageIdWithChatId;
-        if (v3MessageId) {
-            if (!isFlagged) {
-                void channelService
-                    .flagMessage(v3MessageId)
-                    .catch((e) => console.error("[BubbleMoreMenu] flag failed:", e));
-            } else {
-                void channelService
-                    .unflagMessage(v3MessageId)
-                    .catch((e) => console.error("[BubbleMoreMenu] unflag failed:", e));
-            }
-        } else {
+        if (!v3MessageId) {
             console.warn("[BubbleMoreMenu] missing v3 messageUuid — flag not persisted");
+            return;
         }
-
+        if (!isFlagged) {
+            void channelService
+                .flagMessage(v3MessageId)
+                .catch((e) => console.error("[BubbleMoreMenu] flag failed:", e));
+        } else {
+            void channelService
+                .unflagMessage(v3MessageId)
+                .catch((e) => console.error("[BubbleMoreMenu] unflag failed:", e));
+        }
         setIsFlagged(!isFlagged);
     };
 
