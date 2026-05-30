@@ -447,16 +447,26 @@ export const useChatManagement = (
         if (previousUserIdRef.current === next) return;
         const isSwitchAway = previousUserIdRef.current !== null;
         previousUserIdRef.current = next;
-        if (!isSwitchAway) return;
-        setAllChats([]);
-        setFlaggedMessages([]);
-        setActivityMessages([]);
-        setCurrentMainChat(undefined);
-        setCurrentSubChat(undefined);
-        setCurrentThreadChat(undefined);
-        setUnReadChatCounts({});
-        setUnReadActivityMessageCounts(-1);
-        setUnReadChatAndActivityCounts(0);
+        // On a genuine account SWITCH (prev was a real user), wipe the
+        // previous user's state so it can't bleed into the new session.
+        // On the INITIAL null→user hydration there's nothing to clear —
+        // and crucially we must NOT early-return here. The "fire ONCE on
+        // mount" effect below runs BEFORE `myself.userId` hydrates from
+        // localStorage, so its `loadV3Chats(null)` resolves every DM
+        // partner to EMPTY_USER (the chat-list rows render "?"/blank
+        // names). The loader re-fire at the end (gated on `next`) is what
+        // lands the partner identities once the real userId is available.
+        if (isSwitchAway) {
+            setAllChats([]);
+            setFlaggedMessages([]);
+            setActivityMessages([]);
+            setCurrentMainChat(undefined);
+            setCurrentSubChat(undefined);
+            setCurrentThreadChat(undefined);
+            setUnReadChatCounts({});
+            setUnReadActivityMessageCounts(-1);
+            setUnReadChatAndActivityCounts(0);
+        }
         // Re-prime from the new user's v3 snapshot once auth is
         // back. If the user just signed out (`next === null`) we
         // intentionally don't re-load — the loaders would fail

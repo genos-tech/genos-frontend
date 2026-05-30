@@ -162,6 +162,41 @@ function resolveDmPartner(
 }
 
 /**
+ * DM partner resolved SERVER-SIDE — the `dmPartner` field the v3 channel
+ * serializer now returns on DM rows. Preferred over `resolveDmPartner`,
+ * which is racy on first load: it needs the viewer's user id AND a
+ * members snapshot at chat-list build time, and the chat-list loader can
+ * fire before `myself.userId` hydrates (and stale-closure re-fires can
+ * clobber a good result) — which left DM rows with a blank name while
+ * GM/PM (title-based) rendered fine. Returns null for non-DM channels or
+ * when the field is absent (older cached rows), so the caller falls back
+ * to the client-side resolver.
+ */
+function dmPartnerFromWire(channel: Channel): UserProps | null {
+    const w = (
+        channel as Channel & {
+            dmPartner?: {
+                userId?: string;
+                userName?: string;
+                userEmail?: string;
+                avatarImgPath?: string;
+            } | null;
+        }
+    ).dmPartner;
+    if (!w || !w.userId) return null;
+    return {
+        userId: w.userId,
+        userName: w.userName ?? "",
+        userEmail: w.userEmail ?? "",
+        teamId: "",
+        teamName: "",
+        avatarImgPath: w.avatarImgPath ?? "",
+        tsLastSeen: "",
+        tsJoined: "",
+    };
+}
+
+/**
  * Adapter for the chat list's `latestMessage` slot. The legacy
  * `MessageProps` shape carries integer ids that the v3 backend
  * doesn't have direct equivalents for — we leave those as a tsc
@@ -261,7 +296,9 @@ export function channelToLegacyChat(args: {
     // chatName so the chat-list row and MainChatPaneHeader render
     // something instead of "". Non-DM channels use their stored title.
     const dmPartner =
-        channel.kind === ChannelKind.DM ? resolveDmPartner(members, currentUserId) : EMPTY_USER;
+        channel.kind === ChannelKind.DM
+            ? (dmPartnerFromWire(channel) ?? resolveDmPartner(members, currentUserId))
+            : EMPTY_USER;
     const chatName =
         channel.kind === ChannelKind.DM
             ? dmPartner.userName || channel.title || ""
@@ -745,7 +782,8 @@ export function v3FlagsToLegacy(args: {
                   : undefined;
         const dmPartner =
             channel.kind === ChannelKind.DM
-                ? resolveDmPartner(membersByChannel.get(channel.id), currentUserId)
+                ? (dmPartnerFromWire(channel) ??
+                  resolveDmPartner(membersByChannel.get(channel.id), currentUserId))
                 : EMPTY_USER;
         const chatName =
             channel.kind === ChannelKind.DM
