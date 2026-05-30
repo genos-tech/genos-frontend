@@ -18,6 +18,7 @@
 
 import type { Socket } from "socket.io-client";
 
+import { handleV3Activity } from "../../features/chat/services/handleV3Activity";
 import type {
     Channel,
     ChannelKind,
@@ -111,6 +112,20 @@ export function registerSocketRouter(socket: Socket): () => void {
     on<{ messageId: string }>("flag.removed", (e) =>
         channelService.handleFlagRemoved(e.messageId)
     );
+
+    // Activity-feed live push. The v3 message and reaction handlers
+    // emit `activity.created` to each recipient's `user:{id}` room
+    // alongside the per-channel broadcasts; landing here means a
+    // sidebar entry needs to materialise for the current user without
+    // a refresh. Fire-and-forget — failures are non-fatal (the next
+    // `loadActivityHistory` call reconciles).
+    on<Record<string, unknown>>("activity.created", (a) => {
+        // Diagnostic log retained while the activity pipeline beds in.
+        // Drop once the live-update flow is verified end-to-end.
+        // eslint-disable-next-line no-console
+        console.log("[v3 socketRouter] activity.created received", a);
+        void handleV3Activity(a);
+    });
 
     return () => {
         offs.forEach((off) => off());

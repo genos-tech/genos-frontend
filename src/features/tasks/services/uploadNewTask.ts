@@ -2,6 +2,8 @@ import { Socket } from "socket.io-client";
 
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { getMessages } from "../../../i18n";
+import { channelService } from "../../../services/channel/channelService";
+import { ChannelKind } from "../../../types/channel";
 import { UserProps } from "../../../types/admin";
 import { TaskProps } from "../../../types/tasks";
 import {
@@ -197,123 +199,107 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                     sprintId: taskContent.sprintId ?? null,
                 });
 
-                // Send "task created" message
-                if (socket) {
-                    // 1. join "pm" chat group
-                    socket.emit(
-                        "join",
-                        {
-                            joiningCGId: taskContent.project.projectId,
-                            joiningCGName: taskContent.project.projectName,
-                            chatType: 3,
-                            dmPartnerUserId: null,
-                        },
-                        (ack: any) => {
-                            const createTaskMessage = taskMessageTemplate(myself, taskContent);
-                            if (taskContent.project !== null && createTaskMessage) {
-                                // Send "task created" message to PM
-                                socket.emit(
-                                    "message",
+                // Post "task created" messages via v3 channelService.
+                // The legacy `socket.emit("join" / "message" / "thread_message")`
+                // path went to the deleted `/` namespace handlers; the v3
+                // replacement is `channelService.send(channelUuid, body,
+                // { bodyText, parentId, metadata })`. PM channel UUID is
+                // looked up by scanning the channelService snapshot for
+                // `kind=PM` + matching `projectId`.
+                const createTaskMessage = taskMessageTemplate(myself, taskContent);
+                if (taskContent.project && createTaskMessage) {
+                    const pmChannel = [
+                        ...channelService.getSnapshot().channels.values(),
+                    ].find(
+                        (ch) =>
+                            ch.kind === ChannelKind.PM &&
+                            ch.projectId === taskContent.project!.projectId
+                    );
+                    if (!pmChannel) {
+                        console.error(
+                            "uploadNewTask: PM channel not found in channelService snapshot",
+                            { projectId: taskContent.project.projectId }
+                        );
+                    } else {
+                        const taskMetadata = {
+                            taskId: taskCreateData.task.task_id,
+                            displayId: taskCreateData.task.displayId,
+                            taskStatus: taskCreateData.task.status,
+                            systemUserId: taskContent.project.systemUserId,
+                        };
+                        // Top-level "task created" message in the PM channel.
+                        try {
+                            const sent = await channelService.send(
+                                pmChannel.id,
+                                createTaskMessage,
+                                {
+                                    bodyText: taskContent.title,
+                                    metadata: taskMetadata,
+                                }
+                            );
+                            // First thread reply on the task message —
+                            // legacy posted a follow-up that lives in the
+                            // task's thread pane. `parentId = sent.id`
+                            // turns it into a thread reply.
+                            const threadFollowup =
+                                taskCreatedThreadMessageTemplate(myself);
+                            if (threadFollowup && sent?.id) {
+                                await channelService.send(
+                                    pmChannel.id,
+                                    threadFollowup,
                                     {
-                                        methodType: "POST",
-                                        message: createTaskMessage,
-                                        destCGName: taskContent.project.projectName,
-                                        destCGId: taskContent.project.projectId,
-                                        chatType: 3,
-                                        dmPartnerUserId: null,
-                                        taskId: taskCreateData.task.task_id,
-                                        displayId: taskCreateData.task.displayId,
-                                        taskStatus: taskCreateData.task.status,
-                                        systemUserId: taskContent.project.systemUserId,
-                                        messageIdForPut: null,
-                                    },
-                                    (ack: any) => {
-                                        if (taskCreateData.task.task_id && taskContent.project) {
-                                            const newTaskCreatedThreadMessage =
-                                                taskCreatedThreadMessageTemplate(myself);
-                                            socket.emit("thread_message", {
-                                                methodType: "POST",
-                                                isInit: false,
-                                                rootMessageTSSent: "",
-                                                rootMessageSenderId: null,
-                                                rootMessageReceiverId: null,
-                                                threadId: null,
-                                                threadMessage: newTaskCreatedThreadMessage,
-                                                chatType: 3,
-                                                dmPartnerUserId: null,
-                                                senderId: taskContent.project.systemUserId,
-                                                senderName: taskContent.project.projectName,
-                                                destCGName: taskContent.project.projectName,
-                                                destCGId: taskContent.project.projectId,
-                                                taskId: taskCreateData.task.task_id,
-                                                displayId: taskCreateData.task.displayId,
-                                                systemUserId: taskContent.project.systemUserId,
-                                                messageIdForPut: null,
-                                            });
-                                        }
+                                        bodyText: taskContent.title,
+                                        parentId: sent.id,
+                                        metadata: taskMetadata,
                                     }
                                 );
-
-                                // Messaging for a new task from a thread chat
-                                if (
-                                    useCM.isThreadVisible === true &&
-                                    useCM.currentMainChat &&
-                                    useCM.currentThreadChat &&
-                                    (useCM.currentMainChat.chatType === 1 ||
-                                        useCM.currentMainChat.chatType === 2 ||
-                                        useCM.currentMainChat.chatType === 4) &&
-                                    useCM.currentThreadChat.threadId !== null &&
-                                    useCM.currentThreadChat.threadId !== 0
-                                ) {
-                                    // Not update message_body, just update task_id here.
-                                    socket.emit("message", {
-                                        methodType: "PUT",
-                                        message: null,
-                                        destCGName: useCM.currentMainChat.chatName,
-                                        destCGId: useCM.currentMainChat.chatId,
-                                        chatType: useCM.currentMainChat.chatType,
-                                        dmPartnerUserId:
-                                            useCM.currentMainChat.dmPartnerUser.userId,
-                                        taskId: taskCreateData.task.task_id,
-                                        displayId: taskCreateData.task.displayId,
-                                        taskStatus: taskCreateData.task.status,
-                                        systemUserId: taskContent.project.systemUserId,
-                                        messageIdForPut: useCM.currentThreadChat.threadId,
-                                        isPrivate: useCM.currentMainChat.isPrivate,
-                                    });
-
-                                    socket.emit("thread_message", {
-                                        methodType: "POST",
-                                        isInit: false,
-                                        rootMessageTSSent: "",
-                                        rootMessageSenderId: null,
-                                        rootMessageReceiverId: null,
-                                        threadId: useCM.currentThreadChat.threadId,
-                                        threadMessage: createTaskMessage,
-                                        chatType: useCM.currentThreadChat.chatType,
-                                        dmPartnerUserId:
-                                            useCM.currentThreadChat.dmPartnerUser.userId,
-                                        senderId: taskContent.project.systemUserId,
-                                        senderName: taskContent.project.projectName,
-                                        destCGName: useCM.currentThreadChat.chatName,
-                                        destCGId: useCM.currentThreadChat.chatId,
-                                        taskId: taskCreateData.task.task_id,
-                                        displayId: taskCreateData.task.displayId,
-                                        taskStatus: taskCreateData.task.status,
-                                        systemUserId: taskContent.project.systemUserId,
-                                        messageIdForPut: null,
-                                    });
-                                }
-                            } else {
-                                console.error(
-                                    "Failed to send 'task created message from a thread chat'."
-                                );
                             }
+                        } catch (e) {
+                            console.error("uploadNewTask: failed to post PM task message", e);
                         }
-                    );
-                } else {
-                    console.error("socket not found");
+                    }
                 }
+
+                // When the user creates a task FROM an open thread in a
+                // DM/GM/MDM, also post the task summary as a reply in
+                // that thread so the conversation has a trail back to
+                // the task. `currentMainChat.chatId` / `currentThreadChat.
+                // threadId` already carry v3 UUIDs post-migration.
+                if (
+                    useCM.isThreadVisible === true &&
+                    useCM.currentMainChat &&
+                    useCM.currentThreadChat &&
+                    (useCM.currentMainChat.chatType === 1 ||
+                        useCM.currentMainChat.chatType === 2 ||
+                        useCM.currentMainChat.chatType === 4) &&
+                    useCM.currentThreadChat.threadId !== null &&
+                    useCM.currentThreadChat.threadId !== 0 &&
+                    taskContent.project &&
+                    createTaskMessage
+                ) {
+                    try {
+                        await channelService.send(
+                            String(useCM.currentMainChat.chatId),
+                            createTaskMessage,
+                            {
+                                bodyText: taskContent.title,
+                                parentId: String(useCM.currentThreadChat.threadId),
+                                metadata: {
+                                    taskId: taskCreateData.task.task_id,
+                                    displayId: taskCreateData.task.displayId,
+                                    taskStatus: taskCreateData.task.status,
+                                    systemUserId: taskContent.project.systemUserId,
+                                },
+                            }
+                        );
+                    } catch (e) {
+                        console.error(
+                            "uploadNewTask: failed to post task summary into open thread",
+                            e
+                        );
+                    }
+                }
+                void socket;
             }
         } catch (error) {
             console.error(error);

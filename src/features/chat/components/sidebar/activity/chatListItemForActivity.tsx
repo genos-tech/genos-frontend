@@ -38,7 +38,7 @@ import { loadSpecificTask } from "../../../../tasks/services/loadSpecificTask";
 import { useActivityStatus } from "../../../hooks/useActivityStatus";
 import { loadV3SpecificMessages } from "../../../services/loadV3SpecificMessages";
 import { loadV3SpecificThreadMessages } from "../../../services/loadV3SpecificThreadMessages";
-import { resolveV3ChannelId, resolveV3ThreadRootUuid } from "../../../utils/channelIdResolvers";
+import { resolveV3ThreadRootUuid } from "../../../utils/channelIdResolvers";
 import { ActivityContent } from "./ActivityContent";
 import { ActivityHeader } from "./ActivityHeader";
 
@@ -228,18 +228,13 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
 
         toggleMessagesPane();
 
-        // v3 cutover. Activities still flow through legacy
-        // (`popActivityMessages`) so `activity.chatId` is a legacy
-        // integer. Resolve it via the v3 mirror in the cached channel
-        // list, then load messages through channelService. Without
-        // this the legacy `popSpecificMessages` returned `[]` for
-        // UUID-cast ints and the click silently opened an empty chat.
+        // Post v3 activity rebuild: `activity.chatId` is already the
+        // v3 Channel UUID (the adapter casts it through the legacy
+        // `number` slot). No legacy-int → UUID resolution needed.
         try {
-            const v3ChannelUuid = resolveV3ChannelId(activity.chatId, chatType);
+            const v3ChannelUuid = String(activity.chatId);
             if (!v3ChannelUuid) {
-                console.warn(
-                    `[chatListItemForActivity] no v3 mirror for legacy chatId=${activity.chatId}`
-                );
+                console.warn("[chatListItemForActivity] empty activity.chatId");
                 return;
             }
             const messages = await loadV3SpecificMessages(v3ChannelUuid, chatType);
@@ -279,14 +274,10 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
         if (shouldUseMainChat) {
             toggleMessagesPane();
             try {
-                // v3 cutover: same pattern as `handleChatNavigation`
-                // above — resolve `activity.chatId` (legacy PM int)
-                // to its v3 channel UUID, then load via channelService.
-                const v3ChannelUuid = resolveV3ChannelId(activity.chatId, 3);
+                // v3-native: activity.chatId IS the PM channel UUID.
+                const v3ChannelUuid = String(activity.chatId);
                 if (!v3ChannelUuid) {
-                    console.warn(
-                        `[chatListItemForActivity] no v3 mirror for PM legacy chatId=${activity.chatId}`
-                    );
+                    console.warn("[chatListItemForActivity] empty PM activity.chatId");
                     return;
                 }
                 const messages = await loadV3SpecificMessages(v3ChannelUuid, 3);
@@ -310,10 +301,9 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                     loadTask();
                     useTM.setCurrentPreviewTaskId(activity.taskId);
 
-                    // Activity feed still uses legacy ints. Resolve to
-                    // v3 UUIDs at the boundary: PM thread root is the
-                    // task-card-header message whose `taskId === activity.taskId`.
-                    const v3ChannelUuid = resolveV3ChannelId(activity.chatId, 3);
+                    // PM thread root: the message whose `taskId === activity.taskId`.
+                    // `activity.chatId` is the v3 PM Channel UUID directly.
+                    const v3ChannelUuid = String(activity.chatId);
                     const v3ThreadRootUuid = v3ChannelUuid
                         ? resolveV3ThreadRootUuid(v3ChannelUuid, activity.taskId, true)
                         : null;
@@ -373,18 +363,18 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
     // Handle thread message activity
     const handleThreadMessageActivity = async () => {
         try {
-            // Activity feed still uses legacy ints. For PM the legacy
-            // `threadId` is the task id; for DM/GM/MDM it's the parent
-            // message's per-channel seq. The resolver disambiguates
-            // via the `isPm` flag.
-            const v3ChannelUuid = resolveV3ChannelId(activity.chatId, activity.chatType);
-            const v3ThreadRootUuid = v3ChannelUuid
-                ? resolveV3ThreadRootUuid(
-                      v3ChannelUuid,
-                      activity.threadId,
-                      activity.chatType === 3
-                  )
-                : null;
+            // v3-native: activity.chatId is the v3 Channel UUID, and
+            // activity.threadId is the v3 parent-message UUID (set by
+            // the v3 → legacy activity adapter for non-PM kinds). For
+            // PM, `threadId` is still the task id (legacy seq-key);
+            // the resolver disambiguates via `isPm`.
+            const v3ChannelUuid = String(activity.chatId);
+            const v3ThreadRootUuid =
+                activity.chatType === 3
+                    ? v3ChannelUuid
+                        ? resolveV3ThreadRootUuid(v3ChannelUuid, activity.taskId, true)
+                        : null
+                    : String(activity.threadId) || null;
             const threadMessages: ThreadMessageProps[] =
                 v3ChannelUuid && v3ThreadRootUuid
                     ? await loadV3SpecificThreadMessages(

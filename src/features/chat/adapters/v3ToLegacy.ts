@@ -226,18 +226,25 @@ export function channelToLegacyChat(args: {
         channel.kind === ChannelKind.DM
             ? dmPartner.userName || channel.title || ""
             : channel.title || "";
+    // `countUnreadChats` in useChatManagement compares
+    // `Number(lastReadMessageId) < latestMessage.messageId` to decide
+    // whether the chat is unread. The v3 cursor stores the read
+    // position as a UUID (`ReadCursor.lastReadMessageId`), which doesn't
+    // map to the legacy integer seq comparison. The Channel already
+    // carries `unreadCount` (kept current by `handleReadAdvanced` +
+    // `handleMessageCreated`), so derive the legacy `lastReadMessageId`
+    // from that: when unread == 0, emit the latest seq so the comparison
+    // returns false; when unread > 0, emit "0" so it returns true. The
+    // exact per-message read position isn't needed by the sidebar; only
+    // the boolean "is there anything new" matters.
+    const latestSeq = channel.latestMessage?.seq ?? 0;
+    const lastReadForLegacy = channel.unreadCount === 0 ? String(latestSeq) : "0";
     return {
         chatType: KIND_TO_CHAT_TYPE[channel.kind] ?? 0,
         chatId: channel.id,
         chatName,
         dmPartnerUser: dmPartner,
-        // PUNCH LIST: lastReadMessageId in the legacy shape was the
-        // integer message id. v3 carries a `ReadCursor` keyed on the
-        // message UUID. Until the cursor migrates too, we emit empty
-        // string — consumers that read this value get a stable no-op
-        // and the unread-count derivation in useChatManagement bails
-        // out cleanly.
-        lastReadMessageId: "",
+        lastReadMessageId: lastReadForLegacy,
         latestMessage: latest,
         latestMessageText: latest.contentText,
         TSLastMessage: latest.tsSent,

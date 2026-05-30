@@ -5,7 +5,7 @@
 import axios from "axios";
 
 import { loadActivityHistory } from "../../../features/chat/components/sidebar/activity/services/loadActivityHistory";
-import { authApi } from "../../../services/api";
+import { v3ApiBaseURL } from "../../../services/v3Api";
 import type { ActivityMessageProps } from "../../../types/chat";
 import { ActivityService } from "../../services";
 import type { ActivityRequests } from "../contracts";
@@ -21,7 +21,19 @@ const activityService = new ActivityService();
 
 export const activityHandlers: HandlerMap<ActivityRequests> = {
     addActivityMessage: async ({ activityMessage }) => {
-        await activityService.addActivityMessage(activityMessage);
+        const ok = await activityService.addActivityMessage(activityMessage);
+        // eslint-disable-next-line no-console
+        console.log(
+            `[worker:addActivityMessage] ok=${ok} key=${activityMessage?.activityId} ` +
+                `tsSent=${activityMessage?.tsSent}`
+        );
+        // Sanity check — read back immediately so we can confirm the row
+        // actually landed. Diagnoses silent put() failures (e.g. schema
+        // mismatch, IndexedDB constraint violation) that `BaseRepository.put`
+        // currently swallows.
+        const all = await activityService.getAllActivityMessages();
+        // eslint-disable-next-line no-console
+        console.log(`[worker:addActivityMessage] post-write IDB has ${all.length} rows`);
     },
 
     loadActivityHistory: async ({ myself, accessToken }) => {
@@ -87,23 +99,49 @@ export const activityHandlers: HandlerMap<ActivityRequests> = {
 
     popActivityMessages: async ({ myself }) => {
         const messages: ActivityMessageProps[] = await activityService.getAllActivityMessages();
-        return [...messages]
-            .filter((m) => !(m.activityType === 2 && myself.userId !== m.senderId))
-            .sort((a, b) => new Date(b.tsSent).getTime() - new Date(a.tsSent).getTime());
+        // eslint-disable-next-line no-console
+        console.log(
+            `[worker:popActivityMessages] myself.userId=${myself.userId} raw_count=${messages.length}`
+        );
+        // eslint-disable-next-line no-console
+        console.log(
+            "[worker:popActivityMessages] sample raw rows",
+            messages.slice(0, 3).map((m) => ({
+                activityId: m.activityId,
+                activityType: m.activityType,
+                senderId: m.senderId,
+                isThread: m.isThread,
+                mentionedUserIds: m.mentionedUserIds,
+            }))
+        );
+        const filtered = messages.filter(
+            (m) => !(m.activityType === 2 && myself.userId !== m.senderId)
+        );
+        // eslint-disable-next-line no-console
+        console.log(`[worker:popActivityMessages] after filter=${filtered.length}`);
+        return [...filtered].sort(
+            (a, b) => new Date(b.tsSent).getTime() - new Date(a.tsSent).getTime()
+        );
     },
 
     updateActivityReadStatus: async ({
-        accessToken: _accessToken,
+        accessToken,
         myself: _myself,
         activityId,
         isRead: _isRead,
         activityMessages,
     }) => {
         try {
-            // `/chat/activity/read/` was deleted in Phase 3 of the
-            // legacy-chat retirement. Update IDB locally so the badge
-            // clears; the network sync is restored when the activity
-            // feed is rebuilt on v3.
+            if (accessToken) {
+                await axios.put(
+                    `${v3ApiBaseURL()}/api/v3/activities/${encodeURIComponent(activityId)}/read/`,
+                    {},
+                    {
+                        headers: { Authorization: `Bearer ${accessToken}` },
+                        withCredentials: true,
+                    }
+                );
+            }
             const updated = [...activityMessages];
             const idx = updated.findIndex((item) => item.activityId === activityId);
             if (idx !== -1) {

@@ -1,13 +1,13 @@
 // Chat-channel handlers — runs inside the chat worker.
 //
 // Post-v3 cutover, the only remaining handler is the activity
-// "mark-all-as-read" mutation, which still hits the legacy
-// `/chat/activity/read/all/` endpoint and writes to the activity IDB
-// store. Activity is a separate domain from chat — `channelService`
-// owns chat-list / messages / threads / flags / pins / read cursors,
-// but the activity feed (mentions, task assignments, thread-reply
-// notifications) is not part of the v3 channel surface.
+// "mark-all-as-read" mutation. It now talks to the v3 endpoint
+// `PUT /api/v3/activities/read-all/` (the legacy `/chat/activity/read/all/`
+// was deleted). Activity rows are scoped per-channel via `?channel_id=`.
 
+import axios from "axios";
+
+import { v3ApiBaseURL } from "../../../services/v3Api";
 import { ActivityMessageProps } from "../../../types/chat";
 import { ActivityService } from "../../services";
 import type { ChatRequests } from "../contracts";
@@ -15,17 +15,28 @@ import type { HandlerMap } from "../poolWorker";
 
 export const chatHandlers: HandlerMap<ChatRequests> = {
     markAllChatActivityAsRead: async ({
-        accessToken: _accessToken,
+        accessToken,
         myself: _myself,
         chatType,
         chatId,
         activityMessages,
     }) => {
         try {
-            // `/chat/activity/read/all/` was deleted in Phase 3 of the
-            // legacy-chat retirement. We still update the local IDB
-            // copy so the badge clears immediately — the network sync
-            // will return when the activity feed is rebuilt on v3.
+            if (accessToken) {
+                // Channel id is the v3 UUID (kept through the legacy
+                // `chatId: number` slot via the migration cast). The v3
+                // endpoint scopes by `channel_id` query param. Hits the
+                // Django host directly (not via authApi) since authApi's
+                // baseURL ends in `/api/v2/`.
+                await axios.put(
+                    `${v3ApiBaseURL()}/api/v3/activities/read-all/?channel_id=${encodeURIComponent(String(chatId))}`,
+                    {},
+                    {
+                        headers: { Authorization: `Bearer ${accessToken}` },
+                        withCredentials: true,
+                    }
+                );
+            }
             const affected: ActivityMessageProps[] = [];
             const updated: ActivityMessageProps[] = activityMessages.map((a) => {
                 if (a.chatType === chatType && a.chatId === chatId && a.isRead === false) {
@@ -41,7 +52,15 @@ export const chatHandlers: HandlerMap<ChatRequests> = {
             }
             return updated;
         } catch (error: unknown) {
-            console.error("[chat:markAllChatActivityAsRead] Unexpected error", error);
+            if (axios.isAxiosError(error)) {
+                console.error(
+                    "[chat:markAllChatActivityAsRead] API error",
+                    error.response?.status,
+                    error.response?.data
+                );
+            } else {
+                console.error("[chat:markAllChatActivityAsRead] Unexpected error", error);
+            }
             return { error: String(error) };
         }
     },

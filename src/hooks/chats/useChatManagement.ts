@@ -198,6 +198,10 @@ export const useChatManagement = (
 
     const funcSetActivityMessages = async () => {
         const activityMessages: ActivityMessageProps[] = await popActivityMessages(myself);
+        // eslint-disable-next-line no-console
+        console.log(
+            `[funcSetActivityMessages] popped ${activityMessages?.length ?? 0} entries from IDB`
+        );
         if (activityMessages) {
             setActivityMessages(activityMessages);
             setUnReadActivityMessageCounts(countUnreadActivityMessages(activityMessages));
@@ -461,6 +465,30 @@ export const useChatManagement = (
         // render would thrash the worker + network.
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    // Live activity-feed refresh. `handleV3Activity` (the socketRouter
+    // entry point for `activity.created` socket events) writes the new
+    // row to IDB and then dispatches `v3:activity:created` on `window`.
+    // Re-derive the React state so the sidebar badge and the activity
+    // list tab pick the new entry up without waiting for a page reload.
+    //
+    // Re-arm on `myself.userId` change: `funcSetActivityMessages` closes
+    // over `myself` (used to filter reaction activities by sender id
+    // inside the worker). The first render runs before auth resolves so
+    // the initial closure has `myself.userId=""` and the worker filter
+    // rejects every row. Refreshing the listener whenever the user id
+    // changes guarantees the latest closure (with the real userId) is
+    // the one that fires.
+    useEffect(() => {
+        const onActivity = () => {
+            // eslint-disable-next-line no-console
+            console.log("[useChatManagement] v3:activity:created → funcSetActivityMessages");
+            void funcSetActivityMessages();
+        };
+        window.addEventListener("v3:activity:created", onActivity);
+        return () => window.removeEventListener("v3:activity:created", onActivity);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [myself.userId]);
 
     useEffect(() => {
         setUnReadChatCounts(countUnreadChats(allChats));
