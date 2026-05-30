@@ -40,8 +40,10 @@ import { toggleMessagesPane } from "../../../../utils/sidebarUtils";
 import { formatTaskDisplayId } from "../../../tasks/utils/taskDisplayId";
 import { addMessage } from "../../services/addMessage";
 import { loadSpecificThreadMessages } from "../../services/loadSpecificThreadMessages";
+import { loadV3SpecificMessages } from "../../services/loadV3SpecificMessages";
 import { popSpecificMessages } from "../../services/popSpecificMessages";
 import { updateFlagMessage } from "../../services/updateFlagMessage";
+import { resolveV3ChannelId } from "../../utils/channelIdResolvers";
 
 // chat_type=4 carries two semantics in the wider codebase: legacy task
 // comments (live in the PM store, chat_id = project_id) and the newer MDM
@@ -114,13 +116,12 @@ const createChatFromMessages = (
     messages: MessageProps[],
     moveToSpecificIndex: string,
     flaggedMessage: FlaggedMessageProps,
-    allChats: AllChatProps[]
+    allChats: AllChatProps[],
+    v3ChannelUuid?: string
 ): ChatProps | null => {
     const currentChat = findChatForFlag(allChats, flaggedMessage);
     if (!currentChat || messages.length === 0) return null;
 
-    // Keys sorted alphabetically per `sort-keys`.
-    //
     // `lastReadMessageId`: post-v3 flip the field is `string`.
     // Numeric `Math.max(...)` against the legacy stringified-int
     // cursor preserves the "advance to whichever is later" intent
@@ -132,7 +133,11 @@ const createChatFromMessages = (
         ? flaggedMessage.messageId
         : Math.max(flaggedMessage.messageId, legacyLastRead);
     return {
-        chatId: String(flaggedMessage.chatId),
+        // Prefer the v3 channel UUID when callers resolved it (so
+        // downstream `channelService.send` / live-update subscription
+        // wire up correctly); fall back to the legacy int for
+        // straggler legacy paths.
+        chatId: v3ChannelUuid ?? String(flaggedMessage.chatId),
         chatName: flaggedMessage.chatName || currentChat.chatName,
         chatType: flaggedMessage.chatType,
         dmPartnerUser: flaggedMessage.dmPartnerUser,
@@ -201,7 +206,12 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
     // Flag status management
     const updateFlagStatus = async () => {
         try {
-            // Update backend. Keys sorted alphabetically per `sort-keys`.
+            // PUNCH LIST: the flagged-messages sidebar list is still
+            // sourced from the legacy `popFlaggedMessages` IDB store;
+            // v3 `flag.added` / `.removed` broadcasts populate
+            // `channelService.flags` instead. Until the sidebar
+            // migrates to read v3 flags, this unflag call short-circuits
+            // (legacy `updateFlagMessage` warns + no-ops for UUID ids).
             await updateFlagMessage(accessToken, myself, {
                 chat_id: flaggedMessage.chatId,
                 chat_type: flaggedMessage.chatType,
@@ -273,10 +283,21 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
         deleted: boolean;
         messages: MessageProps[];
         target: MessageProps | undefined;
+        v3ChannelUuid: string | null;
     }> => {
-        const messages = await popSpecificMessages(flaggedMessage.chatId, flaggedMessage.chatType);
+        // v3 cutover. `flaggedMessage.chatId` is still a legacy int
+        // (flagged messages flow through the legacy IDB store);
+        // resolve to the v3 channel UUID, then load via channelService.
+        const v3ChannelUuid = resolveV3ChannelId(flaggedMessage.chatId, flaggedMessage.chatType);
+        if (!v3ChannelUuid) {
+            console.warn(
+                `[chatListItemForFlagMessages] no v3 mirror for legacy chatId=${flaggedMessage.chatId}`
+            );
+            return { deleted: true, messages: [], target: undefined, v3ChannelUuid: null };
+        }
+        const messages = await loadV3SpecificMessages(v3ChannelUuid, flaggedMessage.chatType);
         const target = messages.find((m) => m.messageId === flaggedMessage.messageId);
-        return { deleted: !target, messages, target };
+        return { deleted: !target, messages, target, v3ChannelUuid };
     };
 
     // `updateMessagesAndChat` was an alternative flag-toggle entry point
@@ -293,8 +314,8 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
         const isCurrentChatVisible = isCurrentChat(useCM.currentSubChat, flaggedMessage);
 
         try {
-            const { messages, deleted } = await loadMessagesAndTarget();
-            if (deleted) {
+            const { messages, deleted, v3ChannelUuid } = await loadMessagesAndTarget();
+            if (deleted || !v3ChannelUuid) {
                 setSourceDeleted(true);
                 return;
             }
@@ -303,7 +324,8 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                 messages,
                 `${flaggedMessage.chatId}-${flaggedMessage.messageId}`,
                 flaggedMessage,
-                useCM.allChats
+                useCM.allChats,
+                v3ChannelUuid
             );
             if (!newChat) return; // chat was removed between render and click
 
@@ -400,15 +422,25 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
         const isCurrentChatVisible = isCurrentChat(useCM.currentSubChat, flaggedMessage);
 
         try {
-            const messages = await popSpecificMessages(
+            // v3 cutover. Resolve the legacy int chatId to its v3
+            // UUID, then load messages through channelService.
+            const v3ChannelUuid = resolveV3ChannelId(
                 flaggedMessage.chatId,
                 flaggedMessage.chatType
             );
+            if (!v3ChannelUuid) {
+                console.warn(
+                    `[chatListItemForFlagMessages] no v3 mirror for thread nav, chatId=${flaggedMessage.chatId}`
+                );
+                return;
+            }
+            const messages = await loadV3SpecificMessages(v3ChannelUuid, flaggedMessage.chatType);
             const newChat = createChatFromMessages(
                 messages,
                 `${flaggedMessage.chatId}-${flaggedMessage.threadId}-${flaggedMessage.messageId}`,
                 flaggedMessage,
-                useCM.allChats
+                useCM.allChats,
+                v3ChannelUuid
             );
             if (!newChat) return;
 

@@ -17,7 +17,7 @@ import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { FlaggedMessageProps, ThreadMessageProps, ThreadProps } from "../../../../types/chat";
 import { addFlaggedMessage } from "../../services/addFlaggedMessage";
-import { updateFlagMessage } from "../../services/updateFlagMessage";
+import { channelService } from "../../../../services/channel/channelService";
 import { getFirstLine } from "../../utils/common";
 import { ModalDeleteMessage } from "../modals/ModalDeleteMessage";
 
@@ -264,12 +264,23 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
             );
         }
 
-        updateFlagMessage(accessToken, myself, {
-            chat_type: thread.chatType,
-            chat_id: thread.chatId,
-            thread_id: thread.threadId,
-            message_id: message.messageId,
-        });
+        // v3 flag persistence — same pattern as BubbleMoreMenu, but
+        // the thread message UUID lives on `messageIdWithChatIdAndThreadId`
+        // (set by `v3ThreadMessageToLegacy`).
+        const v3MessageId = message.messageIdWithChatIdAndThreadId;
+        if (v3MessageId) {
+            if (!isFlagged) {
+                void channelService
+                    .flagMessage(v3MessageId)
+                    .catch((e) => console.error("[BubbleThreadMoreMenu] flag failed:", e));
+            } else {
+                void channelService
+                    .unflagMessage(v3MessageId)
+                    .catch((e) => console.error("[BubbleThreadMoreMenu] unflag failed:", e));
+            }
+        } else {
+            console.warn("[BubbleThreadMoreMenu] missing v3 messageUuid — flag not persisted");
+        }
 
         setIsFlagged(!isFlagged);
         closeMenu();

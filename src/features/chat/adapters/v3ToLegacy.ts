@@ -33,6 +33,7 @@ import type {
     ThreadMessageProps,
 } from "../../../types/chat";
 import type { ReactionProps } from "../../../types/common";
+import type { ProjectProps } from "../../../types/tasks";
 
 /** Map v3 `ChannelKind` to the legacy integer kind code. They happen
  *  to be the same integer values today (DM=1, GM=2, PM=3, MDM=4) —
@@ -241,10 +242,23 @@ export function channelToLegacyChat(args: {
         isPrivate: channel.isPrivate,
         profileImagePath: channel.profileImageUrl || undefined,
         isPinned,
-        // PM channels carry `project` on the legacy shape. v3 stores
-        // `projectId` on the channel; resolving the full ProjectProps
-        // is its own migration step.
-        project: undefined,
+        // PM channels carry `project` on the legacy shape. We only
+        // have the `projectId` + project-derived `title` on the v3
+        // Channel — the rest of `ProjectProps` (tags, system user,
+        // owner) lives on a separate `ProjectMaster` row that the FE
+        // hydrates lazily via `useProjectManagement`. Populate the
+        // minimal pair so call sites that only need the id (image
+        // upload in ModalProjectProfile, task-click → preview) work
+        // without an extra fetch. Other consumers that read full
+        // tag / role fields get an empty list rather than `undefined`.
+        project:
+            channel.kind === ChannelKind.PM && channel.projectId != null
+                ? ({
+                      projectId: channel.projectId,
+                      projectName: channel.title || "",
+                      projectTags: [],
+                  } as ProjectProps)
+                : undefined,
         // For MDM channels, map the v3 ChannelMember[] roster to the
         // legacy `MDMMemberProps[]` shape — populates `MDMAvatar`'s
         // overlapping member-avatar render in the sidebar / header.

@@ -19,11 +19,11 @@ import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
+import { channelService } from "../../../../services/channel/channelService";
 import { UserProps } from "../../../../types/admin";
 import { ChatProps, FlaggedMessageProps, MessageProps } from "../../../../types/chat";
 import { addFlaggedMessage } from "../../services/addFlaggedMessage";
 import { addMessage } from "../../services/addMessage";
-import { updateFlagMessage } from "../../services/updateFlagMessage";
 import { getFirstLine } from "../../utils/common";
 import { ModalDeleteMessage } from "../modals/ModalDeleteMessage";
 
@@ -149,15 +149,27 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
             );
         }
 
-        // PUNCH LIST: legacy `/chat/flagged-update/` endpoint takes
-        // `chat_id: number`. Cast at the boundary; UUID-shaped ids
-        // would 400 at the backend (same gap noted above).
-        updateFlagMessage(accessToken, myself, {
-            chat_id: chat.chatId as unknown as number,
-            chat_type: chat.chatType,
-            message_id: message.messageId,
-            thread_id: 0,
-        });
+        // v3 flag persistence routes through channelService — the v3
+        // backend's `Flag` model keys by the message UUID. Optimistic
+        // state above already toggled; broadcast to other tabs +
+        // persist via `flag.add` / `flag.remove`. The optimistic
+        // `_upsertFlag` inside channelService deduplicates against
+        // the server's `flag.added` echo, so re-receiving our own
+        // emit is a no-op.
+        const v3MessageId = message.messageIdWithChatId;
+        if (v3MessageId) {
+            if (!isFlagged) {
+                void channelService
+                    .flagMessage(v3MessageId)
+                    .catch((e) => console.error("[BubbleMoreMenu] flag failed:", e));
+            } else {
+                void channelService
+                    .unflagMessage(v3MessageId)
+                    .catch((e) => console.error("[BubbleMoreMenu] unflag failed:", e));
+            }
+        } else {
+            console.warn("[BubbleMoreMenu] missing v3 messageUuid — flag not persisted");
+        }
 
         setIsFlagged(!isFlagged);
     };

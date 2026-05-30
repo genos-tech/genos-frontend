@@ -37,7 +37,8 @@ import { loadSpecificNote } from "../../../../notes/common/services/loadSpecific
 import { loadSpecificTask } from "../../../../tasks/services/loadSpecificTask";
 import { useActivityStatus } from "../../../hooks/useActivityStatus";
 import { loadSpecificThreadMessages } from "../../../services/loadSpecificThreadMessages";
-import { popSpecificMessages } from "../../../services/popSpecificMessages";
+import { loadV3SpecificMessages } from "../../../services/loadV3SpecificMessages";
+import { resolveV3ChannelId } from "../../../utils/channelIdResolvers";
 import { ActivityContent } from "./ActivityContent";
 import { ActivityHeader } from "./ActivityHeader";
 
@@ -141,12 +142,18 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
     };
     const noteTypeForActivity = NOTE_CHAT_TYPE_TO_NOTE_TYPE[activity.chatType];
 
-    const defineNewChat = (messages: MessageProps[], moveToSpecificIndex: string) => {
+    const defineNewChat = (
+        messages: MessageProps[],
+        moveToSpecificIndex: string,
+        v3ChannelUuid?: string
+    ) => {
         const chatType: number = isTaskComment ? 3 : activity.chatType;
-        // PUNCH LIST (v3 chatId migration): activity payloads still carry
-        // numeric `chatId` (legacy `/` socket); `AllChatProps.chatId` is
-        // `string` post-flip. Stringify the legacy int once and reuse.
-        const activityChatIdStr = String(activity.chatId);
+        // v3-shape callers pass the resolved v3 channel UUID so the
+        // built `ChatProps` keys into `allChats` (UUID-keyed via
+        // `loadV3Chats`) and downstream `channelService.send` doesn't
+        // 404 against a legacy int. Falls back to the legacy int when
+        // not provided.
+        const activityChatIdStr = v3ChannelUuid ?? String(activity.chatId);
         const currentChat: AllChatProps = useCM.allChats.filter(
             (chat) => chat.chatType === chatType && chat.chatId === activityChatIdStr
         )[0];
@@ -207,11 +214,11 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
             `${useCM.currentSubChat?.chatId}-${useCM.currentSubChat?.chatName}` ===
                 `${activity.chatId}-${activity.chatName}`;
 
-        const handleMessages = (messages: MessageProps[]) => {
+        const handleMessages = (messages: MessageProps[], v3ChannelUuid: string) => {
             if (shouldUseMainChat) {
-                useCM.setCurrentMainChat(defineNewChat(messages, messageUniqueKey));
+                useCM.setCurrentMainChat(defineNewChat(messages, messageUniqueKey, v3ChannelUuid));
             } else if (shouldUseSubChat) {
-                useCM.setCurrentSubChat(defineNewChat(messages, messageUniqueKey));
+                useCM.setCurrentSubChat(defineNewChat(messages, messageUniqueKey, v3ChannelUuid));
             }
             useCM.setIsMainChatVisible(true);
             if (useTM.isCreatingTask.flag === true || useTM.isTaskPreviewVisible) {
@@ -221,9 +228,22 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
 
         toggleMessagesPane();
 
+        // v3 cutover. Activities still flow through legacy
+        // (`popActivityMessages`) so `activity.chatId` is a legacy
+        // integer. Resolve it via the v3 mirror in the cached channel
+        // list, then load messages through channelService. Without
+        // this the legacy `popSpecificMessages` returned `[]` for
+        // UUID-cast ints and the click silently opened an empty chat.
         try {
-            const messages = await popSpecificMessages(activity.chatId, chatType);
-            handleMessages(messages);
+            const v3ChannelUuid = resolveV3ChannelId(activity.chatId, chatType);
+            if (!v3ChannelUuid) {
+                console.warn(
+                    `[chatListItemForActivity] no v3 mirror for legacy chatId=${activity.chatId}`
+                );
+                return;
+            }
+            const messages = await loadV3SpecificMessages(v3ChannelUuid, chatType);
+            handleMessages(messages, v3ChannelUuid);
         } catch (error) {
             console.error(error);
         }
@@ -259,8 +279,20 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
         if (shouldUseMainChat) {
             toggleMessagesPane();
             try {
-                const messages = await popSpecificMessages(activity.chatId, 3);
-                useCM.setCurrentMainChat(defineNewChat(messages, activity.messageUniqueKey));
+                // v3 cutover: same pattern as `handleChatNavigation`
+                // above — resolve `activity.chatId` (legacy PM int)
+                // to its v3 channel UUID, then load via channelService.
+                const v3ChannelUuid = resolveV3ChannelId(activity.chatId, 3);
+                if (!v3ChannelUuid) {
+                    console.warn(
+                        `[chatListItemForActivity] no v3 mirror for PM legacy chatId=${activity.chatId}`
+                    );
+                    return;
+                }
+                const messages = await loadV3SpecificMessages(v3ChannelUuid, 3);
+                useCM.setCurrentMainChat(
+                    defineNewChat(messages, activity.messageUniqueKey, v3ChannelUuid)
+                );
 
                 if (activity.projectId) {
                     setCurrentProject({
