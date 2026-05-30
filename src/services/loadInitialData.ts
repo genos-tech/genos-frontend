@@ -1,12 +1,6 @@
 import { useEffect, useState } from "react";
 
-import {
-    activityChannel,
-    chatChannel,
-    inboxChannel,
-    tasksChannel,
-    usersChannel,
-} from "../db/workers/channels";
+import { activityChannel, inboxChannel, tasksChannel, usersChannel } from "../db/workers/channels";
 import { loadV3SpecificMessages } from "../features/chat/services/loadV3SpecificMessages";
 import { defaultChat } from "../features/chat/utils/defaults";
 import { UserProps } from "../types/admin";
@@ -27,10 +21,13 @@ export const loadInitialData = (
 ) => {
     const [isInboxLoaded, setIsInboxLoaded] = useState<boolean | null>(false);
     const [isActivityHistoryLoaded, setIsActivityHistoryLoaded] = useState<boolean | null>(false);
-    const [isDMHistoryLoaded, setIsDMHistoryLoaded] = useState<boolean | null>(false);
-    const [isGMHistoryLoaded, setIsGMHistoryLoaded] = useState<boolean | null>(false);
-    const [isMDMHistoryLoaded, setIsMDMHistoryLoaded] = useState<boolean | null>(false);
-    const [isPMHistoryLoaded, setIsPMHistoryLoaded] = useState<boolean | null>(false);
+    // True once `channelService` has finished hydrating chat history from
+    // IDB + landed its first `listChannels` REST refresh. Subscribed to
+    // below — replaces the legacy per-type `isDMHistoryLoaded` /
+    // `isGMHistoryLoaded` / `isMDMHistoryLoaded` / `isPMHistoryLoaded`
+    // flags which were sourced from the (now-removed) legacy worker
+    // history loaders.
+    const [isChannelsHydrated, setIsChannelsHydrated] = useState<boolean>(false);
     const [isTeamMembersLoaded, setIsTeamMembersLoaded] = useState<boolean | null>(false);
     const [isInitialChatLoaded, setIsInitialChatLoaded] = useState<boolean | null>(false);
     const [isProjectTasksLoaded, setIsProjectTasksLoaded] = useState<boolean | null>(false);
@@ -70,61 +67,19 @@ export const loadInitialData = (
         };
     }, [myself, accessToken]);
 
+    // Chat history is hydrated by `channelService` (subscribed in
+    // `useChannelServiceBootstrap`). Subscribe to its `hydrated` flag
+    // here so the boot-ready gate below can wait for the v3 store
+    // instead of the four per-type legacy IDB loaders that used to
+    // run here.
     useEffect(() => {
-        if (!isReady(accessToken, myself)) return;
-        let cancelled = false;
-        chatChannel
-            .request("loadDMHistory", { myself, accessToken })
-            .then(() => !cancelled && setIsDMHistoryLoaded(true))
-            .catch((err) => {
-                if (!cancelled) console.error("Failed initial DM history loading", err);
-            });
-        return () => {
-            cancelled = true;
+        const apply = () => {
+            if (channelService.getSnapshot().hydrated) setIsChannelsHydrated(true);
         };
-    }, [myself, accessToken]);
-
-    useEffect(() => {
-        if (!isReady(accessToken, myself)) return;
-        let cancelled = false;
-        chatChannel
-            .request("loadGMHistory", { myself, accessToken })
-            .then(() => !cancelled && setIsGMHistoryLoaded(true))
-            .catch((err) => {
-                if (!cancelled) console.error("Failed initial GM history loading", err);
-            });
-        return () => {
-            cancelled = true;
-        };
-    }, [myself, accessToken]);
-
-    useEffect(() => {
-        if (!isReady(accessToken, myself)) return;
-        let cancelled = false;
-        chatChannel
-            .request("loadMDMHistory", { myself, accessToken })
-            .then(() => !cancelled && setIsMDMHistoryLoaded(true))
-            .catch((err) => {
-                if (!cancelled) console.error("Failed initial MDM history loading", err);
-            });
-        return () => {
-            cancelled = true;
-        };
-    }, [myself, accessToken]);
-
-    useEffect(() => {
-        if (!isReady(accessToken, myself)) return;
-        let cancelled = false;
-        chatChannel
-            .request("loadPMHistory", { myself, accessToken })
-            .then(() => !cancelled && setIsPMHistoryLoaded(true))
-            .catch((err) => {
-                if (!cancelled) console.error("Failed initial PM history loading", err);
-            });
-        return () => {
-            cancelled = true;
-        };
-    }, [myself, accessToken]);
+        apply();
+        const unsubscribe = channelService.subscribe(apply);
+        return unsubscribe;
+    }, []);
 
     useEffect(() => {
         if (!isReady(accessToken, myself)) return;
@@ -169,14 +124,10 @@ export const loadInitialData = (
         };
     }, [myself, accessToken]);
 
-    // After all four chat-history caches are populated, resume the user's
-    // last open chat (chat type + chat id from localStorage). The two
-    // channel calls below are sequential because we need the chat row
-    // before we can fetch its messages.
+    // After v3 channels have hydrated, resume the user's last open
+    // chat (chat type + chat id from localStorage).
     useEffect(() => {
-        if (!(isDMHistoryLoaded && isGMHistoryLoaded && isMDMHistoryLoaded && isPMHistoryLoaded)) {
-            return;
-        }
+        if (!isChannelsHydrated) return;
         let cancelled = false;
         const tmpLastChatType = localStorage.getItem("lastChatType");
         const lastChatType =
@@ -296,17 +247,14 @@ export const loadInitialData = (
         return () => {
             cancelled = true;
         };
-    }, [isDMHistoryLoaded, isGMHistoryLoaded, isMDMHistoryLoaded, isPMHistoryLoaded]);
+    }, [isChannelsHydrated]);
 
     // Set "isLoading" true after initialization is completed
     useEffect(() => {
         if (
             isInboxLoaded &&
             isActivityHistoryLoaded &&
-            isDMHistoryLoaded &&
-            isGMHistoryLoaded &&
-            isMDMHistoryLoaded &&
-            isPMHistoryLoaded &&
+            isChannelsHydrated &&
             isTeamMembersLoaded &&
             isInitialChatLoaded &&
             isProjectTasksLoaded
@@ -316,10 +264,7 @@ export const loadInitialData = (
     }, [
         isInboxLoaded,
         isActivityHistoryLoaded,
-        isDMHistoryLoaded,
-        isGMHistoryLoaded,
-        isMDMHistoryLoaded,
-        isPMHistoryLoaded,
+        isChannelsHydrated,
         isTeamMembersLoaded,
         isInitialChatLoaded,
         isProjectTasksLoaded,

@@ -21,12 +21,6 @@ import type { TaskTableProps } from "../../types/tasks";
 
 type AnyNote = MyNoteProps | TaskNoteProps | ChatNoteProps;
 
-type HistoryLoadReq = { myself: UserProps; accessToken: string };
-// Handlers that exist purely for their side effect — IDB writes, API
-// requests — type their response as `void`. The Promise resolves once the
-// work completes; callers wait on the Promise but don't read the value.
-type HistoryLoadRes = void;
-
 // ---- chat channel ---------------------------------------------------------
 
 export type ChatRequests = {
@@ -39,10 +33,6 @@ export type ChatRequests = {
     addFlaggedMessage: { req: { message: FlaggedMessageProps }; res: void };
     popFlaggedMessages: { req: Record<string, never>; res: FlaggedMessageProps[] };
     checkKnownChat: { req: { chatId: number; chatType: number }; res: boolean };
-    loadDMHistory: { req: HistoryLoadReq; res: HistoryLoadRes };
-    loadGMHistory: { req: HistoryLoadReq; res: HistoryLoadRes };
-    loadMDMHistory: { req: HistoryLoadReq; res: HistoryLoadRes };
-    loadPMHistory: { req: HistoryLoadReq; res: HistoryLoadRes };
     markAllChatActivityAsRead: {
         req: {
             accessToken: string;
