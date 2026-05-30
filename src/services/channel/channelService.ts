@@ -1748,6 +1748,31 @@ export class ChannelService {
     }
 
     /**
+     * Seed channel member rosters from the chat-list payload.
+     * `GET /api/v3/channels/` now returns `members` for DM/MDM rows
+     * (other kinds omit it). Without this, `membersByChannel` stays empty
+     * until a channel is opened (the lazy `fetchChannelMembers` path), so
+     * unopened DM rows render the partner as "?" + blank name and MDM
+     * rows show no member avatars. `loadV3Chats` calls this right after
+     * ingesting the channels and BEFORE adapting the snapshot, so the
+     * first chat-list render already has partner identities. The list
+     * payload is the full current set, so it replaces (live
+     * `member_added`/`removed` events keep it current afterward). One
+     * `_notify()` for the whole batch.
+     */
+    ingestListMembers(channels: readonly Channel[]): void {
+        let changed = false;
+        for (const c of channels) {
+            const members = (c as Channel & { members?: ChannelMember[] }).members;
+            if (members && members.length > 0) {
+                this._members.set(c.id, [...members]);
+                changed = true;
+            }
+        }
+        if (changed) this._notify();
+    }
+
+    /**
      * Apply a `channel.updated` broadcast (title / profile / visibility
      * changed by the owner). Merge into the existing row rather than
      * full-replace so we preserve client-side denorms (`latestMessage`,

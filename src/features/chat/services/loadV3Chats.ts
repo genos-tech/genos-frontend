@@ -40,6 +40,11 @@ export async function loadV3Chats(currentUserId: string | null): Promise<AllChat
         // off the snapshot see the same data the wire response had.
         const fresh = await channelService.listChannels();
         for (const c of fresh) channelService.handleChannelCreated(c);
+        // The list payload carries `members` for DM/MDM rows — seed them
+        // into the snapshot so DM partner names/avatars (and MDM member
+        // avatars) resolve on the FIRST chat-list render, instead of only
+        // after the channel is opened (which lazily fetches members).
+        channelService.ingestListMembers(fresh);
     } catch {
         // Network failure: fall through to whatever the snapshot
         // already had (e.g. from a prior boot's IDB hydration).
