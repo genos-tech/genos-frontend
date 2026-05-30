@@ -58,5 +58,10 @@ export async function loadV3SpecificMessages(
     }
     const snapshot = channelService.getSnapshot();
     const messages: readonly Message[] = snapshot.messagesByChannel.get(channelId) ?? [];
-    return v3MessagesToLegacy({ messages, channelId, chatType });
+    return v3MessagesToLegacy({
+        channelId,
+        chatType,
+        flaggedMessageIds: snapshot.flagByMessageId,
+        messages,
+    });
 }

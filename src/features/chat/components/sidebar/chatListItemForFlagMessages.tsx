@@ -18,13 +18,12 @@ import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithSt
 import { GMAvatar } from "../../../../components/ui/avatars/GMAvatar";
 import { MDMAvatar } from "../../../../components/ui/avatars/MDMAvatar";
 import { ProjectAvatar } from "../../../../components/ui/avatars/ProjectAvatar";
-import { useAuth } from "../../../../context/AuthContext";
-import { FlaggedService } from "../../../../db/services/flagged.service";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
+import { channelService } from "../../../../services/channel/channelService";
 import { UserProps } from "../../../../types/admin";
 import {
     AllChatProps,
@@ -38,11 +37,8 @@ import { ProjectProps } from "../../../../types/tasks";
 import { extractYYYYMMDDHHMM, getLocalCurrentTimestamp } from "../../../../utils/dateUtils";
 import { toggleMessagesPane } from "../../../../utils/sidebarUtils";
 import { formatTaskDisplayId } from "../../../tasks/utils/taskDisplayId";
-import { addMessage } from "../../services/addMessage";
 import { loadV3SpecificMessages } from "../../services/loadV3SpecificMessages";
 import { loadV3SpecificThreadMessages } from "../../services/loadV3SpecificThreadMessages";
-import { popSpecificMessages } from "../../services/popSpecificMessages";
-import { updateFlagMessage } from "../../services/updateFlagMessage";
 
 // chat_type=4 carries two semantics in the wider codebase: legacy task
 // comments (live in the PM store, chat_id = project_id) and the newer MDM
@@ -171,7 +167,6 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
         useCM,
         useTM,
     } = props;
-    const { accessToken } = useAuth();
     const { mode } = useColorScheme();
     const { t } = useTranslation();
     const isDark = mode === "dark";
@@ -193,70 +188,22 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
     const chatRemoved = chatRecord === undefined;
     const navigationDisabled = chatRemoved || sourceDeleted;
 
-    // Flag status management
+    // v3 unflag. `channelService.unflagMessage` does the optimistic
+    // local removal, emits `flag.remove`, and rolls back if the server
+    // rejects. The sidebar row disappears automatically because
+    // `useChatManagement.flaggedMessages` is a v3 subscription derived
+    // from `snapshot.flags` — the optimistic remove fires a notify and
+    // the subscription drops this row on the next pass.
     const updateFlagStatus = async () => {
+        const v3MessageUuid = flaggedMessage.messageId as unknown as string;
+        if (!v3MessageUuid) return;
+        setTmpIsFlagged(false);
         try {
-            // PUNCH LIST: the flagged-messages sidebar list is still
-            // sourced from the legacy `popFlaggedMessages` IDB store;
-            // v3 `flag.added` / `.removed` broadcasts populate
-            // `channelService.flags` instead. Until the sidebar
-            // migrates to read v3 flags, this unflag call short-circuits
-            // (legacy `updateFlagMessage` warns + no-ops for UUID ids).
-            await updateFlagMessage(accessToken, myself, {
-                chat_id: flaggedMessage.chatId,
-                chat_type: flaggedMessage.chatType,
-                message_id: flaggedMessage.messageId,
-                thread_id: flaggedMessage.threadId,
-            });
-
-            setTmpIsFlagged(false);
-
-            // Remove from local state
-            useCM.setFlaggedMessages(
-                useCM.flaggedMessages.filter(
-                    (message: FlaggedMessageProps) =>
-                        message.flaggedMessageId !== flaggedMessage.flaggedMessageId
-                )
-            );
-
-            // Remove from IndexedDB using FlaggedService
-            const flaggedService = new FlaggedService();
-            await flaggedService.deleteFlaggedMessage(flaggedMessage.flaggedMessageId);
-
-            // Update the isFlagged status in IndexedDB without navigating away
-            try {
-                const messages = await popSpecificMessages(
-                    flaggedMessage.chatId,
-                    flaggedMessage.chatType
-                );
-                const updatedMessage = messages.find(
-                    (m: MessageProps) => m.messageId === flaggedMessage.messageId
-                );
-                if (updatedMessage) {
-                    await addMessage(
-                        { ...updatedMessage, isFlagged: false },
-                        flaggedMessage.chatType
-                    );
-                }
-            } catch {
-                // Non-critical: IndexedDB message update can fail silently
-            }
-
-            // If the user is currently viewing this chat, update isFlagged in the pane
-            if (
-                useCM.currentMainChat &&
-                useCM.currentMainChat.chatId === String(flaggedMessage.chatId) &&
-                useCM.currentMainChat.chatType === flaggedMessage.chatType
-            ) {
-                useCM.setCurrentMainChat({
-                    ...useCM.currentMainChat,
-                    messages: useCM.currentMainChat.messages.map((m) =>
-                        m.messageId === flaggedMessage.messageId ? { ...m, isFlagged: false } : m
-                    ),
-                    notMove: true,
-                });
-            }
+            await channelService.unflagMessage(v3MessageUuid);
         } catch (error) {
+            // `unflagMessage` already rolled the snapshot back; un-set
+            // the local toggle so the icon matches state.
+            setTmpIsFlagged(true);
             console.error("Error updating flag status:", error);
         }
     };
@@ -289,14 +236,6 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
         // `messageId` field on v3-adapted messages is the per-channel
         // `seq` integer, which won't match the UUID we're looking for.
         const target = messages.find((m) => m.messageIdWithChatId === v3MessageUuid);
-        // TEMP DIAGNOSTIC: surface why a click resolves to "deleted".
-        console.warn("[flag-load]", {
-            foundTarget: !!target,
-            messagesCount: messages.length,
-            sampleIds: messages.slice(0, 5).map((m) => m.messageIdWithChatId),
-            v3ChannelUuid,
-            v3MessageUuid,
-        });
         return { deleted: !target, messages, target, v3ChannelUuid };
     };
 
@@ -377,16 +316,6 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
             const targetThreadMsg = threadMessages.find(
                 (m: ThreadMessageProps) => m.messageIdWithChatIdAndThreadId === v3MessageUuid
             );
-            // TEMP DIAGNOSTIC.
-            console.warn("[flag-load-thread]", {
-                foundTarget: !!targetThreadMsg,
-                sampleIds: threadMessages.slice(0, 5).map((m) => m.messageIdWithChatIdAndThreadId),
-                targetDeleted: targetThreadMsg?.isDeleted,
-                threadCount: threadMessages.length,
-                v3ChannelUuid,
-                v3MessageUuid,
-                v3ThreadRootUuid,
-            });
             if (!targetThreadMsg || targetThreadMsg.isDeleted === true) {
                 setSourceDeleted(true);
                 return;
@@ -481,20 +410,6 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
     };
 
     const onClickHandler = async () => {
-        // TEMP DIAGNOSTIC: confirm the runtime shape at click time so
-        // we can tell whether the v3 subscription or the legacy
-        // popFlaggedMessages is the source. Remove after the flagged-
-        // sidebar v3 migration is verified end-to-end.
-        console.warn("[flag-click]", {
-            chatId: flaggedMessage.chatId,
-            chatIdType: typeof flaggedMessage.chatId,
-            chatType: flaggedMessage.chatType,
-            messageId: flaggedMessage.messageId,
-            messageIdType: typeof flaggedMessage.messageId,
-            threadId: flaggedMessage.threadId,
-            threadIdType: typeof flaggedMessage.threadId,
-        });
-
         // The chat (or the source message itself) has been removed since
         // this flag entry was created — short-circuit and let the user
         // unflag via the right-side icon. Selecting still gives the row a

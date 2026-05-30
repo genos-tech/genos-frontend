@@ -379,8 +379,13 @@ export function v3MessageToLegacy(args: {
     channelId: string;
     /** Legacy integer chat-type code (1=DM, 2=GM, 3=PM, 4=MDM). */
     chatType: number;
+    /** Optional flag-membership lookup. Caller usually passes
+     *  `channelService.snapshot.flagByMessageId` directly — the adapter
+     *  only needs `.has(messageId)`. Omit to default `isFlagged` to
+     *  false (call sites that don't care about flag state). */
+    flaggedMessageIds?: { has(id: string): boolean };
 }): MessageProps {
-    const { message: m, channelId, chatType } = args;
+    const { message: m, channelId, chatType, flaggedMessageIds } = args;
     const meta = (m.metadata ?? {}) as Record<string, unknown>;
     // Prefer top-level fields (sourced server-side from the linked
     // `TaskMaster` row via the v3 `MessageSerializer.displayId /
@@ -448,7 +453,7 @@ export function v3MessageToLegacy(args: {
         displayId,
         taskStatus,
         reactions: (m.reactions ?? []).map(v3ReactionToLegacy),
-        isFlagged: false, // resolved separately via channelService.snapshot.flagByMessageId
+        isFlagged: flaggedMessageIds?.has(m.id) ?? false,
     };
 }
 
@@ -461,8 +466,9 @@ export function v3MessagesToLegacy(args: {
     messages: readonly Message[];
     channelId: string;
     chatType: number;
+    flaggedMessageIds?: { has(id: string): boolean };
 }): MessageProps[] {
-    const { messages, channelId, chatType } = args;
+    const { messages, channelId, chatType, flaggedMessageIds } = args;
     // For PM channels, top-level messages are task-card headers — one
     // per task. Anything without a `taskId` is an orphan row (legacy
     // junk: task was deleted via `on_delete=SET_NULL`, or a non-task
@@ -475,7 +481,7 @@ export function v3MessagesToLegacy(args: {
         if (m.isThreadReply) continue;
         if (m.deletedAt) continue;
         if (isPm && m.taskId == null) continue;
-        out.push(v3MessageToLegacy({ message: m, channelId, chatType }));
+        out.push(v3MessageToLegacy({ message: m, channelId, chatType, flaggedMessageIds }));
     }
     out.sort((a, b) => (a.tsSent || "").localeCompare(b.tsSent || ""));
     return out;
@@ -499,8 +505,9 @@ export function v3ThreadMessageToLegacy(args: {
     channelId: string;
     threadRootUuid: string;
     chatType: number;
+    flaggedMessageIds?: { has(id: string): boolean };
 }): ThreadMessageProps {
-    const { message: m, channelId, threadRootUuid, chatType } = args;
+    const { message: m, channelId, threadRootUuid, chatType, flaggedMessageIds } = args;
     const meta = (m.metadata ?? {}) as Record<string, unknown>;
     const taskId =
         typeof m.taskId === "number"
@@ -539,7 +546,7 @@ export function v3ThreadMessageToLegacy(args: {
         tsUpdated: m.tsUpdated,
         reactions: (m.reactions ?? []).map(v3ReactionToLegacy),
         taskExist: taskId != null,
-        isFlagged: false,
+        isFlagged: flaggedMessageIds?.has(m.id) ?? false,
     };
 }
 
@@ -566,8 +573,9 @@ export function v3ThreadMessagesToLegacy(args: {
     channelId: string;
     threadRootUuid: string;
     chatType: number;
+    flaggedMessageIds?: { has(id: string): boolean };
 }): ThreadMessageProps[] {
-    const { messages, channelId, threadRootUuid, chatType } = args;
+    const { messages, channelId, threadRootUuid, chatType, flaggedMessageIds } = args;
     // Find the root first. If absent, the thread can't render at all.
     let root: Message | undefined;
     for (const m of messages) {
@@ -583,11 +591,25 @@ export function v3ThreadMessagesToLegacy(args: {
         if (!m.isThreadReply) continue;
         if (m.parentId !== threadRootUuid) continue;
         if (m.deletedAt) continue;
-        replies.push(v3ThreadMessageToLegacy({ message: m, channelId, threadRootUuid, chatType }));
+        replies.push(
+            v3ThreadMessageToLegacy({
+                channelId,
+                chatType,
+                flaggedMessageIds,
+                message: m,
+                threadRootUuid,
+            })
+        );
     }
     replies.sort((a, b) => (a.tsSent || "").localeCompare(b.tsSent || ""));
     return [
-        v3ThreadMessageToLegacy({ message: root, channelId, threadRootUuid, chatType }),
+        v3ThreadMessageToLegacy({
+            channelId,
+            chatType,
+            flaggedMessageIds,
+            message: root,
+            threadRootUuid,
+        }),
         ...replies,
     ];
 }

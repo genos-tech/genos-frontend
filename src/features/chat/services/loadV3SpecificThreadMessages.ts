@@ -43,9 +43,10 @@ export async function loadV3SpecificThreadMessages(
     const snapshot = channelService.getSnapshot();
     const messages: readonly Message[] = snapshot.messagesByChannel.get(channelUuid) ?? [];
     return v3ThreadMessagesToLegacy({
-        messages,
         channelId: channelUuid,
-        threadRootUuid,
         chatType,
+        flaggedMessageIds: snapshot.flagByMessageId,
+        messages,
+        threadRootUuid,
     });
 }

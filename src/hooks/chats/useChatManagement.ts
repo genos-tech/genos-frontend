@@ -494,17 +494,26 @@ export const useChatManagement = (
         const channelId = currentMainChat?.chatId;
         const chatType = currentMainChat?.chatType;
         if (!channelId || chatType == null) return;
+        // Track BOTH the messages slice ref and the flag-map ref so a
+        // flag-only change (user flags/unflags a bubble in this pane,
+        // or another tab does) still triggers a re-adapt — otherwise
+        // the bubble's flag icon wouldn't flip until the next message
+        // arrives.
         let lastSliceRef: readonly unknown[] | undefined;
+        let lastFlagsRef: ReadonlyMap<string, unknown> | undefined;
         const apply = () => {
             const snapshot = channelService.getSnapshot();
             const messagesSlice = snapshot.messagesByChannel.get(channelId);
-            if (messagesSlice === lastSliceRef) return;
+            if (messagesSlice === lastSliceRef && snapshot.flagByMessageId === lastFlagsRef)
+                return;
             lastSliceRef = messagesSlice;
+            lastFlagsRef = snapshot.flagByMessageId;
             if (!messagesSlice) return;
             const legacyMessages = v3MessagesToLegacy({
-                messages: messagesSlice,
                 channelId,
                 chatType,
+                flaggedMessageIds: snapshot.flagByMessageId,
+                messages: messagesSlice,
             });
             setCurrentMainChat((prev) => {
                 // Guard against a chat-switch race: by the time the
@@ -534,16 +543,20 @@ export const useChatManagement = (
         const chatType = currentSubChat?.chatType;
         if (!channelId || chatType == null) return;
         let lastSliceRef: readonly unknown[] | undefined;
+        let lastFlagsRef: ReadonlyMap<string, unknown> | undefined;
         const apply = () => {
             const snapshot = channelService.getSnapshot();
             const messagesSlice = snapshot.messagesByChannel.get(channelId);
-            if (messagesSlice === lastSliceRef) return;
+            if (messagesSlice === lastSliceRef && snapshot.flagByMessageId === lastFlagsRef)
+                return;
             lastSliceRef = messagesSlice;
+            lastFlagsRef = snapshot.flagByMessageId;
             if (!messagesSlice) return;
             const legacyMessages = v3MessagesToLegacy({
-                messages: messagesSlice,
                 channelId,
                 chatType,
+                flaggedMessageIds: snapshot.flagByMessageId,
+                messages: messagesSlice,
             });
             setCurrentSubChat((prev) => {
                 if (!prev || prev.chatId !== channelId) return prev;
@@ -573,17 +586,21 @@ export const useChatManagement = (
         const chatType = currentThreadChat?.chatType;
         if (!channelUuid || !threadRootUuid || chatType == null) return;
         let lastSliceRef: readonly unknown[] | undefined;
+        let lastFlagsRef: ReadonlyMap<string, unknown> | undefined;
         const apply = () => {
             const snapshot = channelService.getSnapshot();
             const messagesSlice = snapshot.messagesByChannel.get(channelUuid);
-            if (messagesSlice === lastSliceRef) return;
+            if (messagesSlice === lastSliceRef && snapshot.flagByMessageId === lastFlagsRef)
+                return;
             lastSliceRef = messagesSlice;
+            lastFlagsRef = snapshot.flagByMessageId;
             if (!messagesSlice) return;
             const legacyThreadMessages = v3ThreadMessagesToLegacy({
-                messages: messagesSlice,
                 channelId: channelUuid,
-                threadRootUuid,
                 chatType,
+                flaggedMessageIds: snapshot.flagByMessageId,
+                messages: messagesSlice,
+                threadRootUuid,
             });
             setCurrentThreadChat((prev) => {
                 if (!prev) return prev;
