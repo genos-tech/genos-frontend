@@ -278,26 +278,35 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
 
         const formData = new FormData();
         formData.append("profile_image", userProfileImage);
-        // Legacy backend binds `gm_id` to an IntegerField. Use the
-        // resolved legacy id, not the v3 UUID.
-        formData.append("gm_id", gmChatIdLegacy.toString());
-        const uploadProfileImageResponse = await fetch(`${base_url}/gm/profile/image/`, {
-            method: "PUT",
-            headers: {
-                Authorization: `Bearer ${accessToken}`,
-            },
-            body: formData,
-        });
-
-        const uploadProfileImageData = await uploadProfileImageResponse.json();
+        // v3 endpoint. Channel UUID lives in the URL — no `gm_id`
+        // body field needed. The view writes the binary via
+        // `Channel.profile_image_file` (FileField), then sets
+        // `Channel.profile_image_url` to the resolved storage path so
+        // the response body's `profileImageUrl` is the URL the FE
+        // should display next.
+        const uploadProfileImageResponse = await fetch(
+            `${base_url}/api/v3/channels/${gmChat.chatId}/profile/image/`,
+            {
+                method: "PUT",
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                },
+                body: formData,
+            }
+        );
 
         if (!uploadProfileImageResponse.ok) {
             throw new Error(t.chat.modals.gmProfile.uploadImageError);
         }
-        // v3 source. The avatar update broadcasts `channel.updated` to
-        // every member, which `channelService` applies to
-        // `snapshot.channels`. `funcSetAllChats` re-derives the legacy
-        // `allChats` list from the snapshot — no legacy IDB write.
+
+        // The v3 REST endpoint doesn't fan out a socket broadcast (the
+        // legacy endpoint didn't either). For this tab, hit
+        // `syncChannel` so `snapshot.channels` picks up the new
+        // `profile_image_url`; the `funcSetAllChats` subscription then
+        // re-derives `allChats`. Other tabs see the new image on their
+        // next `listChannels` / `syncChannel` poll — an acceptable
+        // gap that matches the legacy behavior.
+        await channelService.syncChannel(gmChat.chatId);
         await useCM.funcSetAllChats();
         // Bump the per-chat image version so this modal and every
         // mounted GMAvatar refetch with a fresh `?v=N` query string —
