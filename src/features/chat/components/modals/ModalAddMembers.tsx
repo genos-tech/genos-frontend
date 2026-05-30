@@ -25,8 +25,8 @@ import { UIStateManagementState } from "../../../../hooks/common/useUIStateManag
 import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps } from "../../../../types/chat";
+import { popTeamMembers } from "../../../admin/services/popTeamMembers";
 import { addMembersToChat } from "../../services/addMembersToChat";
-import { popTeamMembers } from "../../services/popTeamMembers";
 
 const fadeIn = keyframes`
     from { opacity: 0; transform: scale(0.95) translateY(-10px); }

@@ -1,8 +1,8 @@
 import { PartialBlock } from "@blocknote/core";
 
-import { UserProps } from "../../../types/admin";
-import { TodoItemProps } from "../../../types/chat";
-import { getLocalCurrentDate } from "../../../utils/dateUtils";
+import { UserProps } from "../../../../../types/admin";
+import { TodoItemProps } from "../../../../../types/chat";
+import { getLocalCurrentDate } from "../../../../../utils/dateUtils";
 import { createTodoItem } from "./todoItems";
 
 interface MessageSource {

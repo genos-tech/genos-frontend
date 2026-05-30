@@ -1,8 +1,8 @@
 import axios from "axios";
 
-import { authApi } from "../../../services/api";
-import { UserProps } from "../../../types/admin";
-import { TodoGroupProps } from "../../../types/chat";
+import { authApi } from "../../../../../services/api";
+import { UserProps } from "../../../../../types/admin";
+import { TodoGroupProps } from "../../../../../types/chat";
 
 export const loadTodoGroups = async (
     myself: UserProps,

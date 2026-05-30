@@ -4,7 +4,7 @@
 
 import axios from "axios";
 
-import { loadActivityHistory } from "../../../features/chat/services/loadActivityHistory";
+import { loadActivityHistory } from "../../../features/chat/components/sidebar/activity/services/loadActivityHistory";
 import { authApi } from "../../../services/api";
 import type { ActivityMessageProps } from "../../../types/chat";
 import { ActivityService } from "../../services";

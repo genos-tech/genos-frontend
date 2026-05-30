@@ -9,7 +9,7 @@ import {
 import { loadV3Chats } from "../../features/chat/services/loadV3Chats";
 import { loadV3SpecificMessages } from "../../features/chat/services/loadV3SpecificMessages";
 import { loadV3SpecificThreadMessages } from "../../features/chat/services/loadV3SpecificThreadMessages";
-import { popActivityMessages } from "../../features/chat/services/popActivityMessages";
+import { popActivityMessages } from "../../features/chat/components/sidebar/activity/services/popActivityMessages";
 import {
     resolveV3MessageUuid,
     resolveV3ThreadRootUuid,

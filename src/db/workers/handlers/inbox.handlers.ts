@@ -1,7 +1,7 @@
 // Inbox-channel handlers. Consolidates the 3 single-purpose inbox workers
 // (addInboxItem, loadInbox, popInboxItems).
 
-import { loadInbox } from "../../../features/chat/services/loadInbox";
+import { loadInbox } from "../../../features/inbox/services/loadInbox";
 import type { InboxItemProps } from "../../../types/common";
 import { InboxRepository } from "../../repositories";
 import type { InboxRequests } from "../contracts";

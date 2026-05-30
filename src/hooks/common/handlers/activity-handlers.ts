@@ -1,4 +1,4 @@
-import { addActivityMessage } from "../../../features/chat/services/addActivityMessage";
+import { addActivityMessage } from "../../../features/chat/components/sidebar/activity/services/addActivityMessage";
 import { UserProps } from "../../../types/admin";
 import { ActivityMessageProps } from "../../../types/chat";
 import { ChatManagementState } from "../../chats/useChatManagement";

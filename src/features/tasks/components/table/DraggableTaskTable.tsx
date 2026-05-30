@@ -22,7 +22,7 @@ import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TagListProps, TaskTableProps } from "../../../../types/tasks";
-import { popTeamMembers } from "../../../chat/services/popTeamMembers";
+import { popTeamMembers } from "../../../admin/services/popTeamMembers";
 import { updateTaskFromTable } from "../../services/updateTaskFromTable";
 import { FilterProps } from "../../types/TaskTableTypes";
 import { buildComparator, nullTier, SortTier } from "../../utils/sortTask";

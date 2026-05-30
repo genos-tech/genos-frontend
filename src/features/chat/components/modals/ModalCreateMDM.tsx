@@ -25,8 +25,8 @@ import { TeamManagementState } from "../../../../hooks/common/useTeamManagement"
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
+import { popTeamMembers } from "../../../admin/services/popTeamMembers";
 import { createMDMChatGroup } from "../../services/createMDMChatGroup";
-import { popTeamMembers } from "../../services/popTeamMembers";
 
 const fadeIn = keyframes`
     from { opacity: 0; transform: scale(0.95) translateY(-10px); }

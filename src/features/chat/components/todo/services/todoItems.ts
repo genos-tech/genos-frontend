@@ -1,9 +1,9 @@
 import { PartialBlock } from "@blocknote/core";
 import axios from "axios";
 
-import { authApi } from "../../../services/api";
-import { UserProps } from "../../../types/admin";
-import { TodoItemProps } from "../../../types/chat";
+import { authApi } from "../../../../../services/api";
+import { UserProps } from "../../../../../types/admin";
+import { TodoItemProps } from "../../../../../types/chat";
 
 export interface CreateTodoItemInput {
     localDate: string;

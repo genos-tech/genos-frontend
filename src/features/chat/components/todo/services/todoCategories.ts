@@ -1,8 +1,8 @@
 import axios from "axios";
 
-import { authApi } from "../../../services/api";
-import { UserProps } from "../../../types/admin";
-import { TodoCategoryProps } from "../../../types/chat";
+import { authApi } from "../../../../../services/api";
+import { UserProps } from "../../../../../types/admin";
+import { TodoCategoryProps } from "../../../../../types/chat";
 
 export const loadTodoCategories = async (
     accessToken: string | null,

@@ -18,8 +18,8 @@ import { TaskPreviewPanel } from "./components/panels/TaskPreviewPanel";
 import { ThreadPanel } from "./components/panels/ThreadPanel";
 import { ResizeHandle } from "./components/shared/ResizeHandle";
 import { ChatSidebar } from "./components/sidebar/ChatSidebar";
+import { appendTodoFromMessage } from "./components/todo/services/appendTodoFromMessage";
 import { useChatRouting } from "./hooks/useChatRouting";
-import { appendTodoFromMessage } from "./services/appendTodoFromMessage";
 import { getFirstLine } from "./utils/common";
 
 import { LayoutStyles } from "../../components/ui/styles/commonStyle";

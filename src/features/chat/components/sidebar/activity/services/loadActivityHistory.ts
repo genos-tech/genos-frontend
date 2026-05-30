@@ -1,8 +1,8 @@
 import axios from "axios";
 
-import { authApi } from "../../../services/api";
-import { UserProps } from "../../../types/admin";
-import { ActivityMessageProps } from "../../../types/chat";
+import { authApi } from "../../../../../../services/api";
+import { UserProps } from "../../../../../../types/admin";
+import { ActivityMessageProps } from "../../../../../../types/chat";
 
 // Default lookback for the FULL-load path. Once a checkpoint exists,
 // the server uses it as the lower bound instead — no day cap applies.
