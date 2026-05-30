@@ -21,10 +21,11 @@ import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { useTranslation } from "../../../../i18n";
+import { channelService } from "../../../../services/channel/channelService";
 import { UserProps } from "../../../../types/admin";
-import { AllChatProps, SearchListProps } from "../../../../types/chat";
+import { ChannelKind, type Channel } from "../../../../types/channel";
+import { AllChatProps, ChatProps, SearchListProps } from "../../../../types/chat";
 import { loadSearchList } from "../../services/loadChatSearchList";
-import { moveToSelectedChat } from "../../services/moveToChat";
 
 type ChatSearchProps = {
     myself: UserProps;
@@ -60,53 +61,82 @@ export const ChatSearch = (props: ChatSearchProps) => {
     const loading = openSearchBox && options.length === 0;
 
     const onChangeHandler = async (value: any) => {
-        if (value !== null && socket !== null) {
-            let _chatType: number;
-            if (value.type === "Group") {
-                _chatType = 2;
-            } else {
-                _chatType = 1;
-            }
+        if (value === null) return;
+        const isGroup = value.type === "Group";
+        const _chatType = isGroup ? 2 : 1;
 
-            // If the user tries to join a private GM, show the modal to get approval from the GM owner.
-            if (_chatType === 2 && value.isPrivate === true && value.isJoined === false) {
-                setOpenJoinGM({ flag: true, chatId: value.id, chatName: value.name });
-            } else {
-                socket.emit(
-                    "join",
-                    {
-                        joiningCGId: value.id, // dm_id or gm_id
-                        joiningCGName: value.name, // dm_name or gm_name
-                        chatType: _chatType,
-                        dmPartnerUserId: value.dmPartnerUser.userId,
-                    },
-                    (ack: any) => {
-                        // Since the existing DM/GM obviously has its own chatId (value.id),
-                        // the user can move the the DM/GM.
-                        if (Number(value.id) !== -1) {
-                            moveToSelectedChat(
-                                myself,
-                                accessToken,
-                                socket,
-                                value.id,
-                                value.name,
-                                value.type === "Group" ? 2 : 1,
-                                value.isPrivate,
-                                value.dmPartnerUser,
-                                useCM,
-                                setOpenSearchBox
-                            );
-                        } else {
-                            // If the user tries to join a new DM (try to make a DM with a new friend),
-                            // there is no chat (chatId) yet, so need to wait till the first message
-                            // will be arrived via WS. (the above "join" ws message will generate
-                            // the first message for the user).
-                            // Joining a new DM -> value.id = -1. User will get the first message via WS.
-                        }
-                    }
-                );
+        // If the user tries to join a private GM, show the modal to
+        // get approval from the GM owner.
+        if (_chatType === 2 && value.isPrivate === true && value.isJoined === false) {
+            setOpenJoinGM({ flag: true, chatId: value.id, chatName: value.name });
+            return;
+        }
+
+        // v3 channel resolution. The search backend still returns
+        // legacy ids, so locate the corresponding v3 Channel by
+        // matching kind + (DM partner | GM name) in the snapshot.
+        const snapshot = channelService.getSnapshot();
+        let channel: Channel | undefined;
+        if (isGroup) {
+            for (const c of snapshot.channels.values()) {
+                if (c.kind !== ChannelKind.GM) continue;
+                if ((c.title || "") === value.name) {
+                    channel = c;
+                    break;
+                }
+            }
+        } else {
+            for (const c of snapshot.channels.values()) {
+                if (c.kind !== ChannelKind.DM) continue;
+                const roster = snapshot.membersByChannel.get(c.id) ?? [];
+                const ids = new Set(roster.map((m) => m.userId));
+                if (
+                    ids.size === 2 &&
+                    ids.has(myself.userId) &&
+                    ids.has(value.dmPartnerUser.userId)
+                ) {
+                    channel = c;
+                    break;
+                }
+            }
+            if (!channel) {
+                // No DM yet — ask the backend to create one.
+                // createChannel is idempotent for DM (via
+                // `ChannelDirectPair`) so a race against another tab
+                // is safe.
+                try {
+                    channel = await channelService.createChannel({
+                        kind: ChannelKind.DM,
+                        otherUserId: value.dmPartnerUser.userId,
+                        teamId: myself.teamId,
+                    });
+                } catch (e) {
+                    console.error("[ChatSearch] DM create failed:", e);
+                    return;
+                }
             }
         }
+        if (!channel) {
+            console.warn("[ChatSearch] no v3 channel found for search result", value);
+            return;
+        }
+
+        const initialChat: ChatProps = {
+            chatId: channel.id,
+            chatName: value.name,
+            chatType: _chatType,
+            dmPartnerUser: value.dmPartnerUser,
+            isPrivate: channel.isPrivate,
+            lastReadMessageId: "",
+            latestMessage: undefined as unknown as ChatProps["latestMessage"],
+            latestMessageText: "",
+            messages: [],
+            profileImagePath: channel.profileImageUrl || undefined,
+            TSLastMessage: channel.tsUpdated ?? channel.tsCreated ?? "",
+        };
+        useCM.setCurrentMainChat(initialChat);
+        useCM.setIsMainChatVisible(true);
+        setOpenSearchBox(false);
     };
 
     useEffect(() => {

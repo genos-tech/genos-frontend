@@ -4,9 +4,8 @@ import { Socket } from "socket.io-client";
 
 import { ChatProvider } from "../../../features/chat/context/ChatContext";
 import { MessagesPane } from "../../../features/chat/MainChatPane";
-import { loadSpecificThreadMessages } from "../../../features/chat/services/loadSpecificThreadMessages";
-import { loadSpecificThreadMessagesByTaskId } from "../../../features/chat/services/loadSpecificThreadMessagesByTaskId";
 import { loadV3SpecificMessages } from "../../../features/chat/services/loadV3SpecificMessages";
+import { loadV3SpecificThreadMessages } from "../../../features/chat/services/loadV3SpecificThreadMessages";
 import { ThreadPane } from "../../../features/chat/ThreadChatPane";
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../hooks/common/useProjectManagement";
@@ -164,22 +163,17 @@ export const ModalChatView = (props: ModalChatViewProps) => {
 
                 // Step 2: thread load, only when target is a thread URL.
                 if (target.kind === "chatThread") {
-                    const threadMessages: ThreadMessageProps[] | undefined =
-                        target.chatType === 3
-                            ? await loadSpecificThreadMessagesByTaskId(
-                                  myself,
-                                  target.chatType,
-                                  target.chatId,
-                                  target.threadId,
-                                  accessToken
-                              )
-                            : await loadSpecificThreadMessages(
-                                  myself,
-                                  target.chatType,
-                                  target.chatId,
-                                  target.threadId,
-                                  accessToken
-                              );
+                    // v3 source. `target.chatId` and `target.threadId`
+                    // carry v3 UUIDs through their legacy `number`
+                    // slots. PM vs non-PM no longer matters at this
+                    // layer — `loadV3SpecificThreadMessages` resolves
+                    // both via the snapshot.
+                    const threadMessages: ThreadMessageProps[] =
+                        await loadV3SpecificThreadMessages(
+                            target.chatId as unknown as string,
+                            target.threadId as unknown as string,
+                            target.chatType
+                        );
                     if (cancelled) return;
 
                     if (!threadMessages || threadMessages.length === 0) {

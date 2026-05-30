@@ -36,9 +36,9 @@ import { toggleMessagesPane } from "../../../../../utils/sidebarUtils";
 import { loadSpecificNote } from "../../../../notes/common/services/loadSpecificNote";
 import { loadSpecificTask } from "../../../../tasks/services/loadSpecificTask";
 import { useActivityStatus } from "../../../hooks/useActivityStatus";
-import { loadSpecificThreadMessages } from "../../../services/loadSpecificThreadMessages";
 import { loadV3SpecificMessages } from "../../../services/loadV3SpecificMessages";
-import { resolveV3ChannelId } from "../../../utils/channelIdResolvers";
+import { loadV3SpecificThreadMessages } from "../../../services/loadV3SpecificThreadMessages";
+import { resolveV3ChannelId, resolveV3ThreadRootUuid } from "../../../utils/channelIdResolvers";
 import { ActivityContent } from "./ActivityContent";
 import { ActivityHeader } from "./ActivityHeader";
 
@@ -310,13 +310,21 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                     loadTask();
                     useTM.setCurrentPreviewTaskId(activity.taskId);
 
-                    const threadMessages: ThreadMessageProps[] = await loadSpecificThreadMessages(
-                        myself,
-                        3,
-                        activity.chatId,
-                        activity.taskId,
-                        accessToken
-                    );
+                    // Activity feed still uses legacy ints. Resolve to
+                    // v3 UUIDs at the boundary: PM thread root is the
+                    // task-card-header message whose `taskId === activity.taskId`.
+                    const v3ChannelUuid = resolveV3ChannelId(activity.chatId, 3);
+                    const v3ThreadRootUuid = v3ChannelUuid
+                        ? resolveV3ThreadRootUuid(v3ChannelUuid, activity.taskId, true)
+                        : null;
+                    const threadMessages: ThreadMessageProps[] =
+                        v3ChannelUuid && v3ThreadRootUuid
+                            ? await loadV3SpecificThreadMessages(
+                                  v3ChannelUuid,
+                                  v3ThreadRootUuid,
+                                  3
+                              )
+                            : [];
 
                     if (threadMessages && threadMessages.length > 0) {
                         const newThread: ThreadProps = {
@@ -365,13 +373,26 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
     // Handle thread message activity
     const handleThreadMessageActivity = async () => {
         try {
-            const threadMessages: ThreadMessageProps[] = await loadSpecificThreadMessages(
-                myself,
-                activity.chatType,
-                activity.chatId,
-                activity.threadId,
-                accessToken
-            );
+            // Activity feed still uses legacy ints. For PM the legacy
+            // `threadId` is the task id; for DM/GM/MDM it's the parent
+            // message's per-channel seq. The resolver disambiguates
+            // via the `isPm` flag.
+            const v3ChannelUuid = resolveV3ChannelId(activity.chatId, activity.chatType);
+            const v3ThreadRootUuid = v3ChannelUuid
+                ? resolveV3ThreadRootUuid(
+                      v3ChannelUuid,
+                      activity.threadId,
+                      activity.chatType === 3
+                  )
+                : null;
+            const threadMessages: ThreadMessageProps[] =
+                v3ChannelUuid && v3ThreadRootUuid
+                    ? await loadV3SpecificThreadMessages(
+                          v3ChannelUuid,
+                          v3ThreadRootUuid,
+                          activity.chatType
+                      )
+                    : [];
 
             if (threadMessages && threadMessages.length > 0) {
                 // Same sender-centric issue as in `defineNewChat`: for DM

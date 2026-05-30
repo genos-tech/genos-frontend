@@ -45,14 +45,15 @@ import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { fmt, useTranslation } from "../../../../i18n";
+import { channelService } from "../../../../services/channel/channelService";
 import { UserProps } from "../../../../types/admin";
+import { ChannelKind } from "../../../../types/channel";
 import { AllChatProps, GMProfileProps } from "../../../../types/chat";
 import { extractYYYYMMDD } from "../../../../utils/dateUtils";
 import {
     bumpGMProfileImageVersion,
     useGMProfileImageVersion,
 } from "../../../../utils/gmProfileImageVersion";
-import { leaveGM } from "../../services/leaveGM";
 import { loadGMProfile } from "../../services/loadGMProfile";
 import { updateGMProfile } from "../../services/updateGMProfile";
 import { resolveLegacyChatId } from "../../utils/channelIdResolvers";
@@ -208,27 +209,19 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
     );
 
     const handleLeaveGM = async () => {
-        const ok = await leaveGM(accessToken, gmChatIdLegacy, myself.userId);
-        if (!ok) return false;
-        useCM.setAllChats((prev) =>
-            prev.filter((c) => !(c.chatType === gmChat.chatType && c.chatId === gmChat.chatId))
-        );
-        if (
-            useCM.currentMainChat?.chatType === gmChat.chatType &&
-            useCM.currentMainChat?.chatId === gmChat.chatId
-        ) {
-            useCM.setCurrentMainChat(undefined);
+        // v3 leave. `channelService.removeMember` posts to the v3
+        // backend, which broadcasts `channel.member_removed` to every
+        // member (including us). The handler in channelService evicts
+        // the channel from `snapshot.channels` for the leaver, which
+        // cascades through the `funcSetAllChats` subscription and the
+        // `currentMainChat` / `currentSubChat` subscriptions in
+        // useChatManagement — no manual local-state cleanup needed.
+        try {
+            await channelService.removeMember(gmChat.chatId, ChannelKind.GM, myself.userId);
+        } catch (error) {
+            console.error("[ModalGMProfile] leave GM failed:", error);
+            return false;
         }
-        if (
-            useCM.currentSubChat?.chatType === gmChat.chatType &&
-            useCM.currentSubChat?.chatId === gmChat.chatId
-        ) {
-            useCM.setCurrentSubChat(undefined);
-        }
-        // v3 ownership: leaving a GM triggers a `channel.member_removed`
-        // broadcast which `channelService._evictChannelMessages` reacts
-        // to — dropping the channel from the snapshot + IDB. No manual
-        // cleanup needed.
         setOpenModalGMProfile(false);
         return true;
     };
