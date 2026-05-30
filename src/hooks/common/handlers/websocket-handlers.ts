@@ -10,7 +10,6 @@ import { InboxItemProps } from "../../../types/common";
 import { ChatManagementState } from "../../chats/useChatManagement";
 import { TeamManagementState } from "../useTeamManagement";
 import { handleActivityMessage } from "./activity-handlers";
-import { handleRegularMessage, handleThreadMessage } from "./message-handlers";
 
 export const setupWebSocketHandlers = (
     socket: Socket,
