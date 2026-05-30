@@ -96,6 +96,7 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
         1: "dm",
         2: "gm",
         3: "pm",
+        4: "mdm",
     };
 
     // Handle thread message click to update URL and focus
@@ -109,15 +110,17 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
                 `/workspace/chat/${typePath}/${thread.chatId}/thread/${threadId}/message/${message.messageId}`
             );
 
-            // Update currentThreadChat's moveToSpecificIndex to focus on this
-            // message. Format: {chatId}-{threadId}-{messageId} to match
-            // messageIdWithChatIdAndThreadId.
+            // v3 `moveToSpecificIndex` is the thread reply's v3 UUID
+            // — matches `messageIdWithChatIdAndThreadId` on the bubble
+            // so `MessageListRenderer.resolveFocusedState` returns
+            // "focused" for the clicked row. The legacy
+            // `{chatId}-{threadId}-{messageId}` composite is gone.
             //
-            // Uses the functional updater so the latest `currentThreadChat`
-            // is read at call time — required for downstream React.memo on
-            // this bubble to be safe (we no longer close over the value at
-            // render time).
-            const newMoveIndex = `${thread.chatId}-${threadId}-${message.messageId}`;
+            // Uses the functional updater so the latest
+            // `currentThreadChat` is read at call time — required for
+            // downstream React.memo on this bubble to be safe.
+            const newMoveIndex = message.messageIdWithChatIdAndThreadId;
+            if (!newMoveIndex) return;
             useCM.setCurrentThreadChat((prev) => {
                 if (!prev || prev.moveToSpecificIndex === newMoveIndex) return prev;
                 return { ...prev, moveToSpecificIndex: newMoveIndex };

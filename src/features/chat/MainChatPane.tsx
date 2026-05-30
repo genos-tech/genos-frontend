@@ -107,17 +107,16 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                     : 0;
             } else if (
                 messageManagement.indexMap &&
-                messageManagement.indexMap[useCM.currentMainChat?.moveToSpecificIndex] &&
-                // PUNCH LIST (v3 chatId migration): `chatId` is `string`
-                // post-flip; `moveToSpecificIndex` is `${chatId}-${messageId}`
-                // where the chatId portion was historically numeric.
-                // Compare both as strings — legacy stringified ints match
-                // as before. UUID-shaped v3 chatIds split on "-" and won't
-                // match, which is the right behavior — the v3 scroll path
-                // handles its own state.
-                useCM.currentMainChat?.chatId ===
-                    useCM.currentMainChat?.moveToSpecificIndex?.split("-")[0]
+                messageManagement.indexMap[useCM.currentMainChat?.moveToSpecificIndex] !==
+                    undefined
             ) {
+                // v3 `moveToSpecificIndex` is the message's v3 UUID,
+                // matching the bubble's `messageIdWithChatId`. The
+                // legacy `chatId === split("-")[0]` validation was
+                // for the `${chatId}-${seq}` composite key — gone
+                // now. `indexMap[uuid]` lookup is enough: a UUID in
+                // the open chat resolves; one from a different chat
+                // returns `undefined` and we fall through.
                 targetIndex = Number(
                     messageManagement.indexMap[useCM.currentMainChat?.moveToSpecificIndex]
                 );

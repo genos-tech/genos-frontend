@@ -9,7 +9,7 @@ import { ChatProps, MessageProps, ThreadMessageProps, ThreadProps } from "../../
 import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
 import { loadV3SpecificMessages } from "../services/loadV3SpecificMessages";
 import { loadV3SpecificThreadMessages } from "../services/loadV3SpecificThreadMessages";
-import { resolveV3ThreadRootUuid } from "../utils/channelIdResolvers";
+import { resolveV3MessageUuid, resolveV3ThreadRootUuid } from "../utils/channelIdResolvers";
 
 // Chat type constants matching the existing codebase.
 // Keys sorted alphabetically per `sort-keys` (the integer values are
@@ -316,8 +316,14 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
 
         // If chat is already loaded but we need to focus on a specific message
         if (currentMainChatId === chatId && messageId && threadId === undefined) {
-            const newMoveIndex = `${chatId}-${messageId}`;
-            if (useCM.currentMainChat!.moveToSpecificIndex !== newMoveIndex) {
+            // v3 format: `moveToSpecificIndex` is now the message's v3
+            // UUID, matching the `messageIdWithChatId` field that
+            // `MessageListRenderer.resolveFocusedState` reads. The URL
+            // `messageId` segment is still the legacy seq (or task id
+            // for PM); resolve through the snapshot.
+            const isPm = paneType === 3;
+            const newMoveIndex = resolveV3MessageUuid(chatId, messageId, isPm);
+            if (newMoveIndex && useCM.currentMainChat!.moveToSpecificIndex !== newMoveIndex) {
                 // Functional updater. The closure-captured
                 // `useCM.currentMainChat` lags behind the channelService
                 // live-update subscription (`useChatManagement.ts`
@@ -374,13 +380,19 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
                         // `chatId !== ""` is the v3-flipped "valid chat?"
                         // sentinel (replaces legacy `!== -1`).
                         const isValidChat = useCM.currentMainChat?.chatId !== "";
+                        // v3 `moveToSpecificIndex` carries the message's
+                        // v3 UUID so the bubble's `messageIdWithChatId`
+                        // matches in `MessageListRenderer`. Resolve the
+                        // URL `messageId` (legacy seq, or task id for
+                        // PM) via the snapshot.
+                        const isPm = paneType === 3;
                         const newMoveIndex =
                             threadId === undefined
                                 ? messageId && isValidChat
-                                    ? `${chatId}-${messageId}`
+                                    ? (resolveV3MessageUuid(chatId, messageId, isPm) ?? undefined)
                                     : undefined
                                 : isValidChat
-                                  ? `${chatId}-${threadId}`
+                                  ? (resolveV3MessageUuid(chatId, threadId, isPm) ?? undefined)
                                   : undefined;
                         useCM.setCurrentMainChat({
                             ...newChat,

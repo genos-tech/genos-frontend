@@ -10,7 +10,10 @@ import { loadV3SpecificMessages } from "../../features/chat/services/loadV3Speci
 import { loadV3SpecificThreadMessages } from "../../features/chat/services/loadV3SpecificThreadMessages";
 import { popActivityMessages } from "../../features/chat/services/popActivityMessages";
 import { popFlaggedMessages } from "../../features/chat/services/popFlaggedMessages";
-import { resolveV3ThreadRootUuid } from "../../features/chat/utils/channelIdResolvers";
+import {
+    resolveV3MessageUuid,
+    resolveV3ThreadRootUuid,
+} from "../../features/chat/utils/channelIdResolvers";
 import { channelService } from "../../services/channel/channelService";
 import { UserProps } from "../../types/admin";
 import {
@@ -338,10 +341,15 @@ export const useChatManagement = (
             const messages = await loadV3SpecificMessages(chatIdAsString, chatType);
             const newChat: ChatProps = defineNewChat(targetChat, messages);
             // Spotlight may have asked us to focus a specific bubble in
-            // the main channel. The chat list reads `moveToSpecificIndex`
-            // (formatted as "{chatId}-{messageId}") to scroll-target.
-            if (hasMessage && threadId === 0) {
-                newChat.moveToSpecificIndex = `${chatId}-${messageId}`;
+            // the main channel. `moveToSpecificIndex` is now the v3
+            // message UUID — matches `messageIdWithChatId` on
+            // `MessageProps` so `MessageListRenderer.resolveFocusedState`
+            // highlights the right row. Resolve the legacy `messageId`
+            // (seq, or task id for PM) via the cached snapshot.
+            if (hasMessage && threadId === 0 && messageId) {
+                const isPm = chatType === 3;
+                const resolvedUuid = resolveV3MessageUuid(chatIdAsString, messageId, isPm);
+                if (resolvedUuid) newChat.moveToSpecificIndex = resolvedUuid;
             }
             setCurrentMainChat(newChat);
 

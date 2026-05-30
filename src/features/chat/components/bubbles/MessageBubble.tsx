@@ -444,7 +444,12 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
     if (chat.chatType === 3) {
         numRepliesWithoutFirstMessage = message.taskCommentCount ?? 0;
     } else {
-        numRepliesWithoutFirstMessage = message.numReplies - 1;
+        // v3 `Message.reply_count` is the literal number of thread
+        // replies — it does NOT include the legacy synthetic "first
+        // thread message" mirror that messageId=1 used to represent.
+        // The `- 1` correction the legacy code did is no longer
+        // appropriate; use the count as-is.
+        numRepliesWithoutFirstMessage = message.numReplies;
     }
 
     // Bubble action buttons component - consolidated into a single "More" menu

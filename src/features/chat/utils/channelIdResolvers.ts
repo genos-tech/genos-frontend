@@ -77,3 +77,38 @@ export function resolveV3ThreadRootUuid(
     }
     return null;
 }
+
+/**
+ * Legacy per-channel integer `seq` → v3 message UUID. Used by
+ * URL routing + scroll-to-message paths that historically built
+ * `moveToSpecificIndex` as `${chatId}-${messageId}` (where messageId
+ * was the legacy `seq`). The bubble's `messageIdWithChatId` slot now
+ * carries the v3 UUID, so the focus highlight needs the UUID format
+ * to match. Resolve seq → UUID via the cached snapshot.
+ *
+ * For PM channels, the URL `messageId` segment is actually the task
+ * id (legacy convention — see `MessageBubble.handleMessageClick`).
+ * `isPm=true` triggers a task-id lookup instead of a seq lookup so
+ * PM URLs roundtrip correctly.
+ *
+ * Returns null if the row isn't in the snapshot — callers should
+ * fall back to leaving `moveToSpecificIndex` unset rather than
+ * synthesizing a key that won't match anything.
+ */
+export function resolveV3MessageUuid(
+    channelUuid: string,
+    messageIdOrTaskId: number,
+    isPm: boolean
+): string | null {
+    const messages = channelService.getSnapshot().messagesByChannel.get(channelUuid);
+    if (!messages) return null;
+    for (const m of messages) {
+        if (m.isThreadReply) continue;
+        if (isPm) {
+            if (m.taskId === messageIdOrTaskId) return m.id;
+        } else {
+            if (m.seq === messageIdOrTaskId) return m.id;
+        }
+    }
+    return null;
+}

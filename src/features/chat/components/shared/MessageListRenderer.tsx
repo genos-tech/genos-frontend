@@ -183,7 +183,14 @@ export const MessageListRenderer = ({
             }
             return false;
         }
-        if (message.messageId === threadActiveTarget.threadId) return "threadActive";
+        // For non-PM, the parent of the open thread should highlight
+        // as "threadActive". `currentThreadChat.threadId` carries the
+        // parent's v3 UUID via the migration cast; `messageKey` is the
+        // bubble's v3 UUID (via `messageIdWithChatId`). Stringify both
+        // sides defensively because the cast is `as unknown as number`.
+        if (messageKey && messageKey === String(threadActiveTarget.threadId)) {
+            return "threadActive";
+        }
         return false;
     };
 

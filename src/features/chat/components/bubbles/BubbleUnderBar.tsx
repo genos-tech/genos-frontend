@@ -56,11 +56,12 @@ export const BubbleUnderBar = (props: BubbleUnderBarTypes) => {
     //     numbers are auto-generated system bubbles, so showing the
     //     reply count there is misleading; comments are what humans
     //     actually engage with.
-    //   - Other chats: thread replies, minus 1 because the parent
-    //     message itself is stored as the first thread message and
-    //     the chip should count only the actual replies under it.
+    //   - Other chats: thread replies. v3 `Message.reply_count` is
+    //     the literal count — no synthetic "first thread message"
+    //     mirror to subtract anymore (the legacy `- 1` correction is
+    //     gone).
     const isPm = chatType === 3;
-    const chipCount = isPm ? (taskCommentCount ?? 0) : numReplies - 1;
+    const chipCount = isPm ? (taskCommentCount ?? 0) : numReplies;
     const chipNoun = isPm ? "comment" : "reply";
     const chipNounPlural = isPm ? "comments" : "replies";
 
