@@ -2,10 +2,18 @@ import { Socket } from "socket.io-client";
 
 import { addInboxItem } from "../../../features/admin/services/addInboxItem";
 import { addUser } from "../../../features/admin/services/addUser";
+import {
+    v3MessageToLegacyChatPayload,
+    v3MessageToLegacyThreadPayload,
+} from "../../../features/chat/adapters/v3MessageToNotification";
 import { NotificationManager } from "../../../services/notifications/notificationManager";
-import { buildIntentFromMessage } from "../../../services/notifications/notificationRouter";
+import {
+    buildActivityIntent,
+    buildIntentFromMessage,
+} from "../../../services/notifications/notificationRouter";
 import { UserProps } from "../../../types/admin";
-import { MessageProps } from "../../../types/chat";
+import { Message as V3Message } from "../../../types/channel";
+import { ActivityMessageProps, MessageProps } from "../../../types/chat";
 import { InboxItemProps } from "../../../types/common";
 import { ChatManagementState } from "../../chats/useChatManagement";
 import { TeamManagementState } from "../useTeamManagement";
@@ -41,6 +49,61 @@ export const setupWebSocketHandlers = (
     socket.on("auth_error", (data) => {
         console.error("Authentication Error:", data.message);
     });
+
+    // v3 activity → web notification bridge. `handleV3Activity` (the
+    // socket router entry point for `activity.created` on the /v3
+    // namespace) writes the activity to IDB and dispatches the
+    // `v3:activity:created` window event with `detail.activity` set to
+    // the legacy-shaped row. Re-use the existing `buildActivityIntent`
+    // + `notificationManager.notify` path here so the web notification
+    // is the same as the legacy one.
+    if (notificationManager) {
+        // v3 activity (mention / task-comment) → existing buildActivityIntent.
+        const onV3Activity = (e: Event) => {
+            try {
+                const detail = (e as CustomEvent<{ activity?: ActivityMessageProps }>).detail;
+                if (!detail?.activity) return;
+                const intent = buildActivityIntent(detail.activity, myself, useTEM, useCM);
+                if (intent) notificationManager.notify(intent);
+            } catch (err) {
+                console.warn("[notifications] v3 activity router error", err);
+            }
+        };
+        // v3 chat message arrival → buildChatIntent / buildThreadIntent.
+        // socketRouter dispatches `v3:message:created` for every live
+        // `message.created` socket event. Thread replies and top-level
+        // messages route through different builders to match the
+        // legacy semantics (`chats` vs `thread_replies` categories).
+        const onV3Message = (e: Event) => {
+            try {
+                const detail = (e as CustomEvent<{ message?: V3Message }>).detail;
+                const m = detail?.message;
+                if (!m) return;
+                // Skip self-sends — the legacy intent builders also
+                // skip these, but a self-skip here avoids the extra
+                // snapshot lookups inside the adapter for a no-op call.
+                if (m.sender && m.sender.userId === myself.userId) return;
+                if (m.isThreadReply) {
+                    const payload = v3MessageToLegacyThreadPayload(m, myself);
+                    const intent = buildIntentFromMessage(payload, myself, useTEM, useCM);
+                    if (intent) notificationManager.notify(intent);
+                } else {
+                    const payload = v3MessageToLegacyChatPayload(m, myself);
+                    const intent = buildIntentFromMessage(payload, myself, useTEM, useCM);
+                    if (intent) notificationManager.notify(intent);
+                }
+            } catch (err) {
+                console.warn("[notifications] v3 chat router error", err);
+            }
+        };
+        window.addEventListener("v3:activity:created", onV3Activity);
+        window.addEventListener("v3:message:created", onV3Message);
+        // Stash off-handles on the socket so cleanup can detach both.
+        (socket as Socket & { _v3NotifOff?: () => void })._v3NotifOff = () => {
+            window.removeEventListener("v3:activity:created", onV3Activity);
+            window.removeEventListener("v3:message:created", onV3Message);
+        };
+    }
 
     socket.on("message", async (message) => {
         // Run the notification router alongside the existing data-sync
@@ -190,4 +253,11 @@ export const cleanupWebSocketHandlers = (socket: Socket) => {
     socket.off("disconnect");
     socket.off("connect_error");
     socket.off("auth_error");
+    // Detach the v3 notification window listeners we attached in
+    // setupWebSocketHandlers, if any.
+    const off = (socket as Socket & { _v3NotifOff?: () => void })._v3NotifOff;
+    if (off) {
+        off();
+        delete (socket as Socket & { _v3NotifOff?: () => void })._v3NotifOff;
+    }
 };

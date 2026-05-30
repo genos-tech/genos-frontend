@@ -115,9 +115,24 @@ export function v3ActivityToLegacy(a: V3ActivityWire, myself: UserProps): Activi
         receiver: myself,
         reactions: [],
         tsSent: a.tsCreated,
-        mentionedUserIds: [],
+        // For mention activities, the recipient IS the mentioned user
+        // (one Activity row per recipient is fanned out by the v3
+        // producer). The legacy `buildActivityIntent` notification path
+        // gates on `mentionedUserIds.includes(myself.userId)`, so seed
+        // the array with the recipient id; without this seed the
+        // "mentions" web-notification category never fires for v3-side
+        // mentions.
+        mentionedUserIds: a.activityType === 3 ? ([a.recipientUserId] as unknown as []) : [],
         mentionedViaGroups: undefined,
         isRead: a.isRead,
+        // Display name for the actor — used as `senderName` in the
+        // legacy notification builder. The activity producer always
+        // serialises `actor` for non-self activities so this is
+        // populated; falls back to empty so the legacy "someone"
+        // string kicks in if the wire payload is missing it.
+        ...(a.actor?.userName
+            ? ({ senderName: a.actor.userName } as Partial<ActivityMessageProps>)
+            : {}),
         systemUserId: msg.sender?.isSystemUser ? msg.sender.userId : undefined,
-    };
+    } as ActivityMessageProps;
 }

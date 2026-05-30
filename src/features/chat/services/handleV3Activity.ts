@@ -61,7 +61,13 @@ export async function handleV3Activity(payload: unknown): Promise<void> {
         await addActivityMessage(legacy);
         // eslint-disable-next-line no-console
         console.log("[handleV3Activity] IDB write done, dispatching window event");
-        window.dispatchEvent(new CustomEvent(V3_ACTIVITY_CREATED_EVENT));
+        // `detail.activity` carries the adapted row so listeners that
+        // need the data (web-notification router, future bridges)
+        // don't have to re-fetch from IDB. The useChatManagement
+        // listener doesn't read it — it always re-derives from IDB.
+        window.dispatchEvent(
+            new CustomEvent(V3_ACTIVITY_CREATED_EVENT, { detail: { activity: legacy } })
+        );
     } catch (e) {
         console.error("[handleV3Activity] failed", e);
     }

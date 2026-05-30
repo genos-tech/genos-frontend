@@ -254,7 +254,7 @@ const buildThreadIntent = (
     };
 };
 
-const buildActivityIntent = (
+export const buildActivityIntent = (
     activity: ActivityMessageProps,
     myself: UserProps,
     useTEM: TeamManagementState,

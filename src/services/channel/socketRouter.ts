@@ -51,7 +51,17 @@ export function registerSocketRouter(socket: Socket): () => void {
         offs.push(() => socket.off(event, fn));
     }
 
-    on<Message>("message.created", (m) => channelService.handleMessageCreated(m));
+    on<Message>("message.created", (m) => {
+        channelService.handleMessageCreated(m);
+        // Live notification fan-out. Fires ONLY for events arriving on
+        // the live socket — not for REST hydration or resync batches,
+        // which use channelService.handleMessageCreated directly. This
+        // matches the legacy notification trigger point (a single
+        // socket "message" event). `setupWebSocketHandlers` listens
+        // for `v3:message:created` and builds chat / thread intents
+        // through the existing notification router.
+        window.dispatchEvent(new CustomEvent("v3:message:created", { detail: { message: m } }));
+    });
     on<Message>("message.updated", (m) => channelService.handleMessageUpdated(m));
     on<{ id: string; channelId: string; channelKind: ChannelKind }>("message.deleted", (e) =>
         channelService.handleMessageDeleted(e)
