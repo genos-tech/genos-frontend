@@ -13,8 +13,8 @@
  */
 import { useEffect, useRef } from "react";
 
-import { popSpecificMessages } from "../../features/chat/services/popSpecificMessages";
-import { popSpecificThreadMessages } from "../../features/chat/services/popSpecificThreadMessages";
+import { loadV3SpecificMessages } from "../../features/chat/services/loadV3SpecificMessages";
+import { loadV3SpecificThreadMessages } from "../../features/chat/services/loadV3SpecificThreadMessages";
 import { ChatManagementState } from "../chats/useChatManagement";
 import { NoteManagementState } from "../notes/useNoteManagement";
 import { SprintMilestoneManagementState } from "../tasks/useSprintMilestoneManagement";
@@ -174,10 +174,13 @@ export const useHistoryTracker = ({ useCM, useTM, useSM, useNM, usePM }: Props) 
         // can find; `mergeAndCap` keys by (chat, messageId) so a late
         // record still lands on the right entry.
         if (messageId != null && messageText == null) {
-            // Cast for `popSpecificMessages(chatId: number, ...)` and
-            // for the `HistoryEntry.chatId: number` record — both
-            // legacy boundaries flagged in the file-header note.
-            void popSpecificMessages(chatId as unknown as number, chatType).then((all) => {
+            // v3 source. `chatId` is the v3 channel UUID (typed
+            // `number` per legacy `HistoryEntry`, runtime string).
+            // `loadV3SpecificMessages` triggers `syncChannel` + reads
+            // the snapshot, returning legacy-shape MessageProps with
+            // `messageId` as the per-channel `seq`. The `Number(...)`
+            // compare still works.
+            void loadV3SpecificMessages(chatId as unknown as string, chatType).then((all) => {
                 const found = all.find((m) => Number(m.messageId) === messageId);
                 const text = found ? previewFromMessage(found) : null;
                 if (!text) return;
@@ -256,7 +259,14 @@ export const useHistoryTracker = ({ useCM, useTM, useSM, useNM, usePM }: Props) 
         // only the part Virtuoso loaded. No cancellation — see the
         // matching comment in the chat effect for why.
         if (messageId != null && messageText == null) {
-            void popSpecificThreadMessages(chatId, threadId, chatType).then((all) => {
+            // v3 source. `chatId` carries the channel UUID and
+            // `threadId` carries the parent message's UUID via the
+            // legacy `number` slot — same cast pattern.
+            void loadV3SpecificThreadMessages(
+                chatId as unknown as string,
+                threadId as unknown as string,
+                chatType
+            ).then((all) => {
                 const found = all.find((m) => Number(m.messageId) === messageId);
                 const text = found ? previewFromMessage(found) : null;
                 if (!text) return;

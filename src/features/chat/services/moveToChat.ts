@@ -24,9 +24,7 @@ import { addChat } from "../services/addChat";
 import { addMessage } from "../services/addMessage";
 import { checkKnownChat } from "../services/checkKnownChat";
 import { defineNewChat } from "../services/defineNewChat";
-import { loadMDMHistory } from "../services/loadMDMHistory";
 import { loadV3SpecificMessages } from "../services/loadV3SpecificMessages";
-import { popSpecificMessages } from "../services/popSpecificMessages";
 import { resolveV3ChannelId } from "../utils/channelIdResolvers";
 import { defaultDmPartner } from "./constants";
 import { loadSpecificGM } from "./loadSpecificGM";
@@ -238,30 +236,15 @@ export const moveToSelectedChat = async (
                 const existingChat = useCM.allChats?.find(
                     (c) => c.chatId === String(chatId) && c.chatType === 4
                 );
-                let fetchedMessages: MessageProps[] = await popSpecificMessages(chatId, 4);
-                if (fetchedMessages.length === 0) {
-                    try {
-                        const teamId = existingChat?.dmPartnerUser?.teamId || "";
-                        const teamName = existingChat?.dmPartnerUser?.teamName || "";
-                        const userId = myself.userId;
-                        const data = await loadMDMHistory(
-                            teamId || myself.teamId,
-                            teamName || myself.teamName,
-                            userId,
-                            accessToken,
-                            chatId
-                        );
-                        const mdmChat = data?.chat_history?.[0];
-                        if (mdmChat?.messages?.length > 0) {
-                            fetchedMessages = [...mdmChat.messages].sort(
-                                (a: MessageProps, b: MessageProps) => a.messageId - b.messageId
-                            );
-                            await new ChatService().batchInsertMDMMessages(fetchedMessages);
-                        }
-                    } catch (e) {
-                        console.error("Failed to load MDM messages from backend:", e);
-                    }
-                }
+                // v3 source. `chatId` carries the v3 channel UUID via
+                // the legacy `number` slot (chat-open routes through
+                // useCM.allChats which is v3-sourced). loadV3-pop
+                // hits `syncChannel` (REST + cache) and returns the
+                // legacy-shape MessageProps[] from the snapshot.
+                const fetchedMessages: MessageProps[] = await loadV3SpecificMessages(
+                    chatId as unknown as string,
+                    4
+                );
                 useCM.setCurrentMainChat(
                     defineNewChat(
                         chatId,

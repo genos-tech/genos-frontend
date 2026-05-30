@@ -20,7 +20,6 @@ import {
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
-import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
@@ -55,7 +54,6 @@ export const ModalCreateMDM: React.FC<Props> = ({
     useUISM,
     setMyself,
 }) => {
-    const { accessToken } = useAuth();
     const { t } = useTranslation();
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedMembers, setSelectedMembers] = useState<UserProps[]>([]);
@@ -124,11 +122,8 @@ export const ModalCreateMDM: React.FC<Props> = ({
                 myself,
                 memberIds,
                 useCM,
-                socket,
                 (msg: string) => setErrorMessage(msg),
-                setOpen,
-                accessToken || "",
-                selectedMembers
+                setOpen
             );
         } catch (error) {
             console.error("Failed to create MDM:", error);
@@ -371,7 +366,9 @@ export const ModalCreateMDM: React.FC<Props> = ({
                                 : "rgba(255, 255, 255, 0.4)",
                     }}
                 >
-                    {fmt(t.chat.modals.createMDM.membersSelected, { count: selectedMembers.length })}
+                    {fmt(t.chat.modals.createMDM.membersSelected, {
+                        count: selectedMembers.length,
+                    })}
                     {selectedMembers.length < 2 && t.chat.modals.createMDM.minRequiredSuffix}
                 </Typography>
 

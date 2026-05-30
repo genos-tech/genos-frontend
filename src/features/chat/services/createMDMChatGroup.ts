@@ -1,269 +1,130 @@
-/*
- * PUNCH LIST (v3 chatId migration):
- * This legacy "create MDM" path runs against the legacy `/` socket and
- * legacy REST (`createMDMChat`, `loadMDMHistory`). Those still operate
- * on integer `mdm_id` / `chat_id` keys. The v3-flipped `ChatProps.chatId`
- * is `string`, so we bridge with `String(...)` at the boundary —
- * comparisons and construction sites. Numeric callbacks (the socket
- * `joiningCGId`, the legacy services) keep receiving the original
- * `number`. This whole file is dead code once the v3 `channel.create`
- * path replaces it.
+/**
+ * v3 MDM create flow. Replaces the legacy
+ * `createMDMChat` (REST) + `socket.emit("join")` + `socket.emit("message")`
+ * + manual `addChat/addMessage` IDB plumbing with a single
+ * `channelService.createChannel` call.
+ *
+ * Idempotency: the v3 backend (`_create_group`) does NOT dedupe MDM
+ * channels by member set the way `_create_dm` does via
+ * `ChannelDirectPair`. To preserve the legacy "open the existing MDM
+ * instead of creating a duplicate" UX, we scan
+ * `channelService.snapshot.channels` for an MDM whose member roster
+ * matches exactly before issuing `createChannel`.
+ *
+ * Behavior changes from legacy (decided 2026-05-30):
+ *   - No system "started conversation" bubble is posted. The MDM opens
+ *     empty; first user message is the first bubble.
+ *   - `allChats` updates flow from the v3 `channel.created` broadcast
+ *     into `channelService.snapshot.channels` and the existing v3
+ *     subscription. We only navigate locally via `setCurrentMainChat`.
  */
-import { Socket } from "socket.io-client";
 
-import { ChatService } from "../../../db/services/chat.service";
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
-import { getMessages } from "../../../i18n";
+import { channelService } from "../../../services/channel/channelService";
 import { UserProps } from "../../../types/admin";
-import { AllChatProps, ChatProps, MDMMemberProps, MessageProps } from "../../../types/chat";
-import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
-import { addChat } from "./addChat";
-import { addMessage } from "./addMessage";
+import { Channel, ChannelKind, ChannelMember } from "../../../types/channel";
+import { ChatProps } from "../../../types/chat";
 import { defaultDmPartner } from "./constants";
-import { createMDMChat } from "./createMDMChat";
-import { loadMDMHistory } from "./loadMDMHistory";
-import { popSpecificMessages } from "./popSpecificMessages";
 
-const getMdmCreatedMessage = () => getMessages().chat.system.startedConversation;
-// Keys sorted alphabetically (case-insensitive) per `sort-keys`.
-const getCreateMDMMessage = () => [
-    {
-        content: [{ styles: {}, text: getMdmCreatedMessage(), type: "text" }],
-        type: "paragraph",
-    },
-    { content: [{ styles: {}, text: "", type: "text" }], type: "paragraph" },
-];
-
-const addMDMChatAndMessage = async (
-    myself: UserProps,
-    chatId: number,
-    chatName: string,
-    useCM: ChatManagementState,
-    mdmMembers?: MDMMemberProps[]
-) => {
-    const mdmCreatedMessage = getMdmCreatedMessage();
-    const createMDMMessage = getCreateMDMMessage();
-    const ts = getLocalCurrentTimestamp();
-
-    // MessageProps.chatId is still `number`; no cast needed here.
-    // Keys sorted alphabetically (case-insensitive) per `sort-keys`.
-    const newMessage: MessageProps = {
-        chatId: chatId,
-        chatType: 4,
-        content: createMDMMessage,
-        contentText: mdmCreatedMessage,
-        messageId: 1,
-        messageIdWithChatId: `${chatId}-1`,
-        numReplies: 0,
-        sender: myself,
-        taskId: null,
-        taskStatus: null,
-        tsSent: ts,
-        tsUpdated: ts,
-    };
-
-    // `AllChatProps.chatId` and `lastReadMessageId` are `string` post-flip.
-    // `""` is the v3-flipped "no last-read" sentinel.
-    const newAllChat: AllChatProps = {
-        chatId: String(chatId),
-        chatName: chatName,
-        chatType: 4,
+function channelToInitialChat(channel: Channel, chatType: number): ChatProps {
+    return {
+        chatId: channel.id,
+        chatName: channel.title || "",
+        chatType,
         dmPartnerUser: defaultDmPartner,
+        isPrivate: channel.isPrivate,
         lastReadMessageId: "",
-        latestMessage: newMessage,
-        latestMessageText: mdmCreatedMessage,
-        mdmMembers: mdmMembers,
-        TSLastMessage: ts,
+        latestMessage: undefined as unknown as ChatProps["latestMessage"],
+        latestMessageText: "",
+        messages: [],
+        profileImagePath: channel.profileImageUrl || undefined,
+        TSLastMessage: channel.tsUpdated ?? channel.tsCreated ?? "",
     };
+}
 
-    await addChat(newAllChat, 4);
-    await addMessage(newMessage, 4);
-
-    // Same string-shape for `ChatProps.chatId / lastReadMessageId`.
-    const newChat: ChatProps = {
-        chatId: String(chatId),
-        chatName: chatName,
-        chatType: 4,
-        dmPartnerUser: defaultDmPartner,
-        lastReadMessageId: "1",
-        latestMessage: newMessage,
-        latestMessageText: mdmCreatedMessage,
-        messages: [newMessage],
-        TSLastMessage: ts,
-    };
-
-    useCM.setCurrentMainChat(newChat);
-    useCM.setAllChats((prev: AllChatProps[]) => {
-        const exists = prev.some((c) => c.chatId === String(chatId) && c.chatType === 4);
-        if (exists) return prev;
-        return [newAllChat, ...prev];
-    });
-};
-
-const openExistingMDM = async (
-    myself: UserProps,
-    mdmId: number,
-    useCM: ChatManagementState,
-    socket: Socket | null,
-    accessToken: string
-) => {
-    const existingAllChat = useCM.allChats.find(
-        (c) => c.chatType === 4 && c.chatId === String(mdmId)
-    );
-
-    if (existingAllChat) {
-        const messages = await popSpecificMessages(mdmId, 4);
-        // `lastReadMessageId` is `string` post-flip; `""` is the
-        // "no messages yet" sentinel (replaces legacy `-1`). Keys
-        // sorted alphabetically per `sort-keys`.
-        const existingChat: ChatProps = {
-            chatId: existingAllChat.chatId,
-            chatName: existingAllChat.chatName,
-            chatType: 4,
-            dmPartnerUser: existingAllChat.dmPartnerUser,
-            lastReadMessageId:
-                messages.length > 0 ? String(messages[messages.length - 1].messageId) : "",
-            latestMessage: existingAllChat.latestMessage,
-            latestMessageText: existingAllChat.latestMessageText,
-            messages: messages,
-            TSLastMessage: existingAllChat.TSLastMessage,
-        };
-        useCM.setCurrentMainChat(existingChat);
-        return;
-    }
-
-    const loadedData = await loadMDMHistory(
-        myself.teamId,
-        myself.teamName,
-        myself.userId,
-        accessToken,
-        mdmId
-    );
-
-    const mdmChat: ChatProps | undefined = loadedData?.chat_history?.[0];
-    if (mdmChat) {
-        const sortedMessages = mdmChat.messages.sort(
-            (a: MessageProps, b: MessageProps) => a.messageId - b.messageId
-        );
-        // Keys sorted alphabetically per `sort-keys`. The
-        // `mdmMembers` cast bridges a legacy quirk: `ChatProps` doesn't
-        // declare `mdmMembers`, but `loadMDMHistory` includes it on
-        // the wire payload because the same row also flows through
-        // `AllChatProps`. Reading via the intersection cast preserves
-        // the field without widening `ChatProps`.
-        const newAllChat: AllChatProps = {
-            chatId: mdmChat.chatId,
-            chatName: mdmChat.chatName,
-            chatType: 4,
-            dmPartnerUser: defaultDmPartner,
-            lastReadMessageId: mdmChat.lastReadMessageId,
-            latestMessage: mdmChat.latestMessage,
-            latestMessageText: mdmChat.latestMessageText,
-            mdmMembers: (mdmChat as ChatProps & { mdmMembers?: MDMMemberProps[] }).mdmMembers,
-            TSLastMessage: mdmChat.TSLastMessage,
-        };
-
-        await addChat(newAllChat, 4);
-        await new ChatService().batchInsertMDMMessages(sortedMessages);
-
-        useCM.setCurrentMainChat({ ...newAllChat, messages: sortedMessages });
-        useCM.setAllChats((prev: AllChatProps[]) => {
-            const exists = prev.some((c) => c.chatId === String(mdmId) && c.chatType === 4);
-            if (exists) return prev;
-            return [newAllChat, ...prev];
-        });
-
-        if (socket) {
-            socket.emit("join", {
-                chatType: 4,
-                dmPartnerUser: defaultDmPartner,
-                joiningCGId: mdmId,
-                joiningCGName: mdmChat.chatName,
-            });
+/**
+ * Find an existing MDM channel whose member set exactly matches
+ * `targetMemberIds` (which already includes the creator). Returns the
+ * channel UUID, or `null` when no match is found.
+ *
+ * The roster scan is bounded by `snapshot.channels.size` — small in
+ * practice (per-team count). Member roster comparison uses Set equality
+ * so order/duplicates in the input don't affect the result.
+ */
+function findExistingMdm(targetMemberIds: ReadonlySet<string>): string | null {
+    const snapshot = channelService.getSnapshot();
+    for (const channel of snapshot.channels.values()) {
+        if (channel.kind !== ChannelKind.MDM) continue;
+        const roster = snapshot.membersByChannel.get(channel.id) ?? [];
+        if (roster.length !== targetMemberIds.size) continue;
+        const ids = new Set(roster.map((m: ChannelMember) => m.userId));
+        if (ids.size !== targetMemberIds.size) continue;
+        let allMatch = true;
+        for (const id of targetMemberIds) {
+            if (!ids.has(id)) {
+                allMatch = false;
+                break;
+            }
         }
+        if (allMatch) return channel.id;
     }
-};
+    return null;
+}
 
 export const createMDMChatGroup = async (
     myself: UserProps,
     memberIds: string[],
     useCM: ChatManagementState,
-    socket: Socket | null,
     setErrorMessage: (msg: string) => void,
-    setOpen: (e: boolean) => void,
-    accessToken: string,
-    selectedMembers?: UserProps[]
-) => {
-    const createMDMMessage = getCreateMDMMessage();
-    const data = await createMDMChat(accessToken, myself, memberIds, undefined, setErrorMessage);
+    setOpen: (e: boolean) => void
+): Promise<Channel | undefined> => {
+    // Build the canonical member set (creator included). The v3 backend
+    // drops the creator from `member_user_ids` server-side and re-adds
+    // them as owner, but the dedup scan compares against the *roster*
+    // which always contains the creator.
+    const targetMemberIds = new Set<string>(memberIds.filter(Boolean));
+    targetMemberIds.add(myself.userId);
+    if (targetMemberIds.size < 3) {
+        setErrorMessage("MDM requires at least 3 distinct members.");
+        return undefined;
+    }
 
-    if (!data) return;
+    try {
+        // FE-side idempotency scan. If an MDM with the same members
+        // already exists in this session's snapshot, open it instead.
+        const existingChannelId = findExistingMdm(targetMemberIds);
+        if (existingChannelId) {
+            const snapshot = channelService.getSnapshot();
+            const existing = snapshot.channels.get(existingChannelId);
+            if (existing) {
+                useCM.setCurrentMainChat(channelToInitialChat(existing, 4));
+                useCM.setCurrentChatPaneType(1);
+                useCM.setIsMainChatVisible(true);
+                setOpen(false);
+                setErrorMessage("");
+                return existing;
+            }
+        }
 
-    if (data.mdm_exists) {
-        const mdmId = data.mdm_id;
-        await openExistingMDM(myself, mdmId, useCM, socket, accessToken);
+        const channel = await channelService.createChannel({
+            kind: ChannelKind.MDM,
+            memberUserIds: [...targetMemberIds].filter((id) => id !== myself.userId),
+            teamId: myself.teamId,
+        });
+        if (!channel) {
+            setErrorMessage("Failed to create multi-user DM. Please try again.");
+            return undefined;
+        }
+
+        useCM.setCurrentMainChat(channelToInitialChat(channel, 4));
         useCM.setCurrentChatPaneType(1);
         useCM.setIsMainChatVisible(true);
         setOpen(false);
         setErrorMessage("");
-        return data;
+        return channel;
+    } catch (error) {
+        console.error("Failed to create MDM:", error);
+        setErrorMessage("Failed to create multi-user DM. Please try again.");
+        return undefined;
     }
-
-    const chatId = data.chatId || data.mdm_id;
-    const chatName = data.chatName;
-
-    if (socket !== null) {
-        // Keys sorted alphabetically (case-insensitive) per `sort-keys`.
-        // The join ack is fired-and-forgotten — we just chain the
-        // first message emit after the join completes.
-        socket.emit(
-            "join",
-            {
-                chatType: 4,
-                dmPartnerUser: defaultDmPartner,
-                joiningCGId: chatId,
-                joiningCGName: chatName,
-            },
-            () => {
-                socket.emit("message", {
-                    chatType: 4,
-                    destCGId: chatId,
-                    destCGName: chatName,
-                    dmPartnerUserId: null,
-                    message: createMDMMessage,
-                    messageIdForPut: null,
-                    methodType: "POST",
-                    systemUserId: null,
-                    taskId: null,
-                    taskStatus: null,
-                });
-            }
-        );
-    }
-
-    // Keys sorted alphabetically per `sort-keys`.
-    const allMembers: MDMMemberProps[] = [
-        {
-            avatarImgPath: myself.avatarImgPath,
-            teamId: myself.teamId,
-            teamName: myself.teamName,
-            userEmail: myself.userEmail,
-            userId: myself.userId,
-            userName: myself.userName,
-        },
-        ...(selectedMembers || []).map((m) => ({
-            avatarImgPath: m.avatarImgPath,
-            teamId: m.teamId,
-            teamName: m.teamName,
-            userEmail: m.userEmail,
-            userId: m.userId,
-            userName: m.userName,
-        })),
-    ];
-    await addMDMChatAndMessage(myself, chatId, chatName, useCM, allMembers);
-    useCM.setCurrentChatPaneType(1);
-    useCM.setIsMainChatVisible(true);
-    setOpen(false);
-    setErrorMessage("");
-    return data;
 };

@@ -2,13 +2,11 @@ import { useEffect, useState } from "react";
 import { Box, Typography } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
-import { ChatService } from "../../../db/services/chat.service";
 import { ChatProvider } from "../../../features/chat/context/ChatContext";
 import { MessagesPane } from "../../../features/chat/MainChatPane";
-import { loadMDMHistory } from "../../../features/chat/services/loadMDMHistory";
 import { loadSpecificThreadMessages } from "../../../features/chat/services/loadSpecificThreadMessages";
 import { loadSpecificThreadMessagesByTaskId } from "../../../features/chat/services/loadSpecificThreadMessagesByTaskId";
-import { popSpecificMessages } from "../../../features/chat/services/popSpecificMessages";
+import { loadV3SpecificMessages } from "../../../features/chat/services/loadV3SpecificMessages";
 import { ThreadPane } from "../../../features/chat/ThreadChatPane";
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../hooks/common/useProjectManagement";
@@ -120,28 +118,15 @@ export const ModalChatView = (props: ModalChatViewProps) => {
 
         (async () => {
             try {
-                // Step 1: pop cached messages. Mirrors useChatRouting.ts
-                // popSpecificMessages → optional MDM backfill flow.
-                let messages: MessageProps[] = await popSpecificMessages(
-                    target.chatId,
+                // v3 source. `target.chatId` carries the channel UUID
+                // via the legacy `number` slot (modal entries flow
+                // through `useCM.allChats` which is v3-sourced).
+                // `loadV3SpecificMessages` triggers `syncChannel`
+                // (REST + cache) and returns legacy-shape rows.
+                const messages: MessageProps[] = await loadV3SpecificMessages(
+                    target.chatId as unknown as string,
                     target.chatType
                 );
-                if (messages.length === 0 && target.chatType === 4) {
-                    const data = await loadMDMHistory(
-                        myself.teamId,
-                        myself.teamName,
-                        myself.userId,
-                        accessToken,
-                        target.chatId
-                    );
-                    const mdmChat = data?.chat_history?.[0];
-                    if (mdmChat?.messages?.length > 0) {
-                        messages = [...mdmChat.messages].sort(
-                            (a: MessageProps, b: MessageProps) => a.messageId - b.messageId
-                        );
-                        await new ChatService().batchInsertMDMMessages(messages);
-                    }
-                }
                 if (cancelled) return;
 
                 if (messages.length === 0) {
