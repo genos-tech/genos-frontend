@@ -63,6 +63,14 @@ export function registerSocketRouter(socket: Socket): () => void {
         window.dispatchEvent(new CustomEvent("v3:message:created", { detail: { message: m } }));
     });
     on<Message>("message.updated", (m) => channelService.handleMessageUpdated(m));
+    // Narrow reply-count delta from a thread reply create/delete. Distinct
+    // from `message.updated` (the genuine body edit) on purpose: this
+    // merges only `replyCount` so a parent's stale body can't ride along
+    // and clobber a concurrent edit.
+    on<{ id: string; channelId: string; channelKind: ChannelKind; replyCount: number }>(
+        "message.reply_count_changed",
+        (e) => channelService.handleReplyCountChanged(e)
+    );
     on<{ id: string; channelId: string; channelKind: ChannelKind }>("message.deleted", (e) =>
         channelService.handleMessageDeleted(e)
     );

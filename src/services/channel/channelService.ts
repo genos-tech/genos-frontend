@@ -250,6 +250,18 @@ type ReactionRemovedPayload = {
     emoji: string;
     correlation_id?: string;
 };
+// Narrow reply-count delta. Replaces the old full-row `message.updated`
+// re-broadcast of a thread-reply's parent — that carried a (possibly
+// stale) body and clobbered concurrent edits via the whole-object
+// upsert. This delta merges ONLY `replyCount` and never synthesizes a
+// body-less row.
+type MessageReplyCountChangedPayload = {
+    id: string;
+    channelId: string;
+    channelKind: ChannelKind;
+    replyCount: number;
+    correlation_id?: string;
+};
 type ChannelMemberAddedPayload = {
     channelId: string;
     channelKind: ChannelKind;
@@ -1629,6 +1641,31 @@ export class ChannelService {
         }
         this._notify();
         void this._persistMessage(message);
+    }
+
+    /**
+     * Apply a narrow reply-count delta to a thread's parent message.
+     *
+     * Replaces the old behaviour where a thread reply re-broadcast the
+     * parent's FULL row as `message.updated` just to refresh the chip —
+     * that carried the parent's (possibly stale) body and, via the
+     * whole-object `_upsertMessage`, clobbered a concurrent edit to that
+     * parent (last-write-wins, no guard). Merging ONLY `replyCount`
+     * removes the stale body from the wire entirely.
+     *
+     * `_mutateMessage` no-ops when the parent isn't loaded — correct: the
+     * count is reconciled on the parent's next delta sync, and we never
+     * synthesize a body-less placeholder row (which the old upsert did).
+     */
+    handleReplyCountChanged(event: MessageReplyCountChangedPayload): void {
+        let mutated: Message | undefined;
+        this._mutateMessage(event.channelId, event.id, (m) => {
+            if (m.replyCount === event.replyCount) return m; // idempotent
+            mutated = { ...m, replyCount: event.replyCount };
+            return mutated;
+        });
+        this._notify();
+        if (mutated) void this._persistMessage(mutated);
     }
 
     /**
