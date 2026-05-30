@@ -21,6 +21,12 @@ import type { ActivityMessageProps } from "../../../types/chat";
 interface V3ActivityWire {
     id: string;
     activityType: number;
+    // Non-null for channel-less "surface" mention activities (task body
+    // + the three note types) — carries the legacy chat_type namespace
+    // (5=task body, 6=personal note, 7=task note, 8=chat note). When set,
+    // `channelId`/`channelKind`/`message` are null and the routing ids
+    // live in `meta`.
+    surfaceType?: number | null;
     recipientUserId: string;
     channelId: string;
     channelKind: number;
@@ -85,6 +91,60 @@ function resolveChatName(a: V3ActivityWire): string {
 }
 
 export function v3ActivityToLegacy(a: V3ActivityWire, myself: UserProps): ActivityMessageProps {
+    // Channel-less "surface" mention (task body / note). There's no
+    // backing Message/Channel, so render + route from `meta`. `chatType`
+    // is the surface namespace (5=task body, 6/7/8=notes) which
+    // `chatListItemForActivity` already knows how to route:
+    //   - task body (5) opens the task preview via projectId + taskId
+    //   - notes (6/7/8) open the note via chatId (== the note id)
+    if (a.surfaceType != null) {
+        const meta = (a.meta ?? {}) as Record<string, unknown>;
+        const num = (v: unknown): number | undefined => (typeof v === "number" ? v : undefined);
+        const str = (v: unknown): string | undefined => (typeof v === "string" ? v : undefined);
+        const taskId = num(meta.taskId) ?? 0;
+        const projectId = num(meta.projectId);
+        const noteId = num(meta.noteId) ?? 0;
+        // Notes route by `chatId === noteId`; task body routes by
+        // projectId + taskId (its chatId slot mirrors the legacy
+        // project-id packing).
+        const chatId = a.surfaceType === 5 ? (projectId ?? 0) : noteId;
+        return {
+            activityId: a.id,
+            activityType: a.activityType,
+            chatType: a.surfaceType,
+            chatId: chatId as unknown as number,
+            chatName: str(meta.projectName) ?? str(meta.noteTitle) ?? "",
+            dmPartnerUserId: "",
+            dmPartnerUserName: "",
+            dmPartnerUserEmail: "",
+            isThread: false,
+            threadId: 0 as unknown as number,
+            messageId: 0,
+            messageUniqueKey: a.id,
+            threadMessageUniqueKey: "",
+            taskId: taskId as number,
+            displayId: str(meta.displayId) ?? null,
+            projectId,
+            projectName: str(meta.projectName),
+            firstLineContent: str(meta.firstLineContent) ?? "",
+            latestReaction: { emoji: "", sender: EMPTY_USER, tsSent: a.tsCreated },
+            senderId: a.actor?.userId ?? "",
+            receiver: myself,
+            reactions: [],
+            tsSent: a.tsCreated,
+            // Seeds the "mentions" notification category (gated on
+            // `mentionedUserIds.includes(myself.userId)`), same as the
+            // channel-backed mention path below.
+            mentionedUserIds: [a.recipientUserId] as unknown as [],
+            mentionedViaGroups: undefined,
+            isRead: a.isRead,
+            ...(a.actor?.userName
+                ? ({ senderName: a.actor.userName } as Partial<ActivityMessageProps>)
+                : {}),
+            systemUserId: undefined,
+        } as ActivityMessageProps;
+    }
+
     const msg = a.message;
     const isThread = !!msg.isThreadReply;
     // `latestReaction` is only populated for reaction activities. Other
