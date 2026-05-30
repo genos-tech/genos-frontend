@@ -2,6 +2,7 @@ import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import {
+    v3ChannelsToLegacyChats,
     v3FlagsToLegacy,
     v3MessagesToLegacy,
     v3ThreadMessagesToLegacy,
@@ -702,6 +703,32 @@ export const useChatManagement = (
         return unsubscribe;
         // `myself.userId` is the only external input — re-arm if the
         // signed-in user changes (rare; covers re-login flows).
+    }, [myself.userId]);
+
+    // Chat-list sidebar subscription. `allChats` was previously seeded
+    // by the one-shot `funcSetAllChats()` call on mount and refreshed
+    // only when the user opened a different chat — so a read-cursor
+    // advance from `handleReadAdvanced` (which mutates `_channels[id].
+    // unreadCount` in place) never reached the sidebar badge. Subscribe
+    // to channelService and re-derive on every notify so the unread
+    // counts stay live.
+    useEffect(() => {
+        let lastVersion = -1;
+        const apply = () => {
+            const snapshot = channelService.getSnapshot();
+            if (snapshot.version === lastVersion) return;
+            lastVersion = snapshot.version;
+            const next = v3ChannelsToLegacyChats({
+                channels: snapshot.channels.values(),
+                pinByChannelId: snapshot.pinByChannelId,
+                membersByChannel: snapshot.membersByChannel,
+                currentUserId: myself.userId || null,
+            });
+            setAllChats(next);
+        };
+        const unsubscribe = channelService.subscribe(apply);
+        apply();
+        return unsubscribe;
     }, [myself.userId]);
 
     // Keys sorted natural-case-insensitive ascending per the project's
