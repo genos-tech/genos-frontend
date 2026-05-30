@@ -35,7 +35,6 @@ import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../context/AuthContext";
 import { useMentionGroupsContext } from "../../context/MentionGroupsContext";
-import { addThreadMessage } from "../../features/chat/services/addThreadMessage";
 import { getFirstLine } from "../../features/chat/utils/common";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
@@ -45,9 +44,9 @@ import { useIsMobile } from "../../hooks/common/useIsMobile";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { useTranslation } from "../../i18n";
+import { channelService } from "../../services/channel/channelService";
 import { UserProps } from "../../types/admin";
-import { ChatProps, ThreadMessageProps, ThreadProps } from "../../types/chat";
-import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
+import { ChatProps, ThreadProps } from "../../types/chat";
 import { EmojiPicker } from "../ui/emoji/EmojiPicker";
 import { FileSizeRejectionSnackbar } from "../ui/feedback/FileSizeRejectionSnackbar";
 import { FileUploadOverlay, FileUploadStatusBadge } from "../ui/feedback/FileUploadProgress";
@@ -307,88 +306,36 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
     const { saveDraft, clearDraft } = useEditorDraft(editor, draftCacheKey);
 
     const sendingThreadMessage = async () => {
-        if (editor.document.length > 1 && socket !== null) {
-            // Set input text. `getFirstLine` already returns
-            // attachment-aware previews ("Image: …", "File: …", etc.)
-            // for non-text first blocks, so we don't need a separate
-            // image fallback here.
-            const content: any[] | any = editor.document;
-            const contentText: string = getFirstLine(content[0]);
-
-            socket.emit(
-                "thread_message",
-                {
-                    methodType: "POST",
-                    isInit: false,
-                    rootMessageTSSent: "",
-                    rootMessageSenderId: null,
-                    rootMessageReceiverId: null,
-                    threadId: thread.threadId,
-                    threadMessage: editor.document,
-                    chatType: thread.chatType,
-                    dmPartnerUserId: thread.dmPartnerUser.userId,
-                    senderId: myself.userId,
-                    senderName: myself.userName,
-                    destCGName: thread.chatName,
-                    destCGId: thread.chatId,
-                    taskId: thread.taskId,
-                    systemUserId: thread.systemUserId || null,
-                    messageIdForPut: null,
-                },
-                (ack: any) => {
-                    const updatedChat: ThreadProps = {
-                        chatId: thread.chatId,
-                        chatName: thread.chatName,
-                        threadId: thread.threadId,
-                        chatType: thread.chatType,
-                        dmPartnerUser: thread.dmPartnerUser,
-                        taskId: thread.taskId,
-                        messages: [
-                            ...thread.messages,
-                            {
-                                chatType: thread.chatType,
-                                messageIdWithChatIdAndThreadId: `${thread.chatId}-${
-                                    thread.threadId
-                                }-${String(Number(thread.messages.length) + 1)}`,
-                                chatId: thread.chatId,
-                                threadId: thread.threadId,
-                                messageId: Number(thread.messages.length) + 1,
-                                content: editor.document,
-                                contentText: contentText,
-                                sender: myself,
-                                tsSent: getLocalCurrentTimestamp(),
-                                tsUpdated: getLocalCurrentTimestamp(),
-                                taskId: thread.taskId,
-                            },
-                        ],
-                        TSLastMessage: getLocalCurrentTimestamp(),
-                        taskExist: thread.taskId !== null ? true : false,
-                    };
-                    setCurrentThreadChat(updatedChat);
-
-                    const newThreadMessage: ThreadMessageProps = {
-                        chatType: thread.chatType,
-                        messageIdWithChatIdAndThreadId: `${thread.chatId}-${
-                            thread.threadId
-                        }-${String(Number(thread.messages.length) + 1)}`,
-                        chatId: thread.chatId,
-                        threadId: thread.threadId,
-                        messageId: Number(thread.messages.length) + 1,
-                        content: editor.document,
-                        contentText: contentText,
-                        sender: myself,
-                        tsSent: getLocalCurrentTimestamp(),
-                        tsUpdated: getLocalCurrentTimestamp(),
-                        taskId: thread.taskId,
-                    };
-
-                    addThreadMessage(newThreadMessage, thread.chatType);
-
-                    editor.replaceBlocks(editor.document, []);
-                    clearDraft();
-                }
-            );
+        if (editor.document.length <= 1) return;
+        // v3 cutover. The legacy `socket.emit("thread_message", POST,
+        // ...)` + manual optimistic append + addThreadMessage IDB
+        // write is replaced by `channelService.send(channelUuid,
+        // body, {parentId: threadRootUuid, bodyText})`. The v3 backend:
+        //
+        //   1. Persists a `Message` row with `is_thread_reply=true`
+        //      and `parent_id = threadRootUuid`.
+        //   2. Increments the parent's `reply_count` atomically.
+        //   3. Broadcasts `message.created` to the channel room.
+        //
+        // channelService.handleMessageCreated upserts the row into the
+        // channel's `messagesByChannel` slice; the thread-pane
+        // subscription in `useChatManagement` picks it up and patches
+        // `currentThreadChat.messages` automatically. No optimistic
+        // local state needed here.
+        const content: any[] | any = editor.document;
+        const bodyText: string = getFirstLine(content[0]);
+        const channelUuid = String(thread.chatId);
+        const threadRootUuid = String(thread.threadId);
+        try {
+            await channelService.send(channelUuid, content, {
+                parentId: threadRootUuid,
+                bodyText,
+            });
+        } catch (e) {
+            console.error("[bnThreadEditor] channelService.send failed:", e);
         }
+        editor.replaceBlocks(editor.document, []);
+        clearDraft();
     };
 
     const countLines = (nodes: any[]): number => {

@@ -29,7 +29,7 @@ import { TaskCommentProps, TaskProps } from "../../../../types/tasks";
 import { extractYYYYMMDDHHMM, getLocalCurrentTimestamp } from "../../../../utils/dateUtils";
 import { isMac } from "../../../../utils/platform";
 import { loadSpecificTaskByThreadId } from "../../../tasks/services/loadSpecificTaskByThreadId";
-import { loadSpecificThreadMessages } from "../../services/loadSpecificThreadMessages";
+import { loadV3SpecificThreadMessages } from "../../services/loadV3SpecificThreadMessages";
 import { BubbleAttachmentSheet } from "./BubbleAttachmentSheet";
 import { BubbleMoreMenu } from "./BubbleMoreMenu";
 import {
@@ -219,104 +219,65 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
             useTM.setCurrentPreviewTaskId(-1);
         }
 
-        if (socket !== null) {
-            socket.emit(
-                "thread_message",
-                {
-                    methodType: "POST",
-                    isInit: true,
-                    rootMessageTSSent: message.tsSent,
-                    rootMessageSenderId: message.sender.userId,
-                    rootMessageReceiverId:
-                        myself.userId === message.sender.userId
-                            ? chat.dmPartnerUser.userId === ""
-                                ? null
-                                : chat.dmPartnerUser.userId
-                            : myself.userId,
-                    threadId: message.messageId,
-                    threadMessage: message.content,
-                    chatType: chat.chatType,
-                    dmPartnerUserId:
-                        chat.dmPartnerUser.userId === "" ? null : chat.dmPartnerUser.userId,
-                    senderId: myself.userId,
-                    senderName: myself.userName,
-                    destCGName: chat.chatName,
-                    destCGId: chat.chatId,
-                    systemUserId: null,
-                    taskId: message.taskId || null,
-                    messageIdForPut: null,
-                    sendActivity: false,
-                },
-                async (ack: any) => {
-                    const newThreadMessage: ThreadMessageProps = {
-                        chatType: chat.chatType,
-                        messageIdWithChatIdAndThreadId: `${chat.chatId}-${message.messageId}-1`,
-                        chatId: legacyChatId,
-                        threadId: message.messageId,
-                        messageId: 1,
-                        content: message.content,
-                        contentText: t.chat.system.needToAdd,
-                        sender:
-                            chat.chatType === 1
-                                ? myself.userId === message.sender.userId
-                                    ? myself
-                                    : chat.dmPartnerUser
-                                : message.sender,
-                        reactions: message.reactions,
-                        taskId: message.taskId || null,
-                        tsSent: message.tsSent,
-                        tsUpdated: message.tsSent,
-                    };
-
-                    if (newThreadMessage) {
-                        const threadMessages: ThreadMessageProps[] =
-                            await loadSpecificThreadMessages(
-                                myself,
-                                chat.chatType,
-                                newThreadMessage.chatId,
-                                newThreadMessage.threadId,
-                                accessToken
-                            );
-                        if (threadMessages && threadMessages.length > 0) {
-                            const newThread: ThreadProps = {
-                                chatId: newThreadMessage.chatId,
-                                chatName: chat.chatName,
-                                threadId: newThreadMessage.threadId,
-                                chatType: chat.chatType,
-                                dmPartnerUser: chat.dmPartnerUser,
-                                taskId: message.taskId || null,
-                                messages: threadMessages,
-                                project: message.project,
-                                TSLastMessage: getLocalCurrentTimestamp(),
-                                taskExist: threadMessages[0].taskExist,
-                            };
-                            if (message.project && message.project.projectId) {
-                                usePM.setCurrentProject(message.project);
-                            }
-                            if (newThread) {
-                                useCM.setCurrentThreadChat(newThread);
-                                if (newThread.taskExist === true && threadMessages[0].taskId) {
-                                    useTM.setCurrentPreviewTaskId(threadMessages[0].taskId);
-                                }
-
-                                // Navigate to thread URL for consistency with URL routing
-                                const typePath = CHAT_TYPE_PATH[chat.chatType];
-                                if (typePath) {
-                                    // For PM (chatType 3), use taskId as thread identifier to match indexMap key format
-                                    const threadIdentifier =
-                                        chat.chatType === 3 && message.taskId
-                                            ? message.taskId
-                                            : message.messageId;
-                                    navigate(
-                                        `/workspace/chat/${typePath}/${chat.chatId}/thread/${threadIdentifier}`
-                                    );
-                                }
-                            }
-                        }
-                    }
-                }
-            );
+        // v3 cutover: the legacy `socket.emit("thread_message",
+        // {methodType: "POST", isInit: true, ...})` synthesized a
+        // "first thread message" mirror of the parent. The v3 unified
+        // Message model treats the parent itself as the thread root;
+        // thread replies are just rows with `parentId === parent.id`.
+        // No emit needed to open a thread — just load existing replies
+        // and navigate to the URL.
+        //
+        // `message.messageIdWithChatId` is the parent's v3 UUID (set
+        // by the v3 → legacy adapter). That's the thread root.
+        const threadRootUuid = message.messageIdWithChatId;
+        if (!threadRootUuid) {
+            console.warn("[MessageBubble.replayHandler] missing v3 parent UUID");
+            return;
         }
+        const v3ChannelId = chat.chatId;
+        (async () => {
+            const threadMessages = await loadV3SpecificThreadMessages(
+                v3ChannelId,
+                threadRootUuid,
+                chat.chatType
+            );
+            const newThread: ThreadProps = {
+                chatId: v3ChannelId as unknown as number,
+                chatName: chat.chatName,
+                // ThreadProps.threadId is `number`; carry the v3 UUID
+                // through via the same cast as the rest of the
+                // migration. Downstream consumers compare it as a
+                // string against URL segments and stored values.
+                threadId: threadRootUuid as unknown as number,
+                chatType: chat.chatType,
+                dmPartnerUser: chat.dmPartnerUser,
+                taskId: message.taskId || null,
+                messages: threadMessages,
+                project: message.project,
+                TSLastMessage: getLocalCurrentTimestamp(),
+                taskExist:
+                    threadMessages.length > 0 ? threadMessages[0].taskExist : !!message.taskId,
+            };
+            if (message.project && message.project.projectId) {
+                usePM.setCurrentProject(message.project);
+            }
+            useCM.setCurrentThreadChat(newThread);
+            if (newThread.taskExist === true && message.taskId) {
+                useTM.setCurrentPreviewTaskId(message.taskId);
+            }
+
+            // Navigate to thread URL for consistency with URL routing.
+            // For PM (chatType 3), use taskId as thread identifier so
+            // the URL roundtrips through `useChatRouting`'s
+            // `resolveV3ThreadRootUuid(isPm=true)` lookup. Other kinds
+            // use the parent's per-channel seq.
+            const typePath = CHAT_TYPE_PATH[chat.chatType];
+            if (typePath) {
+                const threadIdentifier =
+                    chat.chatType === 3 && message.taskId ? message.taskId : message.messageId;
+                navigate(`/workspace/chat/${typePath}/${chat.chatId}/thread/${threadIdentifier}`);
+            }
+        })();
     };
 
     // Reaction handling

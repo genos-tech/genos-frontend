@@ -56,36 +56,48 @@ export const useReadStatusManagement = ({
     const updateReadStatus = (indexForLastReadMessageId: number) => {
         const message = currentChat.messages[indexForLastReadMessageId];
         if (!message) return;
-        // v3 markRead takes the v3 message UUID. After the v3 → legacy
-        // adapter (`v3MessageToLegacy`) populates `messageIdWithChatId`
-        // with `m.id`, that field IS the UUID we need.
-        const messageUuid = (message as { messageIdWithChatId?: string }).messageIdWithChatId;
-        const channelUuid = currentChat.chatId;
-        if (!messageUuid || typeof channelUuid !== "string") {
-            // Legacy-shaped chat (UUID adapter didn't run) — silently
-            // skip rather than 500ing against the legacy endpoint.
-            // Surfaces in console for diagnostics.
+        // v3 markRead takes the v3 message UUID. The legacy → v3
+        // adapters store the UUID under different field names by
+        // chat kind:
+        //   - top-level: `messageIdWithChatId` (`v3MessageToLegacy`)
+        //   - thread reply: `messageIdWithChatIdAndThreadId`
+        //     (`v3ThreadMessageToLegacy`)
+        const messageUuid = isThread
+            ? (
+                  message as {
+                      messageIdWithChatIdAndThreadId?: string;
+                  }
+              ).messageIdWithChatIdAndThreadId
+            : (message as { messageIdWithChatId?: string }).messageIdWithChatId;
+        // `chatId` slot carries the v3 channel UUID via the migration
+        // cast (`ChatProps.chatId: string`; `ThreadProps.chatId: number`
+        // but stringifies idempotently for UUIDs).
+        const channelUuidRaw =
+            typeof currentChat.chatId === "string"
+                ? currentChat.chatId
+                : String(currentChat.chatId);
+        if (!messageUuid || !channelUuidRaw) {
             console.warn(
                 "[useReadStatusManagement] skipped: missing v3 ids " +
-                    `(channelUuid=${JSON.stringify(channelUuid)}, ` +
+                    `(channelUuid=${JSON.stringify(channelUuidRaw)}, ` +
                     `messageUuid=${JSON.stringify(messageUuid)})`
             );
             return;
         }
-        // For a thread cursor, v3 distinguishes the main timeline cursor
-        // from per-thread cursors via `thread_root_id`. The thread root
-        // UUID lives on the thread's first message — pull from the
-        // current thread's `messages[0].messageIdWithChatId` if present.
+        // Thread cursor: derive the root UUID from `messages[0]`, which
+        // is the parent message after the v3 adapter's prepend.
         const threadRootId = isThread
             ? (
                   (currentChat as ThreadProps).messages?.[0] as
-                      | { messageIdWithChatId?: string }
+                      | { messageIdWithChatIdAndThreadId?: string }
                       | undefined
-              )?.messageIdWithChatId
+              )?.messageIdWithChatIdAndThreadId
             : undefined;
-        void channelService.markRead(channelUuid, messageUuid, threadRootId).catch((err) => {
-            console.error("[useReadStatusManagement] markRead failed", err);
-        });
+        void channelService
+            .markRead(channelUuidRaw, messageUuid, threadRootId)
+            .catch((err) => {
+                console.error("[useReadStatusManagement] markRead failed", err);
+            });
     };
 
     const handleReadStatusUpdate = (targetIndex: number) => {

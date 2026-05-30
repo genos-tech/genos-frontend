@@ -26,7 +26,12 @@ import {
     type Message,
     type MessageReaction,
 } from "../../../types/channel";
-import type { AllChatProps, MDMMemberProps, MessageProps } from "../../../types/chat";
+import type {
+    AllChatProps,
+    MDMMemberProps,
+    MessageProps,
+    ThreadMessageProps,
+} from "../../../types/chat";
 import type { ReactionProps } from "../../../types/common";
 
 /** Map v3 `ChannelKind` to the legacy integer kind code. They happen
@@ -458,4 +463,115 @@ export function v3MessagesToLegacy(args: {
     }
     out.sort((a, b) => (a.tsSent || "").localeCompare(b.tsSent || ""));
     return out;
+}
+
+/**
+ * Full-shape v3 thread reply → legacy `ThreadMessageProps`. Carries
+ * the v3 message UUID through `messageIdWithChatIdAndThreadId` so the
+ * thread-pane click handlers (delete / edit / react) can reach it
+ * without re-parsing the legacy `${chatId}-${threadId}-${messageId}`
+ * composite string format.
+ *
+ * `chatId` and `threadId` are still `number` in the legacy type but
+ * we carry the v3 UUIDs through them via `as unknown as number` casts
+ * — same migration shim as the top-level adapter. Runtime consumers
+ * that compare them as strings keep working; consumers doing integer
+ * arithmetic fail loudly and are punch-list items.
+ */
+export function v3ThreadMessageToLegacy(args: {
+    message: Message;
+    channelId: string;
+    threadRootUuid: string;
+    chatType: number;
+}): ThreadMessageProps {
+    const { message: m, channelId, threadRootUuid, chatType } = args;
+    const meta = (m.metadata ?? {}) as Record<string, unknown>;
+    const taskId =
+        typeof m.taskId === "number"
+            ? m.taskId
+            : typeof meta.taskId === "number"
+              ? (meta.taskId as number)
+              : null;
+    const displayId =
+        typeof m.displayId === "string"
+            ? m.displayId
+            : typeof meta.displayId === "string"
+              ? (meta.displayId as string)
+              : undefined;
+    return {
+        chatType,
+        messageIdWithChatIdAndThreadId: m.id,
+        chatId: channelId as unknown as number,
+        threadId: threadRootUuid as unknown as number,
+        messageId: m.seq,
+        content: normalizeBodyForLegacy(m.body),
+        contentText: m.bodyText ?? "",
+        sender: {
+            userId: m.sender?.userId ?? "",
+            userName: m.sender?.userName ?? "",
+            userEmail: m.sender?.userEmail ?? "",
+            teamId: "",
+            teamName: "",
+            avatarImgPath: m.sender?.avatarImgPath ?? "",
+            tsLastSeen: "",
+            tsJoined: "",
+            isSystemUser: m.sender?.isSystemUser ?? false,
+        },
+        taskId,
+        displayId,
+        tsSent: m.tsSent,
+        tsUpdated: m.tsUpdated,
+        reactions: (m.reactions ?? []).map(v3ReactionToLegacy),
+        taskExist: taskId != null,
+        isFlagged: false,
+    };
+}
+
+/**
+ * Plural form for thread messages. The legacy `ThreadProps.messages`
+ * shape includes the thread root (the parent message) as `messages[0]`
+ * followed by replies — that's the invariant the existing
+ * `ThreadChatPane` / `ThreadMessageBubble` UI is built around (every
+ * thread is non-empty, the first row IS the root, the rest are replies).
+ *
+ * v3 stores the root as a top-level row (`isThreadReply=false`,
+ * `id === threadRootUuid`) and replies as `isThreadReply=true,
+ * parentId === threadRootUuid`. Adapter rebuilds the legacy shape by
+ * prepending the root and appending replies in tsSent order.
+ *
+ * Returns an empty array only when the root itself isn't in the
+ * snapshot (channel not synced yet, hard-deleted, etc.). A thread with
+ * no replies still returns `[root]` — that matches legacy "fresh
+ * task opened, nothing replied yet" behavior and lets `moveToSpecific
+ * ThreadChat` succeed instead of silently dropping out.
+ */
+export function v3ThreadMessagesToLegacy(args: {
+    messages: readonly Message[];
+    channelId: string;
+    threadRootUuid: string;
+    chatType: number;
+}): ThreadMessageProps[] {
+    const { messages, channelId, threadRootUuid, chatType } = args;
+    // Find the root first. If absent, the thread can't render at all.
+    let root: Message | undefined;
+    for (const m of messages) {
+        if (m.id === threadRootUuid) {
+            root = m;
+            break;
+        }
+    }
+    if (!root || root.deletedAt) return [];
+
+    const replies: ThreadMessageProps[] = [];
+    for (const m of messages) {
+        if (!m.isThreadReply) continue;
+        if (m.parentId !== threadRootUuid) continue;
+        if (m.deletedAt) continue;
+        replies.push(v3ThreadMessageToLegacy({ message: m, channelId, threadRootUuid, chatType }));
+    }
+    replies.sort((a, b) => (a.tsSent || "").localeCompare(b.tsSent || ""));
+    return [
+        v3ThreadMessageToLegacy({ message: root, channelId, threadRootUuid, chatType }),
+        ...replies,
+    ];
 }

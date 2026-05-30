@@ -5,7 +5,6 @@ import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import { Alert, Box, Button, Modal, ModalDialog, Stack, Typography } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
-import { ChatService } from "../../../../db/services/chat.service";
 import { FlaggedService } from "../../../../db/services/flagged.service";
 import { useTranslation } from "../../../../i18n";
 import {
@@ -59,7 +58,6 @@ export const ModalDeleteMessage: React.FC<Props> = ({
     setFlaggedMessages,
 }) => {
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
-    const chatService = new ChatService();
     const { t } = useTranslation();
 
     const cleanupFlaggedMessage = async (
@@ -121,43 +119,29 @@ export const ModalDeleteMessage: React.FC<Props> = ({
                 message.messageId
             );
 
-            // Broadcast delete to other members
-            socket.emit("thread_message", {
-                methodType: "DELETE",
-                chatType: message.chatType,
-                destCGId: message.chatId,
-                threadId: message.threadId,
-                messageIdForDelete: message.messageId,
-            });
-
-            // PUNCH LIST: thread delete is still on the legacy axios
-            // path (deleteThreadMessage falls through silently for v3
-            // UUID chatIds). Thread messages don't yet carry the v3
-            // message UUID required by `channelService.deleteMessage`
-            // — flip happens once the thread loader migrates to v3
-            // (`loadV3SpecificThreadMessages` + ThreadMessageProps
-            // gaining a UUID field). Until then this no-ops on v3
-            // channels.
+            // v3 thread delete. The v3 model has thread replies as the
+            // same `Message` row type as top-level messages, so the
+            // delete emit is the same `channelService.deleteMessage`
+            // call used by the main-pane delete branch. Now that the
+            // thread loader is on v3, `ThreadMessageProps.
+            // messageIdWithChatIdAndThreadId` carries the v3 message
+            // UUID via the adapter — pass that through. The legacy
+            // `socket.emit("thread_message", DELETE)` + axios PUT +
+            // per-type IDB chatService cleanups all collapse into
+            // this one call; the open thread's live-update
+            // subscription patches the visible reply list off the
+            // server's `message.deleted` broadcast.
             try {
                 await deleteThreadMessage(
                     accessToken,
                     message.chatType,
                     message.chatId as unknown as string,
                     message.threadId,
-                    "",
+                    message.messageIdWithChatIdAndThreadId ?? "",
                     setErrorMessage
                 );
-                if (message.chatType === 1) {
-                    await chatService.deleteDMThreadMessage(message.chatId, message.messageId);
-                } else if (message.chatType === 2) {
-                    await chatService.deleteGMThreadMessage(message.chatId, message.messageId);
-                } else if (message.chatType === 3) {
-                    await chatService.deletePMThreadMessage(message.chatId, message.messageId);
-                } else if (message.chatType === 4) {
-                    await chatService.deleteMDMThreadMessage(message.chatId, message.messageId);
-                }
             } catch (err) {
-                console.error("Failed to delete thread message from backend/IndexedDB:", err);
+                console.error("Failed to delete thread message:", err);
             }
         } else {
             if (!socket || !currentChat || !setCurrentChat) {

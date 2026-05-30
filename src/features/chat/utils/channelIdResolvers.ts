@@ -42,3 +42,38 @@ export function resolveV3ChannelId(legacyChatId: number, chatType: number): stri
     }
     return null;
 }
+
+/**
+ * Legacy thread-id → v3 parent-message UUID.
+ *
+ * The legacy `threadId` semantics differ by chat type:
+ *   - DM/GM/MDM: the parent message's per-channel integer `seq`.
+ *   - PM: the `TaskMaster.task_id` integer (every PM thread is rooted
+ *     on a task-card header message; the legacy code keys threads by
+ *     task id rather than seq).
+ *
+ * v3 stores both the parent UUID (`Message.parentId`) and the per-task
+ * `Message.taskId`, so we can look the right top-level row up either
+ * way and return its `id` to use as the thread root.
+ *
+ * Returns null if the parent isn't in the snapshot (the chat hasn't
+ * been synced this session, or the row was hard-deleted). Callers
+ * should treat that as "thread can't open" rather than 500ing.
+ */
+export function resolveV3ThreadRootUuid(
+    channelUuid: string,
+    threadIdOrTaskId: number,
+    isPm: boolean
+): string | null {
+    const messages = channelService.getSnapshot().messagesByChannel.get(channelUuid);
+    if (!messages) return null;
+    for (const m of messages) {
+        if (m.isThreadReply) continue;
+        if (isPm) {
+            if (m.taskId === threadIdOrTaskId) return m.id;
+        } else {
+            if (m.seq === threadIdOrTaskId) return m.id;
+        }
+    }
+    return null;
+}

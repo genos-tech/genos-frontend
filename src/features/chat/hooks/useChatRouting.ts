@@ -7,9 +7,9 @@ import { TaskManagementState } from "../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../types/admin";
 import { ChatProps, MessageProps, ThreadMessageProps, ThreadProps } from "../../../types/chat";
 import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
-import { loadSpecificThreadMessages } from "../services/loadSpecificThreadMessages";
-import { loadSpecificThreadMessagesByTaskId } from "../services/loadSpecificThreadMessagesByTaskId";
 import { loadV3SpecificMessages } from "../services/loadV3SpecificMessages";
+import { loadV3SpecificThreadMessages } from "../services/loadV3SpecificThreadMessages";
+import { resolveV3ThreadRootUuid } from "../utils/channelIdResolvers";
 
 // Chat type constants matching the existing codebase.
 // Keys sorted alphabetically per `sort-keys` (the integer values are
@@ -405,38 +405,33 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
                 useCM.currentThreadChat?.threadId !== threadId);
 
         if (shouldLoadThread) {
-            // PUNCH LIST: legacy thread-load services still take
-            // `chatId: number`; processThreadMessages still takes
-            // number too. Cast at the call boundary — same migration
-            // gap as `popSpecificMessages` above.
-            const legacyChatId = chatId as unknown as number;
-            const loadThreadFn =
-                paneType === 3
-                    ? loadSpecificThreadMessagesByTaskId(
-                          myself,
-                          paneType,
-                          legacyChatId,
-                          threadId,
-                          accessToken
-                      )
-                    : loadSpecificThreadMessages(
-                          myself,
-                          paneType,
-                          legacyChatId,
-                          threadId,
-                          accessToken
-                      );
-
-            loadThreadFn.then((threadMessages: ThreadMessageProps[]) => {
-                processThreadMessages(
-                    threadMessages,
-                    legacyChatId,
-                    threadId,
-                    paneType,
-                    messageId,
-                    paneType === 3
+            // v3 path: resolve the URL `threadId` (parent's per-channel
+            // seq for DM/GM/MDM, task_id for PM) to the parent message's
+            // v3 UUID, then load thread replies for that UUID via
+            // channelService. The legacy `processThreadMessages` slot
+            // still types things as `number` — carry the UUID via
+            // `as unknown as number` like the rest of the migration.
+            const isPm = paneType === 3;
+            const threadRootUuid = resolveV3ThreadRootUuid(chatId, threadId, isPm);
+            if (threadRootUuid) {
+                loadV3SpecificThreadMessages(chatId, threadRootUuid, paneType).then(
+                    (threadMessages: ThreadMessageProps[]) => {
+                        processThreadMessages(
+                            threadMessages,
+                            chatId as unknown as number,
+                            threadRootUuid as unknown as number,
+                            paneType,
+                            messageId,
+                            isPm
+                        );
+                    }
                 );
-            });
+            } else {
+                console.warn(
+                    `[useChatRouting] no v3 parent for thread ` +
+                        `channel=${chatId} threadId=${threadId} isPm=${isPm}`
+                );
+            }
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [pathname, useCM.allChats.length]);

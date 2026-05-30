@@ -1,12 +1,16 @@
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { v3MessagesToLegacy } from "../../features/chat/adapters/v3ToLegacy";
-import { loadSpecificThreadMessages } from "../../features/chat/services/loadSpecificThreadMessages";
+import {
+    v3MessagesToLegacy,
+    v3ThreadMessagesToLegacy,
+} from "../../features/chat/adapters/v3ToLegacy";
 import { loadV3Chats } from "../../features/chat/services/loadV3Chats";
 import { loadV3SpecificMessages } from "../../features/chat/services/loadV3SpecificMessages";
+import { loadV3SpecificThreadMessages } from "../../features/chat/services/loadV3SpecificThreadMessages";
 import { popActivityMessages } from "../../features/chat/services/popActivityMessages";
 import { popFlaggedMessages } from "../../features/chat/services/popFlaggedMessages";
+import { resolveV3ThreadRootUuid } from "../../features/chat/utils/channelIdResolvers";
 import { channelService } from "../../services/channel/channelService";
 import { UserProps } from "../../types/admin";
 import {
@@ -229,19 +233,25 @@ export const useChatManagement = (
     };
 
     const moveToSpecificThreadChat = async (chat: AllChatProps, threadId: number) => {
-        // PUNCH LIST: loadSpecificThreadMessages still takes `chatId:
-        // number` and ThreadProps.chatId is still `number`. Both will
-        // flip to string in a later session that migrates the
-        // thread-services + ThreadProps shape. The casts below keep
-        // the file compiling at the boundary; at runtime the integer
-        // form was always what the legacy endpoint expected, so a
-        // UUID-shaped chatId here would 400 — known migration gap.
-        const threadMessages: ThreadMessageProps[] = await loadSpecificThreadMessages(
-            myself,
-            chat.chatType,
-            chat.chatId as unknown as number,
-            threadId,
-            accessToken
+        // v3 path: resolve the legacy `threadId` (parent-seq for
+        // DM/GM/MDM; task_id for PM) to the parent message's v3 UUID,
+        // then load thread replies for that UUID via channelService.
+        // The legacy `threadId: number` slot on ThreadProps carries
+        // the UUID through via `as unknown as number` — same pattern
+        // as `chatId`.
+        const isPm = chat.chatType === 3;
+        const threadRootUuid = resolveV3ThreadRootUuid(chat.chatId, threadId, isPm);
+        if (!threadRootUuid) {
+            console.warn(
+                `[moveToSpecificThreadChat] no v3 parent for ` +
+                    `channel=${chat.chatId} threadId=${threadId} isPm=${isPm}`
+            );
+            return null;
+        }
+        const threadMessages: ThreadMessageProps[] = await loadV3SpecificThreadMessages(
+            chat.chatId,
+            threadRootUuid,
+            chat.chatType
         );
         if (threadMessages && threadMessages.length > 0) {
             const lastThreadMsg = threadMessages[threadMessages.length - 1];
@@ -254,7 +264,7 @@ export const useChatManagement = (
                 project: lastThreadMsg.project,
                 taskExist: lastThreadMsg.taskExist,
                 taskId: lastThreadMsg.taskId,
-                threadId: threadId,
+                threadId: threadRootUuid as unknown as number,
                 TSLastMessage: lastThreadMsg.tsSent,
             };
             if (newThread) {
@@ -519,6 +529,51 @@ export const useChatManagement = (
         apply();
         return unsubscribe;
     }, [currentSubChat?.chatId, currentSubChat?.chatType]);
+
+    // Thread-pane mirror of the above. When the user has a thread
+    // open and a new reply lands via WS, v3 channelService writes it
+    // into the channel's `messagesByChannel` slice (thread replies
+    // sit alongside top-level rows, distinguished by `isThreadReply`
+    // + `parentId`). Filter to the open thread's root, re-adapt to
+    // legacy `ThreadMessageProps[]`, patch `currentThreadChat.messages`.
+    //
+    // `currentThreadChat.chatId` and `currentThreadChat.threadId` are
+    // typed `number` but carry the v3 UUIDs via the migration cast —
+    // stringify defensively before consuming.
+    useEffect(() => {
+        const channelUuid = currentThreadChat?.chatId ? String(currentThreadChat.chatId) : null;
+        const threadRootUuid = currentThreadChat?.threadId
+            ? String(currentThreadChat.threadId)
+            : null;
+        const chatType = currentThreadChat?.chatType;
+        if (!channelUuid || !threadRootUuid || chatType == null) return;
+        let lastSliceRef: readonly unknown[] | undefined;
+        const apply = () => {
+            const snapshot = channelService.getSnapshot();
+            const messagesSlice = snapshot.messagesByChannel.get(channelUuid);
+            if (messagesSlice === lastSliceRef) return;
+            lastSliceRef = messagesSlice;
+            if (!messagesSlice) return;
+            const legacyThreadMessages = v3ThreadMessagesToLegacy({
+                messages: messagesSlice,
+                channelId: channelUuid,
+                threadRootUuid,
+                chatType,
+            });
+            setCurrentThreadChat((prev) => {
+                if (!prev) return prev;
+                // Guard against a thread-switch race — only patch if
+                // the thread that was open when this effect armed is
+                // still open.
+                if (String(prev.chatId) !== channelUuid) return prev;
+                if (String(prev.threadId) !== threadRootUuid) return prev;
+                return { ...prev, messages: legacyThreadMessages };
+            });
+        };
+        const unsubscribe = channelService.subscribe(apply);
+        apply();
+        return unsubscribe;
+    }, [currentThreadChat?.chatId, currentThreadChat?.threadId, currentThreadChat?.chatType]);
 
     // Keys sorted natural-case-insensitive ascending per the project's
     // `sort-keys` lint rule. Grouping comments (visibility / chat data
