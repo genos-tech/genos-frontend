@@ -270,6 +270,26 @@ describe("applyResyncBatch", () => {
         expect(msgs.find((m) => m.id === "m-fresh")).toBeDefined();
     });
 
+    it("applies a connect-time single-channel push ({channel_id, envelope})", async () => {
+        // The connect handler's auto-replay pushes ONE channel per
+        // `resync.batch` event as {channel_id, envelope} — NOT the batched
+        // {channels:[...]} shape. Regression for the bug where
+        // applyResyncBatch iterated `batch.channels` (undefined here),
+        // threw, and silently dropped every missed message on reconnect.
+        stubCheckpoints();
+        channelService.handleChannelCreated(fakeChannel("c-1"));
+        const singleChannelPush = {
+            channel_id: "c-1",
+            envelope: envelope("2026-05-29T10:00:00Z", [fakeMessage("m-missed", "c-1")]),
+        };
+        const applied = await channelService.applyResyncBatch(
+            singleChannelPush as unknown as ResyncBatchShape
+        );
+        expect(applied).toBe(1);
+        const msgs = channelService.getSnapshot().messagesByChannel.get("c-1") ?? [];
+        expect(msgs.find((m) => m.id === "m-missed")).toBeDefined();
+    });
+
     it("returns the count of successfully applied envelopes", async () => {
         stubCheckpoints();
         channelService.handleChannelCreated(fakeChannel("c-1"));

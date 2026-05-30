@@ -505,8 +505,15 @@ export const useChatManagement = (
     useEffect(() => {
         if (unReadChatCounts) {
             // 1: DM, 2: GM, 3: PM
+            // Parenthesize each term: `+` binds tighter than `||`, so the
+            // old `a || 0 + b || 0 + c || 0` parsed as
+            // `a || (0+b) || (0+c) || 0` — an OR-chain that returned the
+            // first truthy DM/GM/PM count instead of their sum. Each
+            // `(count || 0)` now coalesces before the additions run.
             setUnReadChatAndActivityCounts(
-                (unReadChatCounts[1] || 0 + unReadChatCounts[2] || 0 + unReadChatCounts[3] || 0) +
+                (unReadChatCounts[1] || 0) +
+                    (unReadChatCounts[2] || 0) +
+                    (unReadChatCounts[3] || 0) +
                     unReadActivityMessageCounts
             );
         }

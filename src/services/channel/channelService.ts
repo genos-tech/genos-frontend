@@ -1815,10 +1815,30 @@ export class ChannelService {
      * Returns the count of channels successfully applied so callers
      * can log throughput / surface a "synced N channels" indicator.
      */
-    async applyResyncBatch(batch: ResyncBatch): Promise<number> {
+    async applyResyncBatch(
+        batch: ResyncBatch | { channel_id: string; envelope: DeltaEnvelope<ResyncDeltaData> }
+    ): Promise<number> {
+        // Two producers feed this method with DIFFERENT shapes:
+        //   - the explicit `resync` emit acks the batched {channels:[...]}
+        //     form (resync_handlers.py + triggerResync), and
+        //   - the connect-time auto-replay pushes ONE channel per
+        //     `resync.batch` socket event as {channel_id, envelope}
+        //     (connect_handlers.py).
+        // Normalize the single-channel push to the batched form. Without
+        // this, the connect-time replay hit `for (const entry of
+        // batch.channels)` with `channels === undefined` → TypeError,
+        // which socketRouter's `void` swallowed — so every missed message
+        // on reconnect was silently dropped.
+        const channels: Array<{
+            channel_id: string;
+            envelope: DeltaEnvelope<ResyncDeltaData>;
+        }> =
+            "channels" in batch && Array.isArray(batch.channels)
+                ? batch.channels
+                : [batch as { channel_id: string; envelope: DeltaEnvelope<ResyncDeltaData> }];
         const repo = this._checkpoints();
         let applied = 0;
-        for (const entry of batch.channels) {
+        for (const entry of channels) {
             const channelId = entry.channel_id;
             const env = entry.envelope;
             if (!env) continue;

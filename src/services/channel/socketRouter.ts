@@ -97,10 +97,12 @@ export function registerSocketRouter(socket: Socket): () => void {
     }>("channel.member_removed", (e) => channelService.handleChannelMemberRemoved(e));
 
     on<{
-        channels: Array<{
-            channel_id: string;
-            envelope: DeltaEnvelope<MessagesDeltaData & { thread_messages?: Message[] }>;
-        }>;
+        // The connect-time auto-replay (connect_handlers.py) pushes ONE
+        // channel per `resync.batch` event as {channel_id, envelope}.
+        // `applyResyncBatch` normalizes this single-channel shape and the
+        // batched {channels:[...]} shape the explicit `resync` ack uses.
+        channel_id: string;
+        envelope: DeltaEnvelope<MessagesDeltaData & { thread_messages?: Message[] }>;
     }>("resync.batch", (b) => {
         // Fire-and-forget: applyResyncBatch is async (checkpoint writes
         // hit IDB), but the synchronous prefix already lands every
