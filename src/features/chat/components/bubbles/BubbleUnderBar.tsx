@@ -52,16 +52,16 @@ export const BubbleUnderBar = (props: BubbleUnderBarTypes) => {
     const isDark = mode === "dark";
 
     // Pick the right counter for this bubble:
-    //   - PM (chatType === 3): task comments. The "Activities" tab
-    //     numbers are auto-generated system bubbles, so showing the
-    //     reply count there is misleading; comments are what humans
-    //     actually engage with.
-    //   - Other chats: thread replies. v3 `Message.reply_count` is
-    //     the literal count — no synthetic "first thread message"
-    //     mirror to subtract anymore (the legacy `- 1` correction is
-    //     gone).
+    //   - PM (chatType === 3): task comments. Each `TaskComments` row
+    //     is mirrored as a v3 thread-reply Message under the PM task
+    //     header, so `reply_count` and the legacy `taskCommentCount`
+    //     count the same thing. Take the max so the chip stays
+    //     accurate when the dual-write is ahead of the metadata
+    //     update, AND for older PM rows the backfill hasn't reached
+    //     yet (legacy chats with no v3 mirror).
+    //   - Other chats: thread replies.
     const isPm = chatType === 3;
-    const chipCount = isPm ? (taskCommentCount ?? 0) : numReplies;
+    const chipCount = isPm ? Math.max(numReplies ?? 0, taskCommentCount ?? 0) : numReplies;
     const chipNoun = isPm ? "comment" : "reply";
     const chipNounPlural = isPm ? "comments" : "replies";
 
