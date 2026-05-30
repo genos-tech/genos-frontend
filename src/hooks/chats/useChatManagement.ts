@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import {
@@ -6,10 +6,10 @@ import {
     v3MessagesToLegacy,
     v3ThreadMessagesToLegacy,
 } from "../../features/chat/adapters/v3ToLegacy";
+import { popActivityMessages } from "../../features/chat/components/sidebar/activity/services/popActivityMessages";
 import { loadV3Chats } from "../../features/chat/services/loadV3Chats";
 import { loadV3SpecificMessages } from "../../features/chat/services/loadV3SpecificMessages";
 import { loadV3SpecificThreadMessages } from "../../features/chat/services/loadV3SpecificThreadMessages";
-import { popActivityMessages } from "../../features/chat/components/sidebar/activity/services/popActivityMessages";
 import {
     resolveV3MessageUuid,
     resolveV3ThreadRootUuid,
@@ -405,6 +405,51 @@ export const useChatManagement = (
         }
     };
 
+    // User-switch reset. The App component doesn't unmount on sign-out
+    // (the auth gate just swaps routes), so this hook's `useState`
+    // values survive across sign-out → sign-in. Without this effect, a
+    // sign-in as a different user would render the previous user's
+    // chat list, flagged messages, and open chat. Pairs with
+    // `channelService.setCurrentUserId`'s in-memory reset and the
+    // sign-in flow's `DatabaseUtils.clearTeamScopedStores`.
+    //
+    // Also re-triggers the chat-list / flag-list / activity-list loads:
+    // the "fire ONCE on mount" effects below don't re-fire on a user
+    // switch, and `useServiceInitialization`'s `isLoading=false` effect
+    // only fires once too. Without this re-fire the new user lands on
+    // an empty workspace until something else triggers a refresh.
+    const previousUserIdRef = useRef<string | null>(myself.userId || null);
+    useEffect(() => {
+        const next = myself.userId || null;
+        if (previousUserIdRef.current === next) return;
+        const isSwitchAway = previousUserIdRef.current !== null;
+        previousUserIdRef.current = next;
+        if (!isSwitchAway) return;
+        setAllChats([]);
+        setFlaggedMessages([]);
+        setActivityMessages([]);
+        setCurrentMainChat(undefined);
+        setCurrentSubChat(undefined);
+        setCurrentThreadChat(undefined);
+        setUnReadChatCounts({});
+        setUnReadActivityMessageCounts(-1);
+        setUnReadChatAndActivityCounts(0);
+        // Re-prime from the new user's v3 snapshot once auth is
+        // back. If the user just signed out (`next === null`) we
+        // intentionally don't re-load — the loaders would fail
+        // without a userId and the sign-in screen has nothing to
+        // render anyway.
+        if (next) {
+            void funcSetAllChats();
+            void funcSetFlaggedMessages();
+            void funcSetActivityMessages();
+        }
+        // `funcSet*` are defined in this same hook scope and rebind
+        // every render — including them in deps would re-fire on
+        // every render. Only the userId transition should matter.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [myself.userId]);
+
     // Initialization Hooks
     useEffect(() => {
         funcSetAllChats();
@@ -494,20 +539,22 @@ export const useChatManagement = (
         const channelId = currentMainChat?.chatId;
         const chatType = currentMainChat?.chatType;
         if (!channelId || chatType == null) return;
-        // Track BOTH the messages slice ref and the flag-map ref so a
+        // Track BOTH the messages slice ref and the flags version so a
         // flag-only change (user flags/unflags a bubble in this pane,
         // or another tab does) still triggers a re-adapt — otherwise
         // the bubble's flag icon wouldn't flip until the next message
-        // arrives.
+        // arrives. The `flagByMessageId` Map is mutated in place by
+        // channelService, so reference identity can't detect changes;
+        // `flagsVersion` bumps on every flag mutation instead.
         let lastSliceRef: readonly unknown[] | undefined;
-        let lastFlagsRef: ReadonlyMap<string, unknown> | undefined;
+        let lastFlagsVersion = -1;
         const apply = () => {
             const snapshot = channelService.getSnapshot();
             const messagesSlice = snapshot.messagesByChannel.get(channelId);
-            if (messagesSlice === lastSliceRef && snapshot.flagByMessageId === lastFlagsRef)
+            if (messagesSlice === lastSliceRef && snapshot.flagsVersion === lastFlagsVersion)
                 return;
             lastSliceRef = messagesSlice;
-            lastFlagsRef = snapshot.flagByMessageId;
+            lastFlagsVersion = snapshot.flagsVersion;
             if (!messagesSlice) return;
             const legacyMessages = v3MessagesToLegacy({
                 channelId,
@@ -543,14 +590,14 @@ export const useChatManagement = (
         const chatType = currentSubChat?.chatType;
         if (!channelId || chatType == null) return;
         let lastSliceRef: readonly unknown[] | undefined;
-        let lastFlagsRef: ReadonlyMap<string, unknown> | undefined;
+        let lastFlagsVersion = -1;
         const apply = () => {
             const snapshot = channelService.getSnapshot();
             const messagesSlice = snapshot.messagesByChannel.get(channelId);
-            if (messagesSlice === lastSliceRef && snapshot.flagByMessageId === lastFlagsRef)
+            if (messagesSlice === lastSliceRef && snapshot.flagsVersion === lastFlagsVersion)
                 return;
             lastSliceRef = messagesSlice;
-            lastFlagsRef = snapshot.flagByMessageId;
+            lastFlagsVersion = snapshot.flagsVersion;
             if (!messagesSlice) return;
             const legacyMessages = v3MessagesToLegacy({
                 channelId,
@@ -586,14 +633,14 @@ export const useChatManagement = (
         const chatType = currentThreadChat?.chatType;
         if (!channelUuid || !threadRootUuid || chatType == null) return;
         let lastSliceRef: readonly unknown[] | undefined;
-        let lastFlagsRef: ReadonlyMap<string, unknown> | undefined;
+        let lastFlagsVersion = -1;
         const apply = () => {
             const snapshot = channelService.getSnapshot();
             const messagesSlice = snapshot.messagesByChannel.get(channelUuid);
-            if (messagesSlice === lastSliceRef && snapshot.flagByMessageId === lastFlagsRef)
+            if (messagesSlice === lastSliceRef && snapshot.flagsVersion === lastFlagsVersion)
                 return;
             lastSliceRef = messagesSlice;
-            lastFlagsRef = snapshot.flagByMessageId;
+            lastFlagsVersion = snapshot.flagsVersion;
             if (!messagesSlice) return;
             const legacyThreadMessages = v3ThreadMessagesToLegacy({
                 channelId: channelUuid,
@@ -629,11 +676,18 @@ export const useChatManagement = (
     // place for back-compat — they no longer overwrite the v3-derived
     // list because this effect re-applies on every channelService notify.
     useEffect(() => {
-        let lastFlagsRef: ReadonlyMap<string, unknown> | undefined;
+        // Dedup on the monotonic `version` counter: it bumps on every
+        // notify, including ones that mutate `_flags` / `_messages` in
+        // place (their Map references never change). `flagsVersion`
+        // alone would miss the "message arrives → previously-orphaned
+        // flag now resolves" edge case, since `v3FlagsToLegacy` reads
+        // `messagesByChannel` too. Cost is one `v3FlagsToLegacy()` per
+        // notify; flag count is small, negligible.
+        let lastVersion = -1;
         const apply = () => {
             const snapshot = channelService.getSnapshot();
-            if (snapshot.flags === lastFlagsRef) return;
-            lastFlagsRef = snapshot.flags;
+            if (snapshot.version === lastVersion) return;
+            lastVersion = snapshot.version;
             const next = v3FlagsToLegacy({
                 flags: snapshot.flags,
                 channels: snapshot.channels,

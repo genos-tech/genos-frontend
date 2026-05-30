@@ -207,6 +207,12 @@ export interface ChannelStoreSnapshot {
     pinByChannelId: ReadonlyMap<string, Pin>;
     /** Secondary index: which Flag (if any) covers `messageId`. */
     flagByMessageId: ReadonlyMap<string, Flag>;
+    /** Monotonic version of the flags state. Bumps whenever a flag is
+     *  added, removed, or hydrated. `flags` / `flagByMessageId` Maps
+     *  are mutated in place for cheap writes, so subscribers that need
+     *  to dedup on flag-only changes track this counter instead of the
+     *  Map reference (which never changes). */
+    flagsVersion: number;
     /** Cache-layer health. See `IdbHealth` for state semantics. */
     idbHealth: IdbHealth;
     /** Unconfirmed sends keyed by correlation_id. See `PendingMessage`. */
@@ -297,6 +303,10 @@ export class ChannelService {
      *  remain authoritative for IDB persistence (keyPath: "id"). */
     private _pinByChannelId = new Map<string, Pin>();
     private _flagByMessageId = new Map<string, Flag>();
+    /** Bumped on every `_flags` / `_flagByMessageId` mutation so
+     *  subscribers can detect flag-only changes without relying on Map
+     *  reference identity (the Maps are mutated in place). */
+    private _flagsVersion = 0;
     /** IDB cache health tracking — see `IdbHealth` for the contract. */
     private _idbErrorCount = 0;
     private _lastIdbError: IdbHealth["lastError"] = null;
@@ -345,6 +355,7 @@ export class ChannelService {
             flags: this._flags,
             pinByChannelId: this._pinByChannelId,
             flagByMessageId: this._flagByMessageId,
+            flagsVersion: this._flagsVersion,
             idbHealth: {
                 status: this._idbErrorCount > 0 ? "degraded" : "ok",
                 lastError: this._lastIdbError,
@@ -422,9 +433,76 @@ export class ChannelService {
     /**
      * Set the current user id so message handlers can distinguish
      * self-sent (don't bump my unread count) from incoming events.
+     *
+     * Also detects a user switch (sign-out / sign-in as a different
+     * user) and wipes in-memory state so the next user doesn't render
+     * the previous user's channels. The persisted IDB cache is the
+     * sign-in flow's responsibility (`DatabaseUtils.clearTeamScopedStores`);
+     * this method only handles the in-process maps.
      */
     setCurrentUserId(userId: string | null) {
-        this.currentUserId = userId;
+        const next = userId || null;
+        const previous = this.currentUserId;
+        if (previous === next) return;
+        // Real switch: we previously had a user, and we're moving away
+        // from them (to null on sign-out, or to a different id on
+        // sign-in as someone else). Reset BEFORE swapping the id so
+        // the snapshot's `currentUserId` flips in lockstep.
+        if (previous) {
+            this._resetForUserSwitch();
+        }
+        this.currentUserId = next;
+    }
+
+    /**
+     * Drop every piece of in-memory state tied to the previous user's
+     * session. Called by `setCurrentUserId` when a user-switch is
+     * detected; not exposed publicly to discourage misuse during
+     * normal operation (resetting mid-session would invalidate every
+     * open subscription).
+     *
+     * Pairs with `DatabaseUtils.clearTeamScopedStores`: together they
+     * wipe both the in-memory snapshot AND the persisted cache so the
+     * next signed-in render starts from a clean slate.
+     */
+    private _resetForUserSwitch(): void {
+        this._channels.clear();
+        this._members.clear();
+        this._messages.clear();
+        this._cursors.clear();
+        this._pins.clear();
+        this._flags.clear();
+        this._pinByChannelId.clear();
+        this._flagByMessageId.clear();
+        this._flagsVersion += 1;
+        this._pendingByChannel.clear();
+        // Reject in-flight send promises so callers don't await forever
+        // on requests that belong to the previous user's socket. The
+        // pending entries get cleared right after so retries can't
+        // pick them up.
+        for (const { reject } of this._pendingResolvers.values()) {
+            try {
+                reject(
+                    new ChannelServiceError(
+                        "USER_SWITCHED",
+                        "Session ended before this send completed."
+                    )
+                );
+            } catch {
+                /* listener threw — non-fatal, keep going */
+            }
+        }
+        this._pendingResolvers.clear();
+        this._pendingByCorrelationId.clear();
+        this._idbErrorCount = 0;
+        this._lastIdbError = null;
+        // The next user's bootstrap will call `hydrateFromIDB` which
+        // flips this back to true after reading the (already-cleared)
+        // IDB. Setting it false now means hooks render their loading
+        // state correctly during the brief window between user-switch
+        // and the new hydration completing.
+        this._hydrated = false;
+        this._notify();
     }
 
     /**
@@ -1833,6 +1911,7 @@ export class ChannelService {
                 this._flags.set(f.id, f);
                 this._flagByMessageId.set(f.messageId, f);
             }
+            if (flagRows.length > 0) this._flagsVersion += 1;
         } catch (e) {
             // IDB failure is non-fatal — the app keeps working off the
             // live socket stream + REST cold reads. Record so the dev
@@ -1933,6 +2012,7 @@ export class ChannelService {
         if (previous && previous.id !== flag.id) this._flags.delete(previous.id);
         this._flags.set(flag.id, flag);
         this._flagByMessageId.set(flag.messageId, flag);
+        this._flagsVersion += 1;
         this._notify();
         void this._persistFlag(flag, previous?.id !== flag.id ? previous?.id : undefined);
     }
@@ -1942,6 +2022,7 @@ export class ChannelService {
         if (!existing) return;
         this._flags.delete(existing.id);
         this._flagByMessageId.delete(messageId);
+        this._flagsVersion += 1;
         this._notify();
         void this._persistFlagDelete(existing.id);
     }

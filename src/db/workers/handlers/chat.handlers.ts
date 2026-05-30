@@ -8,9 +8,6 @@
 // but the activity feed (mentions, task assignments, thread-reply
 // notifications) is not part of the v3 channel surface.
 
-import axios from "axios";
-
-import { authApi } from "../../../services/api";
 import { ActivityMessageProps } from "../../../types/chat";
 import { ActivityService } from "../../services";
 import type { ChatRequests } from "../contracts";
@@ -18,23 +15,17 @@ import type { HandlerMap } from "../poolWorker";
 
 export const chatHandlers: HandlerMap<ChatRequests> = {
     markAllChatActivityAsRead: async ({
-        accessToken,
-        myself,
+        accessToken: _accessToken,
+        myself: _myself,
         chatType,
         chatId,
         activityMessages,
     }) => {
         try {
-            const api = authApi(accessToken);
-            if (!api) {
-                return { error: "Unauthorized. Auth token is not found." };
-            }
-            await api.put("/chat/activity/read/all/", {
-                chat_id: chatId,
-                chat_type: chatType,
-                team_id: myself.teamId,
-                user_id: myself.userId,
-            });
+            // `/chat/activity/read/all/` was deleted in Phase 3 of the
+            // legacy-chat retirement. We still update the local IDB
+            // copy so the badge clears immediately — the network sync
+            // will return when the activity feed is rebuilt on v3.
             const affected: ActivityMessageProps[] = [];
             const updated: ActivityMessageProps[] = activityMessages.map((a) => {
                 if (a.chatType === chatType && a.chatId === chatId && a.isRead === false) {
@@ -50,15 +41,7 @@ export const chatHandlers: HandlerMap<ChatRequests> = {
             }
             return updated;
         } catch (error: unknown) {
-            if (axios.isAxiosError(error)) {
-                console.error(
-                    "[chat:markAllChatActivityAsRead] API error",
-                    error.response?.status,
-                    error.response?.data
-                );
-            } else {
-                console.error("[chat:markAllChatActivityAsRead] Unexpected error", error);
-            }
+            console.error("[chat:markAllChatActivityAsRead] Unexpected error", error);
             return { error: String(error) };
         }
     },

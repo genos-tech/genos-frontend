@@ -19,33 +19,21 @@ export interface ActivityDeltaResponse {
 }
 
 export const loadActivityHistory = async (
-    myself: UserProps,
-    accessToken: string | null,
-    since: string | null
+    _myself: UserProps,
+    _accessToken: string | null,
+    _since: string | null
 ): Promise<ActivityDeltaResponse | undefined> => {
-    try {
-        const api = authApi(accessToken);
-        if (!api) {
-            console.error("Unauthorized. Auth toke is not found.");
-            return;
-        }
-        const params: string[] = [`team_id=${myself.teamId}`, `user_id=${myself.userId}`];
-        if (since) {
-            params.push(`since=${encodeURIComponent(since)}`);
-        } else {
-            params.push(`period_days=${periodDays}`);
-        }
-        const res = await api.get(`/chat/activity/history/?${params.join("&")}`);
-        return {
-            serverTime: res.data.server_time,
-            activity: res.data.data.activity,
-            forceFull: res.data.force_full_reload,
-        };
-    } catch (error: unknown) {
-        if (axios.isAxiosError(error)) {
-            console.error("API error:", error.response?.status, error.response?.data);
-        } else {
-            console.error("Unexpected error:", error);
-        }
-    }
+    // The legacy `/chat/activity/history/` endpoint was deleted in
+    // Phase 3 of the legacy-chat retirement. The activity feed will
+    // be re-introduced on the v3 schema in a follow-up; until then,
+    // this loader returns an empty delta so the sidebar renders an
+    // empty state rather than 404-spamming on every initial load.
+    return {
+        serverTime: new Date().toISOString(),
+        activity: [],
+        forceFull: false,
+    };
 };
+// Imports retained for the public type surface; suppress unused-warning.
+void axios;
+void periodDays;

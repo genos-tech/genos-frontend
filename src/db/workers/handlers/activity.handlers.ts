@@ -93,25 +93,17 @@ export const activityHandlers: HandlerMap<ActivityRequests> = {
     },
 
     updateActivityReadStatus: async ({
-        accessToken,
-        myself,
+        accessToken: _accessToken,
+        myself: _myself,
         activityId,
-        isRead,
+        isRead: _isRead,
         activityMessages,
     }) => {
         try {
-            const api = authApi(accessToken);
-            if (!api) {
-                console.error("Unauthorized. Auth toke is not found.");
-                return { error: "Unauthorized. Auth toke is not found." };
-            }
-            await api.put("/chat/activity/read/", {
-                activity_id: activityId,
-                is_read: isRead,
-                team_id: myself.teamId,
-                user_id: myself.userId,
-            });
-
+            // `/chat/activity/read/` was deleted in Phase 3 of the
+            // legacy-chat retirement. Update IDB locally so the badge
+            // clears; the network sync is restored when the activity
+            // feed is rebuilt on v3.
             const updated = [...activityMessages];
             const idx = updated.findIndex((item) => item.activityId === activityId);
             if (idx !== -1) {
