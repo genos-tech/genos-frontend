@@ -487,25 +487,25 @@ export const App = () => {
                 // helper's legacy `chatId: number` param type — the same
                 // migration shim used wherever v3 UUIDs ride the legacy
                 // numeric chat-id slot.
-                const chatId = r.chat_id as unknown as number;
-                // thread_id / message_id stay numeric: PM thread chips
-                // carry an integer task id (focusable), and the `> 0`
-                // guards inside `moveToSpecificChat` already drop a
-                // non-numeric (NaN) id, so a UUID thread id simply skips
-                // the thread/message focus instead of corrupting the URL.
-                // Coalesce NaN → 0 so a UUID thread id can't flip the
-                // `openThreadTaskPreview` flag on via `NaN !== 0`.
-                const numericThreadId = Number(r.thread_id) || 0;
-                const numericMessageId = Number(r.message_id) || undefined;
+                // `chat_id` (channel), `thread_id` (thread-root Message.id)
+                // and `message_id` are all v3 UUID strings now — pass them
+                // through so the chip deep-links to the exact thread / message
+                // bubble. `moveToSpecificChat` treats ""/undefined as "no
+                // focus" and resolves UUID ids directly (the old
+                // `Number(...)` coerced UUIDs to NaN and silently dropped the
+                // focus, which is why chips only opened the chat top).
+                const chatId = r.chat_id;
+                const threadId = r.thread_id ?? "";
+                const messageId = r.message_id ?? undefined;
                 useCM.moveToSpecificChat(
                     chatTypeCode,
                     chatId,
-                    numericThreadId,
+                    threadId,
                     false,
-                    numericThreadId !== 0,
+                    Boolean(r.thread_id),
                     useTM.setCurrentPreviewTaskId,
                     usePM.setCurrentProject,
-                    numericMessageId
+                    messageId
                 );
                 return;
             }

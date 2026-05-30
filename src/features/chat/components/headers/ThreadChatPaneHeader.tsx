@@ -92,24 +92,24 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
         }
         if (r.entity_type === "chat" && r.chat_type && r.chat_id) {
             const chatTypeCode = CHAT_TYPE_CODE[r.chat_type];
-            // `chat_id` is the v3 channel UUID (string) — pass it through
-            // unchanged. The old `Number(r.chat_id)` yielded NaN for a
-            // UUID and produced `/workspace/chat/dm/NaN` (this "mirrors
-            // handleSpotlightSelect" handler had copied the pre-fix
-            // version). thread/message ids coalesce NaN -> 0/undefined so
-            // a non-numeric id just skips focus instead of corrupting it.
-            const numericChatId = r.chat_id as unknown as number;
-            const numericThreadId = Number(r.thread_id) || 0;
-            const numericMessageId = Number(r.message_id) || undefined;
+            // chat_id (channel), thread_id (thread-root Message.id) and
+            // message_id are all v3 UUID strings — pass them through so the
+            // citation chip opens the exact thread / message bubble.
+            // `moveToSpecificChat` treats ""/undefined as "no focus" and
+            // resolves UUID ids directly (the old `Number(...)` coerced them
+            // to NaN and silently dropped the thread/message focus).
+            const chatId = r.chat_id;
+            const threadId = r.thread_id ?? "";
+            const messageId = r.message_id ?? undefined;
             useCM.moveToSpecificChat(
                 chatTypeCode,
-                numericChatId,
-                numericThreadId,
+                chatId,
+                threadId,
                 false,
-                numericThreadId !== 0,
+                Boolean(r.thread_id),
                 useTM.setCurrentPreviewTaskId,
                 usePM.setCurrentProject,
-                numericMessageId
+                messageId
             );
             return;
         }

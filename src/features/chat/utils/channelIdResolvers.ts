@@ -62,9 +62,14 @@ export function resolveV3ChannelId(legacyChatId: number, chatType: number): stri
  */
 export function resolveV3ThreadRootUuid(
     channelUuid: string,
-    threadIdOrTaskId: number,
+    threadIdOrTaskId: number | string,
     isPm: boolean
 ): string | null {
+    // v3-native path: search / citation chips already carry the thread-root
+    // `Message.id` UUID. Use it directly — no legacy seq/task-id resolution.
+    if (typeof threadIdOrTaskId === "string") {
+        return threadIdOrTaskId || null;
+    }
     const messages = channelService.getSnapshot().messagesByChannel.get(channelUuid);
     if (!messages) return null;
     for (const m of messages) {
@@ -97,9 +102,16 @@ export function resolveV3ThreadRootUuid(
  */
 export function resolveV3MessageUuid(
     channelUuid: string,
-    messageIdOrTaskId: number,
+    messageIdOrTaskId: number | string,
     isPm: boolean
 ): string | null {
+    // v3-native path: search / citation chips already carry the matched
+    // `Message.id` UUID (which may be a thread reply, not a top-level row).
+    // Use it directly so the focus highlight matches the bubble's
+    // `messageIdWithChatId` / `messageIdWithChatIdAndThreadId` (== Message.id).
+    if (typeof messageIdOrTaskId === "string") {
+        return messageIdOrTaskId || null;
+    }
     const messages = channelService.getSnapshot().messagesByChannel.get(channelUuid);
     if (!messages) return null;
     for (const m of messages) {

@@ -87,21 +87,23 @@ export interface ChatManagementState {
     funcSetActivityMessages: () => Promise<void>;
     moveToSpecificChat: (
         chatType: number,
-        chatId: number,
-        threadId: number,
+        // v3 ids are UUID strings (Spotlight / citation chips); legacy
+        // callers may still pass integer seq/ids. Accept both.
+        chatId: string | number,
+        threadId: string | number,
         openTaskNoteInChat: boolean,
         openThreadTaskPreview: boolean,
         setCurrentPreviewTaskId: (id: number) => void,
         setCurrentProject: (project: ProjectProps | null) => void,
-        // Optional matched-message focus (used by Spotlight). When > 0
-        // the helper sets `moveToSpecificIndex` on the chat / thread
-        // so the list scrolls to the bubble, and appends `/message/:id`
-        // to the URL. Callers that don't need message focus omit it.
-        messageId?: number
+        // Optional matched-message focus (used by Spotlight / citation
+        // chips). When present the helper sets `moveToSpecificIndex` on
+        // the chat / thread so the list scrolls to the bubble, and
+        // appends `/message/:id` to the URL. Omit for no message focus.
+        messageId?: string | number
     ) => Promise<void>;
     moveToSpecificThreadChat: (
         chat: AllChatProps,
-        threadId: number
+        threadId: string | number
     ) => Promise<ThreadProps | null>;
     defineNewChat: (chat: AllChatProps, messages: MessageProps[]) => ChatProps;
     showOnlyInCompleteTodos: boolean;
@@ -275,7 +277,7 @@ export const useChatManagement = (
         };
     };
 
-    const moveToSpecificThreadChat = async (chat: AllChatProps, threadId: number) => {
+    const moveToSpecificThreadChat = async (chat: AllChatProps, threadId: string | number) => {
         // v3 path: resolve the legacy `threadId` (parent-seq for
         // DM/GM/MDM; task_id for PM) to the parent message's v3 UUID,
         // then load thread replies for that UUID via channelService.
@@ -320,13 +322,13 @@ export const useChatManagement = (
 
     const moveToSpecificChat = async (
         chatType: number,
-        chatId: number,
-        threadId: number,
+        chatId: string | number,
+        threadId: string | number,
         openTaskNoteInChat: boolean,
         openThreadTaskPreview: boolean,
         setCurrentPreviewTaskId: (id: number) => void,
         setCurrentProject: (project: ProjectProps | null) => void,
-        messageId?: number
+        messageId?: string | number
     ) => {
         // Get the URL path for the chat type
         const chatTypePath = CHAT_TYPE_REVERSE_MAP[chatType];
@@ -335,13 +337,17 @@ export const useChatManagement = (
             return;
         }
 
-        // Build the destination URL once. Adding `/message/:id` is
-        // optional — Spotlight passes it when the search response
-        // identified the specific matched bubble; other callers don't.
-        const hasMessage = messageId !== undefined && messageId > 0;
+        // ids may be v3 UUID strings or legacy ints. Treat undefined / 0 /
+        // "0" / "" as "absent" — the old `> 0` test wrongly rejected a valid
+        // UUID (a UUID string is never `> 0`), which is why chat citation
+        // chips couldn't deep-link to a thread / message.
+        const isPresent = (v: string | number | undefined): boolean =>
+            v !== undefined && v !== null && v !== 0 && v !== "0" && v !== "";
+        const threadActive = isPresent(threadId);
+        const hasMessage = isPresent(messageId);
         const buildPath = (): string => {
             let path = `/workspace/chat/${chatTypePath}/${chatId}`;
-            if (threadId > 0) path += `/thread/${threadId}`;
+            if (threadActive) path += `/thread/${threadId}`;
             if (hasMessage) path += `/message/${messageId}`;
             return path;
         };
@@ -386,14 +392,14 @@ export const useChatManagement = (
             // `MessageProps` so `MessageListRenderer.resolveFocusedState`
             // highlights the right row. Resolve the legacy `messageId`
             // (seq, or task id for PM) via the cached snapshot.
-            if (hasMessage && threadId === 0 && messageId) {
+            if (hasMessage && !threadActive && messageId !== undefined) {
                 const isPm = chatType === 3;
                 const resolvedUuid = resolveV3MessageUuid(chatIdAsString, messageId, isPm);
                 if (resolvedUuid) newChat.moveToSpecificIndex = resolvedUuid;
             }
             setCurrentMainChat(newChat);
 
-            if (threadId > 0) {
+            if (threadActive) {
                 const newThread = await moveToSpecificThreadChat(targetChat, threadId);
                 if (newThread) {
                     // Set project if the project id exists in the thread messages.
@@ -408,20 +414,20 @@ export const useChatManagement = (
                     // without it; we add it here so a Spotlight match
                     // on a thread bubble actually scrolls.
                     if (hasMessage) {
-                        // Focus key is the bare v3 thread-reply UUID
-                        // (`messageIdWithChatIdAndThreadId`), NOT the legacy
-                        // `${chatId}-${threadId}-${messageId}` composite —
-                        // chatId/threadId are v3 UUIDs now, so that composite
-                        // never matches the indexMap/focus keys. Resolve the
-                        // reply by its numeric seq within the loaded thread
-                        // messages (mirrors the main-channel branch above
-                        // that resolves the UUID via resolveV3MessageUuid).
-                        const target = newThread.messages.find(
-                            (m) => Number(m.messageId) === messageId
-                        );
+                        // Focus key is the bare v3 reply UUID
+                        // (`messageIdWithChatIdAndThreadId` == Message.id), NOT
+                        // the legacy `${chatId}-${threadId}-${messageId}`
+                        // composite. Search / citation chips pass that UUID
+                        // directly; legacy callers pass a numeric seq we
+                        // resolve to the reply's UUID within the loaded thread.
+                        const focusKey =
+                            typeof messageId === "string"
+                                ? messageId
+                                : newThread.messages.find((m) => Number(m.messageId) === messageId)
+                                      ?.messageIdWithChatIdAndThreadId;
                         setCurrentThreadChat({
                             ...newThread,
-                            moveToSpecificIndex: target?.messageIdWithChatIdAndThreadId,
+                            moveToSpecificIndex: focusKey,
                         });
                     }
                 }
