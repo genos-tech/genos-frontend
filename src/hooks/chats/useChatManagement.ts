@@ -164,7 +164,25 @@ export const useChatManagement = (
         // whichever finished last won, and the legacy result carried
         // legacy-int chatId/messageId which broke the v3-shape
         // assumptions in the click handler.
-        const snapshot = channelService.getSnapshot();
+        let snapshot = channelService.getSnapshot();
+        // Back-fill flagged messages whose host channel hasn't been synced
+        // this session: they aren't in `messagesByChannel`, so
+        // `v3FlagsToLegacy` (a pure adapter) would silently drop them and
+        // the flagged sidebar would under-report. Fetch the missing ones
+        // by id, then re-read the snapshot before adapting.
+        const inSnapshot = (messageId: string): boolean => {
+            for (const msgs of snapshot.messagesByChannel.values()) {
+                if (msgs.some((m) => m.id === messageId)) return true;
+            }
+            return false;
+        };
+        const missing = Array.from(snapshot.flags.values()).filter(
+            (f) => !inSnapshot(f.messageId)
+        );
+        if (missing.length > 0) {
+            await Promise.all(missing.map((f) => channelService.fetchMessageById(f.messageId)));
+            snapshot = channelService.getSnapshot();
+        }
         const next = v3FlagsToLegacy({
             flags: snapshot.flags,
             channels: snapshot.channels,

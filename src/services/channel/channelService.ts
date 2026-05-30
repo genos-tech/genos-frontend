@@ -647,6 +647,32 @@ export class ChannelService {
     }
 
     /**
+     * Fetch a single message by id (`GET /api/v3/messages/{id}/`) and
+     * upsert it into the store WITHOUT bumping the channel's latest /
+     * unread — this is a historical back-fill (e.g. resolving a flagged
+     * or pinned message whose host channel hasn't been synced this
+     * session), NOT a freshly-arrived message, so `handleMessageCreated`'s
+     * latest/unread side effects would be wrong here.
+     *
+     * Returns the message, or null on 404 (deleted / no longer a member)
+     * or any error — so a single stale flag can't break the whole list.
+     */
+    async fetchMessageById(messageId: string): Promise<Message | null> {
+        let msg: Message | undefined;
+        try {
+            const res = await this.api().get<Message>(`/api/v3/messages/${messageId}/`);
+            msg = res.data;
+        } catch {
+            return null;
+        }
+        if (!msg) return null;
+        this._upsertMessage(msg);
+        this._notify();
+        void this._persistMessage(msg);
+        return msg;
+    }
+
+    /**
      * Replace the entire member list for a channel atomically (under
      * one notify). Used by `syncChannel`'s cold-load path. Differs
      * from `handleChannelMemberAdded` (which appends a single member)
@@ -1095,13 +1121,22 @@ export class ChannelService {
                 15000
             );
             if (ack.ok) {
+                const msg = ack.data as Message;
+                // Render the server row immediately off the ack — BEFORE
+                // dropping the optimistic pending bubble — so the message
+                // doesn't flicker out in the gap between the ack and the
+                // `message.created` broadcast. `_upsertMessage` (inside
+                // handleMessageCreated) dedups by message id, so the
+                // later broadcast / resync can't duplicate it. Self-sent,
+                // so no unread bump; the #17 thread-reply guard applies.
+                this.handleMessageCreated(msg);
                 this._removePending(correlationId);
                 // The broadcast also dedupes off the correlation id, but
                 // the ack data carries the same Message, so settle now
                 // rather than wait for the broadcast.
                 this._settlePending(correlationId, {
                     ok: true,
-                    message: ack.data as Message,
+                    message: msg,
                 });
             } else {
                 const err = new ChannelServiceError(ack.code, ack.message);
@@ -1558,18 +1593,28 @@ export class ChannelService {
         }
 
         this._upsertMessage(message);
-        this._bumpChannelLatest(message);
-        // Self-sent messages must not bump unread (server only knows
-        // we read up to `markRead`; if we just sent it, we trivially
-        // saw it). The server's `unreadCount` denorm on the next
-        // chat-list refresh corrects any drift; in-memory we adjust
-        // optimistically only when the message is from someone else.
-        if (this.currentUserId && message.sender?.userId !== this.currentUserId) {
-            this._bumpUnread(message.channelId);
+        // Chat-list `latestMessage` + `unreadCount` reflect TOP-LEVEL
+        // messages only — the server's ChannelListView computes both with
+        // `is_thread_reply=False`. A thread reply arriving live must not
+        // bump either, or the sidebar preview shows a reply and the unread
+        // badge over-counts until the next `listChannels` refresh corrects
+        // the drift.
+        if (!message.isThreadReply) {
+            this._bumpChannelLatest(message);
+            // Self-sent messages must not bump unread (server only knows
+            // we read up to `markRead`; if we just sent it, we trivially
+            // saw it). The server's `unreadCount` denorm on the next
+            // chat-list refresh corrects any drift; in-memory we adjust
+            // optimistically only when the message is from someone else.
+            if (this.currentUserId && message.sender?.userId !== this.currentUserId) {
+                this._bumpUnread(message.channelId);
+            }
         }
         this._notify();
         void this._persistMessage(message);
-        void this._persistChannelLatest(message.channelId);
+        if (!message.isThreadReply) {
+            void this._persistChannelLatest(message.channelId);
+        }
     }
 
     handleMessageUpdated(message: Message): void {

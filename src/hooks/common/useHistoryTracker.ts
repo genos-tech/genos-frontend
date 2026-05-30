@@ -15,6 +15,7 @@ import { useEffect, useRef } from "react";
 
 import { loadV3SpecificMessages } from "../../features/chat/services/loadV3SpecificMessages";
 import { loadV3SpecificThreadMessages } from "../../features/chat/services/loadV3SpecificThreadMessages";
+import { isV3Uuid } from "../../utils/legacyId";
 import { ChatManagementState } from "../chats/useChatManagement";
 import { NoteManagementState } from "../notes/useNoteManagement";
 import { SprintMilestoneManagementState } from "../tasks/useSprintMilestoneManagement";
@@ -107,6 +108,28 @@ const messageIdFromHint = (hint: string | undefined, segments: number): number |
     return raw;
 };
 
+// Resolve the message a `moveToSpecificIndex` hint points at, tolerant of
+// BOTH forms the hint can take:
+//   - v3 (the common case): the hint IS the message's UUID, set by
+//     `useChatRouting` / `moveToSpecificChat` via `resolveV3MessageUuid`.
+//   - legacy composite: "{chatId}-{messageId}" / "{chatId}-{threadId}-
+//     {messageId}" with the numeric seq in the trailing segment.
+// A v3 UUID has 4 dashes, so `messageIdFromHint` split+Number()'d a UUID
+// segment to NaN and returned null — silently dropping the deep-linked
+// bubble's preview from the history entry. Find by the message's UUID
+// field when the hint is a UUID, by seq otherwise.
+const findHintedMessage = <T extends { messageId: number }>(
+    msgs: readonly T[],
+    hint: string | undefined,
+    getUuid: (m: T) => string | undefined,
+    segments: number
+): T | undefined => {
+    if (!hint) return undefined;
+    if (isV3Uuid(hint)) return msgs.find((m) => getUuid(m) === hint);
+    const seq = messageIdFromHint(hint, segments);
+    return seq != null ? msgs.find((m) => Number(m.messageId) === seq) : undefined;
+};
+
 export const useHistoryTracker = ({ useCM, useTM, useSM, useNM, usePM }: Props) => {
     const { record } = useHistory();
 
@@ -133,12 +156,23 @@ export const useHistoryTracker = ({ useCM, useTM, useSM, useNM, usePM }: Props) 
         // effect in `useChatRouting`. Format: "{chatId}-{messageId}".
         const chatType = currentMainChat.chatType;
         const chatId = currentMainChat.chatId;
-        const messageId = messageIdFromHint(currentMainChat.moveToSpecificIndex, 2);
-        let messageText: string | null = null;
-        if (messageId != null) {
-            const msg = currentMainChat.messages.find((m) => Number(m.messageId) === messageId);
-            if (msg) messageText = previewFromMessage(msg);
-        }
+        const hint = currentMainChat.moveToSpecificIndex;
+        const targetMsg = findHintedMessage(
+            currentMainChat.messages,
+            hint,
+            (m) => m.messageIdWithChatId,
+            2
+        );
+        // Derive the seq for the history entry from the resolved bubble
+        // (works for both UUID and legacy-composite hints). Fall back to
+        // the legacy seq parse only for non-UUID hints whose bubble isn't
+        // in the loaded slice yet (the async block below fills the text).
+        const messageId = targetMsg
+            ? Number(targetMsg.messageId)
+            : isV3Uuid(hint)
+              ? null
+              : messageIdFromHint(hint, 2);
+        let messageText: string | null = targetMsg ? previewFromMessage(targetMsg) : null;
         // The ref encodes "have we recorded this (chat, message, text)
         // exact state already?" — including `messageText` means if a
         // later effect run finds the bubble in `messages` (Virtuoso
@@ -173,24 +207,24 @@ export const useHistoryTracker = ({ useCM, useTM, useSM, useNM, usePM }: Props) 
         // silently drop the result. We always want whatever text we
         // can find; `mergeAndCap` keys by (chat, messageId) so a late
         // record still lands on the right entry.
-        if (messageId != null && messageText == null) {
-            // v3 source. `chatId` is the v3 channel UUID (typed
-            // `number` per legacy `HistoryEntry`, runtime string).
-            // `loadV3SpecificMessages` triggers `syncChannel` + reads
-            // the snapshot, returning legacy-shape MessageProps with
-            // `messageId` as the per-channel `seq`. The `Number(...)`
-            // compare still works.
+        if (messageText == null && hint) {
+            // v3 source. `chatId` is the v3 channel UUID (typed `number`
+            // per legacy `HistoryEntry`, runtime string).
+            // `loadV3SpecificMessages` triggers `syncChannel` + reads the
+            // snapshot, returning legacy-shape MessageProps. Resolve the
+            // hinted bubble (by UUID or seq) and record its seq + preview.
             void loadV3SpecificMessages(chatId as unknown as string, chatType).then((all) => {
-                const found = all.find((m) => Number(m.messageId) === messageId);
+                const found = findHintedMessage(all, hint, (m) => m.messageIdWithChatId, 2);
                 const text = found ? previewFromMessage(found) : null;
-                if (!text) return;
-                lastChatKeyRef.current = `chat:${chatType}:${chatId}:${messageId}:1`;
+                if (!found || !text) return;
+                const seq = Number(found.messageId);
+                lastChatKeyRef.current = `chat:${chatType}:${chatId}:${seq}:1`;
                 record({
                     chatId: chatId as unknown as number,
                     chatType,
                     kind: "chat",
                     label,
-                    messageId,
+                    messageId: seq,
                     messageText: text,
                     openedAt: Date.now(),
                 });
@@ -213,12 +247,19 @@ export const useHistoryTracker = ({ useCM, useTM, useSM, useNM, usePM }: Props) 
         const chatType = currentThreadChat.chatType;
         const chatId = currentThreadChat.chatId;
         const threadId = currentThreadChat.threadId;
-        const messageId = messageIdFromHint(currentThreadChat.moveToSpecificIndex, 3);
-        let messageText: string | null = null;
-        if (messageId != null) {
-            const msg = currentThreadChat.messages.find((m) => Number(m.messageId) === messageId);
-            if (msg) messageText = previewFromMessage(msg);
-        }
+        const hint = currentThreadChat.moveToSpecificIndex;
+        const targetMsg = findHintedMessage(
+            currentThreadChat.messages,
+            hint,
+            (m) => m.messageIdWithChatIdAndThreadId,
+            3
+        );
+        const messageId = targetMsg
+            ? Number(targetMsg.messageId)
+            : isV3Uuid(hint)
+              ? null
+              : messageIdFromHint(hint, 3);
+        let messageText: string | null = targetMsg ? previewFromMessage(targetMsg) : null;
         // Same retry-on-text pattern as the chat effect — see comment
         // there for the rationale.
         const refKey = `thread:${chatType}:${chatId}:${threadId}:${messageId ?? 0}:${messageText ? "1" : "0"}`;
@@ -258,25 +299,32 @@ export const useHistoryTracker = ({ useCM, useTM, useSM, useNM, usePM }: Props) 
         // story as the chat effect: the in-memory `messages` slice is
         // only the part Virtuoso loaded. No cancellation — see the
         // matching comment in the chat effect for why.
-        if (messageId != null && messageText == null) {
+        if (messageText == null && hint) {
             // v3 source. `chatId` carries the channel UUID and
             // `threadId` carries the parent message's UUID via the
-            // legacy `number` slot — same cast pattern.
+            // legacy `number` slot — same cast pattern. Resolve the
+            // hinted reply (by UUID or seq) and record its seq + preview.
             void loadV3SpecificThreadMessages(
                 chatId as unknown as string,
                 threadId as unknown as string,
                 chatType
             ).then((all) => {
-                const found = all.find((m) => Number(m.messageId) === messageId);
+                const found = findHintedMessage(
+                    all,
+                    hint,
+                    (m) => m.messageIdWithChatIdAndThreadId,
+                    3
+                );
                 const text = found ? previewFromMessage(found) : null;
-                if (!text) return;
-                lastThreadKeyRef.current = `thread:${chatType}:${chatId}:${threadId}:${messageId}:1`;
+                if (!found || !text) return;
+                const seq = Number(found.messageId);
+                lastThreadKeyRef.current = `thread:${chatType}:${chatId}:${threadId}:${seq}:1`;
                 record({
                     chatId,
                     chatType,
                     kind: "thread",
                     label: parentName,
-                    messageId,
+                    messageId: seq,
                     messageText: text,
                     openedAt: Date.now(),
                     parentMessageText,

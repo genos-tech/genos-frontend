@@ -256,7 +256,10 @@ export const STORE_CONFIGS: Record<string, StoreConfig> = {
 //     Existing indexes are never recreated or renamed here. To rename or
 //     repurpose an index, drop and re-add it in a dedicated migration step.
 export const initDB = async (): Promise<IDBPDatabase> => {
-    return openDB(DB_NAME, DB_VERSION, {
+    // `db` is referenced inside the `blocking` handler below; that
+    // callback only fires long after `openDB` resolves, so the binding is
+    // assigned by then (standard idb close-on-blocking pattern).
+    const db = await openDB(DB_NAME, DB_VERSION, {
         upgrade(db, oldVersion, _newVersion, tx) {
             // v8: the TODOS store's record shape changed (ToDoFact →
             // ToDoGroup), so the keyPath moved from "todoId" to
@@ -304,5 +307,37 @@ export const initDB = async (): Promise<IDBPDatabase> => {
                 });
             });
         },
+        // Another tab holds an OLDER connection open, blocking THIS tab's
+        // upgrade. We can't force the other tab shut from here, but its own
+        // `blocking` handler closes it when it sees our newer open. Log so a
+        // stuck upgrade is diagnosable instead of a silent forever-hang
+        // (which is what happened before: no handler → every IDB read/write
+        // in this tab stalled with no error after a version bump like v10).
+        blocked(currentVersion, blockedVersion) {
+            // eslint-disable-next-line no-console
+            console.warn(
+                `[IDB] open blocked: another tab holds v${currentVersion}; ` +
+                    `waiting to upgrade to v${blockedVersion}.`
+            );
+        },
+        // THIS connection is the older one blocking a NEWER-version open in
+        // another tab. Close it so that tab's upgrade can proceed — otherwise
+        // both tabs deadlock (the new one waits forever on `blocked`). The
+        // in-memory store stays authoritative; callers already treat a
+        // closed DB as a transient/degraded cache error, and a reload
+        // re-opens at the new version.
+        blocking(currentVersion, blockedVersion) {
+            // eslint-disable-next-line no-console
+            console.warn(
+                `[IDB] closing v${currentVersion} connection so another tab ` +
+                    `can upgrade to v${blockedVersion}.`
+            );
+            db.close();
+        },
+        terminated() {
+            // eslint-disable-next-line no-console
+            console.warn("[IDB] connection terminated unexpectedly by the browser.");
+        },
     });
+    return db;
 };

@@ -78,11 +78,33 @@ export const ChatSearch = (props: ChatSearchProps) => {
         const snapshot = channelService.getSnapshot();
         let channel: Channel | undefined;
         if (isGroup) {
+            // Resolve by the backfilled legacy GM id, NOT the title. Two
+            // GMs can share a name, and title-matching would open the
+            // wrong one. The search backend returns legacy ids and every
+            // GM channel the user belongs to carries `legacyChatId`.
             for (const c of snapshot.channels.values()) {
                 if (c.kind !== ChannelKind.GM) continue;
-                if ((c.title || "") === value.name) {
+                if (c.legacyChatId != null && c.legacyChatId === value.id) {
                     channel = c;
                     break;
+                }
+            }
+            // Snapshot miss (e.g. the GM was joined in another tab and
+            // hasn't synced into this tab's store yet): refresh the
+            // channel list once and retry by legacy id, so the click
+            // isn't a silent no-op.
+            if (!channel) {
+                try {
+                    const fresh = await channelService.listChannels();
+                    const match = fresh.find(
+                        (c) => c.kind === ChannelKind.GM && c.legacyChatId === value.id
+                    );
+                    if (match) {
+                        channelService.handleChannelCreated(match);
+                        channel = match;
+                    }
+                } catch (e) {
+                    console.error("[ChatSearch] channel-list refresh failed:", e);
                 }
             }
         } else {

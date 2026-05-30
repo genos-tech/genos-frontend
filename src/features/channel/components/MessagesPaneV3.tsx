@@ -55,8 +55,14 @@ export function MessagesPaneV3({ channelId, onOpenThread }: MessagesPaneV3Props)
     // differs from the last-read cursor, advance the cursor so my
     // unread badge decrements. The server enforces forward-only so a
     // race with another tab can't rewind us.
+    //
+    // Gate on tab visibility: a message arriving while this tab is
+    // backgrounded (user is elsewhere) must NOT silently mark the channel
+    // read — they never saw it. (A stricter scrolled-to-bottom gate is a
+    // follow-up; it needs an at-bottom signal from the message list.)
     useEffect(() => {
         if (!channel || messages.length === 0) return;
+        if (typeof document !== "undefined" && document.visibilityState !== "visible") return;
         const latest = messages[messages.length - 1];
         if (!latest || latest.id === readCursor?.lastReadMessageId) return;
         void channelService.markRead(channelId, latest.id).catch(() => {

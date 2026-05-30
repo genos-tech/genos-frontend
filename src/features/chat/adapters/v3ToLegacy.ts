@@ -25,6 +25,7 @@ import {
     type ChannelMember,
     type Flag,
     type Message,
+    type MessageAttachment,
     type MessageReaction,
 } from "../../../types/channel";
 import type {
@@ -66,6 +67,43 @@ function normalizeBodyForLegacy(body: unknown): unknown[] {
     // leaves at least one element. Renders as a blank bubble (matches
     // the legacy "deleted / empty message" rendering).
     return [EMPTY_PARAGRAPH, EMPTY_PARAGRAPH];
+}
+
+/** Format a byte count as a short human-readable size for the legacy
+ *  attachment chip (`MessageProps.attachment.size` is a display string). */
+function formatBytes(n: number | undefined | null): string {
+    if (!n || n <= 0) return "0 B";
+    const units = ["B", "KB", "MB", "GB"];
+    const i = Math.min(Math.floor(Math.log(n) / Math.log(1024)), units.length - 1);
+    const v = n / Math.pow(1024, i);
+    return `${i === 0 ? v : v.toFixed(1)} ${units[i]}`;
+}
+
+/**
+ * Map v3 `Message.attachments[]` to the legacy single-attachment chip
+ * shape. The v3 schema stores separately-uploaded files as an array
+ * (`POST /messages/{id}/attachments/`), but the legacy `MessageProps`
+ * (and the `BubbleAttachmentSheet` it renders) only carries ONE
+ * `{ fileName, type, size }` chip. Surfacing the first attachment makes
+ * the bubble render the chip instead of dropping the file silently
+ * (text-only message). The v3 row has no stored filename — derive it
+ * from the `fileUrl` basename. Multi-attachment rendering is a follow-up
+ * gated on the legacy bubble growing more than one slot.
+ */
+function v3AttachmentToLegacy(
+    attachments: readonly MessageAttachment[] | undefined
+): { fileName: string; type: string; size: string } | undefined {
+    if (!attachments || attachments.length === 0) return undefined;
+    const a = attachments[0];
+    const path = (a.fileUrl || "").split("?")[0];
+    const rawName = path.split("/").pop() || "file";
+    let fileName = rawName;
+    try {
+        fileName = decodeURIComponent(rawName);
+    } catch {
+        /* malformed %-encoding in the URL — fall back to the raw basename */
+    }
+    return { fileName, type: a.mime || "", size: formatBytes(a.sizeBytes) };
 }
 
 /** A best-effort empty user — used for `dmPartnerUser` on non-DM
@@ -135,9 +173,11 @@ function resolveDmPartner(
 function v3MessageToLegacyPreview(m: Message): MessageProps {
     return {
         chatType: KIND_TO_CHAT_TYPE[m.channelKind as ChannelKind] ?? 0,
-        // PUNCH LIST: MessageProps.chatId is still typed `number`.
-        // tsc surfaces this — fix when MessageProps migrates.
-        chatId: 0,
+        // Carry the v3 channel UUID through the legacy `number` slot (same
+        // migration shim as `v3MessageToLegacy.chatId`) rather than a
+        // hardcoded 0 — so a future consumer of `latestMessage.chatId`
+        // gets the real id instead of a placeholder.
+        chatId: (m.channelId as unknown as number) ?? 0,
         messageId: m.seq ?? 0,
         content: normalizeBodyForLegacy(m.body),
         contentText: m.bodyText ?? "",
@@ -461,6 +501,7 @@ export function v3MessageToLegacy(args: {
         taskStatus,
         reactions: (m.reactions ?? []).map(v3ReactionToLegacy),
         isFlagged: flaggedMessageIds?.has(m.id) ?? false,
+        attachment: v3AttachmentToLegacy(m.attachments),
     };
 }
 
@@ -566,6 +607,7 @@ export function v3ThreadMessageToLegacy(args: {
         reactions: (m.reactions ?? []).map(v3ReactionToLegacy),
         taskExist: taskId != null,
         isFlagged: flaggedMessageIds?.has(m.id) ?? false,
+        attachment: v3AttachmentToLegacy(m.attachments),
     };
 }
 

@@ -139,6 +139,16 @@ export function registerSocketRouter(socket: Socket): () => void {
         void handleV3Activity(a);
     });
 
+    // A per-channel resync replay failed server-side during connect
+    // (connect_handlers emits this). Without handling it the channel
+    // stays silently stale until the user happens to open it — so fall
+    // back to a REST delta sync to self-heal.
+    on<{ channel_id: string; error: string }>("resync.error", (e) => {
+        // eslint-disable-next-line no-console
+        console.warn("[v3 socketRouter] resync.error — falling back to REST sync", e);
+        if (e?.channel_id) void channelService.syncChannel(e.channel_id);
+    });
+
     return () => {
         offs.forEach((off) => off());
     };
