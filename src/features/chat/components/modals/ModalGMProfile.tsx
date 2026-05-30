@@ -54,8 +54,6 @@ import {
     bumpGMProfileImageVersion,
     useGMProfileImageVersion,
 } from "../../../../utils/gmProfileImageVersion";
-import { loadGMProfile } from "../../services/loadGMProfile";
-import { updateGMProfile } from "../../services/updateGMProfile";
 import { resolveLegacyChatId } from "../../utils/channelIdResolvers";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
@@ -162,16 +160,21 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
         }
         setNameSaving(true);
         setNameError(null);
-        const ok = await updateGMProfile(
-            accessToken,
-            gmChatIdLegacy,
-            { gmName: next },
-            setNameError
-        );
+        let ok = false;
+        try {
+            await channelService.updateChannel(gmChat.chatId, ChannelKind.GM, { title: next });
+            ok = true;
+        } catch (e) {
+            console.error("[ModalGMProfile] rename failed:", e);
+            setNameError("Failed to rename the group.");
+        }
         setNameSaving(false);
         if (ok) {
-            // Reflect rename in the chat-list row so the sidebar updates
-            // immediately. funcSetAllChats overwrites on next sync.
+            // The v3 `channel.updated` broadcast updates
+            // `snapshot.channels`, which the `funcSetAllChats`
+            // subscription re-derives into `allChats`. The optimistic
+            // local patch below avoids the one-frame flicker between
+            // the emit ack and the broadcast landing.
             useCM.setAllChats((prev) =>
                 prev.map((c) =>
                     c.chatType === gmChat.chatType && c.chatId === gmChat.chatId
@@ -185,14 +188,17 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
 
     const handleTransferConfirm = async (newOwnerId: string) => {
         if (!gmProfile) return false;
-        const ok = await updateGMProfile(accessToken, gmChatIdLegacy, {
-            ownerUserId: newOwnerId,
-        });
-        if (ok) {
-            setGmProfile({ ...gmProfile, ownerUserId: newOwnerId });
-            setOpenTransfer(false);
+        try {
+            await channelService.updateChannel(gmChat.chatId, ChannelKind.GM, {
+                ownerUserId: newOwnerId,
+            });
+        } catch (e) {
+            console.error("[ModalGMProfile] owner transfer failed:", e);
+            return false;
         }
-        return ok;
+        setGmProfile({ ...gmProfile, ownerUserId: newOwnerId });
+        setOpenTransfer(false);
+        return true;
     };
 
     const transferCandidates = useMemo(
@@ -300,21 +306,52 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
         bumpGMProfileImageVersion(gmChat.chatType, gmChatIdLegacy);
     };
 
-    const loadGMProfileData = async () => {
-        const gmProfile = await loadGMProfile(myself.teamId, gmChatIdLegacy, accessToken);
-        setGmProfile(gmProfile);
-    };
-
+    // v3 source. Derive `GMProfileProps` from `channelService.snapshot`
+    // and re-derive on every channelService notify so the owner badge,
+    // member roster, and rename input stay live as broadcasts land.
     useEffect(() => {
-        if (openModalGMProfile) {
-            loadGMProfileData();
-            setMemberSearchQuery("");
-        }
-        // Intentional: load on open only. Including `loadGMProfileData`
-        // would refire whenever the closure rebinds (every render);
-        // we only want one fetch per open transition.
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [openModalGMProfile]);
+        if (!openModalGMProfile) return;
+        setMemberSearchQuery("");
+        let lastChannelRef: unknown;
+        let lastMembersRef: unknown;
+        const apply = () => {
+            const snapshot = channelService.getSnapshot();
+            const channel = snapshot.channels.get(gmChat.chatId);
+            const members = snapshot.membersByChannel.get(gmChat.chatId);
+            if (channel === lastChannelRef && members === lastMembersRef) return;
+            lastChannelRef = channel;
+            lastMembersRef = members;
+            if (!channel) {
+                setGmProfile(null);
+                return;
+            }
+            const gmMembers = (members ?? []).map((m) => ({
+                userId: m.userId,
+                userName: m.user?.userName ?? "",
+                userEmail: m.user?.userEmail ?? "",
+                avatarImgPath: m.user?.avatarImgPath ?? "",
+                teamId: myself.teamId,
+                teamName: myself.teamName,
+                tsLastSeen: "",
+                tsJoined: m.tsJoined ?? "",
+            }));
+            setGmProfile({
+                gmId: channel.legacyChatId ?? 0,
+                gmName: channel.title || "",
+                ownerUserId: channel.ownerId ?? "",
+                profileImagePath: channel.profileImageUrl || "",
+                gmMembers,
+                isPrivate: channel.isPrivate,
+                tsCreatedAt: channel.tsCreated || "",
+            });
+        };
+        apply();
+        const unsubscribe = channelService.subscribe(apply);
+        return unsubscribe;
+        // gmChat.chatId is stable per open; `myself` only matters for
+        // the teamId/teamName fields that the legacy gmMembers shape
+        // demanded — re-arm if the team changes.
+    }, [openModalGMProfile, gmChat.chatId, myself.teamId, myself.teamName]);
 
     return (
         <>

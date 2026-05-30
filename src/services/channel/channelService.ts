@@ -1230,6 +1230,10 @@ export class ChannelService {
             title?: string;
             profileImageUrl?: string;
             isPrivate?: boolean;
+            /** Transfer ownership to a current member. The backend
+             *  validates that the target user is a current
+             *  non-deleted member of this channel. */
+            ownerUserId?: string;
         }
     ): Promise<Channel | undefined> {
         // Map camelCase → snake_case for the wire (matches the rest of
@@ -1244,6 +1248,7 @@ export class ChannelService {
             payload.profile_image_url = patch.profileImageUrl;
         }
         if (patch.isPrivate !== undefined) payload.is_private = patch.isPrivate;
+        if (patch.ownerUserId !== undefined) payload.owner_user_id = patch.ownerUserId;
         return this.socketEmitOrThrow<Channel>("channel.update", payload);
     }
 
