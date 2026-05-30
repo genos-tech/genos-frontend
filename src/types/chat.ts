@@ -303,15 +303,23 @@ export type FlaggedMessageProps = {
 };
 
 // Other Props
+// Chat-search result row. v3-native shape: People carry `userId`
+// (DM-able directly), Groups carry `channelId` (openable directly).
+// `legacyChatId` is retained for back-compat fallbacks while some
+// surfaces still resolve by legacy id.
 export type SearchListProps = {
-    id: number;
-    type: string;
+    type: string; // "People" | "Group"
     name: string;
-    email: string | null;
-    dmPartnerUser: UserProps;
-    isPrivate: boolean;
-    isJoined: boolean;
-    profileImagePath?: string;
+    // People
+    userId?: string;
+    email?: string | null;
+    // Group
+    channelId?: string;
+    legacyChatId?: number | null;
+    isPrivate?: boolean;
+    isJoined?: boolean;
+    // both
+    profileImageUrl?: string;
 };
 
 export type LoadSearchListResponse = {

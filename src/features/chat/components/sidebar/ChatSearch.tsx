@@ -66,39 +66,27 @@ export const ChatSearch = (props: ChatSearchProps) => {
         const _chatType = isGroup ? 2 : 1;
 
         // If the user tries to join a private GM, show the modal to
-        // get approval from the GM owner.
+        // get approval from the GM owner. The join flow still keys on the
+        // legacy GM id, so pass `legacyChatId` through.
         if (_chatType === 2 && value.isPrivate === true && value.isJoined === false) {
-            setOpenJoinGM({ flag: true, chatId: value.id, chatName: value.name });
+            setOpenJoinGM({ flag: true, chatId: value.legacyChatId ?? 0, chatName: value.name });
             return;
         }
 
-        // v3 channel resolution. The search backend still returns
-        // legacy ids, so locate the corresponding v3 Channel by
-        // matching kind + (DM partner | GM name) in the snapshot.
+        // v3 resolution — the search endpoint now returns v3 ids directly:
+        // Groups carry `channelId`, People carry `userId`. No legacy-id
+        // round-trip / snapshot scan needed for the happy path.
         const snapshot = channelService.getSnapshot();
         let channel: Channel | undefined;
         if (isGroup) {
-            // Resolve by the backfilled legacy GM id, NOT the title. Two
-            // GMs can share a name, and title-matching would open the
-            // wrong one. The search backend returns legacy ids and every
-            // GM channel the user belongs to carries `legacyChatId`.
-            for (const c of snapshot.channels.values()) {
-                if (c.kind !== ChannelKind.GM) continue;
-                if (c.legacyChatId != null && c.legacyChatId === value.id) {
-                    channel = c;
-                    break;
-                }
-            }
-            // Snapshot miss (e.g. the GM was joined in another tab and
-            // hasn't synced into this tab's store yet): refresh the
-            // channel list once and retry by legacy id, so the click
-            // isn't a silent no-op.
-            if (!channel) {
+            channel = value.channelId ? snapshot.channels.get(value.channelId) : undefined;
+            // Snapshot miss (e.g. joined in another tab, not yet synced
+            // here): refresh the channel list once and retry by UUID, so
+            // the click isn't a silent no-op.
+            if (!channel && value.channelId) {
                 try {
                     const fresh = await channelService.listChannels();
-                    const match = fresh.find(
-                        (c) => c.kind === ChannelKind.GM && c.legacyChatId === value.id
-                    );
+                    const match = fresh.find((c) => c.id === value.channelId);
                     if (match) {
                         channelService.handleChannelCreated(match);
                         channel = match;
@@ -107,16 +95,13 @@ export const ChatSearch = (props: ChatSearchProps) => {
                     console.error("[ChatSearch] channel-list refresh failed:", e);
                 }
             }
-        } else {
+        } else if (value.userId) {
+            const otherUserId = value.userId;
             for (const c of snapshot.channels.values()) {
                 if (c.kind !== ChannelKind.DM) continue;
                 const roster = snapshot.membersByChannel.get(c.id) ?? [];
                 const ids = new Set(roster.map((m) => m.userId));
-                if (
-                    ids.size === 2 &&
-                    ids.has(myself.userId) &&
-                    ids.has(value.dmPartnerUser.userId)
-                ) {
+                if (ids.size === 2 && ids.has(myself.userId) && ids.has(otherUserId)) {
                     channel = c;
                     break;
                 }
@@ -129,7 +114,7 @@ export const ChatSearch = (props: ChatSearchProps) => {
                 try {
                     channel = await channelService.createChannel({
                         kind: ChannelKind.DM,
-                        otherUserId: value.dmPartnerUser.userId,
+                        otherUserId,
                         teamId: myself.teamId,
                     });
                 } catch (e) {
@@ -143,11 +128,25 @@ export const ChatSearch = (props: ChatSearchProps) => {
             return;
         }
 
+        // Minimal DM-partner stub from the search row (the chat header /
+        // adapter resolves the full partner from channel members). Empty
+        // for Groups, which render off `chatName`.
+        const dmPartner: UserProps = {
+            userId: value.userId ?? "",
+            userName: isGroup ? "" : value.name,
+            userEmail: value.email ?? "",
+            teamId: "",
+            teamName: "",
+            avatarImgPath: value.profileImageUrl ?? "",
+            tsLastSeen: "",
+            tsJoined: "",
+        };
+
         const initialChat: ChatProps = {
             chatId: channel.id,
             chatName: value.name,
             chatType: _chatType,
-            dmPartnerUser: value.dmPartnerUser,
+            dmPartnerUser: dmPartner,
             isPrivate: channel.isPrivate,
             lastReadMessageId: "",
             latestMessage: undefined as unknown as ChatProps["latestMessage"],
@@ -277,32 +276,31 @@ export const ChatSearch = (props: ChatSearchProps) => {
                           : option.name
                 }
                 renderOption={(props, option) => {
-                    // PUNCH LIST (v3 chatId migration): `AllChatProps.chatId`
-                    // is `string` post-flip; `option.id` is the legacy
-                    // numeric GM id. Stringify at the comparison.
+                    // Resolve the GM's cached chat row by its v3 channel
+                    // UUID (the search result now carries `channelId`
+                    // directly — no legacy-id stringify needed).
                     const gmChat: AllChatProps | undefined = useCM.allChats.find(
-                        (chat) => chat.chatId === String(option.id) && chat.chatType === 2
+                        (chat) => chat.chatId === option.channelId && chat.chatType === 2
                     );
+                    const optKey = option.userId ?? option.channelId ?? option.name;
                     return (
                         <AutocompleteOption
                             {...props}
-                            key={`ac-render-option-chatsearch-${option.name}-${option.id}`}
+                            key={`ac-render-option-chatsearch-${option.name}-${optKey}`}
                         >
                             <ListItemContent sx={{ fontSize: "sm" }}>
                                 <Stack direction="row" spacing={1.5} alignItems="center">
                                     {option.type === "People" && (
                                         <AvatarWithStatus
-                                            key={`ac-render-option-chatsearch-user-avatar-${option.name}-${option.id}`}
+                                            key={`ac-render-option-chatsearch-user-avatar-${option.name}-${optKey}`}
                                             useCM={useCM}
-                                            isYou={option.dmPartnerUser.userId === myself.userId}
+                                            isYou={option.userId === myself.userId}
                                             myself={myself}
                                             setMyself={setMyself}
                                             socket={socket}
                                             useUISM={useUISM}
                                             avatarUser={
-                                                useTEM.teamMemberProfiles[
-                                                    option.dmPartnerUser.userId
-                                                ]
+                                                useTEM.teamMemberProfiles[option.userId ?? ""]
                                             }
                                         />
                                     )}
@@ -321,8 +319,8 @@ export const ChatSearch = (props: ChatSearchProps) => {
                                         <Avatar
                                             size="sm"
                                             src={
-                                                option.profileImagePath
-                                                    ? `${mediaUrl}/${option.profileImagePath}`
+                                                option.profileImageUrl
+                                                    ? `${mediaUrl}/${option.profileImageUrl}`
                                                     : undefined
                                             }
                                         >

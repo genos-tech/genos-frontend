@@ -17,23 +17,9 @@ type AnyNote = MyNoteProps | TaskNoteProps | ChatNoteProps;
 
 // ---- chat channel ---------------------------------------------------------
 //
-// Post-v3 cutover, only the two read-status mutation paths remain.
-// Everything else (chat list / messages / threads / flags / pins) lives
-// in `channelService` and persists via the v3 IDB hydrate/snapshot
-// pipeline.
-
-export type ChatRequests = {
-    markAllChatActivityAsRead: {
-        req: {
-            accessToken: string;
-            myself: UserProps;
-            chatType: number;
-            chatId: number;
-            activityMessages: ActivityMessageProps[];
-        };
-        res: ActivityMessageProps[] | { error: string };
-    };
-};
+// Retired after the v3 cutover. The last handler (markAllChatActivityAsRead)
+// is inlined in `useMarkAllChatActivityRead`; everything else lives in
+// `channelService`. No `ChatRequests` / `chatChannel` remain.
 
 // ---- notes channel --------------------------------------------------------
 
