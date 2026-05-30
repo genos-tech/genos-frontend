@@ -41,7 +41,6 @@ import { ModalLeaveConfirm } from "../../../../components/ui/misc/ModalLeaveConf
 import { ModalTransferOwner } from "../../../../components/ui/misc/ModalTransferOwner";
 import { ProfileModalStyles } from "../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../context/AuthContext";
-import { ChatService } from "../../../../db/services/chat.service";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
@@ -226,10 +225,10 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
         ) {
             useCM.setCurrentSubChat(undefined);
         }
-        // Purge IDB so cached group data (messages, threads, chat row)
-        // doesn't keep rendering after leave. Best-effort — failures
-        // are swallowed inside the helper.
-        await new ChatService().deleteGMChatData(gmChatIdLegacy);
+        // v3 ownership: leaving a GM triggers a `channel.member_removed`
+        // broadcast which `channelService._evictChannelMessages` reacts
+        // to — dropping the channel from the snapshot + IDB. No manual
+        // cleanup needed.
         setOpenModalGMProfile(false);
         return true;
     };

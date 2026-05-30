@@ -1,8 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { deleteMessage } from "../../features/chat/services/deleteMessage";
-import { updateReadStatus } from "../../features/chat/services/updateReadStatus";
-import { authApi } from "../../services/api";
 import { channelService } from "../../services/channel/channelService";
 
 vi.mock("../../services/api", () => ({
@@ -63,45 +61,7 @@ describe("deleteMessage (v3)", () => {
     });
 });
 
-describe("updateReadStatus", () => {
-    beforeEach(() => {
-        vi.clearAllMocks();
-    });
-
-    const mockMyself = {
-        teamId: "team1",
-        teamName: "Team One",
-        userId: "user1",
-        userName: "Test User",
-        userEmail: "test@test.com",
-        avatarImgPath: "",
-        tsLastSeen: "",
-        tsJoined: "",
-        customStatus: "",
-    };
-
-    it("should call PUT /chat/read/ with correct params", async () => {
-        const mockPut = vi.fn().mockResolvedValue({ data: { success: true } });
-        (authApi as ReturnType<typeof vi.fn>).mockReturnValue({ put: mockPut });
-
-        const result = await updateReadStatus("token123", mockMyself, 1, 42, false, 0, 10);
-
-        expect(mockPut).toHaveBeenCalledWith("/chat/read/", {
-            team_id: "team1",
-            user_id: "user1",
-            chat_type: 1,
-            chat_id: 42,
-            is_thread: false,
-            thread_id: 0,
-            last_read_message_id: 10,
-        });
-        expect(result).toEqual({ success: true });
-    });
-
-    it("should return undefined when token is null", async () => {
-        (authApi as ReturnType<typeof vi.fn>).mockReturnValue(null);
-
-        const result = await updateReadStatus(null, mockMyself, 1, 1, false, 0, 1);
-        expect(result).toBeUndefined();
-    });
-});
+// Legacy `updateReadStatus` (axios PUT to `/chat/read/`) was removed
+// with the chat worker handler trim — read cursors now route through
+// `channelService.markRead` (covered by the channelService unit tests
+// + the integration tests for `useReadStatusManagement`).

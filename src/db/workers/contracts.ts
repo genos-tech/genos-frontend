@@ -33,18 +33,6 @@ export type ChatRequests = {
         };
         res: ActivityMessageProps[] | { error: string };
     };
-    updateReadStatus: {
-        req: {
-            accessToken: string;
-            myself: UserProps;
-            chatType: number;
-            chatId: number;
-            isThread: boolean;
-            threadId: number;
-            lastReadMessageId: number;
-        };
-        res: void;
-    };
 };
 
 // ---- notes channel --------------------------------------------------------

@@ -42,7 +42,6 @@ import { ModalLeaveConfirm } from "../../../../components/ui/misc/ModalLeaveConf
 import { ModalTransferOwner } from "../../../../components/ui/misc/ModalTransferOwner";
 import { ProfileModalStyles } from "../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../context/AuthContext";
-import { ChatService } from "../../../../db/services/chat.service";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
@@ -218,10 +217,10 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
         ) {
             useCM.setCurrentSubChat(undefined);
         }
-        // Purge IDB so cached project data (messages, threads, chat row)
-        // doesn't keep rendering after leave. Best-effort — failures are
-        // swallowed inside the helper.
-        await new ChatService().deletePMChatData(pmChatIdLegacy);
+        // v3 ownership: when the user is removed from the project's
+        // channel, the v3 `channel.member_removed` broadcast triggers
+        // `channelService._evictChannelMessages`, which drops the
+        // channel from the snapshot + IDB. No manual cleanup needed.
         setOpenModalProjectProfile(false);
         return true;
     };

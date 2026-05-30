@@ -1,7 +1,15 @@
 import { IDBPDatabase, openDB } from "idb";
 
 import { StoreConfig } from "../types";
-import { DB_NAME, DB_VERSION, INDEX_KEY_PATHS, INDEX_NAMES, KEY_PATHS, STORES } from "./constants";
+import {
+    DB_NAME,
+    DB_VERSION,
+    INDEX_KEY_PATHS,
+    INDEX_NAMES,
+    KEY_PATHS,
+    LEGACY_CHAT_STORES,
+    STORES,
+} from "./constants";
 
 // Store configurations
 export const STORE_CONFIGS: Record<string, StoreConfig> = {
@@ -19,178 +27,6 @@ export const STORE_CONFIGS: Record<string, StoreConfig> = {
     [STORES.ACTIVITY_MESSAGES]: {
         name: STORES.ACTIVITY_MESSAGES,
         keyPath: KEY_PATHS.ACTIVITY_MESSAGES,
-    },
-    [STORES.DM_CHATS]: {
-        name: STORES.DM_CHATS,
-        keyPath: KEY_PATHS.DM_CHATS,
-        indexes: [
-            { name: INDEX_NAMES.DM_CHATS, keyPath: INDEX_KEY_PATHS.DM_CHATS, unique: false },
-        ],
-    },
-    [STORES.DM_MESSAGES]: {
-        name: STORES.DM_MESSAGES,
-        keyPath: KEY_PATHS.DM_MESSAGES,
-        indexes: [
-            { name: INDEX_NAMES.DM_MESSAGES, keyPath: INDEX_KEY_PATHS.DM_MESSAGES, unique: false },
-            {
-                name: INDEX_NAMES.DM_MESSAGES_COMPOUND,
-                keyPath: [
-                    INDEX_KEY_PATHS.DM_MESSAGES_COMPOUND[0],
-                    INDEX_KEY_PATHS.DM_MESSAGES_COMPOUND[1],
-                ],
-                unique: true,
-            },
-        ],
-    },
-    [STORES.DM_THREAD_MESSAGES]: {
-        name: STORES.DM_THREAD_MESSAGES,
-        keyPath: KEY_PATHS.DM_THREAD_MESSAGES,
-        indexes: [
-            {
-                name: INDEX_NAMES.DM_THREAD_MESSAGES,
-                keyPath: INDEX_KEY_PATHS.DM_THREAD_MESSAGES,
-                unique: false,
-            },
-            {
-                name: INDEX_NAMES.DM_THREAD_MESSAGES_COMPOUND,
-                keyPath: [
-                    INDEX_KEY_PATHS.DM_THREAD_MESSAGES_COMPOUND[0],
-                    INDEX_KEY_PATHS.DM_THREAD_MESSAGES_COMPOUND[1],
-                ],
-                unique: false,
-            },
-        ],
-    },
-    [STORES.GM_CHATS]: {
-        name: STORES.GM_CHATS,
-        keyPath: KEY_PATHS.GM_CHATS,
-        indexes: [
-            { name: INDEX_NAMES.GM_CHATS, keyPath: INDEX_KEY_PATHS.GM_CHATS, unique: false },
-        ],
-    },
-    [STORES.GM_MESSAGES]: {
-        name: STORES.GM_MESSAGES,
-        keyPath: KEY_PATHS.GM_MESSAGES,
-        indexes: [
-            { name: INDEX_NAMES.GM_MESSAGES, keyPath: INDEX_KEY_PATHS.GM_MESSAGES, unique: false },
-            {
-                name: INDEX_NAMES.GM_MESSAGES_COMPOUND,
-                keyPath: [
-                    INDEX_KEY_PATHS.GM_MESSAGES_COMPOUND[0],
-                    INDEX_KEY_PATHS.GM_MESSAGES_COMPOUND[1],
-                ],
-                unique: true,
-            },
-        ],
-    },
-    [STORES.GM_THREAD_MESSAGES]: {
-        name: STORES.GM_THREAD_MESSAGES,
-        keyPath: KEY_PATHS.GM_THREAD_MESSAGES,
-        indexes: [
-            {
-                name: INDEX_NAMES.GM_THREAD_MESSAGES,
-                keyPath: INDEX_KEY_PATHS.GM_THREAD_MESSAGES,
-                unique: false,
-            },
-            {
-                name: INDEX_NAMES.GM_THREAD_MESSAGES_COMPOUND,
-                keyPath: [
-                    INDEX_KEY_PATHS.GM_THREAD_MESSAGES_COMPOUND[0],
-                    INDEX_KEY_PATHS.GM_THREAD_MESSAGES_COMPOUND[1],
-                ],
-                unique: false,
-            },
-        ],
-    },
-    [STORES.MDM_CHATS]: {
-        name: STORES.MDM_CHATS,
-        keyPath: KEY_PATHS.MDM_CHATS,
-        indexes: [
-            { name: INDEX_NAMES.MDM_CHATS, keyPath: INDEX_KEY_PATHS.MDM_CHATS, unique: false },
-        ],
-    },
-    [STORES.MDM_MESSAGES]: {
-        name: STORES.MDM_MESSAGES,
-        keyPath: KEY_PATHS.MDM_MESSAGES,
-        indexes: [
-            {
-                name: INDEX_NAMES.MDM_MESSAGES,
-                keyPath: INDEX_KEY_PATHS.MDM_MESSAGES,
-                unique: false,
-            },
-            {
-                name: INDEX_NAMES.MDM_MESSAGES_COMPOUND,
-                keyPath: [
-                    INDEX_KEY_PATHS.MDM_MESSAGES_COMPOUND[0],
-                    INDEX_KEY_PATHS.MDM_MESSAGES_COMPOUND[1],
-                ],
-                unique: true,
-            },
-        ],
-    },
-    [STORES.MDM_THREAD_MESSAGES]: {
-        name: STORES.MDM_THREAD_MESSAGES,
-        keyPath: KEY_PATHS.MDM_THREAD_MESSAGES,
-        indexes: [
-            {
-                name: INDEX_NAMES.MDM_THREAD_MESSAGES,
-                keyPath: INDEX_KEY_PATHS.MDM_THREAD_MESSAGES,
-                unique: false,
-            },
-            {
-                name: INDEX_NAMES.MDM_THREAD_MESSAGES_COMPOUND,
-                keyPath: [
-                    INDEX_KEY_PATHS.MDM_THREAD_MESSAGES_COMPOUND[0],
-                    INDEX_KEY_PATHS.MDM_THREAD_MESSAGES_COMPOUND[1],
-                ],
-                unique: false,
-            },
-        ],
-    },
-    [STORES.PM_CHATS]: {
-        name: STORES.PM_CHATS,
-        keyPath: KEY_PATHS.PM_CHATS,
-        indexes: [
-            { name: INDEX_NAMES.PM_CHATS, keyPath: INDEX_KEY_PATHS.PM_CHATS, unique: false },
-        ],
-    },
-    [STORES.PM_MESSAGES]: {
-        name: STORES.PM_MESSAGES,
-        keyPath: KEY_PATHS.PM_MESSAGES,
-        indexes: [
-            { name: INDEX_NAMES.PM_MESSAGES, keyPath: INDEX_KEY_PATHS.PM_MESSAGES, unique: false },
-            {
-                name: INDEX_NAMES.PM_MESSAGES_COMPOUND,
-                keyPath: [
-                    INDEX_KEY_PATHS.PM_MESSAGES_COMPOUND[0],
-                    INDEX_KEY_PATHS.PM_MESSAGES_COMPOUND[1],
-                ],
-                unique: true,
-            },
-        ],
-    },
-    [STORES.PM_THREAD_MESSAGES]: {
-        name: STORES.PM_THREAD_MESSAGES,
-        keyPath: KEY_PATHS.PM_THREAD_MESSAGES,
-        indexes: [
-            {
-                name: INDEX_NAMES.PM_THREAD_MESSAGES,
-                keyPath: INDEX_KEY_PATHS.PM_THREAD_MESSAGES,
-                unique: false,
-            },
-            {
-                name: INDEX_NAMES.PM_THREAD_MESSAGES_COMPOUND,
-                keyPath: [
-                    INDEX_KEY_PATHS.PM_THREAD_MESSAGES_COMPOUND[0],
-                    INDEX_KEY_PATHS.PM_THREAD_MESSAGES_COMPOUND[1],
-                ],
-                unique: false,
-            },
-        ],
-    },
-    [STORES.FLAGGED_MESSAGES]: {
-        name: STORES.FLAGGED_MESSAGES,
-        keyPath: KEY_PATHS.FLAGGED_MESSAGES,
     },
     [STORES.TASK_META]: {
         name: STORES.TASK_META,
@@ -428,6 +264,20 @@ export const initDB = async (): Promise<IDBPDatabase> => {
             // drop the store so the generic loop below recreates it.
             if (oldVersion < 8 && db.objectStoreNames.contains("todos")) {
                 db.deleteObjectStore("todos");
+            }
+            // v10: drop the legacy per-type chat stores. The v3
+            // unified messaging stores have been the source of truth
+            // for chat list, messages, threads, flags, pins, and read
+            // cursors for several batches; the legacy stores have had
+            // no writers or readers in that time. Delete by exact
+            // store name so users on an older DB version don't keep
+            // empty `dmChats` / `dmMessages` / … lying around.
+            if (oldVersion < 10) {
+                for (const name of LEGACY_CHAT_STORES) {
+                    if (db.objectStoreNames.contains(name)) {
+                        db.deleteObjectStore(name);
+                    }
+                }
             }
             Object.values(STORE_CONFIGS).forEach((config) => {
                 if (!db.objectStoreNames.contains(config.name)) {

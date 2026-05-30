@@ -1,12 +1,12 @@
 // Chat-channel handlers — runs inside the chat worker.
 //
-// Post-v3 cutover, the only handlers that remain are the two
-// activity/read-status mutation paths that still hit the legacy
-// `/chat/activity/read/all/` and `/chat/read/` REST endpoints. All
-// per-type chat list / message / thread / flag IDB plumbing was
-// removed once the v3 `channelService` became the single source of
-// truth for chat-list, messages, threads, pins, flags, and read
-// cursors.
+// Post-v3 cutover, the only remaining handler is the activity
+// "mark-all-as-read" mutation, which still hits the legacy
+// `/chat/activity/read/all/` endpoint and writes to the activity IDB
+// store. Activity is a separate domain from chat — `channelService`
+// owns chat-list / messages / threads / flags / pins / read cursors,
+// but the activity feed (mentions, task assignments, thread-reply
+// notifications) is not part of the v3 channel surface.
 
 import axios from "axios";
 
@@ -60,43 +60,6 @@ export const chatHandlers: HandlerMap<ChatRequests> = {
                 console.error("[chat:markAllChatActivityAsRead] Unexpected error", error);
             }
             return { error: String(error) };
-        }
-    },
-
-    updateReadStatus: async ({
-        accessToken,
-        myself,
-        chatType,
-        chatId,
-        isThread,
-        threadId,
-        lastReadMessageId,
-    }) => {
-        try {
-            const api = authApi(accessToken);
-            if (!api) {
-                console.error("Unauthorized. Auth toke is not found.");
-                return;
-            }
-            await api.put("/chat/read/", {
-                chat_id: chatId,
-                chat_type: chatType,
-                is_thread: isThread,
-                last_read_message_id: lastReadMessageId,
-                team_id: myself.teamId,
-                thread_id: threadId,
-                user_id: myself.userId,
-            });
-        } catch (error: unknown) {
-            if (axios.isAxiosError(error)) {
-                console.error(
-                    "[chat:updateReadStatus] API error",
-                    error.response?.status,
-                    error.response?.data
-                );
-            } else {
-                console.error("[chat:updateReadStatus] Unexpected error", error);
-            }
         }
     },
 };
