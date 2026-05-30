@@ -14,6 +14,7 @@
  * sidebar tolerates empty strings.
  */
 
+import { channelService } from "../../../services/channel/channelService";
 import type { UserProps } from "../../../types/admin";
 import type { ActivityMessageProps } from "../../../types/chat";
 
@@ -66,6 +67,23 @@ const EMPTY_USER: UserProps = {
     isSystemUser: false,
 };
 
+/**
+ * Resolve a display-friendly `chatName` for the activity row.
+ *
+ * Reads from the `channelService` snapshot so the value matches the
+ * sidebar's chat-list label. Falls back to the actor's name for DMs
+ * (the DM has no title — the partner's name IS the label) and to a
+ * single `"?"` placeholder so downstream consumers that take
+ * `chatName[0]` (e.g. `ActivityAvatar`'s initial-letter fallback) don't
+ * crash on the empty string.
+ */
+function resolveChatName(a: V3ActivityWire): string {
+    const ch = channelService.getSnapshot().channels.get(a.channelId);
+    if (ch && ch.title) return ch.title;
+    if (a.channelKind === 1 && a.actor?.userName) return a.actor.userName;
+    return "?";
+}
+
 export function v3ActivityToLegacy(a: V3ActivityWire, myself: UserProps): ActivityMessageProps {
     const msg = a.message;
     const isThread = !!msg.isThreadReply;
@@ -96,7 +114,7 @@ export function v3ActivityToLegacy(a: V3ActivityWire, myself: UserProps): Activi
         // see the `v3ToLegacy.ts` migration notes. UUIDs go through the
         // same `as unknown as number` cast.
         chatId: a.channelId as unknown as number,
-        chatName: "",
+        chatName: resolveChatName(a),
         dmPartnerUserId: "",
         dmPartnerUserName: "",
         dmPartnerUserEmail: "",

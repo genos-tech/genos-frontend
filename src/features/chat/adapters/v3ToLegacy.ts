@@ -487,8 +487,20 @@ export function v3MessagesToLegacy(args: {
     for (const m of messages) {
         if (m.isThreadReply) continue;
         if (m.deletedAt) continue;
-        if (isPm && m.taskId == null) continue;
-        out.push(v3MessageToLegacy({ message: m, channelId, chatType, flaggedMessageIds }));
+        // Adapt FIRST, then filter on the *resolved* taskId. The server
+        // only fills the top-level `taskId` column when the `task` FK is
+        // linked, but task-create messages carry the id in
+        // `metadata.taskId` (see `uploadNewTask.ts` — the create path in
+        // `message_views._allocate_seq_and_create_message` stores
+        // `metadata` but never sets the FK, so `MessageSerializer.taskId`
+        // comes back null). Filtering on the raw `m.taskId` here dropped
+        // those bubbles entirely — both live and after a refresh — even
+        // though `v3MessageToLegacy` already coalesces `m.taskId ??
+        // metadata.taskId`. Reusing the adapter's resolved value keeps
+        // the filter and the resolver from ever diverging again.
+        const adapted = v3MessageToLegacy({ message: m, channelId, chatType, flaggedMessageIds });
+        if (isPm && adapted.taskId == null) continue;
+        out.push(adapted);
     }
     out.sort((a, b) => (a.tsSent || "").localeCompare(b.tsSent || ""));
     return out;

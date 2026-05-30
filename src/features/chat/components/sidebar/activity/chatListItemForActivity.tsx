@@ -142,6 +142,17 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
     };
     const noteTypeForActivity = NOTE_CHAT_TYPE_TO_NOTE_TYPE[activity.chatType];
 
+    // chatType → URL path segment. Mirrors `MessageBubble.handleMessageClick`
+    // so activity-click navigation lands on the same canonical URL the
+    // chat-list click does — that's what `useChatRouting` watches to
+    // resolve focus through `resolveV3MessageUuid`.
+    const CHAT_TYPE_PATH: Record<number, string> = {
+        1: "dm",
+        2: "gm",
+        3: "pm",
+        4: "mdm",
+    };
+
     const defineNewChat = (
         messages: MessageProps[],
         moveToSpecificIndex: string,
@@ -239,6 +250,22 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
             }
             const messages = await loadV3SpecificMessages(v3ChannelUuid, chatType);
             handleMessages(messages, v3ChannelUuid);
+
+            // Sync the URL so `useChatRouting` picks the focus target up
+            // through `resolveV3MessageUuid` — that path is what the
+            // legacy chat-list click already used and what the bubble
+            // renderer's `focusKey` ultimately reads. Without this nav,
+            // an activity click in a chat that's already open updates
+            // `moveToSpecificIndex` via the local `setCurrentMainChat`
+            // but a later URL-driven sync can clobber it; for PM the
+            // URL `messageId` segment is the task id (matches
+            // `MessageBubble.handleMessageClick`).
+            const typePath = CHAT_TYPE_PATH[chatType];
+            const idForUrl =
+                chatType === 3 && activity.taskId ? activity.taskId : activity.messageId;
+            if (typePath && idForUrl && !isThread) {
+                navigate(`/workspace/chat/${typePath}/${v3ChannelUuid}/message/${idForUrl}`);
+            }
         } catch (error) {
             console.error(error);
         }

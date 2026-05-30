@@ -78,7 +78,9 @@ export const ActivityAvatar: React.FC<ActivityAvatarProps> = ({
             );
         } else {
             return (
-                <Avatar size="sm">{(chat?.chatName ?? activity.chatName)[0].toUpperCase()}</Avatar>
+                <Avatar size="sm">
+                    {((chat?.chatName || activity.chatName || "?")[0] ?? "?").toUpperCase()}
+                </Avatar>
             );
         }
     }

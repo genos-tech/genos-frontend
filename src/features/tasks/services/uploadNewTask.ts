@@ -3,8 +3,8 @@ import { Socket } from "socket.io-client";
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { getMessages } from "../../../i18n";
 import { channelService } from "../../../services/channel/channelService";
-import { ChannelKind } from "../../../types/channel";
 import { UserProps } from "../../../types/admin";
+import { ChannelKind } from "../../../types/channel";
 import { TaskProps } from "../../../types/tasks";
 import {
     taskCreatedThreadMessageTemplate,
@@ -208,9 +208,7 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                 // `kind=PM` + matching `projectId`.
                 const createTaskMessage = taskMessageTemplate(myself, taskContent);
                 if (taskContent.project && createTaskMessage) {
-                    const pmChannel = [
-                        ...channelService.getSnapshot().channels.values(),
-                    ].find(
+                    const pmChannel = [...channelService.getSnapshot().channels.values()].find(
                         (ch) =>
                             ch.kind === ChannelKind.PM &&
                             ch.projectId === taskContent.project!.projectId
@@ -229,6 +227,15 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                         };
                         // Top-level "task created" message in the PM channel.
                         try {
+                            // eslint-disable-next-line no-console
+                            console.log("[uploadNewTask] sending PM task-create message", {
+                                channelId: pmChannel.id,
+                                projectId: pmChannel.projectId,
+                                metadata: taskMetadata,
+                                bodyBlocks: Array.isArray(createTaskMessage)
+                                    ? createTaskMessage.length
+                                    : "n/a",
+                            });
                             const sent = await channelService.send(
                                 pmChannel.id,
                                 createTaskMessage,
@@ -237,22 +244,22 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                                     metadata: taskMetadata,
                                 }
                             );
+                            // eslint-disable-next-line no-console
+                            console.log("[uploadNewTask] PM task-create message sent", {
+                                messageId: sent?.id,
+                                channelId: sent?.channelId,
+                            });
                             // First thread reply on the task message —
                             // legacy posted a follow-up that lives in the
                             // task's thread pane. `parentId = sent.id`
                             // turns it into a thread reply.
-                            const threadFollowup =
-                                taskCreatedThreadMessageTemplate(myself);
+                            const threadFollowup = taskCreatedThreadMessageTemplate(myself);
                             if (threadFollowup && sent?.id) {
-                                await channelService.send(
-                                    pmChannel.id,
-                                    threadFollowup,
-                                    {
-                                        bodyText: taskContent.title,
-                                        parentId: sent.id,
-                                        metadata: taskMetadata,
-                                    }
-                                );
+                                await channelService.send(pmChannel.id, threadFollowup, {
+                                    bodyText: taskContent.title,
+                                    parentId: sent.id,
+                                    metadata: taskMetadata,
+                                });
                             }
                         } catch (e) {
                             console.error("uploadNewTask: failed to post PM task message", e);
