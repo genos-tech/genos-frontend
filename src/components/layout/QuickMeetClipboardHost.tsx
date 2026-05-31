@@ -17,6 +17,10 @@ type SnackbarState = {
     kind: "info" | "success" | "error";
     text: string;
     needsGrant?: boolean;
+    // Same OAuth connect flow as `needsGrant`, surfaced when the stored
+    // refresh token is revoked/expired (`google_reauth_required`); only
+    // the button label differs ("Reconnect" vs "Grant access").
+    needsReconnect?: boolean;
 } | null;
 
 /**
@@ -89,6 +93,15 @@ export const QuickMeetClipboardHost = forwardRef<QuickMeetClipboardHandle, Props
                 });
                 return;
             }
+            if (event === "google_reauth_required") {
+                setLoading(false);
+                setSnackbar({
+                    kind: "error",
+                    text: t.app.meetClipboard.reauth,
+                    needsReconnect: true,
+                });
+                return;
+            }
             if (!event) {
                 setLoading(false);
                 return;
@@ -153,9 +166,11 @@ export const QuickMeetClipboardHost = forwardRef<QuickMeetClipboardHandle, Props
                 open={snackbar !== null}
                 variant="soft"
                 endDecorator={
-                    snackbar?.needsGrant ? (
+                    snackbar?.needsGrant || snackbar?.needsReconnect ? (
                         <Button size="sm" variant="solid" onClick={handleGrant}>
-                            {t.app.meetClipboard.grantButton}
+                            {snackbar?.needsReconnect
+                                ? t.app.meetClipboard.reconnectButton
+                                : t.app.meetClipboard.grantButton}
                         </Button>
                     ) : null
                 }

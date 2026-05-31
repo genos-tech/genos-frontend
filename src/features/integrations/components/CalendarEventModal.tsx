@@ -23,6 +23,7 @@ import {
 import { useOptionalAvatarContext } from "../../../components/ui/avatars/AvatarContext";
 import { useTranslation } from "../../../i18n";
 import { CalendarEvent, createEvent, deleteEvent, updateEvent } from "../services/calendar";
+import { ReconnectGoogleCalendarButton } from "./ReconnectGoogleCalendarButton";
 
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
@@ -136,6 +137,10 @@ export const CalendarEventModal = ({
     // dismiss the confirmation.
     const [deleteConfirm, setDeleteConfirm] = useState(false);
     const [localError, setLocalError] = useState<string | null>(null);
+    // Set when a save fails because the Google refresh token is dead
+    // (`google_reauth_required`). Surfaces a "Reconnect" button right
+    // in the modal so the user can repair it without leaving the flow.
+    const [needsReconnect, setNeedsReconnect] = useState(false);
 
     // Team-member directory — sourced from `AvatarContext` so the
     // modal doesn't take a teamMembers prop. `useOptional` returns
@@ -178,6 +183,7 @@ export const CalendarEventModal = ({
             });
             setForm(seeded);
             setLocalError(null);
+            setNeedsReconnect(false);
             setDeleteConfirm(false);
         }
     }, [open, initial, teamOptions]);
@@ -202,6 +208,7 @@ export const CalendarEventModal = ({
         }
         setSubmitting(true);
         setLocalError(null);
+        setNeedsReconnect(false);
         const payload = {
             add_meet: form.addMeet,
             // Only include attendees in the body when the user has
@@ -227,6 +234,12 @@ export const CalendarEventModal = ({
             ? await updateEvent(accessToken, editingEventId, payload, reportError)
             : await createEvent(accessToken, payload, reportError);
         setSubmitting(false);
+        // A dead refresh token gets an inline reconnect button in
+        // addition to the error text `reportError` already set.
+        if (result === "google_reauth_required") {
+            setNeedsReconnect(true);
+            return;
+        }
         // `reportError` already surfaces the user-facing reason for
         // string discriminators (google_not_connected /
         // calendar_scope_missing); the modal just needs to skip the
@@ -277,6 +290,9 @@ export const CalendarEventModal = ({
                         <Typography level="body-sm" sx={{ color: "danger.500" }}>
                             {localError}
                         </Typography>
+                    )}
+                    {needsReconnect && (
+                        <ReconnectGoogleCalendarButton accessToken={accessToken} size="sm" />
                     )}
                     <FormControl required>
                         <FormLabel>Title</FormLabel>

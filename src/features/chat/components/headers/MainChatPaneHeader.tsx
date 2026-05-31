@@ -153,10 +153,13 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
     const [quickMeetLoading, setQuickMeetLoading] = useState(false);
     // `needsGrant` swaps the snackbar's action button to a
     // "Grant access" CTA that re-runs the connect-intent OAuth flow.
+    // `needsReconnect` is the same OAuth flow but for a revoked/expired
+    // refresh token — only the button label differs ("Reconnect").
     const [quickMeetSnackbar, setQuickMeetSnackbar] = useState<{
         kind: "error" | "info";
         text: string;
         needsGrant?: boolean;
+        needsReconnect?: boolean;
     } | null>(null);
     // Link held for the share-confirm modal; null when modal is closed.
     const [shareMeetLink, setShareMeetLink] = useState<string | null>(null);
@@ -197,6 +200,15 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                 kind: "error",
                 text: t.chat.headers.quickMeetScopeMissing,
                 needsGrant: true,
+            });
+            return;
+        }
+        if (event === "google_reauth_required") {
+            setQuickMeetLoading(false);
+            setQuickMeetSnackbar({
+                kind: "error",
+                text: t.chat.headers.quickMeetReauth,
+                needsReconnect: true,
             });
             return;
         }
@@ -524,9 +536,11 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                     open={quickMeetSnackbar !== null}
                     variant="soft"
                     endDecorator={
-                        quickMeetSnackbar?.needsGrant ? (
+                        quickMeetSnackbar?.needsGrant || quickMeetSnackbar?.needsReconnect ? (
                             <Button size="sm" variant="solid" onClick={handleQuickMeetGrant}>
-                                {t.chat.headers.quickMeetGrant}
+                                {quickMeetSnackbar?.needsReconnect
+                                    ? t.chat.headers.quickMeetReconnect
+                                    : t.chat.headers.quickMeetGrant}
                             </Button>
                         ) : null
                     }
@@ -839,9 +853,11 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                 open={quickMeetSnackbar !== null}
                 variant="soft"
                 endDecorator={
-                    quickMeetSnackbar?.needsGrant ? (
+                    quickMeetSnackbar?.needsGrant || quickMeetSnackbar?.needsReconnect ? (
                         <Button size="sm" variant="solid" onClick={handleQuickMeetGrant}>
-                            {t.chat.headers.quickMeetGrant}
+                            {quickMeetSnackbar?.needsReconnect
+                                ? t.chat.headers.quickMeetReconnect
+                                : t.chat.headers.quickMeetGrant}
                         </Button>
                     ) : null
                 }

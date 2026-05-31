@@ -146,6 +146,8 @@ export const chat = {
         quickMeetScopeMissing:
             "Calendar access hasn't been granted yet — grant it to use Quick Meet.",
         quickMeetGrant: "Grant access",
+        quickMeetReauth: "Google Calendar connection expired — reconnect to use Quick Meet.",
+        quickMeetReconnect: "Reconnect",
     },
     threadTabs: {
         comments: "Comments",

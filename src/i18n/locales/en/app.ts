@@ -24,5 +24,7 @@ export const app = {
         notConnected: "Connect Google in Settings → Integrations to generate Meet links.",
         scopeMissing: "Calendar access hasn't been granted. Grant it to generate Meet links.",
         grantButton: "Grant",
+        reauth: "Google Calendar connection expired. Reconnect to generate Meet links.",
+        reconnectButton: "Reconnect",
     },
 } as const;

@@ -68,7 +68,19 @@ interface ErrorResponse {
     detail?: string;
 }
 
-export type CalendarErrorKind = "google_not_connected" | "calendar_scope_missing" | "other";
+export type CalendarErrorKind =
+    | "google_not_connected"
+    | "calendar_scope_missing"
+    | "google_reauth_required"
+    | "other";
+
+// Connection-state discriminators a caller may want to branch on (vs.
+// the catch-all "other"). Shared so each service function's return
+// union and `errorReturn` allow-list stay in sync.
+type CalendarConnectionError =
+    | "google_not_connected"
+    | "calendar_scope_missing"
+    | "google_reauth_required";
 
 const surfaceError = (
     error: unknown,
@@ -86,6 +98,15 @@ const surfaceError = (
             setErrorMessage?.("Calendar access not granted yet.");
             return "calendar_scope_missing";
         }
+        if (detail === "google_reauth_required") {
+            // The Google account row still exists (and may still carry
+            // the calendar scope), but its refresh token is revoked or
+            // expired. Callers present a "Reconnect Google Calendar"
+            // button that re-runs the connect-intent OAuth flow, which
+            // mints a fresh refresh token.
+            setErrorMessage?.("Google Calendar connection expired. Please reconnect.");
+            return "google_reauth_required";
+        }
         setErrorMessage?.(detail || "Calendar request failed.");
     } else {
         setErrorMessage?.("Calendar request failed.");
@@ -96,7 +117,7 @@ const surfaceError = (
 // Helper: map the surfaced error kind to the right discriminator
 // return shape used by all calendar service functions. Keeps each
 // function's catch block tight.
-const errorReturn = <T extends "google_not_connected" | "calendar_scope_missing">(
+const errorReturn = <T extends CalendarConnectionError>(
     error: unknown,
     setErrorMessage: ((value: string) => void) | undefined,
     discriminators: readonly T[]
@@ -109,7 +130,11 @@ export const listCalendars = async (
     accessToken: string,
     setErrorMessage?: (value: string) => void
 ): Promise<
-    { calendars: CalendarSummary[] } | "google_not_connected" | "calendar_scope_missing" | null
+    | { calendars: CalendarSummary[] }
+    | "google_not_connected"
+    | "calendar_scope_missing"
+    | "google_reauth_required"
+    | null
 > => {
     try {
         const api = authApi(accessToken);
@@ -120,6 +145,7 @@ export const listCalendars = async (
         return errorReturn(error, setErrorMessage, [
             "google_not_connected",
             "calendar_scope_missing",
+            "google_reauth_required",
         ] as const);
     }
 };
@@ -133,6 +159,7 @@ export const getEvent = async (
     | CalendarEvent
     | "google_not_connected"
     | "calendar_scope_missing"
+    | "google_reauth_required"
     | "event_deleted_upstream"
     | null
 > => {
@@ -156,6 +183,7 @@ export const getEvent = async (
         return errorReturn(error, setErrorMessage, [
             "google_not_connected",
             "calendar_scope_missing",
+            "google_reauth_required",
         ] as const);
     }
 };
@@ -165,7 +193,11 @@ export const listEvents = async (
     opts: { from?: string; to?: string; calendarId?: string },
     setErrorMessage?: (value: string) => void
 ): Promise<
-    { items: CalendarEvent[] } | "google_not_connected" | "calendar_scope_missing" | null
+    | { items: CalendarEvent[] }
+    | "google_not_connected"
+    | "calendar_scope_missing"
+    | "google_reauth_required"
+    | null
 > => {
     try {
         const api = authApi(accessToken);
@@ -182,6 +214,7 @@ export const listEvents = async (
         return errorReturn(error, setErrorMessage, [
             "google_not_connected",
             "calendar_scope_missing",
+            "google_reauth_required",
         ] as const);
     }
 };
@@ -204,7 +237,13 @@ export const createEvent = async (
         summary: string;
     },
     setErrorMessage?: (value: string) => void
-): Promise<CalendarEvent | "google_not_connected" | "calendar_scope_missing" | null> => {
+): Promise<
+    | CalendarEvent
+    | "google_not_connected"
+    | "calendar_scope_missing"
+    | "google_reauth_required"
+    | null
+> => {
     try {
         const api = authApi(accessToken);
         if (!api) return null;
@@ -214,6 +253,7 @@ export const createEvent = async (
         return errorReturn(error, setErrorMessage, [
             "google_not_connected",
             "calendar_scope_missing",
+            "google_reauth_required",
         ] as const);
     }
 };
@@ -239,7 +279,13 @@ export const updateEvent = async (
         summary: string;
     }>,
     setErrorMessage?: (value: string) => void
-): Promise<CalendarEvent | "google_not_connected" | "calendar_scope_missing" | null> => {
+): Promise<
+    | CalendarEvent
+    | "google_not_connected"
+    | "calendar_scope_missing"
+    | "google_reauth_required"
+    | null
+> => {
     try {
         const api = authApi(accessToken);
         if (!api) return null;
@@ -249,6 +295,7 @@ export const updateEvent = async (
         return errorReturn(error, setErrorMessage, [
             "google_not_connected",
             "calendar_scope_missing",
+            "google_reauth_required",
         ] as const);
     }
 };
