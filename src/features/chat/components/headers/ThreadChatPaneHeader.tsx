@@ -540,6 +540,53 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                                     onClick={() => {
                                         useCM.setIsMainChatVisible(false);
                                         useCM.setIsThreadVisible(true);
+                                        // Ensure the project is set so the
+                                        // App-level auto-loader fetches
+                                        // currentPreviewTask from the id below.
+                                        // NOTE: `currentThreadChat.project` is
+                                        // ALWAYS undefined — the v3 message
+                                        // adapter (v3MessageToLegacy) never
+                                        // populates a message `.project`, so the
+                                        // thread built from those messages has
+                                        // none. The reliable sources are: the
+                                        // host channel's project (set for PM
+                                        // channels by the channel adapter — and
+                                        // a PM thread's task belongs to that
+                                        // project), falling back to the task
+                                        // row's projectId from `allTasks` (the
+                                        // current project's loaded tasks). For a
+                                        // DM/GM task thread whose project isn't
+                                        // the current one, neither resolves —
+                                        // the auto-loader then never fires and
+                                        // chatHome's id-match gate renders
+                                        // NOTHING (never the wrong task). The
+                                        // user is already on chat, so the
+                                        // setIsTaskPreviewVisible(true) below is
+                                        // observed directly by chatHome's
+                                        // sticky-flag effect (no remount).
+                                        const taskRow = useTM.allTasks.find(
+                                            (row) => String(row.id) === String(currentThreadTaskId)
+                                        );
+                                        if (useCM.currentMainChat?.project) {
+                                            usePM.setCurrentProject(useCM.currentMainChat.project);
+                                        } else if (
+                                            taskRow?.projectId != null &&
+                                            usePM.currentProject?.projectId !== taskRow.projectId
+                                        ) {
+                                            // `allTasks` is scoped to
+                                            // currentProject, so finding the row
+                                            // here means currentProject is
+                                            // already this project (and fully
+                                            // populated). Only set when it would
+                                            // actually CHANGE — a minimal
+                                            // {projectId} ProjectProps would
+                                            // otherwise strip name/tags app-wide.
+                                            usePM.setCurrentProject({
+                                                projectId: taskRow.projectId,
+                                                projectName: "",
+                                                projectTags: [],
+                                            });
+                                        }
                                         useTM.setCurrentPreviewTaskId(currentThreadTaskId);
                                         useTM.setIsTaskPreviewVisible(true);
                                         useTM.setIsCreatingTask({

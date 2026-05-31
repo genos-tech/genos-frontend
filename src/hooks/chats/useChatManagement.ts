@@ -99,7 +99,13 @@ export interface ChatManagementState {
         // chips). When present the helper sets `moveToSpecificIndex` on
         // the chat / thread so the list scrolls to the bubble, and
         // appends `/message/:id` to the URL. Omit for no message focus.
-        messageId?: string | number
+        messageId?: string | number,
+        // Cross-page "open the task preview ON THE CHAT PAGE" intent. Only
+        // the task-page "Check Thread" / "openThread" entry points set this;
+        // the deep-link callers (notification / search / history / citation)
+        // leave it at its `false` default so they stay no-ops here. See the
+        // implementation for the full rationale.
+        openChatPageTaskPreview?: boolean
     ) => Promise<void>;
     moveToSpecificThreadChat: (
         chat: AllChatProps,
@@ -300,15 +306,27 @@ export const useChatManagement = (
         );
         if (threadMessages && threadMessages.length > 0) {
             const lastThreadMsg = threadMessages[threadMessages.length - 1];
+            // A thread's task linkage lives on the message the task was
+            // created from — the thread ROOT (`messages[0]`), per
+            // `v3ThreadMessagesToLegacy` which returns `[root, ...replies]`.
+            // Reading it off `lastThreadMsg` (the last reply) made a thread
+            // look task-less the moment any reply was added after the task
+            // was created: the header's task chip/button vanished and
+            // `moveToSpecificChat`'s `taskExist`-gated `setCurrentPreviewTaskId`
+            // never fired (so opening the thread didn't surface its task).
+            // Pick the first message that actually carries a task (the root
+            // scans first), falling back to the root when there's none.
+            const taskMsg =
+                threadMessages.find((m) => m.taskExist && m.taskId != null) ?? threadMessages[0];
             const newThread: ThreadProps = {
                 chatId: chat.chatId as unknown as number,
                 chatName: chat.chatName,
                 chatType: chat.chatType,
                 dmPartnerUser: chat.dmPartnerUser,
                 messages: threadMessages,
-                project: lastThreadMsg.project,
-                taskExist: lastThreadMsg.taskExist,
-                taskId: lastThreadMsg.taskId,
+                project: taskMsg.project ?? lastThreadMsg.project,
+                taskExist: taskMsg.taskExist,
+                taskId: taskMsg.taskId,
                 threadId: threadRootUuid as unknown as number,
                 TSLastMessage: lastThreadMsg.tsSent,
             };
@@ -328,7 +346,16 @@ export const useChatManagement = (
         openThreadTaskPreview: boolean,
         setCurrentPreviewTaskId: (id: number) => void,
         setCurrentProject: (project: ProjectProps | null) => void,
-        messageId?: string | number
+        messageId?: string | number,
+        // Cross-page "open the task preview ON THE CHAT PAGE" intent.
+        // Distinct from the legacy `openThreadTaskPreview` (which four
+        // deep-link callers — notification, search/recents, history, the
+        // citation chip — already pass `true` and must stay no-ops here):
+        // only the task-page "Check Thread" / "openThread" entry points
+        // (TaskTitleBlock) set this. Gated on `taskExist` below so a
+        // task-less thread never raises it. Defaults false so every
+        // existing caller keeps its prior behavior.
+        openChatPageTaskPreview: boolean = false
     ) => {
         // Get the URL path for the chat type
         const chatTypePath = CHAT_TYPE_REVERSE_MAP[chatType];
@@ -357,7 +384,12 @@ export const useChatManagement = (
         // of truth for the active service (see useGlobalServiceShortcut).
         setIsMainChatVisible(false);
         setIsChatNoteVisibleInChat(openTaskNoteInChat);
-        setIsThreadTaskVisible(openThreadTaskPreview);
+        // Reset the chat-page task-preview "open intent" up front. We only
+        // honor `openChatPageTaskPreview` once we've confirmed the freshly
+        // opened thread actually carries a task (see the taskExist branch
+        // below), so the preview can never re-open onto a task-less / stale
+        // target. chatHome consumes this flag post-mount.
+        setIsThreadTaskVisible(false);
 
         // PUNCH LIST: `chatId` param is still `number` for the legacy
         // callers; `chat.chatId` is `string` post-v3 flip. We stringify
@@ -408,6 +440,21 @@ export const useChatManagement = (
                     }
                     if (newThread.taskExist === true && newThread.taskId) {
                         setCurrentPreviewTaskId(newThread.taskId);
+                        // Honor the caller's "open the task preview on the
+                        // chat page" request ONLY now that we know this
+                        // thread carries a task and the preview id is fresh.
+                        // Scoped to `openChatPageTaskPreview` (NOT the legacy
+                        // `openThreadTaskPreview`, which the deep-link callers
+                        // pass true) so only the TaskTitleBlock entry points
+                        // raise this. chatHome reads this intent post-mount
+                        // (the task->chat route swap remounts ChatHome, so its
+                        // own false->true transition effect never sees the
+                        // flip). The auto-loader in useProjectTaskManagement
+                        // loads currentPreviewTask from this id + the
+                        // project set by the caller.
+                        if (openChatPageTaskPreview) {
+                            setIsThreadTaskVisible(true);
+                        }
                     }
                     // Re-apply moveToSpecificIndex for thread-message
                     // focus. `moveToSpecificThreadChat` set the thread
