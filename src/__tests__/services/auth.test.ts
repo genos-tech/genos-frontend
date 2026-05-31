@@ -1,13 +1,13 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { signIn } from "../../features/admin/services/signin";
+import { signUp } from "../../features/admin/services/signup";
+import { nonAuthApi } from "../../services/api";
 
 vi.mock("../../services/api", () => ({
     nonAuthApi: vi.fn(),
     authApi: vi.fn(),
 }));
-
-import { nonAuthApi } from "../../services/api";
-import { signIn } from "../../features/admin/services/signin";
-import { signUp } from "../../features/admin/services/signup";
 
 describe("signIn", () => {
     beforeEach(() => {

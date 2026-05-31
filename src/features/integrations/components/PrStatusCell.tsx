@@ -169,8 +169,8 @@ const SinglePrBadge = ({
     const hasDetail = detail?.kind === "ok";
     const hoverTitle = hasDetail ? (
         <PrHoverDetails
-            payload={detail.payload as PrDetailResponse}
             isDark={isDark}
+            payload={detail.payload as PrDetailResponse}
             includeHeader
         />
     ) : (
@@ -187,11 +187,10 @@ const SinglePrBadge = ({
 
     return (
         <Tooltip
-            arrow
-            size="sm"
             placement="top"
-            variant={hasDetail ? "plain" : undefined}
+            size="sm"
             title={hoverTitle}
+            variant={hasDetail ? "plain" : undefined}
             sx={
                 hasDetail
                     ? {
@@ -208,13 +207,13 @@ const SinglePrBadge = ({
                       }
                     : undefined
             }
+            arrow
         >
             <Box
                 component="a"
                 href={pull.html_url}
-                target="_blank"
                 rel="noreferrer"
-                onClick={(e) => e.stopPropagation()}
+                target="_blank"
                 sx={{
                     display: "inline-flex",
                     alignItems: "center",
@@ -237,6 +236,7 @@ const SinglePrBadge = ({
                         borderColor: palette.borderStrong,
                     },
                 }}
+                onClick={(e) => e.stopPropagation()}
             >
                 <PrStateIcon state={prState} />
                 {/* Tiny CI dot — easier to scan at row scale than the
@@ -285,9 +285,9 @@ export const PrStatusCell = ({ taskId, accessToken }: Props) => {
             {pulls.map((pull) => (
                 <SinglePrBadge
                     key={pull.html_url}
-                    pull={pull}
                     accessToken={accessToken}
                     isDark={isDark}
+                    pull={pull}
                 />
             ))}
         </Stack>

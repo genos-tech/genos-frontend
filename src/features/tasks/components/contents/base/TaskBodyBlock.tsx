@@ -40,7 +40,6 @@ export const TaskBodyBlock = (props: TaskBodyBlockProps) => {
             <Box sx={{ mt: 1 }}>
                 <BnTaskPreview
                     body={body || []}
-                    useCM={useCM}
                     myself={myself}
                     setBody={setBody}
                     setMyself={setMyself}
@@ -48,6 +47,7 @@ export const TaskBodyBlock = (props: TaskBodyBlockProps) => {
                     setTaskBodySaved={setTaskBodySaved}
                     socket={socket}
                     taskId={taskId}
+                    useCM={useCM}
                     useTEM={useTEM}
                     useUISM={useUISM}
                 />

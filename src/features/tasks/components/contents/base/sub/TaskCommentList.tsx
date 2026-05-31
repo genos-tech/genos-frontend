@@ -181,31 +181,31 @@ export const TaskCommentList = ({
                     className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                     followOutput="auto"
                     initialTopMostItemIndex={taskComments.length - 1}
+                    style={{ flex: 1, minHeight: 0 }}
                     totalCount={taskComments.length}
                     itemContent={(index) => {
                         const comment = taskComments[index];
                         return (
                             <TaskCommentBubble
                                 key={`task-comment-${comment.commentId}-${comment.tsUpdated}`}
-                                useCM={useCM}
                                 comment={comment}
-                                myself={myself}
-                                setEditTargetComment={setEditTargetComment}
-                                setIsInEdit={setIsInEdit}
-                                setMyself={setMyself}
-                                socket={socket}
-                                useTEM={useTEM}
-                                useUISM={useUISM}
                                 currentProjectId={currentProjectId ?? undefined}
                                 currentProjectName={currentProjectName ?? undefined}
                                 currentTaskDisplayId={currentTaskDisplayId ?? undefined}
                                 isFocused={comment.commentId === focusedCommentId}
-                                onCommentClick={buildCommentClickHandler(comment.commentId)}
+                                myself={myself}
+                                setEditTargetComment={setEditTargetComment}
+                                setIsInEdit={setIsInEdit}
+                                setMyself={setMyself}
                                 setTodoFromMessageBubble={setTodoFromMessageBubble}
+                                socket={socket}
+                                useCM={useCM}
+                                useTEM={useTEM}
+                                useUISM={useUISM}
+                                onCommentClick={buildCommentClickHandler(comment.commentId)}
                             />
                         );
                     }}
-                    style={{ flex: 1, minHeight: 0 }}
                 />
             </Box>
         );
@@ -220,32 +220,32 @@ export const TaskCommentList = ({
                 className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                 followOutput="auto"
                 initialTopMostItemIndex={taskComments.length - 1}
+                style={{ height: Math.min(contentHeight, maxHeight) }}
                 totalCount={taskComments.length}
+                totalListHeightChanged={setContentHeight}
                 itemContent={(index) => {
                     const comment = taskComments[index];
                     return (
                         <TaskCommentBubble
                             key={`task-comment-${comment.commentId}-${comment.tsUpdated}`}
-                            useCM={useCM}
                             comment={comment}
-                            myself={myself}
-                            setEditTargetComment={setEditTargetComment}
-                            setIsInEdit={setIsInEdit}
-                            setMyself={setMyself}
-                            socket={socket}
-                            useTEM={useTEM}
-                            useUISM={useUISM}
                             currentProjectId={currentProjectId ?? undefined}
                             currentProjectName={currentProjectName ?? undefined}
                             currentTaskDisplayId={currentTaskDisplayId ?? undefined}
                             isFocused={comment.commentId === focusedCommentId}
-                            onCommentClick={buildCommentClickHandler(comment.commentId)}
+                            myself={myself}
+                            setEditTargetComment={setEditTargetComment}
+                            setIsInEdit={setIsInEdit}
+                            setMyself={setMyself}
                             setTodoFromMessageBubble={setTodoFromMessageBubble}
+                            socket={socket}
+                            useCM={useCM}
+                            useTEM={useTEM}
+                            useUISM={useUISM}
+                            onCommentClick={buildCommentClickHandler(comment.commentId)}
                         />
                     );
                 }}
-                totalListHeightChanged={setContentHeight}
-                style={{ height: Math.min(contentHeight, maxHeight) }}
             />
         </Box>
     );

@@ -56,10 +56,10 @@ export async function handleV3Activity(payload: unknown): Promise<void> {
             payload as Parameters<typeof v3ActivityToLegacy>[0],
             getMyself()
         );
-        // eslint-disable-next-line no-console
+
         console.log("[handleV3Activity] adapted legacy row", legacy);
         await addActivityMessage(legacy);
-        // eslint-disable-next-line no-console
+
         console.log("[handleV3Activity] IDB write done, dispatching window event");
         // `detail.activity` carries the adapted row so listeners that
         // need the data (web-notification router, future bridges)

@@ -57,7 +57,6 @@ export const ChatEditorSection = ({
             <Box sx={{ paddingLeft: 1, paddingRight: 1, paddingBottom: 1 }}>
                 {isInEdit === true && editTargetMessage && (
                     <BnUpdateThreadEditor
-                        useCM={useCM}
                         isInEdit={isInEdit}
                         message={editTargetMessage as ThreadMessageProps}
                         myself={myself}
@@ -67,26 +66,27 @@ export const ChatEditorSection = ({
                         setMyself={setMyself}
                         setNumEditorLines={setNumEditorLines}
                         socket={socket}
-                        useTEM={useTEM}
                         thread={thread!}
+                        useCM={useCM}
+                        useTEM={useTEM}
                         useUISM={useUISM}
                     />
                 )}
                 {isInEdit === false && (
                     <BnThreadEditor
-                        useCM={useCM}
+                        clearPendingFiles={clearPendingFiles}
                         myself={myself}
                         numEditorLines={numEditorLines}
+                        pendingFiles={pendingFiles}
                         setCurrentChat={setCurrentChat as (chat: ChatProps) => void}
                         setCurrentThreadChat={setCurrentThreadChat!}
                         setMyself={setMyself}
                         setNumEditorLines={setNumEditorLines}
                         socket={socket}
-                        useTEM={useTEM}
                         thread={thread!}
+                        useCM={useCM}
+                        useTEM={useTEM}
                         useUISM={useUISM}
-                        pendingFiles={pendingFiles}
-                        clearPendingFiles={clearPendingFiles}
                     />
                 )}
             </Box>
@@ -98,7 +98,6 @@ export const ChatEditorSection = ({
             {isInEdit === true && editTargetMessage && (
                 <BnUpdateEditor
                     chat={chat as ChatProps}
-                    useCM={useCM}
                     isInEdit={isInEdit}
                     message={editTargetMessage as MessageProps}
                     myself={myself}
@@ -107,6 +106,7 @@ export const ChatEditorSection = ({
                     setMyself={setMyself}
                     setNumEditorLines={setNumEditorLines}
                     socket={socket}
+                    useCM={useCM}
                     useTEM={useTEM}
                     useUISM={useUISM}
                 />
@@ -114,17 +114,17 @@ export const ChatEditorSection = ({
             {isInEdit === false && (
                 <BnChatEditor
                     chat={chat as ChatProps}
-                    useCM={useCM}
+                    clearPendingFiles={clearPendingFiles}
                     myself={myself}
                     numEditorLines={numEditorLines}
+                    pendingFiles={pendingFiles}
                     setCurrentChat={setCurrentChat as (chat: ChatProps) => void}
                     setMyself={setMyself}
                     setNumEditorLines={setNumEditorLines}
                     socket={socket}
+                    useCM={useCM}
                     useTEM={useTEM}
                     useUISM={useUISM}
-                    pendingFiles={pendingFiles}
-                    clearPendingFiles={clearPendingFiles}
                 />
             )}
         </Box>

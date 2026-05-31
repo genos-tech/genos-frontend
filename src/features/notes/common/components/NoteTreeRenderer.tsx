@@ -97,10 +97,10 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
         >
             <ListItem
                 key={`note-${node.noteId}-${timestamp}`}
-                nested
                 sx={{
                     position: "relative",
                 }}
+                nested
             >
                 {/* Tree line connector */}
                 {depth > 0 && (
@@ -120,9 +120,6 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
 
                 <ListItemButton
                     selected={isSelected}
-                    onClick={() => {
-                        handleClick();
-                    }}
                     sx={{
                         borderRadius: "8px",
                         py: 0.5,
@@ -150,10 +147,12 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
                             },
                         },
                     }}
+                    onClick={() => {
+                        handleClick();
+                    }}
                 >
                     {/* Chevron / Expand button */}
                     <Box
-                        onClick={hasChildren ? handleChevronClick : undefined}
                         sx={{
                             display: "flex",
                             alignItems: "center",
@@ -173,6 +172,7 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
                                   }
                                 : {},
                         }}
+                        onClick={hasChildren ? handleChevronClick : undefined}
                     >
                         <ChevronRightRoundedIcon
                             sx={{
@@ -222,10 +222,9 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
                     {/* Favorite toggle button */}
                     <IconButton
                         className="favorite-btn"
+                        color="warning"
                         size="sm"
                         variant="plain"
-                        color="warning"
-                        onClick={handleFavoriteClick}
                         sx={{
                             opacity: isFavorited ? 1 : 0,
                             minWidth: 20,
@@ -238,6 +237,7 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
                                     : "rgba(245,158,11,0.1)",
                             },
                         }}
+                        onClick={handleFavoriteClick}
                     >
                         {isFavorited ? (
                             <StarRoundedIcon sx={{ fontSize: 14, color: "#f59e0b" }} />
@@ -268,11 +268,11 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
                                 key={child.noteId}
                                 createChildNoteList={createChildNoteList}
                                 currentChain={currentChain}
-                                useNM={useNM}
+                                depth={depth + 1}
                                 node={child as T}
                                 noteType={noteType}
                                 timestamp={timestamp}
-                                depth={depth + 1}
+                                useNM={useNM}
                             />
                         ))}
                     </List>

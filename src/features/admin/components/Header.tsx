@@ -63,8 +63,8 @@ export const AdminHeader = () => {
                     }}
                 >
                     <img
-                        src={genosLogo}
                         alt={t.admin.brand.logoAlt}
+                        src={genosLogo}
                         style={{
                             width: 38,
                             height: 38,

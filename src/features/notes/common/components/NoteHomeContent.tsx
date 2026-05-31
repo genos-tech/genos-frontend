@@ -259,11 +259,7 @@ export const NoteHomeContent = ({ useNM }: NoteHomeContentProps) => {
         },
     ];
 
-    const tips = [
-        t.notes.home.tip1,
-        t.notes.home.tip2,
-        t.notes.home.tip3,
-    ];
+    const tips = [t.notes.home.tip1, t.notes.home.tip2, t.notes.home.tip3];
     const randomTip = tips[Math.floor(Math.random() * tips.length)];
 
     // Shared section header. Pulled out so Recent Notes and Favorites

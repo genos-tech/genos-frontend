@@ -396,7 +396,7 @@ export class ChannelService {
             at: new Date().toISOString(),
         };
         this._notify();
-        // eslint-disable-next-line no-console
+
         console.warn(`[ChannelService] ${source} failed:`, e);
     }
 

@@ -72,7 +72,6 @@ export const GMAvatar = (props: GMAvatarProps) => {
             </Box>
 
             <ModalGMProfile
-                useCM={useCM}
                 gmChat={liveChat}
                 myself={myself}
                 openModalGMProfile={openModalGMProfile}
@@ -81,21 +80,22 @@ export const GMAvatar = (props: GMAvatarProps) => {
                 setOpenModalGMProfile={setOpenModalGMProfile}
                 setOpenUserProfile={setOpenUserProfile}
                 socket={socket}
+                useCM={useCM}
                 useTEM={useTEM}
                 useUISM={useUISM}
             />
 
             {avatarUserId && (
                 <UserProfile
-                    useCM={useCM}
                     isYou={isYou}
                     myself={myself}
                     openUserProfile={openUserProfile}
                     setMyself={setMyself}
                     setOpenUserProfile={setOpenUserProfile}
                     socket={socket}
-                    useUISM={useUISM}
+                    useCM={useCM}
                     user={useTEM.teamMemberProfiles[avatarUserId]}
+                    useUISM={useUISM}
                 />
             )}
         </div>

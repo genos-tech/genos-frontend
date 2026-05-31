@@ -180,14 +180,14 @@ export const ResetPasswordForm = () => {
                         </Alert>
                         <Link
                             component="button"
-                            type="button"
                             level="title-sm"
-                            onClick={() => navigate("/signin")}
+                            type="button"
                             sx={{
                                 color: styles.linkColor,
                                 fontWeight: 600,
                                 "&:hover": { color: styles.linkHover },
                             }}
+                            onClick={() => navigate("/signin")}
                         >
                             {t.admin.auth.passwordReset.backToSignIn}
                         </Link>
@@ -427,14 +427,14 @@ export const ResetPasswordForm = () => {
                             >
                                 <Link
                                     component="button"
-                                    type="button"
                                     level="title-sm"
-                                    onClick={() => navigate("/signin")}
+                                    type="button"
                                     sx={{
                                         color: styles.linkColor,
                                         fontWeight: 600,
                                         "&:hover": { color: styles.linkHover },
                                     }}
+                                    onClick={() => navigate("/signin")}
                                 >
                                     {t.admin.auth.passwordReset.backToSignIn}
                                 </Link>

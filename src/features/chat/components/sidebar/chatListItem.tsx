@@ -3,7 +3,7 @@
 // prop objects whose visual grouping (positioning → sizing → typography
 // → colors) is intentional, and the file is slated for replacement by
 // the v3 channel sidebar.
-/* eslint-disable sort-keys, react/jsx-sort-props, simple-import-sort/imports */
+/* eslint-disable react/jsx-sort-props */
 import * as React from "react";
 import { memo, useState } from "react";
 import { Box, ListItem, Stack } from "@mui/joy";

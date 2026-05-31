@@ -58,12 +58,13 @@ export default defineConfig({
                     return undefined;
                 },
             },
-            plugins: [
-                visualizer({
-                    filename: "stats.html",
-                    open: !process.env.CI, // opens in browser after build (never in CI/headless)
-                }),
-            ],
+            // The bundle visualizer builds a full-module treemap during chunk
+            // generation — memory-heavy on a 6k-module app and a dev-only
+            // analysis tool. Skip it entirely in CI (it contributed to the
+            // GitHub Actions heap OOM); keep it for local builds.
+            plugins: process.env.CI
+                ? []
+                : [visualizer({ filename: "stats.html", open: true })],
         },
     },
     test: {

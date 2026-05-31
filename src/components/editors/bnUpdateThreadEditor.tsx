@@ -383,8 +383,8 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
 
                     {/* Adds a mentions menu which opens with the "@" key */}
                     <SuggestionMenuController
-                        triggerCharacter={"@"}
                         suggestionMenuComponent={MentionSuggestionMenu}
+                        triggerCharacter={"@"}
                         getItems={async (query) =>
                             // Gets the mentions menu items
                             filterSuggestionItems(

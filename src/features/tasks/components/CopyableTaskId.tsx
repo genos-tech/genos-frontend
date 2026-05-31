@@ -62,8 +62,8 @@ export const CopyableTaskIdChip = ({
         <AppTooltip title={copied ? t.common.ui.copy.copied : t.common.ui.copy.clickToCopy}>
             <Chip
                 {...rest}
-                onClick={onClick(text)}
                 sx={[{ cursor: "pointer" }, ...(Array.isArray(sx) ? sx : [sx])]}
+                onClick={onClick(text)}
             >
                 {text}
             </Chip>
@@ -102,8 +102,8 @@ export const CopyableTaskIdText = ({
             <Typography
                 {...rest}
                 component="span"
-                onClick={onClick(text)}
                 sx={[{ cursor: "pointer" }, ...(Array.isArray(sx) ? sx : [sx])]}
+                onClick={onClick(text)}
             >
                 {prefix}
                 {text}

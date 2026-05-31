@@ -4,8 +4,7 @@ import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import { Box, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
-import { useTranslation } from "../../../../i18n";
-import type { Messages } from "../../../../i18n";
+import { useTranslation, type Messages } from "../../../../i18n";
 
 export type ThreadTabId = "activities" | "comments";
 
@@ -68,7 +67,6 @@ export const ThreadTabStrip = ({ value, onChange }: ThreadTabStripProps) => {
                     <Box
                         key={tab.id}
                         component="button"
-                        onClick={() => onChange(tab.id)}
                         sx={{
                             display: "inline-flex",
                             alignItems: "center",
@@ -103,6 +101,7 @@ export const ThreadTabStrip = ({ value, onChange }: ThreadTabStripProps) => {
                                       : "rgba(0,0,0,0.04)",
                             },
                         }}
+                        onClick={() => onChange(tab.id)}
                     >
                         {tab.icon}
                         <Typography

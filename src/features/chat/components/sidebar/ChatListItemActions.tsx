@@ -130,7 +130,6 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
             {/* More Options Menu */}
             <Dropdown>
                 <MenuButton
-                    onClick={(e: React.MouseEvent) => e.stopPropagation()}
                     slots={{ root: IconButton }}
                     slotProps={{
                         root: {
@@ -148,12 +147,13 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
                             },
                         },
                     }}
+                    onClick={(e: React.MouseEvent) => e.stopPropagation()}
                 >
                     <MoreHorizRoundedIcon sx={{ fontSize: 18 }} />
                 </MenuButton>
                 <Menu
-                    size="sm"
                     placement="bottom-end"
+                    size="sm"
                     sx={{
                         zIndex: 10010,
                         borderRadius: "10px",
@@ -171,16 +171,16 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
                     {/* Add Members Option (for DM and MDM chats) */}
                     {showAddMembers && (
                         <MenuItem
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onAddMembersClick?.(e as unknown as React.MouseEvent);
-                            }}
                             sx={{
                                 borderRadius: "6px",
                                 mx: 0.5,
                                 gap: 1.5,
                                 fontSize: "0.85rem",
                                 py: 1,
+                            }}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onAddMembersClick?.(e as unknown as React.MouseEvent);
                             }}
                         >
                             <PersonAddRoundedIcon
@@ -192,16 +192,16 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
 
                     {/* Split View Option */}
                     <MenuItem
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onSplitClick(e as unknown as React.MouseEvent);
-                        }}
                         sx={{
                             borderRadius: "6px",
                             mx: 0.5,
                             gap: 1.5,
                             fontSize: "0.85rem",
                             py: 1,
+                        }}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onSplitClick(e as unknown as React.MouseEvent);
                         }}
                     >
                         <SplitscreenIcon

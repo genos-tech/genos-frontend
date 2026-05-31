@@ -1,8 +1,8 @@
 // Real in-memory IndexedDB for the DatabaseUtils block. Must be imported
 // before anything that touches `indexedDB` / `idb`.
 import "fake-indexeddb/auto";
-import { IDBFactory } from "fake-indexeddb";
 
+import { IDBFactory } from "fake-indexeddb";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { DB_NAME, DB_VERSION, initDB, STORES } from "../../db/config";
@@ -353,7 +353,9 @@ describe("ValidationUtils", () => {
         });
 
         it("rejects when timestamp is the wrong type", () => {
-            expect(ValidationUtils.isValidChatMessage({ ...valid, timestamp: "1000" })).toBe(false);
+            expect(ValidationUtils.isValidChatMessage({ ...valid, timestamp: "1000" })).toBe(
+                false
+            );
         });
 
         it("rejects null", () => {

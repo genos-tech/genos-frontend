@@ -81,7 +81,6 @@ function FavoriteNoteItemComponent({ note, noteType, useNM }: FavoriteNoteItemPr
         >
             <ListItemButton
                 selected={isSelected}
-                onClick={handleClick}
                 sx={{
                     borderRadius: "8px",
                     py: 0.5,
@@ -97,7 +96,9 @@ function FavoriteNoteItemComponent({ note, noteType, useNM }: FavoriteNoteItemPr
                         },
                     },
                     "&.Mui-selected": {
-                        backgroundColor: isDark ? "rgba(124,58,237,0.12)" : "rgba(124,58,237,0.08)",
+                        backgroundColor: isDark
+                            ? "rgba(124,58,237,0.12)"
+                            : "rgba(124,58,237,0.08)",
                         "&:hover": {
                             backgroundColor: isDark
                                 ? "rgba(124,58,237,0.18)"
@@ -105,6 +106,7 @@ function FavoriteNoteItemComponent({ note, noteType, useNM }: FavoriteNoteItemPr
                         },
                     },
                 }}
+                onClick={handleClick}
             >
                 {/* Note indicator dot */}
                 <Box
@@ -115,7 +117,8 @@ function FavoriteNoteItemComponent({ note, noteType, useNM }: FavoriteNoteItemPr
                         flexShrink: 0,
                         backgroundColor: isSelected
                             ? isDark
-                                ? "#a78bfa" : "#6d28d9"
+                                ? "#a78bfa"
+                                : "#6d28d9"
                             : isDark
                               ? "rgba(255,255,255,0.2)"
                               : "rgba(0,0,0,0.15)",
@@ -158,10 +161,9 @@ function FavoriteNoteItemComponent({ note, noteType, useNM }: FavoriteNoteItemPr
                 {/* Remove from favorites button */}
                 <IconButton
                     className="favorite-remove-btn"
+                    color="warning"
                     size="sm"
                     variant="plain"
-                    color="warning"
-                    onClick={handleRemoveFavorite}
                     sx={{
                         opacity: 0,
                         minWidth: 20,
@@ -174,6 +176,7 @@ function FavoriteNoteItemComponent({ note, noteType, useNM }: FavoriteNoteItemPr
                                 : "rgba(245,158,11,0.1)",
                         },
                     }}
+                    onClick={handleRemoveFavorite}
                 >
                     <StarRoundedIcon sx={{ fontSize: 14, color: "#f59e0b" }} />
                 </IconButton>

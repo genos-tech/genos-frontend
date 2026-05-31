@@ -219,19 +219,19 @@ export const TaskTableColumnSettings = ({ open, onClose }: Props) => {
                 >
                     <AppTooltip title={t.tasks.table.columnSettings.resetTooltip}>
                         <IconButton
+                            aria-label={t.tasks.table.columnSettings.resetTooltip}
                             size="sm"
                             variant="plain"
                             onClick={reset}
-                            aria-label={t.tasks.table.columnSettings.resetTooltip}
                         >
                             <RestartAltRoundedIcon />
                         </IconButton>
                     </AppTooltip>
                     <IconButton
+                        aria-label={t.common.actions.close}
                         size="sm"
                         variant="plain"
                         onClick={onClose}
-                        aria-label={t.common.actions.close}
                     >
                         <CloseRoundedIcon />
                     </IconButton>
@@ -277,8 +277,8 @@ export const TaskTableColumnSettings = ({ open, onClose }: Props) => {
                                                     <Stack
                                                         ref={dragProvided.innerRef}
                                                         {...dragProvided.draggableProps}
-                                                        direction="row"
                                                         alignItems="center"
+                                                        direction="row"
                                                         spacing={1}
                                                         sx={{
                                                             px: 1.25,
@@ -326,8 +326,8 @@ export const TaskTableColumnSettings = ({ open, onClose }: Props) => {
                                                             {labelFor(col)}
                                                         </Typography>
                                                         <Switch
-                                                            size="sm"
                                                             checked={isVisible(col)}
+                                                            size="sm"
                                                             onChange={(e) =>
                                                                 setVisibility(
                                                                     col.field,

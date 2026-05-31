@@ -173,11 +173,11 @@ const CalendarTab = ({
                     Connect Google to read and manage your calendar events here.
                 </Alert>
                 <Button
+                    startDecorator={<LinkRoundedIcon />}
+                    sx={{ alignSelf: "flex-start" }}
                     onClick={() => {
                         void redirectToOAuthConnect("google", accessToken, undefined, setError);
                     }}
-                    startDecorator={<LinkRoundedIcon />}
-                    sx={{ alignSelf: "flex-start" }}
                 >
                     Connect Google
                 </Button>
@@ -198,11 +198,11 @@ const CalendarTab = ({
                     all need this permission.
                 </Alert>
                 <Button
+                    startDecorator={<LinkRoundedIcon />}
+                    sx={{ alignSelf: "flex-start" }}
                     onClick={() => {
                         void redirectToOAuthConnect("google", accessToken, undefined, setError);
                     }}
-                    startDecorator={<LinkRoundedIcon />}
-                    sx={{ alignSelf: "flex-start" }}
                 >
                     Grant Calendar access
                 </Button>
@@ -230,7 +230,7 @@ const CalendarTab = ({
 
     return (
         <Stack spacing={2}>
-            <Stack direction="row" justifyContent="space-between" alignItems="center">
+            <Stack alignItems="center" direction="row" justifyContent="space-between">
                 <Typography level="title-md">Upcoming events</Typography>
                 <Button startDecorator={<AddRoundedIcon />} onClick={openCreate}>
                     New event
@@ -244,7 +244,7 @@ const CalendarTab = ({
                     <CircularProgress />
                 </Stack>
             ) : events.length === 0 ? (
-                <Sheet variant="outlined" sx={{ p: 3, borderRadius: "md", textAlign: "center" }}>
+                <Sheet sx={{ p: 3, borderRadius: "md", textAlign: "center" }} variant="outlined">
                     <Typography level="body-sm" sx={{ color: "text.secondary" }}>
                         No events in the next 30 days. Click "New event" to create one.
                     </Typography>
@@ -252,8 +252,8 @@ const CalendarTab = ({
             ) : (
                 <Stack spacing={1}>
                     {events.map((e) => (
-                        <Card key={e.id} variant="outlined" sx={{ p: 1.5 }}>
-                            <Stack direction="row" alignItems="center" spacing={1.5}>
+                        <Card key={e.id} sx={{ p: 1.5 }} variant="outlined">
+                            <Stack alignItems="center" direction="row" spacing={1.5}>
                                 <Box sx={{ flex: 1, minWidth: 0 }}>
                                     <Typography level="title-sm">
                                         {e.summary || "(no title)"}
@@ -265,45 +265,45 @@ const CalendarTab = ({
                                 {e.hangoutLink && (
                                     <AppTooltip size="sm" title="Join Google Meet">
                                         <IconButton
-                                            size="sm"
-                                            variant="plain"
+                                            aria-label="Join Google Meet"
                                             color="success"
                                             component="a"
                                             href={e.hangoutLink}
-                                            target="_blank"
                                             rel="noreferrer"
-                                            aria-label="Join Google Meet"
+                                            size="sm"
+                                            target="_blank"
+                                            variant="plain"
                                         >
                                             <VideoCameraFrontRoundedIcon />
                                         </IconButton>
                                     </AppTooltip>
                                 )}
                                 <IconButton
+                                    aria-label="Edit"
                                     size="sm"
                                     variant="plain"
                                     onClick={() => openEdit(e)}
-                                    aria-label="Edit"
                                 >
                                     <EditRoundedIcon />
                                 </IconButton>
                                 <IconButton
+                                    aria-label="Delete"
+                                    color="danger"
                                     size="sm"
                                     variant="plain"
-                                    color="danger"
                                     onClick={() => handleDelete(e)}
-                                    aria-label="Delete"
                                 >
                                     <DeleteOutlineRoundedIcon />
                                 </IconButton>
                                 {e.htmlLink && (
                                     <IconButton
-                                        size="sm"
-                                        variant="plain"
+                                        aria-label="Open in Google Calendar"
                                         component="a"
                                         href={e.htmlLink}
-                                        target="_blank"
                                         rel="noreferrer"
-                                        aria-label="Open in Google Calendar"
+                                        size="sm"
+                                        target="_blank"
+                                        variant="plain"
                                     >
                                         <OpenInNewRoundedIcon />
                                     </IconButton>
@@ -316,14 +316,14 @@ const CalendarTab = ({
 
             <CalendarEventModal
                 accessToken={accessToken}
+                editingEventId={editingEventId}
+                initial={modalInitial}
                 open={modalOpen}
                 onClose={() => setModalOpen(false)}
-                initial={modalInitial}
-                editingEventId={editingEventId}
+                onError={setError}
                 onSaved={() => {
                     void refresh();
                 }}
-                onError={setError}
             />
         </Stack>
     );
@@ -360,9 +360,9 @@ const WebhookSetup = () => {
     };
 
     return (
-        <Card variant="outlined" sx={{ p: 2 }}>
+        <Card sx={{ p: 2 }} variant="outlined">
             <Stack spacing={1.5}>
-                <Stack direction="row" alignItems="center" spacing={1}>
+                <Stack alignItems="center" direction="row" spacing={1}>
                     <BoltRoundedIcon sx={{ color: "primary.500" }} />
                     <Typography level="title-sm">
                         Auto-close tasks when their PR is merged
@@ -384,11 +384,11 @@ const WebhookSetup = () => {
 
                 <Box>
                     <Button
-                        size="sm"
-                        variant="plain"
                         color="neutral"
-                        onClick={() => setShowManual((v) => !v)}
+                        size="sm"
                         sx={{ pl: 0 }}
+                        variant="plain"
+                        onClick={() => setShowManual((v) => !v)}
                     >
                         {showManual ? "Hide" : "Show"} manual setup
                         {showManual ? "" : " (only needed if you lack repo admin)"}
@@ -406,16 +406,15 @@ const WebhookSetup = () => {
                         <FormControl>
                             <FormLabel>Webhook URL</FormLabel>
                             <Input
-                                value={webhookUrl}
-                                readOnly
                                 size="sm"
+                                value={webhookUrl}
                                 endDecorator={
-                                    <AppTooltip title={copied ? "Copied" : "Copy"} size="sm">
+                                    <AppTooltip size="sm" title={copied ? "Copied" : "Copy"}>
                                         <IconButton
+                                            aria-label="Copy webhook URL"
                                             size="sm"
                                             variant="plain"
                                             onClick={handleCopy}
-                                            aria-label="Copy webhook URL"
                                         >
                                             {copied ? (
                                                 <CheckRoundedIcon fontSize="small" />
@@ -428,10 +427,11 @@ const WebhookSetup = () => {
                                 sx={{
                                     fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
                                 }}
+                                readOnly
                             />
                         </FormControl>
 
-                        <Sheet variant="soft" sx={{ p: 1.5, borderRadius: "md" }}>
+                        <Sheet sx={{ p: 1.5, borderRadius: "md" }} variant="soft">
                             <Typography
                                 level="body-xs"
                                 sx={{ fontWeight: 600, mb: 0.5, color: "text.primary" }}
@@ -512,11 +512,11 @@ const GithubTab = ({
             <Stack spacing={2}>
                 <Alert color="primary">Connect GitHub to see your pull requests here.</Alert>
                 <Button
+                    startDecorator={<LinkRoundedIcon />}
+                    sx={{ alignSelf: "flex-start" }}
                     onClick={() => {
                         void redirectToOAuthConnect("github", accessToken, undefined, setError);
                     }}
-                    startDecorator={<LinkRoundedIcon />}
-                    sx={{ alignSelf: "flex-start" }}
                 >
                     Connect GitHub
                 </Button>
@@ -526,7 +526,7 @@ const GithubTab = ({
 
     return (
         <Stack spacing={2}>
-            <Stack direction="row" justifyContent="space-between" alignItems="center">
+            <Stack alignItems="center" direction="row" justifyContent="space-between">
                 <Typography level="title-md">Your open pull requests</Typography>
             </Stack>
             {error && <Alert color="danger">{error}</Alert>}
@@ -535,7 +535,7 @@ const GithubTab = ({
                     <CircularProgress />
                 </Stack>
             ) : pulls.length === 0 ? (
-                <Sheet variant="outlined" sx={{ p: 3, borderRadius: "md", textAlign: "center" }}>
+                <Sheet sx={{ p: 3, borderRadius: "md", textAlign: "center" }} variant="outlined">
                     <Typography level="body-sm" sx={{ color: "text.secondary" }}>
                         No open pull requests authored by you.
                     </Typography>
@@ -543,8 +543,8 @@ const GithubTab = ({
             ) : (
                 <Stack spacing={1}>
                     {pulls.map((pr) => (
-                        <Card key={`${pr.repo}-${pr.number}`} variant="outlined" sx={{ p: 1.5 }}>
-                            <Stack direction="row" alignItems="center" spacing={1.5}>
+                        <Card key={`${pr.repo}-${pr.number}`} sx={{ p: 1.5 }} variant="outlined">
+                            <Stack alignItems="center" direction="row" spacing={1.5}>
                                 <CallMergeRoundedIcon
                                     sx={{
                                         color: pr.draft
@@ -563,13 +563,13 @@ const GithubTab = ({
                                 </Box>
                                 {pr.draft && <Chip size="sm">Draft</Chip>}
                                 <IconButton
-                                    size="sm"
-                                    variant="plain"
+                                    aria-label="Open on GitHub"
                                     component="a"
                                     href={pr.html_url}
-                                    target="_blank"
                                     rel="noreferrer"
-                                    aria-label="Open on GitHub"
+                                    size="sm"
+                                    target="_blank"
+                                    variant="plain"
                                 >
                                     <OpenInNewRoundedIcon />
                                 </IconButton>
@@ -629,7 +629,7 @@ export const IntegrationsHome = () => {
             }}
         >
             <Box sx={{ maxWidth: 800, mx: "auto" }}>
-                <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 3 }}>
+                <Stack alignItems="center" direction="row" spacing={1.5} sx={{ mb: 3 }}>
                     <HubRoundedIcon sx={{ fontSize: 32 }} />
                     <Typography level="h2" sx={{ fontWeight: 700 }}>
                         Integrations
@@ -637,9 +637,9 @@ export const IntegrationsHome = () => {
                 </Stack>
 
                 <Tabs
+                    sx={{ bgcolor: "transparent" }}
                     value={tab}
                     onChange={(_e, v) => v && setTab(v as TabKey)}
-                    sx={{ bgcolor: "transparent" }}
                 >
                     <TabList sx={{ mb: 2 }}>
                         <Tab value="connections">Connections</Tab>
@@ -647,7 +647,7 @@ export const IntegrationsHome = () => {
                         <Tab value="github">GitHub</Tab>
                     </TabList>
 
-                    <TabPanel value="connections" sx={{ px: 0 }}>
+                    <TabPanel sx={{ px: 0 }} value="connections">
                         {/* Same component renders in Settings →
                             Integrations. The page-level fetch above
                             still populates `data` for the
@@ -657,15 +657,15 @@ export const IntegrationsHome = () => {
                         <ConnectionsSection accessToken={accessToken} />
                     </TabPanel>
 
-                    <TabPanel value="calendar" sx={{ px: 0 }}>
+                    <TabPanel sx={{ px: 0 }} value="calendar">
                         <CalendarTab
                             accessToken={accessToken}
-                            googleConnected={googleConnected}
                             calendarAuthorized={googleCalendarAuthorized}
+                            googleConnected={googleConnected}
                         />
                     </TabPanel>
 
-                    <TabPanel value="github" sx={{ px: 0 }}>
+                    <TabPanel sx={{ px: 0 }} value="github">
                         <GithubTab accessToken={accessToken} githubConnected={githubConnected} />
                     </TabPanel>
                 </Tabs>

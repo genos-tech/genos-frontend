@@ -73,9 +73,6 @@ export const RecentsListItem = (props: RecentsListItemProps) => {
                 defaultExpanded={false}
                 renderToggle={({ open, setOpen }) => (
                     <ListItemButton
-                        onClick={() => {
-                            setOpen(!open);
-                        }}
                         sx={{
                             borderRadius: "10px",
                             py: 1,
@@ -87,6 +84,9 @@ export const RecentsListItem = (props: RecentsListItemProps) => {
                                     ? "rgba(255,255,255,0.06)"
                                     : "rgba(0,0,0,0.04)",
                             },
+                        }}
+                        onClick={() => {
+                            setOpen(!open);
                         }}
                     >
                         <Box
@@ -137,12 +137,11 @@ export const RecentsListItem = (props: RecentsListItemProps) => {
             >
                 <List sx={{ gap: 0.5, pl: 1 }}>
                     {groupedTasks.map((group) => (
-                        <ListItem key={`project-group-${group.projectId}`} nested sx={{ gap: 0 }}>
+                        <ListItem key={`project-group-${group.projectId}`} sx={{ gap: 0 }} nested>
                             <Toggler
                                 defaultExpanded={true}
                                 renderToggle={({ open, setOpen }) => (
                                     <ListItemButton
-                                        onClick={() => setOpen(!open)}
                                         sx={{
                                             borderRadius: "8px",
                                             py: 0.75,
@@ -155,6 +154,7 @@ export const RecentsListItem = (props: RecentsListItemProps) => {
                                                     : "rgba(0,0,0,0.03)",
                                             },
                                         }}
+                                        onClick={() => setOpen(!open)}
                                     >
                                         {open ? (
                                             <KeyboardArrowDownIcon
@@ -199,9 +199,9 @@ export const RecentsListItem = (props: RecentsListItemProps) => {
                                             {group.projectName}
                                         </Typography>
                                         <Chip
+                                            color="neutral"
                                             size="sm"
                                             variant="soft"
-                                            color="neutral"
                                             sx={{
                                                 borderRadius: "4px",
                                                 fontSize: 10,
@@ -218,6 +218,19 @@ export const RecentsListItem = (props: RecentsListItemProps) => {
                                     {group.tasks.map((task, index) => (
                                         <ListItem key={`recent-task-${task.taskId}`}>
                                             <ListItemButton
+                                                sx={{
+                                                    overflow: "hidden",
+                                                    borderRadius: "6px",
+                                                    py: 0.5,
+                                                    px: 1,
+                                                    gap: 0.75,
+                                                    transition: "all 0.15s ease",
+                                                    "&:hover": {
+                                                        backgroundColor: isDark
+                                                            ? "rgba(255,255,255,0.04)"
+                                                            : "rgba(0,0,0,0.03)",
+                                                    },
+                                                }}
                                                 onClick={() => {
                                                     if (group.projectId) {
                                                         usePM.setCurrentProject({
@@ -234,24 +247,11 @@ export const RecentsListItem = (props: RecentsListItemProps) => {
                                                         );
                                                     }
                                                 }}
-                                                sx={{
-                                                    overflow: "hidden",
-                                                    borderRadius: "6px",
-                                                    py: 0.5,
-                                                    px: 1,
-                                                    gap: 0.75,
-                                                    transition: "all 0.15s ease",
-                                                    "&:hover": {
-                                                        backgroundColor: isDark
-                                                            ? "rgba(255,255,255,0.04)"
-                                                            : "rgba(0,0,0,0.03)",
-                                                    },
-                                                }}
                                             >
                                                 <CopyableTaskIdChip
                                                     key={`task-id-chip-${task.taskId}`}
-                                                    task={task}
                                                     color="neutral"
+                                                    task={task}
                                                     variant="outlined"
                                                     sx={{
                                                         borderRadius: "4px",

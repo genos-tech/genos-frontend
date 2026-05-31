@@ -41,11 +41,11 @@ export const ChatListItemAvatar: React.FC<ChatListItemAvatarProps> = ({
             <AvatarWithStatus
                 avatarUser={useTEM.teamMemberProfiles[chat.dmPartnerUser.userId]}
                 chat={chat}
-                useCM={useCM}
                 isYou={isYou}
                 myself={myself}
                 setMyself={setMyself}
                 socket={socket}
+                useCM={useCM}
                 useUISM={useUISM}
             />
         );
@@ -66,12 +66,12 @@ export const ChatListItemAvatar: React.FC<ChatListItemAvatarProps> = ({
     if (chatType === 2) {
         return (
             <GMAvatar
-                useCM={useCM}
                 gmChat={chat}
                 isYou={isYou}
                 myself={myself}
                 setMyself={setMyself}
                 socket={socket}
+                useCM={useCM}
                 useTEM={useTEM}
                 useUISM={useUISM}
             />
@@ -82,11 +82,11 @@ export const ChatListItemAvatar: React.FC<ChatListItemAvatarProps> = ({
     if (chatType === 3) {
         return (
             <ProjectAvatar
-                useCM={useCM}
                 myself={myself}
                 pmChat={chat}
                 setMyself={setMyself}
                 socket={socket}
+                useCM={useCM}
                 useTEM={useTEM}
                 useUISM={useUISM}
             />

@@ -130,8 +130,8 @@ export const SelectChatPanel = ({ setMainChatPanelSize }: SelectChatPanelProps) 
 
                     {/* Hint indicator */}
                     <Stack
-                        direction="row"
                         alignItems="center"
+                        direction="row"
                         spacing={0.5}
                         sx={{
                             mt: 1,

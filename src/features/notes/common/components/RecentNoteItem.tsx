@@ -109,7 +109,6 @@ function RecentNoteItemComponent({ note, noteType, useNM }: RecentNoteItemProps)
         >
             <ListItemButton
                 selected={isSelected}
-                onClick={handleClick}
                 sx={{
                     borderRadius: "8px",
                     py: 0.5,
@@ -122,7 +121,9 @@ function RecentNoteItemComponent({ note, noteType, useNM }: RecentNoteItemProps)
                         backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)",
                     },
                     "&.Mui-selected": {
-                        backgroundColor: isDark ? "rgba(124,58,237,0.12)" : "rgba(124,58,237,0.08)",
+                        backgroundColor: isDark
+                            ? "rgba(124,58,237,0.12)"
+                            : "rgba(124,58,237,0.08)",
                         "&:hover": {
                             backgroundColor: isDark
                                 ? "rgba(124,58,237,0.18)"
@@ -130,6 +131,7 @@ function RecentNoteItemComponent({ note, noteType, useNM }: RecentNoteItemProps)
                         },
                     },
                 }}
+                onClick={handleClick}
             >
                 {/* Type icon */}
                 <Box

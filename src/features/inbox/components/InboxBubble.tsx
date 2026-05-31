@@ -98,8 +98,6 @@ export const InboxBubble = (props: InboxBubbleProps) => {
     return (
         <Card
             variant="outlined"
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
             sx={{
                 p: 2,
                 background: isDark
@@ -130,6 +128,8 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                 position: "relative",
                 overflow: "hidden",
             }}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
         >
             {/* Subtle glow effect on hover */}
             {isHovered && (
@@ -153,8 +153,8 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                     {config && (
                         <Chip
                             size="sm"
-                            variant="soft"
                             startDecorator={config.icon}
+                            variant="soft"
                             sx={{
                                 borderRadius: "8px",
                                 fontWeight: 600,
@@ -202,13 +202,13 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                     >
                         <BnChatPreview
                             key={`${inboxItem.itemType}-${inboxItem.itemId}-${inboxItem.tsSent}`}
-                            useCM={useCM}
                             content={inboxItem.itemBody}
                             customClassName="inbox-preview"
                             isSent={true}
                             myself={myself}
                             setMyself={setMyself}
                             socket={socket}
+                            useCM={useCM}
                             useTEM={useTEM}
                             useUISM={useUISM}
                         />
@@ -220,10 +220,9 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                     <Stack direction="row" justifyContent="flex-end" spacing={1}>
                         {isHandled ? (
                             <Button
+                                color={resolvedStatus === "rejected" ? "neutral" : "success"}
                                 size="sm"
                                 variant="soft"
-                                color={resolvedStatus === "rejected" ? "neutral" : "success"}
-                                disabled
                                 startDecorator={
                                     resolvedStatus === "rejected" ? (
                                         <CloseRoundedIcon sx={{ fontSize: 16 }} />
@@ -249,6 +248,7 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                                         opacity: 0.9,
                                     },
                                 }}
+                                disabled
                             >
                                 {resolvedStatus === "rejected"
                                     ? t.inbox.bubble.rejected
@@ -257,13 +257,10 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                         ) : (
                             <>
                                 <Button
-                                    size="sm"
-                                    variant="outlined"
                                     color="danger"
-                                    onClick={handleReject}
-                                    startDecorator={
-                                        <CloseRoundedIcon sx={{ fontSize: 16 }} />
-                                    }
+                                    size="sm"
+                                    startDecorator={<CloseRoundedIcon sx={{ fontSize: 16 }} />}
+                                    variant="outlined"
                                     sx={{
                                         borderRadius: "10px",
                                         fontWeight: 600,
@@ -282,16 +279,14 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                                             transform: "translateY(0)",
                                         },
                                     }}
+                                    onClick={handleReject}
                                 >
                                     {t.inbox.bubble.reject}
                                 </Button>
                                 <Button
                                     size="sm"
+                                    startDecorator={<CheckRoundedIcon sx={{ fontSize: 16 }} />}
                                     variant="solid"
-                                    onClick={handleApprove}
-                                    startDecorator={
-                                        <CheckRoundedIcon sx={{ fontSize: 16 }} />
-                                    }
                                     sx={{
                                         borderRadius: "10px",
                                         fontWeight: 600,
@@ -312,6 +307,7 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                                             transform: "translateY(0)",
                                         },
                                     }}
+                                    onClick={handleApprove}
                                 >
                                     {t.inbox.bubble.approve}
                                 </Button>

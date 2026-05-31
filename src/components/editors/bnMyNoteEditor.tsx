@@ -453,10 +453,10 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
                         </Chip>
                     )}
                     <WrapToggleButtons
-                        unwrapAll={unwrapAll}
                         setUnwrapAll={setUnwrapAll}
-                        unwrapCode={unwrapCode}
                         setUnwrapCode={setUnwrapCode}
+                        unwrapAll={unwrapAll}
+                        unwrapCode={unwrapCode}
                     />
                 </Box>
 
@@ -620,8 +620,8 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
 
                                 {isEditable && (
                                     <SuggestionMenuController
-                                        triggerCharacter={"@"}
                                         suggestionMenuComponent={MentionSuggestionMenu}
+                                        triggerCharacter={"@"}
                                         getItems={async (query) =>
                                             filterSuggestionItems(
                                                 MentionMenuItems(

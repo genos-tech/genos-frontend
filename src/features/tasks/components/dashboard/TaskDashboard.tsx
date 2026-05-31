@@ -36,15 +36,15 @@ export const TaskDashboard = ({
 }: TaskDashboardProps) => {
     return (
         <TaskHomeContent
-            useTM={useTM}
-            usePM={usePM}
-            useTEM={useTEM}
-            useSM={useSM}
             myself={myself}
             setMyself={setMyself}
-            useCM={useCM}
-            useUISM={useUISM}
             socket={socket}
+            useCM={useCM}
+            usePM={usePM}
+            useSM={useSM}
+            useTEM={useTEM}
+            useTM={useTM}
+            useUISM={useUISM}
             onCloseTaskHome={onCloseTaskHome}
         />
     );

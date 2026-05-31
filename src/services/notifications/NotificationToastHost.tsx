@@ -53,15 +53,11 @@ export const NotificationToastHost = ({
 
     return (
         <Snackbar
-            open={!!active}
-            onClose={(_event, reason) => {
-                if (reason === "clickaway") return;
-                dismiss();
-            }}
-            autoHideDuration={TOAST_AUTO_HIDE_MS}
             anchorOrigin={{ vertical: "top", horizontal: "right" }}
-            variant="soft"
+            autoHideDuration={TOAST_AUTO_HIDE_MS}
             color="primary"
+            open={!!active}
+            variant="soft"
             sx={{
                 minWidth: 320,
                 maxWidth: 420,
@@ -81,12 +77,16 @@ export const NotificationToastHost = ({
                     : "1px solid rgba(124,58,237,0.18)",
                 backdropFilter: "none",
             }}
+            onClose={(_event, reason) => {
+                if (reason === "clickaway") return;
+                dismiss();
+            }}
         >
             {active ? (
                 <Stack
+                    alignItems="flex-start"
                     direction="row"
                     spacing={1.25}
-                    alignItems="flex-start"
                     sx={{ width: "100%" }}
                 >
                     {active.icon ? (
@@ -95,14 +95,14 @@ export const NotificationToastHost = ({
                         // not prepend the media root again, or the URL
                         // becomes `${media}/${media}/...` and Avatar
                         // silently falls back to the initials.
-                        <Avatar src={active.icon} size="md" />
+                        <Avatar size="md" src={active.icon} />
                     ) : (
                         <Avatar size="md">{active.title?.[0] ?? "?"}</Avatar>
                     )}
 
                     <Box
-                        onClick={handleOpen}
                         sx={{ minWidth: 0, flex: 1, cursor: onOpenIntent ? "pointer" : "default" }}
+                        onClick={handleOpen}
                     >
                         <Typography level="title-sm" sx={{ mb: 0.25 }}>
                             {active.title}
@@ -120,7 +120,7 @@ export const NotificationToastHost = ({
                         </Typography>
                     </Box>
 
-                    <IconButton size="sm" variant="plain" color="neutral" onClick={dismiss}>
+                    <IconButton color="neutral" size="sm" variant="plain" onClick={dismiss}>
                         <CloseRounded />
                     </IconButton>
                 </Stack>

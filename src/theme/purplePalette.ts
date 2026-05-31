@@ -84,8 +84,7 @@ export const purplePalette: { dark: PurpleTokens; light: PurpleTokens } = {
     dark: {
         // Surfaces
         bg: "#0b0a16",
-        surface:
-            "linear-gradient(145deg, rgba(30,20,46,0.95) 0%, rgba(20,14,34,0.98) 100%)",
+        surface: "linear-gradient(145deg, rgba(30,20,46,0.95) 0%, rgba(20,14,34,0.98) 100%)",
         surfaceElevated:
             "linear-gradient(135deg, rgba(40,28,60,0.9) 0%, rgba(30,20,46,0.95) 100%)",
         surfaceSolid: "rgba(30,20,46,0.95)",
@@ -99,8 +98,7 @@ export const purplePalette: { dark: PurpleTokens; light: PurpleTokens } = {
         // Gradients
         accentGradient: "linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%)",
         accentGradientHover: "linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)",
-        titleGradient:
-            "linear-gradient(90deg, #a78bfa 0%, #8b5cf6 50%, #c084fc 100%)",
+        titleGradient: "linear-gradient(90deg, #a78bfa 0%, #8b5cf6 50%, #c084fc 100%)",
 
         // Structure
         border: "rgba(124,58,237,0.2)",
@@ -133,8 +131,7 @@ export const purplePalette: { dark: PurpleTokens; light: PurpleTokens } = {
 
         // Effects
         glow: "rgba(124,58,237,0.25)",
-        shadow:
-            "0 8px 32px rgba(0,0,0,0.4), 0 0 60px rgba(124,58,237,0.12)",
+        shadow: "0 8px 32px rgba(0,0,0,0.4), 0 0 60px rgba(124,58,237,0.12)",
         shadowSoft: "0 4px 16px rgba(124,58,237,0.4)",
 
         // Inputs
@@ -148,31 +145,26 @@ export const purplePalette: { dark: PurpleTokens; light: PurpleTokens } = {
         activeBg: "rgba(124,58,237,0.25)",
 
         // Chip / badge
-        chipBg:
-            "linear-gradient(135deg, rgba(124,58,237,0.15) 0%, rgba(139,92,246,0.15) 100%)",
+        chipBg: "linear-gradient(135deg, rgba(124,58,237,0.15) 0%, rgba(139,92,246,0.15) 100%)",
         chipBorder: "rgba(124,58,237,0.3)",
 
         // Buttons
-        buttonBg:
-            "linear-gradient(135deg, rgba(124,58,237,0.15) 0%, rgba(139,92,246,0.15) 100%)",
+        buttonBg: "linear-gradient(135deg, rgba(124,58,237,0.15) 0%, rgba(139,92,246,0.15) 100%)",
         buttonBgHover:
             "linear-gradient(135deg, rgba(124,58,237,0.28) 0%, rgba(139,92,246,0.28) 100%)",
         buttonBorder: "rgba(124,58,237,0.3)",
         primaryButtonBg: "linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%)",
-        primaryButtonHover:
-            "linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)",
+        primaryButtonHover: "linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)",
         primaryButtonShadow: "0 4px 16px rgba(124,58,237,0.4)",
 
         // Menus
-        menuBg:
-            "linear-gradient(180deg, rgba(30,20,46,0.98) 0%, rgba(20,14,34,0.99) 100%)",
+        menuBg: "linear-gradient(180deg, rgba(30,20,46,0.98) 0%, rgba(20,14,34,0.99) 100%)",
         menuBorder: "rgba(124,58,237,0.18)",
     },
     light: {
         // Surfaces
         bg: "#faf9ff",
-        surface:
-            "linear-gradient(145deg, rgba(255,255,255,0.98) 0%, rgba(248,245,255,0.99) 100%)",
+        surface: "linear-gradient(145deg, rgba(255,255,255,0.98) 0%, rgba(248,245,255,0.99) 100%)",
         surfaceElevated:
             "linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(245,240,255,0.92) 100%)",
         surfaceSolid: "rgba(255,255,255,0.98)",
@@ -186,8 +178,7 @@ export const purplePalette: { dark: PurpleTokens; light: PurpleTokens } = {
         // Gradients
         accentGradient: "linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%)",
         accentGradientHover: "linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)",
-        titleGradient:
-            "linear-gradient(90deg, #6d28d9 0%, #7c3aed 50%, #9333ea 100%)",
+        titleGradient: "linear-gradient(90deg, #6d28d9 0%, #7c3aed 50%, #9333ea 100%)",
 
         // Structure
         border: "rgba(124,58,237,0.15)",
@@ -220,8 +211,7 @@ export const purplePalette: { dark: PurpleTokens; light: PurpleTokens } = {
 
         // Effects
         glow: "rgba(124,58,237,0.15)",
-        shadow:
-            "0 8px 32px rgba(124,58,237,0.12), 0 0 60px rgba(124,58,237,0.05)",
+        shadow: "0 8px 32px rgba(124,58,237,0.12), 0 0 60px rgba(124,58,237,0.05)",
         shadowSoft: "0 4px 16px rgba(124,58,237,0.3)",
 
         // Inputs
@@ -235,24 +225,20 @@ export const purplePalette: { dark: PurpleTokens; light: PurpleTokens } = {
         activeBg: "rgba(124,58,237,0.15)",
 
         // Chip / badge
-        chipBg:
-            "linear-gradient(135deg, rgba(124,58,237,0.08) 0%, rgba(139,92,246,0.08) 100%)",
+        chipBg: "linear-gradient(135deg, rgba(124,58,237,0.08) 0%, rgba(139,92,246,0.08) 100%)",
         chipBorder: "rgba(124,58,237,0.2)",
 
         // Buttons
-        buttonBg:
-            "linear-gradient(135deg, rgba(124,58,237,0.08) 0%, rgba(139,92,246,0.08) 100%)",
+        buttonBg: "linear-gradient(135deg, rgba(124,58,237,0.08) 0%, rgba(139,92,246,0.08) 100%)",
         buttonBgHover:
             "linear-gradient(135deg, rgba(124,58,237,0.18) 0%, rgba(139,92,246,0.18) 100%)",
         buttonBorder: "rgba(124,58,237,0.2)",
         primaryButtonBg: "linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%)",
-        primaryButtonHover:
-            "linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)",
+        primaryButtonHover: "linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)",
         primaryButtonShadow: "0 4px 16px rgba(124,58,237,0.3)",
 
         // Menus
-        menuBg:
-            "linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(248,245,255,0.99) 100%)",
+        menuBg: "linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(248,245,255,0.99) 100%)",
         menuBorder: "rgba(124,58,237,0.12)",
     },
 };

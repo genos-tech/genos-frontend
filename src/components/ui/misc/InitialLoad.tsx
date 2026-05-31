@@ -231,7 +231,6 @@ export const InitialLoad = (props: InitialLoadProps) => {
                     </Typography>
                     <Button
                         variant="outlined"
-                        onClick={() => navigate("/signin")}
                         sx={{
                             borderColor: "rgba(99, 102, 241, 0.5)",
                             color: "rgba(255,255,255,0.9)",
@@ -251,6 +250,7 @@ export const InitialLoad = (props: InitialLoadProps) => {
                                 boxShadow: "0 8px 25px rgba(99, 102, 241, 0.25)",
                             },
                         }}
+                        onClick={() => navigate("/signin")}
                     >
                         {t.common.initialLoad.signInAgain}
                     </Button>

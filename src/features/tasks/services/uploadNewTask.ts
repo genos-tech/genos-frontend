@@ -227,7 +227,6 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                         };
                         // Top-level "task created" message in the PM channel.
                         try {
-                            // eslint-disable-next-line no-console
                             console.log("[uploadNewTask] sending PM task-create message", {
                                 channelId: pmChannel.id,
                                 projectId: pmChannel.projectId,
@@ -244,7 +243,7 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                                     metadata: taskMetadata,
                                 }
                             );
-                            // eslint-disable-next-line no-console
+
                             console.log("[uploadNewTask] PM task-create message sent", {
                                 messageId: sent?.id,
                                 channelId: sent?.channelId,

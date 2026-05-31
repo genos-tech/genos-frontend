@@ -159,7 +159,7 @@ describe("MessageRowHoverToolbar — isolated", () => {
 
     it("renders replyCount on the thread button when > 0", () => {
         const onReply = vi.fn();
-        render(<MessageRowHoverToolbar {...baseProps} onReply={onReply} replyCount={3} />);
+        render(<MessageRowHoverToolbar {...baseProps} replyCount={3} onReply={onReply} />);
         const btn = screen.getByTestId("message-row-thread-m-1");
         expect(btn).toHaveTextContent("3");
         fireEvent.click(btn);

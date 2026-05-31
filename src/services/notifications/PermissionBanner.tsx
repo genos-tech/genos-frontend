@@ -60,8 +60,8 @@ export const PermissionBanner = ({
 
     return (
         <Sheet
-            variant="soft"
             color="primary"
+            variant="soft"
             sx={{
                 position: "fixed",
                 top: 8,
@@ -76,7 +76,7 @@ export const PermissionBanner = ({
                 maxWidth: 560,
             }}
         >
-            <Stack direction="row" spacing={1.5} alignItems="center">
+            <Stack alignItems="center" direction="row" spacing={1.5}>
                 <Box
                     sx={{
                         width: 36,
@@ -95,14 +95,12 @@ export const PermissionBanner = ({
                     <Typography level="title-sm">
                         {t.services.notifications.banner.title}
                     </Typography>
-                    <Typography level="body-xs">
-                        {t.services.notifications.banner.body}
-                    </Typography>
+                    <Typography level="body-xs">{t.services.notifications.banner.body}</Typography>
                 </Box>
                 <Button size="sm" onClick={handleEnable}>
                     {t.services.notifications.banner.enable}
                 </Button>
-                <IconButton size="sm" variant="plain" color="neutral" onClick={handleDismiss}>
+                <IconButton color="neutral" size="sm" variant="plain" onClick={handleDismiss}>
                     <CloseRounded />
                 </IconButton>
             </Stack>

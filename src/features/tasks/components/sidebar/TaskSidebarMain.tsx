@@ -222,11 +222,6 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                     <ListItem>
                         <ListItemButton
                             selected={useTM.isTaskDashboardVisible}
-                            onClick={() => {
-                                useTM.setIsTaskDashboardVisible(true);
-                                useTM.setIsTaskTableVisible(false);
-                                useTM.setIsSprintBoardVisible(false);
-                            }}
                             sx={{
                                 borderRadius: "10px",
                                 py: 1,
@@ -248,6 +243,11 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                             : "rgba(124,58,237,0.15)",
                                     },
                                 },
+                            }}
+                            onClick={() => {
+                                useTM.setIsTaskDashboardVisible(true);
+                                useTM.setIsTaskTableVisible(false);
+                                useTM.setIsSprintBoardVisible(false);
                             }}
                         >
                             <Box
@@ -335,7 +335,7 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                         </Typography>
                     </Box>
 
-                    <RecentsListItem recentTasks={recentTasks} useTM={useTM} usePM={usePM} />
+                    <RecentsListItem recentTasks={recentTasks} usePM={usePM} useTM={useTM} />
 
                     {/* Section Header - Projects */}
                     <Box sx={{ pt: 1.5, pb: 0.5, px: 1 }}>
@@ -354,16 +354,16 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                     </Box>
 
                     <ProjectsListItem
-                        usePM={usePM}
-                        setOpenJoinProject={setOpenJoinProject}
-                        useTM={useTM}
-                        useSM={useSM}
-                        useTEM={useTEM}
-                        useCM={useCM}
-                        useUISM={useUISM}
                         myself={myself}
                         setMyself={setMyself}
+                        setOpenJoinProject={setOpenJoinProject}
                         socket={socket}
+                        useCM={useCM}
+                        usePM={usePM}
+                        useSM={useSM}
+                        useTEM={useTEM}
+                        useTM={useTM}
+                        useUISM={useUISM}
                     />
                 </List>
             </Box>

@@ -172,12 +172,6 @@ export const ModalCreateGM: React.FC<Props> = ({
                 <Input
                     placeholder={t.chat.modals.createGM.groupNamePlaceholder}
                     value={chatName}
-                    onChange={(e) => setGroupName(e.target.value)}
-                    onKeyDown={(e) => {
-                        if (e.key === "Enter" && chatName.trim()) {
-                            handleCreateGroup();
-                        }
-                    }}
                     sx={{
                         mb: 2,
                         "--Input-focusedThickness": "1px",
@@ -189,6 +183,12 @@ export const ModalCreateGM: React.FC<Props> = ({
                         "&:hover": {
                             borderColor: "rgba(124,58,237,0.3)",
                         },
+                    }}
+                    onChange={(e) => setGroupName(e.target.value)}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter" && chatName.trim()) {
+                            handleCreateGroup();
+                        }
                     }}
                 />
 
@@ -213,9 +213,9 @@ export const ModalCreateGM: React.FC<Props> = ({
                     <Checkbox
                         checked={isPrivate}
                         color="neutral"
+                        sx={{ pointerEvents: "none" }}
                         variant="soft"
                         onChange={(e) => setIsPrivate(e.target.checked)}
-                        sx={{ pointerEvents: "none" }}
                     />
                     {isPrivate ? (
                         <LockOutlinedIcon
@@ -255,9 +255,9 @@ export const ModalCreateGM: React.FC<Props> = ({
                         {selectedMembers.map((member) => (
                             <Chip
                                 key={member.userId}
+                                color="primary"
                                 size="sm"
                                 variant="soft"
-                                color="primary"
                                 endDecorator={
                                     <CloseRoundedIcon
                                         sx={{ fontSize: 14, cursor: "pointer" }}
@@ -279,7 +279,6 @@ export const ModalCreateGM: React.FC<Props> = ({
                 <Input
                     placeholder={t.chat.modals.createGM.searchPlaceholder}
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
                     startDecorator={
                         <SearchRoundedIcon sx={{ color: "rgba(255, 255, 255, 0.4)" }} />
                     }
@@ -295,6 +294,7 @@ export const ModalCreateGM: React.FC<Props> = ({
                             borderColor: "rgba(124,58,237,0.3)",
                         },
                     }}
+                    onChange={(e) => setSearchQuery(e.target.value)}
                 />
 
                 {/* Member List */}
@@ -329,7 +329,6 @@ export const ModalCreateGM: React.FC<Props> = ({
                             return (
                                 <Box
                                     key={member.userId}
-                                    onClick={() => handleToggleMember(member)}
                                     sx={{
                                         display: "flex",
                                         alignItems: "center",
@@ -350,21 +349,22 @@ export const ModalCreateGM: React.FC<Props> = ({
                                             borderBottom: "none",
                                         },
                                     }}
+                                    onClick={() => handleToggleMember(member)}
                                 >
                                     <Checkbox
                                         checked={isSelected}
                                         color="primary"
-                                        variant="soft"
                                         sx={{ pointerEvents: "none" }}
+                                        variant="soft"
                                     />
                                     <AvatarWithStatus
                                         avatarUser={member}
-                                        useCM={useCM}
                                         isYou={false}
                                         myself={myself}
                                         setMyself={setMyself}
                                         showNameAndEmail={false}
                                         socket={socket}
+                                        useCM={useCM}
                                         useUISM={useUISM}
                                     />
                                     <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -433,7 +433,6 @@ export const ModalCreateGM: React.FC<Props> = ({
                 <Stack direction="row" spacing={1.5} sx={{ justifyContent: "flex-end" }}>
                     <Button
                         variant="plain"
-                        onClick={() => setOpen(false)}
                         sx={{
                             color: "rgba(255, 255, 255, 0.6)",
                             borderRadius: "10px",
@@ -443,12 +442,12 @@ export const ModalCreateGM: React.FC<Props> = ({
                                 color: "rgba(255, 255, 255, 0.9)",
                             },
                         }}
+                        onClick={() => setOpen(false)}
                     >
                         {t.chat.modals.createGM.cancel}
                     </Button>
                     <Button
                         disabled={!chatName.trim()}
-                        onClick={handleCreateGroup}
                         sx={{
                             background: "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)",
                             borderRadius: "10px",
@@ -465,6 +464,7 @@ export const ModalCreateGM: React.FC<Props> = ({
                                 color: "rgba(255, 255, 255, 0.3)",
                             },
                         }}
+                        onClick={handleCreateGroup}
                     >
                         {t.chat.modals.createGM.createGroup}
                     </Button>

@@ -216,7 +216,7 @@ export const TaskCreateFooter = forwardRef<TaskCreateFooterHandle, TaskCreateFoo
                 </Button>
 
                 <Modal open={showDiscardConfirm} onClose={() => setShowDiscardConfirm(false)}>
-                    <ModalDialog variant="outlined" role="alertdialog">
+                    <ModalDialog role="alertdialog" variant="outlined">
                         <DialogTitle>
                             <WarningRoundedIcon sx={{ color: "#f59e0b" }} />
                             Discard this draft?
@@ -229,8 +229,8 @@ export const TaskCreateFooter = forwardRef<TaskCreateFooterHandle, TaskCreateFoo
                         <DialogActions>
                             <Button
                                 color="danger"
-                                variant="solid"
                                 startDecorator={<CloseRoundedIcon sx={{ fontSize: 16 }} />}
+                                variant="solid"
                                 onClick={confirmDiscard}
                             >
                                 Discard draft

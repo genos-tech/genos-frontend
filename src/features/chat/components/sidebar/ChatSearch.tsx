@@ -203,14 +203,6 @@ export const ChatSearch = (props: ChatSearchProps) => {
                 options={options}
                 placeholder={t.chat.sidebar.searchPlaceholder}
                 size="sm"
-                startDecorator={
-                    <SearchRoundedIcon
-                        sx={{
-                            fontSize: 18,
-                            color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.35)",
-                        }}
-                    />
-                }
                 endDecorator={
                     loading ? (
                         <CircularProgress
@@ -223,49 +215,6 @@ export const ChatSearch = (props: ChatSearchProps) => {
                         />
                     ) : null
                 }
-                sx={{
-                    "--Input-focusedThickness": "0px",
-                    borderRadius: "12px",
-                    background: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)",
-                    border: "1px solid",
-                    borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
-                    transition: "all 0.2s ease",
-                    "&:hover": {
-                        background: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
-                        borderColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)",
-                    },
-                    "&.Mui-focused": {
-                        background: isDark ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.9)",
-                        borderColor: isDark ? "rgba(139,92,246,0.4)" : "rgba(124,58,237,0.3)",
-                        boxShadow: isDark
-                            ? "0 0 0 3px rgba(139,92,246,0.15)"
-                            : "0 0 0 3px rgba(124,58,237,0.1)",
-                    },
-                    "& .MuiAutocomplete-input": {
-                        fontSize: "0.85rem",
-                        "&::placeholder": {
-                            color: isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.35)",
-                            opacity: 1,
-                        },
-                    },
-                }}
-                slotProps={{
-                    listbox: {
-                        sx: {
-                            borderRadius: "12px",
-                            boxShadow: isDark
-                                ? "0 8px 32px rgba(0,0,0,0.5)"
-                                : "0 8px 32px rgba(0,0,0,0.12)",
-                            border: "1px solid",
-                            borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
-                            "& .MuiAutocomplete-option": {
-                                borderRadius: "8px",
-                                mx: 0.5,
-                                my: 0.25,
-                            },
-                        },
-                    },
-                }}
                 getOptionLabel={(option) =>
                     option.type === "People"
                         ? option.email === myself.userEmail
@@ -289,15 +238,15 @@ export const ChatSearch = (props: ChatSearchProps) => {
                             key={`ac-render-option-chatsearch-${option.name}-${optKey}`}
                         >
                             <ListItemContent sx={{ fontSize: "sm" }}>
-                                <Stack direction="row" spacing={1.5} alignItems="center">
+                                <Stack alignItems="center" direction="row" spacing={1.5}>
                                     {option.type === "People" && (
                                         <AvatarWithStatus
                                             key={`ac-render-option-chatsearch-user-avatar-${option.name}-${optKey}`}
-                                            useCM={useCM}
                                             isYou={option.userId === myself.userId}
                                             myself={myself}
                                             setMyself={setMyself}
                                             socket={socket}
+                                            useCM={useCM}
                                             useUISM={useUISM}
                                             avatarUser={
                                                 useTEM.teamMemberProfiles[option.userId ?? ""]
@@ -306,12 +255,12 @@ export const ChatSearch = (props: ChatSearchProps) => {
                                     )}
                                     {option.type === "Group" && gmChat ? (
                                         <GMAvatar
-                                            useCM={useCM}
                                             gmChat={gmChat}
                                             isYou={false}
                                             myself={myself}
                                             setMyself={setMyself}
                                             socket={socket}
+                                            useCM={useCM}
                                             useTEM={useTEM}
                                             useUISM={useUISM}
                                         />
@@ -362,6 +311,57 @@ export const ChatSearch = (props: ChatSearchProps) => {
                             </ListItemContent>
                         </AutocompleteOption>
                     );
+                }}
+                slotProps={{
+                    listbox: {
+                        sx: {
+                            borderRadius: "12px",
+                            boxShadow: isDark
+                                ? "0 8px 32px rgba(0,0,0,0.5)"
+                                : "0 8px 32px rgba(0,0,0,0.12)",
+                            border: "1px solid",
+                            borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
+                            "& .MuiAutocomplete-option": {
+                                borderRadius: "8px",
+                                mx: 0.5,
+                                my: 0.25,
+                            },
+                        },
+                    },
+                }}
+                startDecorator={
+                    <SearchRoundedIcon
+                        sx={{
+                            fontSize: 18,
+                            color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.35)",
+                        }}
+                    />
+                }
+                sx={{
+                    "--Input-focusedThickness": "0px",
+                    borderRadius: "12px",
+                    background: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)",
+                    border: "1px solid",
+                    borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
+                    transition: "all 0.2s ease",
+                    "&:hover": {
+                        background: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
+                        borderColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)",
+                    },
+                    "&.Mui-focused": {
+                        background: isDark ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.9)",
+                        borderColor: isDark ? "rgba(139,92,246,0.4)" : "rgba(124,58,237,0.3)",
+                        boxShadow: isDark
+                            ? "0 0 0 3px rgba(139,92,246,0.15)"
+                            : "0 0 0 3px rgba(124,58,237,0.1)",
+                    },
+                    "& .MuiAutocomplete-input": {
+                        fontSize: "0.85rem",
+                        "&::placeholder": {
+                            color: isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.35)",
+                            opacity: 1,
+                        },
+                    },
                 }}
                 onChange={(event, value) => onChangeHandler(value)}
                 onClose={() => {

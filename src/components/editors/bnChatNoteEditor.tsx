@@ -428,10 +428,10 @@ export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
                         </Chip>
                     )}
                     <WrapToggleButtons
-                        unwrapAll={unwrapAll}
                         setUnwrapAll={setUnwrapAll}
-                        unwrapCode={unwrapCode}
                         setUnwrapCode={setUnwrapCode}
+                        unwrapAll={unwrapAll}
+                        unwrapCode={unwrapCode}
                     />
                 </Box>
 
@@ -601,8 +601,8 @@ export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
                                     // always-notify rule + 403-on-click
                                     // path covers the rest.
                                     <SuggestionMenuController
-                                        triggerCharacter={"@"}
                                         suggestionMenuComponent={MentionSuggestionMenu}
+                                        triggerCharacter={"@"}
                                         getItems={async (query) =>
                                             filterSuggestionItems(
                                                 MentionMenuItems(

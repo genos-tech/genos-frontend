@@ -236,7 +236,6 @@ export const ModalJoinGM: React.FC<Props> = ({ socket, myself, openJoinGM, setOp
                 <Stack direction="row" spacing={1.5} sx={{ justifyContent: "center" }}>
                     <Button
                         variant="plain"
-                        onClick={() => setOpenJoinGM(disableOpenJoinGMParams)}
                         sx={{
                             color: "rgba(255, 255, 255, 0.6)",
                             borderRadius: "10px",
@@ -246,11 +245,11 @@ export const ModalJoinGM: React.FC<Props> = ({ socket, myself, openJoinGM, setOp
                                 color: "rgba(255, 255, 255, 0.9)",
                             },
                         }}
+                        onClick={() => setOpenJoinGM(disableOpenJoinGMParams)}
                     >
                         {t.chat.modals.joinGM.cancel}
                     </Button>
                     <Button
-                        onClick={handleJoinGM}
                         endDecorator={<SendIcon sx={{ fontSize: 16 }} />}
                         sx={{
                             background: "linear-gradient(135deg, #a855f7 0%, #8b5cf6 100%)",
@@ -264,6 +263,7 @@ export const ModalJoinGM: React.FC<Props> = ({ socket, myself, openJoinGM, setOp
                                 boxShadow: "0 6px 20px rgba(168, 85, 247, 0.4)",
                             },
                         }}
+                        onClick={handleJoinGM}
                     >
                         {t.chat.modals.joinGM.sendRequest}
                     </Button>

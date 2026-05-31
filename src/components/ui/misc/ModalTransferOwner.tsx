@@ -164,23 +164,22 @@ export const ModalTransferOwner = ({
                         <Input
                             placeholder={t.common.profileEdit.transferPickMember}
                             value={query}
-                            onChange={(e) => setQuery(e.target.value)}
-                            startDecorator={
-                                <SearchIcon
-                                    sx={{ fontSize: 18, color: "rgba(232,121,195,0.8)" }}
-                                />
-                            }
                             endDecorator={
                                 query && (
                                     <IconButton
                                         size="sm"
+                                        sx={{ minWidth: 24, minHeight: 24, borderRadius: "50%" }}
                                         variant="plain"
                                         onClick={() => setQuery("")}
-                                        sx={{ minWidth: 24, minHeight: 24, borderRadius: "50%" }}
                                     >
                                         <CloseIcon sx={{ fontSize: 16 }} />
                                     </IconButton>
                                 )
+                            }
+                            startDecorator={
+                                <SearchIcon
+                                    sx={{ fontSize: 18, color: "rgba(232,121,195,0.8)" }}
+                                />
                             }
                             sx={{
                                 mb: 1.5,
@@ -189,6 +188,7 @@ export const ModalTransferOwner = ({
                                 border: "1px solid rgba(232,121,195,0.25)",
                                 fontSize: "14px",
                             }}
+                            onChange={(e) => setQuery(e.target.value)}
                         />
                         <Box
                             sx={{
@@ -215,7 +215,6 @@ export const ModalTransferOwner = ({
                                     <ListItemButton
                                         key={`transfer-owner-${m.userId}`}
                                         selected={selectedId === m.userId}
-                                        onClick={() => setSelectedId(m.userId)}
                                         sx={{
                                             borderRadius: "8px",
                                             my: 0.25,
@@ -231,8 +230,9 @@ export const ModalTransferOwner = ({
                                                 background: "rgba(255,255,255,0.05)",
                                             },
                                         }}
+                                        onClick={() => setSelectedId(m.userId)}
                                     >
-                                        <Stack direction="row" spacing={1.25} alignItems="center">
+                                        <Stack alignItems="center" direction="row" spacing={1.25}>
                                             <Avatar size="sm">{m.userName?.[0] ?? "?"}</Avatar>
                                             <Stack spacing={0} sx={{ minWidth: 0 }}>
                                                 <Typography
@@ -278,9 +278,8 @@ export const ModalTransferOwner = ({
 
                 <Stack direction="row" spacing={1.5} sx={{ justifyContent: "flex-end" }}>
                     <Button
-                        variant="plain"
                         disabled={submitting}
-                        onClick={handleClose}
+                        variant="plain"
                         sx={{
                             color: "rgba(255, 255, 255, 0.6)",
                             borderRadius: "10px",
@@ -290,19 +289,20 @@ export const ModalTransferOwner = ({
                                 color: "rgba(255, 255, 255, 0.9)",
                             },
                         }}
+                        onClick={handleClose}
                     >
                         {t.common.profileEdit.cancel}
                     </Button>
                     <Button
                         disabled={!selectedId || candidates.length === 0}
                         loading={submitting}
-                        onClick={handleConfirm}
                         sx={{
                             background: "linear-gradient(135deg, #c026a8 0%, #9d2386 100%)",
                             borderRadius: "10px",
                             px: 3,
                             fontWeight: 600,
                         }}
+                        onClick={handleConfirm}
                     >
                         {t.common.profileEdit.transferConfirm}
                     </Button>

@@ -447,10 +447,10 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                             {!isMobile && (
                                 <WrapToggleToolbarButtons
                                     key={"wrapToggleButtons"}
-                                    unwrapAll={unwrapAll}
                                     setUnwrapAll={setUnwrapAll}
-                                    unwrapCode={unwrapCode}
                                     setUnwrapCode={setUnwrapCode}
+                                    unwrapAll={unwrapAll}
+                                    unwrapCode={unwrapCode}
                                 />
                             )}
                         </FormattingToolbar>
@@ -458,8 +458,8 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
 
                     {/* Adds a mentions menu which opens with the "@" key */}
                     <SuggestionMenuController
-                        triggerCharacter={"@"}
                         suggestionMenuComponent={MentionSuggestionMenu}
+                        triggerCharacter={"@"}
                         getItems={async (query) =>
                             filterSuggestionItems(
                                 MentionMenuItems(

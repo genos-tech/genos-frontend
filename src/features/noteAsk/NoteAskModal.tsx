@@ -149,8 +149,8 @@ export const NoteAskModal = ({ state, onSelectSource }: NoteAskModalProps) => {
                     {noteTitle ? (
                         <Typography
                             level="body-sm"
-                            noWrap
                             sx={{ color: "text.tertiary", minWidth: 0 }}
+                            noWrap
                         >
                             · {noteTitle}
                         </Typography>

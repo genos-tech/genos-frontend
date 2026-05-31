@@ -314,7 +314,6 @@ export const initDB = async (): Promise<IDBPDatabase> => {
         // (which is what happened before: no handler → every IDB read/write
         // in this tab stalled with no error after a version bump like v10).
         blocked(currentVersion, blockedVersion) {
-            // eslint-disable-next-line no-console
             console.warn(
                 `[IDB] open blocked: another tab holds v${currentVersion}; ` +
                     `waiting to upgrade to v${blockedVersion}.`
@@ -327,7 +326,6 @@ export const initDB = async (): Promise<IDBPDatabase> => {
         // closed DB as a transient/degraded cache error, and a reload
         // re-opens at the new version.
         blocking(currentVersion, blockedVersion) {
-            // eslint-disable-next-line no-console
             console.warn(
                 `[IDB] closing v${currentVersion} connection so another tab ` +
                     `can upgrade to v${blockedVersion}.`
@@ -335,7 +333,6 @@ export const initDB = async (): Promise<IDBPDatabase> => {
             db.close();
         },
         terminated() {
-            // eslint-disable-next-line no-console
             console.warn("[IDB] connection terminated unexpectedly by the browser.");
         },
     });

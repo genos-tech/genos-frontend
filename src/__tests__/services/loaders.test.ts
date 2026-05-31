@@ -1,6 +1,16 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import {
+    activityChannel,
+    inboxChannel,
+    tasksChannel,
+    usersChannel,
+} from "../../db/workers/channels";
+import { loadV3SpecificMessages } from "../../features/chat/services/loadV3SpecificMessages";
+import { channelService } from "../../services/channel/channelService";
+import { loadInitialData } from "../../services/loadInitialData";
+import { refreshAllData } from "../../services/refreshAllData";
 import type { UserProps } from "../../types/admin";
 
 // ---------------------------------------------------------------------------
@@ -48,12 +58,6 @@ vi.mock("../../services/channel/channelService", () => {
 vi.mock("../../features/chat/services/loadV3SpecificMessages", () => ({
     loadV3SpecificMessages: vi.fn().mockResolvedValue([]),
 }));
-
-import { activityChannel, inboxChannel, tasksChannel, usersChannel } from "../../db/workers/channels";
-import { channelService } from "../../services/channel/channelService";
-import { loadV3SpecificMessages } from "../../features/chat/services/loadV3SpecificMessages";
-import { refreshAllData } from "../../services/refreshAllData";
-import { loadInitialData } from "../../services/loadInitialData";
 
 // Typed accessors for the mocked channel `request` fns.
 const inboxReq = inboxChannel.request as ReturnType<typeof vi.fn>;
@@ -426,7 +430,13 @@ describe("loadInitialData", () => {
             ],
         ]);
         snapshotState.membersByChannel = new Map([
-            [uuid, [{ userId: "u-me", tsJoined: "j1" }, { userId: "u-partner", tsJoined: "j2" }]],
+            [
+                uuid,
+                [
+                    { userId: "u-me", tsJoined: "j1" },
+                    { userId: "u-partner", tsJoined: "j2" },
+                ],
+            ],
         ]);
         loadV3Mock.mockResolvedValue([
             { messageId: 99, contentText: "hello", tsSent: "2026-02-02T01:00:00Z" },

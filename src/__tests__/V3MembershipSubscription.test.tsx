@@ -25,9 +25,9 @@ import { channelService } from "../services/channel/channelService";
 import {
     ChannelKind,
     type ChannelMember,
-    type Pin,
     type Flag,
     type PendingMessage,
+    type Pin,
 } from "../types/channel";
 
 vi.mock("../db/config/schema", () => ({
@@ -127,9 +127,7 @@ describe("handleChannelMemberAdded — self-subscribe", () => {
             channelKind: ChannelKind.GM,
             member: fakeMember("mem-1", "u-me"),
         });
-        const subscribeCalls = sock.emit.mock.calls.filter(
-            (c) => c[0] === "channel.subscribe"
-        );
+        const subscribeCalls = sock.emit.mock.calls.filter((c) => c[0] === "channel.subscribe");
         expect(subscribeCalls).toHaveLength(1);
         expect(subscribeCalls[0][1]).toMatchObject({ channel_id: "c-1" });
     });
@@ -141,9 +139,7 @@ describe("handleChannelMemberAdded — self-subscribe", () => {
             channelKind: ChannelKind.GM,
             member: fakeMember("mem-1", "u-alice"),
         });
-        const subscribeCalls = sock.emit.mock.calls.filter(
-            (c) => c[0] === "channel.subscribe"
-        );
+        const subscribeCalls = sock.emit.mock.calls.filter((c) => c[0] === "channel.subscribe");
         expect(subscribeCalls).toHaveLength(0);
     });
 
@@ -173,8 +169,7 @@ describe("handleChannelMemberAdded — self-subscribe", () => {
             channelKind: ChannelKind.GM,
             member: fakeMember("mem-2", "u-me"),
         });
-        const members =
-            channelService.getSnapshot().membersByChannel.get("c-1") ?? [];
+        const members = channelService.getSnapshot().membersByChannel.get("c-1") ?? [];
         expect(members.map((m) => m.userId).sort()).toEqual(["u-alice", "u-me"]);
     });
 });
@@ -215,9 +210,7 @@ describe("handleChannelMemberRemoved — self-unsubscribe", () => {
             channelKind: ChannelKind.GM,
             userId: "u-me",
         });
-        const unsubCalls = sock.emit.mock.calls.filter(
-            (c) => c[0] === "channel.unsubscribe"
-        );
+        const unsubCalls = sock.emit.mock.calls.filter((c) => c[0] === "channel.unsubscribe");
         expect(unsubCalls).toHaveLength(1);
         expect(unsubCalls[0][1]).toMatchObject({
             channel_id: "c-1",
@@ -244,9 +237,7 @@ describe("handleChannelMemberRemoved — self-unsubscribe", () => {
             channelKind: ChannelKind.GM,
             userId: "u-alice",
         });
-        const unsubCalls = sock.emit.mock.calls.filter(
-            (c) => c[0] === "channel.unsubscribe"
-        );
+        const unsubCalls = sock.emit.mock.calls.filter((c) => c[0] === "channel.unsubscribe");
         expect(unsubCalls).toHaveLength(0);
         // Channel still in the store for the still-member viewer.
         expect(channelService.getSnapshot().channels.has("c-1")).toBe(true);

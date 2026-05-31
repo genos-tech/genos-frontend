@@ -56,10 +56,9 @@ const MobileOverlay = ({
             }}
         >
             <IconButton
-                onClick={onClose}
+                aria-label="Close"
                 size="sm"
                 variant="plain"
-                aria-label="Close"
                 sx={{
                     position: "absolute",
                     top: 8,
@@ -71,6 +70,7 @@ const MobileOverlay = ({
                         background: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)",
                     },
                 }}
+                onClick={onClose}
             >
                 <CloseRoundedIcon sx={{ fontSize: 20 }} />
             </IconButton>
@@ -149,7 +149,7 @@ export const MobileNoteHome = (props: MobileNoteHomeProps) => {
         >
             {showSidebar && (
                 <Box sx={{ flex: 1, minHeight: 0, width: "100%" }}>
-                    <NoteSidebar useNM={useNM} allChats={useCM.allChats} />
+                    <NoteSidebar allChats={useCM.allChats} useNM={useNM} />
                 </Box>
             )}
 
@@ -175,11 +175,11 @@ export const MobileNoteHome = (props: MobileNoteHomeProps) => {
                         }}
                     >
                         <IconButton
+                            aria-label="Back to notes list"
                             size="sm"
+                            sx={{ flexShrink: 0 }}
                             variant="plain"
                             onClick={handleBack}
-                            aria-label="Back to notes list"
-                            sx={{ flexShrink: 0 }}
                         >
                             <ArrowBackIosNewRoundedIcon sx={{ fontSize: 18 }} />
                         </IconButton>
@@ -194,12 +194,12 @@ export const MobileNoteHome = (props: MobileNoteHomeProps) => {
 
                     <Box sx={{ flex: 1, minHeight: 0, overflow: "auto" }}>
                         <NoteContentRenderer
-                            useCM={useCM}
                             myself={myself}
-                            useNM={useNM}
-                            usePM={usePM}
                             setMyself={setMyself}
                             socket={socket}
+                            useCM={useCM}
+                            useNM={useNM}
+                            usePM={usePM}
                             useTEM={useTEM}
                             useTM={useTM}
                             useUISM={useUISM}
@@ -219,15 +219,15 @@ export const MobileNoteHome = (props: MobileNoteHomeProps) => {
                     <MobileOverlay onClose={() => useNM.setIsTaskVisibleInNote(false)}>
                         <Box sx={{ p: 1, height: "100%", overflow: "auto" }}>
                             <TaskPreview
-                                useCM={useCM}
-                                useNM={useNM}
                                 myself={myself}
-                                usePM={usePM}
                                 setMyself={setMyself}
                                 socket={socket}
+                                useCM={useCM}
+                                useNM={useNM}
+                                usePM={usePM}
+                                useSM={useSM}
                                 useTEM={useTEM}
                                 useTM={useTM}
-                                useSM={useSM}
                                 useUISM={useUISM}
                             />
                         </Box>

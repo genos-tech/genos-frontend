@@ -225,17 +225,17 @@ export const TaskHomeLayout = ({
                     )}
                     {activeNoteType === 3 && useNM.currentChatNote && (
                         <ChatNoteMain
+                            isInChatPage={false}
                             isInTaskPage={true}
                             myself={myself}
                             setMyself={setMyself}
                             socket={socket}
                             useCM={useCM}
                             useNM={useNM}
+                            usePM={usePM}
                             useTEM={useTEM}
                             useTM={useTM}
                             useUISM={useUISM}
-                            isInChatPage={false}
-                            usePM={usePM}
                         />
                     )}
                 </Box>

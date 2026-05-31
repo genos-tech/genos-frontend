@@ -93,11 +93,9 @@ export const useReadStatusManagement = ({
                       | undefined
               )?.messageIdWithChatIdAndThreadId
             : undefined;
-        void channelService
-            .markRead(channelUuidRaw, messageUuid, threadRootId)
-            .catch((err) => {
-                console.error("[useReadStatusManagement] markRead failed", err);
-            });
+        void channelService.markRead(channelUuidRaw, messageUuid, threadRootId).catch((err) => {
+            console.error("[useReadStatusManagement] markRead failed", err);
+        });
     };
 
     const handleReadStatusUpdate = (targetIndex: number) => {

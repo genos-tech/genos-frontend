@@ -58,11 +58,11 @@ export const MentionGroupModal = ({
                 {open && (
                     <MentionGroupEditor
                         groupId={openGroupId!}
-                        useTEM={useTEM}
                         myself={myself}
                         setMyself={setMyself}
                         socket={socket}
                         useCM={useCM}
+                        useTEM={useTEM}
                         useUISM={useUISM}
                         onDeleted={closeGroupModal}
                     />

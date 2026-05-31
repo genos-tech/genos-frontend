@@ -52,18 +52,18 @@ export const MuteToggleButton = ({
 
     return (
         <Tooltip
-            title={label}
             placement="bottom"
             size="sm"
-            variant="outlined"
             sx={{ zIndex: 10020 }}
+            title={label}
+            variant="outlined"
         >
             <IconButton
+                aria-label={label}
+                color={color}
                 size={size}
                 variant="plain"
-                color={color}
                 onClick={handleClick}
-                aria-label={label}
             >
                 {muted ? <NotificationsOffRounded /> : <NotificationsActiveRounded />}
             </IconButton>

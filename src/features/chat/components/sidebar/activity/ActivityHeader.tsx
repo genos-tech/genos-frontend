@@ -67,9 +67,9 @@ export const ActivityHeader: React.FC<ActivityHeaderProps> = ({
             sx={{ minHeight: 32 }}
         >
             <Stack
+                alignItems="center"
                 direction="row"
                 spacing={1.25}
-                alignItems="center"
                 sx={{ minWidth: 0, flex: 1 }}
             >
                 <Box
@@ -80,11 +80,11 @@ export const ActivityHeader: React.FC<ActivityHeaderProps> = ({
                 >
                     <ActivityAvatar
                         activity={activity}
-                        useCM={useCM}
                         isYou={isYou}
                         myself={myself}
                         setMyself={setMyself}
                         socket={socket}
+                        useCM={useCM}
                         useTEM={useTEM}
                         useUISM={useUISM}
                     />
@@ -102,7 +102,6 @@ export const ActivityHeader: React.FC<ActivityHeaderProps> = ({
                     activity.chatType >= 5) && (
                     <Typography
                         level="title-sm"
-                        noWrap
                         sx={{
                             fontWeight: 600,
                             fontSize: "0.875rem",
@@ -110,6 +109,7 @@ export const ActivityHeader: React.FC<ActivityHeaderProps> = ({
                             letterSpacing: "-0.01em",
                             minWidth: 0,
                         }}
+                        noWrap
                     >
                         {activity.chatType === 1 && isYou
                             ? `${resolvedChatName} (you)`
@@ -128,7 +128,6 @@ export const ActivityHeader: React.FC<ActivityHeaderProps> = ({
             <Stack alignItems="center" direction="row" spacing={1} sx={{ flexShrink: 0, ml: 1 }}>
                 <Typography
                     level="body-xs"
-                    noWrap
                     sx={{
                         display: { xs: "none", md: "block" },
                         fontSize: "0.7rem",
@@ -136,6 +135,7 @@ export const ActivityHeader: React.FC<ActivityHeaderProps> = ({
                         color: isDark ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.45)",
                         letterSpacing: "0.02em",
                     }}
+                    noWrap
                 >
                     {extractYYYYMMDDHHMM(activity.tsSent)}
                 </Typography>

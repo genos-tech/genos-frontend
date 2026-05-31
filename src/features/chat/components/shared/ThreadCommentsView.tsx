@@ -162,23 +162,23 @@ export const ThreadCommentsView = ({
                 }}
             >
                 <TaskCommentList
-                    socket={socket}
-                    myself={myself}
-                    setMyself={setMyself}
-                    taskComments={useTM.taskComments}
-                    setIsInEdit={setIsInEdit}
-                    setEditTargetComment={setEditTargetComment}
-                    useTEM={useTEM}
-                    useUISM={useUISM}
-                    useCM={useCM}
-                    useTM={useTM}
+                    commentLinkBuilder={chatId !== undefined ? commentLinkBuilder : undefined}
                     currentProjectId={task.project?.projectId}
                     currentProjectName={task.project?.projectName}
                     currentTaskDisplayId={task.displayId}
-                    fillContainer
-                    commentLinkBuilder={chatId !== undefined ? commentLinkBuilder : undefined}
                     focusedCommentId={focusedCommentId}
+                    myself={myself}
+                    setEditTargetComment={setEditTargetComment}
+                    setIsInEdit={setIsInEdit}
+                    setMyself={setMyself}
                     setTodoFromMessageBubble={setTodoFromMessageBubble}
+                    socket={socket}
+                    taskComments={useTM.taskComments}
+                    useCM={useCM}
+                    useTEM={useTEM}
+                    useTM={useTM}
+                    useUISM={useUISM}
+                    fillContainer
                 />
             </Box>
             <Box
@@ -190,7 +190,6 @@ export const ThreadCommentsView = ({
                 }}
             >
                 <TaskCommentEditorBlock
-                    useCM={useCM}
                     editTargetComment={editTargetComment}
                     isInEdit={isInEdit}
                     myself={myself}
@@ -202,9 +201,10 @@ export const ThreadCommentsView = ({
                     task={task}
                     taskCommentLines={useTM.taskCommentLines}
                     taskComments={useTM.taskComments}
+                    useCM={useCM}
                     useTEM={useTEM}
-                    useUISM={useUISM}
                     useTM={useTM}
+                    useUISM={useUISM}
                 />
             </Box>
         </Sheet>

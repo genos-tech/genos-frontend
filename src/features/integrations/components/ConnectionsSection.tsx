@@ -72,14 +72,14 @@ export const ConnectionsSection = ({ accessToken }: ConnectionsSectionProps) => 
         const c = connected[provider];
         const isPrimary = c?.is_primary === true;
         return (
-            <Card variant="outlined" sx={{ p: 2 }}>
-                <Stack direction="row" alignItems="center" spacing={2}>
+            <Card sx={{ p: 2 }} variant="outlined">
+                <Stack alignItems="center" direction="row" spacing={2}>
                     <Box sx={{ fontSize: 32, display: "flex" }}>{icon}</Box>
                     <Box sx={{ flex: 1, minWidth: 0 }}>
-                        <Stack direction="row" spacing={1} alignItems="center">
+                        <Stack alignItems="center" direction="row" spacing={1}>
                             <Typography level="title-md">{label}</Typography>
                             {isPrimary && (
-                                <Chip size="sm" color="primary">
+                                <Chip color="primary" size="sm">
                                     Primary login
                                 </Chip>
                             )}
@@ -102,8 +102,8 @@ export const ConnectionsSection = ({ accessToken }: ConnectionsSectionProps) => 
                         upgrades scopes on the existing row. */}
                     {c && provider === "google" && !hasCalendarScope(c) && (
                         <Button
-                            variant="solid"
                             color="primary"
+                            variant="solid"
                             onClick={() => {
                                 void redirectToOAuthConnect(
                                     provider,
@@ -118,18 +118,18 @@ export const ConnectionsSection = ({ accessToken }: ConnectionsSectionProps) => 
                     )}
                     {c ? (
                         <AppTooltip
+                            placement="left"
                             title={
                                 isPrimary
                                     ? "You can't disconnect the provider you signed up with."
                                     : ""
                             }
-                            placement="left"
                         >
                             <span>
                                 <Button
-                                    variant="outlined"
                                     color="danger"
                                     disabled={isPrimary || disconnecting === provider}
+                                    variant="outlined"
                                     onClick={() => handleDisconnect(provider)}
                                 >
                                     {disconnecting === provider ? "Disconnecting…" : "Disconnect"}
@@ -175,9 +175,9 @@ export const ConnectionsSection = ({ accessToken }: ConnectionsSectionProps) => 
                 instead of getting stuck mid-flow. */}
             <Alert
                 color="neutral"
-                variant="soft"
                 startDecorator={<InfoOutlinedIcon />}
                 sx={{ alignItems: "flex-start" }}
+                variant="soft"
             >
                 <Box>
                     <Typography level="body-sm" sx={{ fontWeight: 600 }}>
@@ -207,11 +207,11 @@ export const ConnectionsSection = ({ accessToken }: ConnectionsSectionProps) => 
             </Alert>
 
             <Row
-                provider="google"
+                icon={<CalendarMonthRoundedIcon fontSize="inherit" sx={{ color: "#4285f4" }} />}
                 label="Google"
-                icon={<CalendarMonthRoundedIcon sx={{ color: "#4285f4" }} fontSize="inherit" />}
+                provider="google"
             />
-            <Row provider="github" label="GitHub" icon={<GitHubIcon fontSize="inherit" />} />
+            <Row icon={<GitHubIcon fontSize="inherit" />} label="GitHub" provider="github" />
         </Stack>
     );
 };

@@ -292,13 +292,13 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
                 setFlaggedMessages={useCM.setFlaggedMessages}
                 setIsInEdit={setIsInEdit}
                 setTargetMessageIndex={setTargetMessageIndex}
+                setUnwrapAll={setUnwrapAll}
+                setUnwrapCode={setUnwrapCode}
                 socket={socket}
                 thread={thread}
-                useCM={useCM}
                 unwrapAll={unwrapAll}
-                setUnwrapAll={setUnwrapAll}
                 unwrapCode={unwrapCode}
-                setUnwrapCode={setUnwrapCode}
+                useCM={useCM}
             />
         </Stack>
     );
@@ -357,6 +357,8 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
                     transition: "background-color 0.15s ease",
                 }}
                 onClick={handleMessageClick}
+                onMouseEnter={() => setShowUnderBarOption(true)}
+                onMouseLeave={() => setShowUnderBarOption(false)}
                 onDoubleClick={
                     doubleClickTodoEnabled
                         ? () => {
@@ -364,8 +366,6 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
                           }
                         : undefined
                 }
-                onMouseEnter={() => setShowUnderBarOption(true)}
-                onMouseLeave={() => setShowUnderBarOption(false)}
             >
                 {emojiPickerPositionCalculated === true && (
                     <EmojiPicker
@@ -383,8 +383,6 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
                 {showUnderBarOption === true && (
                     <Box
                         ref={toolbarRef}
-                        onClick={(e) => e.stopPropagation()}
-                        onDoubleClick={(e) => e.stopPropagation()}
                         sx={{
                             position: "absolute",
                             top: COMPACT_TOOLBAR_OFFSET.top,
@@ -399,6 +397,8 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
                                 ? "0 2px 8px rgba(0,0,0,0.4)"
                                 : "0 2px 8px rgba(0,0,0,0.1)",
                         }}
+                        onClick={(e) => e.stopPropagation()}
+                        onDoubleClick={(e) => e.stopPropagation()}
                     >
                         <BubbleActions />
                     </Box>
@@ -420,13 +420,13 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
                         {!isSimpleBubble && (
                             <BubbleUserName
                                 chatType={thread.chatType}
+                                displayId={thread.displayId}
                                 dtSent={dtSent}
                                 isSent={isSent}
                                 isSimpleBubble={false}
                                 isThread={true}
                                 sender={message.sender}
                                 taskId={thread.taskId}
-                                displayId={thread.displayId}
                                 taskStatus={null}
                                 tsSent={message.tsSent}
                                 tsUpdated={message.tsUpdated}
@@ -570,13 +570,13 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
                                 >
                                     <BubbleUserName
                                         chatType={thread.chatType}
+                                        displayId={thread.displayId}
                                         dtSent={dtSent}
                                         isSent={isSent}
                                         isSimpleBubble={isSimpleBubble}
                                         isThread={true}
                                         sender={message.sender}
                                         taskId={thread.taskId}
-                                        displayId={thread.displayId}
                                         taskStatus={null}
                                         tsSent={message.tsSent}
                                         tsUpdated={message.tsUpdated}
@@ -601,13 +601,13 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
                                         <Stack alignItems="center" direction="row">
                                             <BubbleUserName
                                                 chatType={thread.chatType}
+                                                displayId={thread.displayId}
                                                 dtSent={dtSent}
                                                 isSent={isSent}
                                                 isSimpleBubble={isSimpleBubble}
                                                 isThread={true}
                                                 sender={message.sender}
                                                 taskId={thread.taskId}
-                                                displayId={thread.displayId}
                                                 taskStatus={null}
                                                 tsSent={message.tsSent}
                                                 tsUpdated={message.tsUpdated}

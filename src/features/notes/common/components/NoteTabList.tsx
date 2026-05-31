@@ -182,8 +182,8 @@ export const NoteTabList = ({ useNM, onCloseTab }: NoteTabListProps) => {
             {canScrollLeft && (
                 <IconButton
                     size="sm"
-                    variant="plain"
                     sx={{ ...scrollButtonStyles, left: 4 }}
+                    variant="plain"
                     onClick={() => scroll("left")}
                 >
                     <ChevronLeftRoundedIcon sx={{ fontSize: 18 }} />
@@ -221,7 +221,6 @@ export const NoteTabList = ({ useNM, onCloseTab }: NoteTabListProps) => {
                     {useNM.tabItems.map((tab, index) => (
                         <Tooltip
                             key={`tab-tooltip-${index}`}
-                            arrow
                             placement="bottom"
                             size="sm"
                             title={tab.title}
@@ -232,6 +231,7 @@ export const NoteTabList = ({ useNM, onCloseTab }: NoteTabListProps) => {
                                     color: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)",
                                 },
                             }}
+                            arrow
                         >
                             <Tab
                                 key={`tab-${tab.noteType}-${tab.noteId}`}
@@ -300,13 +300,13 @@ export const NoteTabList = ({ useNM, onCloseTab }: NoteTabListProps) => {
                                     />
                                     <Typography
                                         level="body-sm"
-                                        noWrap
                                         sx={{
                                             fontSize: "inherit",
                                             fontWeight: "inherit",
                                             color: "inherit",
                                             maxWidth: 120,
                                         }}
+                                        noWrap
                                     >
                                         {tab.title}
                                     </Typography>
@@ -349,8 +349,8 @@ export const NoteTabList = ({ useNM, onCloseTab }: NoteTabListProps) => {
             {canScrollRight && (
                 <IconButton
                     size="sm"
-                    variant="plain"
                     sx={{ ...scrollButtonStyles, right: 4 }}
+                    variant="plain"
                     onClick={() => scroll("right")}
                 >
                     <ChevronRightRoundedIcon sx={{ fontSize: 18 }} />

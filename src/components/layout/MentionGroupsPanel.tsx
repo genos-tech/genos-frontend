@@ -77,7 +77,7 @@ export const MentionGroupsPanel = ({
     };
 
     return (
-        <Sheet variant="outlined" sx={{ borderRadius: "lg", p: 2 }}>
+        <Sheet sx={{ borderRadius: "lg", p: 2 }} variant="outlined">
             <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 0.5 }}>
                 <GroupRoundedIcon />
                 <Typography level="title-md">Mention groups</Typography>
@@ -97,11 +97,11 @@ export const MentionGroupsPanel = ({
                     below that the two panes stack vertically so they
                     don't truncate the modal. */}
                 <Box sx={{ flex: 1, minWidth: 0, width: { xs: "100%", lg: 260 } }}>
-                    <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
+                    <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 1 }}>
                         <Typography level="title-sm" sx={{ flex: 1 }}>
                             Groups
                         </Typography>
-                        <AppTooltip title="New group" size="sm">
+                        <AppTooltip size="sm" title="New group">
                             <IconButton
                                 size="sm"
                                 variant="soft"
@@ -118,15 +118,15 @@ export const MentionGroupsPanel = ({
 
                     {creating && (
                         <Sheet
-                            variant="soft"
                             sx={{ p: 1, borderRadius: "md", mb: 1, background: "neutral.softBg" }}
+                            variant="soft"
                         >
                             <Stack spacing={0.75}>
                                 <Input
-                                    autoFocus
-                                    size="sm"
                                     placeholder="group-name (lowercase)"
+                                    size="sm"
                                     value={newName}
+                                    autoFocus
                                     onChange={(e) => setNewName(e.target.value)}
                                     onKeyDown={(e) => {
                                         if (e.key === "Enter") void handleCreate();
@@ -134,24 +134,24 @@ export const MentionGroupsPanel = ({
                                     }}
                                 />
                                 <Input
-                                    size="sm"
                                     placeholder="Description (optional)"
+                                    size="sm"
                                     value={newDescription}
                                     onChange={(e) => setNewDescription(e.target.value)}
                                 />
                                 <Stack direction="row" justifyContent="flex-end" spacing={0.5}>
                                     <Button
+                                        color="neutral"
                                         size="sm"
                                         variant="plain"
-                                        color="neutral"
                                         onClick={() => setCreating(false)}
                                     >
                                         Cancel
                                     </Button>
                                     <Button
+                                        disabled={!newName.trim()}
                                         size="sm"
                                         variant="solid"
-                                        disabled={!newName.trim()}
                                         onClick={() => void handleCreate()}
                                     >
                                         Create
@@ -183,8 +183,8 @@ export const MentionGroupsPanel = ({
                             <ListItem key={g.groupId} sx={{ p: 0 }}>
                                 <ListItemButton
                                     selected={g.groupId === selectedGroupId}
-                                    onClick={() => setSelectedGroupId(g.groupId)}
                                     sx={{ px: 1.25, py: 0.75 }}
+                                    onClick={() => setSelectedGroupId(g.groupId)}
                                 >
                                     <GroupRoundedIcon
                                         sx={{ fontSize: 16, color: "#16a34a", mr: 0.75 }}
@@ -198,7 +198,7 @@ export const MentionGroupsPanel = ({
                                             @{g.groupName}
                                         </Typography>
                                     </Box>
-                                    <Chip size="sm" variant="soft" color="success">
+                                    <Chip color="success" size="sm" variant="soft">
                                         {g.memberCount}
                                     </Chip>
                                 </ListItemButton>
@@ -228,11 +228,11 @@ export const MentionGroupsPanel = ({
                     ) : (
                         <MentionGroupEditor
                             groupId={selectedGroup.groupId}
-                            useTEM={useTEM}
                             myself={myself}
                             setMyself={setMyself}
                             socket={socket}
                             useCM={useCM}
+                            useTEM={useTEM}
                             useUISM={useUISM}
                             onDeleted={() => setSelectedGroupId(null)}
                         />

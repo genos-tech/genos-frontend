@@ -96,7 +96,6 @@ export const MobileTaskList = ({ usePM, useTM }: MobileTaskListProps) => {
                 return (
                     <Sheet
                         key={task.id ?? task.title}
-                        onClick={() => openTask(task.id)}
                         sx={{
                             p: 1.5,
                             borderRadius: "12px",
@@ -112,8 +111,9 @@ export const MobileTaskList = ({ usePM, useTM }: MobileTaskListProps) => {
                                 background: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.03)",
                             },
                         }}
+                        onClick={() => openTask(task.id)}
                     >
-                        <Stack direction="row" spacing={1.25} alignItems="flex-start">
+                        <Stack alignItems="flex-start" direction="row" spacing={1.25}>
                             {/* Assignee avatar (or empty slot) */}
                             <Box sx={{ flexShrink: 0, mt: 0.25 }}>
                                 {task.assigneeId ? (
@@ -134,7 +134,7 @@ export const MobileTaskList = ({ usePM, useTM }: MobileTaskListProps) => {
 
                             <Box sx={{ flex: 1, minWidth: 0 }}>
                                 {/* Title row */}
-                                <Stack direction="row" alignItems="center" spacing={0.75}>
+                                <Stack alignItems="center" direction="row" spacing={0.75}>
                                     {/* Milestone flag — surfaces backing-task
                                         rows so users can tell milestones from
                                         regular tasks at a glance. Mirrors the
@@ -184,9 +184,9 @@ export const MobileTaskList = ({ usePM, useTM }: MobileTaskListProps) => {
 
                                 {/* Status + Priority + Due date */}
                                 <Stack
+                                    alignItems="center"
                                     direction="row"
                                     spacing={0.5}
-                                    alignItems="center"
                                     sx={{ mt: 0.75, flexWrap: "wrap", gap: 0.5 }}
                                 >
                                     {statusMeta && (
@@ -232,9 +232,9 @@ export const MobileTaskList = ({ usePM, useTM }: MobileTaskListProps) => {
                                     )}
                                     {task.dueDate && (
                                         <Stack
+                                            alignItems="center"
                                             direction="row"
                                             spacing={0.25}
-                                            alignItems="center"
                                             sx={{
                                                 ml: "auto",
                                                 opacity: 0.65,

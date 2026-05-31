@@ -318,12 +318,12 @@ export const Sidebar = (props: SidebarProps) => {
                             placement="right"
                             size="sm"
                             sx={{ zIndex: 10020 }}
+                            variant="outlined"
                             title={
                                 isMac()
                                     ? t.sidebar.tooltips.spotlightShortcut.mac
                                     : t.sidebar.tooltips.spotlightShortcut.windows
                             }
-                            variant="outlined"
                         >
                             <ListItemButton
                                 sx={{
@@ -548,12 +548,12 @@ export const Sidebar = (props: SidebarProps) => {
                             placement="right"
                             size="sm"
                             sx={{ zIndex: 10020 }}
+                            variant="outlined"
                             title={
                                 isMac()
                                     ? t.sidebar.tooltips.historyShortcut.mac
                                     : t.sidebar.tooltips.historyShortcut.windows
                             }
-                            variant="outlined"
                         >
                             <ListItemButton
                                 sx={{
@@ -794,14 +794,14 @@ export const Sidebar = (props: SidebarProps) => {
             )}
 
             <SettingsModal
-                open={openSettings}
-                onClose={() => setOpenSettings(false)}
-                useTEM={useTEM}
                 myself={myself}
+                open={openSettings}
                 setMyself={setMyself}
                 socket={socket}
                 useCM={useCM}
+                useTEM={useTEM}
                 useUISM={useUISM}
+                onClose={() => setOpenSettings(false)}
             />
 
             <Modal

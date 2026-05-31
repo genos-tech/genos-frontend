@@ -219,7 +219,6 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                         <MyNoteEditorPanel
                             key={inlineMyTab.id}
                             accessToken={accessToken}
-                            isActive
                             myself={myself}
                             setMyself={setMyself}
                             socket={socket}
@@ -228,6 +227,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                             useNM={useNM}
                             useTEM={useTEM}
                             useUISM={useUISM}
+                            isActive
                         />
                     )}
                 </Stack>

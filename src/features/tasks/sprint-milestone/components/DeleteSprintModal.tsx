@@ -1,7 +1,5 @@
 import { useState } from "react";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
-
-import { fmt, useTranslation } from "../../../../i18n";
 import {
     Alert,
     Button,
@@ -14,6 +12,8 @@ import {
     Stack,
     Typography,
 } from "@mui/joy";
+
+import { fmt, useTranslation } from "../../../../i18n";
 
 type Props = {
     open: boolean;
@@ -62,7 +62,7 @@ export const DeleteSprintModal = ({
                     </Stack>
                 </DialogContent>
                 <DialogActions>
-                    <Button variant="plain" color="neutral" onClick={onClose} disabled={busy}>
+                    <Button color="neutral" disabled={busy} variant="plain" onClick={onClose}>
                         {t.tasks.deleteSprint.cancelButton}
                     </Button>
                     <Button

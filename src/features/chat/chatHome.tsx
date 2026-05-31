@@ -1,7 +1,7 @@
 // `simple-import-sort` and the prettier import-sort plugin disagree on
 // the order of `react` vs `@mui/...`. Prettier wins; disable
 // simple-import-sort.
-/* eslint-disable simple-import-sort/imports */
+
 import { useEffect, useRef, useState } from "react";
 import { Box, Sheet, Snackbar } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";

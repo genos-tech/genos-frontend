@@ -95,7 +95,7 @@ function BlockSpan({ block, currentUserId }: BlockSpanProps) {
     return (
         <>
             {(block.content ?? []).map((node, i) => (
-                <InlineSpan key={i} node={node} currentUserId={currentUserId} />
+                <InlineSpan key={i} currentUserId={currentUserId} node={node} />
             ))}
             {(block.children ?? []).map((child, i) => (
                 <BlockSpan key={`c-${i}`} block={child} currentUserId={currentUserId} />
@@ -116,8 +116,8 @@ function InlineSpan({ node, currentUserId }: InlineSpanProps) {
         const isSelf = currentUserId !== null && userId === currentUserId;
         return (
             <span
-                data-testid={`message-body-mention-${userId}`}
                 data-self={isSelf ? "true" : "false"}
+                data-testid={`message-body-mention-${userId}`}
                 style={isSelf ? MENTION_SELF : MENTION_OTHER}
                 title={isSelf ? "Mentions you" : `Mentions ${userName}`}
             >

@@ -172,12 +172,12 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
                     onChange={(e) => onToggleComplete(item.itemId, e.target.checked)}
                 />
                 <Textarea
+                    maxRows={6}
+                    minRows={1}
                     placeholder="Untitled todo"
                     size="sm"
                     value={title}
                     variant="plain"
-                    minRows={1}
-                    maxRows={6}
                     sx={{
                         flex: 1,
                         textDecoration: item.isCompleted ? "line-through" : undefined,
@@ -191,12 +191,12 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
                         "--Textarea-paddingBlock": "0px",
                         "& textarea": { px: 0, resize: "none" },
                     }}
-                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                        setTitle(e.target.value)
-                    }
                     onBlur={() => {
                         if (title !== item.title) onTitleCommit(item.itemId, title);
                     }}
+                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                        setTitle(e.target.value)
+                    }
                     onKeyDown={(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
                         // Enter inserts a newline by default (Textarea
                         // behavior). Cmd/Ctrl+Enter commits without
@@ -319,9 +319,9 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
                             useCM={useCM}
                             useTEM={useTEM}
                             useUISM={useUISM}
+                            onCategoryChange={onCategoryChange}
                             onCategoryCreate={onCategoryCreate}
                             onDelete={onDelete}
-                            onCategoryChange={onCategoryChange}
                             onNotesCommit={onNotesCommit}
                             onTitleCommit={onTitleCommit}
                             onToggleComplete={onToggleComplete}
@@ -336,16 +336,16 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
                             sx={{ mt: 0.25, px: 1 }}
                         >
                             <Input
-                                autoFocus
                                 placeholder="+ Add subitem"
                                 size="sm"
+                                value={newSubitemTitle}
+                                variant="plain"
                                 sx={{
                                     flex: 1,
                                     fontSize: "0.85rem",
                                     "& input": { px: 0 },
                                 }}
-                                value={newSubitemTitle}
-                                variant="plain"
+                                autoFocus
                                 onChange={(e) => setNewSubitemTitle(e.target.value)}
                                 onKeyDown={(e) => {
                                     if (e.key === "Enter") {

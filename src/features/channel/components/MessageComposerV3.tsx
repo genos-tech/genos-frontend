@@ -246,7 +246,6 @@ export function MessageComposerV3({
                     title: displayName,
                     onItemClick: () => {
                         editor.insertInlineContent([
-                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
                             {
                                 type: "mention",
                                 props: { userId: m.userId, userName: displayName },
@@ -268,10 +267,11 @@ export function MessageComposerV3({
         <>
             <PendingAttachmentStrip
                 pending={attachments.pending}
-                onRemove={attachments.removeAt}
                 testIdPrefix={testIdPrefix}
+                onRemove={attachments.removeAt}
             />
             <div
+                data-testid={testIdPrefix}
                 style={{
                     display: "flex",
                     alignItems: "stretch",
@@ -280,10 +280,11 @@ export function MessageComposerV3({
                     borderTop: "1px solid #ddd",
                     background: "#fff",
                 }}
-                data-testid={testIdPrefix}
             >
                 <input
                     ref={fileInputRef}
+                    data-testid={`${testIdPrefix}-file-input`}
+                    style={{ display: "none" }}
                     type="file"
                     multiple
                     onChange={(e) => {
@@ -292,27 +293,25 @@ export function MessageComposerV3({
                         // after a remove still fires onChange.
                         e.target.value = "";
                     }}
-                    style={{ display: "none" }}
-                    data-testid={`${testIdPrefix}-file-input`}
                 />
                 <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
+                    data-testid={`${testIdPrefix}-attach`}
                     disabled={busy}
                     title="Attach file(s)"
+                    type="button"
                     style={{
                         alignSelf: "flex-end",
                         marginBottom: 4,
                         fontSize: 16,
                         padding: "4px 8px",
                     }}
-                    data-testid={`${testIdPrefix}-attach`}
+                    onClick={() => fileInputRef.current?.click()}
                 >
                     📎
                 </button>
                 <div
-                    style={{ flex: 1, minWidth: 0 }}
                     data-testid={`${testIdPrefix}-editor-host`}
+                    style={{ flex: 1, minWidth: 0 }}
                     onKeyDown={(e) => {
                         if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
                             e.preventDefault();
@@ -330,21 +329,21 @@ export function MessageComposerV3({
                         onChange={() => saveDraft(editor.document)}
                     >
                         <SuggestionMenuController
-                            triggerCharacter="@"
                             getItems={getMentionItems}
+                            triggerCharacter="@"
                         />
                     </BlockNoteView>
                 </div>
                 <button
+                    data-testid={`${testIdPrefix}-send`}
+                    style={{ alignSelf: "flex-end", marginBottom: 4 }}
                     type="button"
-                    onClick={() => void send()}
                     disabled={
                         busy ||
                         attachments.isUploading ||
                         (!hasContent(editor.document) && !hasAttachments)
                     }
-                    style={{ alignSelf: "flex-end", marginBottom: 4 }}
-                    data-testid={`${testIdPrefix}-send`}
+                    onClick={() => void send()}
                 >
                     {attachments.isUploading ? "Uploading…" : "Send"}
                 </button>

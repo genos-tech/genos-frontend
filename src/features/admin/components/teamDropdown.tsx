@@ -139,17 +139,17 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
         <Box sx={{ display: "flex", alignItems: "center" }}>
             {teamProfile && (
                 <ModalTeamProfile
-                    socket={socket}
-                    useTEM={useTEM}
                     myself={myself}
-                    setMyself={setMyself}
-                    teamProfile={teamProfile}
-                    setTeamProfile={setTeamProfile}
                     openModalTeamProfile={openModalTeamProfile}
-                    setOpenModalTeamProfile={setOpenModalTeamProfile}
                     setAvatarUserId={setAvatarUserId}
+                    setMyself={setMyself}
+                    setOpenModalTeamProfile={setOpenModalTeamProfile}
                     setOpenUserProfile={setOpenUserProfile}
+                    setTeamProfile={setTeamProfile}
+                    socket={socket}
+                    teamProfile={teamProfile}
                     useCM={useCM}
+                    useTEM={useTEM}
                     useUISM={useUISM}
                 />
             )}
@@ -167,7 +167,6 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
                     }}
                 >
                     <IconButton
-                        onClick={handleClick}
                         sx={{
                             p: 0.5,
                             borderRadius: "12px",
@@ -177,6 +176,7 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
                                 transform: "scale(1.05)",
                             },
                         }}
+                        onClick={handleClick}
                     >
                         <Box
                             sx={{
@@ -255,7 +255,6 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
 
                     {/* Show Team Profile */}
                     <MenuItem
-                        onClick={handleShowTeamProfileClick}
                         sx={{
                             borderRadius: "10px",
                             py: 1.25,
@@ -265,6 +264,7 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
                                 background: styles.menuItemHover,
                             },
                         }}
+                        onClick={handleShowTeamProfileClick}
                     >
                         <ListItemDecorator>
                             <Box
@@ -313,7 +313,6 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
                         return (
                             <MenuItem
                                 key={team.teamName}
-                                onClick={() => handleClicked(team.teamId, team.teamName)}
                                 sx={{
                                     borderRadius: "10px",
                                     py: 1.25,
@@ -332,6 +331,7 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
                                         transform: "translateX(4px)",
                                     },
                                 }}
+                                onClick={() => handleClicked(team.teamId, team.teamName)}
                             >
                                 <ListItemDecorator>
                                     <Box

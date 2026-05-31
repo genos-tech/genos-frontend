@@ -23,15 +23,27 @@ export const MilestoneAssigneesPicker = ({
     const resolvedPlaceholder = placeholder ?? t.tasks.picker.addAssignees;
     return (
         <Autocomplete
-            multiple
-            size="sm"
-            value={selected}
+            disabled={disabled}
+            getOptionLabel={(o) => o.userName || o.userEmail || String(o.userId)}
+            isOptionEqualToValue={(o, v) => o.userId === v.userId}
             options={teamMembers}
             placeholder={resolvedPlaceholder}
-            disabled={disabled}
-            isOptionEqualToValue={(o, v) => o.userId === v.userId}
-            getOptionLabel={(o) => o.userName || o.userEmail || String(o.userId)}
-            onChange={(_, v) => onChange(v as UserProps[])}
+            size="sm"
+            sx={{ width: "100%" }}
+            value={selected}
+            renderOption={(optionProps, user) => (
+                <li {...optionProps} key={String(user.userId)}>
+                    <Stack alignItems="center" direction="row" spacing={1}>
+                        <UserAvatar
+                            clickable={false}
+                            showPulseDot={false}
+                            size={22}
+                            userId={user.userId}
+                        />
+                        <span>{user.userName || user.userEmail}</span>
+                    </Stack>
+                </li>
+            )}
             renderTags={(value, getTagProps) =>
                 value.map((user, index) => {
                     const { key: _key, ...tagProps } = getTagProps({ index });
@@ -55,20 +67,8 @@ export const MilestoneAssigneesPicker = ({
                     );
                 })
             }
-            renderOption={(optionProps, user) => (
-                <li {...optionProps} key={String(user.userId)}>
-                    <Stack direction="row" spacing={1} alignItems="center">
-                        <UserAvatar
-                            clickable={false}
-                            showPulseDot={false}
-                            size={22}
-                            userId={user.userId}
-                        />
-                        <span>{user.userName || user.userEmail}</span>
-                    </Stack>
-                </li>
-            )}
-            sx={{ width: "100%" }}
+            multiple
+            onChange={(_, v) => onChange(v as UserProps[])}
         />
     );
 };

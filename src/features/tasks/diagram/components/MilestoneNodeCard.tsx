@@ -155,33 +155,33 @@ export const MilestoneNodeCard = memo((props: NodeProps) => {
             }}
         >
             <Handle
-                type="target"
-                position={Position.Top}
                 id={HANDLE.structureTop}
-                style={{ ...HANDLE_BASE, background: P.accent, borderColor: P.accentSoft }}
                 isConnectable={false}
-            />
-            <Handle
-                type="source"
-                position={Position.Bottom}
-                id={HANDLE.structureBottom}
+                position={Position.Top}
                 style={{ ...HANDLE_BASE, background: P.accent, borderColor: P.accentSoft }}
-                isConnectable={false}
-            />
-            <Handle
                 type="target"
-                position={Position.Left}
-                id={HANDLE.dependencyLeft}
-                style={{ ...HANDLE_BASE, background: "#ff8c00", borderColor: "#fbbf24" }}
             />
             <Handle
+                id={HANDLE.structureBottom}
+                isConnectable={false}
+                position={Position.Bottom}
+                style={{ ...HANDLE_BASE, background: P.accent, borderColor: P.accentSoft }}
                 type="source"
-                position={Position.Right}
-                id={HANDLE.dependencyRight}
+            />
+            <Handle
+                id={HANDLE.dependencyLeft}
+                position={Position.Left}
                 style={{ ...HANDLE_BASE, background: "#ff8c00", borderColor: "#fbbf24" }}
+                type="target"
+            />
+            <Handle
+                id={HANDLE.dependencyRight}
+                position={Position.Right}
+                style={{ ...HANDLE_BASE, background: "#ff8c00", borderColor: "#fbbf24" }}
+                type="source"
             />
 
-            <Stack direction="row" alignItems="center" spacing={0.75} sx={{ mb: 0.75 }}>
+            <Stack alignItems="center" direction="row" spacing={0.75} sx={{ mb: 0.75 }}>
                 <Box
                     sx={{
                         width: 22,
@@ -197,12 +197,12 @@ export const MilestoneNodeCard = memo((props: NodeProps) => {
                     <FlagRoundedIcon sx={{ fontSize: 14 }} />
                 </Box>
                 <CopyableTaskIdChip
-                    task={task}
                     size="sm"
-                    variant="outlined"
                     sx={{ fontWeight: 600, fontFamily: "monospace", borderRadius: "5px" }}
+                    task={task}
+                    variant="outlined"
                 />
-                <StatusChip meta={meta} isDark={isDark} />
+                <StatusChip isDark={isDark} meta={meta} />
                 {/* Schedule-health chip — visible per-milestone so the
                     user spots a slipping milestone inside a multi-
                     milestone tree without opening each card. Skipped
@@ -215,9 +215,9 @@ export const MilestoneNodeCard = memo((props: NodeProps) => {
                         })}
                     >
                         <Chip
+                            color={HEALTH_JOY_COLOR[health.tone]}
                             size="sm"
                             variant="soft"
-                            color={HEALTH_JOY_COLOR[health.tone]}
                             sx={{
                                 fontSize: "0.6rem",
                                 fontWeight: 700,
@@ -234,13 +234,13 @@ export const MilestoneNodeCard = memo((props: NodeProps) => {
                     <IconButton
                         size="sm"
                         variant="plain"
-                        onClick={onOpenPreview}
                         sx={{
                             "--IconButton-size": "22px",
                             color: P.textMuted,
                             opacity: 0.7,
                             "&:hover": { opacity: 1, color: P.text },
                         }}
+                        onClick={onOpenPreview}
                     >
                         <LaunchRoundedIcon sx={{ fontSize: 14 }} />
                     </IconButton>
@@ -267,8 +267,8 @@ export const MilestoneNodeCard = memo((props: NodeProps) => {
 
             {/* Schedule row */}
             <Stack
-                direction="row"
                 alignItems="center"
+                direction="row"
                 spacing={0.5}
                 sx={{ mb: 0.5, minHeight: 22, flexWrap: "wrap", rowGap: 0.5 }}
             >
@@ -306,8 +306,8 @@ export const MilestoneNodeCard = memo((props: NodeProps) => {
                 {schedule.relativeLabel && (
                     <Chip
                         size="sm"
-                        variant="soft"
                         startDecorator={<ScheduleRoundedIcon sx={{ fontSize: 11 }} />}
+                        variant="soft"
                         sx={{
                             fontSize: "0.6rem",
                             fontWeight: 700,
@@ -329,8 +329,8 @@ export const MilestoneNodeCard = memo((props: NodeProps) => {
                 window and sprint cadence read side by side. */}
             {sprint && (
                 <Stack
-                    direction="row"
                     alignItems="center"
+                    direction="row"
                     spacing={0.5}
                     sx={{ mb: 0.75, minHeight: 22, flexWrap: "wrap", rowGap: 0.5 }}
                 >
@@ -353,14 +353,14 @@ export const MilestoneNodeCard = memo((props: NodeProps) => {
                 health.expectedPct so the gap between actual progress
                 and expected progress is visible right on the card. */}
             {total > 0 && (
-                <Stack direction="row" alignItems="center" spacing={1} sx={{ mt: 0.5 }}>
+                <Stack alignItems="center" direction="row" spacing={1} sx={{ mt: 0.5 }}>
                     <Box sx={{ flex: 1, position: "relative" }}>
                         <LinearProgress
-                            determinate
-                            value={pct}
-                            size="sm"
                             color={progressColor}
+                            size="sm"
                             sx={{ "--LinearProgress-thickness": "5px" }}
+                            value={pct}
+                            determinate
                         />
                         {health && (
                             <Box
@@ -399,8 +399,8 @@ export const MilestoneNodeCard = memo((props: NodeProps) => {
             )}
 
             <Stack
-                direction="row"
                 alignItems="center"
+                direction="row"
                 spacing={0.75}
                 sx={{ mt: total > 0 ? 0.5 : 0 }}
             >
@@ -425,7 +425,6 @@ export const MilestoneNodeCard = memo((props: NodeProps) => {
                     <IconButton
                         size="sm"
                         variant="plain"
-                        onClick={() => void onAddSubtask()}
                         sx={{
                             "--IconButton-size": "24px",
                             color: flagColor,
@@ -438,6 +437,7 @@ export const MilestoneNodeCard = memo((props: NodeProps) => {
                                     : "rgba(234,88,12,0.1)",
                             },
                         }}
+                        onClick={() => void onAddSubtask()}
                     >
                         <AddRoundedIcon sx={{ fontSize: 16 }} />
                     </IconButton>

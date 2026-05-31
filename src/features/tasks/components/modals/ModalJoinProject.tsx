@@ -344,7 +344,6 @@ export const ModalJoinProject: React.FC<Props> = ({
                 <Stack direction="row" spacing={1.5} sx={{ justifyContent: "center" }}>
                     <Button
                         variant="plain"
-                        onClick={() => setOpenJoinProject(disableOpenJoinModalParams)}
                         sx={{
                             color: "rgba(255, 255, 255, 0.6)",
                             borderRadius: "10px",
@@ -354,11 +353,11 @@ export const ModalJoinProject: React.FC<Props> = ({
                                 color: "rgba(255, 255, 255, 0.9)",
                             },
                         }}
+                        onClick={() => setOpenJoinProject(disableOpenJoinModalParams)}
                     >
                         {t.tasks.modals.joinProject.cancelButton}
                     </Button>
                     <Button
-                        onClick={handleJoinProject}
                         endDecorator={
                             openJoinProject.isPrivate ? (
                                 <SendIcon sx={{ fontSize: 16 }} />
@@ -382,6 +381,7 @@ export const ModalJoinProject: React.FC<Props> = ({
                                     : "0 6px 20px rgba(168,85,247,0.4)",
                             },
                         }}
+                        onClick={handleJoinProject}
                     >
                         {openJoinProject.isPrivate
                             ? t.tasks.modals.joinProject.sendButton

@@ -27,15 +27,15 @@ export const WrapToggleToolbarButtons = (props: WrapToggleToolbarButtonsProps) =
     return (
         <>
             <Components.FormattingToolbar.Button
-                mainTooltip={unwrapAll ? "Wrap all content" : "Unwrap all content"}
                 isSelected={unwrapAll}
+                mainTooltip={unwrapAll ? "Wrap all content" : "Unwrap all content"}
                 onClick={() => setUnwrapAll(!unwrapAll)}
             >
                 <WrapTextIcon sx={{ fontSize: "17px", color: iconColor }} />
             </Components.FormattingToolbar.Button>
             <Components.FormattingToolbar.Button
-                mainTooltip={unwrapCode ? "Wrap code blocks" : "Unwrap code blocks only"}
                 isSelected={unwrapCode}
+                mainTooltip={unwrapCode ? "Wrap code blocks" : "Unwrap code blocks only"}
                 onClick={() => setUnwrapCode(!unwrapCode)}
             >
                 <CodeIcon sx={{ fontSize: "17px", color: iconColor }} />

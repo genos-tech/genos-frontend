@@ -200,21 +200,13 @@ export const SprintMilestonePicker = ({
         <Stack direction="row" spacing={1} sx={{ width: "100%" }}>
             {showSprint && (
                 <Autocomplete
-                    size={size}
-                    value={selectedSprint}
-                    options={sprintOptions}
-                    getOptionLabel={(o) => o.label}
-                    disableClearable
                     disabled={disabled}
-                    onChange={(_, v) => {
-                        onChangeSprint(v?.id ?? null);
-                        // We deliberately don't touch `milestoneId`
-                        // here. Picking a milestone auto-syncs the
-                        // sprint, so changing the sprint alone leaves
-                        // the current milestone untouched and lets the
-                        // user override the linkage explicitly when
-                        // they want to.
-                    }}
+                    getOptionLabel={(o) => o.label}
+                    options={sprintOptions}
+                    size={size}
+                    slotProps={OPTION_LISTBOX_SLOT_PROPS}
+                    sx={{ flex: 1, minWidth: 0 }}
+                    value={selectedSprint}
                     renderOption={(props, option) => (
                         <li {...props} key={`s-${option.id ?? "none"}`}>
                             <Stack
@@ -222,7 +214,7 @@ export const SprintMilestonePicker = ({
                                 spacing={0.25}
                                 sx={{ width: "100%", py: 0.25 }}
                             >
-                                <Stack direction="row" spacing={1} alignItems="center">
+                                <Stack alignItems="center" direction="row" spacing={1}>
                                     <CalendarMonthRoundedIcon
                                         sx={{ fontSize: 14, opacity: 0.7 }}
                                     />
@@ -250,42 +242,27 @@ export const SprintMilestonePicker = ({
                             </Stack>
                         </li>
                     )}
-                    slotProps={OPTION_LISTBOX_SLOT_PROPS}
-                    sx={{ flex: 1, minWidth: 0 }}
+                    disableClearable
+                    onChange={(_, v) => {
+                        onChangeSprint(v?.id ?? null);
+                        // We deliberately don't touch `milestoneId`
+                        // here. Picking a milestone auto-syncs the
+                        // sprint, so changing the sprint alone leaves
+                        // the current milestone untouched and lets the
+                        // user override the linkage explicitly when
+                        // they want to.
+                    }}
                 />
             )}
             {showMilestone && (
                 <Autocomplete
-                    size={size}
-                    value={selectedMilestone}
-                    options={milestoneOptions}
-                    getOptionLabel={(o) => o.label}
-                    disableClearable
                     disabled={disabled}
-                    onChange={(_, v) => {
-                        // Auto-sync the sprint to the milestone's
-                        // sprint when one is set, so the two pickers
-                        // stay coherent without nagging the user.
-                        // Resolve the sprint here and forward it to
-                        // the parent in a SINGLE callback so the
-                        // upstream setState collapses both updates
-                        // into one batch (see `onChangeMilestone`
-                        // doc above for why two callbacks corrupted
-                        // the state).
-                        let autoSyncedSprint: Sprint | null = null;
-                        if (v?.milestone) {
-                            const linkedSprintId = v.milestone.sprintId;
-                            if (linkedSprintId != null && linkedSprintId !== sprintId) {
-                                autoSyncedSprint =
-                                    sprints.find((s) => s.sprintId === linkedSprintId) ?? null;
-                            }
-                        }
-                        onChangeMilestone(
-                            v?.id ?? null,
-                            v?.milestone?.taskId ?? null,
-                            autoSyncedSprint
-                        );
-                    }}
+                    getOptionLabel={(o) => o.label}
+                    options={milestoneOptions}
+                    size={size}
+                    slotProps={OPTION_LISTBOX_SLOT_PROPS}
+                    sx={{ flex: 1, minWidth: 0 }}
+                    value={selectedMilestone}
                     renderOption={(props, option) => {
                         const m = option.milestone;
                         const linkedSprintName =
@@ -303,7 +280,7 @@ export const SprintMilestonePicker = ({
                                     spacing={0.25}
                                     sx={{ width: "100%", py: 0.25 }}
                                 >
-                                    <Stack direction="row" spacing={1} alignItems="center">
+                                    <Stack alignItems="center" direction="row" spacing={1}>
                                         <FlagRoundedIcon sx={{ fontSize: 14, color: "#f97316" }} />
                                         <Typography
                                             level="body-sm"
@@ -326,9 +303,9 @@ export const SprintMilestonePicker = ({
                                     </Stack>
                                     {m && (
                                         <Stack
+                                            alignItems="center"
                                             direction="row"
                                             spacing={1}
-                                            alignItems="center"
                                             sx={{ pl: 2.5 }}
                                         >
                                             <Chip size="sm" variant="outlined">
@@ -340,13 +317,13 @@ export const SprintMilestonePicker = ({
                                             </Typography>
                                             <Box sx={{ flex: 1, minWidth: 60 }}>
                                                 <LinearProgress
-                                                    determinate
-                                                    value={pct}
-                                                    size="sm"
                                                     color={pct === 100 ? "success" : "primary"}
+                                                    size="sm"
+                                                    value={pct}
                                                     sx={{
                                                         "--LinearProgress-thickness": "4px",
                                                     }}
+                                                    determinate
                                                 />
                                             </Box>
                                             {m.assignees && m.assignees.length > 0 && (
@@ -372,8 +349,31 @@ export const SprintMilestonePicker = ({
                             </li>
                         );
                     }}
-                    slotProps={OPTION_LISTBOX_SLOT_PROPS}
-                    sx={{ flex: 1, minWidth: 0 }}
+                    disableClearable
+                    onChange={(_, v) => {
+                        // Auto-sync the sprint to the milestone's
+                        // sprint when one is set, so the two pickers
+                        // stay coherent without nagging the user.
+                        // Resolve the sprint here and forward it to
+                        // the parent in a SINGLE callback so the
+                        // upstream setState collapses both updates
+                        // into one batch (see `onChangeMilestone`
+                        // doc above for why two callbacks corrupted
+                        // the state).
+                        let autoSyncedSprint: Sprint | null = null;
+                        if (v?.milestone) {
+                            const linkedSprintId = v.milestone.sprintId;
+                            if (linkedSprintId != null && linkedSprintId !== sprintId) {
+                                autoSyncedSprint =
+                                    sprints.find((s) => s.sprintId === linkedSprintId) ?? null;
+                            }
+                        }
+                        onChangeMilestone(
+                            v?.id ?? null,
+                            v?.milestone?.taskId ?? null,
+                            autoSyncedSprint
+                        );
+                    }}
                 />
             )}
         </Stack>

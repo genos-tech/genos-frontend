@@ -27,7 +27,7 @@ export default function GenosAIHubImageSection({ lang = "ja" }: { lang?: Lang })
               };
 
     return (
-        <section id="ai-context-map" className="px-4 py-16 sm:px-6 lg:px-8">
+        <section className="px-4 py-16 sm:px-6 lg:px-8" id="ai-context-map">
             <div className="mx-auto max-w-7xl">
                 <div className="grid items-center gap-12 lg:grid-cols-[0.9fr_1.1fr]">
                     <div>
@@ -63,10 +63,10 @@ export default function GenosAIHubImageSection({ lang = "ja" }: { lang?: Lang })
 
                         <div className="relative overflow-hidden rounded-[2.5rem] border border-violet-100 bg-white/90 p-4 shadow-2xl shadow-violet-900/10 backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/85 sm:p-6">
                             <img
-                                src="/lp-ai-hub.png"
                                 alt={t.imageAlt}
-                                loading="lazy"
                                 className="h-auto w-full rounded-[2rem] object-contain"
+                                loading="lazy"
+                                src="/lp-ai-hub.png"
                             />
 
                             <div className="mt-4 rounded-2xl border border-violet-100 bg-violet-50/70 p-4 dark:border-white/10 dark:bg-white/5">

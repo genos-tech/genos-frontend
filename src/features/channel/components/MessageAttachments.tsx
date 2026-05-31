@@ -58,7 +58,7 @@ export function MessageAttachments({ messageId, attachments }: MessageAttachment
     return (
         <div data-testid={`message-attachments-${messageId}`} style={STRIP_STYLE}>
             {attachments.map((a) => (
-                <AttachmentChip key={a.id} messageId={messageId} attachment={a} />
+                <AttachmentChip key={a.id} attachment={a} messageId={messageId} />
             ))}
         </div>
     );
@@ -77,20 +77,20 @@ function AttachmentChip({ messageId, attachment }: AttachmentChipProps) {
         <div data-testid={`message-attachment-${messageId}-${attachment.id}`}>
             {isImage && (
                 <img
-                    src={attachment.fileUrl}
                     alt={filename}
-                    style={PREVIEW_STYLE}
                     data-testid={`message-attachment-preview-${attachment.id}`}
                     loading="lazy"
+                    src={attachment.fileUrl}
+                    style={PREVIEW_STYLE}
                 />
             )}
             <a
-                href={attachment.fileUrl}
-                target="_blank"
-                rel="noreferrer"
-                download={filename}
-                style={CHIP_STYLE}
                 data-testid={`message-attachment-link-${attachment.id}`}
+                download={filename}
+                href={attachment.fileUrl}
+                rel="noreferrer"
+                style={CHIP_STYLE}
+                target="_blank"
                 title={`${filename} — ${sizeLabel}`}
             >
                 <span aria-hidden="true">{isImage ? "🖼️" : "📎"}</span>

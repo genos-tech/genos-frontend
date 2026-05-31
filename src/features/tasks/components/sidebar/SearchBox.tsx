@@ -59,14 +59,6 @@ export const TaskSidebarSearchBox = (props: TaskSidebarSearchBoxProps) => {
             options={teamTaskSearchOptions}
             placeholder={t.tasks.sidebar.searchPlaceholder}
             size="sm"
-            startDecorator={
-                <SearchRoundedIcon
-                    sx={{
-                        fontSize: 18,
-                        color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.35)",
-                    }}
-                />
-            }
             endDecorator={
                 loading ? (
                     <CircularProgress
@@ -79,59 +71,14 @@ export const TaskSidebarSearchBox = (props: TaskSidebarSearchBoxProps) => {
                     />
                 ) : null
             }
-            sx={{
-                width: "100%",
-                "--Input-focusedThickness": "0px",
-                borderRadius: "12px",
-                background: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)",
-                border: "1px solid",
-                borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
-                transition: "all 0.2s ease",
-                "&:hover": {
-                    background: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
-                    borderColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)",
-                },
-                "&.Mui-focused": {
-                    background: isDark ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.9)",
-                    borderColor: isDark ? "rgba(139,92,246,0.4)" : "rgba(124,58,237,0.3)",
-                    boxShadow: isDark
-                        ? "0 0 0 3px rgba(139,92,246,0.15)"
-                        : "0 0 0 3px rgba(124,58,237,0.1)",
-                },
-                "& .MuiAutocomplete-input": {
-                    fontSize: "0.85rem",
-                    "&::placeholder": {
-                        color: isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.35)",
-                        opacity: 1,
-                    },
-                },
-            }}
-            slotProps={{
-                listbox: {
-                    sx: {
-                        zIndex: 10020,
-                        borderRadius: "12px",
-                        boxShadow: isDark
-                            ? "0 8px 32px rgba(0,0,0,0.5)"
-                            : "0 8px 32px rgba(0,0,0,0.12)",
-                        border: "1px solid",
-                        borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
-                        "& .MuiAutocomplete-option": {
-                            borderRadius: "8px",
-                            mx: 0.5,
-                            my: 0.25,
-                        },
-                    },
-                },
-            }}
             renderOption={(props, option) => (
                 <AutocompleteOption {...props} key={`ac-taskhome-search-task-${option.taskId}`}>
                     <ListItemContent sx={{ fontSize: "sm" }}>
-                        <Stack direction="row" spacing={1} alignItems="center">
+                        <Stack alignItems="center" direction="row" spacing={1}>
                             <CopyableTaskIdChip
                                 key={`ac-taskhome-search-task-id-chip-${option.taskId}`}
-                                task={option}
                                 size="sm"
+                                task={option}
                                 variant="soft"
                                 sx={{
                                     fontSize: "0.65rem",
@@ -172,13 +119,13 @@ export const TaskSidebarSearchBox = (props: TaskSidebarSearchBoxProps) => {
                             <Box sx={{ minWidth: 0, flex: 1 }}>
                                 <Typography
                                     level="body-sm"
-                                    noWrap
                                     sx={{
                                         fontWeight: 500,
                                         color: isDark
                                             ? "rgba(255,255,255,0.9)"
                                             : "rgba(0,0,0,0.85)",
                                     }}
+                                    noWrap
                                 >
                                     {option.title}
                                 </Typography>
@@ -220,6 +167,59 @@ export const TaskSidebarSearchBox = (props: TaskSidebarSearchBoxProps) => {
                     );
                 })
             }
+            slotProps={{
+                listbox: {
+                    sx: {
+                        zIndex: 10020,
+                        borderRadius: "12px",
+                        boxShadow: isDark
+                            ? "0 8px 32px rgba(0,0,0,0.5)"
+                            : "0 8px 32px rgba(0,0,0,0.12)",
+                        border: "1px solid",
+                        borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
+                        "& .MuiAutocomplete-option": {
+                            borderRadius: "8px",
+                            mx: 0.5,
+                            my: 0.25,
+                        },
+                    },
+                },
+            }}
+            startDecorator={
+                <SearchRoundedIcon
+                    sx={{
+                        fontSize: 18,
+                        color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.35)",
+                    }}
+                />
+            }
+            sx={{
+                width: "100%",
+                "--Input-focusedThickness": "0px",
+                borderRadius: "12px",
+                background: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)",
+                border: "1px solid",
+                borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
+                transition: "all 0.2s ease",
+                "&:hover": {
+                    background: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
+                    borderColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)",
+                },
+                "&.Mui-focused": {
+                    background: isDark ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.9)",
+                    borderColor: isDark ? "rgba(139,92,246,0.4)" : "rgba(124,58,237,0.3)",
+                    boxShadow: isDark
+                        ? "0 0 0 3px rgba(139,92,246,0.15)"
+                        : "0 0 0 3px rgba(124,58,237,0.1)",
+                },
+                "& .MuiAutocomplete-input": {
+                    fontSize: "0.85rem",
+                    "&::placeholder": {
+                        color: isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.35)",
+                        opacity: 1,
+                    },
+                },
+            }}
             onChange={(event, value) => onChangeHandler(value)}
             onClose={() => {
                 setOpenSearch(false);

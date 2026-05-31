@@ -112,7 +112,6 @@ const ModernChip: React.FC<ModernChipProps> = ({
 
     const chip = (
         <Box
-            onClick={copyText ? handleClick : undefined}
             sx={{
                 display: "inline-flex",
                 alignItems: "center",
@@ -129,6 +128,7 @@ const ModernChip: React.FC<ModernChipProps> = ({
                 cursor: copyText ? "pointer" : "default",
                 ...styles,
             }}
+            onClick={copyText ? handleClick : undefined}
         >
             {label}
         </Box>
@@ -136,7 +136,7 @@ const ModernChip: React.FC<ModernChipProps> = ({
 
     if (!copyText) return chip;
     return (
-        <AppTooltip arrow placement="top" title={copied ? "Copied!" : "Click to copy"}>
+        <AppTooltip placement="top" title={copied ? "Copied!" : "Click to copy"} arrow>
             {chip}
         </AppTooltip>
     );
@@ -205,18 +205,18 @@ export const ActivityTypeChips: React.FC<ActivityTypeChipsProps> = ({
                         chip. */}
                     {!!projectChipName && projectChipName !== "?" && !isTaskNote && (
                         <ModernChip
-                            label={projectChipName}
                             colorScheme={CHIP_COLORS.project}
                             isDark={isDark}
+                            label={projectChipName}
                             variant="filled"
                         />
                     )}
                     {!!activity.taskId && (
                         <ModernChip
-                            label={formatTaskDisplayId(activity)}
-                            copyText={formatTaskDisplayId(activity)}
                             colorScheme={CHIP_COLORS.task}
+                            copyText={formatTaskDisplayId(activity)}
                             isDark={isDark}
+                            label={formatTaskDisplayId(activity)}
                             variant="outlined"
                         />
                     )}
@@ -230,43 +230,43 @@ export const ActivityTypeChips: React.FC<ActivityTypeChipsProps> = ({
                 their own surface chip and no notion of "replying". */}
             {activity.activityType === 1 && activity.chatType !== 4 && !isTaskBody && !isNote && (
                 <ModernChip
-                    label={t.chat.activity.chipReply}
                     colorScheme={CHIP_COLORS.reply}
                     isDark={isDark}
+                    label={t.chat.activity.chipReply}
                     variant="filled"
                 />
             )}
 
             {activity.activityType === 2 && (
                 <ModernChip
-                    label={t.chat.activity.chipReaction}
                     colorScheme={CHIP_COLORS.reaction}
                     isDark={isDark}
+                    label={t.chat.activity.chipReaction}
                     variant="filled"
                 />
             )}
 
             {activity.activityType === 3 && (
                 <ModernChip
-                    label={t.chat.activity.chipMention}
                     colorScheme={CHIP_COLORS.mention}
                     isDark={isDark}
+                    label={t.chat.activity.chipMention}
                     variant="filled"
                 />
             )}
 
             <ModernChip
-                label={chatTypeLabel}
                 colorScheme={surfaceChipColor}
                 isDark={isDark}
+                label={chatTypeLabel}
                 variant={surfaceChipVariant}
             />
 
             {activity.isThread === true && (
                 <ModernChip
-                    label={t.chat.activity.chipThread}
                     colorScheme={CHIP_COLORS.thread}
                     isDark={isDark}
+                    label={t.chat.activity.chipThread}
                     variant="outlined"
                 />
             )}

@@ -1,8 +1,8 @@
 import React from "react";
-import { Box, Button, CssBaseline, Typography } from "@mui/joy";
-import { CssVarsProvider, useColorScheme } from "@mui/joy/styles";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import SearchOffRoundedIcon from "@mui/icons-material/SearchOffRounded";
+import { Box, Button, CssBaseline, Typography } from "@mui/joy";
+import { CssVarsProvider, useColorScheme } from "@mui/joy/styles";
 import { useNavigate } from "react-router-dom";
 
 import { I18nProvider, useTranslation } from "../../i18n";
@@ -145,7 +145,6 @@ const PageNotFoundContent: React.FC = () => {
 
             {/* Button */}
             <Button
-                onClick={handleBackHome}
                 startDecorator={<HomeRoundedIcon />}
                 sx={{
                     px: 3,
@@ -168,6 +167,7 @@ const PageNotFoundContent: React.FC = () => {
                         transform: "translateY(0)",
                     },
                 }}
+                onClick={handleBackHome}
             >
                 {t.layout.pageNotFound.backHome}
             </Button>
@@ -177,7 +177,7 @@ const PageNotFoundContent: React.FC = () => {
 
 export const PageNotFound: React.FC = () => {
     return (
-        <CssVarsProvider disableTransitionOnChange theme={purpleTheme}>
+        <CssVarsProvider theme={purpleTheme} disableTransitionOnChange>
             <CssBaseline />
             <I18nProvider>
                 <PageNotFoundContent />

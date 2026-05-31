@@ -418,10 +418,10 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
                         </Chip>
                     )}
                     <WrapToggleButtons
-                        unwrapAll={unwrapAll}
                         setUnwrapAll={setUnwrapAll}
-                        unwrapCode={unwrapCode}
                         setUnwrapCode={setUnwrapCode}
+                        unwrapAll={unwrapAll}
+                        unwrapCode={unwrapCode}
                     />
                 </Box>
 
@@ -587,8 +587,8 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
                                     // Always-notify + 403-on-click handles
                                     // any out-of-scope selections.
                                     <SuggestionMenuController
-                                        triggerCharacter={"@"}
                                         suggestionMenuComponent={MentionSuggestionMenu}
+                                        triggerCharacter={"@"}
                                         getItems={async (query) =>
                                             filterSuggestionItems(
                                                 MentionMenuItems(

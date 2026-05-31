@@ -424,13 +424,13 @@ function LanguageToggle({ lang, setLang }: { lang: Lang; setLang: (lang: Lang) =
             {(["ja", "en"] as Lang[]).map((item) => (
                 <button
                     key={item}
-                    onClick={() => setLang(item)}
                     className={cn(
                         "rounded-full px-3 py-1.5 text-sm font-semibold transition",
                         lang === item
                             ? "bg-violet-600 text-white shadow-sm"
                             : "text-slate-600 hover:text-violet-700 dark:text-slate-300 dark:hover:text-white"
                     )}
+                    onClick={() => setLang(item)}
                 >
                     {item === "ja" ? "日本語" : "EN"}
                 </button>
@@ -520,7 +520,7 @@ function ContactSection({ lang }: { lang: "ja" | "en" }) {
               };
 
     return (
-        <section id="contact" className="px-4 py-16 sm:px-6 lg:px-8">
+        <section className="px-4 py-16 sm:px-6 lg:px-8" id="contact">
             <div className="mx-auto max-w-7xl">
                 <div className="rounded-[2.5rem] border border-violet-100 bg-white p-8 shadow-2xl shadow-violet-900/10 dark:border-white/10 dark:bg-white/5 lg:p-12">
                     <div className="mx-auto max-w-3xl text-center">
@@ -554,8 +554,8 @@ function ContactSection({ lang }: { lang: "ja" | "en" }) {
                             </p>
 
                             <a
-                                href={createMailtoHref(lang)}
                                 className="mt-6 inline-flex items-center gap-2 rounded-full bg-violet-600 px-5 py-3 text-sm font-black text-white shadow-lg shadow-violet-600/25 transition hover:-translate-y-0.5 hover:bg-violet-700"
+                                href={createMailtoHref(lang)}
                             >
                                 {t.emailCta}
                                 <ArrowRight className="h-4 w-4" />
@@ -580,10 +580,10 @@ function ContactSection({ lang }: { lang: "ja" | "en" }) {
                             </p>
 
                             <a
-                                href={GOOGLE_FORM_URL}
-                                target="_blank"
-                                rel="noreferrer"
                                 className="mt-6 inline-flex items-center gap-2 rounded-full border border-violet-200 bg-white px-5 py-3 text-sm font-black text-violet-700 shadow-sm transition hover:-translate-y-0.5 hover:border-violet-300 hover:bg-violet-50 dark:border-white/10 dark:bg-white/10 dark:text-violet-100 dark:hover:bg-white/15"
+                                href={GOOGLE_FORM_URL}
+                                rel="noreferrer"
+                                target="_blank"
                             >
                                 {t.formCta}
                                 <ArrowRight className="h-4 w-4" />
@@ -625,10 +625,10 @@ function ScreenshotFrame({
             )}
 
             <img
-                src={src}
                 alt={alt}
-                loading="lazy"
                 className={`w-full rounded-[1.35rem] object-contain ${imageClassName}`}
+                loading="lazy"
+                src={src}
             />
         </div>
     );
@@ -646,12 +646,12 @@ export default function GenosLandingPage() {
             <main className="min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgba(139,92,246,0.18),_transparent_32%),linear-gradient(180deg,#ffffff_0%,#faf7ff_44%,#ffffff_100%)] text-slate-950 dark:bg-[radial-gradient(circle_at_top_left,_rgba(139,92,246,0.22),_transparent_32%),linear-gradient(180deg,#020617_0%,#111827_48%,#020617_100%)] dark:text-white">
                 <header className="sticky top-0 z-50 border-b border-violet-100/70 bg-white/75 backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/70">
                     <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-                        <a href="#top" className="flex items-center gap-3">
+                        <a className="flex items-center gap-3" href="#top">
                             <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl border border-violet-100 bg-white shadow-lg shadow-violet-900/10 dark:border-white/10 dark:bg-white">
                                 <img
-                                    src="/genos_tech.png"
                                     alt="Genos"
                                     className="h-11 w-11 object-contain"
+                                    src="/genos_tech.png"
                                 />
                             </div>
 
@@ -699,17 +699,17 @@ export default function GenosLandingPage() {
                         <div className="flex items-center gap-2">
                             <LanguageToggle lang={lang} setLang={setLang} />
                             <button
-                                onClick={() => setDark((value) => !value)}
-                                className="hidden h-10 w-10 items-center justify-center rounded-full border border-violet-200/70 bg-white/70 text-slate-700 shadow-sm transition hover:text-violet-700 dark:border-white/10 dark:bg-white/10 dark:text-slate-200 dark:hover:text-white sm:flex"
                                 aria-label="Toggle dark mode"
+                                className="hidden h-10 w-10 items-center justify-center rounded-full border border-violet-200/70 bg-white/70 text-slate-700 shadow-sm transition hover:text-violet-700 dark:border-white/10 dark:bg-white/10 dark:text-slate-200 dark:hover:text-white sm:flex"
+                                onClick={() => setDark((value) => !value)}
                             >
                                 {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
                             </button>
                             <a
-                                href={APP_URL}
-                                target="_blank"
-                                rel="noreferrer"
                                 className="hidden rounded-full bg-slate-950 px-4 py-2 text-sm font-bold text-white shadow-lg shadow-slate-950/10 transition hover:-translate-y-0.5 hover:bg-violet-700 dark:bg-white dark:text-slate-950 dark:hover:bg-violet-100 lg:inline-flex"
+                                href={APP_URL}
+                                rel="noreferrer"
+                                target="_blank"
                             >
                                 {t.nav.demo}
                             </a>
@@ -718,26 +718,26 @@ export default function GenosLandingPage() {
                 </header>
 
                 <section
-                    id="top"
                     className="relative px-4 pb-20 pt-16 sm:px-6 lg:px-8 lg:pb-28 lg:pt-24"
+                    id="top"
                 >
                     <div className="mx-auto grid max-w-7xl items-center gap-14 lg:grid-cols-[1fr_0.92fr]">
                         <div>
                             <motion.div
-                                initial={{ opacity: 0, y: 12 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.55 }}
                                 className={`mb-6 inline-flex items-center gap-2 rounded-full border border-violet-200 bg-white/80 px-4 py-2 ${lang === "en" ? "text-md" : "text-sm"} font-bold text-violet-700 shadow-sm dark:border-violet-400/20 dark:bg-white/10 dark:text-violet-200"`}
+                                initial={{ opacity: 0, y: 12 }}
+                                transition={{ duration: 0.55 }}
                             >
                                 <Sparkles className="h-4 w-4" />
                                 {t.hero.badge}
                             </motion.div>
 
                             <motion.h1
-                                initial={{ opacity: 0, y: 16 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.65, delay: 0.05 }}
                                 className="max-w-4xl font-black tracking-[-0.06em] text-slate-950 dark:text-white text-[44px] sm:text-6xl lg:text-[76px]"
+                                initial={{ opacity: 0, y: 16 }}
+                                transition={{ duration: 0.65, delay: 0.05 }}
                             >
                                 <span className="block">{t.hero.title}</span>
 
@@ -749,32 +749,32 @@ export default function GenosLandingPage() {
                             </motion.h1>
 
                             <motion.p
-                                initial={{ opacity: 0, y: 16 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.65, delay: 0.12 }}
                                 className={`mt-6 max-w-2xl ${lang === "en" ? "text-lg" : "text-md"} leading-8 text-slate-600 dark:text-slate-300 sm:text-xl`}
+                                initial={{ opacity: 0, y: 16 }}
+                                transition={{ duration: 0.65, delay: 0.12 }}
                             >
                                 {t.hero.lead}
                             </motion.p>
 
                             <motion.div
-                                initial={{ opacity: 0, y: 16 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.65, delay: 0.18 }}
                                 className="mt-8 flex flex-col gap-3 sm:flex-row"
+                                initial={{ opacity: 0, y: 16 }}
+                                transition={{ duration: 0.65, delay: 0.18 }}
                             >
                                 <a
-                                    href={APP_URL}
-                                    target="_blank"
-                                    rel="noreferrer"
                                     className="inline-flex items-center justify-center gap-2 rounded-full bg-violet-600 px-6 py-4 text-base font-black text-white shadow-xl shadow-violet-600/25 transition hover:-translate-y-0.5 hover:bg-violet-700"
+                                    href={APP_URL}
+                                    rel="noreferrer"
+                                    target="_blank"
                                 >
                                     {t.hero.primary}
                                     <ArrowRight className="h-5 w-5" />
                                 </a>
                                 <a
-                                    href="#features"
                                     className="inline-flex items-center justify-center gap-2 rounded-full border border-violet-200 bg-white px-6 py-4 text-base font-black text-slate-900 shadow-sm transition hover:-translate-y-0.5 hover:border-violet-300 hover:text-violet-700 dark:border-white/10 dark:bg-white/10 dark:text-white dark:hover:border-violet-300/50"
+                                    href="#features"
                                 >
                                     {t.hero.secondary}
                                     <ChevronRight className="h-5 w-5" />
@@ -799,10 +799,10 @@ export default function GenosLandingPage() {
                         </div>
 
                         <ScreenshotFrame
-                            src="/lp-top.png"
                             alt="Genos main workspace screenshot"
-                            label="Genos Workspace"
                             className="mx-auto max-w-2xl p-3"
+                            label="Genos Workspace"
+                            src="/lp-top.png"
                         />
                     </div>
                 </section>
@@ -827,11 +827,11 @@ export default function GenosLandingPage() {
                                 {t.problem.cards.map((card, index) => (
                                     <motion.div
                                         key={card.title}
-                                        initial={{ opacity: 0, y: 18 }}
-                                        whileInView={{ opacity: 1, y: 0 }}
-                                        viewport={{ once: true, amount: 0.4 }}
-                                        transition={{ duration: 0.55, delay: index * 0.08 }}
                                         className="rounded-[2rem] border border-violet-100 bg-white p-6 shadow-lg shadow-violet-900/5 dark:border-white/10 dark:bg-white/5"
+                                        initial={{ opacity: 0, y: 18 }}
+                                        transition={{ duration: 0.55, delay: index * 0.08 }}
+                                        viewport={{ once: true, amount: 0.4 }}
+                                        whileInView={{ opacity: 1, y: 0 }}
                                     >
                                         <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-2xl bg-violet-50 text-violet-700 dark:bg-violet-500/15 dark:text-violet-200">
                                             {index === 0 ? (
@@ -853,7 +853,7 @@ export default function GenosLandingPage() {
                     </div>
                 </section>
 
-                <section id="features" className="px-4 py-16 sm:px-6 lg:px-8">
+                <section className="px-4 py-16 sm:px-6 lg:px-8" id="features">
                     <div className="mx-auto max-w-7xl">
                         <div className="mx-auto max-w-3xl text-center">
                             <p className="text-sm font-black uppercase tracking-[0.22em] text-violet-600 dark:text-violet-300">
@@ -877,11 +877,11 @@ export default function GenosLandingPage() {
                             {t.features.map((feature, index) => (
                                 <motion.div
                                     key={feature.title}
-                                    initial={{ opacity: 0, y: 18 }}
-                                    whileInView={{ opacity: 1, y: 0 }}
-                                    viewport={{ once: true, amount: 0.35 }}
-                                    transition={{ duration: 0.55, delay: index * 0.08 }}
                                     className="group rounded-[2rem] border border-violet-100 bg-white p-7 shadow-xl shadow-violet-900/5 transition hover:-translate-y-1 hover:shadow-2xl hover:shadow-violet-900/10 dark:border-white/10 dark:bg-white/5"
+                                    initial={{ opacity: 0, y: 18 }}
+                                    transition={{ duration: 0.55, delay: index * 0.08 }}
+                                    viewport={{ once: true, amount: 0.35 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
                                 >
                                     <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-600 to-fuchsia-500 text-white shadow-lg shadow-violet-600/20">
                                         <FeatureIcon type={feature.icon} />
@@ -902,11 +902,11 @@ export default function GenosLandingPage() {
                                         ))}
                                     </ul>
                                     <ScreenshotFrame
-                                        src={feature.image}
                                         alt={feature.imageAlt}
-                                        label={feature.title}
                                         className="mt-6"
                                         imageClassName="max-h-56"
+                                        label={feature.title}
+                                        src={feature.image}
                                     />
                                 </motion.div>
                             ))}
@@ -914,7 +914,7 @@ export default function GenosLandingPage() {
                     </div>
                 </section>
 
-                <section id="value" className="px-4 py-16 sm:px-6 lg:px-8">
+                <section className="px-4 py-16 sm:px-6 lg:px-8" id="value">
                     <div className="mx-auto grid max-w-7xl items-center gap-10 lg:grid-cols-[0.95fr_1.05fr]">
                         <div>
                             <p className="text-sm font-black uppercase tracking-[0.22em] text-violet-600 dark:text-violet-300">
@@ -1043,11 +1043,11 @@ export default function GenosLandingPage() {
                             {t.audience.cards.map((card, index) => (
                                 <motion.div
                                     key={card.title}
-                                    initial={{ opacity: 0, y: 18 }}
-                                    whileInView={{ opacity: 1, y: 0 }}
-                                    viewport={{ once: true, amount: 0.35 }}
-                                    transition={{ duration: 0.55, delay: index * 0.08 }}
                                     className="rounded-[2rem] border border-violet-100 bg-white p-7 shadow-xl shadow-violet-900/5 dark:border-white/10 dark:bg-white/5"
+                                    initial={{ opacity: 0, y: 18 }}
+                                    transition={{ duration: 0.55, delay: index * 0.08 }}
+                                    viewport={{ once: true, amount: 0.35 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
                                 >
                                     <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-50 text-violet-700 dark:bg-violet-500/15 dark:text-violet-200">
                                         {index === 0 ? (
@@ -1068,7 +1068,7 @@ export default function GenosLandingPage() {
                     </div>
                 </section>
 
-                <section id="ai" className="px-4 py-16 sm:px-6 lg:px-8">
+                <section className="px-4 py-16 sm:px-6 lg:px-8" id="ai">
                     <div className="mx-auto max-w-7xl overflow-hidden rounded-[2.5rem] border border-violet-200 bg-gradient-to-br from-violet-700 via-violet-600 to-fuchsia-600 p-8 text-white shadow-2xl shadow-violet-900/20 dark:border-white/10 lg:p-12">
                         <div className="grid items-center gap-10 lg:grid-cols-[1fr_0.9fr]">
                             <div>
@@ -1174,19 +1174,19 @@ export default function GenosLandingPage() {
                             </div>
                             <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
                                 <a
-                                    href={APP_URL}
-                                    target="_blank"
-                                    rel="noreferrer"
                                     className="inline-flex items-center justify-center gap-2 rounded-full bg-violet-600 px-6 py-4 text-base font-black text-white shadow-xl shadow-violet-600/25 transition hover:-translate-y-0.5 hover:bg-violet-700"
+                                    href={APP_URL}
+                                    rel="noreferrer"
+                                    target="_blank"
                                 >
                                     {t.cta.primary}
                                     <ArrowRight className="h-5 w-5" />
                                 </a>
                                 <a
-                                    href={GOOGLE_FORM_URL}
-                                    target="_blank"
-                                    rel="noreferrer"
                                     className="inline-flex items-center justify-center gap-2 rounded-full border border-violet-200 bg-white px-6 py-4 text-base font-black text-slate-900 shadow-sm transition hover:-translate-y-0.5 hover:text-violet-700 dark:border-white/10 dark:bg-white/10 dark:text-white"
+                                    href={GOOGLE_FORM_URL}
+                                    rel="noreferrer"
+                                    target="_blank"
                                 >
                                     {t.cta.secondary}
                                     <ArrowRight className="h-5 w-5" />
@@ -1198,7 +1198,7 @@ export default function GenosLandingPage() {
 
                 <ContactSection lang={lang} />
 
-                <section id="faq" className="px-4 py-16 sm:px-6 lg:px-8">
+                <section className="px-4 py-16 sm:px-6 lg:px-8" id="faq">
                     <div className="mx-auto max-w-4xl">
                         <div className="text-center">
                             <p className="text-sm font-black uppercase tracking-[0.22em] text-violet-600 dark:text-violet-300">
@@ -1233,9 +1233,9 @@ export default function GenosLandingPage() {
                             <div className="flex items-center gap-3">
                                 <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl border border-violet-100 bg-white shadow-lg shadow-violet-900/10 dark:border-white/10 dark:bg-white">
                                     <img
-                                        src="/genos_tech.png"
                                         alt="Genos"
                                         className="h-11 w-11 object-contain"
+                                        src="/genos_tech.png"
                                     />
                                 </div>
                                 <div className="font-black">{t.footer.product}</div>
@@ -1247,10 +1247,10 @@ export default function GenosLandingPage() {
                         <div className="flex flex-wrap items-center gap-4 text-sm font-semibold text-slate-500 dark:text-slate-400">
                             <span>© {year} Genos</span>
                             <a
-                                href={LINKEDIN_URL}
-                                target="_blank"
-                                rel="noreferrer"
                                 className="inline-flex items-center gap-2 transition hover:text-violet-700 dark:hover:text-white"
+                                href={LINKEDIN_URL}
+                                rel="noreferrer"
+                                target="_blank"
                             >
                                 {t.footer.creator}
                             </a>

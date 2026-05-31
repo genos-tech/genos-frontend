@@ -227,9 +227,8 @@ export const SignInForm = () => {
                                 {t.admin.auth.signIn.newMemberPrompt}{" "}
                                 <Link
                                     component="button"
-                                    type="button"
                                     level="title-sm"
-                                    onClick={() => navigate("/signup")}
+                                    type="button"
                                     sx={{
                                         color: styles.linkColor,
                                         fontWeight: 600,
@@ -238,6 +237,7 @@ export const SignInForm = () => {
                                             color: styles.linkHover,
                                         },
                                     }}
+                                    onClick={() => navigate("/signup")}
                                 >
                                     {t.admin.auth.signIn.createAccountLink}
                                 </Link>

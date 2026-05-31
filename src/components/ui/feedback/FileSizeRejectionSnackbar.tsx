@@ -41,11 +41,6 @@ export const FileSizeRejectionSnackbar = ({
             color="warning"
             open={open}
             startDecorator={<WarningRoundedIcon />}
-            sx={{
-                zIndex: 12000,
-                maxWidth: 420,
-                alignItems: "flex-start",
-            }}
             variant="soft"
             endDecorator={
                 <IconButton
@@ -58,6 +53,11 @@ export const FileSizeRejectionSnackbar = ({
                     <CloseRoundedIcon sx={{ fontSize: 16 }} />
                 </IconButton>
             }
+            sx={{
+                zIndex: 12000,
+                maxWidth: 420,
+                alignItems: "flex-start",
+            }}
             onClose={(_event, reason) => {
                 if (reason === "clickaway") return;
                 onDismiss();

@@ -82,8 +82,8 @@ export const NotificationSettingsPanel = () => {
     const settingsMessages = t.services.notifications.settings;
 
     return (
-        <Sheet variant="outlined" sx={{ p: 2, borderRadius: "lg" }}>
-            <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
+        <Sheet sx={{ p: 2, borderRadius: "lg" }} variant="outlined">
+            <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 0.5 }}>
                 {preferences.masterEnabled ? (
                     <NotificationsActiveRounded />
                 ) : (
@@ -102,9 +102,9 @@ export const NotificationSettingsPanel = () => {
 
             {/* Permission state */}
             <Stack
+                alignItems="center"
                 direction="row"
                 spacing={1}
-                alignItems="center"
                 sx={{ mb: 1.5, flexWrap: "wrap" }}
             >
                 <Typography level="body-sm">{settingsMessages.browserPermissionLabel}</Typography>
@@ -152,10 +152,10 @@ export const NotificationSettingsPanel = () => {
                     return (
                         <Box key={cat.id}>
                             <Stack
-                                direction="row"
-                                spacing={2}
                                 alignItems="center"
+                                direction="row"
                                 justifyContent="space-between"
+                                spacing={2}
                             >
                                 <Box sx={{ minWidth: 0, flex: 1 }}>
                                     <Typography level="title-sm">{cat.label}</Typography>
@@ -194,10 +194,10 @@ export const NotificationSettingsPanel = () => {
                         return (
                             <Stack
                                 key={`${m.chatType}:${m.chatId}`}
-                                direction="row"
-                                spacing={1}
                                 alignItems="center"
+                                direction="row"
                                 justifyContent="space-between"
+                                spacing={1}
                                 sx={{
                                     px: 1.25,
                                     py: 0.5,
@@ -206,9 +206,9 @@ export const NotificationSettingsPanel = () => {
                                 }}
                             >
                                 <Stack
+                                    alignItems="center"
                                     direction="row"
                                     spacing={1}
-                                    alignItems="center"
                                     sx={{ minWidth: 0, flex: 1 }}
                                 >
                                     <Chip size="sm" variant="soft">
@@ -218,21 +218,21 @@ export const NotificationSettingsPanel = () => {
                                         <Typography
                                             level="body-sm"
                                             sx={{ fontWeight: 600 }}
-                                            noWrap
                                             title={displayName}
+                                            noWrap
                                         >
                                             {displayName}
                                         </Typography>
                                         {showRawId && (
                                             <Typography
                                                 level="body-xs"
+                                                title={`Chat ID: ${m.chatId}`}
                                                 sx={{
                                                     color: "neutral.plainColor",
                                                     opacity: 0.6,
                                                     fontFamily: "monospace",
                                                 }}
                                                 noWrap
-                                                title={`Chat ID: ${m.chatId}`}
                                             >
                                                 #{m.chatId}
                                             </Typography>
@@ -242,10 +242,10 @@ export const NotificationSettingsPanel = () => {
                                 <IconButton
                                     size="sm"
                                     variant="plain"
-                                    onClick={() => unmute(m.chatType, m.chatId)}
                                     aria-label={fmt(settingsMessages.unmuteAriaLabel, {
                                         name: displayName,
                                     })}
+                                    onClick={() => unmute(m.chatType, m.chatId)}
                                 >
                                     <NotificationsActiveRounded />
                                 </IconButton>

@@ -228,10 +228,10 @@ export const MilestonesListItem = ({
                                                     isYou={String(myself.userId) === userIdKey}
                                                     myself={myself}
                                                     setMyself={setMyself}
+                                                    showPulseDot={false}
                                                     socket={socket}
                                                     useCM={useCM}
                                                     useUISM={useUISM}
-                                                    showPulseDot={false}
                                                 />
                                             ) : (
                                                 <Avatar

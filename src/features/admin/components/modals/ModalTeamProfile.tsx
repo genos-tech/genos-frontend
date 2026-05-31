@@ -360,8 +360,8 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                 }}
                             >
                                 <Stack
-                                    direction={{ xs: "column", md: "row" }}
                                     alignItems={{ xs: "stretch", md: "flex-start" }}
+                                    direction={{ xs: "column", md: "row" }}
                                     sx={{
                                         display: "flex",
                                         my: 1,
@@ -478,24 +478,13 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                     </FormLabel>
                                                     {nameEditMode ? (
                                                         <Stack
+                                                            alignItems="center"
                                                             direction="row"
                                                             spacing={1}
-                                                            alignItems="center"
                                                         >
                                                             <Input
                                                                 size="sm"
-                                                                autoFocus
                                                                 value={nameDraft}
-                                                                onChange={(e) =>
-                                                                    setNameDraft(e.target.value)
-                                                                }
-                                                                // Pin keydown to the inner <input>
-                                                                // via slotProps so Enter/Escape
-                                                                // always land on the typing
-                                                                // target — Joy Input's outer
-                                                                // onKeyDown wrapper can miss
-                                                                // synthetic events that bubble
-                                                                // through composed slots.
                                                                 slotProps={{
                                                                     input: {
                                                                         onKeyDown: (e) => {
@@ -516,23 +505,34 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                                         },
                                                                     },
                                                                 }}
+                                                                onChange={(e) =>
+                                                                    setNameDraft(e.target.value)
+                                                                }
+                                                                // Pin keydown to the inner <input>
+                                                                // via slotProps so Enter/Escape
+                                                                // always land on the typing
+                                                                // target — Joy Input's outer
+                                                                // onKeyDown wrapper can miss
+                                                                // synthetic events that bubble
+                                                                // through composed slots.
                                                                 sx={{
                                                                     flex: 1,
                                                                     "--Input-radius": "8px",
                                                                 }}
+                                                                autoFocus
                                                             />
                                                             <Button
+                                                                loading={nameSaving}
                                                                 size="sm"
                                                                 variant="solid"
-                                                                loading={nameSaving}
                                                                 onClick={handleNameSave}
                                                             >
                                                                 {t.common.profileEdit.save}
                                                             </Button>
                                                             <Button
+                                                                color="neutral"
                                                                 size="sm"
                                                                 variant="plain"
-                                                                color="neutral"
                                                                 onClick={() => {
                                                                     setNameEditMode(false);
                                                                     setNameError(null);
@@ -543,9 +543,9 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                         </Stack>
                                                     ) : (
                                                         <Stack
+                                                            alignItems="center"
                                                             direction="row"
                                                             spacing={1}
-                                                            alignItems="center"
                                                         >
                                                             <Box
                                                                 sx={{
@@ -573,10 +573,10 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                             {isTeamOwner && (
                                                                 <Tooltip
                                                                     size="sm"
+                                                                    variant="outlined"
                                                                     title={
                                                                         t.common.profileEdit.rename
                                                                     }
-                                                                    variant="outlined"
                                                                 >
                                                                     <IconButton
                                                                         size="sm"
@@ -670,8 +670,8 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                     wrapping mid-line and gives each element
                                                     breathing room. */}
                                                 <Stack
-                                                    direction="row"
                                                     alignItems="center"
+                                                    direction="row"
                                                     spacing={2}
                                                     sx={{ flexWrap: "wrap", rowGap: 0.5 }}
                                                 >
@@ -753,16 +753,16 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                         }}
                                                     >
                                                         <Button
-                                                            size="sm"
-                                                            variant="outlined"
                                                             color="neutral"
+                                                            size="sm"
+                                                            sx={{ borderRadius: "8px" }}
+                                                            variant="outlined"
                                                             startDecorator={
                                                                 <SwapHorizRoundedIcon
                                                                     sx={{ fontSize: 16 }}
                                                                 />
                                                             }
                                                             onClick={() => setOpenTransfer(true)}
-                                                            sx={{ borderRadius: "8px" }}
                                                         >
                                                             {t.common.profileEdit.transferOwner}
                                                         </Button>
@@ -774,13 +774,13 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                 <FormControl>
                                                     <Stack
                                                         direction={{ xs: "column", sm: "row" }}
+                                                        justifyContent="space-between"
+                                                        spacing={{ xs: 1, sm: 0 }}
+                                                        sx={{ mb: 1 }}
                                                         alignItems={{
                                                             xs: "stretch",
                                                             sm: "center",
                                                         }}
-                                                        justifyContent="space-between"
-                                                        spacing={{ xs: 1, sm: 0 }}
-                                                        sx={{ mb: 1 }}
                                                     >
                                                         <FormLabel
                                                             sx={{
@@ -799,38 +799,22 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                             })}
                                                         </FormLabel>
                                                         <Input
-                                                            placeholder={
-                                                                t.admin.teamProfile.searchMembers
-                                                            }
                                                             value={memberSearchQuery}
-                                                            onChange={(e) =>
-                                                                setMemberSearchQuery(
-                                                                    e.target.value
-                                                                )
-                                                            }
-                                                            startDecorator={
-                                                                <SearchIcon
-                                                                    sx={{
-                                                                        color: styles.accentColor,
-                                                                        fontSize: "18px",
-                                                                    }}
-                                                                />
-                                                            }
                                                             endDecorator={
                                                                 memberSearchQuery && (
                                                                     <IconButton
                                                                         size="sm"
                                                                         variant="plain"
-                                                                        onClick={() =>
-                                                                            setMemberSearchQuery(
-                                                                                ""
-                                                                            )
-                                                                        }
                                                                         sx={{
                                                                             minWidth: "24px",
                                                                             minHeight: "24px",
                                                                             borderRadius: "50%",
                                                                         }}
+                                                                        onClick={() =>
+                                                                            setMemberSearchQuery(
+                                                                                ""
+                                                                            )
+                                                                        }
                                                                     >
                                                                         <CloseIcon
                                                                             sx={{
@@ -839,6 +823,17 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                                         />
                                                                     </IconButton>
                                                                 )
+                                                            }
+                                                            placeholder={
+                                                                t.admin.teamProfile.searchMembers
+                                                            }
+                                                            startDecorator={
+                                                                <SearchIcon
+                                                                    sx={{
+                                                                        color: styles.accentColor,
+                                                                        fontSize: "18px",
+                                                                    }}
+                                                                />
                                                             }
                                                             sx={{
                                                                 width: { xs: "100%", sm: "220px" },
@@ -863,6 +858,11 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                                         : "0 0 0 2px rgba(124,58,237,0.1)",
                                                                 },
                                                             }}
+                                                            onChange={(e) =>
+                                                                setMemberSearchQuery(
+                                                                    e.target.value
+                                                                )
+                                                            }
                                                         />
                                                     </Stack>
                                                     <Box
@@ -902,12 +902,12 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                                 >
                                                                     <AvatarWithStatus
                                                                         avatarUser={member}
-                                                                        useCM={useCM}
                                                                         isYou={false}
                                                                         myself={myself}
                                                                         setMyself={setMyself}
                                                                         showNameAndEmail={true}
                                                                         socket={socket}
+                                                                        useCM={useCM}
                                                                         useUISM={useUISM}
                                                                     />
                                                                 </ListItemButton>
@@ -988,7 +988,6 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                         startDecorator={
                                                             <LogoutRoundedIcon fontSize="small" />
                                                         }
-                                                        onClick={() => setOpenLeaveConfirm(true)}
                                                         sx={{
                                                             borderRadius: "10px",
                                                             borderColor: "rgba(232,121,195,0.4)",
@@ -1000,6 +999,7 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                                     "rgba(232,121,195,0.6)",
                                                             },
                                                         }}
+                                                        onClick={() => setOpenLeaveConfirm(true)}
                                                     >
                                                         {t.common.actions.leave}
                                                     </Button>
@@ -1014,20 +1014,20 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                 </ModalDialog>
             </Modal>
             <ModalLeaveConfirm
-                open={openLeaveConfirm}
-                title={t.common.leaveConfirm.teamTitle}
                 description={t.common.leaveConfirm.teamDescription}
                 entityName={teamProfile.teamName}
-                onConfirm={handleLeaveTeam}
+                open={openLeaveConfirm}
+                title={t.common.leaveConfirm.teamTitle}
                 onCancel={() => setOpenLeaveConfirm(false)}
+                onConfirm={handleLeaveTeam}
             />
             <ModalTransferOwner
+                candidates={transferCandidates}
+                description={t.common.profileEdit.transferTeamDescription}
                 open={openTransfer}
                 title={t.common.profileEdit.transferTitle}
-                description={t.common.profileEdit.transferTeamDescription}
-                candidates={transferCandidates}
-                onConfirm={handleTransferConfirm}
                 onCancel={() => setOpenTransfer(false)}
+                onConfirm={handleTransferConfirm}
             />
         </>
     );

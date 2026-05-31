@@ -193,8 +193,8 @@ export const ModalNoteHistory = ({
             >
                 {/* Header */}
                 <Stack
-                    direction="row"
                     alignItems="center"
+                    direction="row"
                     justifyContent="space-between"
                     sx={{ px: 2.5, py: 2 }}
                 >
@@ -214,7 +214,7 @@ export const ModalNoteHistory = ({
                                 : t.notes.history.viewerDescription}
                         </Typography>
                     </Box>
-                    <ModalClose variant="plain" sx={{ position: "static" }} />
+                    <ModalClose sx={{ position: "static" }} variant="plain" />
                 </Stack>
 
                 <Divider sx={{ opacity: isDark ? 0.08 : 0.12 }} />
@@ -223,6 +223,7 @@ export const ModalNoteHistory = ({
                 <Stack direction="row" sx={{ flex: 1, minHeight: 0 }}>
                     {/* Left: list */}
                     <Box
+                        className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                         sx={{
                             width: 320,
                             flexShrink: 0,
@@ -231,7 +232,6 @@ export const ModalNoteHistory = ({
                             }`,
                             overflow: "auto",
                         }}
-                        className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                     >
                         {versions.length === 0 ? (
                             <Typography
@@ -250,7 +250,6 @@ export const ModalNoteHistory = ({
                                             key={v.versionNo}
                                             component="button"
                                             type="button"
-                                            onClick={() => setSelectedVersionNo(v.versionNo)}
                                             sx={{
                                                 display: "flex",
                                                 alignItems: "center",
@@ -286,9 +285,15 @@ export const ModalNoteHistory = ({
                                                           : "rgba(0,0,0,0.03)",
                                                 },
                                             }}
+                                            onClick={() => setSelectedVersionNo(v.versionNo)}
                                         >
                                             <AvatarWithStatus
                                                 avatarSize={32}
+                                                myself={myself}
+                                                setMyself={setMyself}
+                                                socket={socket}
+                                                useCM={useCM}
+                                                useUISM={useUISM}
                                                 avatarUser={
                                                     v.editor
                                                         ? ({
@@ -308,16 +313,11 @@ export const ModalNoteHistory = ({
                                                     String(v.editor.userId) ===
                                                         String(myself.userId)
                                                 }
-                                                myself={myself}
-                                                setMyself={setMyself}
-                                                socket={socket}
-                                                useCM={useCM}
-                                                useUISM={useUISM}
                                             />
                                             <Box sx={{ flex: 1, minWidth: 0 }}>
                                                 <Stack
-                                                    direction="row"
                                                     alignItems="center"
+                                                    direction="row"
                                                     spacing={0.75}
                                                     sx={{ minWidth: 0 }}
                                                 >
@@ -336,10 +336,10 @@ export const ModalNoteHistory = ({
                                                     </Typography>
                                                     {isHead && (
                                                         <Chip
-                                                            size="sm"
-                                                            variant="soft"
                                                             color="primary"
+                                                            size="sm"
                                                             sx={{ fontSize: 10 }}
+                                                            variant="soft"
                                                         >
                                                             {t.notes.history.currentChip}
                                                         </Chip>
@@ -380,13 +380,13 @@ export const ModalNoteHistory = ({
 
                     {/* Right: preview */}
                     <Box
+                        className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                         sx={{
                             flex: 1,
                             minWidth: 0,
                             overflow: "auto",
                             p: 2.5,
                         }}
-                        className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                     >
                         {loadingDetail && (
                             <Stack alignItems="center" sx={{ pt: 6 }}>
@@ -445,8 +445,8 @@ export const ModalNoteHistory = ({
 
                 {/* Footer */}
                 <Stack
-                    direction="row"
                     alignItems="center"
+                    direction="row"
                     justifyContent="space-between"
                     sx={{ px: 2.5, py: 1.75 }}
                 >
@@ -467,11 +467,11 @@ export const ModalNoteHistory = ({
                             {t.notes.history.closeButton}
                         </Button>
                         <Button
-                            variant="solid"
                             color="primary"
-                            startDecorator={<RestoreRoundedIcon sx={{ fontSize: 18 }} />}
                             disabled={!restoreEnabled}
                             loading={restoring}
+                            startDecorator={<RestoreRoundedIcon sx={{ fontSize: 18 }} />}
+                            variant="solid"
                             onClick={handleRestore}
                         >
                             {t.notes.history.restoreButton}

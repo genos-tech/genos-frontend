@@ -32,9 +32,6 @@ export const JoinProjectListItem = (props: JoinProjectListItemProps) => {
             renderToggle={({ open, setOpen }) => (
                 <ListItemButton
                     color="primary"
-                    onClick={() => {
-                        setOpen(!open);
-                    }}
                     sx={{
                         overflow: "hidden",
                         borderRadius: "8px",
@@ -43,6 +40,9 @@ export const JoinProjectListItem = (props: JoinProjectListItemProps) => {
                         ml: 4.5,
                         gap: 1,
                         transition: "all 0.15s ease",
+                    }}
+                    onClick={() => {
+                        setOpen(!open);
                     }}
                 >
                     <LoginIcon />

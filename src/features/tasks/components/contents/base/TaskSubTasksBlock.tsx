@@ -271,10 +271,10 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                                     return (
                                         <ListItem key={`listitem-${id}-${index}`}>
                                             <AvatarWithStatus
-                                                useCM={useCM}
                                                 myself={myself}
                                                 setMyself={setMyself}
                                                 socket={socket}
+                                                useCM={useCM}
                                                 useUISM={useUISM}
                                                 // Sub-tasks can be unassigned —
                                                 // fall back to the empty avatar
@@ -449,15 +449,9 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                 ) : (
                     <Stack direction="column" spacing={0.5}>
                         <Input
-                            autoFocus
                             disabled={isSubmittingQuick}
                             placeholder={t.tasks.subTasks.quickAddPlaceholder}
                             size="sm"
-                            slotProps={{
-                                input: {
-                                    "aria-label": t.tasks.subTasks.quickAddPlaceholder,
-                                },
-                            }}
                             sx={{ borderRadius: "8px" }}
                             value={quickTitle}
                             endDecorator={
@@ -468,6 +462,12 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                                     />
                                 ) : null
                             }
+                            slotProps={{
+                                input: {
+                                    "aria-label": t.tasks.subTasks.quickAddPlaceholder,
+                                },
+                            }}
+                            autoFocus
                             onBlur={() => {
                                 // Blur with an empty input cancels. If the
                                 // user typed something, keep the input open

@@ -3,7 +3,7 @@
 // UI `sx` prop objects and prop lists whose visual grouping is
 // intentional and not worth re-sorting given the header is part of the
 // legacy chat surface slated for replacement by the v3 channel UI.
-/* eslint-disable sort-keys, react/jsx-sort-props */
+/* eslint-disable react/jsx-sort-props */
 import AddTaskRoundedIcon from "@mui/icons-material/AddTaskRounded";
 import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRounded";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";

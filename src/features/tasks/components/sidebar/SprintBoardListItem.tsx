@@ -21,11 +21,6 @@ export const SprintBoardListItem = (props: SprintBoardListItemProps) => {
         <ListItem>
             <ListItemButton
                 selected={isSelected}
-                onClick={() => {
-                    useTM.setIsTaskDashboardVisible(false);
-                    useTM.setIsTaskTableVisible(false);
-                    useTM.setIsSprintBoardVisible(true);
-                }}
                 sx={{
                     borderRadius: "10px",
                     py: 1,
@@ -47,6 +42,11 @@ export const SprintBoardListItem = (props: SprintBoardListItemProps) => {
                                 : "rgba(124,58,237,0.15)",
                         },
                     },
+                }}
+                onClick={() => {
+                    useTM.setIsTaskDashboardVisible(false);
+                    useTM.setIsTaskTableVisible(false);
+                    useTM.setIsSprintBoardVisible(true);
                 }}
             >
                 <Box

@@ -387,12 +387,12 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         <NoteTreeRenderer
             key={node.noteId}
             currentChain={myNoteState.tmpCurrentChain}
-            useNM={useNM}
             node={node}
             noteType={1}
             timestamp={myNoteState.timestamp}
+            useNM={useNM}
             createChildNoteList={(node) => (
-                <ChildNoteCreator useNM={useNM} node={node} timestamp={myNoteState.timestamp} />
+                <ChildNoteCreator node={node} timestamp={myNoteState.timestamp} useNM={useNM} />
             )}
         />
     );
@@ -401,12 +401,12 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         <NoteTreeRenderer
             key={node.noteId}
             currentChain={taskNoteState.tmpCurrentChain}
-            useNM={useNM}
             node={node}
             noteType={2}
             timestamp={taskNoteState.timestamp}
+            useNM={useNM}
             createChildNoteList={(node) => (
-                <ChildNoteCreator useNM={useNM} node={node} timestamp={taskNoteState.timestamp} />
+                <ChildNoteCreator node={node} timestamp={taskNoteState.timestamp} useNM={useNM} />
             )}
         />
     );
@@ -415,12 +415,12 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         <NoteTreeRenderer
             key={node.noteId}
             currentChain={chatNoteState.tmpCurrentChain}
-            useNM={useNM}
             node={node}
             noteType={3}
             timestamp={chatNoteState.timestamp}
+            useNM={useNM}
             createChildNoteList={(node) => (
-                <ChildNoteCreator useNM={useNM} node={node} timestamp={chatNoteState.timestamp} />
+                <ChildNoteCreator node={node} timestamp={chatNoteState.timestamp} useNM={useNM} />
             )}
         />
     );
@@ -432,15 +432,15 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         <NoteTreeRenderer
             key={node.noteId}
             currentChain={sharedNoteState.tmpCurrentChain}
-            useNM={useNM}
             node={node}
             noteType={4}
             timestamp={sharedNoteState.timestamp}
+            useNM={useNM}
             createChildNoteList={(node) => (
                 <ChildNoteCreator
-                    useNM={useNM}
                     node={node}
                     timestamp={sharedNoteState.timestamp}
+                    useNM={useNM}
                 />
             )}
         />
@@ -490,25 +490,25 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     ) => (
         <GroupedNoteSection
             key={`${keyPrefix}-task-${taskGroup.taskId}`}
+            defaultExpanded={taskGroupContainsNote(taskGroup, activeNoteId)}
             groupKey={`${keyPrefix}-task-${taskGroup.taskId}`}
+            subLabel={taskGroup.taskTitle}
             groupLabel={formatTaskDisplayId({
                 taskId: taskGroup.taskId,
                 displayId: taskGroup.displayId,
             })}
-            subLabel={taskGroup.taskTitle}
-            defaultExpanded={taskGroupContainsNote(taskGroup, activeNoteId)}
         >
             {taskGroup.notes.map((note) => renderTaskNoteTreeItem(note))}
             {taskGroup.subtasks.map((subGroup) => (
                 <GroupedNoteSection
                     key={`${keyPrefix}-task-${taskGroup.taskId}-sub-${subGroup.taskId}`}
+                    defaultExpanded={subGroup.notes.some((n) => n.noteId === activeNoteId)}
                     groupKey={`${keyPrefix}-task-${taskGroup.taskId}-sub-${subGroup.taskId}`}
+                    subLabel={subGroup.taskTitle}
                     groupLabel={formatTaskDisplayId({
                         taskId: subGroup.taskId,
                         displayId: subGroup.displayId,
                     })}
-                    subLabel={subGroup.taskTitle}
-                    defaultExpanded={subGroup.notes.some((n) => n.noteId === activeNoteId)}
                 >
                     {subGroup.notes.map((note) => renderTaskNoteTreeItem(note))}
                 </GroupedNoteSection>
@@ -523,9 +523,9 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             return (
                 <GroupedNoteSection
                     key={projectKey}
+                    defaultExpanded={projectGroupContainsNote(projectGroup, activeNoteId)}
                     groupKey={projectKey}
                     groupLabel={projectGroup.projectName}
-                    defaultExpanded={projectGroupContainsNote(projectGroup, activeNoteId)}
                 >
                     {projectGroup.milestones.map((milestoneGroup) => {
                         const milestoneKey = `${projectKey}-milestone-${milestoneGroup.milestoneId}`;
@@ -638,10 +638,10 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             <Box>
                 {hasPersonalNotes && (
                     <FavoriteNoteSection
+                        defaultExpanded={true}
                         groupKey="fav-personal"
                         groupLabel={t.notes.sidebar.myNotes}
                         icon={<WindowRoundedIcon sx={{ fontSize: 14 }} />}
-                        defaultExpanded={true}
                     >
                         {useNM.favoriteNotes.personalNotes.map((note) =>
                             renderFavoriteNoteItem(note, 1)
@@ -650,10 +650,10 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                 )}
                 {hasTaskNotes && (
                     <FavoriteNoteSection
+                        defaultExpanded={true}
                         groupKey="fav-task"
                         groupLabel={t.notes.sidebar.taskNotes}
                         icon={<AssignmentRoundedIcon sx={{ fontSize: 14 }} />}
-                        defaultExpanded={true}
                     >
                         {useNM.favoriteNotes.taskNotes.map((note) =>
                             renderFavoriteNoteItem(note, 2)
@@ -662,10 +662,10 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                 )}
                 {hasChatNotes && (
                     <FavoriteNoteSection
+                        defaultExpanded={true}
                         groupKey="fav-chat"
                         groupLabel={t.notes.sidebar.chatNotes}
                         icon={<QuestionAnswerRoundedIcon sx={{ fontSize: 14 }} />}
-                        defaultExpanded={true}
                     >
                         {useNM.favoriteNotes.chatNotes.map((note) =>
                             renderFavoriteNoteItem(note, 3)
@@ -843,10 +843,6 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                     <ListItem>
                         <ListItemButton
                             selected={useNM.currentNoteType === 0}
-                            onClick={() => {
-                                useNM.setCurrentNoteType(0);
-                                localStorage.setItem("lastOpenNoteType", "0");
-                            }}
                             sx={{
                                 borderRadius: "10px",
                                 py: 1,
@@ -868,6 +864,10 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                                             : "rgba(124,58,237,0.15)",
                                     },
                                 },
+                            }}
+                            onClick={() => {
+                                useNM.setCurrentNoteType(0);
+                                localStorage.setItem("lastOpenNoteType", "0");
                             }}
                         >
                             <Box
@@ -912,9 +912,9 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                     {/* Favorites Section */}
                     <NoteTypeSection
                         icon={<StarRoundedIcon sx={{ fontSize: 18 }} />}
-                        useNM={useNM}
                         noteType={5} // Use 5 for favorites (distinct from 0-4)
                         title={t.notes.sidebar.favorites}
+                        useNM={useNM}
                     >
                         {renderFavoriteNotes()}
                     </NoteTypeSection>
@@ -922,9 +922,9 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                     {/* Recents Section */}
                     <NoteTypeSection
                         icon={<HistoryRoundedIcon sx={{ fontSize: 18 }} />}
-                        useNM={useNM}
                         noteType={6} // Use 6 for recents (distinct from 0-5)
                         title={t.notes.sidebar.recents}
+                        useNM={useNM}
                     >
                         {renderRecentNotes()}
                     </NoteTypeSection>
@@ -950,9 +950,9 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                         <NoteTypeSection
                             key={config.noteType}
                             icon={config.icon}
-                            useNM={useNM}
                             noteType={config.noteType}
                             title={config.title}
+                            useNM={useNM}
                         >
                             {config.isGrouped && config.renderGrouped
                                 ? config.renderGrouped()

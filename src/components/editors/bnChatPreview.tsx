@@ -181,8 +181,8 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
                     {prUrls.map((url) => (
                         <LinkedPrCard
                             key={url}
-                            url={url}
                             accessToken={accessToken}
+                            url={url}
                             hideOnNotConnected
                         />
                     ))}

@@ -22,7 +22,6 @@ export const MobileSpotlightFab = ({ onOpenSpotlight }: MobileSpotlightFabProps)
 
     return (
         <IconButton
-            onClick={onOpenSpotlight}
             aria-label="Search"
             size="lg"
             sx={{
@@ -54,6 +53,7 @@ export const MobileSpotlightFab = ({ onOpenSpotlight }: MobileSpotlightFabProps)
                     transform: "translateY(0)",
                 },
             }}
+            onClick={onOpenSpotlight}
         >
             <SearchRoundedIcon sx={{ fontSize: 24 }} />
         </IconButton>

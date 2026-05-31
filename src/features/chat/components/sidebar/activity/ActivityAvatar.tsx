@@ -68,11 +68,11 @@ export const ActivityAvatar: React.FC<ActivityAvatarProps> = ({
             return (
                 <AvatarWithStatus
                     avatarUser={useTEM.teamMemberProfiles[partnerUserId]}
-                    useCM={useCM}
                     isYou={isYou}
                     myself={myself}
                     setMyself={setMyself}
                     socket={socket}
+                    useCM={useCM}
                     useUISM={useUISM}
                 />
             );
@@ -90,12 +90,12 @@ export const ActivityAvatar: React.FC<ActivityAvatarProps> = ({
         if (chat) {
             return (
                 <GMAvatar
-                    useCM={useCM}
                     gmChat={chat}
                     isYou={isYou}
                     myself={myself}
                     setMyself={setMyself}
                     socket={socket}
+                    useCM={useCM}
                     useTEM={useTEM}
                     useUISM={useUISM}
                 />
@@ -114,11 +114,11 @@ export const ActivityAvatar: React.FC<ActivityAvatarProps> = ({
         if (chat) {
             return (
                 <ProjectAvatar
-                    useCM={useCM}
                     myself={myself}
                     pmChat={chat}
                     setMyself={setMyself}
                     socket={socket}
+                    useCM={useCM}
                     useTEM={useTEM}
                     useUISM={useUISM}
                 />
@@ -138,11 +138,11 @@ export const ActivityAvatar: React.FC<ActivityAvatarProps> = ({
         if (chat) {
             return (
                 <ProjectAvatar
-                    useCM={useCM}
                     myself={myself}
                     pmChat={chat}
                     setMyself={setMyself}
                     socket={socket}
+                    useCM={useCM}
                     useTEM={useTEM}
                     useUISM={useUISM}
                 />

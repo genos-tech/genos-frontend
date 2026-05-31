@@ -681,9 +681,8 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                     {onOpenColumnSettings && (
                         <AppTooltip title={t.tasks.table.columnSettings.openTooltip}>
                             <IconButton
-                                size="small"
                                 aria-label={t.tasks.table.columnSettings.openTooltip}
-                                onClick={onOpenColumnSettings}
+                                size="small"
                                 sx={{
                                     ml: 0.25,
                                     color: styles.mutedText,
@@ -692,6 +691,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                                         background: styles.buttonHoverBg,
                                     },
                                 }}
+                                onClick={onOpenColumnSettings}
                             >
                                 <TuneRoundedIcon sx={{ fontSize: 16 }} />
                             </IconButton>

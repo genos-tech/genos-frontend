@@ -135,19 +135,19 @@ export const MentionGroupEditor = ({
     return (
         <Stack spacing={1.5}>
             {/* Name + delete */}
-            <Stack direction="row" alignItems="center" spacing={1}>
+            <Stack alignItems="center" direction="row" spacing={1}>
                 {editingName != null ? (
                     <Input
-                        autoFocus
                         size="md"
+                        sx={{ flex: 1 }}
                         value={editingName}
+                        autoFocus
+                        onBlur={() => void handleRename()}
                         onChange={(e) => setEditingName(e.target.value)}
                         onKeyDown={(e) => {
                             if (e.key === "Enter") void handleRename();
                             if (e.key === "Escape") setEditingName(null);
                         }}
-                        onBlur={() => void handleRename()}
-                        sx={{ flex: 1 }}
                     />
                 ) : (
                     <Typography
@@ -158,11 +158,11 @@ export const MentionGroupEditor = ({
                         @{group.groupName}
                     </Typography>
                 )}
-                <AppTooltip title="Delete group" size="sm">
+                <AppTooltip size="sm" title="Delete group">
                     <IconButton
+                        color="danger"
                         size="sm"
                         variant="plain"
-                        color="danger"
                         onClick={() => void handleDelete()}
                     >
                         <DeleteOutlineRoundedIcon />
@@ -173,16 +173,16 @@ export const MentionGroupEditor = ({
             {/* Description */}
             {editingDescription != null ? (
                 <Input
-                    autoFocus
-                    size="md"
                     placeholder="Description (optional)"
+                    size="md"
                     value={editingDescription}
+                    autoFocus
+                    onBlur={() => void handleDescriptionSave()}
                     onChange={(e) => setEditingDescription(e.target.value)}
                     onKeyDown={(e) => {
                         if (e.key === "Enter") void handleDescriptionSave();
                         if (e.key === "Escape") setEditingDescription(null);
                     }}
-                    onBlur={() => void handleDescriptionSave()}
                 />
             ) : (
                 <Typography
@@ -201,7 +201,7 @@ export const MentionGroupEditor = ({
             <Divider />
 
             {/* Members */}
-            <Stack direction="row" alignItems="center" spacing={1}>
+            <Stack alignItems="center" direction="row" spacing={1}>
                 <PersonRoundedIcon sx={{ fontSize: 18, opacity: 0.7 }} />
                 <Typography level="title-md">Members ({group.memberCount})</Typography>
             </Stack>
@@ -220,10 +220,10 @@ export const MentionGroupEditor = ({
                                     isYou={row.userId === myself.userId}
                                     myself={myself}
                                     setMyself={setMyself}
+                                    showPulseDot={true}
                                     socket={socket}
                                     useCM={useCM}
                                     useUISM={useUISM}
-                                    showPulseDot={true}
                                 />
                             </Box>
                             <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -234,11 +234,11 @@ export const MentionGroupEditor = ({
                                     {row.user?.userEmail || ""}
                                 </Typography>
                             </Box>
-                            <AppTooltip title="Remove member" size="sm">
+                            <AppTooltip size="sm" title="Remove member">
                                 <IconButton
+                                    color="neutral"
                                     size="sm"
                                     variant="plain"
-                                    color="neutral"
                                     onClick={() => void removeMember(group.groupId, row.userId)}
                                 >
                                     <CloseRoundedIcon />
@@ -252,13 +252,13 @@ export const MentionGroupEditor = ({
             <Divider />
 
             {/* Add member picker */}
-            <Stack direction="row" alignItems="center" spacing={1}>
+            <Stack alignItems="center" direction="row" spacing={1}>
                 <PersonAddAltRoundedIcon sx={{ fontSize: 18, opacity: 0.7 }} />
                 <Typography level="title-md">Add members</Typography>
             </Stack>
             <Input
-                size="md"
                 placeholder="Search team members…"
+                size="md"
                 value={memberPickerQuery}
                 onChange={(e) => setMemberPickerQuery(e.target.value)}
             />
@@ -294,10 +294,10 @@ export const MentionGroupEditor = ({
                                     isYou={u.userId === myself.userId}
                                     myself={myself}
                                     setMyself={setMyself}
+                                    showPulseDot={true}
                                     socket={socket}
                                     useCM={useCM}
                                     useUISM={useUISM}
-                                    showPulseDot={true}
                                 />
                             </Box>
                             <Box sx={{ flex: 1, minWidth: 0 }}>

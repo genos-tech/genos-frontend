@@ -230,13 +230,13 @@ export const ChatNoteHeader = ({
                         onNodeClick={(noteId) => useNM.loadNote(3, noteId, -1)}
                     />
                     <NoteHistoryChip
-                        useNM={useNM}
-                        noteType={3}
-                        noteId={useNM.currentChatNote?.noteId ?? 0}
                         myself={myself}
+                        noteId={useNM.currentChatNote?.noteId ?? 0}
+                        noteType={3}
                         setMyself={setMyself}
                         socket={socket}
                         useCM={useCM}
+                        useNM={useNM}
                         useUISM={useUISM}
                     />
                 </Stack>
@@ -249,13 +249,13 @@ export const ChatNoteHeader = ({
                     on the right instead of orphaning it. */}
                 {isInChatPage === true && useNM.currentChatNote && (
                     <NoteHistoryChip
-                        useNM={useNM}
-                        noteType={3}
-                        noteId={useNM.currentChatNote?.noteId ?? 0}
                         myself={myself}
+                        noteId={useNM.currentChatNote?.noteId ?? 0}
+                        noteType={3}
                         setMyself={setMyself}
                         socket={socket}
                         useCM={useCM}
+                        useNM={useNM}
                         useUISM={useUISM}
                     />
                 )}

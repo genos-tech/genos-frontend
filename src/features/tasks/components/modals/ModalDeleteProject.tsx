@@ -190,7 +190,6 @@ export const ModalDeleteProject: React.FC<Props> = ({
                 <Stack direction="row" spacing={1.5} sx={{ justifyContent: "center" }}>
                     <Button
                         variant="plain"
-                        onClick={() => setOpenDeleteProject(disableOpenDeleteModalParams)}
                         sx={{
                             color: "rgba(255, 255, 255, 0.6)",
                             borderRadius: "10px",
@@ -200,11 +199,11 @@ export const ModalDeleteProject: React.FC<Props> = ({
                                 color: "rgba(255, 255, 255, 0.9)",
                             },
                         }}
+                        onClick={() => setOpenDeleteProject(disableOpenDeleteModalParams)}
                     >
                         {t.tasks.modals.deleteProject.cancelButton}
                     </Button>
                     <Button
-                        onClick={handleDeleteProject}
                         sx={{
                             background: "linear-gradient(135deg, #c026a8 0%, #9d2386 100%)",
                             borderRadius: "10px",
@@ -217,6 +216,7 @@ export const ModalDeleteProject: React.FC<Props> = ({
                                 boxShadow: "0 6px 20px rgba(232,121,195,0.4)",
                             },
                         }}
+                        onClick={handleDeleteProject}
                     >
                         {t.tasks.modals.deleteProject.confirmButton}
                     </Button>

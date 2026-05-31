@@ -145,20 +145,6 @@ export const UserProfileStatus = ({
                 // Allow the username + chips row to wrap on mobile so
                 // the "Update Status" chip doesn't get clipped at the
                 // right edge of the modal. Desktop stays single-line.
-                sx={{
-                    display: "flex",
-                    flexWrap: { xs: "wrap", md: "nowrap" },
-                    alignItems: "center",
-                    gap: 1,
-                    minWidth: 0,
-                    "& > :first-of-type": {
-                        whiteSpace: { xs: "normal", md: "nowrap" },
-                        overflow: { xs: "visible", md: "hidden" },
-                        textOverflow: { xs: "clip", md: "ellipsis" },
-                        wordBreak: "break-word",
-                        minWidth: 0,
-                    },
-                }}
                 endDecorator={
                     <Stack
                         direction="row"
@@ -177,14 +163,14 @@ export const UserProfileStatus = ({
                                 <Chip
                                     color="neutral"
                                     size="md"
-                                    variant="plain"
                                     slotProps={{ root: { component: "span" } }}
+                                    sx={chipBase}
+                                    variant="plain"
                                     startDecorator={
                                         <Box sx={{ ml: "-5px" }}>
                                             <PulseDot color={presenceColor} />
                                         </Box>
                                     }
-                                    sx={chipBase}
                                 >
                                     {presenceLabel}
                                 </Chip>
@@ -208,7 +194,6 @@ export const UserProfileStatus = ({
                                 color="neutral"
                                 size="md"
                                 variant="outlined"
-                                onClick={isSelfView ? handleOpenEditor : undefined}
                                 sx={{
                                     ...chipBase,
                                     cursor: isSelfView ? "pointer" : "default",
@@ -217,6 +202,7 @@ export const UserProfileStatus = ({
                                         ? { backgroundColor: styles.hoverBg }
                                         : undefined,
                                 }}
+                                onClick={isSelfView ? handleOpenEditor : undefined}
                             >
                                 {customStatus !== "" ? customStatus : t.admin.status.updateStatus}
                             </Chip>
@@ -262,6 +248,20 @@ export const UserProfileStatus = ({
                         )}
                     </Stack>
                 }
+                sx={{
+                    display: "flex",
+                    flexWrap: { xs: "wrap", md: "nowrap" },
+                    alignItems: "center",
+                    gap: 1,
+                    minWidth: 0,
+                    "& > :first-of-type": {
+                        whiteSpace: { xs: "normal", md: "nowrap" },
+                        overflow: { xs: "visible", md: "hidden" },
+                        textOverflow: { xs: "clip", md: "ellipsis" },
+                        wordBreak: "break-word",
+                        minWidth: 0,
+                    },
+                }}
             >
                 {profileUser?.userName}
             </Typography>
@@ -271,8 +271,8 @@ export const UserProfileStatus = ({
                     <Button
                         color="danger"
                         size="md"
-                        variant="outlined"
                         sx={{ borderRadius: "sm", fontWeight: "bold" }}
+                        variant="outlined"
                         onClick={handleReset}
                     >
                         {t.admin.status.reset}
@@ -280,8 +280,8 @@ export const UserProfileStatus = ({
                     <Button
                         color="neutral"
                         size="md"
-                        variant="outlined"
                         sx={{ borderRadius: "sm", fontWeight: "bold" }}
+                        variant="outlined"
                         onClick={handleCloseEditor}
                     >
                         {t.admin.status.cancel}
@@ -289,8 +289,8 @@ export const UserProfileStatus = ({
                     <Button
                         color="primary"
                         size="md"
-                        variant="soft"
                         sx={{ borderRadius: "sm", fontWeight: "bold" }}
+                        variant="soft"
                         onClick={handleSet}
                     >
                         {t.admin.status.set}

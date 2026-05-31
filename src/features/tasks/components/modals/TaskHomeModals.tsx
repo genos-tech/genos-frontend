@@ -59,18 +59,18 @@ export const TaskHomeModals = ({
         <>
             <ModalCreateProject myself={myself} usePM={usePM} />
             <ModalJoinProject
-                useCM={useCM}
                 myself={myself}
                 openJoinProject={openJoinProject}
                 setOpenJoinProject={setOpenJoinProject}
                 socket={socket}
+                useCM={useCM}
                 usePM={usePM}
             />
             <ModalDeleteProject
                 myself={myself}
                 openDeleteProject={openDeleteProject}
-                usePM={usePM}
                 setOpenDeleteProject={setOpenDeleteProject}
+                usePM={usePM}
             />
             <ModalCreateTag myself={myself} usePM={usePM} useTM={useTM} />
         </>

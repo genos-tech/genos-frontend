@@ -887,11 +887,11 @@ export const TaskHomeContent = ({
                                             {pmChat && (
                                                 <ProjectAvatar
                                                     avatarSize={46}
-                                                    useCM={useCM}
                                                     myself={myself}
                                                     pmChat={pmChat}
                                                     setMyself={setMyself}
                                                     socket={socket}
+                                                    useCM={useCM}
                                                     useTEM={useTEM}
                                                     useUISM={useUISM}
                                                 />
@@ -1087,7 +1087,7 @@ export const TaskHomeContent = ({
                                                 }
                                             )}
                                         </Select>
-                                        <Stack direction="row" spacing={1} alignItems="center">
+                                        <Stack alignItems="center" direction="row" spacing={1}>
                                             <AppTooltip
                                                 title={t.tasks.dashboard.sprintSettingsTooltip}
                                             >
@@ -1465,8 +1465,8 @@ export const TaskHomeContent = ({
                                                                     spacing={0.5}
                                                                 >
                                                                     <CopyableTaskIdText
-                                                                        task={task}
                                                                         level="body-xs"
+                                                                        task={task}
                                                                         sx={{
                                                                             fontWeight: 600,
                                                                             color: textMuted,
@@ -1914,8 +1914,8 @@ export const TaskHomeContent = ({
                                                                     sx={{ flex: 1, minWidth: 0 }}
                                                                 >
                                                                     <CopyableTaskIdText
-                                                                        task={task}
                                                                         level="body-xs"
+                                                                        task={task}
                                                                         sx={{
                                                                             fontWeight: 600,
                                                                             color: textMuted,

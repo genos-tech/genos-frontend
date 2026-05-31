@@ -89,60 +89,60 @@ export function MessageRowHoverToolbar({
             }}
         >
             <button
-                type="button"
-                onClick={onFlag}
                 data-testid={`message-row-flag-${messageId}`}
                 style={{ ...BTN_STYLE, opacity: isFlagged ? 1 : 0.55 }}
                 title={isFlagged ? "Unflag message" : "Flag message"}
+                type="button"
+                onClick={onFlag}
             >
                 ⭐
             </button>
             <button
-                type="button"
-                onClick={onReact}
                 data-testid={`message-row-react-${messageId}`}
                 style={BTN_STYLE}
                 title="Add reaction"
+                type="button"
+                onClick={onReact}
             >
                 🙂+
             </button>
             {onReply && (
                 <button
-                    type="button"
-                    onClick={onReply}
                     data-testid={`message-row-thread-${messageId}`}
                     style={BTN_STYLE}
                     title="Reply in thread"
+                    type="button"
+                    onClick={onReply}
                 >
                     💬{replyCount > 0 ? ` ${replyCount}` : ""}
                 </button>
             )}
             <button
-                type="button"
-                onClick={onCopyLink}
                 data-testid={`message-row-copy-link-${messageId}`}
                 style={BTN_STYLE}
                 title="Copy link to message"
+                type="button"
+                onClick={onCopyLink}
             >
                 🔗
             </button>
             {isMine && (
                 <>
                     <button
-                        type="button"
-                        onClick={onEdit}
                         data-testid={`message-row-edit-${messageId}`}
                         style={BTN_STYLE}
                         title="Edit"
+                        type="button"
+                        onClick={onEdit}
                     >
                         ✏️
                     </button>
                     <button
-                        type="button"
-                        onClick={onDelete}
                         data-testid={`message-row-delete-${messageId}`}
                         style={BTN_STYLE}
                         title="Delete"
+                        type="button"
+                        onClick={onDelete}
                     >
                         🗑️
                     </button>

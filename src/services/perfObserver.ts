@@ -23,7 +23,6 @@ export function startLongTaskObserver(): void {
     // polyfill — Chromium / Firefox cover the dev surface.
     const supported = PerformanceObserver.supportedEntryTypes?.includes("longtask");
     if (!supported) {
-        // eslint-disable-next-line no-console
         console.info("[perf] longtask observer unsupported in this browser");
         return;
     }
@@ -32,7 +31,7 @@ export function startLongTaskObserver(): void {
         observer = new PerformanceObserver((list) => {
             for (const entry of list.getEntries()) {
                 if (entry.duration < LONG_TASK_THRESHOLD_MS) continue;
-                // eslint-disable-next-line no-console
+
                 console.warn(
                     `[longtask] ${entry.duration.toFixed(1)}ms at +${entry.startTime.toFixed(
                         0
@@ -42,10 +41,9 @@ export function startLongTaskObserver(): void {
             }
         });
         observer.observe({ type: "longtask", buffered: true });
-        // eslint-disable-next-line no-console
+
         console.info("[perf] longtask observer active (threshold 50ms)");
     } catch (error) {
-        // eslint-disable-next-line no-console
         console.warn("[perf] failed to start longtask observer", error);
     }
 }

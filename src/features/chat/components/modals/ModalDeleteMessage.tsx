@@ -277,7 +277,6 @@ export const ModalDeleteMessage: React.FC<Props> = ({
                 <Stack direction="row" spacing={1.5} sx={{ justifyContent: "center" }}>
                     <Button
                         variant="plain"
-                        onClick={() => setOpenDeleteMessage(false)}
                         sx={{
                             color: "rgba(255, 255, 255, 0.6)",
                             borderRadius: "10px",
@@ -287,11 +286,11 @@ export const ModalDeleteMessage: React.FC<Props> = ({
                                 color: "rgba(255, 255, 255, 0.9)",
                             },
                         }}
+                        onClick={() => setOpenDeleteMessage(false)}
                     >
                         {t.chat.modals.deleteMessage.cancel}
                     </Button>
                     <Button
-                        onClick={handleDeleteMessage}
                         sx={{
                             background: "linear-gradient(135deg, #c026a8 0%, #9d2386 100%)",
                             borderRadius: "10px",
@@ -304,6 +303,7 @@ export const ModalDeleteMessage: React.FC<Props> = ({
                                 boxShadow: "0 6px 20px rgba(232,121,195,0.4)",
                             },
                         }}
+                        onClick={handleDeleteMessage}
                     >
                         {t.chat.modals.deleteMessage.delete}
                     </Button>

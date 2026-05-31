@@ -7,9 +7,12 @@
 // CustomEvent fires for message.created, that conditional branches behave,
 // and that the returned teardown unregisters every handler.
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import type { Socket } from "socket.io-client";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { handleV3Activity } from "../../features/chat/services/handleV3Activity";
+import { channelService } from "../../services/channel/channelService";
+import { registerSocketRouter, V3_NAMESPACE } from "../../services/channel/socketRouter";
 import { ChannelKind } from "../../types/channel";
 import { fakeChannel, fakeMessage, fakeReaction } from "../helpers/factories";
 
@@ -19,10 +22,6 @@ import { fakeChannel, fakeMessage, fakeReaction } from "../helpers/factories";
 vi.mock("../../features/chat/services/handleV3Activity", () => ({
     handleV3Activity: vi.fn(),
 }));
-
-import { handleV3Activity } from "../../features/chat/services/handleV3Activity";
-import { channelService } from "../../services/channel/channelService";
-import { registerSocketRouter, V3_NAMESPACE } from "../../services/channel/socketRouter";
 
 /**
  * Minimal fake Socket that records every `on(event, fn)` registration so a

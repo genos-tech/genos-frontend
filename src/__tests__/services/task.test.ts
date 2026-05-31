@@ -1,12 +1,12 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { loadTeamTasks } from "../../features/tasks/services/loadTeamTasks";
+import { authApi } from "../../services/api";
 
 vi.mock("../../services/api", () => ({
     authApi: vi.fn(),
     nonAuthApi: vi.fn(),
 }));
-
-import { authApi } from "../../services/api";
-import { loadTeamTasks } from "../../features/tasks/services/loadTeamTasks";
 
 const mockMyself = {
     teamId: "team1",

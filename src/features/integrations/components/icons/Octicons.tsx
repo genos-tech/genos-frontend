@@ -9,12 +9,12 @@ type IconProps = React.SVGProps<SVGSVGElement> & { size?: number };
 
 const Octicon = ({ size = 16, children, ...rest }: IconProps & { children: React.ReactNode }) => (
     <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width={size}
+        aria-hidden="true"
+        fill="currentColor"
         height={size}
         viewBox="0 0 16 16"
-        fill="currentColor"
-        aria-hidden="true"
+        width={size}
+        xmlns="http://www.w3.org/2000/svg"
         {...rest}
     >
         {children}

@@ -73,50 +73,50 @@ export const TaskHome = (props: TaskHomeProps) => {
 
                 {isMobile ? (
                     <MobileTaskHome
-                        useCM={useCM}
                         myself={myself}
+                        setMyself={setMyself}
+                        setOpenJoinProject={setOpenJoinProject}
+                        socket={socket}
+                        useCM={useCM}
                         useNM={useNM}
                         usePM={usePM}
-                        setMyself={setMyself}
-                        socket={socket}
+                        useSM={useSM}
                         useTEM={useTEM}
                         useTM={useTM}
-                        useSM={useSM}
                         useUISM={useUISM}
                         onCloseTaskHome={handleCloseTaskHome}
-                        setOpenJoinProject={setOpenJoinProject}
                     />
                 ) : (
                     <TaskHomeLayout
-                        useCM={useCM}
                         myself={myself}
+                        setMyself={setMyself}
+                        setOpenJoinProject={setOpenJoinProject}
+                        socket={socket}
+                        useCM={useCM}
                         useNM={useNM}
                         usePM={usePM}
-                        setMyself={setMyself}
-                        socket={socket}
+                        useSM={useSM}
                         useTEM={useTEM}
                         useTM={useTM}
-                        useSM={useSM}
                         useUISM={useUISM}
                         onCloseTaskHome={handleCloseTaskHome}
                         onCreateProject={handleCreateProject}
                         onCreateTag={handleCreateTag}
                         onDeleteProject={handleDeleteProject}
-                        setOpenJoinProject={setOpenJoinProject}
                     />
                 )}
 
                 <TaskHomeModals
-                    useCM={useCM}
                     myself={myself}
                     openDeleteProject={openDeleteProject}
                     openJoinProject={openJoinProject}
-                    usePM={usePM}
                     setOpenDeleteProject={setOpenDeleteProject}
                     setOpenJoinProject={setOpenJoinProject}
                     socket={socket}
-                    useTM={useTM}
+                    useCM={useCM}
+                    usePM={usePM}
                     useSM={useSM}
+                    useTM={useTM}
                 />
             </Sheet>
 

@@ -6,8 +6,8 @@ import { Badge, Box, Sheet } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { useLocation, useNavigate } from "react-router-dom";
 
-import { useIsMobile } from "../../hooks/common/useIsMobile";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
+import { useIsMobile } from "../../hooks/common/useIsMobile";
 import { InboxManagementState } from "../../hooks/inbox/useInboxManagement";
 import { useTranslation } from "../../i18n";
 import { purplePalette } from "../../theme/purplePalette";
@@ -97,7 +97,6 @@ export const BottomTabBar = (props: BottomTabBarProps) => {
                 return (
                     <Box
                         key={item.id}
-                        onClick={() => navigate(item.path)}
                         sx={{
                             flex: 1,
                             display: "flex",
@@ -114,6 +113,7 @@ export const BottomTabBar = (props: BottomTabBarProps) => {
                             transition: "color 0.2s ease",
                             "&:active": { opacity: 0.7 },
                         }}
+                        onClick={() => navigate(item.path)}
                     >
                         <Badge
                             badgeContent={badgeCount > 0 ? badgeCount : 0}

@@ -262,16 +262,16 @@ export const SprintConfigDialog = ({ open, onClose, projectId, useSM }: Props) =
 
                         <FormControl>
                             <FormLabel>{t.tasks.sprint.sprintLength}</FormLabel>
-                            <Stack direction="row" spacing={1} alignItems="center">
+                            <Stack alignItems="center" direction="row" spacing={1}>
                                 <Select
                                     size="sm"
+                                    sx={{ minWidth: 140 }}
                                     value={isPreset ? String(durationDays) : "custom"}
                                     onChange={(_, v) => {
                                         if (v == null || v === "custom") return;
                                         const n = parseInt(v, 10);
                                         if (!Number.isNaN(n) && n > 0) setDurationDays(n);
                                     }}
-                                    sx={{ minWidth: 140 }}
                                 >
                                     {DURATION_PRESETS.map((p) => (
                                         <Option key={p.value} value={String(p.value)}>
@@ -281,35 +281,35 @@ export const SprintConfigDialog = ({ open, onClose, projectId, useSM }: Props) =
                                     <Option value="custom">{t.tasks.sprint.customOption}</Option>
                                 </Select>
                                 <Input
-                                    type="number"
                                     size="sm"
+                                    sx={{ width: 140 }}
+                                    type="number"
                                     value={durationDays}
-                                    onChange={(e) => {
-                                        const n = parseInt(e.target.value, 10);
-                                        if (!Number.isNaN(n) && n > 0) setDurationDays(n);
-                                    }}
                                     endDecorator={
                                         <Typography level="body-xs">
                                             {t.tasks.sprint.days}
                                         </Typography>
                                     }
-                                    sx={{ width: 140 }}
+                                    onChange={(e) => {
+                                        const n = parseInt(e.target.value, 10);
+                                        if (!Number.isNaN(n) && n > 0) setDurationDays(n);
+                                    }}
                                 />
                             </Stack>
                         </FormControl>
 
                         <FormControl>
                             <FormLabel>{t.tasks.sprint.sprintStartsOn}</FormLabel>
-                            <Stack direction="row" spacing={1.5} alignItems="center">
+                            <Stack alignItems="center" direction="row" spacing={1.5}>
                                 <Select
                                     size="sm"
+                                    sx={{ minWidth: 160 }}
                                     value={String(selectedWeekday)}
                                     onChange={(_, v) => {
                                         if (v == null) return;
                                         setAnchorDate(nextOnOrAfter(todayIso(), parseInt(v, 10)));
                                         setShowDateOverride(false);
                                     }}
-                                    sx={{ minWidth: 160 }}
                                 >
                                     {WEEKDAYS.map((w) => (
                                         <Option key={w.value} value={String(w.value)}>
@@ -324,19 +324,19 @@ export const SprintConfigDialog = ({ open, onClose, projectId, useSM }: Props) =
                             </Stack>
                             {showDateOverride ? (
                                 <Input
-                                    type="date"
                                     size="sm"
+                                    sx={{ mt: 1, width: 200 }}
+                                    type="date"
                                     value={anchorDate}
                                     onChange={(e) => setAnchorDate(e.target.value)}
-                                    sx={{ mt: 1, width: 200 }}
                                 />
                             ) : (
                                 <Link
-                                    level="body-xs"
                                     component="button"
+                                    level="body-xs"
+                                    sx={{ mt: 0.5, alignSelf: "flex-start" }}
                                     type="button"
                                     onClick={() => setShowDateOverride(true)}
-                                    sx={{ mt: 0.5, alignSelf: "flex-start" }}
                                 >
                                     {t.tasks.sprint.pickSpecificDate}
                                 </Link>
@@ -349,7 +349,7 @@ export const SprintConfigDialog = ({ open, onClose, projectId, useSM }: Props) =
 
                         <FormControl>
                             <FormLabel>{t.tasks.sprint.autoRollSprints}</FormLabel>
-                            <Stack direction="row" spacing={1.5} alignItems="center">
+                            <Stack alignItems="center" direction="row" spacing={1.5}>
                                 <Switch
                                     checked={autoRoll}
                                     onChange={(e) => setAutoRoll(e.target.checked)}
@@ -365,24 +365,20 @@ export const SprintConfigDialog = ({ open, onClose, projectId, useSM }: Props) =
                         <FormControl>
                             <FormLabel>{t.tasks.sprint.upcomingSprintsToKeep}</FormLabel>
                             <Input
-                                type="number"
                                 size="sm"
+                                sx={{ width: 140 }}
+                                type="number"
                                 value={upcomingHorizon}
                                 onChange={(e) => {
                                     const n = parseInt(e.target.value, 10);
                                     if (!Number.isNaN(n) && n > 0) setUpcomingHorizon(n);
                                 }}
-                                sx={{ width: 140 }}
                             />
                             <FormHelperText>{t.tasks.sprint.upcomingHelper}</FormHelperText>
                         </FormControl>
 
                         {realignmentPlan.length > 0 && (
-                            <Sheet
-                                variant="soft"
-                                color="warning"
-                                sx={{ p: 1.5, borderRadius: 8 }}
-                            >
+                            <Sheet color="warning" sx={{ p: 1.5, borderRadius: 8 }} variant="soft">
                                 <Typography level="title-sm" sx={{ color: "inherit", mb: 1 }}>
                                     {fmt(t.tasks.sprint.realignWarningTitle, {
                                         count: realignmentPlan.length,
@@ -393,9 +389,9 @@ export const SprintConfigDialog = ({ open, onClose, projectId, useSM }: Props) =
                                     {realignmentPlan.map((p) => (
                                         <Stack
                                             key={p.sprintId}
+                                            alignItems="center"
                                             direction="row"
                                             spacing={1}
-                                            alignItems="center"
                                             sx={{ flexWrap: "wrap" }}
                                         >
                                             <Typography
@@ -441,7 +437,7 @@ export const SprintConfigDialog = ({ open, onClose, projectId, useSM }: Props) =
                                     color: "danger.softColor",
                                 }}
                             >
-                                <Typography level="body-sm" color="danger">
+                                <Typography color="danger" level="body-sm">
                                     {error}
                                 </Typography>
                             </Box>
@@ -460,10 +456,10 @@ export const SprintConfigDialog = ({ open, onClose, projectId, useSM }: Props) =
                             })}
                         </Typography>
                     )}
-                    <Button variant="plain" color="neutral" onClick={onClose} disabled={isSaving}>
+                    <Button color="neutral" disabled={isSaving} variant="plain" onClick={onClose}>
                         {t.tasks.sprint.cancelButton}
                     </Button>
-                    <Button onClick={handleSave} loading={isSaving}>
+                    <Button loading={isSaving} onClick={handleSave}>
                         {t.tasks.sprint.saveButton}
                     </Button>
                 </DialogActions>

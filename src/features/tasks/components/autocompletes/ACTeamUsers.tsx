@@ -66,14 +66,14 @@ export const ACTeamUsers = (props: ACTeamUsersProps) => {
             key={taskContent.id}
             isOptionEqualToValue={(option, value) => option.userId === value.userId}
             options={sortedMembers}
-            size="sm"
+            placeholder={isAssignee ? t.tasks.messageTemplate.unassigned : undefined}
             sx={{ width: "100%" }}
             // Pass `null` through so an unassigned task renders an empty
             // picker (built-in placeholder), not a silent fallback to
             // `myself` that would mislead the user into thinking they
             // were the assignee.
+            size="sm"
             value={initialUser}
-            placeholder={isAssignee ? t.tasks.messageTemplate.unassigned : undefined}
             getOptionLabel={(option) =>
                 option.userEmail === myself.userEmail
                     ? `${option.userName} ${youSuffix} - ${option.userEmail}`

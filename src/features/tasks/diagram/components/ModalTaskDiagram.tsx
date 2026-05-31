@@ -152,8 +152,8 @@ export const ModalTaskDiagram = ({
 
                 {/* Header */}
                 <Stack
-                    direction="row"
                     alignItems="center"
+                    direction="row"
                     spacing={1.25}
                     sx={{
                         px: 2.5,
@@ -201,16 +201,16 @@ export const ModalTaskDiagram = ({
                         no window is available. */}
                     {overview?.health && (
                         <AppTooltip
+                            placement="bottom"
                             title={fmt(t.tasks.diagram.tooltips.healthSummary, {
                                 actualPct: Math.round(overview.health.actualPct),
                                 expectedPct: Math.round(overview.health.expectedPct),
                             })}
-                            placement="bottom"
                         >
                             <Chip
+                                color={HEALTH_JOY_COLOR[overview.health.tone]}
                                 size="md"
                                 variant="soft"
-                                color={HEALTH_JOY_COLOR[overview.health.tone]}
                                 sx={{
                                     fontWeight: 700,
                                     borderRadius: "8px",
@@ -229,8 +229,8 @@ export const ModalTaskDiagram = ({
                         for the milestone or sub-tree. */}
                     {showOverview && (
                         <Stack
-                            direction="row"
                             alignItems="center"
+                            direction="row"
                             spacing={1.5}
                             sx={{
                                 px: 1.5,
@@ -243,7 +243,7 @@ export const ModalTaskDiagram = ({
                             }}
                         >
                             {overview?.sprint && (
-                                <Stack direction="row" alignItems="center" spacing={0.6}>
+                                <Stack alignItems="center" direction="row" spacing={0.6}>
                                     <BoltRoundedIcon sx={{ fontSize: 16, color: P.accentSoft }} />
                                     <Typography
                                         level="body-sm"
@@ -262,7 +262,7 @@ export const ModalTaskDiagram = ({
                                 </Stack>
                             )}
                             {spanLabel && (
-                                <Stack direction="row" alignItems="center" spacing={0.6}>
+                                <Stack alignItems="center" direction="row" spacing={0.6}>
                                     <CalendarMonthRoundedIcon
                                         sx={{ fontSize: 16, color: P.textMuted, opacity: 0.85 }}
                                     />
@@ -293,16 +293,16 @@ export const ModalTaskDiagram = ({
                                     overview.dueSoonCount > 0 ||
                                     overview.blockedCount > 0) && (
                                     <Stack
-                                        direction="row"
                                         alignItems="center"
+                                        direction="row"
                                         spacing={0.5}
                                         sx={{ flexWrap: "wrap", rowGap: 0.5 }}
                                     >
                                         {overview.overdueCount > 0 && (
                                             <Chip
+                                                color="danger"
                                                 size="sm"
                                                 variant="soft"
-                                                color="danger"
                                                 startDecorator={
                                                     <WarningAmberRoundedIcon
                                                         sx={{ fontSize: 12 }}
@@ -319,9 +319,9 @@ export const ModalTaskDiagram = ({
                                         )}
                                         {overview.dueSoonCount > 0 && (
                                             <Chip
+                                                color="warning"
                                                 size="sm"
                                                 variant="soft"
-                                                color="warning"
                                                 startDecorator={
                                                     <ScheduleRoundedIcon sx={{ fontSize: 12 }} />
                                                 }
@@ -336,9 +336,9 @@ export const ModalTaskDiagram = ({
                                         )}
                                         {overview.blockedCount > 0 && (
                                             <Chip
+                                                color="neutral"
                                                 size="sm"
                                                 variant="soft"
-                                                color="neutral"
                                                 startDecorator={
                                                     <BlockRoundedIcon sx={{ fontSize: 12 }} />
                                                 }
@@ -355,8 +355,8 @@ export const ModalTaskDiagram = ({
                                 )}
                             {progressPct != null && overview && (
                                 <Stack
-                                    direction="row"
                                     alignItems="center"
+                                    direction="row"
                                     spacing={0.75}
                                     sx={{ minWidth: 140 }}
                                 >
@@ -367,11 +367,11 @@ export const ModalTaskDiagram = ({
                                         schedule-health story. */}
                                     <Box sx={{ flex: 1, minWidth: 60, position: "relative" }}>
                                         <LinearProgress
-                                            determinate
-                                            value={progressPct}
-                                            size="sm"
                                             color={progressPct === 100 ? "success" : "primary"}
+                                            size="sm"
                                             sx={{ "--LinearProgress-thickness": "6px" }}
+                                            value={progressPct}
+                                            determinate
                                         />
                                         {overview.health && overview.total > 0 && (
                                             <AppTooltip
@@ -436,22 +436,22 @@ export const ModalTaskDiagram = ({
                         button would be confusing. */}
                     {(overview?.closed ?? 0) > 0 && (
                         <AppTooltip
+                            placement="bottom"
                             title={
                                 hideClosed
                                     ? t.tasks.diagram.tooltips.showClosed
                                     : t.tasks.diagram.tooltips.hideClosed
                             }
-                            placement="bottom"
                         >
                             <IconButton
-                                variant="plain"
                                 color="neutral"
                                 size="sm"
-                                onClick={() => setHideClosed((v) => !v)}
+                                variant="plain"
                                 sx={{
                                     color: hideClosed ? P.accent : P.textMuted,
                                     "&:hover": { color: P.text },
                                 }}
+                                onClick={() => setHideClosed((v) => !v)}
                             >
                                 {hideClosed ? (
                                     <VisibilityOffRoundedIcon />
@@ -462,13 +462,13 @@ export const ModalTaskDiagram = ({
                         </AppTooltip>
                     )}
 
-                    <AppTooltip title={t.tasks.diagram.tooltips.close} placement="left">
+                    <AppTooltip placement="left" title={t.tasks.diagram.tooltips.close}>
                         <IconButton
-                            variant="plain"
                             color="neutral"
                             size="sm"
-                            onClick={onClose}
                             sx={{ color: P.textMuted, "&:hover": { color: P.text } }}
+                            variant="plain"
+                            onClick={onClose}
                         >
                             <CloseRoundedIcon />
                         </IconButton>
@@ -479,15 +479,15 @@ export const ModalTaskDiagram = ({
                 <Box sx={{ flex: 1, display: "flex", minHeight: 0 }}>
                     {open && (
                         <TaskFlowCanvas
+                            hideClosed={hideClosed}
                             myself={myself}
-                            rootTaskId={rootTaskId}
                             projectId={projectId}
-                            useTM={useTM}
+                            rootTaskId={rootTaskId}
                             usePM={usePM}
                             useSM={useSM}
-                            onOverviewChange={setOverview}
+                            useTM={useTM}
                             onCloseModal={onClose}
-                            hideClosed={hideClosed}
+                            onOverviewChange={setOverview}
                         />
                     )}
                 </Box>

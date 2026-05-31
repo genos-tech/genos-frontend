@@ -497,6 +497,7 @@ export const NoteHeaderActions = ({
                 <Stack alignItems="center" direction="row" spacing={0.75}>
                     <Tooltip
                         size="sm"
+                        variant="outlined"
                         title={
                             ownerMember
                                 ? otherMembers.length > 0
@@ -509,7 +510,6 @@ export const NoteHeaderActions = ({
                                       })
                                 : t.notes.header.membersLabel
                         }
-                        variant="outlined"
                     >
                         <Box
                             sx={{
@@ -549,6 +549,12 @@ export const NoteHeaderActions = ({
                                 >
                                     <AvatarWithStatus
                                         avatarSize={26}
+                                        isYou={String(m.userId) === String(myself.userId)}
+                                        myself={myself}
+                                        setMyself={setMyself}
+                                        socket={socket}
+                                        useCM={useCM}
+                                        useUISM={useUISM}
                                         avatarUser={
                                             {
                                                 userId: m.userId,
@@ -556,12 +562,6 @@ export const NoteHeaderActions = ({
                                                 avatarImgPath: m.avatarUrl ?? "",
                                             } as UserProps
                                         }
-                                        isYou={String(m.userId) === String(myself.userId)}
-                                        myself={myself}
-                                        setMyself={setMyself}
-                                        socket={socket}
-                                        useCM={useCM}
-                                        useUISM={useUISM}
                                     />
                                 </Box>
                             ))}
@@ -767,18 +767,18 @@ export const NoteHeaderActions = ({
             {/* Share modal */}
             {activeNoteId != null && (
                 <ModalNoteSharing
-                    open={shareOpen}
-                    onClose={() => setShareOpen(false)}
-                    noteType={noteType === 4 ? 1 : noteType}
+                    myself={myself}
                     noteId={activeNoteId}
                     noteTitle={activeNoteTitle}
-                    myself={myself}
+                    noteType={noteType === 4 ? 1 : noteType}
+                    open={shareOpen}
                     setMyself={setMyself}
                     socket={socket}
-                    useCM={useCM}
-                    useUISM={useUISM}
                     teamMembers={useTEM.teamMembers}
+                    useCM={useCM}
                     useNM={useNM}
+                    useUISM={useUISM}
+                    onClose={() => setShareOpen(false)}
                 />
             )}
 

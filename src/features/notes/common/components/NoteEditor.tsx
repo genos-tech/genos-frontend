@@ -107,7 +107,6 @@ export const NoteEditor = ({
 
             <BnMyNoteEditor
                 body={body || []}
-                useCM={useCM}
                 currentMyNote={currentMyNote}
                 currentNoteMembers={useNM.currentNoteMembers}
                 myself={myself}
@@ -118,6 +117,7 @@ export const NoteEditor = ({
                 setNoteBodyEdited={setNoteBodyEdited}
                 setNoteBodySaved={setNoteBodySaved}
                 socket={socket}
+                useCM={useCM}
                 useTEM={useTEM}
                 useUISM={useUISM}
             />

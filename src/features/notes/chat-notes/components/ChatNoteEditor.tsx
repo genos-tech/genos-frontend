@@ -100,7 +100,6 @@ export const ChatNoteEditor = ({
 
             <BnChatNoteEditor
                 body={body}
-                useCM={useCM}
                 currentChatNote={currentChatNote}
                 currentNoteMembers={currentNoteMembers}
                 myself={myself}
@@ -111,6 +110,7 @@ export const ChatNoteEditor = ({
                 setNoteBodyEdited={setNoteBodyEdited}
                 setNoteBodySaved={setNoteBodySaved}
                 socket={socket}
+                useCM={useCM}
                 useTEM={useTEM}
                 useUISM={useUISM}
             />
