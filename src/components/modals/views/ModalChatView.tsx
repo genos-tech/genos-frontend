@@ -2,13 +2,10 @@ import { useEffect, useState } from "react";
 import { Box, Typography } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
-import { ChatService } from "../../../db/services/chat.service";
 import { ChatProvider } from "../../../features/chat/context/ChatContext";
 import { MessagesPane } from "../../../features/chat/MainChatPane";
-import { loadMDMHistory } from "../../../features/chat/services/loadMDMHistory";
-import { loadSpecificThreadMessages } from "../../../features/chat/services/loadSpecificThreadMessages";
-import { loadSpecificThreadMessagesByTaskId } from "../../../features/chat/services/loadSpecificThreadMessagesByTaskId";
-import { popSpecificMessages } from "../../../features/chat/services/popSpecificMessages";
+import { loadV3SpecificMessages } from "../../../features/chat/services/loadV3SpecificMessages";
+import { loadV3SpecificThreadMessages } from "../../../features/chat/services/loadV3SpecificThreadMessages";
 import { ThreadPane } from "../../../features/chat/ThreadChatPane";
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../hooks/common/useProjectManagement";
@@ -104,8 +101,11 @@ export const ModalChatView = (props: ModalChatViewProps) => {
         setModalChat(null);
         setModalThread(null);
 
+        // PUNCH LIST (v3 chatId migration): `AllChatProps.chatId` is
+        // `string` post-flip; `target.chatId` (history target) is still
+        // `number`. Stringify at the comparison.
         const summary = useCM.allChats.find(
-            (c) => c.chatId === target.chatId && c.chatType === target.chatType
+            (c) => c.chatId === String(target.chatId) && c.chatType === target.chatType
         );
         if (!summary) {
             setErrorMessage(t.common.modalView.chatUnavailable);
@@ -117,28 +117,15 @@ export const ModalChatView = (props: ModalChatViewProps) => {
 
         (async () => {
             try {
-                // Step 1: pop cached messages. Mirrors useChatRouting.ts
-                // popSpecificMessages → optional MDM backfill flow.
-                let messages: MessageProps[] = await popSpecificMessages(
-                    target.chatId,
+                // v3 source. `target.chatId` carries the channel UUID
+                // via the legacy `number` slot (modal entries flow
+                // through `useCM.allChats` which is v3-sourced).
+                // `loadV3SpecificMessages` triggers `syncChannel`
+                // (REST + cache) and returns legacy-shape rows.
+                const messages: MessageProps[] = await loadV3SpecificMessages(
+                    target.chatId as unknown as string,
                     target.chatType
                 );
-                if (messages.length === 0 && target.chatType === 4) {
-                    const data = await loadMDMHistory(
-                        myself.teamId,
-                        myself.teamName,
-                        myself.userId,
-                        accessToken,
-                        target.chatId
-                    );
-                    const mdmChat = data?.chat_history?.[0];
-                    if (mdmChat?.messages?.length > 0) {
-                        messages = [...mdmChat.messages].sort(
-                            (a: MessageProps, b: MessageProps) => a.messageId - b.messageId
-                        );
-                        await new ChatService().batchInsertMDMMessages(messages);
-                    }
-                }
                 if (cancelled) return;
 
                 if (messages.length === 0) {
@@ -161,7 +148,8 @@ export const ModalChatView = (props: ModalChatViewProps) => {
                     chatType: summary.chatType,
                     dmPartnerUser: summary.dmPartnerUser,
                     isPrivate: summary.isPrivate,
-                    lastReadMessageId: lastMessage.messageId,
+                    // `ChatProps.lastReadMessageId` is `string` post-flip.
+                    lastReadMessageId: String(lastMessage.messageId),
                     latestMessage: summary.latestMessage,
                     latestMessageText: summary.latestMessageText,
                     messages,
@@ -175,22 +163,17 @@ export const ModalChatView = (props: ModalChatViewProps) => {
 
                 // Step 2: thread load, only when target is a thread URL.
                 if (target.kind === "chatThread") {
-                    const threadMessages: ThreadMessageProps[] | undefined =
-                        target.chatType === 3
-                            ? await loadSpecificThreadMessagesByTaskId(
-                                  myself,
-                                  target.chatType,
-                                  target.chatId,
-                                  target.threadId,
-                                  accessToken
-                              )
-                            : await loadSpecificThreadMessages(
-                                  myself,
-                                  target.chatType,
-                                  target.chatId,
-                                  target.threadId,
-                                  accessToken
-                              );
+                    // v3 source. `target.chatId` and `target.threadId`
+                    // carry v3 UUIDs through their legacy `number`
+                    // slots. PM vs non-PM no longer matters at this
+                    // layer — `loadV3SpecificThreadMessages` resolves
+                    // both via the snapshot.
+                    const threadMessages: ThreadMessageProps[] =
+                        await loadV3SpecificThreadMessages(
+                            target.chatId as unknown as string,
+                            target.threadId as unknown as string,
+                            target.chatType
+                        );
                     if (cancelled) return;
 
                     if (!threadMessages || threadMessages.length === 0) {

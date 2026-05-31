@@ -2,15 +2,22 @@ import { Socket } from "socket.io-client";
 
 import { addInboxItem } from "../../../features/admin/services/addInboxItem";
 import { addUser } from "../../../features/admin/services/addUser";
+import {
+    v3MessageToLegacyChatPayload,
+    v3MessageToLegacyThreadPayload,
+} from "../../../features/chat/adapters/v3MessageToNotification";
 import { NotificationManager } from "../../../services/notifications/notificationManager";
-import { buildIntentFromMessage } from "../../../services/notifications/notificationRouter";
+import {
+    buildActivityIntent,
+    buildIntentFromMessage,
+} from "../../../services/notifications/notificationRouter";
 import { UserProps } from "../../../types/admin";
-import { MessageProps } from "../../../types/chat";
+import { Message as V3Message } from "../../../types/channel";
+import { ActivityMessageProps, MessageProps } from "../../../types/chat";
 import { InboxItemProps } from "../../../types/common";
 import { ChatManagementState } from "../../chats/useChatManagement";
 import { TeamManagementState } from "../useTeamManagement";
 import { handleActivityMessage } from "./activity-handlers";
-import { handleRegularMessage, handleThreadMessage } from "./message-handlers";
 
 export const setupWebSocketHandlers = (
     socket: Socket,
@@ -43,6 +50,61 @@ export const setupWebSocketHandlers = (
         console.error("Authentication Error:", data.message);
     });
 
+    // v3 activity → web notification bridge. `handleV3Activity` (the
+    // socket router entry point for `activity.created` on the /v3
+    // namespace) writes the activity to IDB and dispatches the
+    // `v3:activity:created` window event with `detail.activity` set to
+    // the legacy-shaped row. Re-use the existing `buildActivityIntent`
+    // + `notificationManager.notify` path here so the web notification
+    // is the same as the legacy one.
+    if (notificationManager) {
+        // v3 activity (mention / task-comment) → existing buildActivityIntent.
+        const onV3Activity = (e: Event) => {
+            try {
+                const detail = (e as CustomEvent<{ activity?: ActivityMessageProps }>).detail;
+                if (!detail?.activity) return;
+                const intent = buildActivityIntent(detail.activity, myself, useTEM, useCM);
+                if (intent) notificationManager.notify(intent);
+            } catch (err) {
+                console.warn("[notifications] v3 activity router error", err);
+            }
+        };
+        // v3 chat message arrival → buildChatIntent / buildThreadIntent.
+        // socketRouter dispatches `v3:message:created` for every live
+        // `message.created` socket event. Thread replies and top-level
+        // messages route through different builders to match the
+        // legacy semantics (`chats` vs `thread_replies` categories).
+        const onV3Message = (e: Event) => {
+            try {
+                const detail = (e as CustomEvent<{ message?: V3Message }>).detail;
+                const m = detail?.message;
+                if (!m) return;
+                // Skip self-sends — the legacy intent builders also
+                // skip these, but a self-skip here avoids the extra
+                // snapshot lookups inside the adapter for a no-op call.
+                if (m.sender && m.sender.userId === myself.userId) return;
+                if (m.isThreadReply) {
+                    const payload = v3MessageToLegacyThreadPayload(m, myself);
+                    const intent = buildIntentFromMessage(payload, myself, useTEM, useCM);
+                    if (intent) notificationManager.notify(intent);
+                } else {
+                    const payload = v3MessageToLegacyChatPayload(m, myself);
+                    const intent = buildIntentFromMessage(payload, myself, useTEM, useCM);
+                    if (intent) notificationManager.notify(intent);
+                }
+            } catch (err) {
+                console.warn("[notifications] v3 chat router error", err);
+            }
+        };
+        window.addEventListener("v3:activity:created", onV3Activity);
+        window.addEventListener("v3:message:created", onV3Message);
+        // Stash off-handles on the socket so cleanup can detach both.
+        (socket as Socket & { _v3NotifOff?: () => void })._v3NotifOff = () => {
+            window.removeEventListener("v3:activity:created", onV3Activity);
+            window.removeEventListener("v3:message:created", onV3Message);
+        };
+    }
+
     socket.on("message", async (message) => {
         // Run the notification router alongside the existing data-sync
         // dispatch. Failures here must never break sync, hence the
@@ -57,22 +119,29 @@ export const setupWebSocketHandlers = (
         }
 
         if (message.wsType === "chat") {
-            // console.log("chat_message:", message);
-            if (message.chatId !== null) {
-                if (message.isThread === true) {
-                    await handleThreadMessage(message, myself, accessToken, useCM);
-                } else {
-                    await handleRegularMessage(
-                        message,
-                        myself,
-                        currentProject,
-                        currentPreviewTaskId,
-                        setIsTaskUpdatedBySomeone,
-                        useCM,
-                        socket
-                    );
-                }
-            }
+            // v3 cutover: chat events now flow through the `/v3`
+            // namespace via channelService — this legacy `/` namespace
+            // dispatch is disabled to prevent bleed. The bleed bug
+            // it caused: handleRegularMessage / handleThreadMessage
+            // call `useCM.setAllChats((prev) => [legacyChat, ...prev])`
+            // with `chatId: String(legacy_int)`. Those integer-keyed
+            // AllChatProps would then live alongside v3 UUID-keyed
+            // chats in the same list. Any subsequent
+            // `channelService.send(chat.chatId, ...)` against one of
+            // those legacy-keyed entries 404'd at
+            // `/api/v3/channels/{int}/messages/` because the v3 URL
+            // pattern is `<uuid:channel_id>`.
+            //
+            // Trade-off: legacy-only chats (no v3 Channel mirror row)
+            // will no longer appear in the chat list. Resolution:
+            // either run `backfill_v3_channels` (Track B) so each
+            // legacy chat gets a v3 Channel UUID, or wipe legacy data
+            // and start fresh via the v3 creation path.
+            //
+            // Notification routing above still runs — the
+            // notificationManager.notify call doesn't mutate React
+            // state and only surfaces toasts / push notifications.
+            return;
         } else if (message.wsType === "task") {
             // console.log("Got a task comment");
             // console.log("task_message:", message);
@@ -184,4 +253,11 @@ export const cleanupWebSocketHandlers = (socket: Socket) => {
     socket.off("disconnect");
     socket.off("connect_error");
     socket.off("auth_error");
+    // Detach the v3 notification window listeners we attached in
+    // setupWebSocketHandlers, if any.
+    const off = (socket as Socket & { _v3NotifOff?: () => void })._v3NotifOff;
+    if (off) {
+        off();
+        delete (socket as Socket & { _v3NotifOff?: () => void })._v3NotifOff;
+    }
 };

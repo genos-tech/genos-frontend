@@ -43,7 +43,9 @@ import { useColorScheme } from "@mui/joy/styles";
 
 import { useAuth } from "../../context/AuthContext";
 import { ConnectionsSection } from "../../features/integrations/components/ConnectionsSection";
+import { ReconnectGoogleCalendarButton } from "../../features/integrations/components/ReconnectGoogleCalendarButton";
 import { OAUTH_INTEGRATIONS_ENABLED } from "../../features/integrations/featureFlags";
+import { listCalendars } from "../../features/integrations/services/calendar";
 import {
     findGoogleConnection,
     hasCalendarScope,
@@ -748,6 +750,11 @@ const AutoSyncCalendarSection = () => {
     // useful when BOTH are true. Null = still loading.
     const [googleConnected, setGoogleConnected] = useState<boolean | null>(null);
     const [calendarAuthorized, setCalendarAuthorized] = useState<boolean | null>(null);
+    // The connection probe above only reads DB scopes, which stay intact
+    // when the refresh token is revoked/expired. `needsReconnect` is set
+    // by a live probe so a dead token surfaces a reconnect prompt instead
+    // of a silently dead toggle (and a backfill that reports "Synced 0").
+    const [needsReconnect, setNeedsReconnect] = useState(false);
     const [backfillMessage, setBackfillMessage] = useState<string | null>(null);
     const [backfillError, setBackfillError] = useState<string | null>(null);
 
@@ -769,6 +776,26 @@ const AutoSyncCalendarSection = () => {
             cancelled = true;
         };
     }, [accessToken]);
+
+    // Live health probe: only the connection probe above can't tell a
+    // dead refresh token from a healthy one (both keep the DB scope), so
+    // make one lightweight Calendar call when the account looks ready. A
+    // `google_reauth_required` return flips on the reconnect prompt.
+    useEffect(() => {
+        if (!accessToken || googleConnected !== true || calendarAuthorized !== true) {
+            setNeedsReconnect(false);
+            return;
+        }
+        let cancelled = false;
+        (async () => {
+            const res = await listCalendars(accessToken);
+            if (cancelled) return;
+            setNeedsReconnect(res === "google_reauth_required");
+        })();
+        return () => {
+            cancelled = true;
+        };
+    }, [accessToken, googleConnected, calendarAuthorized]);
 
     const handleBackfill = async () => {
         setBackfillError(null);
@@ -812,14 +839,17 @@ const AutoSyncCalendarSection = () => {
 
     // Toggle is disabled while we don't know the connection state, or
     // when the user clearly can't use the feature yet (not connected,
-    // or connected without calendar scope).
-    const togglesDisabled = loading || googleConnected === false || calendarAuthorized === false;
+    // connected without calendar scope, or connected with a dead token).
+    const togglesDisabled =
+        loading || googleConnected === false || calendarAuthorized === false || needsReconnect;
 
     let helperText: string = t.settings.autoSyncCalendar.toggleHelper;
     if (googleConnected === false) {
         helperText = t.settings.autoSyncCalendar.connectPrompt;
     } else if (calendarAuthorized === false) {
         helperText = t.settings.autoSyncCalendar.grantPrompt;
+    } else if (needsReconnect) {
+        helperText = t.settings.autoSyncCalendar.reconnectPrompt;
     }
 
     return (
@@ -871,7 +901,24 @@ const AutoSyncCalendarSection = () => {
                 </Stack>
             )}
 
-            {enabled && googleConnected && calendarAuthorized && (
+            {/* Connected + scoped on paper, but the live probe found a
+                dead refresh token → reconnect (re-runs the connect flow,
+                minting a fresh token). Mutually exclusive with the grant
+                block above (that needs scope; this needs a live token). */}
+            {googleConnected === true &&
+                calendarAuthorized === true &&
+                needsReconnect &&
+                accessToken && (
+                    <Stack direction="row" justifyContent="flex-end" sx={{ mt: 1.5 }}>
+                        <ReconnectGoogleCalendarButton
+                            accessToken={accessToken}
+                            label={t.settings.autoSyncCalendar.reconnectButton}
+                            size="sm"
+                        />
+                    </Stack>
+                )}
+
+            {enabled && googleConnected && calendarAuthorized && !needsReconnect && (
                 <>
                     <Divider sx={{ my: 1.5 }} />
                     <Stack

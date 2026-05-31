@@ -1,3 +1,11 @@
+// `sort-keys` is disabled file-wide: this 1200-line modal carries ~80
+// violations in Joy UI `sx` prop objects whose visual grouping
+// (positioning vs sizing vs typography) is intentional and not worth
+// re-sorting given the punch-list note above marks the modal as dead
+// code once the v3 channel-update path replaces these legacy services.
+// `simple-import-sort` is disabled because the prettier import-sort
+// plugin disagrees with it on react-vs-@mui ordering; prettier wins.
+/* eslint-disable sort-keys, simple-import-sort/imports, react/jsx-sort-props */
 import { useEffect, useMemo, useRef, useState } from "react";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import CloseIcon from "@mui/icons-material/Close";
@@ -34,7 +42,6 @@ import { ModalLeaveConfirm } from "../../../../components/ui/misc/ModalLeaveConf
 import { ModalTransferOwner } from "../../../../components/ui/misc/ModalTransferOwner";
 import { ProfileModalStyles } from "../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../context/AuthContext";
-import { ChatService } from "../../../../db/services/chat.service";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
@@ -44,7 +51,7 @@ import { purplePalette } from "../../../../theme/purplePalette";
 import { ProjectProfileProps, UserProps } from "../../../../types/admin";
 import { AllChatProps } from "../../../../types/chat";
 import { extractYYYYMMDD } from "../../../../utils/dateUtils";
-import { addChat } from "../../../chat/services/addChat";
+import { resolveLegacyChatId } from "../../../chat/utils/channelIdResolvers";
 import { leaveProject } from "../../services/leaveProject";
 import { updateProjectProfile } from "../../services/updateProjectProfile";
 
@@ -85,6 +92,17 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
     const isDark = mode === "dark";
     const styles = isDark ? ProfileModalStyles.dark : ProfileModalStyles.light;
     const palette = isDark ? purplePalette.dark : purplePalette.light;
+
+    // Resolve the legacy integer `project_id` from the v3 channel UUID
+    // via `Channel.legacyChatId`. Every legacy project service this
+    // modal calls (`updateProjectProfile`, `leaveProject`,
+    // `deletePMChatData`, `loadProjectProfile`, and the inline image
+    // / code PUT below) binds its backend URL param to a Django
+    // `IntegerField`. Passing a UUID 500s.
+    //
+    // Returns `-1` when no v3 mirror exists; downstream calls 404
+    // benignly rather than 500-with-traceback.
+    const pmChatIdLegacy = resolveLegacyChatId(pmChat.chatId) ?? -1;
 
     const [projectProfile, setProjectProfile] = useState<ProjectProfileProps | null>(null);
 
@@ -132,7 +150,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
         setNameError(null);
         const ok = await updateProjectProfile(
             accessToken,
-            pmChat.chatId,
+            pmChatIdLegacy,
             { projectName: next },
             setNameError
         );
@@ -155,7 +173,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
 
     const handleTransferConfirm = async (newOwnerId: string) => {
         if (!projectProfile) return false;
-        const ok = await updateProjectProfile(accessToken, pmChat.chatId, {
+        const ok = await updateProjectProfile(accessToken, pmChatIdLegacy, {
             ownerId: newOwnerId,
         });
         if (ok) {
@@ -180,7 +198,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
 
     const handleLeaveProject = async () => {
         if (!myself.teamId) return false;
-        const ok = await leaveProject(accessToken, myself.teamId, pmChat.chatId, myself.userId);
+        const ok = await leaveProject(accessToken, myself.teamId, pmChatIdLegacy, myself.userId);
         if (!ok) return false;
         // Drop the project chat from the in-memory list so the sidebar
         // updates immediately.
@@ -199,10 +217,10 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
         ) {
             useCM.setCurrentSubChat(undefined);
         }
-        // Purge IDB so cached project data (messages, threads, chat row)
-        // doesn't keep rendering after leave. Best-effort — failures are
-        // swallowed inside the helper.
-        await new ChatService().deletePMChatData(pmChat.chatId);
+        // v3 ownership: when the user is removed from the project's
+        // channel, the v3 `channel.member_removed` broadcast triggers
+        // `channelService._evictChannelMessages`, which drops the
+        // channel from the snapshot + IDB. No manual cleanup needed.
         setOpenModalProjectProfile(false);
         return true;
     };
@@ -235,7 +253,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
             }
             setProjectProfile({ ...projectProfile, code: next });
             setCodeEditMode(false);
-        } catch (_err) {
+        } catch {
             setCodeError("Network error.");
         } finally {
             setCodeSaving(false);
@@ -301,21 +319,22 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
 
             if (!uploadProfileImageResponse.ok) {
                 throw new Error(t.admin.projectProfile.uploadFailed);
-            } else {
-                addChat(
-                    {
-                        ...pmChat,
-                        profileImagePath: uploadProfileImageData.profile_image_file_name,
-                    },
-                    pmChat.chatType
-                );
-                await useCM.funcSetAllChats();
             }
+            // v3 source. The PM channel mirrors the ProjectMaster row;
+            // the v3 backend's project-update flow broadcasts
+            // `channel.updated` to all members, which `channelService`
+            // applies to `snapshot.channels`. `funcSetAllChats` re-derives
+            // from the snapshot — no legacy IDB write needed.
+            await useCM.funcSetAllChats();
         }
     };
 
     const loadProjectProfileData = async () => {
-        const projectProfile = await loadProjectProfile(myself.teamId, pmChat.chatId, accessToken);
+        const projectProfile = await loadProjectProfile(
+            myself.teamId,
+            pmChatIdLegacy,
+            accessToken
+        );
         setProjectProfile(projectProfile);
     };
 
@@ -323,6 +342,10 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
         if (openModalProjectProfile) {
             loadProjectProfileData();
         }
+        // Intentional: load on open only. Including `loadProjectProfileData`
+        // would refire whenever the closure rebinds (every render); we
+        // only want one fetch per open transition.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [openModalProjectProfile]);
 
     return (

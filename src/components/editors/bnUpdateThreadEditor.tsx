@@ -35,6 +35,7 @@ import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../context/AuthContext";
 import { useMentionGroupsContext } from "../../context/MentionGroupsContext";
+import { getFirstLine } from "../../features/chat/utils/common";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
 import { useAnchorClickIntercept } from "../../hooks/common/useAnchorClickIntercept";
@@ -42,6 +43,7 @@ import { useIsMobile } from "../../hooks/common/useIsMobile";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { useTranslation } from "../../i18n";
+import { channelService } from "../../services/channel/channelService";
 import { UserProps } from "../../types/admin";
 import { ChatProps, ThreadMessageProps, ThreadProps } from "../../types/chat";
 import { EmojiPicker } from "../ui/emoji/EmojiPicker";
@@ -62,8 +64,8 @@ import {
     getBlockTypeSelectItemsWithCodeBlock,
 } from "./sub/codeBlockExtras";
 
-const base_url = import.meta.env.VITE_API_BASE_URL;
-const django_url = import.meta.env.VITE_DJANGO_URL;
+// Chat attachment upload uses channelService.uploadInlineFile (v3); the
+// legacy VITE_API_BASE_URL / VITE_DJANGO_URL upload consts were removed.
 
 type BnUpdateThreadEditorProps = {
     useTEM: TeamManagementState;
@@ -151,30 +153,10 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
 
     const uploadFile = guardUploadFile(
         trackUpload(async (file: File) => {
-            const formData = new FormData();
-            formData.append("team_id", String(myself.teamId));
-            formData.append("chat_type", String(thread.chatType));
-            formData.append("chat_id", String(message.chatId));
-            formData.append("message_id", String(message.messageId));
-            formData.append("thread_id", String(message.threadId));
-            formData.append("uploader", myself.userId);
-            formData.append("chat_attachment_file", file);
-            const uploadChatAttachmentResponse = await fetch(`${base_url}/chat/attachment/`, {
-                method: "POST",
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                },
-                body: formData,
-            });
-            const uploadChatAttachmentData = await uploadChatAttachmentResponse.json();
-
-            if (!uploadChatAttachmentResponse.ok) {
-                throw new Error(
-                    uploadChatAttachmentData.message || t.common.editor.attachmentUploadFailed
-                );
-            }
-
-            return `${django_url}${uploadChatAttachmentData.chatAttachmentUrl}`;
+            // v3: compose-time inline upload via the channel-scoped uploader
+            // (returns an absolute URL; no `django_url` prepend). Replaces
+            // the deleted `/chat/attachment/` route.
+            return channelService.uploadInlineFile(String(message.chatId), file);
         })
     );
 
@@ -250,40 +232,29 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
     }, [message]);
 
     const sendUpdatedMessage = async () => {
-        if (editor.document.length > 1 && socket !== null) {
-            socket.emit("thread_message", {
-                methodType: "PUT",
-                isInit: false,
-                rootMessageTSSent: "",
-                rootMessageSenderId: null,
-                rootMessageReceiverId: null,
-                threadId: thread.threadId,
-                threadMessage: editor.document,
-                chatType: thread.chatType,
-                dmPartnerUserId: thread.dmPartnerUser.userId,
-                senderId: message.sender.userId,
-                senderName: message.sender.userName,
-                destCGName: thread.chatName,
-                destCGId: thread.chatId,
-                taskId: thread.taskId,
-                systemUserId: null,
-                messageIdForPut: message.messageId,
-            });
-            if (message.messageId === 1) {
-                socket.emit("message", {
-                    methodType: "PUT",
-                    message: editor.document,
-                    destCGName: thread.chatName,
-                    destCGId: thread.chatId,
-                    chatType: thread.chatType,
-                    dmPartnerUserId: thread.dmPartnerUser.userId,
-                    taskId: thread.taskId,
-                    taskStatus: null,
-                    systemUserId: null,
-                    messageIdForPut: thread.threadId,
-                    isPrivate: thread.isPrivate,
-                });
-            }
+        if (editor.document.length <= 1) return;
+        // v3 cutover. Was a `socket.emit("thread_message", PUT, ...)`
+        // plus a sibling `socket.emit("message", PUT, ...)` mirror at
+        // `messageId === 1` (the synthetic "first thread message"
+        // pattern from the legacy data model). The v3 model collapses
+        // both: thread replies and top-level messages are the same
+        // `Message` row, edits route through one `channelService.edit`
+        // emit. The server broadcasts `message.updated` and the open
+        // thread's live-update subscription picks up the new body.
+        const v3MessageId = (message as { messageIdWithChatIdAndThreadId?: string })
+            .messageIdWithChatIdAndThreadId;
+        if (!v3MessageId) {
+            console.warn("[bnUpdateThreadEditor] missing v3 messageUuid — cannot edit");
+            return;
+        }
+        try {
+            await channelService.edit(
+                v3MessageId,
+                editor.document,
+                getFirstLine(editor.document[0])
+            );
+        } catch (e) {
+            console.error("[bnUpdateThreadEditor] channelService.edit failed:", e);
         }
     };
 

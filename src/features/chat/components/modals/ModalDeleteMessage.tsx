@@ -5,8 +5,6 @@ import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import { Alert, Box, Button, Modal, ModalDialog, Stack, Typography } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
-import { ChatService } from "../../../../db/services/chat.service";
-import { FlaggedService } from "../../../../db/services/flagged.service";
 import { useTranslation } from "../../../../i18n";
 import {
     ChatProps,
@@ -59,7 +57,6 @@ export const ModalDeleteMessage: React.FC<Props> = ({
     setFlaggedMessages,
 }) => {
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
-    const chatService = new ChatService();
     const { t } = useTranslation();
 
     const cleanupFlaggedMessage = async (
@@ -74,20 +71,13 @@ export const ModalDeleteMessage: React.FC<Props> = ({
         // list at call time — `flaggedMessages` (the prop) can be a render
         // or two behind once the parent message-bubble is memoized.
         // `hadMatch` is captured inside the updater and read after.
-        let hadMatch = false;
-        setFlaggedMessages((prev) => {
-            const next = prev.filter((fm) => fm.flaggedMessageId !== flaggedId);
-            hadMatch = next.length !== prev.length;
-            return hadMatch ? next : prev;
-        });
-        if (hadMatch) {
-            try {
-                const flaggedService = new FlaggedService();
-                await flaggedService.deleteFlaggedMessage(flaggedId);
-            } catch {
-                // Non-critical
-            }
-        }
+        // Optimistic local removal. The v3 `channelService.deleteMessage`
+        // chain also fires `_removeFlagByMessage`, which the
+        // `useChatManagement` subscription picks up to re-derive
+        // `flaggedMessages` from the snapshot — so even without this
+        // optimistic update the row would clear within one notify
+        // cycle, but updating eagerly avoids a one-frame flicker.
+        setFlaggedMessages((prev) => prev.filter((fm) => fm.flaggedMessageId !== flaggedId));
     };
 
     const handleDeleteMessage = async () => {
@@ -121,35 +111,29 @@ export const ModalDeleteMessage: React.FC<Props> = ({
                 message.messageId
             );
 
-            // Broadcast delete to other members
-            socket.emit("thread_message", {
-                methodType: "DELETE",
-                chatType: message.chatType,
-                destCGId: message.chatId,
-                threadId: message.threadId,
-                messageIdForDelete: message.messageId,
-            });
-
-            // Backend & IndexedDB cleanup (non-blocking for UI)
+            // v3 thread delete. The v3 model has thread replies as the
+            // same `Message` row type as top-level messages, so the
+            // delete emit is the same `channelService.deleteMessage`
+            // call used by the main-pane delete branch. Now that the
+            // thread loader is on v3, `ThreadMessageProps.
+            // messageIdWithChatIdAndThreadId` carries the v3 message
+            // UUID via the adapter — pass that through. The legacy
+            // `socket.emit("thread_message", DELETE)` + axios PUT +
+            // per-type IDB chatService cleanups all collapse into
+            // this one call; the open thread's live-update
+            // subscription patches the visible reply list off the
+            // server's `message.deleted` broadcast.
             try {
                 await deleteThreadMessage(
                     accessToken,
                     message.chatType,
-                    message.chatId,
+                    message.chatId as unknown as string,
                     message.threadId,
-                    message.messageId
+                    message.messageIdWithChatIdAndThreadId ?? "",
+                    setErrorMessage
                 );
-                if (message.chatType === 1) {
-                    await chatService.deleteDMThreadMessage(message.chatId, message.messageId);
-                } else if (message.chatType === 2) {
-                    await chatService.deleteGMThreadMessage(message.chatId, message.messageId);
-                } else if (message.chatType === 3) {
-                    await chatService.deletePMThreadMessage(message.chatId, message.messageId);
-                } else if (message.chatType === 4) {
-                    await chatService.deleteMDMThreadMessage(message.chatId, message.messageId);
-                }
             } catch (err) {
-                console.error("Failed to delete thread message from backend/IndexedDB:", err);
+                console.error("Failed to delete thread message:", err);
             }
         } else {
             if (!socket || !currentChat || !setCurrentChat) {
@@ -158,45 +142,40 @@ export const ModalDeleteMessage: React.FC<Props> = ({
                 return;
             }
 
-            // Update UI immediately
-            setCurrentChat({
-                ...currentChat,
-                messages: currentChat.messages.filter(
-                    (m) => m.messageId !== message.messageId
-                ) as MessageProps[],
-                notMove: true,
-            });
             setOpenDeleteMessage(false);
 
             // Remove from flagged messages if flagged
             cleanupFlaggedMessage(message.chatType, message.chatId, 0, message.messageId);
             setErrorMessage(null);
 
-            // Broadcast delete to other members
-            socket.emit("message", {
-                methodType: "DELETE",
-                chatType: message.chatType,
-                destCGId: message.chatId,
-                messageIdForDelete: message.messageId,
-            });
-
-            // Backend & IndexedDB cleanup (non-blocking for UI)
+            // v3 channelService.deleteMessage handles BOTH the
+            // server-side soft-delete (Django) AND the broadcast to
+            // other members (`message.deleted` on the channel room).
+            // The legacy socket.emit("message", DELETE) + axios PUT +
+            // per-type IDB chatService cleanups all collapse into one
+            // call; the v3 store + IDB writes happen inside
+            // channelService.handleMessageDeleted, and the open chat's
+            // live-update subscription picks up the new state.
+            //
+            // No optimistic local filter: a previous version
+            // pre-emptively filtered the message out of
+            // `currentChat.messages` for snappier UI, but any
+            // unrelated event (typing, reaction) that fires the
+            // useSyncExternalStore subscription between the filter
+            // and the server's `message.deleted` broadcast would
+            // regenerate `currentChat.messages` from the still-
+            // present-in-store row and visibly resurrect the
+            // bubble. The v3 ack-then-broadcast roundtrip is fast
+            // enough that the subscription-driven update is
+            // imperceptible in practice.
             try {
                 await deleteMessage(
                     accessToken,
                     message.chatType,
-                    message.chatId,
-                    message.messageId
+                    message.chatId as unknown as string,
+                    message.messageIdWithChatId ?? "",
+                    setErrorMessage
                 );
-                if (message.chatType === 1) {
-                    await chatService.deleteDMMessage(message.chatId, message.messageId);
-                } else if (message.chatType === 2) {
-                    await chatService.deleteGMMessage(message.chatId, message.messageId);
-                } else if (message.chatType === 3) {
-                    await chatService.deletePMMessage(message.chatId, message.messageId);
-                } else if (message.chatType === 4) {
-                    await chatService.deleteMDMMessage(message.chatId, message.messageId);
-                }
             } catch (err) {
                 console.error("Failed to delete message from backend/IndexedDB:", err);
             }

@@ -51,9 +51,15 @@ export const ChatListItemAvatar: React.FC<ChatListItemAvatarProps> = ({
         );
     }
 
-    // DM Chat without partner (group chat)
+    // DM Chat without partner (group chat).
+    // PUNCH LIST (v3 migration): v3 DMs come through `channelToLegacyChat`
+    // with `chatName: channel.title || ""` — when both the title and the
+    // resolved partner are empty (members not yet loaded), `chatName[0]`
+    // is `undefined` and `.toUpperCase()` throws. Fall back to "?" so
+    // the row renders while the partner / title resolves.
     if (chatType === 1 && chat.dmPartnerUser.userId === "") {
-        return <Avatar size="sm">{chat.chatName[0].toUpperCase()}</Avatar>;
+        const initial = chat.chatName?.[0]?.toUpperCase() ?? "?";
+        return <Avatar size="sm">{initial}</Avatar>;
     }
 
     // GM Chat
@@ -89,7 +95,9 @@ export const ChatListItemAvatar: React.FC<ChatListItemAvatarProps> = ({
 
     // MDM (Multi-user DM) Chat - show overlapping member avatars
     if (chatType === 4) {
-        return <MDMAvatar members={chat.mdmMembers} teamMemberProfiles={useTEM.teamMemberProfiles} />;
+        return (
+            <MDMAvatar members={chat.mdmMembers} teamMemberProfiles={useTEM.teamMemberProfiles} />
+        );
     }
 
     return null;

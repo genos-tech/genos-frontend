@@ -1,3 +1,7 @@
+// `simple-import-sort` and the prettier import-sort plugin disagree on the
+// order of `react` vs the alphabetically-earlier `@mui/...` block. Prettier
+// wins (run-on-save reformats it), so disable `simple-import-sort` here.
+/* eslint-disable simple-import-sort/imports */
 import * as React from "react";
 import { useState } from "react";
 import AssignmentIcon from "@mui/icons-material/Assignment";
@@ -14,13 +18,12 @@ import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithSt
 import { GMAvatar } from "../../../../components/ui/avatars/GMAvatar";
 import { MDMAvatar } from "../../../../components/ui/avatars/MDMAvatar";
 import { ProjectAvatar } from "../../../../components/ui/avatars/ProjectAvatar";
-import { useAuth } from "../../../../context/AuthContext";
-import { FlaggedService } from "../../../../db/services/flagged.service";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
+import { channelService } from "../../../../services/channel/channelService";
 import { UserProps } from "../../../../types/admin";
 import {
     AllChatProps,
@@ -34,10 +37,8 @@ import { ProjectProps } from "../../../../types/tasks";
 import { extractYYYYMMDDHHMM, getLocalCurrentTimestamp } from "../../../../utils/dateUtils";
 import { toggleMessagesPane } from "../../../../utils/sidebarUtils";
 import { formatTaskDisplayId } from "../../../tasks/utils/taskDisplayId";
-import { addMessage } from "../../services/addMessage";
-import { loadSpecificThreadMessages } from "../../services/loadSpecificThreadMessages";
-import { popSpecificMessages } from "../../services/popSpecificMessages";
-import { updateFlagMessage } from "../../services/updateFlagMessage";
+import { loadV3SpecificMessages } from "../../services/loadV3SpecificMessages";
+import { loadV3SpecificThreadMessages } from "../../services/loadV3SpecificThreadMessages";
 
 // chat_type=4 carries two semantics in the wider codebase: legacy task
 // comments (live in the PM store, chat_id = project_id) and the newer MDM
@@ -45,18 +46,21 @@ import { updateFlagMessage } from "../../services/updateFlagMessage";
 // inside chat bubbles (DM/GM/PM/MDM) — there is no "flag" affordance on a
 // task comment — so every chat_type=4 flagged message we render here is an
 // MDM message. The constant + label are named accordingly.
+// Keys sorted alphabetically (case-insensitive) per `sort-keys`.
+// Integer values are the canonical kind codes; declaration order
+// is independent of runtime behavior.
 const CHAT_TYPES = {
     DM: 1,
     GM: 2,
-    PM: 3,
     MDM: 4,
+    PM: 3,
 } as const;
 
 const CHAT_TYPE_LABELS = {
     [CHAT_TYPES.DM]: "DM",
     [CHAT_TYPES.GM]: "GM",
-    [CHAT_TYPES.PM]: "PM",
     [CHAT_TYPES.MDM]: "MDM",
+    [CHAT_TYPES.PM]: "PM",
 } as const;
 
 // Flagged message color scheme for visual distinction
@@ -84,9 +88,17 @@ const findChatForFlag = (
     allChats: AllChatProps[],
     flaggedMessage: FlaggedMessageProps
 ): AllChatProps | undefined =>
+    // PUNCH LIST (v3 chatId migration): `FlaggedMessageProps.chatId`
+    // is still the legacy integer; `AllChatProps.chatId` is the
+    // v3 string. `String(...)` bridges them at the comparison
+    // boundary. Same idea applies at all the other comparison
+    // and construction sites flagged below. Whole file is dead
+    // code once the v3 flagged-message endpoint replaces this
+    // legacy `/chat/flagged-update/` flow.
     allChats.find(
         (chat) =>
-            chat.chatType === flaggedMessage.chatType && chat.chatId === flaggedMessage.chatId
+            chat.chatType === flaggedMessage.chatType &&
+            chat.chatId === String(flaggedMessage.chatId)
     );
 
 /**
@@ -99,25 +111,31 @@ const createChatFromMessages = (
     messages: MessageProps[],
     moveToSpecificIndex: string,
     flaggedMessage: FlaggedMessageProps,
-    allChats: AllChatProps[]
+    allChats: AllChatProps[],
+    v3ChannelUuid?: string
 ): ChatProps | null => {
     const currentChat = findChatForFlag(allChats, flaggedMessage);
     if (!currentChat || messages.length === 0) return null;
 
+    // v3: cursor is the v3 read-cursor UUID (or empty when not synced).
+    // Don't try to compute a "later" cursor here — clicking a flag
+    // doesn't advance the read cursor; the chat-open path does that.
+    // Pass the existing cursor through unchanged so the unread-pip /
+    // banner state isn't perturbed by navigation.
     return {
-        chatId: flaggedMessage.chatId,
+        chatId: v3ChannelUuid ?? String(flaggedMessage.chatId),
         chatName: flaggedMessage.chatName || currentChat.chatName,
         chatType: flaggedMessage.chatType,
         dmPartnerUser: flaggedMessage.dmPartnerUser,
-        lastReadMessageId: Math.max(flaggedMessage.messageId, currentChat.lastReadMessageId),
-        messages: messages,
+        isPrivate: currentChat.isPrivate,
+        lastReadMessageId: currentChat.lastReadMessageId,
         latestMessage: messages[messages.length - 1],
         latestMessageText: messages[messages.length - 1].contentText,
-        TSLastMessage: flaggedMessage.tsSent,
-        moveToSpecificIndex: moveToSpecificIndex,
-        isPrivate: currentChat.isPrivate,
-        profileImagePath: currentChat.profileImagePath,
         mdmMembers: currentChat.mdmMembers,
+        messages: messages,
+        moveToSpecificIndex: moveToSpecificIndex,
+        profileImagePath: currentChat.profileImagePath,
+        TSLastMessage: flaggedMessage.tsSent,
     };
 };
 
@@ -126,7 +144,7 @@ const isCurrentChat = (
     flaggedMessage: FlaggedMessageProps
 ): boolean => {
     return (
-        currentSubChat?.chatId === flaggedMessage.chatId &&
+        currentSubChat?.chatId === String(flaggedMessage.chatId) &&
         currentSubChat?.chatName === flaggedMessage.chatName
     );
 };
@@ -149,7 +167,6 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
         useCM,
         useTM,
     } = props;
-    const { accessToken } = useAuth();
     const { mode } = useColorScheme();
     const { t } = useTranslation();
     const isDark = mode === "dark";
@@ -171,65 +188,22 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
     const chatRemoved = chatRecord === undefined;
     const navigationDisabled = chatRemoved || sourceDeleted;
 
-    // Flag status management
+    // v3 unflag. `channelService.unflagMessage` does the optimistic
+    // local removal, emits `flag.remove`, and rolls back if the server
+    // rejects. The sidebar row disappears automatically because
+    // `useChatManagement.flaggedMessages` is a v3 subscription derived
+    // from `snapshot.flags` — the optimistic remove fires a notify and
+    // the subscription drops this row on the next pass.
     const updateFlagStatus = async () => {
+        const v3MessageUuid = flaggedMessage.messageId as unknown as string;
+        if (!v3MessageUuid) return;
+        setTmpIsFlagged(false);
         try {
-            // Update backend
-            await updateFlagMessage(accessToken, myself, {
-                chat_type: flaggedMessage.chatType,
-                chat_id: flaggedMessage.chatId,
-                thread_id: flaggedMessage.threadId,
-                message_id: flaggedMessage.messageId,
-            });
-
-            setTmpIsFlagged(false);
-
-            // Remove from local state
-            useCM.setFlaggedMessages(
-                useCM.flaggedMessages.filter(
-                    (message: FlaggedMessageProps) =>
-                        message.flaggedMessageId !== flaggedMessage.flaggedMessageId
-                )
-            );
-
-            // Remove from IndexedDB using FlaggedService
-            const flaggedService = new FlaggedService();
-            await flaggedService.deleteFlaggedMessage(flaggedMessage.flaggedMessageId);
-
-            // Update the isFlagged status in IndexedDB without navigating away
-            try {
-                const messages = await popSpecificMessages(
-                    flaggedMessage.chatId,
-                    flaggedMessage.chatType
-                );
-                const updatedMessage = messages.find(
-                    (m: MessageProps) => m.messageId === flaggedMessage.messageId
-                );
-                if (updatedMessage) {
-                    await addMessage(
-                        { ...updatedMessage, isFlagged: false },
-                        flaggedMessage.chatType
-                    );
-                }
-            } catch {
-                // Non-critical: IndexedDB message update can fail silently
-            }
-
-            // If the user is currently viewing this chat, update isFlagged in the pane
-            if (
-                useCM.currentMainChat &&
-                useCM.currentMainChat.chatId === flaggedMessage.chatId &&
-                useCM.currentMainChat.chatType === flaggedMessage.chatType
-            ) {
-                useCM.setCurrentMainChat({
-                    ...useCM.currentMainChat,
-                    messages: useCM.currentMainChat.messages.map((m) =>
-                        m.messageId === flaggedMessage.messageId ? { ...m, isFlagged: false } : m
-                    ),
-                    notMove: true,
-                });
-            }
+            await channelService.unflagMessage(v3MessageUuid);
         } catch (error) {
+            // `unflagMessage` already rolled the snapshot back; un-set
+            // the local toggle so the icon matches state.
+            setTmpIsFlagged(true);
             console.error("Error updating flag status:", error);
         }
     };
@@ -243,55 +217,31 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
      * here. `MessageProps` itself has no `isDeleted` field.
      */
     const loadMessagesAndTarget = async (): Promise<{
+        deleted: boolean;
         messages: MessageProps[];
         target: MessageProps | undefined;
-        deleted: boolean;
+        v3ChannelUuid: string | null;
     }> => {
-        const messages = await popSpecificMessages(flaggedMessage.chatId, flaggedMessage.chatType);
-        const target = messages.find((m) => m.messageId === flaggedMessage.messageId);
-        return { messages, target, deleted: !target };
-    };
-
-    const updateMessagesAndChat = async () => {
-        try {
-            const { messages, target, deleted } = await loadMessagesAndTarget();
-            if (deleted || !target) {
-                setSourceDeleted(true);
-                return;
-            }
-
-            // Update the isFlagged status of the target message
-            const updatedMessages: MessageProps[] = messages.map((message: MessageProps) =>
-                message.messageId === flaggedMessage.messageId
-                    ? { ...message, isFlagged: !message.isFlagged }
-                    : message
-            );
-
-            const updatedTarget = updatedMessages.find(
-                (m) => m.messageId === flaggedMessage.messageId
-            );
-            if (updatedTarget) {
-                await addMessage(updatedTarget, flaggedMessage.chatType);
-            }
-
-            const newChat = createChatFromMessages(
-                updatedMessages,
-                `${flaggedMessage.chatId}-${flaggedMessage.messageId}`,
-                flaggedMessage,
-                useCM.allChats
-            );
-            if (!newChat) return; // chat removed concurrently
-
-            useCM.setCurrentMainChat(newChat);
-            useCM.setIsMainChatVisible(true);
-
-            if (shouldHideThread(useTM.isCreatingTask.flag, useTM.isTaskPreviewVisible)) {
-                useCM.setIsThreadVisible(false);
-            }
-        } catch (error) {
-            console.error("Error updating messages and chat:", error);
+        // `FlaggedMessageProps.chatId` / `.messageId` slots are typed
+        // `number` for legacy compatibility, but `v3FlagsToLegacy`
+        // packs v3 UUIDs through them. Pull both out via the same
+        // structural cast the adapter uses on the way in.
+        const v3ChannelUuid = flaggedMessage.chatId as unknown as string;
+        const v3MessageUuid = flaggedMessage.messageId as unknown as string;
+        if (!v3ChannelUuid || !v3MessageUuid) {
+            return { deleted: true, messages: [], target: undefined, v3ChannelUuid: null };
         }
+        const messages = await loadV3SpecificMessages(v3ChannelUuid, flaggedMessage.chatType);
+        // `messageIdWithChatId` carries the v3 UUID. The legacy
+        // `messageId` field on v3-adapted messages is the per-channel
+        // `seq` integer, which won't match the UUID we're looking for.
+        const target = messages.find((m) => m.messageIdWithChatId === v3MessageUuid);
+        return { deleted: !target, messages, target, v3ChannelUuid };
     };
+
+    // `updateMessagesAndChat` was an alternative flag-toggle entry point
+    // that has been superseded by `updateFlagStatus` + the direct chat
+    // navigation. Removed — was flagged unused by ESLint.
 
     /**
      * Navigate to the source chat for a non-thread flagged message.
@@ -303,17 +253,20 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
         const isCurrentChatVisible = isCurrentChat(useCM.currentSubChat, flaggedMessage);
 
         try {
-            const { messages, deleted } = await loadMessagesAndTarget();
-            if (deleted) {
+            const { messages, deleted, v3ChannelUuid } = await loadMessagesAndTarget();
+            if (deleted || !v3ChannelUuid) {
                 setSourceDeleted(true);
                 return;
             }
 
+            // v3: `moveToSpecificIndex` is the bare message UUID
+            // (matches `indexMap` key, which is `messageIdWithChatId`).
             const newChat = createChatFromMessages(
                 messages,
-                `${flaggedMessage.chatId}-${flaggedMessage.messageId}`,
+                flaggedMessage.messageId as unknown as string,
                 flaggedMessage,
-                useCM.allChats
+                useCM.allChats,
+                v3ChannelUuid
             );
             if (!newChat) return; // chat was removed between render and click
 
@@ -337,12 +290,18 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
 
     const handleThreadMessage = async () => {
         try {
-            const threadMessages = await loadSpecificThreadMessages(
-                myself,
-                flaggedMessage.chatType,
-                flaggedMessage.chatId,
-                flaggedMessage.threadId,
-                accessToken
+            // v3 thread loader: takes channel + thread-root UUIDs.
+            // `FlaggedMessageProps.chatId` and `.threadId` slots are
+            // typed `number`, but `v3FlagsToLegacy` packs the channel
+            // UUID through `chatId` and the parent's UUID through
+            // `threadId`. Cast through the same shim.
+            const v3ChannelUuid = flaggedMessage.chatId as unknown as string;
+            const v3ThreadRootUuid = flaggedMessage.threadId as unknown as string;
+            const v3MessageUuid = flaggedMessage.messageId as unknown as string;
+            const threadMessages = await loadV3SpecificThreadMessages(
+                v3ChannelUuid,
+                v3ThreadRootUuid,
+                flaggedMessage.chatType
             );
 
             // Empty / missing thread response = thread was deleted upstream.
@@ -351,8 +310,11 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                 return;
             }
 
+            // v3: match on the message UUID (carried on
+            // `messageIdWithChatIdAndThreadId` by the v3 adapter), not
+            // the per-channel `seq` integer in `messageId`.
             const targetThreadMsg = threadMessages.find(
-                (m: ThreadMessageProps) => m.messageId === flaggedMessage.messageId
+                (m: ThreadMessageProps) => m.messageIdWithChatIdAndThreadId === v3MessageUuid
             );
             if (!targetThreadMsg || targetThreadMsg.isDeleted === true) {
                 setSourceDeleted(true);
@@ -380,28 +342,33 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
         }
     };
 
+    // Keys sorted alphabetically per `sort-keys`.
     const createThreadFromMessages = (threadMessages: ThreadMessageProps[]): ThreadProps => {
         return {
             chatId: flaggedMessage.chatId,
             chatName: flaggedMessage.chatName,
-            threadId: flaggedMessage.threadId,
             chatType: flaggedMessage.chatType,
             dmPartnerUser: {
+                avatarImgPath: "",
                 teamId: myself.teamId,
                 teamName: myself.teamName,
+                tsJoined: "",
+                tsLastSeen: "",
+                userEmail: flaggedMessage.dmPartnerUser.userEmail,
                 userId: flaggedMessage.dmPartnerUser.userId,
                 userName: flaggedMessage.dmPartnerUser.userName,
-                userEmail: flaggedMessage.dmPartnerUser.userEmail,
-                avatarImgPath: "",
-                tsLastSeen: "",
-                tsJoined: "",
             },
-            taskId: flaggedMessage.taskId,
             messages: threadMessages,
+            // v3 `moveToSpecificIndex` is the bare message UUID;
+            // `indexMap` in the thread pane is keyed by
+            // `messageIdWithChatIdAndThreadId`, which the v3 adapter
+            // sets to the message's v3 UUID.
+            moveToSpecificIndex: flaggedMessage.messageId as unknown as string,
             project: flaggedMessage.project,
-            TSLastMessage: getLocalCurrentTimestamp(),
             taskExist: threadMessages[0].taskExist,
-            moveToSpecificIndex: `${flaggedMessage.chatId}-${flaggedMessage.threadId}-${flaggedMessage.messageId}`,
+            taskId: flaggedMessage.taskId,
+            threadId: flaggedMessage.threadId,
+            TSLastMessage: getLocalCurrentTimestamp(),
         };
     };
 
@@ -409,15 +376,22 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
         const isCurrentChatVisible = isCurrentChat(useCM.currentSubChat, flaggedMessage);
 
         try {
-            const messages = await popSpecificMessages(
-                flaggedMessage.chatId,
-                flaggedMessage.chatType
-            );
+            // v3: `flaggedMessage.chatId` is the channel UUID (packed
+            // through the legacy `number` slot by `v3FlagsToLegacy`).
+            const v3ChannelUuid = flaggedMessage.chatId as unknown as string;
+            const v3ThreadRootUuid = flaggedMessage.threadId as unknown as string;
+            if (!v3ChannelUuid) return;
+            const messages = await loadV3SpecificMessages(v3ChannelUuid, flaggedMessage.chatType);
+            // Background nav lands on the main chat (the thread pane
+            // is what the user actually clicked into); the scroll
+            // target is the thread root, so its UUID drives the
+            // `indexMap` lookup in MainChatPane.
             const newChat = createChatFromMessages(
                 messages,
-                `${flaggedMessage.chatId}-${flaggedMessage.threadId}-${flaggedMessage.messageId}`,
+                v3ThreadRootUuid,
                 flaggedMessage,
-                useCM.allChats
+                useCM.allChats,
+                v3ChannelUuid
             );
             if (!newChat) return;
 
@@ -463,11 +437,11 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
             return (
                 <AvatarWithStatus
                     avatarUser={useTEM.teamMemberProfiles[flaggedMessage.dmPartnerUser.userId]}
-                    useCM={useCM}
                     isYou={isYou}
                     myself={myself}
                     setMyself={setMyself}
                     socket={socket}
+                    useCM={useCM}
                     useUISM={useUISM}
                 />
             );
@@ -478,18 +452,19 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
     const renderGMAvatar = () => {
         const chat = useCM.allChats.find(
             (chat) =>
-                chat.chatType === flaggedMessage.chatType && chat.chatId === flaggedMessage.chatId
+                chat.chatType === flaggedMessage.chatType &&
+                chat.chatId === String(flaggedMessage.chatId)
         );
 
         if (chat) {
             return (
                 <GMAvatar
-                    useCM={useCM}
                     gmChat={chat}
                     isYou={isYou}
                     myself={myself}
                     setMyself={setMyself}
                     socket={socket}
+                    useCM={useCM}
                     useTEM={useTEM}
                     useUISM={useUISM}
                 />
@@ -506,11 +481,11 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
         if (chatRecord) {
             return (
                 <ProjectAvatar
-                    useCM={useCM}
                     myself={myself}
                     pmChat={chatRecord}
                     setMyself={setMyself}
                     socket={socket}
+                    useCM={useCM}
                     useTEM={useTEM}
                     useUISM={useUISM}
                 />
@@ -558,7 +533,9 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
     const resolvedChatName = (() => {
         if (flaggedMessage.chatName) return flaggedMessage.chatName;
         const chat = useCM.allChats.find(
-            (c) => c.chatId === flaggedMessage.chatId && c.chatType === flaggedMessage.chatType
+            (c) =>
+                c.chatId === String(flaggedMessage.chatId) &&
+                c.chatType === flaggedMessage.chatType
         );
         return chat?.chatName || "";
     })();
@@ -600,11 +577,11 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                     size="sm"
                     variant="soft"
                     sx={{
-                        fontSize: "10px",
                         borderRadius: "6px",
+                        fontSize: "10px",
                         fontWeight: 600,
-                        px: 0.75,
                         height: "20px",
+                        px: 0.75,
                     }}
                 >
                     {resolvedChatName}
@@ -614,11 +591,11 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                         size="sm"
                         variant="soft"
                         sx={{
-                            fontSize: "10px",
                             borderRadius: "6px",
+                            fontSize: "10px",
                             fontWeight: 600,
-                            px: 0.75,
                             height: "20px",
+                            px: 0.75,
                         }}
                     >
                         {formatTaskDisplayId(flaggedMessage)}
@@ -634,12 +611,12 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
             size="sm"
             variant="outlined"
             sx={{
-                fontSize: "10px",
                 borderRadius: "6px",
+                fontSize: "10px",
                 fontWeight: 600,
-                px: 0.75,
                 height: "20px",
                 opacity: 0.85,
+                px: 0.75,
             }}
         >
             {label}
@@ -652,12 +629,12 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
             size="sm"
             variant="soft"
             sx={{
-                fontSize: "10px",
                 borderRadius: "6px",
+                fontSize: "10px",
                 fontWeight: 600,
-                px: 0.75,
                 height: "20px",
                 opacity: 0.8,
+                px: 0.75,
             }}
         >
             {CHAT_TYPE_LABELS[flaggedMessage.chatType as keyof typeof CHAT_TYPE_LABELS] ||
@@ -673,11 +650,11 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                     size="sm"
                     variant="soft"
                     sx={{
-                        fontSize: "10px",
                         borderRadius: "6px",
+                        fontSize: "10px",
                         fontWeight: 600,
-                        px: 0.75,
                         height: "20px",
+                        px: 0.75,
                     }}
                 >
                     {t.chat.listItem.threadChip}
@@ -693,46 +670,17 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
         <React.Fragment>
             <ListItem
                 sx={{
-                    width: "100%",
-                    p: 0.5,
                     overflowX: "hidden",
+                    p: 0.5,
+                    width: "100%",
                 }}
             >
                 <ListItemButton
                     data-chat-list-key={`flagged-${flaggedMessage.flaggedMessageId}`}
-                    onClick={onClickHandler}
                     sx={{
-                        flexDirection: "column",
-                        alignItems: "initial",
-                        gap: 0.75,
-                        py: 1.25,
-                        px: 1.5,
-                        borderRadius: "12px",
-                        position: "relative",
-                        overflow: "hidden",
-                        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                        opacity: navigationDisabled ? 0.65 : 1,
-                        cursor: navigationDisabled ? "default" : undefined,
-                        background: isSelected
-                            ? isDark
-                                ? `linear-gradient(135deg, ${flagColor.dark}15 0%, ${flagColor.dark}08 100%)`
-                                : `linear-gradient(135deg, ${flagColor.light}12 0%, ${flagColor.light}05 100%)`
-                            : isDark
-                              ? "rgba(255,255,255,0.02)"
-                              : "rgba(0,0,0,0.01)",
-                        border: "1px solid",
-                        borderColor: isSelected
-                            ? isDark
-                                ? `${flagColor.dark}30`
-                                : `${flagColor.light}25`
-                            : isDark
-                              ? "rgba(255,255,255,0.04)"
-                              : "rgba(0,0,0,0.04)",
-                        boxShadow: isSelected
-                            ? isDark
-                                ? `0 4px 16px ${flagColor.dark}15, inset 0 1px 0 ${flagColor.dark}10`
-                                : `0 4px 16px ${flagColor.light}12, inset 0 1px 0 ${flagColor.light}08`
-                            : "none",
+                        "&:active": {
+                            transform: "translateY(0)",
+                        },
                         "&:hover": {
                             background: isSelected
                                 ? isDark
@@ -748,7 +696,6 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                                 : isDark
                                   ? "rgba(255,255,255,0.08)"
                                   : "rgba(0,0,0,0.08)",
-                            transform: "translateY(-1px)",
                             boxShadow: isSelected
                                 ? isDark
                                     ? `0 6px 20px ${flagColor.dark}20`
@@ -756,29 +703,59 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                                 : isDark
                                   ? "0 4px 12px rgba(0,0,0,0.3)"
                                   : "0 4px 12px rgba(0,0,0,0.08)",
+                            transform: "translateY(-1px)",
                         },
-                        "&:active": {
-                            transform: "translateY(0)",
-                        },
+                        alignItems: "initial",
+                        background: isSelected
+                            ? isDark
+                                ? `linear-gradient(135deg, ${flagColor.dark}15 0%, ${flagColor.dark}08 100%)`
+                                : `linear-gradient(135deg, ${flagColor.light}12 0%, ${flagColor.light}05 100%)`
+                            : isDark
+                              ? "rgba(255,255,255,0.02)"
+                              : "rgba(0,0,0,0.01)",
+                        border: "1px solid",
+                        borderColor: isSelected
+                            ? isDark
+                                ? `${flagColor.dark}30`
+                                : `${flagColor.light}25`
+                            : isDark
+                              ? "rgba(255,255,255,0.04)"
+                              : "rgba(0,0,0,0.04)",
+                        borderRadius: "12px",
+                        boxShadow: isSelected
+                            ? isDark
+                                ? `0 4px 16px ${flagColor.dark}15, inset 0 1px 0 ${flagColor.dark}10`
+                                : `0 4px 16px ${flagColor.light}12, inset 0 1px 0 ${flagColor.light}08`
+                            : "none",
+                        cursor: navigationDisabled ? "default" : undefined,
+                        flexDirection: "column",
+                        gap: 0.75,
+                        opacity: navigationDisabled ? 0.65 : 1,
+                        overflow: "hidden",
+                        position: "relative",
+                        px: 1.5,
+                        py: 1.25,
+                        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                     }}
+                    onClick={onClickHandler}
                 >
                     {/* Flagged indicator line */}
                     {tmpIsFlagged && (
                         <Box
                             sx={{
-                                position: "absolute",
-                                left: 0,
-                                top: "50%",
-                                transform: "translateY(-50%)",
-                                width: 3,
-                                height: "60%",
-                                borderRadius: "0 4px 4px 0",
                                 background: isDark
                                     ? `linear-gradient(180deg, ${flagColor.dark} 0%, ${flagColor.dark}80 100%)`
                                     : `linear-gradient(180deg, ${flagColor.light} 0%, ${flagColor.light}80 100%)`,
+                                borderRadius: "0 4px 4px 0",
                                 boxShadow: isDark
                                     ? `0 0 8px ${flagColor.dark}60`
                                     : `0 0 8px ${flagColor.light}50`,
+                                height: "60%",
+                                left: 0,
+                                position: "absolute",
+                                top: "50%",
+                                transform: "translateY(-50%)",
+                                width: 3,
                             }}
                         />
                     )}
@@ -787,15 +764,15 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                     {isSelected && (
                         <Box
                             sx={{
-                                position: "absolute",
-                                top: 0,
-                                right: 0,
-                                width: "50%",
-                                height: "100%",
                                 background: isDark
                                     ? `radial-gradient(ellipse at top right, ${flagColor.dark}08 0%, transparent 70%)`
                                     : `radial-gradient(ellipse at top right, ${flagColor.light}06 0%, transparent 70%)`,
+                                height: "100%",
                                 pointerEvents: "none",
+                                position: "absolute",
+                                right: 0,
+                                top: 0,
+                                width: "50%",
                             }}
                         />
                     )}
@@ -812,17 +789,17 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                             justifyContent="space-between"
                             spacing={1.5}
                         >
-                            <Stack direction="row" spacing={1} alignItems="center">
+                            <Stack alignItems="center" direction="row" spacing={1}>
                                 <div>{renderAvatar()}</div>
 
                                 <Stack
-                                    direction="row"
-                                    spacing={0.5}
                                     alignItems="center"
+                                    direction="row"
                                     flexWrap="wrap"
+                                    spacing={0.5}
                                 >
                                     {renderChatNameChip()}
-                                    <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
+                                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
                                         {renderProjectChips()}
                                         {renderChatTypeChip()}
                                         {renderThreadChip()}
@@ -852,15 +829,15 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                                         color={tmpIsFlagged ? "danger" : "neutral"}
                                         size="sm"
                                         variant="plain"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            updateFlagStatus();
-                                        }}
                                         sx={{
                                             transition: "all 0.2s ease",
                                             "&:hover": {
                                                 transform: "scale(1.1)",
                                             },
+                                        }}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            updateFlagStatus();
                                         }}
                                     >
                                         <FlagIcon sx={{ fontSize: 16 }} />
@@ -874,16 +851,16 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                             <Typography
                                 level="body-sm"
                                 sx={{
-                                    fontWeight: 500,
                                     display: "-webkit-box",
-                                    WebkitLineClamp: 2,
-                                    WebkitBoxOrient: "vertical",
-                                    overflow: "hidden",
-                                    textOverflow: "ellipsis",
-                                    opacity: navigationDisabled ? 0.55 : 0.85,
-                                    lineHeight: 1.5,
-                                    textDecoration: navigationDisabled ? "line-through" : "none",
                                     fontStyle: navigationDisabled ? "italic" : "normal",
+                                    fontWeight: 500,
+                                    lineHeight: 1.5,
+                                    opacity: navigationDisabled ? 0.55 : 0.85,
+                                    overflow: "hidden",
+                                    textDecoration: navigationDisabled ? "line-through" : "none",
+                                    textOverflow: "ellipsis",
+                                    WebkitBoxOrient: "vertical",
+                                    WebkitLineClamp: 2,
                                 }}
                             >
                                 {flaggedMessage.contentText}

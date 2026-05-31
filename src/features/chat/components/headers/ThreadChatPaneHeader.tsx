@@ -1,3 +1,9 @@
+// `sort-keys` + `react/jsx-sort-props` are disabled file-wide: this
+// 700+-line legacy chat thread header carries ~70 violations in Joy
+// UI `sx` prop objects and prop lists whose visual grouping is
+// intentional and not worth re-sorting given the header is part of the
+// legacy chat surface slated for replacement by the v3 channel UI.
+/* eslint-disable sort-keys, react/jsx-sort-props */
 import AddTaskRoundedIcon from "@mui/icons-material/AddTaskRounded";
 import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRounded";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
@@ -86,18 +92,24 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
         }
         if (r.entity_type === "chat" && r.chat_type && r.chat_id) {
             const chatTypeCode = CHAT_TYPE_CODE[r.chat_type];
-            const numericChatId = Number(r.chat_id);
-            const numericThreadId = r.thread_id ? Number(r.thread_id) : 0;
-            const numericMessageId = r.message_id ? Number(r.message_id) : undefined;
+            // chat_id (channel), thread_id (thread-root Message.id) and
+            // message_id are all v3 UUID strings — pass them through so the
+            // citation chip opens the exact thread / message bubble.
+            // `moveToSpecificChat` treats ""/undefined as "no focus" and
+            // resolves UUID ids directly (the old `Number(...)` coerced them
+            // to NaN and silently dropped the thread/message focus).
+            const chatId = r.chat_id;
+            const threadId = r.thread_id ?? "";
+            const messageId = r.message_id ?? undefined;
             useCM.moveToSpecificChat(
                 chatTypeCode,
-                numericChatId,
-                numericThreadId,
+                chatId,
+                threadId,
                 false,
-                numericThreadId !== 0,
+                Boolean(r.thread_id),
                 useTM.setCurrentPreviewTaskId,
                 usePM.setCurrentProject,
-                numericMessageId
+                messageId
             );
             return;
         }
@@ -223,9 +235,16 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
     const openNoteHandler = () => {
         const chatType = useCM.currentThreadChat?.chatType;
         const chatId = useCM.currentThreadChat?.chatId;
-        const matchedChat = useCM.allChats.find(
-            (c) => c.chatId === chatId && c.chatType === chatType
-        );
+        // PUNCH LIST (v3 chatId migration): `AllChatProps.chatId` is
+        // `string` post-flip; `ThreadProps.chatId` is still `number`.
+        // `String(chatId)` bridges, but undefined would yield the
+        // literal "undefined" string — guard explicitly.
+        const matchedChat =
+            chatId != null
+                ? useCM.allChats.find(
+                      (c) => c.chatId === String(chatId) && c.chatType === chatType
+                  )
+                : undefined;
         let chatName =
             matchedChat?.chatName ||
             useCM.currentMainChat?.chatName ||
@@ -394,7 +413,8 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                             members={
                                 useCM.allChats.find(
                                     (c) =>
-                                        c.chatId === useCM.currentThreadChat?.chatId &&
+                                        // v3 string vs ThreadProps numeric — `String()` bridges.
+                                        c.chatId === String(useCM.currentThreadChat?.chatId) &&
                                         c.chatType === 4
                                 )?.mdmMembers
                             }
@@ -410,7 +430,8 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                             useCM.allChats
                                 .find(
                                     (c) =>
-                                        c.chatId === useCM.currentThreadChat?.chatId &&
+                                        // v3 string vs ThreadProps numeric — `String()` bridges.
+                                        c.chatId === String(useCM.currentThreadChat?.chatId) &&
                                         c.chatType === 4
                                 )
                                 ?.mdmMembers?.map((m) => m.userName)

@@ -32,10 +32,11 @@ import { UserRepository } from "../../../../db/repositories/user";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { fmt, useTranslation } from "../../../../i18n";
+import { channelService } from "../../../../services/channel/channelService";
 import { UserProps } from "../../../../types/admin";
+import { ChannelKind, type Channel } from "../../../../types/channel";
+import type { ChatProps } from "../../../../types/chat";
 import { extractYYYYMMDD } from "../../../../utils/dateUtils";
-import { loadDMIdByUserId } from "../../../chat/services/loadDMIdByUserId";
-import { moveToDMChat } from "../../../chat/services/moveToChat";
 import { UserProfileBaseCountry } from "./sub/UserProfileBaseCountry";
 import { UserProfileRole } from "./sub/UserProfileRole";
 import { UserProfileStatus } from "./sub/UserProfileStatus";
@@ -776,22 +777,67 @@ export const UserProfile = (props: UserProfileProps) => {
                                     }}
                                     onClick={() => {
                                         (async () => {
-                                            if (profileUser) {
-                                                const chatId: number = await loadDMIdByUserId(
-                                                    myself,
-                                                    profileUser?.userId,
-                                                    accessToken
-                                                );
-                                                await moveToDMChat(
-                                                    socket,
-                                                    chatId,
-                                                    profileUser?.userName,
-                                                    profileUser,
-                                                    useCM
-                                                );
-                                                setOpenUserProfile(false);
-                                                navigate("/workspace/chat");
+                                            if (!profileUser) return;
+                                            // v3 DM open. Scan v3 snapshot for an
+                                            // existing DM with this partner; if
+                                            // none, ask the backend to create one
+                                            // (`channelService.createChannel`'s
+                                            // idempotency via `ChannelDirectPair`
+                                            // returns the existing channel if it
+                                            // already exists server-side but the
+                                            // FE snapshot hasn't caught up yet).
+                                            const snapshot = channelService.getSnapshot();
+                                            let channel: Channel | undefined;
+                                            for (const c of snapshot.channels.values()) {
+                                                if (c.kind !== ChannelKind.DM) continue;
+                                                const roster =
+                                                    snapshot.membersByChannel.get(c.id) ?? [];
+                                                const ids = new Set(roster.map((m) => m.userId));
+                                                if (
+                                                    ids.size === 2 &&
+                                                    ids.has(myself.userId) &&
+                                                    ids.has(profileUser.userId)
+                                                ) {
+                                                    channel = c;
+                                                    break;
+                                                }
                                             }
+                                            if (!channel) {
+                                                try {
+                                                    channel = await channelService.createChannel({
+                                                        kind: ChannelKind.DM,
+                                                        otherUserId: profileUser.userId,
+                                                        teamId: myself.teamId,
+                                                    });
+                                                } catch (e) {
+                                                    console.error(
+                                                        "[ModalUserProfile] DM create failed:",
+                                                        e
+                                                    );
+                                                    return;
+                                                }
+                                            }
+                                            if (!channel) return;
+                                            const initialChat: ChatProps = {
+                                                chatId: channel.id,
+                                                chatName: profileUser.userName,
+                                                chatType: 1,
+                                                dmPartnerUser: profileUser,
+                                                isPrivate: channel.isPrivate,
+                                                lastReadMessageId: "",
+                                                latestMessage:
+                                                    undefined as unknown as ChatProps["latestMessage"],
+                                                latestMessageText: "",
+                                                messages: [],
+                                                profileImagePath:
+                                                    channel.profileImageUrl || undefined,
+                                                TSLastMessage:
+                                                    channel.tsUpdated ?? channel.tsCreated ?? "",
+                                            };
+                                            useCM.setCurrentMainChat(initialChat);
+                                            useCM.setIsMainChatVisible(true);
+                                            setOpenUserProfile(false);
+                                            navigate("/workspace/chat");
                                         })();
                                     }}
                                 >

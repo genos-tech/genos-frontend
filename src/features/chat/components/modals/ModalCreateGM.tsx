@@ -21,7 +21,6 @@ import {
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
-import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
@@ -55,7 +54,6 @@ export const ModalCreateGM: React.FC<Props> = ({
     useUISM,
     setMyself,
 }) => {
-    const { accessToken } = useAuth();
     const { t } = useTranslation();
 
     const [isPrivate, setIsPrivate] = useState(false);
@@ -104,11 +102,9 @@ export const ModalCreateGM: React.FC<Props> = ({
                 myself,
                 chatName,
                 useCM,
-                socket,
                 setCreateCGErrorMessage,
                 setOpen,
                 setGroupName,
-                accessToken ? accessToken : "",
                 isPrivate,
                 memberIds
             );
@@ -236,7 +232,9 @@ export const ModalCreateGM: React.FC<Props> = ({
                                 : "rgba(34, 197, 94, 0.9)",
                         }}
                     >
-                        {isPrivate ? t.chat.modals.createGM.privateGroup : t.chat.modals.createGM.publicGroup}
+                        {isPrivate
+                            ? t.chat.modals.createGM.privateGroup
+                            : t.chat.modals.createGM.publicGroup}
                     </Typography>
                 </Box>
 
@@ -411,7 +409,9 @@ export const ModalCreateGM: React.FC<Props> = ({
                                 : "rgba(255, 255, 255, 0.4)",
                     }}
                 >
-                    {fmt(t.chat.modals.createGM.membersSelected, { count: selectedMembers.length })}
+                    {fmt(t.chat.modals.createGM.membersSelected, {
+                        count: selectedMembers.length,
+                    })}
                 </Typography>
 
                 {/* Error Alert */}

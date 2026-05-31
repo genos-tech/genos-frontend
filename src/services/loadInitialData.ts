@@ -1,15 +1,12 @@
 import { useEffect, useState } from "react";
 
-import {
-    activityChannel,
-    chatChannel,
-    inboxChannel,
-    tasksChannel,
-    usersChannel,
-} from "../db/workers/channels";
+import { activityChannel, inboxChannel, tasksChannel, usersChannel } from "../db/workers/channels";
+import { loadV3SpecificMessages } from "../features/chat/services/loadV3SpecificMessages";
 import { defaultChat } from "../features/chat/utils/defaults";
 import { UserProps } from "../types/admin";
 import { ChatProps } from "../types/chat";
+import { isV3Uuid } from "../utils/legacyId";
+import { channelService } from "./channel/channelService";
 
 // Hydrates the local IDB cache from the backend on app boot. Each section
 // runs in its own effect so the corresponding load isn't blocked by an
@@ -24,10 +21,13 @@ export const loadInitialData = (
 ) => {
     const [isInboxLoaded, setIsInboxLoaded] = useState<boolean | null>(false);
     const [isActivityHistoryLoaded, setIsActivityHistoryLoaded] = useState<boolean | null>(false);
-    const [isDMHistoryLoaded, setIsDMHistoryLoaded] = useState<boolean | null>(false);
-    const [isGMHistoryLoaded, setIsGMHistoryLoaded] = useState<boolean | null>(false);
-    const [isMDMHistoryLoaded, setIsMDMHistoryLoaded] = useState<boolean | null>(false);
-    const [isPMHistoryLoaded, setIsPMHistoryLoaded] = useState<boolean | null>(false);
+    // True once `channelService` has finished hydrating chat history from
+    // IDB + landed its first `listChannels` REST refresh. Subscribed to
+    // below — replaces the legacy per-type `isDMHistoryLoaded` /
+    // `isGMHistoryLoaded` / `isMDMHistoryLoaded` / `isPMHistoryLoaded`
+    // flags which were sourced from the (now-removed) legacy worker
+    // history loaders.
+    const [isChannelsHydrated, setIsChannelsHydrated] = useState<boolean>(false);
     const [isTeamMembersLoaded, setIsTeamMembersLoaded] = useState<boolean | null>(false);
     const [isInitialChatLoaded, setIsInitialChatLoaded] = useState<boolean | null>(false);
     const [isProjectTasksLoaded, setIsProjectTasksLoaded] = useState<boolean | null>(false);
@@ -67,61 +67,19 @@ export const loadInitialData = (
         };
     }, [myself, accessToken]);
 
+    // Chat history is hydrated by `channelService` (subscribed in
+    // `useChannelServiceBootstrap`). Subscribe to its `hydrated` flag
+    // here so the boot-ready gate below can wait for the v3 store
+    // instead of the four per-type legacy IDB loaders that used to
+    // run here.
     useEffect(() => {
-        if (!isReady(accessToken, myself)) return;
-        let cancelled = false;
-        chatChannel
-            .request("loadDMHistory", { myself, accessToken })
-            .then(() => !cancelled && setIsDMHistoryLoaded(true))
-            .catch((err) => {
-                if (!cancelled) console.error("Failed initial DM history loading", err);
-            });
-        return () => {
-            cancelled = true;
+        const apply = () => {
+            if (channelService.getSnapshot().hydrated) setIsChannelsHydrated(true);
         };
-    }, [myself, accessToken]);
-
-    useEffect(() => {
-        if (!isReady(accessToken, myself)) return;
-        let cancelled = false;
-        chatChannel
-            .request("loadGMHistory", { myself, accessToken })
-            .then(() => !cancelled && setIsGMHistoryLoaded(true))
-            .catch((err) => {
-                if (!cancelled) console.error("Failed initial GM history loading", err);
-            });
-        return () => {
-            cancelled = true;
-        };
-    }, [myself, accessToken]);
-
-    useEffect(() => {
-        if (!isReady(accessToken, myself)) return;
-        let cancelled = false;
-        chatChannel
-            .request("loadMDMHistory", { myself, accessToken })
-            .then(() => !cancelled && setIsMDMHistoryLoaded(true))
-            .catch((err) => {
-                if (!cancelled) console.error("Failed initial MDM history loading", err);
-            });
-        return () => {
-            cancelled = true;
-        };
-    }, [myself, accessToken]);
-
-    useEffect(() => {
-        if (!isReady(accessToken, myself)) return;
-        let cancelled = false;
-        chatChannel
-            .request("loadPMHistory", { myself, accessToken })
-            .then(() => !cancelled && setIsPMHistoryLoaded(true))
-            .catch((err) => {
-                if (!cancelled) console.error("Failed initial PM history loading", err);
-            });
-        return () => {
-            cancelled = true;
-        };
-    }, [myself, accessToken]);
+        apply();
+        const unsubscribe = channelService.subscribe(apply);
+        return unsubscribe;
+    }, []);
 
     useEffect(() => {
         if (!isReady(accessToken, myself)) return;
@@ -166,14 +124,10 @@ export const loadInitialData = (
         };
     }, [myself, accessToken]);
 
-    // After all four chat-history caches are populated, resume the user's
-    // last open chat (chat type + chat id from localStorage). The two
-    // channel calls below are sequential because we need the chat row
-    // before we can fetch its messages.
+    // After v3 channels have hydrated, resume the user's last open
+    // chat (chat type + chat id from localStorage).
     useEffect(() => {
-        if (!(isDMHistoryLoaded && isGMHistoryLoaded && isMDMHistoryLoaded && isPMHistoryLoaded)) {
-            return;
-        }
+        if (!isChannelsHydrated) return;
         let cancelled = false;
         const tmpLastChatType = localStorage.getItem("lastChatType");
         const lastChatType =
@@ -192,7 +146,29 @@ export const loadInitialData = (
         };
         const storageKey = chatIdKeyByType[lastChatType];
         const storedId = storageKey ? localStorage.getItem(storageKey) : null;
-        const lastChatId = storedId && storedId !== "" ? Number(storedId) : null;
+
+        // v3 migration guard. Legacy sessions wrote integer chatIds
+        // here (e.g. "3"). Post-flip those integers reach
+        // `setCurrentMainChat` and then `channelService.send` 404s
+        // against the `/api/v3/channels/<uuid:channel_id>/messages/`
+        // URL pattern. Skip the restore when the stored id isn't a
+        // v3 UUID, AND clear the key so subsequent reloads don't
+        // keep hitting the same trap. Users land on the default chat
+        // surface and re-open from the v3 sidebar (which the
+        // useChatManagement.localStorage writer will then update
+        // with the UUID).
+        if (storedId && !isV3Uuid(storedId)) {
+            console.warn(
+                `[loadInitialData] stale legacy chatId in ${storageKey} (${storedId}); ` +
+                    "clearing and skipping restore."
+            );
+            if (storageKey) localStorage.removeItem(storageKey);
+            setCurrentMainChat(defaultChat);
+            setIsInitialChatLoaded(true);
+            return;
+        }
+
+        const lastChatId = storedId && storedId !== "" ? storedId : null;
         if (lastChatId === null) {
             console.warn("Failed due to lastChatId is null or undefined, using default chat");
             setCurrentMainChat(defaultChat);
@@ -202,45 +178,60 @@ export const loadInitialData = (
 
         (async () => {
             try {
-                const fetchedChat = await chatChannel.request("popSpecificChat", {
-                    chatId: lastChatId,
-                    chatType: lastChatType,
-                });
-                if (cancelled) return;
-                if (!fetchedChat) {
-                    console.warn("Failed due to fetchedChat is null or undefined", fetchedChat);
+                // v3 cutover: was `chatChannel.request("popSpecificChat"
+                // / "popSpecificMessages", {chatId, chatType})` against
+                // the legacy worker IDB stores. Those return cached
+                // legacy-integer-keyed rows from pre-v3 sessions,
+                // which leak through to `setCurrentMainChat` and 404
+                // any subsequent `channelService.send` against the
+                // `<uuid:channel_id>` URL pattern. We now read the
+                // channel from the v3 channelService snapshot and
+                // hydrate messages via `loadV3SpecificMessages`. The
+                // `isV3Uuid` guard above ensures `lastChatId` is a
+                // UUID; mismatched localStorage values are already
+                // cleared so this branch only runs on healthy state.
+                const snapshot = channelService.getSnapshot();
+                const channel = snapshot.channels.get(lastChatId);
+                if (!channel) {
+                    // The user's last-opened channel isn't in the v3
+                    // store yet (REST refresh in flight, or membership
+                    // changed). Land on default — they can reopen from
+                    // the v3 sidebar once it renders.
+                    console.warn(
+                        `[loadInitialData] last channel ${lastChatId} not yet in v3 store; default.`
+                    );
                     setCurrentMainChat(defaultChat);
                     setIsInitialChatLoaded(true);
                     return;
                 }
-                const fetchedMessages = await chatChannel.request("popSpecificMessages", {
-                    chatId: lastChatId,
-                    chatType: lastChatType,
-                });
+                const legacyMessages = await loadV3SpecificMessages(lastChatId, lastChatType);
                 if (cancelled) return;
-                if (!fetchedMessages) {
-                    console.error("Failed due to fetchedMessages:", fetchedMessages);
-                    setCurrentMainChat(defaultChat);
-                    setIsInitialChatLoaded(true);
-                    return;
-                }
                 const lastMsg =
-                    fetchedMessages.length > 0
-                        ? fetchedMessages[fetchedMessages.length - 1]
-                        : fetchedChat.latestMessage;
+                    legacyMessages.length > 0 ? legacyMessages[legacyMessages.length - 1] : null;
+                const dmPartner = snapshot.membersByChannel
+                    .get(channel.id)
+                    ?.find((m) => m.userId !== myself.userId);
                 const currentMainChat: ChatProps = {
-                    chatId: fetchedChat.chatId,
-                    chatName: fetchedChat.chatName,
+                    chatId: channel.id,
+                    chatName: channel.title,
                     chatType: lastChatType,
-                    dmPartnerUser: fetchedChat.dmPartnerUser,
-                    lastReadMessageId: fetchedChat.lastReadMessageId,
-                    messages: fetchedMessages,
-                    latestMessage: lastMsg,
+                    dmPartnerUser: {
+                        userId: dmPartner?.userId ?? "",
+                        userName: "",
+                        userEmail: "",
+                        teamId: "",
+                        teamName: "",
+                        avatarImgPath: "",
+                        tsLastSeen: "",
+                        tsJoined: dmPartner?.tsJoined ?? "",
+                    },
+                    lastReadMessageId: lastMsg?.messageId != null ? String(lastMsg.messageId) : "",
+                    messages: legacyMessages,
+                    latestMessage: lastMsg ?? defaultChat.latestMessage,
                     latestMessageText: lastMsg?.contentText ?? "",
-                    TSLastMessage: fetchedChat.TSLastMessage,
-                    project: fetchedChat.project,
-                    isPrivate: fetchedChat.isPrivate,
-                    profileImagePath: fetchedChat.profileImagePath,
+                    TSLastMessage: lastMsg?.tsSent ?? channel.tsUpdated ?? "",
+                    isPrivate: channel.isPrivate,
+                    profileImagePath: channel.profileImageUrl || undefined,
                 };
                 setCurrentMainChat(currentMainChat);
                 setIsInitialChatLoaded(true);
@@ -256,17 +247,14 @@ export const loadInitialData = (
         return () => {
             cancelled = true;
         };
-    }, [isDMHistoryLoaded, isGMHistoryLoaded, isMDMHistoryLoaded, isPMHistoryLoaded]);
+    }, [isChannelsHydrated]);
 
     // Set "isLoading" true after initialization is completed
     useEffect(() => {
         if (
             isInboxLoaded &&
             isActivityHistoryLoaded &&
-            isDMHistoryLoaded &&
-            isGMHistoryLoaded &&
-            isMDMHistoryLoaded &&
-            isPMHistoryLoaded &&
+            isChannelsHydrated &&
             isTeamMembersLoaded &&
             isInitialChatLoaded &&
             isProjectTasksLoaded
@@ -276,10 +264,7 @@ export const loadInitialData = (
     }, [
         isInboxLoaded,
         isActivityHistoryLoaded,
-        isDMHistoryLoaded,
-        isGMHistoryLoaded,
-        isMDMHistoryLoaded,
-        isPMHistoryLoaded,
+        isChannelsHydrated,
         isTeamMembersLoaded,
         isInitialChatLoaded,
         isProjectTasksLoaded,

@@ -19,15 +19,14 @@ import {
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
-import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps } from "../../../../types/chat";
+import { popTeamMembers } from "../../../admin/services/popTeamMembers";
 import { addMembersToChat } from "../../services/addMembersToChat";
-import { popTeamMembers } from "../../services/popTeamMembers";
 
 const fadeIn = keyframes`
     from { opacity: 0; transform: scale(0.95) translateY(-10px); }
@@ -57,7 +56,6 @@ export const ModalAddMembers: React.FC<Props> = ({
     useUISM,
     setMyself,
 }) => {
-    const { accessToken } = useAuth();
     const { t } = useTranslation();
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedMembers, setSelectedMembers] = useState<UserProps[]>([]);
@@ -142,15 +140,12 @@ export const ModalAddMembers: React.FC<Props> = ({
         try {
             const memberIds = selectedMembers.map((m) => m.userId);
             await addMembersToChat(
-                accessToken || "",
                 myself,
                 chat,
                 memberIds,
                 useCM,
-                socket,
                 (msg: string) => setErrorMessage(msg),
-                setOpen,
-                selectedMembers
+                setOpen
             );
         } catch (error) {
             console.error("Failed to add members:", error);
@@ -444,7 +439,9 @@ export const ModalAddMembers: React.FC<Props> = ({
                                 : "rgba(255, 255, 255, 0.4)",
                     }}
                 >
-                    {fmt(t.chat.modals.addMembers.membersSelected, { count: selectedMembers.length })}
+                    {fmt(t.chat.modals.addMembers.membersSelected, {
+                        count: selectedMembers.length,
+                    })}
                 </Typography>
 
                 {/* Error Alert */}

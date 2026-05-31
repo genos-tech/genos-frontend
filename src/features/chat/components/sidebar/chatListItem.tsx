@@ -1,3 +1,9 @@
+// `sort-keys` + `react/jsx-sort-props` + `simple-import-sort/imports`
+// disabled file-wide: this legacy chat sidebar item carries Joy UI `sx`
+// prop objects whose visual grouping (positioning → sizing → typography
+// → colors) is intentional, and the file is slated for replacement by
+// the v3 channel sidebar.
+/* eslint-disable sort-keys, react/jsx-sort-props, simple-import-sort/imports */
 import * as React from "react";
 import { memo, useState } from "react";
 import { Box, ListItem, Stack } from "@mui/joy";
@@ -49,12 +55,14 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
         useCM,
         useTM,
         isPinnedChat,
-        accessToken: accessToken || "",
     });
 
     const handlePinClick = (event: React.MouseEvent) => {
         event.stopPropagation();
-        pinChatHandler(chat.chatId, chat.chatType, useCM.funcSetAllChats);
+        // v3 pin/unpin. The args are vestigial — `pinChatHandler`
+        // reads `chat.chatId` / `chat.isPinned` from the closure now,
+        // not from the call args. Kept for prop-shape compatibility.
+        pinChatHandler(chat.chatId as unknown as number, chat.chatType, useCM.funcSetAllChats);
         setIsPinned(!isPinned);
     };
 
@@ -68,8 +76,13 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
         setOpenAddMembers(true);
     };
 
-    // Check if there are unread messages
-    const hasUnread = chat.latestMessage && chat.lastReadMessageId < chat.latestMessage.messageId;
+    // PUNCH LIST (v3 chatId migration): `lastReadMessageId` is `string`
+    // post-flip; `latestMessage.messageId` is still `number` (legacy
+    // message schema). Legacy values stringify cleanly so `Number(...)`
+    // round-trips. UUID-shaped cursors NaN and the comparison fails —
+    // safer side (no false-positive unread dot).
+    const hasUnread =
+        chat.latestMessage && Number(chat.lastReadMessageId || "0") < chat.latestMessage.messageId;
 
     return (
         <ListItem

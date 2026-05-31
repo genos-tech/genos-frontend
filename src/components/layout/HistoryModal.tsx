@@ -456,8 +456,11 @@ export const HistoryModal = ({
     const { chatsEntries, tasksEntries, notesEntries, clear } = useHistory();
     const [tab, setTab] = useState<HistoryTabKey>("chats");
 
+    // PUNCH LIST (v3 chatId migration): `AllChatProps.chatId` is `string`
+    // post-flip; `HistoryEntry.chatId` is still `number` (legacy IDB
+    // history shape). Stringify at the comparison.
     const findChat = (chatType: number, chatId: number): AllChatProps | undefined =>
-        useCM.allChats.find((c) => c.chatType === chatType && c.chatId === chatId);
+        useCM.allChats.find((c) => c.chatType === chatType && c.chatId === String(chatId));
 
     const renderEntry = (entry: HistoryEntry) => {
         switch (entry.kind) {

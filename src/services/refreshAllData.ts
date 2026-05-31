@@ -1,10 +1,4 @@
-import {
-    activityChannel,
-    chatChannel,
-    inboxChannel,
-    tasksChannel,
-    usersChannel,
-} from "../db/workers/channels";
+import { activityChannel, inboxChannel, tasksChannel, usersChannel } from "../db/workers/channels";
 import { UserProps } from "../types/admin";
 
 // Re-runs the same set of API→IndexedDB loaders that `loadInitialData`
@@ -63,27 +57,16 @@ export const refreshAllData = async ({
         return;
     }
 
+    // Chat history hydration is owned by `channelService` (subscribed
+    // in `useChannelServiceBootstrap`). The wake refresh doesn't need
+    // to re-pull it explicitly — the WS reconnect that fires after a
+    // network resume triggers `flushPendingQueue` + a `listChannels` +
+    // delta sync inside channelService.
     const tasks: Array<Promise<unknown>> = [
         withTimeout(inboxChannel.request("loadInbox", { myself, accessToken }), "loadInbox"),
         withTimeout(
             activityChannel.request("loadActivityHistory", { myself, accessToken }),
             "loadActivityHistory"
-        ),
-        withTimeout(
-            chatChannel.request("loadDMHistory", { myself, accessToken }),
-            "loadDMHistory"
-        ),
-        withTimeout(
-            chatChannel.request("loadGMHistory", { myself, accessToken }),
-            "loadGMHistory"
-        ),
-        withTimeout(
-            chatChannel.request("loadMDMHistory", { myself, accessToken }),
-            "loadMDMHistory"
-        ),
-        withTimeout(
-            chatChannel.request("loadPMHistory", { myself, accessToken }),
-            "loadPMHistory"
         ),
         withTimeout(
             usersChannel.request("loadTeamMembers", { myself, accessToken }),

@@ -1,7 +1,15 @@
 import { IDBPDatabase, openDB } from "idb";
 
 import { StoreConfig } from "../types";
-import { DB_NAME, DB_VERSION, INDEX_KEY_PATHS, INDEX_NAMES, KEY_PATHS, STORES } from "./constants";
+import {
+    DB_NAME,
+    DB_VERSION,
+    INDEX_KEY_PATHS,
+    INDEX_NAMES,
+    KEY_PATHS,
+    LEGACY_CHAT_STORES,
+    STORES,
+} from "./constants";
 
 // Store configurations
 export const STORE_CONFIGS: Record<string, StoreConfig> = {
@@ -19,178 +27,6 @@ export const STORE_CONFIGS: Record<string, StoreConfig> = {
     [STORES.ACTIVITY_MESSAGES]: {
         name: STORES.ACTIVITY_MESSAGES,
         keyPath: KEY_PATHS.ACTIVITY_MESSAGES,
-    },
-    [STORES.DM_CHATS]: {
-        name: STORES.DM_CHATS,
-        keyPath: KEY_PATHS.DM_CHATS,
-        indexes: [
-            { name: INDEX_NAMES.DM_CHATS, keyPath: INDEX_KEY_PATHS.DM_CHATS, unique: false },
-        ],
-    },
-    [STORES.DM_MESSAGES]: {
-        name: STORES.DM_MESSAGES,
-        keyPath: KEY_PATHS.DM_MESSAGES,
-        indexes: [
-            { name: INDEX_NAMES.DM_MESSAGES, keyPath: INDEX_KEY_PATHS.DM_MESSAGES, unique: false },
-            {
-                name: INDEX_NAMES.DM_MESSAGES_COMPOUND,
-                keyPath: [
-                    INDEX_KEY_PATHS.DM_MESSAGES_COMPOUND[0],
-                    INDEX_KEY_PATHS.DM_MESSAGES_COMPOUND[1],
-                ],
-                unique: true,
-            },
-        ],
-    },
-    [STORES.DM_THREAD_MESSAGES]: {
-        name: STORES.DM_THREAD_MESSAGES,
-        keyPath: KEY_PATHS.DM_THREAD_MESSAGES,
-        indexes: [
-            {
-                name: INDEX_NAMES.DM_THREAD_MESSAGES,
-                keyPath: INDEX_KEY_PATHS.DM_THREAD_MESSAGES,
-                unique: false,
-            },
-            {
-                name: INDEX_NAMES.DM_THREAD_MESSAGES_COMPOUND,
-                keyPath: [
-                    INDEX_KEY_PATHS.DM_THREAD_MESSAGES_COMPOUND[0],
-                    INDEX_KEY_PATHS.DM_THREAD_MESSAGES_COMPOUND[1],
-                ],
-                unique: false,
-            },
-        ],
-    },
-    [STORES.GM_CHATS]: {
-        name: STORES.GM_CHATS,
-        keyPath: KEY_PATHS.GM_CHATS,
-        indexes: [
-            { name: INDEX_NAMES.GM_CHATS, keyPath: INDEX_KEY_PATHS.GM_CHATS, unique: false },
-        ],
-    },
-    [STORES.GM_MESSAGES]: {
-        name: STORES.GM_MESSAGES,
-        keyPath: KEY_PATHS.GM_MESSAGES,
-        indexes: [
-            { name: INDEX_NAMES.GM_MESSAGES, keyPath: INDEX_KEY_PATHS.GM_MESSAGES, unique: false },
-            {
-                name: INDEX_NAMES.GM_MESSAGES_COMPOUND,
-                keyPath: [
-                    INDEX_KEY_PATHS.GM_MESSAGES_COMPOUND[0],
-                    INDEX_KEY_PATHS.GM_MESSAGES_COMPOUND[1],
-                ],
-                unique: true,
-            },
-        ],
-    },
-    [STORES.GM_THREAD_MESSAGES]: {
-        name: STORES.GM_THREAD_MESSAGES,
-        keyPath: KEY_PATHS.GM_THREAD_MESSAGES,
-        indexes: [
-            {
-                name: INDEX_NAMES.GM_THREAD_MESSAGES,
-                keyPath: INDEX_KEY_PATHS.GM_THREAD_MESSAGES,
-                unique: false,
-            },
-            {
-                name: INDEX_NAMES.GM_THREAD_MESSAGES_COMPOUND,
-                keyPath: [
-                    INDEX_KEY_PATHS.GM_THREAD_MESSAGES_COMPOUND[0],
-                    INDEX_KEY_PATHS.GM_THREAD_MESSAGES_COMPOUND[1],
-                ],
-                unique: false,
-            },
-        ],
-    },
-    [STORES.MDM_CHATS]: {
-        name: STORES.MDM_CHATS,
-        keyPath: KEY_PATHS.MDM_CHATS,
-        indexes: [
-            { name: INDEX_NAMES.MDM_CHATS, keyPath: INDEX_KEY_PATHS.MDM_CHATS, unique: false },
-        ],
-    },
-    [STORES.MDM_MESSAGES]: {
-        name: STORES.MDM_MESSAGES,
-        keyPath: KEY_PATHS.MDM_MESSAGES,
-        indexes: [
-            {
-                name: INDEX_NAMES.MDM_MESSAGES,
-                keyPath: INDEX_KEY_PATHS.MDM_MESSAGES,
-                unique: false,
-            },
-            {
-                name: INDEX_NAMES.MDM_MESSAGES_COMPOUND,
-                keyPath: [
-                    INDEX_KEY_PATHS.MDM_MESSAGES_COMPOUND[0],
-                    INDEX_KEY_PATHS.MDM_MESSAGES_COMPOUND[1],
-                ],
-                unique: true,
-            },
-        ],
-    },
-    [STORES.MDM_THREAD_MESSAGES]: {
-        name: STORES.MDM_THREAD_MESSAGES,
-        keyPath: KEY_PATHS.MDM_THREAD_MESSAGES,
-        indexes: [
-            {
-                name: INDEX_NAMES.MDM_THREAD_MESSAGES,
-                keyPath: INDEX_KEY_PATHS.MDM_THREAD_MESSAGES,
-                unique: false,
-            },
-            {
-                name: INDEX_NAMES.MDM_THREAD_MESSAGES_COMPOUND,
-                keyPath: [
-                    INDEX_KEY_PATHS.MDM_THREAD_MESSAGES_COMPOUND[0],
-                    INDEX_KEY_PATHS.MDM_THREAD_MESSAGES_COMPOUND[1],
-                ],
-                unique: false,
-            },
-        ],
-    },
-    [STORES.PM_CHATS]: {
-        name: STORES.PM_CHATS,
-        keyPath: KEY_PATHS.PM_CHATS,
-        indexes: [
-            { name: INDEX_NAMES.PM_CHATS, keyPath: INDEX_KEY_PATHS.PM_CHATS, unique: false },
-        ],
-    },
-    [STORES.PM_MESSAGES]: {
-        name: STORES.PM_MESSAGES,
-        keyPath: KEY_PATHS.PM_MESSAGES,
-        indexes: [
-            { name: INDEX_NAMES.PM_MESSAGES, keyPath: INDEX_KEY_PATHS.PM_MESSAGES, unique: false },
-            {
-                name: INDEX_NAMES.PM_MESSAGES_COMPOUND,
-                keyPath: [
-                    INDEX_KEY_PATHS.PM_MESSAGES_COMPOUND[0],
-                    INDEX_KEY_PATHS.PM_MESSAGES_COMPOUND[1],
-                ],
-                unique: true,
-            },
-        ],
-    },
-    [STORES.PM_THREAD_MESSAGES]: {
-        name: STORES.PM_THREAD_MESSAGES,
-        keyPath: KEY_PATHS.PM_THREAD_MESSAGES,
-        indexes: [
-            {
-                name: INDEX_NAMES.PM_THREAD_MESSAGES,
-                keyPath: INDEX_KEY_PATHS.PM_THREAD_MESSAGES,
-                unique: false,
-            },
-            {
-                name: INDEX_NAMES.PM_THREAD_MESSAGES_COMPOUND,
-                keyPath: [
-                    INDEX_KEY_PATHS.PM_THREAD_MESSAGES_COMPOUND[0],
-                    INDEX_KEY_PATHS.PM_THREAD_MESSAGES_COMPOUND[1],
-                ],
-                unique: false,
-            },
-        ],
-    },
-    [STORES.FLAGGED_MESSAGES]: {
-        name: STORES.FLAGGED_MESSAGES,
-        keyPath: KEY_PATHS.FLAGGED_MESSAGES,
     },
     [STORES.TASK_META]: {
         name: STORES.TASK_META,
@@ -288,6 +124,128 @@ export const STORE_CONFIGS: Record<string, StoreConfig> = {
         name: STORES.SYNC_CHECKPOINTS,
         keyPath: KEY_PATHS.SYNC_CHECKPOINTS,
     },
+    // ---- v9: unified messaging stores ----
+    // All keyed by server UUID `id`. Channel-scoped reads use a
+    // by-channel index; the per-channel ordering uses the compound
+    // `(channelId, seq)` index. PM grouping is a render-time selector
+    // backed by `(channelId, metadata.taskId via the writer-projected
+    // taskKey)` — see the writer comment in `channelService.ts`.
+    [STORES.CHANNELS]: {
+        name: STORES.CHANNELS,
+        keyPath: KEY_PATHS.CHANNELS,
+        indexes: [
+            {
+                name: INDEX_NAMES.CHANNELS_BY_KIND,
+                keyPath: INDEX_KEY_PATHS.CHANNELS_BY_KIND,
+                unique: false,
+            },
+        ],
+    },
+    [STORES.CHANNEL_MEMBERS]: {
+        name: STORES.CHANNEL_MEMBERS,
+        keyPath: KEY_PATHS.CHANNEL_MEMBERS,
+        indexes: [
+            {
+                name: INDEX_NAMES.CHANNEL_MEMBERS_BY_CHANNEL,
+                keyPath: INDEX_KEY_PATHS.CHANNEL_MEMBERS_BY_CHANNEL,
+                unique: false,
+            },
+            {
+                name: INDEX_NAMES.CHANNEL_MEMBERS_BY_USER,
+                keyPath: INDEX_KEY_PATHS.CHANNEL_MEMBERS_BY_USER,
+                unique: false,
+            },
+        ],
+    },
+    [STORES.MESSAGES_V3]: {
+        name: STORES.MESSAGES_V3,
+        keyPath: KEY_PATHS.MESSAGES_V3,
+        indexes: [
+            {
+                name: INDEX_NAMES.MESSAGES_V3_BY_CHANNEL,
+                keyPath: INDEX_KEY_PATHS.MESSAGES_V3_BY_CHANNEL,
+                unique: false,
+            },
+            {
+                name: INDEX_NAMES.MESSAGES_V3_BY_CHANNEL_SEQ,
+                keyPath: [
+                    INDEX_KEY_PATHS.MESSAGES_V3_BY_CHANNEL_SEQ[0],
+                    INDEX_KEY_PATHS.MESSAGES_V3_BY_CHANNEL_SEQ[1],
+                ],
+                // unique: catches double-write under race; cf. the
+                // backend's `(channel, seq)` UNIQUE constraint.
+                unique: true,
+            },
+            {
+                name: INDEX_NAMES.MESSAGES_V3_BY_THREAD_ROOT,
+                keyPath: INDEX_KEY_PATHS.MESSAGES_V3_BY_THREAD_ROOT,
+                unique: false,
+            },
+            {
+                name: INDEX_NAMES.MESSAGES_V3_BY_CHANNEL_TASK,
+                keyPath: [
+                    INDEX_KEY_PATHS.MESSAGES_V3_BY_CHANNEL_TASK[0],
+                    INDEX_KEY_PATHS.MESSAGES_V3_BY_CHANNEL_TASK[1],
+                ],
+                unique: false,
+            },
+        ],
+    },
+    [STORES.MESSAGE_REACTIONS]: {
+        name: STORES.MESSAGE_REACTIONS,
+        keyPath: KEY_PATHS.MESSAGE_REACTIONS,
+        indexes: [
+            {
+                name: INDEX_NAMES.MESSAGE_REACTIONS_BY_MESSAGE,
+                keyPath: INDEX_KEY_PATHS.MESSAGE_REACTIONS_BY_MESSAGE,
+                unique: false,
+            },
+        ],
+    },
+    [STORES.READ_CURSORS]: {
+        name: STORES.READ_CURSORS,
+        keyPath: KEY_PATHS.READ_CURSORS,
+        indexes: [
+            {
+                name: INDEX_NAMES.READ_CURSORS_BY_CHANNEL,
+                keyPath: INDEX_KEY_PATHS.READ_CURSORS_BY_CHANNEL,
+                unique: false,
+            },
+        ],
+    },
+    [STORES.PINS]: {
+        name: STORES.PINS,
+        keyPath: KEY_PATHS.PINS,
+        indexes: [
+            {
+                name: INDEX_NAMES.PINS_BY_USER,
+                keyPath: INDEX_KEY_PATHS.PINS_BY_USER,
+                unique: false,
+            },
+        ],
+    },
+    [STORES.FLAGS]: {
+        name: STORES.FLAGS,
+        keyPath: KEY_PATHS.FLAGS,
+        indexes: [
+            {
+                name: INDEX_NAMES.FLAGS_BY_USER,
+                keyPath: INDEX_KEY_PATHS.FLAGS_BY_USER,
+                unique: false,
+            },
+        ],
+    },
+    [STORES.MESSAGE_ATTACHMENTS]: {
+        name: STORES.MESSAGE_ATTACHMENTS,
+        keyPath: KEY_PATHS.MESSAGE_ATTACHMENTS,
+        indexes: [
+            {
+                name: INDEX_NAMES.MESSAGE_ATTACHMENTS_BY_MESSAGE,
+                keyPath: INDEX_KEY_PATHS.MESSAGE_ATTACHMENTS_BY_MESSAGE,
+                unique: false,
+            },
+        ],
+    },
 };
 
 // Initialize database with proper schema.
@@ -298,7 +256,10 @@ export const STORE_CONFIGS: Record<string, StoreConfig> = {
 //     Existing indexes are never recreated or renamed here. To rename or
 //     repurpose an index, drop and re-add it in a dedicated migration step.
 export const initDB = async (): Promise<IDBPDatabase> => {
-    return openDB(DB_NAME, DB_VERSION, {
+    // `db` is referenced inside the `blocking` handler below; that
+    // callback only fires long after `openDB` resolves, so the binding is
+    // assigned by then (standard idb close-on-blocking pattern).
+    const db = await openDB(DB_NAME, DB_VERSION, {
         upgrade(db, oldVersion, _newVersion, tx) {
             // v8: the TODOS store's record shape changed (ToDoFact →
             // ToDoGroup), so the keyPath moved from "todoId" to
@@ -306,6 +267,20 @@ export const initDB = async (): Promise<IDBPDatabase> => {
             // drop the store so the generic loop below recreates it.
             if (oldVersion < 8 && db.objectStoreNames.contains("todos")) {
                 db.deleteObjectStore("todos");
+            }
+            // v10: drop the legacy per-type chat stores. The v3
+            // unified messaging stores have been the source of truth
+            // for chat list, messages, threads, flags, pins, and read
+            // cursors for several batches; the legacy stores have had
+            // no writers or readers in that time. Delete by exact
+            // store name so users on an older DB version don't keep
+            // empty `dmChats` / `dmMessages` / … lying around.
+            if (oldVersion < 10) {
+                for (const name of LEGACY_CHAT_STORES) {
+                    if (db.objectStoreNames.contains(name)) {
+                        db.deleteObjectStore(name);
+                    }
+                }
             }
             Object.values(STORE_CONFIGS).forEach((config) => {
                 if (!db.objectStoreNames.contains(config.name)) {
@@ -332,5 +307,37 @@ export const initDB = async (): Promise<IDBPDatabase> => {
                 });
             });
         },
+        // Another tab holds an OLDER connection open, blocking THIS tab's
+        // upgrade. We can't force the other tab shut from here, but its own
+        // `blocking` handler closes it when it sees our newer open. Log so a
+        // stuck upgrade is diagnosable instead of a silent forever-hang
+        // (which is what happened before: no handler → every IDB read/write
+        // in this tab stalled with no error after a version bump like v10).
+        blocked(currentVersion, blockedVersion) {
+            // eslint-disable-next-line no-console
+            console.warn(
+                `[IDB] open blocked: another tab holds v${currentVersion}; ` +
+                    `waiting to upgrade to v${blockedVersion}.`
+            );
+        },
+        // THIS connection is the older one blocking a NEWER-version open in
+        // another tab. Close it so that tab's upgrade can proceed — otherwise
+        // both tabs deadlock (the new one waits forever on `blocked`). The
+        // in-memory store stays authoritative; callers already treat a
+        // closed DB as a transient/degraded cache error, and a reload
+        // re-opens at the new version.
+        blocking(currentVersion, blockedVersion) {
+            // eslint-disable-next-line no-console
+            console.warn(
+                `[IDB] closing v${currentVersion} connection so another tab ` +
+                    `can upgrade to v${blockedVersion}.`
+            );
+            db.close();
+        },
+        terminated() {
+            // eslint-disable-next-line no-console
+            console.warn("[IDB] connection terminated unexpectedly by the browser.");
+        },
     });
+    return db;
 };

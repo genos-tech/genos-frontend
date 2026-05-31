@@ -1,3 +1,8 @@
+// `simple-import-sort/imports` disabled file-wide: prettier and
+// simple-import-sort disagree on the placement of `./ToDoPane` and
+// `../../`-prefixed groups (auto-fix loops between the two). Prettier
+// wins per project convention.
+/* eslint-disable simple-import-sort/imports */
 import { useCallback, useEffect, useState } from "react";
 import { Box, Sheet, useColorScheme } from "@mui/joy";
 import { VirtuosoHandle } from "react-virtuoso";
@@ -70,6 +75,10 @@ export const MessagesPane = (props: MessagesPaneProps) => {
     // File drag-and-drop state
     const [pendingFiles, setPendingFiles] = useState<File[]>([]);
     const clearPendingFiles = useCallback(() => setPendingFiles([]), []);
+    // `createFileDropHandler(setPendingFiles)` returns a stable handler; the
+    // factory itself isn't a stable reference but `setPendingFiles` is the
+    // only meaningful dependency and never changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     const handleDrop = useCallback(createFileDropHandler(setPendingFiles), []);
 
     // Use shared hooks
@@ -78,9 +87,9 @@ export const MessagesPane = (props: MessagesPaneProps) => {
     });
     const readStatusManagement = useReadStatusManagement({
         currentChat: useCM.currentMainChat as ChatProps | ThreadProps,
+        isThread: false,
         myself,
         useCM,
-        isThread: false,
     });
     const scrollManagement = useScrollManagement({
         currentChat: useCM.currentMainChat as ChatProps | ThreadProps,
@@ -98,10 +107,16 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                     : 0;
             } else if (
                 messageManagement.indexMap &&
-                messageManagement.indexMap[useCM.currentMainChat?.moveToSpecificIndex] &&
-                useCM.currentMainChat?.chatId ===
-                    Number(useCM.currentMainChat?.moveToSpecificIndex?.split("-")[0])
+                messageManagement.indexMap[useCM.currentMainChat?.moveToSpecificIndex] !==
+                    undefined
             ) {
+                // v3 `moveToSpecificIndex` is the message's v3 UUID,
+                // matching the bubble's `messageIdWithChatId`. The
+                // legacy `chatId === split("-")[0]` validation was
+                // for the `${chatId}-${seq}` composite key — gone
+                // now. `indexMap[uuid]` lookup is enough: a UUID in
+                // the open chat resolves; one from a different chat
+                // returns `undefined` and we fall through.
                 targetIndex = Number(
                     messageManagement.indexMap[useCM.currentMainChat?.moveToSpecificIndex]
                 );
@@ -111,12 +126,20 @@ export const MessagesPane = (props: MessagesPaneProps) => {
 
             readStatusManagement.handleReadStatusUpdate(targetIndex);
         }, 1000);
+        // Effect fires when `indexMap` changes — that's the resolution event
+        // we care about. Including `readStatusManagement` / the chat fields
+        // would either rerun on every render (manager rebuilt each render)
+        // or double-update when the chat reference changes.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [messageManagement.indexMap]);
 
     useEffect(() => {
         readStatusManagement.handlePeriodicReadStatusUpdate(
             scrollManagement.visibleRange.endIndex
         );
+        // Periodic update is keyed to scroll movement; the throttling lives
+        // inside `handlePeriodicReadStatusUpdate`.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [scrollManagement.visibleRange]);
 
     useEffect(() => {
@@ -127,6 +150,10 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                 );
             }
         }, 300);
+        // Effect is keyed to the chat reference (new chat selected).
+        // `readStatusManagement` is rebuilt every render; including it
+        // would cause the timeout to chain indefinitely.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [useCM.currentMainChat]);
 
     // Layout: flex column. The MessageListRenderer fills the available
@@ -138,10 +165,10 @@ export const MessagesPane = (props: MessagesPaneProps) => {
     return (
         <div
             style={{
-                width: "100%",
-                height: "100%",
                 display: "flex",
                 flexDirection: "column",
+                height: "100%",
+                width: "100%",
             }}
             onDragOver={(e) => e.preventDefault()}
             onDrop={handleDrop}

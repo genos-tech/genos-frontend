@@ -2,6 +2,7 @@ import axios from "axios";
 
 import { authApi } from "../../../services/api";
 import { UserProps } from "../../../types/admin";
+import { isLegacyNumericId } from "../../../utils/legacyId";
 
 export const loadSpecificTaskByThreadId = async (
     myself: UserProps,
@@ -10,6 +11,13 @@ export const loadSpecificTaskByThreadId = async (
     threadId: number,
     accessToken: string | null
 ) => {
+    // PUNCH LIST (v3 chatId migration): `/task/getTaskByThreadId/`
+    // binds `chat_id` to an integer field. Short-circuit when the id
+    // is a v3 UUID — v3 thread → task resolution belongs in the v3
+    // channel sync path.
+    if (!isLegacyNumericId(chatId)) {
+        return [];
+    }
     try {
         const api = authApi(accessToken);
         if (api) {

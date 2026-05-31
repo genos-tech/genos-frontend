@@ -29,7 +29,6 @@ export {
 export { initDB } from "./config/schema";
 
 // Convenience exports for common operations
-export { ChatService } from "./services/chat.service";
 export { NoteService } from "./services/note.service";
 export { TaskService } from "./services/task.service";
 export { UserService } from "./services/user.service";

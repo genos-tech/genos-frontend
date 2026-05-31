@@ -11,14 +11,11 @@ import { useColorScheme } from "@mui/joy/styles";
 import { createPortal } from "react-dom";
 import { Socket } from "socket.io-client";
 
-import { FlaggedService } from "../../../../db/services/flagged.service";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { useTranslation } from "../../../../i18n";
+import { channelService } from "../../../../services/channel/channelService";
 import { UserProps } from "../../../../types/admin";
 import { FlaggedMessageProps, ThreadMessageProps, ThreadProps } from "../../../../types/chat";
-import { addFlaggedMessage } from "../../services/addFlaggedMessage";
-import { updateFlagMessage } from "../../services/updateFlagMessage";
-import { getFirstLine } from "../../utils/common";
 import { ModalDeleteMessage } from "../modals/ModalDeleteMessage";
 
 type BubbleThreadMoreMenuProps = {
@@ -208,69 +205,28 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
     }, [isOpen, focusedIndex]);
 
     const handleFlagClick = () => {
-        setCurrentThreadChat({
-            ...thread,
-            messages: thread.messages.map((m) => ({
-                ...m,
-                isFlagged: m.messageId === message.messageId ? !m.isFlagged : m.isFlagged,
-            })),
-        });
-
-        if (!isFlagged) {
-            addFlaggedMessage({
-                flaggedMessageId: `${thread.chatType}-${thread.chatId}-${thread.threadId}-${message.messageId}`,
-                chatType: thread.chatType,
-                chatId: thread.chatId,
-                threadId: thread.threadId,
-                messageId: message.messageId,
-                contentText: getFirstLine(message.content[0]),
-                sender: message.sender,
-                dmPartnerUser: thread.dmPartnerUser,
-                project: thread.project,
-                taskId: thread.taskId || 0,
-                tsSent: message.tsSent,
-            } as FlaggedMessageProps);
-
-            // Functional updater — see BubbleMoreMenu for the rationale.
-            setFlaggedMessages((prev) => [
-                ...prev,
-                {
-                    flaggedMessageId: `${thread.chatType}-${thread.chatId}-${thread.threadId}-${message.messageId}`,
-                    chatName: thread.chatName,
-                    chatType: thread.chatType,
-                    chatId: thread.chatId,
-                    threadId: thread.threadId,
-                    messageId: message.messageId,
-                    contentText: getFirstLine(message.content[0]),
-                    sender: message.sender,
-                    dmPartnerUser: thread.dmPartnerUser,
-                    project: thread.project,
-                    taskId: thread.taskId || 0,
-                    tsSent: message.tsSent,
-                },
-            ]);
-        } else {
-            const flaggedService = new FlaggedService();
-            flaggedService.deleteFlaggedMessage(
-                `${thread.chatType}-${thread.chatId}-${thread.threadId}-${message.messageId}`
-            );
-
-            setFlaggedMessages((prev) =>
-                prev.filter(
-                    (_message) =>
-                        _message.flaggedMessageId !==
-                        `${thread.chatType}-${thread.chatId}-${thread.threadId}-${message.messageId}`
-                )
-            );
+        // v3 owns the flag state end-to-end. Same pattern as
+        // BubbleMoreMenu — thread message UUID lives on
+        // `messageIdWithChatIdAndThreadId` (set by
+        // `v3ThreadMessageToLegacy`). channelService notify drives the
+        // v3 subscriptions in useChatManagement which re-derive the
+        // thread chat's `isFlagged` bubble flags and the sidebar
+        // `flaggedMessages` list automatically.
+        const v3MessageId = message.messageIdWithChatIdAndThreadId;
+        if (!v3MessageId) {
+            console.warn("[BubbleThreadMoreMenu] missing v3 messageUuid — flag not persisted");
+            closeMenu();
+            return;
         }
-
-        updateFlagMessage(accessToken, myself, {
-            chat_type: thread.chatType,
-            chat_id: thread.chatId,
-            thread_id: thread.threadId,
-            message_id: message.messageId,
-        });
-
+        if (!isFlagged) {
+            void channelService
+                .flagMessage(v3MessageId)
+                .catch((e) => console.error("[BubbleThreadMoreMenu] flag failed:", e));
+        } else {
+            void channelService
+                .unflagMessage(v3MessageId)
+                .catch((e) => console.error("[BubbleThreadMoreMenu] unflag failed:", e));
+        }
         setIsFlagged(!isFlagged);
         closeMenu();
     };

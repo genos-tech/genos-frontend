@@ -8,78 +8,18 @@
 // needs (smaller bundle, faster startup).
 
 import type { UserProps } from "../../types/admin";
-import type {
-    ActivityMessageProps,
-    AllChatProps,
-    FlaggedMessageProps,
-    MessageProps,
-    ThreadMessageProps,
-} from "../../types/chat";
+import type { ActivityMessageProps } from "../../types/chat";
 import type { InboxItemProps } from "../../types/common";
 import type { ChatNoteProps, MyNoteProps, TaskNoteProps } from "../../types/notes";
 import type { TaskTableProps } from "../../types/tasks";
 
 type AnyNote = MyNoteProps | TaskNoteProps | ChatNoteProps;
 
-type HistoryLoadReq = { myself: UserProps; accessToken: string };
-// Handlers that exist purely for their side effect — IDB writes, API
-// requests — type their response as `void`. The Promise resolves once the
-// work completes; callers wait on the Promise but don't read the value.
-type HistoryLoadRes = void;
-
 // ---- chat channel ---------------------------------------------------------
-
-export type ChatRequests = {
-    addChat: { req: { chat: AllChatProps; chatType: number }; res: void };
-    addMessage: { req: { message: MessageProps; chatType: number }; res: void };
-    addThreadMessage: {
-        req: { threadMessage: ThreadMessageProps; chatType: number };
-        res: void;
-    };
-    addFlaggedMessage: { req: { message: FlaggedMessageProps }; res: void };
-    popFlaggedMessages: { req: Record<string, never>; res: FlaggedMessageProps[] };
-    checkKnownChat: { req: { chatId: number; chatType: number }; res: boolean };
-    loadDMHistory: { req: HistoryLoadReq; res: HistoryLoadRes };
-    loadGMHistory: { req: HistoryLoadReq; res: HistoryLoadRes };
-    loadMDMHistory: { req: HistoryLoadReq; res: HistoryLoadRes };
-    loadPMHistory: { req: HistoryLoadReq; res: HistoryLoadRes };
-    markAllChatActivityAsRead: {
-        req: {
-            accessToken: string;
-            myself: UserProps;
-            chatType: number;
-            chatId: number;
-            activityMessages: ActivityMessageProps[];
-        };
-        res: ActivityMessageProps[] | { error: string };
-    };
-    popAllChats: { req: Record<string, never>; res: AllChatProps[] };
-    popLatestChat: { req: { chatType: number }; res: AllChatProps | null };
-    popSpecificChat: {
-        req: { chatId: number; chatType: number };
-        res: AllChatProps | null;
-    };
-    popSpecificMessages: {
-        req: { chatId: number; chatType: number };
-        res: MessageProps[];
-    };
-    popSpecificThreadMessages: {
-        req: { chatId: number; threadId: number; chatType: number };
-        res: ThreadMessageProps[];
-    };
-    updateReadStatus: {
-        req: {
-            accessToken: string;
-            myself: UserProps;
-            chatType: number;
-            chatId: number;
-            isThread: boolean;
-            threadId: number;
-            lastReadMessageId: number;
-        };
-        res: void;
-    };
-};
+//
+// Retired after the v3 cutover. The last handler (markAllChatActivityAsRead)
+// is inlined in `useMarkAllChatActivityRead`; everything else lives in
+// `channelService`. No `ChatRequests` / `chatChannel` remain.
 
 // ---- notes channel --------------------------------------------------------
 

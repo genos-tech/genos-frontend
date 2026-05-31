@@ -76,6 +76,24 @@ export function useCollaborativeBlockNote({
     const syncedRef = useRef(false);
     const fragmentRef = useRef<Y.XmlFragment | null>(null);
 
+    // Hocuspocus + IDB callbacks fire async. If the host component
+    // unmounts (or the provider gets rebuilt due to a documentName /
+    // accessToken change) before `onConnect` / `onSynced` /
+    // `onDisconnect` returns, calling `setConnectionStatus` triggers
+    // React's "state update on unmounted component" warning. Guard the
+    // setter with this ref so callbacks for the prior provider are no-ops
+    // after teardown.
+    const mountedRef = useRef(true);
+    useEffect(() => {
+        mountedRef.current = true;
+        return () => {
+            mountedRef.current = false;
+        };
+    }, []);
+    const safeSetConnectionStatus = useCallback((s: ConnectionStatus) => {
+        if (mountedRef.current) setConnectionStatus(s);
+    }, []);
+
     const isDocumentEmpty = useCallback((fragment: Y.XmlFragment, editor: any): boolean => {
         const content = fragment.toJSON();
         if (!content || content === "" || content === "<undefined></undefined>") return true;
@@ -157,18 +175,18 @@ export function useCollaborativeBlockNote({
             name: documentName,
             document: yjsDoc,
             token: accessToken,
-            onConnect: () => setConnectionStatus("connected"),
+            onConnect: () => safeSetConnectionStatus("connected"),
             onDisconnect: () => {
-                setConnectionStatus("disconnected");
+                safeSetConnectionStatus("disconnected");
                 // If we disconnected before ever syncing, seed immediately
                 if (!syncedRef.current) trySeedFallback();
             },
             onAuthenticationFailed: () => {
-                setConnectionStatus("disconnected");
+                safeSetConnectionStatus("disconnected");
                 trySeedFallback();
             },
             onSynced: () => {
-                setConnectionStatus("connected");
+                safeSetConnectionStatus("connected");
                 syncedRef.current = true;
                 fragmentRef.current = frag;
                 seedDocument(frag);

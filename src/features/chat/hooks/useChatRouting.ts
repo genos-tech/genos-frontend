@@ -2,25 +2,26 @@ import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import { useAuth } from "../../../context/AuthContext";
-import { ChatService } from "../../../db/services/chat.service";
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { TaskManagementState } from "../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../types/admin";
 import { ChatProps, MessageProps, ThreadMessageProps, ThreadProps } from "../../../types/chat";
 import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
-import { loadMDMHistory } from "../services/loadMDMHistory";
-import { loadSpecificThreadMessages } from "../services/loadSpecificThreadMessages";
-import { loadSpecificThreadMessagesByTaskId } from "../services/loadSpecificThreadMessagesByTaskId";
-import { popSpecificMessages } from "../services/popSpecificMessages";
+import { loadV3SpecificMessages } from "../services/loadV3SpecificMessages";
+import { loadV3SpecificThreadMessages } from "../services/loadV3SpecificThreadMessages";
+import { resolveV3MessageUuid, resolveV3ThreadRootUuid } from "../utils/channelIdResolvers";
 
-// Chat type constants matching the existing codebase
+// Chat type constants matching the existing codebase.
+// Keys sorted alphabetically per `sort-keys` (the integer values are
+// still the canonical kind codes — DM=1, GM=2, PM=3, MDM=4, activity=5,
+// flagged=6 — and don't depend on key declaration order).
 const CHAT_TYPE_MAP: Record<string, number> = {
-    dm: 1,
-    gm: 2,
-    pm: 3,
-    mdm: 4,
     activity: 5,
+    dm: 1,
     flagged: 6,
+    gm: 2,
+    mdm: 4,
+    pm: 3,
 };
 
 const CHAT_TYPE_REVERSE_MAP: Record<number, string> = {
@@ -40,7 +41,12 @@ const CHAT_TYPE_REVERSE_MAP: Record<number, string> = {
 // `commentId` wins (caller's choice was a deeper-link target).
 const buildChatPath = (
     typePath: string,
-    chatId?: number,
+    // `chatId` widened to `string | number` for the v3 migration —
+    // post-flip the runtime value is the UUID string from
+    // `ChatProps.chatId`. Numeric callers (legacy code paths in
+    // services still building integer-keyed URLs) keep working via
+    // the template literal coercion.
+    chatId?: string | number,
     threadId?: number,
     messageId?: number,
     commentId?: number
@@ -64,7 +70,11 @@ type UseChatRoutingProps = {
 
 type ParsedRoute = {
     chatType: string | undefined;
-    chatId: number | undefined;
+    // `chatId` is the URL chunk verbatim post-v3 flip — `ChatProps.chatId`
+    // is `string` (UUID), and `Number()`-coercing a UUID would NaN. The
+    // parser now stores the raw chunk; callers that still need a numeric
+    // legacy chat id cast at the call boundary.
+    chatId: string | undefined;
     threadId: number | undefined;
     messageId: number | undefined;
     // PM thread "Comments" tab deep-link target (task comment id).
@@ -74,11 +84,11 @@ type ParsedRoute = {
 };
 
 const EMPTY_ROUTE: ParsedRoute = {
-    chatType: undefined,
     chatId: undefined,
-    threadId: undefined,
-    messageId: undefined,
+    chatType: undefined,
     commentId: undefined,
+    messageId: undefined,
+    threadId: undefined,
 };
 
 export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) => {
@@ -113,20 +123,21 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
         const messageIndex = pathParts.indexOf("message");
         const commentIndex = pathParts.indexOf("comment");
 
+        // Keys sorted alphabetically per `sort-keys`.
         return {
+            chatId: chatIdStr || undefined,
             chatType,
-            chatId: chatIdStr && !isNaN(Number(chatIdStr)) ? Number(chatIdStr) : undefined,
-            threadId:
-                threadIndex !== -1 && pathParts[threadIndex + 1]
-                    ? Number(pathParts[threadIndex + 1])
+            commentId:
+                commentIndex !== -1 && pathParts[commentIndex + 1]
+                    ? Number(pathParts[commentIndex + 1])
                     : undefined,
             messageId:
                 messageIndex !== -1 && pathParts[messageIndex + 1]
                     ? Number(pathParts[messageIndex + 1])
                     : undefined,
-            commentId:
-                commentIndex !== -1 && pathParts[commentIndex + 1]
-                    ? Number(pathParts[commentIndex + 1])
+            threadId:
+                threadIndex !== -1 && pathParts[threadIndex + 1]
+                    ? Number(pathParts[threadIndex + 1])
                     : undefined,
         };
     }, [pathname]);
@@ -145,6 +156,11 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
                 navigate(buildChatPath(typePath));
             }
         },
+        // Intentional: `useCM` is the legacy chat-management object —
+        // re-deriving its callbacks on every render is fine, but adding
+        // it to the dep list would re-create `navigateToChatType` for
+        // every parent re-render and break downstream `React.memo`.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
         [navigate]
     );
 
@@ -222,25 +238,36 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
                 return;
             }
 
+            // Keys sorted alphabetically per `sort-keys`.
             const firstMessage = threadMessages[0];
             const newThread: ThreadProps = {
                 chatId,
                 chatName: useCM.currentMainChat?.chatName || "",
-                threadId: useTaskIdAsThreadId ? firstMessage.threadId : threadId,
                 chatType: paneType,
                 dmPartnerUser: myself,
-                taskId: firstMessage.taskId || null,
                 messages: threadMessages,
-                project: firstMessage.project,
-                TSLastMessage: getLocalCurrentTimestamp(),
-                taskExist: firstMessage.taskExist,
                 moveToSpecificIndex: undefined,
+                project: firstMessage.project,
+                taskExist: firstMessage.taskExist,
+                taskId: firstMessage.taskId || null,
+                threadId: useTaskIdAsThreadId ? firstMessage.threadId : threadId,
+                TSLastMessage: getLocalCurrentTimestamp(),
             };
 
             setTimeout(() => {
-                const newMoveIndex = messageId
-                    ? `${chatId}-${threadId}-${messageId}`
-                    : `${chatId}-${threadId}-1`;
+                // The thread indexMap + focus-highlight key on the bare v3
+                // reply UUID (`messageIdWithChatIdAndThreadId`). The old
+                // `${chatId}-${threadId}-${messageId}` composite embeds two
+                // UUIDs now (chatId + threadId are v3 UUIDs) and never
+                // matches a bare-UUID key, so a thread deep-link loaded the
+                // thread but never scrolled to / highlighted the reply.
+                // `messageId` is the still-numeric URL seq, so resolve the
+                // reply by it within the loaded thread messages.
+                const target =
+                    messageId !== undefined
+                        ? threadMessages.find((m) => Number(m.messageId) === messageId)
+                        : undefined;
+                const newMoveIndex = (target ?? threadMessages[0])?.messageIdWithChatIdAndThreadId;
                 useCM.setCurrentThreadChat({ ...newThread, moveToSpecificIndex: newMoveIndex });
             }, 250);
 
@@ -299,12 +326,23 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
 
         // If chat is already loaded but we need to focus on a specific message
         if (currentMainChatId === chatId && messageId && threadId === undefined) {
-            const newMoveIndex = `${chatId}-${messageId}`;
-            if (useCM.currentMainChat!.moveToSpecificIndex !== newMoveIndex) {
-                useCM.setCurrentMainChat({
-                    ...useCM.currentMainChat!,
-                    moveToSpecificIndex: newMoveIndex,
-                });
+            // v3 format: `moveToSpecificIndex` is now the message's v3
+            // UUID, matching the `messageIdWithChatId` field that
+            // `MessageListRenderer.resolveFocusedState` reads. The URL
+            // `messageId` segment is still the legacy seq (or task id
+            // for PM); resolve through the snapshot.
+            const isPm = paneType === 3;
+            const newMoveIndex = resolveV3MessageUuid(chatId, messageId, isPm);
+            if (newMoveIndex && useCM.currentMainChat!.moveToSpecificIndex !== newMoveIndex) {
+                // Functional updater. The closure-captured
+                // `useCM.currentMainChat` lags behind the channelService
+                // live-update subscription (`useChatManagement.ts`
+                // main-pane apply), so spreading it can revert message
+                // deletes / edits between when this effect armed and
+                // when React processes it.
+                useCM.setCurrentMainChat((prev) =>
+                    prev ? { ...prev, moveToSpecificIndex: newMoveIndex } : prev
+                );
             }
         }
         // If it's a different chat, load it
@@ -316,58 +354,55 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
 
             isNavigatingFromUrl.current = true;
 
-            popSpecificMessages(chatId, existingChat.chatType)
+            // v3 unified path: `loadV3SpecificMessages` handles every
+            // chat kind (DM/GM/PM/MDM) uniformly through channelService,
+            // so the legacy MDM `/history/` fallback for empty results
+            // is no longer needed — the v3 sync either returns rows or
+            // the channel genuinely has none.
+            loadV3SpecificMessages(chatId, existingChat.chatType)
                 .then(async (messages: MessageProps[]) => {
-                    let resolvedMessages = messages;
-                    if (resolvedMessages.length === 0 && existingChat.chatType === 4) {
-                        try {
-                            const data = await loadMDMHistory(
-                                myself.teamId,
-                                myself.teamName,
-                                myself.userId,
-                                accessToken,
-                                chatId
-                            );
-                            const mdmChat = data?.chat_history?.[0];
-                            if (mdmChat?.messages?.length > 0) {
-                                resolvedMessages = [...mdmChat.messages].sort(
-                                    (a: MessageProps, b: MessageProps) => a.messageId - b.messageId
-                                );
-                                await new ChatService().batchInsertMDMMessages(resolvedMessages);
-                            }
-                        } catch (e) {
-                            console.error("Failed to load MDM messages from backend:", e);
-                        }
-                    }
+                    const resolvedMessages = messages;
                     if (resolvedMessages.length === 0) return;
 
                     const lastMessage = resolvedMessages[resolvedMessages.length - 1];
+                    // Keys sorted alphabetically (case-insensitive) per
+                    // `sort-keys`. `lastReadMessageId: String(...)` bridges
+                    // the legacy numeric `MessageProps.messageId` to the
+                    // v3-flipped `ChatProps.lastReadMessageId: string`.
                     const newChat: ChatProps = {
                         chatId: existingChat.chatId,
                         chatName: existingChat.chatName,
                         chatType: existingChat.chatType,
                         dmPartnerUser: existingChat.dmPartnerUser,
-                        lastReadMessageId: lastMessage.messageId,
-                        messages: resolvedMessages,
+                        isPrivate: existingChat.isPrivate,
+                        lastReadMessageId: String(lastMessage.messageId),
                         latestMessage: existingChat.latestMessage,
                         latestMessageText: existingChat.latestMessageText,
-                        TSLastMessage: existingChat.TSLastMessage,
-                        systemUserId: existingChat.systemUserId,
-                        project: existingChat.project,
-                        isPrivate: existingChat.isPrivate,
-                        profileImagePath: existingChat.profileImagePath,
+                        messages: resolvedMessages,
                         moveToSpecificIndex: undefined,
+                        profileImagePath: existingChat.profileImagePath,
+                        project: existingChat.project,
+                        systemUserId: existingChat.systemUserId,
+                        TSLastMessage: existingChat.TSLastMessage,
                     };
 
                     setTimeout(() => {
-                        const isValidChat = useCM.currentMainChat?.chatId !== -1;
+                        // `chatId !== ""` is the v3-flipped "valid chat?"
+                        // sentinel (replaces legacy `!== -1`).
+                        const isValidChat = useCM.currentMainChat?.chatId !== "";
+                        // v3 `moveToSpecificIndex` carries the message's
+                        // v3 UUID so the bubble's `messageIdWithChatId`
+                        // matches in `MessageListRenderer`. Resolve the
+                        // URL `messageId` (legacy seq, or task id for
+                        // PM) via the snapshot.
+                        const isPm = paneType === 3;
                         const newMoveIndex =
                             threadId === undefined
                                 ? messageId && isValidChat
-                                    ? `${chatId}-${messageId}`
+                                    ? (resolveV3MessageUuid(chatId, messageId, isPm) ?? undefined)
                                     : undefined
                                 : isValidChat
-                                  ? `${chatId}-${threadId}`
+                                  ? (resolveV3MessageUuid(chatId, threadId, isPm) ?? undefined)
                                   : undefined;
                         useCM.setCurrentMainChat({
                             ...newChat,
@@ -392,27 +427,33 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
                 useCM.currentThreadChat?.threadId !== threadId);
 
         if (shouldLoadThread) {
-            const loadThreadFn =
-                paneType === 3
-                    ? loadSpecificThreadMessagesByTaskId(
-                          myself,
-                          paneType,
-                          chatId,
-                          threadId,
-                          accessToken
-                      )
-                    : loadSpecificThreadMessages(myself, paneType, chatId, threadId, accessToken);
-
-            loadThreadFn.then((threadMessages: ThreadMessageProps[]) => {
-                processThreadMessages(
-                    threadMessages,
-                    chatId,
-                    threadId,
-                    paneType,
-                    messageId,
-                    paneType === 3
+            // v3 path: resolve the URL `threadId` (parent's per-channel
+            // seq for DM/GM/MDM, task_id for PM) to the parent message's
+            // v3 UUID, then load thread replies for that UUID via
+            // channelService. The legacy `processThreadMessages` slot
+            // still types things as `number` — carry the UUID via
+            // `as unknown as number` like the rest of the migration.
+            const isPm = paneType === 3;
+            const threadRootUuid = resolveV3ThreadRootUuid(chatId, threadId, isPm);
+            if (threadRootUuid) {
+                loadV3SpecificThreadMessages(chatId, threadRootUuid, paneType).then(
+                    (threadMessages: ThreadMessageProps[]) => {
+                        processThreadMessages(
+                            threadMessages,
+                            chatId as unknown as number,
+                            threadRootUuid as unknown as number,
+                            paneType,
+                            messageId,
+                            isPm
+                        );
+                    }
                 );
-            });
+            } else {
+                console.warn(
+                    `[useChatRouting] no v3 parent for thread ` +
+                        `channel=${chatId} threadId=${threadId} isPm=${isPm}`
+                );
+            }
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [pathname, useCM.allChats.length]);
@@ -431,7 +472,7 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
             return;
         }
 
-        if (!currentMainChat || currentMainChat.chatId === -1) return;
+        if (!currentMainChat || currentMainChat.chatId === "") return;
 
         // When a thread is visible, let the thread URL effect handle the full URL
         if (useCM.isThreadVisible && useCM.currentThreadChat) return;
@@ -478,7 +519,7 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
             !useCM.isThreadVisible ||
             !currentThreadChat ||
             !currentMainChat ||
-            currentMainChat.chatId === -1
+            currentMainChat.chatId === ""
         ) {
             return;
         }
@@ -520,15 +561,16 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [useCM.isThreadVisible, useCM.currentThreadChat?.chatId]);
 
+    // Keys sorted alphabetically (case-insensitive) per `sort-keys`.
     return {
-        parseCurrentRoute,
-        navigateToChatType,
-        navigateToChat,
-        navigateToThread,
-        navigateToMessage,
-        navigateToThreadMessage,
-        getCurrentChatTypeFromUrl,
         CHAT_TYPE_MAP,
         CHAT_TYPE_REVERSE_MAP,
+        getCurrentChatTypeFromUrl,
+        navigateToChat,
+        navigateToChatType,
+        navigateToMessage,
+        navigateToThread,
+        navigateToThreadMessage,
+        parseCurrentRoute,
     };
 };

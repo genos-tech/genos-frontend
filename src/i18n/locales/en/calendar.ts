@@ -9,6 +9,9 @@ export const calendar = {
     connectButton: "Connect Google",
     scopePrompt: "Calendar access hasn't been granted yet. Grant it to read and manage events.",
     grantButton: "Grant Calendar access",
+    reauthPrompt:
+        "Your Google Calendar connection expired. Reconnect to see and manage your events.",
+    reconnectButton: "Reconnect Google Calendar",
     openTooltip: "Open calendar",
     // Keyboard chord for the global shortcut handled by
     // `useGlobalServiceShortcut` (letter "C" + the platform modifier

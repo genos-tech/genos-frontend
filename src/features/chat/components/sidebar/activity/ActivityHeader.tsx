@@ -38,19 +38,25 @@ export const ActivityHeader: React.FC<ActivityHeaderProps> = ({
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
 
-    // For DMs the activity payload's `chatName` is sender-centric — the
-    // sender's frontend passes its own view of the DM title (the partner
-    // user's name) as `destCGName`, which is the OTHER user from the
-    // receiver's POV. Prefer the server-resolved per-user `chatName`
-    // from `useCM.allChats` when available. Other chat types carry a
-    // viewer-independent title (group / project / task / note name) so
-    // the activity payload value is fine for them.
-    const resolvedChatName =
-        activity.chatType === 1
-            ? (useCM.allChats.find(
-                  (chat) => chat.chatType === 1 && chat.chatId === activity.chatId
-              )?.chatName ?? activity.chatName)
-            : activity.chatName;
+    // The activity payload's `chatName` is frozen when the row is adapted
+    // (`v3ActivityToLegacy`): for DMs it's sender-centric, and for ANY
+    // channel-backed surface it falls back to a bare "?" placeholder when
+    // the source channel wasn't in the local snapshot at adapt time —
+    // which is the common case in the activity feed (rows arrive before /
+    // independently of the channel list). Resolve the viewer-correct
+    // title from the live chat list for channel-backed types (1-4), keyed
+    // by the unique channel id. Surface mentions (5-8) carry their task /
+    // project / note title in the payload, so those stay as-is. Finally,
+    // never surface the raw "?" — blank reads far cleaner on the row.
+    // PUNCH LIST (v3 chatId migration): `AllChatProps.chatId` is `string`
+    // post-flip; `ActivityMessageProps.chatId` is still `number`.
+    // Stringify at the comparison.
+    const resolvedFromChatList =
+        activity.chatType <= 4
+            ? useCM.allChats.find((chat) => chat.chatId === String(activity.chatId))?.chatName
+            : undefined;
+    const rawChatName = resolvedFromChatList || activity.chatName;
+    const resolvedChatName = rawChatName === "?" ? "" : rawChatName;
 
     return (
         <Stack
@@ -111,7 +117,11 @@ export const ActivityHeader: React.FC<ActivityHeaderProps> = ({
                     </Typography>
                 )}
 
-                <ActivityTypeChips activity={activity} chatTypeLookup={chatTypeLookup} />
+                <ActivityTypeChips
+                    activity={activity}
+                    chatTypeLookup={chatTypeLookup}
+                    resolvedChatName={resolvedChatName}
+                />
             </Stack>
 
             {/* Right-aligned timestamp and unread indicator */}

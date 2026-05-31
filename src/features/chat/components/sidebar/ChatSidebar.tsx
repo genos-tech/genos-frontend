@@ -144,7 +144,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
     const [showOnlyUnreadItems, setShowOnlyUnreadItems] = useState(false);
     const [openJoinGM, setOpenJoinGM] = useState({
         flag: false,
-        chatId: -1,
+        chatId: "",
         chatName: "",
     });
 

@@ -2,20 +2,20 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
 
 import { TodoService } from "../db/services/todo.service";
-import { loadTodoGroups } from "../features/chat/services/loadTodoGroups";
+import { loadTodoGroups } from "../features/chat/components/todo/services/loadTodoGroups";
 import {
     createTodoCategory,
     deleteTodoCategory,
     loadTodoCategories,
     updateTodoCategory,
-} from "../features/chat/services/todoCategories";
+} from "../features/chat/components/todo/services/todoCategories";
 import {
     createTodoItem,
     CreateTodoItemInput,
     deleteTodoItem,
     updateTodoItem,
     UpdateTodoItemPatch,
-} from "../features/chat/services/todoItems";
+} from "../features/chat/components/todo/services/todoItems";
 import { UserProps } from "../types/admin";
 import { TodoCategoryProps, TodoGroupProps, TodoItemProps } from "../types/chat";
 import { getLocalCurrentDate } from "../utils/dateUtils";

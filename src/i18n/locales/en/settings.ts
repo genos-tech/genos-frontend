@@ -142,6 +142,9 @@ export const settings = {
         connectPrompt: "Connect Google Calendar in Integrations to enable this.",
         grantPrompt: "Calendar access hasn't been granted yet — grant it to enable auto-sync.",
         grantButton: "Grant Calendar access",
+        reconnectPrompt:
+            "Your Google Calendar connection expired — reconnect to keep auto-sync working.",
+        reconnectButton: "Reconnect Google Calendar",
         backfillButton: "Sync existing tasks now",
         backfillRunning: "Syncing…",
         backfillSuccess: "Synced {total} task(s) ({created} new, {patched} updated).",

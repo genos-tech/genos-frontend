@@ -1,3 +1,8 @@
+// `simple-import-sort/imports` disabled file-wide: prettier and
+// simple-import-sort disagree on the placement of `./ToDoPane`
+// (auto-fix loops between the two). Prettier wins per project
+// convention.
+/* eslint-disable simple-import-sort/imports */
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Sheet } from "@mui/joy";
 import { VirtuosoHandle } from "react-virtuoso";
@@ -23,27 +28,33 @@ import { ChatProps, MessageProps, ThreadMessageProps, ThreadProps } from "../../
 import { TaskCommentProps } from "../../types/tasks";
 import { ToDoPane } from "./ToDoPane";
 
+// PUNCH LIST (v3 chatId migration): `chatId` and `lastReadMessageId`
+// are `string` post-flip. The empty-string sentinel replaces the
+// legacy `-1` / `0`. This placeholder is never rendered — it exists
+// so `useMessageManagement` etc. can be called unconditionally above
+// the `if (!useCM.currentSubChat) return null` guard.
+// Keys sorted alphabetically per `sort-keys` (case-insensitive).
 const EMPTY_CHAT: ChatProps = {
-    chatId: -1,
+    chatId: "",
     chatName: "",
     chatType: 0,
     dmPartnerUser: {
+        avatarImgPath: "",
         teamId: "",
         teamName: "",
+        tsJoined: "",
+        tsLastSeen: "",
+        userEmail: "",
         userId: "",
         userName: "",
-        userEmail: "",
-        avatarImgPath: "",
-        tsLastSeen: "",
-        tsJoined: "",
     },
-    lastReadMessageId: 0,
-    messages: [],
-    latestMessage: undefined as any,
-    latestMessageText: "",
-    TSLastMessage: "",
     isPrivate: false,
+    lastReadMessageId: "",
+    latestMessage: undefined as unknown as MessageProps,
+    latestMessageText: "",
+    messages: [],
     profileImagePath: "",
+    TSLastMessage: "",
 };
 
 type MessagesPaneProps = {
@@ -89,6 +100,10 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
     // File drag-and-drop state
     const [pendingFiles, setPendingFiles] = useState<File[]>([]);
     const clearPendingFiles = useCallback(() => setPendingFiles([]), []);
+    // `createFileDropHandler(setPendingFiles)` returns a stable handler; the
+    // factory itself isn't a stable reference but `setPendingFiles` is the
+    // only meaningful dependency and never changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     const handleDrop = useCallback(createFileDropHandler(setPendingFiles), []);
 
     // Use a stable placeholder when currentSubChat is null so hooks are always called
@@ -98,9 +113,9 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
     const messageManagement = useMessageManagement({ chat: chatForHooks });
     const readStatusManagement = useReadStatusManagement({
         currentChat: chatForHooks,
+        isThread: false,
         myself,
         useCM,
-        isThread: false,
     });
     const scrollManagement = useScrollManagement({
         currentChat: chatForHooks,
@@ -119,10 +134,11 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                 } else if (
                     useCM.currentSubChat.moveToSpecificIndex &&
                     messageManagement.indexMap &&
-                    messageManagement.indexMap[useCM.currentSubChat.moveToSpecificIndex] &&
-                    useCM.currentSubChat.chatId ===
-                        Number(useCM.currentSubChat.moveToSpecificIndex?.split("-")[0])
+                    messageManagement.indexMap[useCM.currentSubChat.moveToSpecificIndex] !==
+                        undefined
                 ) {
+                    // v3 `moveToSpecificIndex` is the message's v3 UUID
+                    // — `indexMap[uuid]` lookup is enough validation.
                     targetIndex = Number(
                         messageManagement.indexMap[useCM.currentSubChat.moveToSpecificIndex]
                     );
@@ -133,6 +149,11 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                 readStatusManagement.handleReadStatusUpdate(targetIndex);
             }
         }, 1000);
+        // Effect fires when `indexMap` changes — that's the resolution event
+        // we care about. Including `readStatusManagement` / `useCM.currentSubChat`
+        // would either rerun on every render (manager rebuilt each render) or
+        // double-update when the chat reference changes.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [messageManagement.indexMap]);
 
     useEffect(() => {
@@ -140,6 +161,10 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
         readStatusManagement.handlePeriodicReadStatusUpdate(
             scrollManagement.visibleRange.endIndex
         );
+        // Periodic update is keyed to scroll movement; the throttling lives
+        // inside `handlePeriodicReadStatusUpdate`, so the wider deps aren't
+        // needed.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [scrollManagement.visibleRange]);
 
     if (!useCM.currentSubChat) {
@@ -149,10 +174,10 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
     return (
         <div
             style={{
-                width: "100%",
-                height: "100%",
                 display: "flex",
                 flexDirection: "column",
+                height: "100%",
+                width: "100%",
             }}
             onDragOver={(e) => e.preventDefault()}
             onDrop={handleDrop}

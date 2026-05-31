@@ -12,8 +12,12 @@ export const ChatListItemMessage: React.FC<ChatListItemMessageProps> = ({ chat }
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
 
-    // Check if there are unread messages
-    const hasUnread = chat.latestMessage && chat.lastReadMessageId < chat.latestMessage.messageId;
+    // PUNCH LIST (v3 chatId migration): `lastReadMessageId` is `string`
+    // post-flip; `messageId` is still `number`. Round-trip via
+    // `Number(... || "0")` — UUID-shaped cursors NaN-compare to false
+    // (no false-positive unread dot).
+    const hasUnread =
+        chat.latestMessage && Number(chat.lastReadMessageId || "0") < chat.latestMessage.messageId;
 
     if (!chat.latestMessageText) {
         return null;

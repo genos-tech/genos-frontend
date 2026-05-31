@@ -1,3 +1,7 @@
+/* eslint-disable simple-import-sort/imports */
+// `simple-import-sort` and the prettier import-sort plugin disagree on
+// the order of `react` vs the alphabetically-earlier `@mui/...` block.
+// Prettier wins (it reformats on save); disable simple-import-sort.
 import "./App.css";
 
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -24,12 +28,12 @@ import {
 } from "./components/layout/QuickMeetClipboardHost";
 import { ServiceSwitcherOverlay } from "./components/layout/ServiceSwitcherOverlay";
 import { Sidebar } from "./components/layout/sidebar";
-import { TooSmallScreen } from "./components/layout/TooSmallScreen";
 import { UrlLinkModal } from "./components/modals/UrlLinkModal";
 import { AvatarContextProvider } from "./components/ui/avatars/AvatarContext";
 import { InitialLoad } from "./components/ui/misc/InitialLoad";
 import { RouteLoadingFallback } from "./components/ui/misc/RouteLoadingFallback";
 import { CalendarModal } from "./features/calendar/components/CalendarModal";
+import { useIsV3ChatEnabled, V3ChatShell } from "./features/channel/V3ChatShell";
 import { OAUTH_INTEGRATIONS_ENABLED } from "./features/integrations/featureFlags";
 import { SpotlightOverlay } from "./features/spotlight/SpotlightOverlay";
 import { CHAT_TYPE_CODE, SpotlightResult } from "./features/spotlight/types";
@@ -57,11 +61,13 @@ import { useWakeRefresh } from "./hooks/common/useWakeRefresh";
 import { useWebSocket } from "./hooks/common/useWebSocket";
 import { useWindowSize } from "./hooks/common/useWindowSize";
 import { registerApiHealthListener, unregisterApiHealthListener } from "./services/api";
+import { useChannelServiceBootstrap } from "./services/channel/useChannelServiceBootstrap";
 import { NotificationsProvider } from "./services/notifications/NotificationsContext";
 import { NotificationToastHost } from "./services/notifications/NotificationToastHost";
 import { PermissionBanner } from "./services/notifications/PermissionBanner";
 import { NotificationIntent } from "./services/notifications/types";
 import { refreshAllData } from "./services/refreshAllData";
+import { useRuntimeConfigBootstrap } from "./services/runtimeConfig/useRuntimeConfig";
 
 import { I18nProvider } from "./i18n";
 import { purpleTheme } from "./theme/purplePalette";
@@ -132,7 +138,10 @@ const canonicalSpotlightHref = (r: SpotlightResult): string | null => {
 };
 
 export const App = () => {
-    const isTooSmall = useWindowSize();
+    // Call retained for the hook's resize-listener side effects; the
+    // `isTooSmall` gate around `<TooSmallScreen />` is currently
+    // commented out (see history) so the return value isn't read.
+    useWindowSize();
     const navigate = useNavigate();
 
     // Initialize app with authentication and basic setup
@@ -150,6 +159,26 @@ export const App = () => {
         myself,
         useTEM.currentTeamId
     );
+
+    // v3 messaging stack: opens a parallel `/v3` namespace socket,
+    // wires `channelService` (token / user id / socket), registers
+    // the inbound event router, and hydrates the in-memory store
+    // from IDB. The legacy chat surfaces continue using
+    // `socketInstance` above; v3-aware surfaces (mounted via the
+    // `useChannel` / `useChannelList` hooks) consume `channelService`
+    // directly. Side-by-side until the legacy paths are deleted.
+    useChannelServiceBootstrap(accessToken, myself.userId || null);
+
+    // Runtime config: poll `/api/runtime-config` on auth ready and every
+    // 60s. Source of truth for the per-chat-type v3 rollout flags and
+    // the panic switch. Silent / fail-closed if the endpoint errors.
+    useRuntimeConfigBootstrap(accessToken, myself.userId || null);
+
+    // v3 chat gate. True iff build-time env var OR a per-chat-kind
+    // runtime flag is rolled out to this user (panic switch overrides).
+    // Re-evaluates on each config poll so a server-side rollout flip
+    // propagates within ≤60s without a reload.
+    const v3ChatEnabled = useIsV3ChatEnabled();
 
     // API server health tracking
     const [showApiDown, setShowApiDown] = useState(false);
@@ -188,19 +217,19 @@ export const App = () => {
         };
     }, [handleApiHealth]);
 
-    // Project and task management
+    // Project and task management. Keys sorted per `sort-keys`.
     const { usePM, useTM, useSM } = useProjectTaskManagement({
-        myself,
         accessToken: accessToken || "",
         currentTeamId: useTEM.currentTeamId,
+        myself,
     });
 
-    // Service-specific initialization and management
+    // Service-specific initialization and management.
     const { useNM, useCM, useIM } = useServiceInitialization({
-        myself,
         accessToken: accessToken || "",
         currentTeamId: useTEM.currentTeamId,
         isLoading: useUISM.isLoading,
+        myself,
         socketInstance,
     });
 
@@ -212,9 +241,9 @@ export const App = () => {
     // happened while the WS was disconnected is silently missed.
     useWakeRefresh(() => {
         return refreshAllData({
-            myself,
             accessToken: accessToken || null,
             currentProjectId: usePM.currentProject?.projectId ?? null,
+            myself,
             onIDBRefreshed: async () => {
                 await Promise.allSettled([
                     useCM.funcSetAllChats(),
@@ -290,10 +319,10 @@ export const App = () => {
             if (!task?.id || !task.project?.projectId) return null;
             return {
                 projectId: task.project.projectId,
+                rootLabel: task.displayId ? `${task.displayId} · ${task.title}` : task.title,
                 // Walk up to the hierarchy root so the diagram shows the
                 // milestone / parent / siblings rather than a lone leaf.
                 rootTaskId: Number(task.rootTaskId ?? task.id),
-                rootLabel: task.displayId ? `${task.displayId} · ${task.title}` : task.title,
             };
         }
         if (useTM.currentPreviewKind === "milestone") {
@@ -307,11 +336,11 @@ export const App = () => {
             }
             return {
                 projectId: milestone.projectId,
-                rootTaskId: milestone.taskId,
                 // Match the label used by the in-pane button in
                 // MilestonePreviewInner so the shortcut and click paths
                 // open visually identical diagrams.
                 rootLabel: `${milestone.title || "Milestone"} · diagram`,
+                rootTaskId: milestone.taskId,
             };
         }
         return null;
@@ -325,21 +354,21 @@ export const App = () => {
 
     const { previewIndex: serviceSwitcherPreviewIndex, mruOrder: serviceSwitcherMruOrder } =
         useGlobalServiceShortcut({
-            onOpenTasksAndCreate: () => {
-                navigate("/workspace/tasks");
-                useTM.handleCreateTask();
-            },
+            onOpenCalendarModal: calendarModal.open,
+            onOpenHistory: openHistory,
             onOpenNotesAndCreate: () => {
                 navigate("/workspace/notes");
                 void useNM.handleCreateNewMyNote(null);
             },
-            onOpenCalendarModal: calendarModal.open,
-            onQuickMeetClipboard: () => meetClipboardRef.current?.trigger(),
-            onOpenHistory: openHistory,
             onOpenTaskDiagram: () => {
                 if (!taskDiagramTarget) return;
                 setTaskDiagramOpen(true);
             },
+            onOpenTasksAndCreate: () => {
+                navigate("/workspace/tasks");
+                useTM.handleCreateTask();
+            },
+            onQuickMeetClipboard: () => meetClipboardRef.current?.trigger(),
         });
 
     // Click-to-open: jump to the chat / thread / task / inbox that the
@@ -365,7 +394,13 @@ export const App = () => {
             // Chat / thread: orchestrate via the existing helper which loads
             // the chat and pushes the right deep URL.
             if (src.chatType !== undefined && src.chatId !== undefined) {
-                const numericChatId = Number(src.chatId);
+                // `src.chatId` is the v3 channel UUID (string). Pass it
+                // through unchanged — `Number(uuid)` -> NaN here produced
+                // `/workspace/chat/dm/NaN` (same class as the Spotlight
+                // branch below; this notification-click branch was missed
+                // in that fix). The `as unknown as number` keeps
+                // moveToSpecificChat's legacy `chatId: number` param type.
+                const numericChatId = src.chatId as unknown as number;
                 const threadId = src.threadId ?? 0;
                 useCM.moveToSpecificChat(
                     src.chatType,
@@ -382,7 +417,7 @@ export const App = () => {
             // Defensive fallback: surface the chat service.
             navigate("/workspace/chat");
         },
-        [useCM, useTM, useUISM, usePM, navigate]
+        [useCM, useTM, usePM, navigate]
     );
 
     // Web notifications: hydrates prefs from backend, owns permission state,
@@ -442,18 +477,35 @@ export const App = () => {
                 // `/message/:id` segment and the matching
                 // moveToSpecificIndex for scroll-target).
                 const chatTypeCode = CHAT_TYPE_CODE[r.chat_type];
-                const numericChatId = Number(r.chat_id);
-                const numericThreadId = r.thread_id ? Number(r.thread_id) : 0;
-                const numericMessageId = r.message_id ? Number(r.message_id) : undefined;
+                // `chat_id` is the v3 channel UUID (string). It used to be
+                // a legacy integer — hence the old `Number(r.chat_id)`,
+                // which now yields `NaN` for a UUID and produced
+                // `/workspace/chat/dm/NaN`. `moveToSpecificChat` matches on
+                // `String(chatId)` against the UUID-keyed chat list and
+                // interpolates the id straight into the URL, so pass it
+                // through unchanged. The `as unknown as number` keeps the
+                // helper's legacy `chatId: number` param type — the same
+                // migration shim used wherever v3 UUIDs ride the legacy
+                // numeric chat-id slot.
+                // `chat_id` (channel), `thread_id` (thread-root Message.id)
+                // and `message_id` are all v3 UUID strings now — pass them
+                // through so the chip deep-links to the exact thread / message
+                // bubble. `moveToSpecificChat` treats ""/undefined as "no
+                // focus" and resolves UUID ids directly (the old
+                // `Number(...)` coerced UUIDs to NaN and silently dropped the
+                // focus, which is why chips only opened the chat top).
+                const chatId = r.chat_id;
+                const threadId = r.thread_id ?? "";
+                const messageId = r.message_id ?? undefined;
                 useCM.moveToSpecificChat(
                     chatTypeCode,
-                    numericChatId,
-                    numericThreadId,
+                    chatId,
+                    threadId,
                     false,
-                    numericThreadId !== 0,
+                    Boolean(r.thread_id),
                     useTM.setCurrentPreviewTaskId,
                     usePM.setCurrentProject,
-                    numericMessageId
+                    messageId
                 );
                 return;
             }
@@ -541,9 +593,15 @@ export const App = () => {
                 localStorage.setItem("isToDoVisible", "true");
                 window.dispatchEvent(new CustomEvent("openTodoPane"));
                 if (selfDm) {
+                    // PUNCH LIST (v3 chatId migration): `selfDm.chatId`
+                    // is `string` post-flip; `moveToSpecificChat`'s
+                    // signature still takes `number` (its internal
+                    // legacy services do too — see the punch-list note
+                    // in `useChatManagement`). Cast at the boundary
+                    // until that hook's signature flips.
                     useCM.moveToSpecificChat(
                         1,
-                        selfDm.chatId,
+                        selfDm.chatId as unknown as number,
                         0,
                         false,
                         false,
@@ -560,6 +618,11 @@ export const App = () => {
                 return;
             }
         },
+        // `myself.userId` reads the auth-stable user id — it doesn't
+        // change for the lifetime of this component once auth settles,
+        // so including it would just churn the callback identity on
+        // every render with no behavior change.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
         [spotlight, navigate, useCM, useTM, usePM]
     );
 
@@ -595,14 +658,14 @@ export const App = () => {
     useEffect(() => {
         const current = useCM.currentThreadChat
             ? {
-                  chatType: useCM.currentThreadChat.chatType,
                   chatId: String(useCM.currentThreadChat.chatId),
+                  chatType: useCM.currentThreadChat.chatType,
                   threadId: useCM.currentThreadChat.threadId,
               }
             : useCM.currentMainChat
               ? {
-                    chatType: useCM.currentMainChat.chatType,
                     chatId: String(useCM.currentMainChat.chatId),
+                    chatType: useCM.currentMainChat.chatType,
                 }
               : useTM.currentPreviewTaskId
                 ? { taskId: useTM.currentPreviewTaskId }
@@ -610,20 +673,20 @@ export const App = () => {
         useNotif.setActiveSurface(current);
     }, [useCM.currentMainChat, useCM.currentThreadChat, useTM.currentPreviewTaskId, useNotif]);
 
-    // WebSocket synchronization
+    // WebSocket synchronization. Keys sorted per `sort-keys`.
     webSocketSync({
-        useCM: useCM,
         accessToken: accessToken,
         currentPreviewTaskId: useTM.currentPreviewTaskId,
         currentProject: usePM.currentProject,
         funcSetInboxItems: useIM.funcSetInboxItems,
         isLoading: useUISM.isLoading,
         myself: myself,
+        notificationManager: useNotif.manager,
         setIsTaskCommentUpdated: useTM.setIsTaskCommentUpdated,
         setIsTaskUpdatedBySomeone: useTM.setIsTaskUpdatedBySomeone,
         socket: socketInstance,
+        useCM: useCM,
         useTEM: useTEM,
-        notificationManager: useNotif.manager,
     });
 
     // if (isTooSmall) {
@@ -659,17 +722,21 @@ export const App = () => {
                                             <SpotlightOverlay
                                                 aiAnswersEnabled={spotlight.aiAnswersEnabled}
                                                 ask={spotlight.ask}
+                                                backToHistoryList={spotlight.backToHistoryList}
+                                                closeHistory={spotlight.closeHistory}
                                                 dailyUsage={spotlight.dailyUsage}
                                                 error={spotlight.error}
+                                                historyDetail={spotlight.historyDetail}
+                                                historyIsLoading={spotlight.historyIsLoading}
+                                                historyMode={spotlight.historyMode}
+                                                historySessions={spotlight.historySessions}
                                                 isLoading={spotlight.isLoading}
                                                 isOpen={spotlight.isOpen}
+                                                openHistory={spotlight.openHistory}
                                                 query={spotlight.query}
                                                 results={spotlight.results}
                                                 turns={spotlight.turns}
-                                                historyMode={spotlight.historyMode}
-                                                historySessions={spotlight.historySessions}
-                                                historyDetail={spotlight.historyDetail}
-                                                historyIsLoading={spotlight.historyIsLoading}
+                                                viewHistorySession={spotlight.viewHistorySession}
                                                 onApprove={spotlight.onApprove}
                                                 onAsk={spotlight.onAsk}
                                                 onCancel={spotlight.onCancel}
@@ -679,10 +746,6 @@ export const App = () => {
                                                 onQueryChange={spotlight.setQuery}
                                                 onReject={spotlight.onReject}
                                                 onSelect={handleSpotlightSelect}
-                                                openHistory={spotlight.openHistory}
-                                                viewHistorySession={spotlight.viewHistorySession}
-                                                backToHistoryList={spotlight.backToHistoryList}
-                                                closeHistory={spotlight.closeHistory}
                                             />
                                             <ConnectionStatusSnackbar
                                                 showApiDown={showApiDown}
@@ -726,11 +789,11 @@ export const App = () => {
                                                         value={{
                                                             myself,
                                                             setMyself,
-                                                            teamMemberProfiles:
-                                                                useTEM.teamMemberProfiles,
                                                             setTeamMemberProfiles:
                                                                 useTEM.setTeamMemberProfiles,
                                                             socket: socketInstance,
+                                                            teamMemberProfiles:
+                                                                useTEM.teamMemberProfiles,
                                                             useCM,
                                                             useUISM,
                                                         }}
@@ -1084,6 +1147,34 @@ export const App = () => {
                                                                                                 </FeatureErrorBoundary>
                                                                                             }
                                                                                         />
+                                                                                    )}
+                                                                                    {/* v3 proof-of-life routes. Behind `VITE_USE_V3_CHAT`
+                                                                                        — production builds without the env flag don't
+                                                                                        even register the routes. The bare `/v3` shows
+                                                                                        the chat list with no pane; `/v3/<uuid>` opens
+                                                                                        that channel. Selecting a channel from the
+                                                                                        sidebar navigates between them. */}
+                                                                                    {v3ChatEnabled && (
+                                                                                        <>
+                                                                                            <Route
+                                                                                                path="v3"
+                                                                                                element={
+                                                                                                    <V3ChatShell />
+                                                                                                }
+                                                                                            />
+                                                                                            <Route
+                                                                                                path="v3/:channelId"
+                                                                                                element={
+                                                                                                    <V3ChatShell />
+                                                                                                }
+                                                                                            />
+                                                                                            <Route
+                                                                                                path="v3/:channelId/t/:rootMessageId"
+                                                                                                element={
+                                                                                                    <V3ChatShell />
+                                                                                                }
+                                                                                            />
+                                                                                        </>
                                                                                     )}
                                                                                     {/* Default redirect to inbox */}
                                                                                     <Route

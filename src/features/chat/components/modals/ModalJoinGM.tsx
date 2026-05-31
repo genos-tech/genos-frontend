@@ -1,9 +1,9 @@
 import React, { useState } from "react";
+import { keyframes } from "@emotion/react";
 import GroupsIcon from "@mui/icons-material/Groups";
 import LockOutlineIcon from "@mui/icons-material/LockOutline";
 import SendIcon from "@mui/icons-material/Send";
 import { Alert, Box, Button, Modal, ModalDialog, Stack, Typography } from "@mui/joy";
-import { keyframes } from "@emotion/react";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
@@ -18,7 +18,7 @@ const fadeIn = keyframes`
 const base_url = import.meta.env.VITE_API_BASE_URL;
 const disableOpenJoinGMParams = {
     flag: false,
-    chatId: -1,
+    chatId: "",
     chatName: "",
 };
 
@@ -27,10 +27,10 @@ type Props = {
     myself: UserProps;
     openJoinGM: {
         flag: boolean;
-        chatId: number;
+        chatId: string;
         chatName: string;
     };
-    setOpenJoinGM: (value: { flag: boolean; chatId: number; chatName: string }) => void;
+    setOpenJoinGM: (value: { flag: boolean; chatId: string; chatName: string }) => void;
 };
 export const ModalJoinGM: React.FC<Props> = ({ socket, myself, openJoinGM, setOpenJoinGM }) => {
     const { accessToken } = useAuth();
@@ -141,7 +141,8 @@ export const ModalJoinGM: React.FC<Props> = ({ socket, myself, openJoinGM, setOp
                         "linear-gradient(145deg, rgba(30, 30, 40, 0.95) 0%, rgba(20, 20, 28, 0.98) 100%)",
                     border: "1px solid rgba(168, 85, 247, 0.2)",
                     borderRadius: "16px",
-                    boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(168, 85, 247, 0.1)",
+                    boxShadow:
+                        "0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(168, 85, 247, 0.1)",
                     width: { xs: "calc(100vw - 24px)", md: "auto" },
                     minWidth: { xs: 0, md: "360px" },
                     maxWidth: "100vw",
@@ -158,7 +159,8 @@ export const ModalJoinGM: React.FC<Props> = ({ socket, myself, openJoinGM, setOp
                         width: 56,
                         height: 56,
                         borderRadius: "14px",
-                        background: "linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%)",
+                        background:
+                            "linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%)",
                         border: "1px solid rgba(168, 85, 247, 0.25)",
                         mx: "auto",
                         mb: 2,
@@ -168,11 +170,23 @@ export const ModalJoinGM: React.FC<Props> = ({ socket, myself, openJoinGM, setOp
                 </Box>
 
                 {/* Title */}
-                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 1, mb: 1 }}>
+                <Box
+                    sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 1,
+                        mb: 1,
+                    }}
+                >
                     <LockOutlineIcon sx={{ color: "rgba(168, 85, 247, 0.7)", fontSize: 18 }} />
                     <Typography
                         level="body-sm"
-                        sx={{ color: "rgba(255, 255, 255, 0.5)", textTransform: "uppercase", letterSpacing: "0.1em" }}
+                        sx={{
+                            color: "rgba(255, 255, 255, 0.5)",
+                            textTransform: "uppercase",
+                            letterSpacing: "0.1em",
+                        }}
                     >
                         {t.chat.modals.joinGM.privateGroupLabel}
                     </Typography>

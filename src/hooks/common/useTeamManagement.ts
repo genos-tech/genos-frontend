@@ -2,7 +2,7 @@ import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 
 import { usersChannel } from "../../db/workers/channels";
 import { findTeam } from "../../features/admin/services/findTeam";
-import { popTeamMembers } from "../../features/chat/services/popTeamMembers";
+import { popTeamMembers } from "../../features/admin/services/popTeamMembers";
 import { FindTeamResponse, Team, UserProps } from "../../types/admin";
 
 export interface TeamManagementState {

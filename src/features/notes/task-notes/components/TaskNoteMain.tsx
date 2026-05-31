@@ -116,11 +116,25 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
         }
     }, [useNM.currentTaskNote]);
 
+    // Find the open task note's project PM chat — it drives the project
+    // avatar + task pill in the note header.
+    //
+    // v3 chatId migration: post-flip a PM chat's `chatId` is the channel
+    // UUID (see `v3ToLegacy.channelToLegacyChat`), NOT the numeric project
+    // id. The old `chatId === String(projectId)` compare therefore matched
+    // a UUID against e.g. "42" — silently never true — so this lookup
+    // returned undefined and the whole `noteType === 2 && … && pmChat`
+    // section disappeared. The v3 adapter carries the numeric project id
+    // on `chat.project.projectId` (populated for PM channels), which is
+    // the correct join key; the legacy `chatId === String(projectId)`
+    // compare is kept as a fallback for any pre-migration rows.
+    const taskNoteProjectId = useNM.currentTaskNote?.projectId;
     const pmChat = useCM.allChats.find(
         (chat) =>
             chat.chatType === 3 &&
-            useNM.currentTaskNote &&
-            chat.chatId === useNM.currentTaskNote.projectId
+            taskNoteProjectId != null &&
+            (chat.project?.projectId === taskNoteProjectId ||
+                chat.chatId === String(taskNoteProjectId))
     );
 
     // In task-page mode TaskNoteMain renders standalone — the editor

@@ -4,7 +4,9 @@ import { Box, Button, IconButton, useColorScheme } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { useTranslation } from "../../../i18n";
+import { channelService } from "../../../services/channel/channelService";
 import { UserProps } from "../../../types/admin";
+import { ChannelKind } from "../../../types/channel";
 import { MessageProps, ThreadMessageProps } from "../../../types/chat";
 import { GroupedReactionProps, ReactionProps } from "../../../types/common";
 import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
@@ -88,188 +90,53 @@ export const EmojiReaction = (props: EmojiReactionProps) => {
     }, [reactions]);
 
     const handleAddReaction = (selectedEmoji: string) => {
-        // Backend's reaction handler skips its 8-way Django refetch when this
-        // is present (see backend/socketio_events/message_reaction_handlers.py).
-        const emptyUser = {
-            userName: "",
-            userId: "",
-            avatarImgPath: "",
-            tsLastSeen: "",
-            tsJoined: "",
-            customStatus: "",
-        };
-        const messageSnapshot = {
-            sender: message.sender,
-            receiver:
-                chatType === 1
-                    ? message.sender.userId === myself.userId
-                        ? dmPartnerUser
-                        : myself
-                    : emptyUser,
-            dmPartnerUser: chatType === 1 ? dmPartnerUser : emptyUser,
-            taskId: message.taskId,
-            content: message.content,
-            tsSent: message.tsSent,
-            tsUpdated: message.tsUpdated,
-        };
-
-        const existingIndex = reactions.findIndex(
-            (r) => r.emoji === selectedEmoji && r.sender.userId === myself.userId
-        );
-        if (existingIndex !== -1) {
-            // Emoji already exists, remove it
-            const updatedReactions = reactions.filter((_, idx) => idx !== existingIndex);
-            setReactions(updatedReactions);
-            if (socket) {
-                socket.emit("message_reaction", {
-                    method_type: "DELETE",
-                    team_id: myself.teamId,
-                    chat_type: chatType,
-                    chat_name: chatName,
-                    chat_id: message.chatId,
-                    thread_id: isThread === true ? message.threadId : message.messageId || 0,
-                    message_id: message.messageId,
-                    message_body: message.content,
-                    message_sender: message.sender,
-                    dm_partner_user_id:
-                        message.sender.userId === myself.userId
-                            ? dmPartnerUser.userId
-                            : myself.userId,
-                    is_thread_binary: isThread === true ? 1 : 0,
-                    reaction_emoji: selectedEmoji,
-                    current_emojis: reactions,
-                    messageSnapshot,
-                });
-
-                // If the reaction is for the first message in the thread,
-                // delete the reaction from the parent message as well
-                if (isThread === true && message.messageId === 1 && chatType !== 3) {
-                    socket.emit("message_reaction", {
-                        method_type: "DELETE",
-                        team_id: myself.teamId,
-                        chat_type: chatType,
-                        chat_name: chatName,
-                        chat_id: message.chatId,
-                        thread_id: message.threadId,
-                        message_id: message.threadId,
-                        message_body: message.content,
-                        message_sender: message.sender,
-                        dm_partner_user_id:
-                            message.sender.userId === myself.userId
-                                ? dmPartnerUser.userId
-                                : myself.userId,
-                        is_thread_binary: 0,
-                        reaction_emoji: selectedEmoji,
-                        current_emojis: reactions,
-                        messageSnapshot,
-                    });
-                }
-
-                // Update the first thread message as well
-                // But not doing this for PM thead.
-                if (isThread === false && numReplies > 0 && chatType !== 3) {
-                    socket.emit("message_reaction", {
-                        method_type: "DELETE",
-                        team_id: myself.teamId,
-                        chat_type: chatType,
-                        chat_name: chatName,
-                        chat_id: message.chatId,
-                        thread_id: message.messageId,
-                        message_id: 1,
-                        message_body: message.content,
-                        message_sender: message.sender,
-                        dm_partner_user_id:
-                            message.sender.userId === myself.userId
-                                ? dmPartnerUser.userId
-                                : myself.userId,
-                        is_thread_binary: 1,
-                        reaction_emoji: selectedEmoji,
-                        current_emojis: reactions,
-                        messageSnapshot,
-                    });
-                }
+        // v3 cutover. The legacy multi-emit `message_reaction` path
+        // (one for the bubble, one for the "first thread message"
+        // mirror at messageId === 1, one for the thread-reply count
+        // broadcast at numReplies > 0) collapses to a single
+        // `channelService.react / .unreact` call. The v3 backend's
+        // `reaction.added` / `reaction.removed` broadcast covers
+        // every visible surface (main pane, thread panel, bubble
+        // counts) off a single Message row, so no mirroring needed.
+        //
+        // Works for both top-level and thread reactions — top-level
+        // messages carry `messageIdWithChatId` (set by
+        // `v3MessageToLegacy`), thread replies carry
+        // `messageIdWithChatIdAndThreadId` (set by
+        // `v3ThreadMessageToLegacy`). Both fields hold the v3 UUID.
+        const v3MessageId = isThread
+            ? (message as ThreadMessageProps).messageIdWithChatIdAndThreadId
+            : (message as MessageProps).messageIdWithChatId;
+        if (v3MessageId) {
+            const v3ChannelId = (message as MessageProps | ThreadMessageProps)
+                .chatId as unknown as string;
+            const channelKind = chatType as ChannelKind;
+            const existingIndex = reactions.findIndex(
+                (r) => r.emoji === selectedEmoji && r.sender.userId === myself.userId
+            );
+            if (existingIndex !== -1) {
+                setReactions(reactions.filter((_, idx) => idx !== existingIndex));
+                void channelService
+                    .unreact(v3MessageId, v3ChannelId, channelKind, selectedEmoji)
+                    .catch((e) => console.error("[EmojiReaction] unreact failed:", e));
+            } else {
+                setReactions([
+                    ...reactions,
+                    {
+                        id: -1,
+                        emoji: selectedEmoji,
+                        sender: myself,
+                        tsSent: getLocalCurrentTimestamp(),
+                    },
+                ]);
+                void channelService
+                    .react(v3MessageId, v3ChannelId, channelKind, selectedEmoji)
+                    .catch((e) => console.error("[EmojiReaction] react failed:", e));
             }
-        } else {
-            // Emoji not in reactions, add it
-            setReactions([
-                ...reactions,
-                {
-                    id: -1,
-                    emoji: selectedEmoji,
-                    sender: myself,
-                    tsSent: getLocalCurrentTimestamp(),
-                },
-            ]);
-            if (socket) {
-                socket.emit("message_reaction", {
-                    method_type: "POST",
-                    team_id: myself.teamId,
-                    chat_type: chatType,
-                    chat_name: chatName,
-                    chat_id: message.chatId,
-                    thread_id: isThread === true ? message.threadId : message.messageId || 0,
-                    message_id: message.messageId,
-                    message_body: message.content,
-                    message_sender: message.sender,
-                    dm_partner_user_id:
-                        message.sender.userId === myself.userId
-                            ? dmPartnerUser.userId
-                            : myself.userId,
-                    is_thread_binary: isThread === true ? 1 : 0,
-                    reaction_emoji: selectedEmoji,
-                    current_emojis: reactions,
-                    messageSnapshot,
-                });
-
-                // Update the parent message as well if it's the first thread message
-                if (isThread === true && message.messageId === 1 && chatType !== 3) {
-                    socket.emit("message_reaction", {
-                        method_type: "POST",
-                        team_id: myself.teamId,
-                        chat_type: chatType,
-                        chat_name: chatName,
-                        chat_id: message.chatId,
-                        thread_id: message.threadId,
-                        message_id: message.threadId,
-                        message_body: message.content,
-                        message_sender: message.sender,
-                        dm_partner_user_id:
-                            message.sender.userId === myself.userId
-                                ? dmPartnerUser.userId
-                                : myself.userId,
-                        is_thread_binary: 0,
-                        reaction_emoji: selectedEmoji,
-                        current_emojis: reactions,
-                        messageSnapshot,
-                        send_activity: false,
-                    });
-                }
-
-                // Update the first thread message as well
-                if (isThread === false && chatType !== 3 && numReplies > 0) {
-                    socket.emit("message_reaction", {
-                        method_type: "POST",
-                        team_id: myself.teamId,
-                        chat_type: chatType,
-                        chat_name: chatName,
-                        chat_id: message.chatId,
-                        thread_id: message.messageId,
-                        message_body: message.content,
-                        message_sender: message.sender,
-                        message_id: 1,
-                        dm_partner_user_id:
-                            message.sender.userId === myself.userId
-                                ? dmPartnerUser.userId
-                                : myself.userId,
-                        is_thread_binary: 1,
-                        reaction_emoji: selectedEmoji,
-                        current_emojis: reactions,
-                        messageSnapshot,
-                        send_activity: false,
-                    });
-                }
-            }
+            return;
         }
+        console.warn("[EmojiReaction] missing v3 messageUuid — cannot react");
+        return;
     };
 
     return (

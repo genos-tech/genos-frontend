@@ -35,6 +35,7 @@ import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../context/AuthContext";
 import { useMentionGroupsContext } from "../../context/MentionGroupsContext";
+import { getFirstLine } from "../../features/chat/utils/common";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
 import { useAnchorClickIntercept } from "../../hooks/common/useAnchorClickIntercept";
@@ -42,6 +43,7 @@ import { useIsMobile } from "../../hooks/common/useIsMobile";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { useTranslation } from "../../i18n";
+import { channelService } from "../../services/channel/channelService";
 import { UserProps } from "../../types/admin";
 import { ChatProps, MessageProps } from "../../types/chat";
 import { EmojiPicker } from "../ui/emoji/EmojiPicker";
@@ -62,8 +64,8 @@ import {
     getBlockTypeSelectItemsWithCodeBlock,
 } from "./sub/codeBlockExtras";
 
-const base_url = import.meta.env.VITE_API_BASE_URL;
-const django_url = import.meta.env.VITE_DJANGO_URL;
+// Chat attachment upload uses channelService.uploadInlineFile (v3); the
+// legacy VITE_API_BASE_URL / VITE_DJANGO_URL upload consts were removed.
 
 type BnUpdateEditorProps = {
     useTEM: TeamManagementState;
@@ -146,30 +148,10 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
 
     const uploadFile = guardUploadFile(
         trackUpload(async (file: File) => {
-            const formData = new FormData();
-            formData.append("team_id", String(myself.teamId));
-            formData.append("chat_type", String(chat.chatType));
-            formData.append("chat_id", String(chat.chatId));
-            formData.append("message_id", String(message.messageId));
-            formData.append("thread_id", "0");
-            formData.append("uploader", myself.userId);
-            formData.append("chat_attachment_file", file);
-            const uploadChatAttachmentResponse = await fetch(`${base_url}/chat/attachment/`, {
-                method: "POST",
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                },
-                body: formData,
-            });
-            const uploadChatAttachmentData = await uploadChatAttachmentResponse.json();
-
-            if (!uploadChatAttachmentResponse.ok) {
-                throw new Error(
-                    uploadChatAttachmentData.message || t.common.editor.attachmentUploadFailed
-                );
-            }
-
-            return `${django_url}${uploadChatAttachmentData.chatAttachmentUrl}`;
+            // v3: compose-time inline upload via the channel-scoped uploader
+            // (returns an absolute URL; no `django_url` prepend). Replaces
+            // the deleted `/chat/attachment/` route.
+            return channelService.uploadInlineFile(String(chat.chatId), file);
         })
     );
 
@@ -230,20 +212,28 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
     }, [message]);
 
     const sendUpdatedMessage = async () => {
-        if (editor.document.length > 1 && socket !== null) {
-            socket.emit("message", {
-                methodType: "PUT",
-                message: editor.document,
-                destCGName: chat.chatName,
-                destCGId: chat.chatId,
-                chatType: chat.chatType,
-                dmPartnerUserId: chat.dmPartnerUser.userId,
-                taskId: message.taskId,
-                taskStatus: message.taskStatus,
-                systemUserId: null,
-                messageIdForPut: message.messageId,
-                isPrivate: chat.isPrivate,
-            });
+        if (editor.document.length <= 1) return;
+        // v3 channelService.edit replaces the legacy
+        // `socket.emit("message", {methodType: "PUT"})`. The v3 emit
+        // acks back the canonical Message and broadcasts
+        // `message.updated` on the channel room — the open chat's
+        // live-update subscription picks up the new body on its own.
+        // PM-specific (`taskId`, `taskStatus`) and routing fields
+        // (`dmPartnerUserId`, `isPrivate`) aren't read by the v3 edit
+        // path; the message's `metadata` JSON already carries them.
+        const v3MessageId = message.messageIdWithChatId;
+        if (!v3MessageId) {
+            console.warn("[bnUpdateEditor] missing v3 messageUuid — cannot edit");
+            return;
+        }
+        try {
+            await channelService.edit(
+                v3MessageId,
+                editor.document,
+                getFirstLine(editor.document[0])
+            );
+        } catch (e) {
+            console.error("[bnUpdateEditor] channelService.edit failed:", e);
         }
     };
 

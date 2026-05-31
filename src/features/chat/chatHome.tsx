@@ -1,3 +1,7 @@
+// `simple-import-sort` and the prettier import-sort plugin disagree on
+// the order of `react` vs `@mui/...`. Prettier wins; disable
+// simple-import-sort.
+/* eslint-disable simple-import-sort/imports */
 import { useEffect, useRef, useState } from "react";
 import { Box, Sheet, Snackbar } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
@@ -14,8 +18,8 @@ import { TaskPreviewPanel } from "./components/panels/TaskPreviewPanel";
 import { ThreadPanel } from "./components/panels/ThreadPanel";
 import { ResizeHandle } from "./components/shared/ResizeHandle";
 import { ChatSidebar } from "./components/sidebar/ChatSidebar";
+import { appendTodoFromMessage } from "./components/todo/services/appendTodoFromMessage";
 import { useChatRouting } from "./hooks/useChatRouting";
-import { appendTodoFromMessage } from "./services/appendTodoFromMessage";
 import { getFirstLine } from "./utils/common";
 
 import { LayoutStyles } from "../../components/ui/styles/commonStyle";
@@ -75,15 +79,17 @@ export const ChatHome = (props: ChatHomeProps) => {
         localStorage.getItem("isToDoVisible") === "true"
     );
 
-    // Custom hooks
-    const { width, height } = useWindowSize();
+    // Custom hooks. `width` from `useWindowSize` is exposed for
+    // future responsive logic but isn't read today; destructure
+    // omits it so ESLint doesn't flag it as unused.
+    const { height } = useWindowSize();
     const { mainChatPanelSize, setMainChatPanelSize, subChatPanelSize, setSubChatPanelSize } =
         usePanelSizes();
     const useTG = useTodoGroups(myself, accessToken, isToDoVisible);
     const { incompleteCount } = useTG;
 
     // URL-based routing
-    const chatRouting = useChatRouting({ useCM, useTM, myself });
+    const chatRouting = useChatRouting({ myself, useCM, useTM });
 
     const [todoFromMessageBubble, setTodoFromMessageBubble] = useState<
         MessageProps | ThreadMessageProps | TaskCommentProps | null
@@ -94,33 +100,34 @@ export const ChatHome = (props: ChatHomeProps) => {
         todoFromMessageBubble: MessageProps | ThreadMessageProps | TaskCommentProps
     ) => {
         let created;
+        // Keys sorted alphabetically per `sort-keys`.
         if ("messageIdWithChatIdAndThreadId" in todoFromMessageBubble) {
             created = await appendTodoFromMessage(accessToken, myself, {
-                chatType: todoFromMessageBubble.chatType,
                 chatId: todoFromMessageBubble.chatId,
-                threadId: todoFromMessageBubble.threadId,
-                messageId: todoFromMessageBubble.messageId,
+                chatType: todoFromMessageBubble.chatType,
                 isThread: true,
+                messageId: todoFromMessageBubble.messageId,
                 messageText: getFirstLine(todoFromMessageBubble.content[0]),
+                threadId: todoFromMessageBubble.threadId,
             });
         } else if ("messageIdWithChatId" in todoFromMessageBubble) {
             created = await appendTodoFromMessage(accessToken, myself, {
-                chatType: todoFromMessageBubble.chatType,
                 chatId: todoFromMessageBubble.chatId,
-                threadId: null,
-                messageId: todoFromMessageBubble.messageId,
+                chatType: todoFromMessageBubble.chatType,
                 isThread: false,
+                messageId: todoFromMessageBubble.messageId,
                 messageText: getFirstLine(todoFromMessageBubble.content[0]),
+                threadId: null,
             });
         } else if ("commentId" in todoFromMessageBubble) {
             if (!todoFromMessageBubble.projectId) return;
             created = await appendTodoFromMessage(accessToken, myself, {
-                chatType: 3,
                 chatId: todoFromMessageBubble.projectId,
-                threadId: todoFromMessageBubble.taskId,
-                messageId: todoFromMessageBubble.commentId,
+                chatType: 3,
                 isThread: true,
+                messageId: todoFromMessageBubble.commentId,
                 messageText: getFirstLine(todoFromMessageBubble.commentBody[0]),
+                threadId: todoFromMessageBubble.taskId,
             });
         }
 
@@ -162,6 +169,10 @@ export const ChatHome = (props: ChatHomeProps) => {
         if (todoFromMessageBubble) {
             handleAppendTodo(todoFromMessageBubble);
         }
+        // Intentional: only re-run when the bubble changes — including
+        // `handleAppendTodo` would re-fire on every render (it's
+        // re-derived each time).
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [todoFromMessageBubble]);
 
     useEffect(() => {
@@ -170,27 +181,43 @@ export const ChatHome = (props: ChatHomeProps) => {
 
     useEffect(() => {
         if (useCM.currentMainChat) {
-            if (currentMainChatId !== useCM.currentMainChat.chatId) {
-                setCurrentMainChatId(useCM.currentMainChat.chatId);
+            // PUNCH LIST (v3 chatId migration): `useCM.currentMainChat.chatId`
+            // is `string` post-flip; the legacy `currentMainChatId` state +
+            // the downstream `MainChatPane.currentMainChatId: number`
+            // signature haven't migrated yet. Cast at the boundary to
+            // keep TS quiet — string-disguised-as-number rides through
+            // to consumers and gets re-stringified for IDB / URL
+            // composite keys. Flipping the state to `string` AND every
+            // consumer's signature is a coordinated multi-file change
+            // for a follow-on session.
+            const mainChatIdAsNumber = useCM.currentMainChat.chatId as unknown as number;
+            if (currentMainChatId !== mainChatIdAsNumber) {
+                setCurrentMainChatId(mainChatIdAsNumber);
             }
             if (useCM.currentMainChat.project && useCM.currentMainChat.project.projectId) {
                 usePM.setCurrentProject(useCM.currentMainChat.project);
             }
         }
+        // Intentional: only re-sync the chat-id mirror when the live
+        // chat changes. `currentMainChatId` is set inside the effect
+        // (would loop on inclusion) and `usePM.setCurrentProject` is
+        // a stable setter not worth a dep.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [useCM.currentMainChat]);
 
     useEffect(() => {
         if (useCM.currentSubChat) {
-            if (
-                useCM.currentSubChat !== undefined &&
-                currentSubChatId !== useCM.currentSubChat.chatId
-            ) {
-                setCurrentSubChatId(useCM.currentSubChat.chatId);
+            // Same v3 chatId boundary as the main-chat effect above.
+            const subChatIdAsNumber = useCM.currentSubChat.chatId as unknown as number;
+            if (useCM.currentSubChat !== undefined && currentSubChatId !== subChatIdAsNumber) {
+                setCurrentSubChatId(subChatIdAsNumber);
             }
             if (useCM.currentSubChat?.project && useCM.currentSubChat.project.projectId) {
                 usePM.setCurrentProject(useCM.currentSubChat.project);
             }
         }
+        // Same reasoning as the main-chat effect above.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [useCM.currentSubChat]);
 
     useEffect(() => {
@@ -289,13 +316,13 @@ export const ChatHome = (props: ChatHomeProps) => {
                                     <Sheet
                                         sx={{
                                             position: { xs: "fixed", sm: "sticky" },
+                                            top: 10,
                                             transform: {
                                                 xs: "translateX(calc(100% * (var(--MessagesPane-slideIn, 0) - 1)))",
                                                 sm: "none",
                                             },
                                             transition: "transform 0.4s, width 0.4s",
                                             zIndex: 100,
-                                            top: 10,
                                         }}
                                     >
                                         <ChatSidebar

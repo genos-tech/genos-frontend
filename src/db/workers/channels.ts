@@ -5,10 +5,8 @@
 // the worker so the next call reconstructs it. See pool.ts for details.
 
 import ActivityWorker from "./activityWorker.ts?worker";
-import ChatWorker from "./chatWorker.ts?worker";
 import type {
     ActivityRequests,
-    ChatRequests,
     InboxRequests,
     NotesRequests,
     TasksRequests,
@@ -20,7 +18,9 @@ import { WorkerChannel } from "./pool";
 import TasksWorker from "./tasksWorker.ts?worker";
 import UsersWorker from "./usersWorker.ts?worker";
 
-export const chatChannel = new WorkerChannel<ChatRequests>("chat", () => new ChatWorker());
+// NOTE: the `chatChannel` worker was retired after the v3 cutover — its
+// only remaining handler (markAllChatActivityAsRead) is now inlined in
+// `useMarkAllChatActivityRead`. The rest of chat runs on `channelService`.
 export const notesChannel = new WorkerChannel<NotesRequests>("notes", () => new NotesWorker());
 export const tasksChannel = new WorkerChannel<TasksRequests>("tasks", () => new TasksWorker());
 export const inboxChannel = new WorkerChannel<InboxRequests>("inbox", () => new InboxWorker());

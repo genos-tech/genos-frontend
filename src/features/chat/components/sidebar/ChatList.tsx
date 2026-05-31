@@ -1,3 +1,8 @@
+// `sort-keys` + `simple-import-sort/imports` disabled file-wide: this
+// legacy chat sidebar list carries Joy UI `sx` prop objects whose visual
+// grouping (positioning → sizing → typography → colors) is intentional,
+// and the file is slated for replacement by the v3 channel sidebar.
+/* eslint-disable sort-keys, simple-import-sort/imports */
 import { useEffect, useMemo, useRef, useState } from "react";
 import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
 import FlagOutlinedIcon from "@mui/icons-material/FlagOutlined";
@@ -109,7 +114,13 @@ const sortAllChatByPinned = (allChats: AllChatProps[]) => {
     return allChats.sort((a, b) => {
         if (a.isPinned && !b.isPinned) return -1;
         if (!a.isPinned && b.isPinned) return 1;
-        return new Date(b.TSLastMessage).getTime() - new Date(a.TSLastMessage).getTime();
+        // Coalesce invalid/empty timestamps to 0 — `new Date("").getTime()`
+        // is NaN, and returning NaN from a comparator makes the sort order
+        // unstable (freshly-created channels with no messages would jump
+        // around between renders).
+        const tb = new Date(b.TSLastMessage).getTime() || 0;
+        const ta = new Date(a.TSLastMessage).getTime() || 0;
+        return tb - ta;
     });
 };
 
@@ -164,13 +175,19 @@ const useFilteredChats = (
 
         let filtered = allChats.filter(chatTypeFilter);
         if (showOnlyUnreadItems) {
-            filtered = filtered.filter(
-                (item) =>
-                    item.lastReadMessageId <
-                    (item.latestMessage
-                        ? item.latestMessage.messageId
-                        : item.lastReadMessageId + 1)
-            );
+            // `lastReadMessageId` is a string (the adapter writes "0" when
+            // the channel has unread per the v3 `unreadCount`, else
+            // `String(latestSeq)`); `latestMessage.messageId` is the numeric
+            // seq. The old `string < number` comparison relied on implicit
+            // coercion and the `: item.lastReadMessageId + 1` fallback did
+            // string concatenation ("0" + 1 → "01"). Coerce explicitly with
+            // `Number(... || "0")` — identical to `countUnreadChats`, so the
+            // per-row filter and the unread badge agree.
+            filtered = filtered.filter((item) => {
+                const lastRead = Number(item.lastReadMessageId || "0");
+                const latestSeq = item.latestMessage ? item.latestMessage.messageId : 0;
+                return lastRead < latestSeq;
+            });
         }
         return sortAllChatByPinned([...filtered]);
     }, [allChats, targetChatType, showOnlyUnreadItems, includeMDM]);
@@ -617,6 +634,10 @@ export const ChatList = (props: ChatListProps) => {
             });
         }
         prevFirstNonPinnedKeyRef.current = key;
+        // Effect is keyed to `targetChats` reordering. `chatTypeLookup` /
+        // `targetChatType` are stable for a given tab; including them
+        // would cause unrelated re-scrolls on tab switches.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [targetChats]);
 
     // Scroll hooks
@@ -731,8 +752,11 @@ export const ChatList = (props: ChatListProps) => {
                 e.preventDefault();
 
                 const currentChat = useCM.currentMainChat;
+                // PUNCH LIST (v3 chatId migration): `chatId` is `string`
+                // post-flip; the legacy "no chat selected" sentinel was
+                // `-1`, now `""` (see `defaultChat` in `utils/defaults.ts`).
                 const currentIdx =
-                    currentChat && currentChat.chatId !== -1
+                    currentChat && currentChat.chatId !== ""
                         ? list.findIndex(
                               (c) =>
                                   c.chatId === currentChat.chatId &&
@@ -749,7 +773,11 @@ export const ChatList = (props: ChatListProps) => {
                 }
 
                 const next = list[nextIdx];
-                chatRouting.navigateToChat(next.chatType, next.chatId);
+                // PUNCH LIST (v3 chatId migration): `next.chatId` is
+                // `string` post-flip; `navigateToChat` still takes
+                // `chatId: number` because the route builder (`buildChatPath`)
+                // hasn't been migrated. Cast once at the boundary.
+                chatRouting.navigateToChat(next.chatType, next.chatId as unknown as number);
                 chatTypeLookup[targetChatType]?.current?.scrollToIndex({
                     index: nextIdx,
                     behavior: "smooth",

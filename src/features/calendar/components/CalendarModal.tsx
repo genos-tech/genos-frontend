@@ -22,6 +22,7 @@ import { useAuth } from "../../../context/AuthContext";
 import { useCalendarViewPreference } from "../../../hooks/common/useCalendarViewPreference";
 import { useTranslation } from "../../../i18n";
 import { CalendarEventModal } from "../../integrations/components/CalendarEventModal";
+import { ReconnectGoogleCalendarButton } from "../../integrations/components/ReconnectGoogleCalendarButton";
 import { CalendarEvent, listEvents } from "../../integrations/services/calendar";
 import {
     findGoogleConnection,
@@ -113,6 +114,10 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
     const [error, setError] = useState<string | null>(null);
     const [needsConnect, setNeedsConnect] = useState(false);
     const [needsScope, setNeedsScope] = useState(false);
+    // Connected + scoped on paper, but a live event fetch came back
+    // `google_reauth_required` — the stored refresh token is dead. The
+    // connection probe (DB scopes) can't see this; only the fetch can.
+    const [needsReconnect, setNeedsReconnect] = useState(false);
 
     // Per-(view, range-start) cache. Switching views or paging
     // back to a previously-viewed window doesn't refetch.
@@ -148,6 +153,7 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
         let cancelled = false;
         setNeedsConnect(false);
         setNeedsScope(false);
+        setNeedsReconnect(false);
         (async () => {
             const res: ConnectionsResponse | null = await listConnections(accessToken);
             if (cancelled) return;
@@ -184,6 +190,14 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
             );
             if (cancelled) return;
             setLoading(false);
+            if (res === "google_reauth_required") {
+                // Dead refresh token. Clear the generic error (already
+                // set by listEvents) so the reconnect prompt is the
+                // single, actionable message.
+                setError(null);
+                setNeedsReconnect(true);
+                return;
+            }
             if (!res || typeof res === "string") return;
             const items = res.items || [];
             cacheRef.current.set(cacheKey, items);
@@ -221,6 +235,11 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
                 setError
             );
             setLoading(false);
+            if (res === "google_reauth_required") {
+                setError(null);
+                setNeedsReconnect(true);
+                return;
+            }
             if (!res || typeof res === "string") return;
             const items = res.items || [];
             cacheRef.current.set(cacheKey, items);
@@ -439,7 +458,25 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
                     </Alert>
                 )}
 
-                {!needsConnect && !needsScope && (
+                {needsReconnect && accessToken && (
+                    <Alert color="warning" sx={{ mb: 1.5, flexShrink: 0 }}>
+                        <Stack
+                            direction="row"
+                            alignItems="center"
+                            spacing={1.5}
+                            sx={{ width: "100%" }}
+                        >
+                            <Box sx={{ flex: 1 }}>{t.calendar.reauthPrompt}</Box>
+                            <ReconnectGoogleCalendarButton
+                                accessToken={accessToken}
+                                label={t.calendar.reconnectButton}
+                                size="sm"
+                            />
+                        </Stack>
+                    </Alert>
+                )}
+
+                {!needsConnect && !needsScope && !needsReconnect && (
                     <>
                         {view === "month" ? (
                             <MonthView

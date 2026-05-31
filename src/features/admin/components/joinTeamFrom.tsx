@@ -28,15 +28,7 @@ import { useAuth } from "../../../context/AuthContext";
 import { wsJoinTeamHook } from "../../../hooks/common/useWebSocket";
 import { useTranslation } from "../../../i18n";
 import { purplePalette } from "../../../theme/purplePalette";
-import {
-    CreateDMResponse,
-    CreateTeamResponse,
-    FindTeamResponse,
-    Team,
-} from "../../../types/admin";
-import { sleepMilliSeconds } from "../../../utils/sleep";
-import { createDMChat } from "../../chat/services/createDMChat";
-import { sendDMMessage } from "../../chat/services/sendDMMessage";
+import { CreateTeamResponse, FindTeamResponse, Team } from "../../../types/admin";
 import { createTeam } from "../services/createTeam";
 import { findTeam } from "../services/findTeam";
 import { joinTeam } from "../services/joinTeam";
@@ -109,44 +101,7 @@ export const JoinTeam = () => {
             localStorage.setItem("teamName", teamName);
 
             if (joinTeamRes) {
-                const createDmRes: CreateDMResponse = await createDMChat(
-                    accessToken,
-                    teamId,
-                    userId,
-                    userId,
-                    setMoveToTeamErrorMessage
-                );
-
-                if (createDmRes && createDmRes.dm_exists === false) {
-                    const initMessageBody = [
-                        {
-                            type: "paragraph",
-                            content: [
-                                { type: "text", text: t.admin.joinTeam.hasJoined, styles: {} },
-                            ],
-                        },
-                        {
-                            type: "paragraph",
-                            content: [{ type: "text", text: "", styles: {} }],
-                        },
-                    ];
-
-                    await sendDMMessage(
-                        accessToken,
-                        createDmRes.dm_id,
-                        createDmRes.user_1_id,
-                        createDmRes.user_2_id,
-                        initMessageBody,
-                        setMoveToTeamErrorMessage,
-                        true
-                    );
-
-                    await sleepMilliSeconds(100);
-
-                    navigate("/workspace");
-                } else {
-                    navigate("/workspace");
-                }
+                navigate("/workspace");
             }
         }
     };

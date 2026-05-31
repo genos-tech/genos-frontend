@@ -122,10 +122,11 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                     targetIndex = useCM.currentThreadChat?.messages.length - 1;
                 } else if (
                     messageManagement.indexMap &&
-                    messageManagement.indexMap[useCM.currentThreadChat?.moveToSpecificIndex] &&
-                    useCM.currentThreadChat?.chatId ===
-                        Number(useCM.currentThreadChat?.moveToSpecificIndex?.split("-")[0])
+                    messageManagement.indexMap[useCM.currentThreadChat?.moveToSpecificIndex] !==
+                        undefined
                 ) {
+                    // v3 `moveToSpecificIndex` is the v3 UUID; the
+                    // `indexMap[uuid]` lookup is enough validation.
                     targetIndex = Number(
                         messageManagement.indexMap[useCM.currentThreadChat?.moveToSpecificIndex]
                     );

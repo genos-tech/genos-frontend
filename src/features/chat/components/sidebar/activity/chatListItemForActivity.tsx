@@ -1,3 +1,11 @@
+// `sort-keys` + `react/jsx-sort-props` disabled file-wide: this 660+
+// line legacy activity list item carries ~45 violations in Joy UI
+// `sx` prop objects and prop lists whose visual grouping is intentional
+// and not worth re-sorting given the surface is legacy chat code
+// slated for replacement by the v3 channel UI. `simple-import-sort`
+// disabled because the prettier import-sort plugin disagrees with it
+// on react-vs-@mui ordering.
+/* eslint-disable sort-keys, react/jsx-sort-props, simple-import-sort/imports */
 import * as React from "react";
 import { Box, ListDivider, ListItem, Stack } from "@mui/joy";
 import ListItemButton from "@mui/joy/ListItemButton";
@@ -17,6 +25,7 @@ import {
     ActivityMessageProps,
     AllChatProps,
     ChatProps,
+    MessageProps,
     ThreadMessageProps,
     ThreadProps,
 } from "../../../../../types/chat";
@@ -27,8 +36,9 @@ import { toggleMessagesPane } from "../../../../../utils/sidebarUtils";
 import { loadSpecificNote } from "../../../../notes/common/services/loadSpecificNote";
 import { loadSpecificTask } from "../../../../tasks/services/loadSpecificTask";
 import { useActivityStatus } from "../../../hooks/useActivityStatus";
-import { loadSpecificThreadMessages } from "../../../services/loadSpecificThreadMessages";
-import { popSpecificMessages } from "../../../services/popSpecificMessages";
+import { loadV3SpecificMessages } from "../../../services/loadV3SpecificMessages";
+import { loadV3SpecificThreadMessages } from "../../../services/loadV3SpecificThreadMessages";
+import { resolveV3ThreadRootUuid } from "../../../utils/channelIdResolvers";
 import { ActivityContent } from "./ActivityContent";
 import { ActivityHeader } from "./ActivityHeader";
 
@@ -132,10 +142,31 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
     };
     const noteTypeForActivity = NOTE_CHAT_TYPE_TO_NOTE_TYPE[activity.chatType];
 
-    const defineNewChat = (messages: any, moveToSpecificIndex: string) => {
+    // chatType → URL path segment. Mirrors `MessageBubble.handleMessageClick`
+    // so activity-click navigation lands on the same canonical URL the
+    // chat-list click does — that's what `useChatRouting` watches to
+    // resolve focus through `resolveV3MessageUuid`.
+    const CHAT_TYPE_PATH: Record<number, string> = {
+        1: "dm",
+        2: "gm",
+        3: "pm",
+        4: "mdm",
+    };
+
+    const defineNewChat = (
+        messages: MessageProps[],
+        moveToSpecificIndex: string,
+        v3ChannelUuid?: string
+    ) => {
         const chatType: number = isTaskComment ? 3 : activity.chatType;
+        // v3-shape callers pass the resolved v3 channel UUID so the
+        // built `ChatProps` keys into `allChats` (UUID-keyed via
+        // `loadV3Chats`) and downstream `channelService.send` doesn't
+        // 404 against a legacy int. Falls back to the legacy int when
+        // not provided.
+        const activityChatIdStr = v3ChannelUuid ?? String(activity.chatId);
         const currentChat: AllChatProps = useCM.allChats.filter(
-            (chat) => chat.chatType === chatType && chat.chatId === activity.chatId
+            (chat) => chat.chatType === chatType && chat.chatId === activityChatIdStr
         )[0];
         // For DMs (and MDMs) the activity payload's `chatName` / `dmPartnerUser*`
         // are sender-centric: the sender's UI passes their own view of the
@@ -144,8 +175,16 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
         // (from `useCM.allChats`) is server-resolved per-user, so prefer it
         // whenever it's available — fall back to the activity payload only
         // when allChats hasn't synced yet.
+        // `lastReadMessageId` is `string` post-flip; compare-as-numbers
+        // for legacy stringified ints, fall back to the activity's
+        // messageId on first read. NaN-on-UUID lands on the activity
+        // side, which is the safer side of the migration gap.
+        const previousLastRead = Number(currentChat?.lastReadMessageId || "0");
+        const nextLastRead = Number.isFinite(previousLastRead)
+            ? Math.max(previousLastRead, activity.messageId)
+            : activity.messageId;
         const newChat: ChatProps = {
-            chatId: activity.chatId,
+            chatId: activityChatIdStr,
             chatName: currentChat?.chatName ?? activity.chatName,
             chatType: chatType,
             dmPartnerUser: currentChat?.dmPartnerUser ?? {
@@ -158,12 +197,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                 tsLastSeen: "",
                 tsJoined: "",
             },
-            lastReadMessageId:
-                currentChat && currentChat.lastReadMessageId
-                    ? activity.messageId > currentChat.lastReadMessageId
-                        ? activity.messageId
-                        : currentChat.lastReadMessageId
-                    : activity.messageId,
+            lastReadMessageId: String(nextLastRead),
             messages: messages,
             latestMessage: messages[messages.length - 1],
             latestMessageText: messages[messages.length - 1].contentText,
@@ -191,11 +225,11 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
             `${useCM.currentSubChat?.chatId}-${useCM.currentSubChat?.chatName}` ===
                 `${activity.chatId}-${activity.chatName}`;
 
-        const handleMessages = (messages: any) => {
+        const handleMessages = (messages: MessageProps[], v3ChannelUuid: string) => {
             if (shouldUseMainChat) {
-                useCM.setCurrentMainChat(defineNewChat(messages, messageUniqueKey));
+                useCM.setCurrentMainChat(defineNewChat(messages, messageUniqueKey, v3ChannelUuid));
             } else if (shouldUseSubChat) {
-                useCM.setCurrentSubChat(defineNewChat(messages, messageUniqueKey));
+                useCM.setCurrentSubChat(defineNewChat(messages, messageUniqueKey, v3ChannelUuid));
             }
             useCM.setIsMainChatVisible(true);
             if (useTM.isCreatingTask.flag === true || useTM.isTaskPreviewVisible) {
@@ -205,9 +239,33 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
 
         toggleMessagesPane();
 
+        // Post v3 activity rebuild: `activity.chatId` is already the
+        // v3 Channel UUID (the adapter casts it through the legacy
+        // `number` slot). No legacy-int → UUID resolution needed.
         try {
-            const messages = await popSpecificMessages(activity.chatId, chatType);
-            handleMessages(messages);
+            const v3ChannelUuid = String(activity.chatId);
+            if (!v3ChannelUuid) {
+                console.warn("[chatListItemForActivity] empty activity.chatId");
+                return;
+            }
+            const messages = await loadV3SpecificMessages(v3ChannelUuid, chatType);
+            handleMessages(messages, v3ChannelUuid);
+
+            // Sync the URL so `useChatRouting` picks the focus target up
+            // through `resolveV3MessageUuid` — that path is what the
+            // legacy chat-list click already used and what the bubble
+            // renderer's `focusKey` ultimately reads. Without this nav,
+            // an activity click in a chat that's already open updates
+            // `moveToSpecificIndex` via the local `setCurrentMainChat`
+            // but a later URL-driven sync can clobber it; for PM the
+            // URL `messageId` segment is the task id (matches
+            // `MessageBubble.handleMessageClick`).
+            const typePath = CHAT_TYPE_PATH[chatType];
+            const idForUrl =
+                chatType === 3 && activity.taskId ? activity.taskId : activity.messageId;
+            if (typePath && idForUrl && !isThread) {
+                navigate(`/workspace/chat/${typePath}/${v3ChannelUuid}/message/${idForUrl}`);
+            }
         } catch (error) {
             console.error(error);
         }
@@ -243,8 +301,16 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
         if (shouldUseMainChat) {
             toggleMessagesPane();
             try {
-                const messages = await popSpecificMessages(activity.chatId, 3);
-                useCM.setCurrentMainChat(defineNewChat(messages, activity.messageUniqueKey));
+                // v3-native: activity.chatId IS the PM channel UUID.
+                const v3ChannelUuid = String(activity.chatId);
+                if (!v3ChannelUuid) {
+                    console.warn("[chatListItemForActivity] empty PM activity.chatId");
+                    return;
+                }
+                const messages = await loadV3SpecificMessages(v3ChannelUuid, 3);
+                useCM.setCurrentMainChat(
+                    defineNewChat(messages, activity.messageUniqueKey, v3ChannelUuid)
+                );
 
                 if (activity.projectId) {
                     setCurrentProject({
@@ -262,13 +328,20 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                     loadTask();
                     useTM.setCurrentPreviewTaskId(activity.taskId);
 
-                    const threadMessages: ThreadMessageProps[] = await loadSpecificThreadMessages(
-                        myself,
-                        3,
-                        activity.chatId,
-                        activity.taskId,
-                        accessToken
-                    );
+                    // PM thread root: the message whose `taskId === activity.taskId`.
+                    // `activity.chatId` is the v3 PM Channel UUID directly.
+                    const v3ChannelUuid = String(activity.chatId);
+                    const v3ThreadRootUuid = v3ChannelUuid
+                        ? resolveV3ThreadRootUuid(v3ChannelUuid, activity.taskId, true)
+                        : null;
+                    const threadMessages: ThreadMessageProps[] =
+                        v3ChannelUuid && v3ThreadRootUuid
+                            ? await loadV3SpecificThreadMessages(
+                                  v3ChannelUuid,
+                                  v3ThreadRootUuid,
+                                  3
+                              )
+                            : [];
 
                     if (threadMessages && threadMessages.length > 0) {
                         const newThread: ThreadProps = {
@@ -317,22 +390,38 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
     // Handle thread message activity
     const handleThreadMessageActivity = async () => {
         try {
-            const threadMessages: ThreadMessageProps[] = await loadSpecificThreadMessages(
-                myself,
-                activity.chatType,
-                activity.chatId,
-                activity.threadId,
-                accessToken
-            );
+            // v3-native: activity.chatId is the v3 Channel UUID, and
+            // activity.threadId is the v3 parent-message UUID (set by
+            // the v3 → legacy activity adapter for non-PM kinds). For
+            // PM, `threadId` is still the task id (legacy seq-key);
+            // the resolver disambiguates via `isPm`.
+            const v3ChannelUuid = String(activity.chatId);
+            const v3ThreadRootUuid =
+                activity.chatType === 3
+                    ? v3ChannelUuid
+                        ? resolveV3ThreadRootUuid(v3ChannelUuid, activity.taskId, true)
+                        : null
+                    : String(activity.threadId) || null;
+            const threadMessages: ThreadMessageProps[] =
+                v3ChannelUuid && v3ThreadRootUuid
+                    ? await loadV3SpecificThreadMessages(
+                          v3ChannelUuid,
+                          v3ThreadRootUuid,
+                          activity.chatType
+                      )
+                    : [];
 
             if (threadMessages && threadMessages.length > 0) {
                 // Same sender-centric issue as in `defineNewChat`: for DM
                 // threads the activity payload's chatName + dmPartnerUser*
                 // are wrong from the receiver's POV. Prefer the server-
                 // resolved per-user fields from `useCM.allChats`.
+                // Same v3 chatId boundary as above — see note in
+                // `defineNewChat`.
                 const currentChat: AllChatProps | undefined = useCM.allChats.find(
                     (chat) =>
-                        chat.chatType === activity.chatType && chat.chatId === activity.chatId
+                        chat.chatType === activity.chatType &&
+                        chat.chatId === String(activity.chatId)
                 );
                 const newThread: ThreadProps = {
                     chatId: activity.chatId,

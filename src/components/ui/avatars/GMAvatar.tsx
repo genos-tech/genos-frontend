@@ -47,7 +47,13 @@ export const GMAvatar = (props: GMAvatarProps) => {
     // `?v=` cache buster — see `gmProfileImageVersion` for the
     // module-level pub-sub. Bumps on every successful upload so the
     // browser refetches even when the backend reuses the filename.
-    const imageVersion = useGMProfileImageVersion(gmChat.chatType, gmChat.chatId);
+    // PUNCH LIST (v3 chatId migration): `gmChat.chatId` is `string`
+    // post-flip; `useGMProfileImageVersion` still keys by numeric chatId
+    // (legacy pub-sub channel). Cast once at the boundary.
+    const imageVersion = useGMProfileImageVersion(
+        gmChat.chatType,
+        gmChat.chatId as unknown as number
+    );
     const avatarSrc = liveChat.profileImagePath
         ? `${media_url}/${liveChat.profileImagePath}${imageVersion > 0 ? `?v=${imageVersion}` : ""}`
         : undefined;

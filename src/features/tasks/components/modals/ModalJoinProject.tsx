@@ -8,15 +8,11 @@ import { Alert, Box, Button, Modal, ModalDialog, Stack, Typography } from "@mui/
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
-import { loadSpecificPM } from "../../../../features/chat/services/loadSpecificPM";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
-import { AllChatProps, ChatProps } from "../../../../types/chat";
 import { ProjectProps } from "../../../../types/tasks";
-import { addChat } from "../../../chat/services/addChat";
-import { addMessage } from "../../../chat/services/addMessage";
 
 const fadeIn = keyframes`
     from { opacity: 0; transform: scale(0.95) translateY(-10px); }
@@ -170,38 +166,14 @@ export const ModalJoinProject: React.FC<Props> = ({
                                 projectTags: [],
                                 systemUserId: openJoinProject.systemUserId,
                             });
-                            (async () => {
-                                const loadedChat: ChatProps[] = await loadSpecificPM(
-                                    myself.teamId,
-                                    myself.teamName,
-                                    myself.userId,
-                                    openJoinProject.projectId,
-                                    accessToken
-                                );
-                                if (loadedChat) {
-                                    const sortedMessages = loadedChat[0].messages.sort(
-                                        (a, b) => a.messageId - b.messageId
-                                    );
-                                    const newChat: AllChatProps = {
-                                        chatType: 3,
-                                        chatId: loadedChat[0].chatId,
-                                        chatName: loadedChat[0].chatName,
-                                        lastReadMessageId: loadedChat[0].lastReadMessageId,
-                                        dmPartnerUser: loadedChat[0].dmPartnerUser,
-                                        latestMessage: loadedChat[0].latestMessage,
-                                        latestMessageText: loadedChat[0].latestMessageText,
-                                        TSLastMessage: loadedChat[0].TSLastMessage,
-                                        isPrivate: loadedChat[0].isPrivate,
-                                        profileImagePath: loadedChat[0].profileImagePath,
-                                        isPinned: loadedChat[0].isPinned,
-                                        tsLastAllReadActivity: loadedChat[0].tsLastAllReadActivity,
-                                    };
-                                    await addChat(newChat, newChat.chatType);
-                                    await addMessage(newChat.latestMessage, newChat.chatType);
-
-                                    useCM.setAllChats([newChat, ...useCM.allChats]);
-                                }
-                            })();
+                            // v3 source. The PM channel is added to the
+                            // joiner's `user:{userId}` room via the
+                            // backend's join hook, which broadcasts
+                            // `channel.created` (or `channel.member_added`
+                            // if the channel already existed). The v3
+                            // subscription in `useChatManagement` picks
+                            // it up and re-derives `allChats` — no
+                            // manual REST refresh of the chat row needed.
                         } else {
                             console.error("Failed to join the project");
                         }

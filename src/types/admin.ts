@@ -81,15 +81,6 @@ export type CreateTeamResponse = {
     hint: string | null;
 };
 
-export type CreateDMResponse = {
-    dm_id: number;
-    dm_exists: boolean;
-    ts_created_at: string;
-    ts_updated_at: string;
-    user_1_id: string;
-    user_2_id: string;
-};
-
 export type ProjectProfileProps = {
     projectId: number;
     projectName: string;

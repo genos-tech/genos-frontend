@@ -284,10 +284,14 @@ function groupChatNotes(
             (c) => c.chatType === note.chatType && c.chatId === note.chatId
         );
         if (!chatGroup) {
+            // PUNCH LIST (v3 chatId migration): `AllChatProps.chatId` is
+            // `string` post-flip; `note.chatId` is still `number` (legacy
+            // note schema). Stringify at the comparison.
             const resolvedName =
                 note.chatName ||
-                allChats.find((c) => c.chatType === note.chatType && c.chatId === note.chatId)
-                    ?.chatName ||
+                allChats.find(
+                    (c) => c.chatType === note.chatType && c.chatId === String(note.chatId)
+                )?.chatName ||
                 `${chatTypeName} ${note.chatId}`;
             chatGroup = {
                 chatId: note.chatId,

@@ -1,16 +1,12 @@
 import { useState } from "react";
 
-import { ChatService } from "../../../db/services/chat.service";
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { TaskManagementState } from "../../../hooks/tasks/useTaskManagement";
+import { channelService } from "../../../services/channel/channelService";
 import { UserProps } from "../../../types/admin";
 import { AllChatProps, ChatProps, MessageProps } from "../../../types/chat";
 import { toggleMessagesPane } from "../../../utils/sidebarUtils";
-import { addChat } from "../services/addChat";
-import { addMessage } from "../services/addMessage";
-import { loadMDMHistory } from "../services/loadMDMHistory";
-import { popSpecificMessages } from "../services/popSpecificMessages";
-import { updatePinnedChats } from "../services/updatePinnedChats";
+import { loadV3SpecificMessages } from "../services/loadV3SpecificMessages";
 
 interface UseChatListItemProps {
     chat: AllChatProps;
@@ -18,7 +14,6 @@ interface UseChatListItemProps {
     useCM: ChatManagementState;
     useTM: TaskManagementState;
     isPinnedChat: boolean;
-    accessToken: string;
 }
 
 export const useChatListItem = ({
@@ -27,7 +22,6 @@ export const useChatListItem = ({
     useCM,
     useTM,
     isPinnedChat,
-    accessToken,
 }: UseChatListItemProps) => {
     const [isPinned, setIsPinned] = useState(chat.isPinned);
 
@@ -40,49 +34,31 @@ export const useChatListItem = ({
 
     const isYou = myself.userId === chat.dmPartnerUser.userId;
 
-    const defineNewChat = (messages: any): ChatProps => {
+    // `chat.chatId` is the v3 UUID string. `lastReadMessageId` is
+    // stringified to match the v3 `ChatProps.lastReadMessageId: string`
+    // shape; `""` is the new "no last-read" sentinel (replaces legacy
+    // `-1`).
+    const v3ChannelId = chat.chatId;
+
+    // Keys sorted alphabetically per `sort-keys`.
+    const defineNewChat = (messages: MessageProps[]): ChatProps => {
         const lastMsg = messages.length > 0 ? messages[messages.length - 1] : chat.latestMessage;
         return {
             chatId: chat.chatId,
             chatName: chat.chatName,
             chatType: chat.chatType,
             dmPartnerUser: chat.dmPartnerUser,
-            lastReadMessageId: lastMsg?.messageId ?? -1,
-            messages: messages,
+            isPinned: chat.isPinned,
+            isPrivate: chat.isPrivate,
+            lastReadMessageId: lastMsg?.messageId != null ? String(lastMsg.messageId) : "",
             latestMessage: chat.latestMessage,
             latestMessageText: chat.latestMessageText,
-            TSLastMessage: chat.TSLastMessage,
-            systemUserId: chat.systemUserId,
-            project: chat.project,
-            isPrivate: chat.isPrivate,
+            messages: messages,
             profileImagePath: chat.profileImagePath,
-            isPinned: chat.isPinned,
+            project: chat.project,
+            systemUserId: chat.systemUserId,
+            TSLastMessage: chat.TSLastMessage,
         };
-    };
-
-    const loadMDMMessagesFromBackend = async (chatId: number): Promise<MessageProps[]> => {
-        try {
-            const data = await loadMDMHistory(
-                myself.teamId,
-                myself.teamName,
-                myself.userId,
-                accessToken,
-                chatId
-            );
-            const mdmChat = data?.chat_history?.[0];
-            if (mdmChat?.messages?.length > 0) {
-                const sorted = [...mdmChat.messages].sort(
-                    (a: MessageProps, b: MessageProps) => a.messageId - b.messageId
-                );
-                for (const msg of sorted) {
-                    await addMessage(msg, 4);
-                }
-                return sorted;
-            }
-        } catch (e) {
-            console.error("Failed to load MDM messages from backend:", e);
-        }
-        return [];
     };
 
     const onClickHandler = (useCM: ChatManagementState) => {
@@ -92,26 +68,18 @@ export const useChatListItem = ({
                 `${chat.chatType}-${chat.chatId}-${chat.chatName}`
         ) {
             toggleMessagesPane();
-            popSpecificMessages(chat.chatId, chat.chatType)
+            // v3 cutover: was `popSpecificMessages(chatIdLegacy, chatType)`
+            // (legacy worker IDB pop with `chat.chatId as unknown as number`,
+            // which NaN'd for UUIDs and returned `[]` — leaving the open
+            // chat empty). The legacy MDM `/history/` fallback for empty
+            // results is also gone; `loadV3SpecificMessages` handles every
+            // kind uniformly through channelService.
+            loadV3SpecificMessages(v3ChannelId, chat.chatType)
                 .then(async (messages) => {
-                    let finalMessages = messages;
-
-                    if (chat.chatType === 4 && finalMessages.length === 0) {
-                        finalMessages = await loadMDMMessagesFromBackend(chat.chatId);
-                    }
+                    const finalMessages = messages;
 
                     const newChat: ChatProps = defineNewChat(finalMessages);
                     useCM.setCurrentMainChat(newChat);
-
-                    const chatForIDB: AllChatProps = {
-                        ...chat,
-                        lastReadMessageId: newChat.lastReadMessageId,
-                        latestMessage: newChat.latestMessage,
-                        latestMessageText: newChat.latestMessageText,
-                        TSLastMessage: newChat.TSLastMessage,
-                    };
-                    addChat(chatForIDB, chat.chatType);
-
                     useCM.setIsMainChatVisible(true);
 
                     if (useTM.isCreatingTask.flag === true || useTM.isTaskPreviewVisible) {
@@ -134,7 +102,7 @@ export const useChatListItem = ({
             `${chat.chatType}-${chat.chatId}-${chat.chatName}`
         ) {
             toggleMessagesPane();
-            popSpecificMessages(chat.chatId, chat.chatType)
+            loadV3SpecificMessages(v3ChannelId, chat.chatType)
                 .then((messages) => {
                     useCM.setCurrentSubChat(defineNewChat(messages));
                     useCM.setIsMainChatVisible(true);
@@ -148,25 +116,33 @@ export const useChatListItem = ({
     };
 
     const pinChatHandler = async (
-        chatId: number,
-        chatType: number,
-        funcSetAllChats: () => Promise<void>
+        _chatId: number,
+        _chatType: number,
+        _funcSetAllChats: () => Promise<void>
     ) => {
-        await updatePinnedChats(accessToken, myself, {
-            chat_type: chatType,
-            chat_id: chatId,
-        });
-        await addChat({ ...chat, isPinned: !chat.isPinned }, chatType);
-        funcSetAllChats();
+        // v3 pin/unpin. The v3 subscription in `useChatManagement`
+        // re-derives `allChats` (with `isPinned` annotated by
+        // `channelToLegacyChat`) on the `pin.added` / `pin.removed`
+        // broadcast — no manual `funcSetAllChats` call needed.
+        try {
+            if (chat.isPinned) {
+                await channelService.unpinChannel(chat.chatId);
+            } else {
+                await channelService.pinChannel(chat.chatId);
+            }
+        } catch (e) {
+            console.error("[useChatListItem] pin toggle failed:", e);
+        }
     };
 
+    // Keys sorted alphabetically per `sort-keys`.
     return {
         isPinned,
-        setIsPinned,
-        selected,
         isYou,
         onClickHandler,
-        splitOpenHandler,
         pinChatHandler,
+        selected,
+        setIsPinned,
+        splitOpenHandler,
     };
 };

@@ -25,10 +25,8 @@ import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../hooks/common/useUIStateManagement";
 import { fmt, useTranslation } from "../../../i18n";
-import { CreateDMResponse, Team, TeamProfileProps, UserProps } from "../../../types/admin";
+import { Team, TeamProfileProps, UserProps } from "../../../types/admin";
 import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
-import { createDMChat } from "../../chat/services/createDMChat";
-import { sendDMMessage } from "../../chat/services/sendDMMessage";
 import { joinTeam } from "../services/joinTeam";
 import { loadMyTeams } from "../services/loadMyTeams";
 import { ModalTeamProfile } from "./modals/ModalTeamProfile";
@@ -69,37 +67,7 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
     const styles = isDark ? TeamDropdownStyles.dark : TeamDropdownStyles.light;
 
     const _joinTeam = async (teamId: string) => {
-        const joinTeamRes = await joinTeam(accessToken, teamId, myself.userId);
-
-        if (joinTeamRes) {
-            const createDmRes: CreateDMResponse = await createDMChat(
-                accessToken,
-                myself.teamId,
-                myself.userId,
-                myself.userId
-            );
-
-            if (createDmRes && createDmRes.dm_exists === false) {
-                const initMessageBody = [
-                    {
-                        type: "paragraph",
-                        content: [{ type: "text", text: t.admin.joinTeam.hasJoined, styles: {} }],
-                    },
-                    {
-                        type: "paragraph",
-                        content: [{ type: "text", text: "", styles: {} }],
-                    },
-                ];
-
-                await sendDMMessage(
-                    accessToken,
-                    createDmRes.dm_id,
-                    createDmRes.user_1_id,
-                    createDmRes.user_2_id,
-                    initMessageBody
-                );
-            }
-        }
+        await joinTeam(accessToken, teamId, myself.userId);
     };
 
     const handleClick = (event: React.MouseEvent<HTMLElement>) => {

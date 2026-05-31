@@ -29,6 +29,7 @@ import {
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { BoxSlotRoot } from "../../../../components/ui/slotRoot";
 import { useMentionGroupsContext } from "../../../../context/MentionGroupsContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { useTranslation, type Messages } from "../../../../i18n";
@@ -462,7 +463,7 @@ export const ActivityDivider = (props: ActivityDividerProps) => {
                     toggles via the parent-supplied setter. */}
                 <Dropdown>
                     <MenuButton
-                        slots={{ root: Box }}
+                        slots={{ root: BoxSlotRoot }}
                         slotProps={{
                             root: {
                                 "aria-label": t.chat.sidebar.chipFilterCustomLabel,
@@ -599,7 +600,7 @@ export const ActivityDivider = (props: ActivityDividerProps) => {
                 {showInstanceFilter && (
                     <Dropdown>
                         <MenuButton
-                            slots={{ root: Box }}
+                            slots={{ root: BoxSlotRoot }}
                             slotProps={{
                                 root: {
                                     "aria-label": t.chat.sidebar.chipFilterByNameLabel,
@@ -703,9 +704,14 @@ export const ActivityDivider = (props: ActivityDividerProps) => {
                                             </Box>
                                         )}
                                         {chats.map((chat) => {
+                                            // PUNCH LIST (v3 chatId migration):
+                                            // `chat.chatId` is `string` post-flip;
+                                            // `makeInstanceKey` still keys by
+                                            // numeric chatId (legacy lookup).
+                                            // Cast once at the boundary.
                                             const key = makeInstanceKey(
                                                 chat.chatType,
-                                                chat.chatId
+                                                chat.chatId as unknown as number
                                             );
                                             const isChecked = selectedInstanceIds.has(key);
                                             const RowIcon = headerMeta?.icon;
@@ -805,7 +811,7 @@ export const ActivityDivider = (props: ActivityDividerProps) => {
                 {showMentionGroupFilter && (
                     <Dropdown>
                         <MenuButton
-                            slots={{ root: Box }}
+                            slots={{ root: BoxSlotRoot }}
                             slotProps={{
                                 root: {
                                     "aria-label": t.chat.sidebar.chipFilterByGroupLabel,

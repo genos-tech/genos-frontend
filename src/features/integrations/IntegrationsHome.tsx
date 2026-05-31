@@ -33,6 +33,7 @@ import { useColorScheme } from "@mui/joy/styles";
 
 import { CalendarEventModal } from "./components/CalendarEventModal";
 import { ConnectionsSection } from "./components/ConnectionsSection";
+import { ReconnectGoogleCalendarButton } from "./components/ReconnectGoogleCalendarButton";
 import { CalendarEvent, deleteEvent, listEvents } from "./services/calendar";
 import {
     ConnectionsResponse,
@@ -81,6 +82,11 @@ const CalendarTab = ({
     const [events, setEvents] = useState<CalendarEvent[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    // Set when a live calendar call returns `google_reauth_required`:
+    // the account row still looks connected + scoped (so the prop-based
+    // gates below pass), but its refresh token is dead. Drives the
+    // reconnect prompt.
+    const [needsReconnect, setNeedsReconnect] = useState(false);
     const [modalOpen, setModalOpen] = useState(false);
     const [modalInitial, setModalInitial] = useState<ModalInitial | undefined>(undefined);
     const [editingEventId, setEditingEventId] = useState<string | undefined>(undefined);
@@ -101,7 +107,17 @@ const CalendarTab = ({
             setError
         );
         setLoading(false);
-        // Any non-object return is a clean domain error (already
+        // A dead refresh token gets its own prompt (reconnect), distinct
+        // from connect / grant-scope, since the account still looks
+        // connected to the prop-based gates. Clear the generic error so
+        // we don't double up with the reconnect Alert.
+        if (res === "google_reauth_required") {
+            setError(null);
+            setNeedsReconnect(true);
+            return;
+        }
+        setNeedsReconnect(false);
+        // Any other non-object return is a clean domain error (already
         // surfaced through `setError`); leave the events list as it
         // was and let the surrounding UI render the appropriate
         // prompt (connect, grant scope, etc.).
@@ -190,6 +206,24 @@ const CalendarTab = ({
                 >
                     Grant Calendar access
                 </Button>
+            </Stack>
+        );
+    }
+
+    // Connected + scoped on paper, but Google rejected the stored
+    // refresh token (revoked or expired — commonly a "Testing"-mode
+    // OAuth app, whose refresh tokens lapse after ~7 days). One click
+    // through the connect flow mints a fresh token and repairs it.
+    if (needsReconnect) {
+        return (
+            <Stack spacing={2}>
+                <Alert color="warning">
+                    Your Google Calendar connection has expired — the stored authorization was
+                    revoked or timed out. Reconnect to restore Quick Meet, task auto-sync, and the
+                    Calendar tab.
+                </Alert>
+                <ReconnectGoogleCalendarButton accessToken={accessToken} onError={setError} />
+                {error && <Alert color="danger">{error}</Alert>}
             </Stack>
         );
     }

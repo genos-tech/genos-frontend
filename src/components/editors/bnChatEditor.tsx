@@ -44,6 +44,7 @@ import { useIsMobile } from "../../hooks/common/useIsMobile";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { useTranslation } from "../../i18n";
+import { channelService } from "../../services/channel/channelService";
 import { UserProps } from "../../types/admin";
 import { ChatProps } from "../../types/chat";
 import { EmojiPicker } from "../ui/emoji/EmojiPicker";
@@ -66,8 +67,8 @@ import {
 import { EditorSendButton } from "./sub/EditorSendButton";
 import { WrapToggleToolbarButtons } from "./sub/WrapToggleToolbarButtons";
 
-const base_url = import.meta.env.VITE_API_BASE_URL;
-const django_url = import.meta.env.VITE_DJANGO_URL;
+// Chat attachment upload uses channelService.uploadInlineFile (v3); the
+// legacy VITE_API_BASE_URL / VITE_DJANGO_URL upload consts were removed.
 
 type BnChatEditorProps = {
     myself: UserProps;
@@ -188,41 +189,11 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
 
     const uploadFile = guardUploadFile(
         trackUpload(async (file: File) => {
-            const formData = new FormData();
-            formData.append("team_id", String(myself.teamId));
-            formData.append("chat_type", String(chat.chatType));
-            formData.append("chat_id", String(chat.chatId));
-            formData.append("message_id", String(chat.messages.length + 1));
-            formData.append("thread_id", "0");
-            formData.append("uploader", myself.userId);
-            formData.append("chat_attachment_file", file);
-            const uploadChatAttachmentResponse = await fetch(`${base_url}/chat/attachment/`, {
-                method: "POST",
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                },
-                body: formData,
-            });
-            const uploadChatAttachmentData = await uploadChatAttachmentResponse.json();
-
-            if (!uploadChatAttachmentResponse.ok) {
-                throw new Error(
-                    uploadChatAttachmentData.message || t.common.editor.attachmentUploadFailed
-                );
-            }
-
-            // The backend's `chatAttachmentUrl` is DRF's default `FileField`
-            // serialization, which already includes the `MEDIA_URL` prefix
-            // (so the value looks like `/media/chats/...`). Concatenating
-            // with an extra `/` between `django_url` and the value would
-            // produce `https://host//media/...` — Django's `re_path`
-            // (`^media/...`) doesn't match the doubled-slash variant, and
-            // Railway's edge proxy preserves the path as-is, so the GET
-            // 404s in production. Browsers / the local dev server happen to
-            // tolerate the double slash, which is why this only surfaced
-            // after we deployed. Same shape applies to every sibling editor
-            // (note / task / thread).
-            return `${django_url}${uploadChatAttachmentData.chatAttachmentUrl}`;
+            // v3: compose-time inline upload via the channel-scoped uploader.
+            // The legacy `/chat/attachment/` route was removed in the v3
+            // cutover; `uploadInlineFile` returns an absolute URL that
+            // BlockNote embeds directly (no `django_url` host prepend).
+            return channelService.uploadInlineFile(String(chat.chatId), file);
         })
     );
 

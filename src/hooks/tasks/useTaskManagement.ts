@@ -8,7 +8,6 @@ import {
     useState,
 } from "react";
 
-import { popSpecificProjectTasks } from "../../features/chat/services/popSpecificProjectTasks";
 import { loadTaskMeta } from "../../features/notes/task-notes/services/loadTaskMeta";
 import {
     createTaskDependency,
@@ -17,6 +16,7 @@ import {
 import { deleteTaskDependency } from "../../features/tasks/services/deleteTaskDependency";
 import { loadSpecificTask } from "../../features/tasks/services/loadSpecificTask";
 import { loadTaskDependencies } from "../../features/tasks/services/loadTaskDependencies";
+import { popSpecificProjectTasks } from "../../features/tasks/services/popSpecificProjectTasks";
 import { buildTaskTree } from "../../features/tasks/utils/buildTaskTree";
 import { UserProps } from "../../types/admin";
 import {

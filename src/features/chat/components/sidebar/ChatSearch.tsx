@@ -21,17 +21,18 @@ import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { useTranslation } from "../../../../i18n";
+import { channelService } from "../../../../services/channel/channelService";
 import { UserProps } from "../../../../types/admin";
-import { AllChatProps, SearchListProps } from "../../../../types/chat";
+import { ChannelKind, type Channel } from "../../../../types/channel";
+import { AllChatProps, ChatProps, SearchListProps } from "../../../../types/chat";
 import { loadSearchList } from "../../services/loadChatSearchList";
-import { moveToSelectedChat } from "../../services/moveToChat";
 
 type ChatSearchProps = {
     myself: UserProps;
     socket: Socket | null;
     openSearchBox: boolean;
     setOpenSearchBox: (value: boolean) => void;
-    setOpenJoinGM: (value: { flag: boolean; chatId: number; chatName: string }) => void;
+    setOpenJoinGM: (value: { flag: boolean; chatId: string; chatName: string }) => void;
     useTEM: TeamManagementState;
     setMyself: (value: UserProps) => void;
     useCM: ChatManagementState;
@@ -60,53 +61,103 @@ export const ChatSearch = (props: ChatSearchProps) => {
     const loading = openSearchBox && options.length === 0;
 
     const onChangeHandler = async (value: any) => {
-        if (value !== null && socket !== null) {
-            let _chatType: number;
-            if (value.type === "Group") {
-                _chatType = 2;
-            } else {
-                _chatType = 1;
-            }
+        if (value === null) return;
+        const isGroup = value.type === "Group";
+        const _chatType = isGroup ? 2 : 1;
 
-            // If the user tries to join a private GM, show the modal to get approval from the GM owner.
-            if (_chatType === 2 && value.isPrivate === true && value.isJoined === false) {
-                setOpenJoinGM({ flag: true, chatId: value.id, chatName: value.name });
-            } else {
-                socket.emit(
-                    "join",
-                    {
-                        joiningCGId: value.id, // dm_id or gm_id
-                        joiningCGName: value.name, // dm_name or gm_name
-                        chatType: _chatType,
-                        dmPartnerUserId: value.dmPartnerUser.userId,
-                    },
-                    (ack: any) => {
-                        // Since the existing DM/GM obviously has its own chatId (value.id),
-                        // the user can move the the DM/GM.
-                        if (Number(value.id) !== -1) {
-                            moveToSelectedChat(
-                                myself,
-                                accessToken,
-                                socket,
-                                value.id,
-                                value.name,
-                                value.type === "Group" ? 2 : 1,
-                                value.isPrivate,
-                                value.dmPartnerUser,
-                                useCM,
-                                setOpenSearchBox
-                            );
-                        } else {
-                            // If the user tries to join a new DM (try to make a DM with a new friend),
-                            // there is no chat (chatId) yet, so need to wait till the first message
-                            // will be arrived via WS. (the above "join" ws message will generate
-                            // the first message for the user).
-                            // Joining a new DM -> value.id = -1. User will get the first message via WS.
-                        }
+        // If the user tries to join a private GM, show the modal to get
+        // approval from the GM owner. v3 GMs have no legacy id, so the join
+        // flow keys on the v3 channel UUID (`channelId`).
+        if (_chatType === 2 && value.isPrivate === true && value.isJoined === false) {
+            setOpenJoinGM({ flag: true, chatId: value.channelId ?? "", chatName: value.name });
+            return;
+        }
+
+        // v3 resolution — the search endpoint now returns v3 ids directly:
+        // Groups carry `channelId`, People carry `userId`. No legacy-id
+        // round-trip / snapshot scan needed for the happy path.
+        const snapshot = channelService.getSnapshot();
+        let channel: Channel | undefined;
+        if (isGroup) {
+            channel = value.channelId ? snapshot.channels.get(value.channelId) : undefined;
+            // Snapshot miss (e.g. joined in another tab, not yet synced
+            // here): refresh the channel list once and retry by UUID, so
+            // the click isn't a silent no-op.
+            if (!channel && value.channelId) {
+                try {
+                    const fresh = await channelService.listChannels();
+                    const match = fresh.find((c) => c.id === value.channelId);
+                    if (match) {
+                        channelService.handleChannelCreated(match);
+                        channel = match;
                     }
-                );
+                } catch (e) {
+                    console.error("[ChatSearch] channel-list refresh failed:", e);
+                }
+            }
+        } else if (value.userId) {
+            const otherUserId = value.userId;
+            for (const c of snapshot.channels.values()) {
+                if (c.kind !== ChannelKind.DM) continue;
+                const roster = snapshot.membersByChannel.get(c.id) ?? [];
+                const ids = new Set(roster.map((m) => m.userId));
+                if (ids.size === 2 && ids.has(myself.userId) && ids.has(otherUserId)) {
+                    channel = c;
+                    break;
+                }
+            }
+            if (!channel) {
+                // No DM yet — ask the backend to create one.
+                // createChannel is idempotent for DM (via
+                // `ChannelDirectPair`) so a race against another tab
+                // is safe.
+                try {
+                    channel = await channelService.createChannel({
+                        kind: ChannelKind.DM,
+                        otherUserId,
+                        teamId: myself.teamId,
+                    });
+                } catch (e) {
+                    console.error("[ChatSearch] DM create failed:", e);
+                    return;
+                }
             }
         }
+        if (!channel) {
+            console.warn("[ChatSearch] no v3 channel found for search result", value);
+            return;
+        }
+
+        // Minimal DM-partner stub from the search row (the chat header /
+        // adapter resolves the full partner from channel members). Empty
+        // for Groups, which render off `chatName`.
+        const dmPartner: UserProps = {
+            userId: value.userId ?? "",
+            userName: isGroup ? "" : value.name,
+            userEmail: value.email ?? "",
+            teamId: "",
+            teamName: "",
+            avatarImgPath: value.profileImageUrl ?? "",
+            tsLastSeen: "",
+            tsJoined: "",
+        };
+
+        const initialChat: ChatProps = {
+            chatId: channel.id,
+            chatName: value.name,
+            chatType: _chatType,
+            dmPartnerUser: dmPartner,
+            isPrivate: channel.isPrivate,
+            lastReadMessageId: "",
+            latestMessage: undefined as unknown as ChatProps["latestMessage"],
+            latestMessageText: "",
+            messages: [],
+            profileImagePath: channel.profileImageUrl || undefined,
+            TSLastMessage: channel.tsUpdated ?? channel.tsCreated ?? "",
+        };
+        useCM.setCurrentMainChat(initialChat);
+        useCM.setIsMainChatVisible(true);
+        setOpenSearchBox(false);
     };
 
     useEffect(() => {
@@ -225,29 +276,31 @@ export const ChatSearch = (props: ChatSearchProps) => {
                           : option.name
                 }
                 renderOption={(props, option) => {
+                    // Resolve the GM's cached chat row by its v3 channel
+                    // UUID (the search result now carries `channelId`
+                    // directly — no legacy-id stringify needed).
                     const gmChat: AllChatProps | undefined = useCM.allChats.find(
-                        (chat) => chat.chatId === option.id && chat.chatType === 2
+                        (chat) => chat.chatId === option.channelId && chat.chatType === 2
                     );
+                    const optKey = option.userId ?? option.channelId ?? option.name;
                     return (
                         <AutocompleteOption
                             {...props}
-                            key={`ac-render-option-chatsearch-${option.name}-${option.id}`}
+                            key={`ac-render-option-chatsearch-${option.name}-${optKey}`}
                         >
                             <ListItemContent sx={{ fontSize: "sm" }}>
                                 <Stack direction="row" spacing={1.5} alignItems="center">
                                     {option.type === "People" && (
                                         <AvatarWithStatus
-                                            key={`ac-render-option-chatsearch-user-avatar-${option.name}-${option.id}`}
+                                            key={`ac-render-option-chatsearch-user-avatar-${option.name}-${optKey}`}
                                             useCM={useCM}
-                                            isYou={option.dmPartnerUser.userId === myself.userId}
+                                            isYou={option.userId === myself.userId}
                                             myself={myself}
                                             setMyself={setMyself}
                                             socket={socket}
                                             useUISM={useUISM}
                                             avatarUser={
-                                                useTEM.teamMemberProfiles[
-                                                    option.dmPartnerUser.userId
-                                                ]
+                                                useTEM.teamMemberProfiles[option.userId ?? ""]
                                             }
                                         />
                                     )}
@@ -266,8 +319,8 @@ export const ChatSearch = (props: ChatSearchProps) => {
                                         <Avatar
                                             size="sm"
                                             src={
-                                                option.profileImagePath
-                                                    ? `${mediaUrl}/${option.profileImagePath}`
+                                                option.profileImageUrl
+                                                    ? `${mediaUrl}/${option.profileImageUrl}`
                                                     : undefined
                                             }
                                         >

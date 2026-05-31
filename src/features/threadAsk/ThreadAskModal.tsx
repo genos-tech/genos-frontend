@@ -130,12 +130,10 @@ export const ThreadAskModal = ({
     const labels = useMemo(() => buildLabels(t), [t]);
 
     const onSave = async () => {
+        // The summary alone is saveable — Q&A turns are optional and the
+        // conversation section is only appended when some exist (see
+        // `saveThreadAskAsNote`).
         if (!state.summary || !state.threadContext) return;
-        if (state.agentQA.turns.length === 0) {
-            // Nothing to save — give the user a non-destructive hint.
-            setSaveError(t.threadAsk.saveAsNote.nothingToSave);
-            return;
-        }
         setSaving(true);
         setSaveError(null);
         setSaveSuccess(false);
@@ -329,7 +327,7 @@ export const ThreadAskModal = ({
                 {/* Footer */}
                 <Stack alignItems="center" direction="row" spacing={1}>
                     <Button
-                        disabled={saving || !state.summary || turnsCount === 0}
+                        disabled={saving || !state.summary}
                         startDecorator={<SaveRoundedIcon sx={{ fontSize: 16 }} />}
                         variant="solid"
                         onClick={onSave}

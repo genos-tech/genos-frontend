@@ -1,76 +1,41 @@
-import axios from "axios";
+import { channelService } from "../../../services/channel/channelService";
+import { ChannelKind } from "../../../types/channel";
 
-import { authApi } from "../../../services/api";
-
+/**
+ * Soft-delete a thread reply via the v3 channelService.
+ *
+ * v3 unifies top-level messages and thread replies in one Message
+ * model — they're differentiated only by `isThreadReply` + `threadRootId`.
+ * That means `channelService.deleteMessage` is the same call regardless
+ * of whether the target is a top-level row or a thread reply; the
+ * separate `deleteThreadMessage` service is kept only for the existing
+ * modal's call-site clarity.
+ *
+ * Behavior mirrors `deleteMessage`: ack-synced delete emit, server
+ * broadcasts `message.deleted` to the channel room, the open chat's
+ * live-update subscription patches the visible thread / pane.
+ *
+ * `threadId` is the legacy integer thread root id, no longer load-
+ * bearing on the v3 path (the message UUID is the unique identifier)
+ * but kept on the signature for back-compat with the modal call.
+ */
 export const deleteThreadMessage = async (
-    accessToken: string | null,
+    _accessToken: string | null,
     chatType: number,
-    chatId: number,
-    threadId: number,
-    messageId: number,
+    channelId: string,
+    _threadId: number,
+    messageUuid: string,
     setErrorMessage?: (value: string) => void
-) => {
+): Promise<void> => {
+    if (!messageUuid) {
+        console.warn("[deleteThreadMessage] missing v3 messageUuid — no-op");
+        setErrorMessage?.("Could not delete: message id unavailable.");
+        return;
+    }
     try {
-        const api = authApi(accessToken);
-        if (api) {
-            if (chatType === 1) {
-                const res = await api.put("/dm/threadMessage/", {
-                    dm_id: chatId,
-                    thread_id: threadId,
-                    message_id: messageId,
-                    is_deleted: true,
-                });
-                return res.data;
-            } else if (chatType === 2) {
-                const res = await api.put("/gm/threadMessage/", {
-                    gm_id: chatId,
-                    thread_id: threadId,
-                    message_id: messageId,
-                    is_deleted: true,
-                });
-                return res.data;
-            } else if (chatType === 3) {
-                const res = await api.put("/pm/threadMessage/", {
-                    project_id: chatId,
-                    thread_id: threadId,
-                    message_id: messageId,
-                    is_deleted: true,
-                });
-                return res.data;
-            } else if (chatType === 4) {
-                const res = await api.put("/mdm/threadMessage/", {
-                    mdm_id: chatId,
-                    thread_id: threadId,
-                    message_id: messageId,
-                    is_deleted: true,
-                });
-                return res.data;
-            } else {
-                console.error("Unexpected chat type:", chatType);
-            }
-        } else {
-            console.error("Unauthorized. Auth toke is not found.");
-            if (setErrorMessage) {
-                setErrorMessage("Unauthorized. Auth toke is not found.");
-            }
-        }
-    } catch (error: unknown) {
-        if (axios.isAxiosError(error)) {
-            if (error.response?.status === 400) {
-                console.error("HTTP 400 error:", error.response?.data);
-                if (setErrorMessage) {
-                    setErrorMessage("Failed to update PM message.");
-                }
-            } else if (error.response?.status === 401) {
-                console.error("HTTP 401 error:", error.response?.data);
-                if (setErrorMessage) {
-                    setErrorMessage("Unauthorized. Please log in again.");
-                }
-            } else {
-                console.error("API error:", error.response?.status, error.response?.data);
-            }
-        } else {
-            console.error("Unexpected error:", error);
-        }
+        await channelService.deleteMessage(messageUuid, channelId, chatType as ChannelKind);
+    } catch (e) {
+        console.error("[deleteThreadMessage] channelService.deleteMessage failed:", e);
+        setErrorMessage?.("Failed to delete message.");
     }
 };

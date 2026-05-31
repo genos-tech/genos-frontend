@@ -33,8 +33,12 @@ const lookupChatProfileImage = (
     chatType: number,
     chatId: number | string
 ): string | undefined => {
-    const idNum = typeof chatId === "string" ? Number(chatId) : chatId;
-    const chat = useCM.allChats.find((c) => c.chatType === chatType && c.chatId === idNum);
+    // `AllChatProps.chatId` is `string` post-v3 flip. Notification
+    // intents arrive with either shape (legacy events still emit
+    // numeric `chatId` for DM/GM/MDM/PM; the v3 socket will emit
+    // UUID strings). Normalize both sides to string for the lookup.
+    const idStr = String(chatId);
+    const chat = useCM.allChats.find((c) => c.chatType === chatType && c.chatId === idStr);
     return chat?.profileImagePath || undefined;
 };
 
@@ -80,13 +84,15 @@ const truncate = (s: string, max = 140): string => {
 };
 
 // Best-effort plain-text from BlockNote PartialBlock[] content used in
-// inbox items. Walks one level of inline content.
-const extractInboxText = (body: any): string => {
+// inbox items. Walks one level of inline content. `unknown` is the
+// honest type — the WS payload's `body` can be a BlockNote document or
+// some legacy shape; the type guards below narrow safely.
+const extractInboxText = (body: unknown): string => {
     if (!Array.isArray(body)) return "";
     const lines: string[] = [];
     for (const block of body) {
         if (!block || typeof block !== "object") continue;
-        const content = (block as any).content;
+        const content = (block as { content?: unknown }).content;
         if (typeof content === "string") {
             lines.push(content);
         } else if (Array.isArray(content)) {
@@ -163,11 +169,10 @@ const buildChatIntent = (
               ? chatLabel
               : fmt(routerMessages.chatTitleWithLabel, { senderName, chatLabel });
 
+    // Keys sorted alphabetically per `sort-keys`.
     return {
-        id: `chat:${msg.chatType}:${msg.chatId}:${msg.messageId}`,
-        category: "chats",
-        title,
         body: truncate(msg.contentText || ""),
+        category: "chats",
         icon: resolveChatIcon(
             msg.chatType,
             msg.chatId,
@@ -176,15 +181,17 @@ const buildChatIntent = (
             useCM,
             useTEM
         ),
+        id: `chat:${msg.chatType}:${msg.chatId}:${msg.messageId}`,
         senderId: msg.sender.userId,
         source: {
-            chatType: msg.chatType,
             chatId: String(msg.chatId),
+            chatType: msg.chatType,
             // PM (chatType 3) messages carry the project so click-to-open
             // can route via the project chat URL.
             projectId: msg.project?.projectId,
             taskId: msg.taskId ?? undefined,
         },
+        title,
     };
 };
 
@@ -222,11 +229,10 @@ const buildThreadIntent = (
     const parentLabel = labelForChatType(msg.chatType, msg.chatName);
     const title = fmt(routerMessages.threadReplyTitle, { senderName, parentLabel });
 
+    // Keys sorted per `sort-keys`.
     return {
-        id: `thread:${msg.chatType}:${msg.chatId}:${msg.threadId}:${msg.messageId}`,
-        category: "thread_replies",
-        title,
         body: truncate(msg.contentText || ""),
+        category: "thread_replies",
         icon: resolveChatIcon(
             msg.chatType,
             msg.chatId,
@@ -235,18 +241,20 @@ const buildThreadIntent = (
             useCM,
             useTEM
         ),
+        id: `thread:${msg.chatType}:${msg.chatId}:${msg.threadId}:${msg.messageId}`,
         senderId: msg.sender.userId,
         source: {
-            chatType: msg.chatType,
             chatId: String(msg.chatId),
-            threadId: msg.threadId,
-            taskId: msg.taskId ?? undefined,
+            chatType: msg.chatType,
             projectId: msg.project?.projectId,
+            taskId: msg.taskId ?? undefined,
+            threadId: msg.threadId,
         },
+        title,
     };
 };
 
-const buildActivityIntent = (
+export const buildActivityIntent = (
     activity: ActivityMessageProps,
     myself: UserProps,
     useTEM: TeamManagementState,
@@ -295,7 +303,9 @@ const buildActivityIntent = (
     if (!category) return null;
 
     const routerMessages = getMessages().services.notifications.router;
-    const senderName = (activity as any).senderName || routerMessages.someone;
+    // `senderName` isn't declared on `ActivityMessageProps` today but
+    // the wire payload carries it for the display path. Narrow cast.
+    const senderName = (activity as { senderName?: string }).senderName || routerMessages.someone;
     const subjectLabel = activity.projectName
         ? fmt(routerMessages.activityProjectLabel, { projectName: activity.projectName })
         : labelForChatType(activity.chatType, activity.chatName);
@@ -330,20 +340,21 @@ const buildActivityIntent = (
     const senderImage = useTEM.teamMemberProfiles[activity.senderId]?.avatarImgPath;
     const icon = buildAvatarSrc(projectImage || senderImage);
 
+    // Keys sorted per `sort-keys`.
     return {
-        id: `activity:${category}:${activity.activityId}`,
-        category,
-        title,
         body: truncate(activity.firstLineContent || ""),
+        category,
         icon,
+        id: `activity:${category}:${activity.activityId}`,
         senderId: activity.senderId,
         source: {
-            chatType: activity.chatType,
             chatId: activity.chatId !== undefined ? String(activity.chatId) : undefined,
-            threadId: activity.threadId || undefined,
-            taskId: activity.taskId || undefined,
+            chatType: activity.chatType,
             projectId: activity.projectId || undefined,
+            taskId: activity.taskId || undefined,
+            threadId: activity.threadId || undefined,
         },
+        title,
     };
 };
 
@@ -364,17 +375,18 @@ const buildInboxIntent = (
     };
     const title = titleByType[item.itemType] || routerMessages.inboxFallback;
 
+    // Keys sorted per `sort-keys`. Inline note on `icon`: inbox items
+    // are team-scoped (join-team / join-project / join-gm requests
+    // routed through the team). The most representative image available
+    // without joining extra tables is the team's avatar; we surface
+    // that so the user can see which workspace pinged them when
+    // multiple teams are configured.
     return {
-        id: `inbox:${item.itemId}`,
-        category: "inbox",
-        title,
         body,
-        // Inbox items are team-scoped (join-team / join-project / join-gm
-        // requests routed through the team). The most representative image
-        // available without joining extra tables is the team's avatar; we
-        // surface that so the user can see which workspace pinged them
-        // when multiple teams are configured.
+        category: "inbox",
         icon: buildAvatarSrc(useTEM.currentTeam?.teamImgPath),
+        id: `inbox:${item.itemId}`,
+        title,
         // `source` is left undefined — inbox items don't have a per-chat
         // mute target and bypass per-chat mute on purpose.
     };
@@ -390,8 +402,19 @@ const buildInboxIntent = (
  * "actionable for me" so the notification stream tracks the in-app
  * activity stream.
  */
+// Loose envelope shape for the WS-tagged payload that dispatches into
+// the typed builders below. The `wsType` discriminant decides which
+// inner cast (NewMessageProps / NewThreadMessageProps / ActivityMessageProps
+// / { data: InboxItemProps }) is valid for the actual contents.
+type WSNotificationMessage = {
+    wsType?: string;
+    isThread?: boolean;
+    data?: unknown;
+    alreadyExist?: boolean;
+};
+
 export const buildIntentFromMessage = (
-    message: any,
+    message: WSNotificationMessage | null | undefined,
     myself: UserProps,
     useTEM: TeamManagementState,
     useCM: ChatManagementState

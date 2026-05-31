@@ -14,13 +14,20 @@ export type MDMMemberProps = {
     teamName?: string;
 };
 
+// `chatId` was `number` in the legacy contract (per-type IntegerField
+// PKs). The v3 backend uses UUIDs end-to-end; during the migration
+// every chat-list / chat-detail surface adopts the UUID string in
+// place. The rest of the legacy fields (e.g. `chatType`, the integer
+// kind code) stay numeric for now — kind is genuinely an enum.
+// `lastReadMessageId` follows the v3 Message id (UUID string) so the
+// cursor model lines up with the message rows it points at.
 export type AllChatProps = {
     chatType: number;
-    chatId: number;
+    chatId: string;
     chatName: string;
     systemUserId?: string;
     dmPartnerUser: UserProps;
-    lastReadMessageId: number;
+    lastReadMessageId: string;
     latestMessage: MessageProps;
     latestMessageText: string;
     TSLastMessage: string;
@@ -34,11 +41,11 @@ export type AllChatProps = {
 
 export type ChatProps = {
     chatType: number;
-    chatId: number;
+    chatId: string;
     chatName: string;
     systemUserId?: string;
     dmPartnerUser: UserProps;
-    lastReadMessageId: number;
+    lastReadMessageId: string;
     messages: MessageProps[];
     latestMessage: MessageProps;
     latestMessageText: string;
@@ -296,15 +303,23 @@ export type FlaggedMessageProps = {
 };
 
 // Other Props
+// Chat-search result row. v3-native shape: People carry `userId`
+// (DM-able directly), Groups carry `channelId` (openable directly).
+// `legacyChatId` is retained for back-compat fallbacks while some
+// surfaces still resolve by legacy id.
 export type SearchListProps = {
-    id: number;
-    type: string;
+    type: string; // "People" | "Group"
     name: string;
-    email: string | null;
-    dmPartnerUser: UserProps;
-    isPrivate: boolean;
-    isJoined: boolean;
-    profileImagePath?: string;
+    // People
+    userId?: string;
+    email?: string | null;
+    // Group
+    channelId?: string;
+    legacyChatId?: number | null;
+    isPrivate?: boolean;
+    isJoined?: boolean;
+    // both
+    profileImageUrl?: string;
 };
 
 export type LoadSearchListResponse = {

@@ -69,6 +69,17 @@ export const BubbleUserName = (props: BubbleUserNameTypes) => {
     const isDark = mode === "dark";
     const taskStatusDetails = statuses.find((item) => item.status === taskStatus);
     const isEdited = extractMMDDHHMMSSs(tsSent) !== extractMMDDHHMMSSs(tsUpdated);
+    // Render the task-card header (display-id chip + status chip + date)
+    // whenever:
+    //   - the sender is the project's system user, OR
+    //   - the bubble is a PM linked to a task. The legacy task-creation
+    //     path stamped `PMMessages.sender_id` to whoever created the
+    //     task, and that backfilled through to v3 `Message.sender_id`,
+    //     so the system-user check alone would render those bubbles
+    //     with the creator's userName instead of task chips. The
+    //     v3 adapter filters out PM messages without a `taskId`, so
+    //     any PM that reaches this renderer is a real task header.
+    const renderAsTaskCard = sender.isSystemUser === true || (chatType === 3 && taskId !== null);
 
     // Modern chip component with improved visibility
     const ModernChip = ({
@@ -116,21 +127,25 @@ export const BubbleUserName = (props: BubbleUserNameTypes) => {
                 justifyContent={isSent ? "flex-end" : "flex-start"}
                 spacing={0.25}
             >
-                {/* Task update message bubble (system user) */}
-                {sender.isSystemUser === true && (
+                {/* Task-card header (system user OR PM bubble) */}
+                {renderAsTaskCard && (
                     <Stack
                         direction="row"
                         alignItems="center"
                         spacing={0.75}
                         sx={{ flexWrap: "wrap", gap: 0.5 }}
                     >
-                        {isThread === false && (
+                        {/* Display-id chip only when this bubble actually
+                            references a task. Orphan PM rows (no `taskId`)
+                            still render in the card layout but skip the
+                            chips so the header stays just the date. */}
+                        {isThread === false && taskId !== null && (
                             <ModernChip>
                                 {formatTaskDisplayId({ taskId, displayId }) || "N/A"}
                             </ModernChip>
                         )}
 
-                        {taskStatusDetails && (
+                        {taskId !== null && taskStatusDetails && (
                             <ModernChip
                                 variant="status"
                                 customStyles={getStatusChipStyles(taskStatusDetails, isDark)}
@@ -159,8 +174,8 @@ export const BubbleUserName = (props: BubbleUserNameTypes) => {
                     </Stack>
                 )}
 
-                {/* Message bubble for normal users (not system users) */}
-                {!sender.isSystemUser && (
+                {/* Message bubble for normal users (not task cards) */}
+                {!renderAsTaskCard && (
                     <Stack direction="row" alignItems="center" spacing={1}>
                         {isSimpleBubble === false && (
                             <Typography
