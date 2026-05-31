@@ -45,7 +45,11 @@ export function fakeChannel(id: string, overrides: Partial<Channel> = {}): Chann
     };
 }
 
-export function fakeMessage(id: string, channelId: string, overrides: Partial<Message> = {}): Message {
+export function fakeMessage(
+    id: string,
+    channelId: string,
+    overrides: Partial<Message> = {}
+): Message {
     return {
         id,
         channelId,
@@ -73,7 +77,10 @@ export function fakeMessage(id: string, channelId: string, overrides: Partial<Me
     };
 }
 
-export function fakeReaction(id: string, overrides: Partial<MessageReaction> = {}): MessageReaction {
+export function fakeReaction(
+    id: string,
+    overrides: Partial<MessageReaction> = {}
+): MessageReaction {
     return {
         id,
         user: fakeUser(),

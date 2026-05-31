@@ -3,7 +3,7 @@
 // prop objects and prop lists whose visual grouping is intentional and
 // not worth re-sorting given the surface is legacy chat code slated
 // for replacement by the v3 channel UI.
-/* eslint-disable sort-keys, react/jsx-sort-props, simple-import-sort/imports */
+/* eslint-disable react/jsx-sort-props */
 import { useMemo, useState } from "react";
 import AddTaskRoundedIcon from "@mui/icons-material/AddTaskRounded";
 import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRounded";

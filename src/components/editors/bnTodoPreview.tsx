@@ -189,8 +189,8 @@ export const BnTodoPreview = (props: BnTodoPreviewProps) => {
 
                 {/* Adds a mentions menu which opens with the "@" key */}
                 <SuggestionMenuController
-                    triggerCharacter={"@"}
                     suggestionMenuComponent={MentionSuggestionMenu}
+                    triggerCharacter={"@"}
                     getItems={async (query) =>
                         // Gets the mentions menu items
                         filterSuggestionItems(

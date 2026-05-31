@@ -39,9 +39,8 @@ export const ChildNoteCreator = memo(function ChildNoteCreator({
 
     return (
         <Box key={`child-creator-${node.noteId}-${timestamp}`} sx={{ py: 0.25 }}>
-            <ListItem nested sx={{ py: 0 }}>
+            <ListItem sx={{ py: 0 }} nested>
                 <ListItemButton
-                    onClick={handleCreateChildNote}
                     sx={{
                         borderRadius: "8px",
                         py: 0.375,
@@ -67,6 +66,7 @@ export const ChildNoteCreator = memo(function ChildNoteCreator({
                             },
                         },
                     }}
+                    onClick={handleCreateChildNote}
                 >
                     <Box
                         className="add-icon"

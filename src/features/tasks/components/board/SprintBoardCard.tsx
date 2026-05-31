@@ -131,9 +131,9 @@ const SprintBoardCardImpl = ({
                         ...getCardStyles(snapshot.isDragging, isHovered, isSelected, mode),
                         ...provided.draggableProps.style,
                     }}
+                    onClick={() => onTaskClick?.(task)}
                     onMouseEnter={() => setIsHovered(true)}
                     onMouseLeave={() => setIsHovered(false)}
-                    onClick={() => onTaskClick?.(task)}
                 >
                     {/* Header: ID + Priority */}
                     <Box
@@ -161,8 +161,8 @@ const SprintBoardCardImpl = ({
                                 />
                             )}
                             <CopyableTaskIdText
-                                task={task}
                                 level="body-xs"
+                                task={task}
                                 sx={{
                                     color: mode === "dark" ? "#6b9fd4" : "#5a8ac7",
                                     fontWeight: 600,

@@ -136,7 +136,7 @@ describe("formatSize", () => {
 
 describe("MessageAttachments", () => {
     it("renders nothing for an empty list", () => {
-        const { container } = render(<MessageAttachments messageId="m-1" attachments={[]} />);
+        const { container } = render(<MessageAttachments attachments={[]} messageId="m-1" />);
         expect(container.firstChild).toBeNull();
     });
 
@@ -155,7 +155,7 @@ describe("MessageAttachments", () => {
                 512
             ),
         ];
-        render(<MessageAttachments messageId="m-1" attachments={atts} />);
+        render(<MessageAttachments attachments={atts} messageId="m-1" />);
         const strip = screen.getByTestId("message-attachments-m-1");
         expect(strip).toBeInTheDocument();
         const linkA = screen.getByTestId("message-attachment-link-a-1");
@@ -182,7 +182,7 @@ describe("MessageAttachments", () => {
                 4096
             ),
         ];
-        render(<MessageAttachments messageId="m-1" attachments={atts} />);
+        render(<MessageAttachments attachments={atts} messageId="m-1" />);
         const preview = screen.getByTestId("message-attachment-preview-a-img");
         expect(preview).toBeInTheDocument();
         expect(preview).toHaveAttribute("src", "https://cdn.example.com/chats/c/m/screenshot.png");
@@ -193,7 +193,7 @@ describe("MessageAttachments", () => {
         const atts: MessageAttachment[] = [
             fakeAttachment("a-noname", "", "application/octet-stream", 16),
         ];
-        render(<MessageAttachments messageId="m-1" attachments={atts} />);
+        render(<MessageAttachments attachments={atts} messageId="m-1" />);
         expect(screen.getByTestId("message-attachment-link-a-noname")).toHaveTextContent(
             "attachment"
         );
@@ -208,7 +208,7 @@ describe("MessageAttachments", () => {
                 100
             ),
         ];
-        render(<MessageAttachments messageId="m-1" attachments={atts} />);
+        render(<MessageAttachments attachments={atts} messageId="m-1" />);
         expect(screen.getByTestId("message-attachment-link-a-utf")).toHaveTextContent(
             "字 file.txt"
         );

@@ -884,9 +884,9 @@ const AutoSyncCalendarSection = () => {
             {googleConnected === true && calendarAuthorized === false && accessToken && (
                 <Stack direction="row" justifyContent="flex-end" sx={{ mt: 1.5 }}>
                     <Button
+                        color="primary"
                         size="sm"
                         variant="solid"
-                        color="primary"
                         onClick={() =>
                             void redirectToOAuthConnect(
                                 "google",
@@ -934,9 +934,9 @@ const AutoSyncCalendarSection = () => {
                             {backfillError || backfillMessage || ""}
                         </Typography>
                         <Button
+                            disabled={backfillRunning}
                             size="sm"
                             variant="outlined"
-                            disabled={backfillRunning}
                             onClick={handleBackfill}
                         >
                             {backfillRunning
@@ -1172,6 +1172,7 @@ export const SettingsModal = ({
                 <Divider sx={{ mb: 2 }} />
                 <Tabs
                     orientation="vertical"
+                    value={tab}
                     sx={{
                         // Sidebar tab list on the left, panel on the
                         // right. The Tabs component flexes children
@@ -1180,7 +1181,6 @@ export const SettingsModal = ({
                         bgcolor: "transparent",
                         gap: 2,
                     }}
-                    value={tab}
                     onChange={(_event, value) => {
                         if (typeof value === "string") setTab(value as SettingsTabKey);
                     }}
@@ -1194,64 +1194,64 @@ export const SettingsModal = ({
                             scrollbarWidth: "none",
                         }}
                     >
-                        <Tab value="general" sx={SIDEBAR_TAB_SX}>
+                        <Tab sx={SIDEBAR_TAB_SX} value="general">
                             <SettingsRoundedIcon sx={SIDEBAR_TAB_ICON_SX} />
                             {t.settings.tabs.general}
                         </Tab>
-                        <Tab value="spotlight" sx={SIDEBAR_TAB_SX}>
+                        <Tab sx={SIDEBAR_TAB_SX} value="spotlight">
                             <AutoAwesomeRoundedIcon sx={SIDEBAR_TAB_ICON_SX} />
                             {t.settings.tabs.spotlight}
                         </Tab>
-                        <Tab value="chat" sx={SIDEBAR_TAB_SX}>
+                        <Tab sx={SIDEBAR_TAB_SX} value="chat">
                             <ChatBubbleOutlineRoundedIcon sx={SIDEBAR_TAB_ICON_SX} />
                             {t.settings.tabs.chat}
                         </Tab>
-                        <Tab value="tasks" sx={SIDEBAR_TAB_SX}>
+                        <Tab sx={SIDEBAR_TAB_SX} value="tasks">
                             <PlaylistAddCheckRoundedIcon sx={SIDEBAR_TAB_ICON_SX} />
                             {t.settings.tabs.tasks}
                         </Tab>
-                        <Tab value="notifications" sx={SIDEBAR_TAB_SX}>
+                        <Tab sx={SIDEBAR_TAB_SX} value="notifications">
                             <NotificationsRoundedIcon sx={SIDEBAR_TAB_ICON_SX} />
                             {t.settings.tabs.notifications}
                         </Tab>
-                        <Tab value="mentionGroups" sx={SIDEBAR_TAB_SX}>
+                        <Tab sx={SIDEBAR_TAB_SX} value="mentionGroups">
                             <GroupRoundedIcon sx={SIDEBAR_TAB_ICON_SX} />
                             {t.settings.tabs.mentionGroups}
                         </Tab>
-                        <Tab value="shortcuts" sx={SIDEBAR_TAB_SX}>
+                        <Tab sx={SIDEBAR_TAB_SX} value="shortcuts">
                             <KeyboardRoundedIcon sx={SIDEBAR_TAB_ICON_SX} />
                             {t.settings.tabs.shortcuts}
                         </Tab>
                         {/* Feature-flagged so disabled deploys don't
                             show an empty tab. */}
                         {OAUTH_INTEGRATIONS_ENABLED && (
-                            <Tab value="integrations" sx={SIDEBAR_TAB_SX}>
+                            <Tab sx={SIDEBAR_TAB_SX} value="integrations">
                                 <HubRoundedIcon sx={SIDEBAR_TAB_ICON_SX} />
                                 {t.settings.tabs.integrations}
                             </Tab>
                         )}
                     </TabList>
 
-                    <TabPanel value="general" sx={{ px: 0, py: 2 }}>
+                    <TabPanel sx={{ px: 0, py: 2 }} value="general">
                         <Stack spacing={2}>
                             <AppearanceSection />
                             <LanguageSection />
                             <PrivacySection />
                         </Stack>
                     </TabPanel>
-                    <TabPanel value="spotlight" sx={{ px: 0, py: 2 }}>
+                    <TabPanel sx={{ px: 0, py: 2 }} value="spotlight">
                         <Stack spacing={2}>
                             <LlmModelSection />
                             <SpotlightSection />
                         </Stack>
                     </TabPanel>
-                    <TabPanel value="chat" sx={{ px: 0, py: 2 }}>
+                    <TabPanel sx={{ px: 0, py: 2 }} value="chat">
                         <Stack spacing={2}>
                             <MessageLayoutSection />
                             <DoubleClickTodoSection />
                         </Stack>
                     </TabPanel>
-                    <TabPanel value="tasks" sx={{ px: 0, py: 2 }}>
+                    <TabPanel sx={{ px: 0, py: 2 }} value="tasks">
                         <Stack spacing={2}>
                             {/* Sort settings now live in
                                 `TaskTableColumnSettings` (task table /
@@ -1264,12 +1264,12 @@ export const SettingsModal = ({
                             <AutoSyncCalendarSection />
                         </Stack>
                     </TabPanel>
-                    <TabPanel value="notifications" sx={{ px: 0, py: 2 }}>
+                    <TabPanel sx={{ px: 0, py: 2 }} value="notifications">
                         <Stack spacing={2}>
                             <NotificationSettingsPanel />
                         </Stack>
                     </TabPanel>
-                    <TabPanel value="mentionGroups" sx={{ px: 0, py: 2 }}>
+                    <TabPanel sx={{ px: 0, py: 2 }} value="mentionGroups">
                         <Stack spacing={2}>
                             {/* All five auxiliary props are needed to
                                 render the panel's avatar rows. If any
@@ -1277,11 +1277,11 @@ export const SettingsModal = ({
                                 quiet placeholder rather than crash. */}
                             {myself && setMyself && useCM && useUISM ? (
                                 <MentionGroupsPanel
-                                    useTEM={useTEM}
                                     myself={myself}
                                     setMyself={setMyself}
                                     socket={socket ?? null}
                                     useCM={useCM}
+                                    useTEM={useTEM}
                                     useUISM={useUISM}
                                 />
                             ) : (
@@ -1291,13 +1291,13 @@ export const SettingsModal = ({
                             )}
                         </Stack>
                     </TabPanel>
-                    <TabPanel value="shortcuts" sx={{ px: 0, py: 2 }}>
+                    <TabPanel sx={{ px: 0, py: 2 }} value="shortcuts">
                         <Stack spacing={2}>
                             <KeyboardShortcutsSection />
                         </Stack>
                     </TabPanel>
                     {OAUTH_INTEGRATIONS_ENABLED && (
-                        <TabPanel value="integrations" sx={{ px: 0, py: 2 }}>
+                        <TabPanel sx={{ px: 0, py: 2 }} value="integrations">
                             <Stack spacing={2}>
                                 <IntegrationsSection />
                             </Stack>

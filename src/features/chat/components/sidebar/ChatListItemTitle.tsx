@@ -44,7 +44,7 @@ export const ChatListItemTitle: React.FC<ChatListItemTitleProps> = ({
         <Box sx={{ minWidth: 0 }}>
             <Stack direction="column" spacing={0.25} sx={{ minWidth: 0 }}>
                 {/* Name row with lock icon and group indicator */}
-                <Stack direction="row" spacing={0.5} alignItems="center" sx={{ minWidth: 0 }}>
+                <Stack alignItems="center" direction="row" spacing={0.5} sx={{ minWidth: 0 }}>
                     {chat.isPrivate && (
                         <LockOutlineRoundedIcon
                             sx={{
@@ -56,7 +56,6 @@ export const ChatListItemTitle: React.FC<ChatListItemTitleProps> = ({
                     )}
                     <Typography
                         level="title-sm"
-                        noWrap
                         sx={{
                             fontWeight: 600,
                             fontSize: "1rem",
@@ -64,6 +63,7 @@ export const ChatListItemTitle: React.FC<ChatListItemTitleProps> = ({
                             minWidth: 0,
                             lineHeight: 1.3,
                         }}
+                        noWrap
                     >
                         {isYou ? `${chat.chatName} (you)` : chat.chatName}
                     </Typography>
@@ -73,7 +73,6 @@ export const ChatListItemTitle: React.FC<ChatListItemTitleProps> = ({
                 {customStatus && (
                     <Typography
                         level="body-xs"
-                        noWrap
                         sx={{
                             fontSize: "0.7rem",
                             fontWeight: 500,
@@ -83,6 +82,7 @@ export const ChatListItemTitle: React.FC<ChatListItemTitleProps> = ({
                             fontStyle: "italic",
                             letterSpacing: "0.01em",
                         }}
+                        noWrap
                     >
                         {customStatus}
                     </Typography>

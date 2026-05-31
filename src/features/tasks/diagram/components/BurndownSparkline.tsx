@@ -65,26 +65,26 @@ export const BurndownSparkline = ({ data, total, tone, width = 220, height = 44 
                     cursor: "help",
                 }}
             >
-                <svg width={width} height={height} aria-hidden>
+                <svg height={height} width={width} aria-hidden>
                     <line
-                        x1={idealStart.split(",")[0]}
-                        y1={idealStart.split(",")[1]}
-                        x2={idealEnd.split(",")[0]}
-                        y2={idealEnd.split(",")[1]}
                         stroke={P.textMuted}
+                        strokeDasharray="3 3"
                         strokeOpacity={0.55}
                         strokeWidth={1}
-                        strokeDasharray="3 3"
+                        x1={idealStart.split(",")[0]}
+                        x2={idealEnd.split(",")[0]}
+                        y1={idealStart.split(",")[1]}
+                        y2={idealEnd.split(",")[1]}
                     />
                     <polyline
-                        points={actualPath}
                         fill="none"
+                        points={actualPath}
                         stroke={actualColor}
-                        strokeWidth={2}
-                        strokeLinejoin="round"
                         strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
                     />
-                    <circle cx={lastX} cy={lastY} r={3} fill={actualColor} />
+                    <circle cx={lastX} cy={lastY} fill={actualColor} r={3} />
                 </svg>
             </Box>
         </AppTooltip>

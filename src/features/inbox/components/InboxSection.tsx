@@ -87,7 +87,6 @@ export const InboxSection = forwardRef<VirtuosoHandle, InboxSectionExtendedProps
                             return (
                                 <Box
                                     key={`${itemKeyPrefix}-${item.itemId}`}
-                                    onClick={() => handleItemClick(item.itemId)}
                                     sx={{
                                         px: 2,
                                         py: 0.75,
@@ -118,13 +117,14 @@ export const InboxSection = forwardRef<VirtuosoHandle, InboxSectionExtendedProps
                                             },
                                         },
                                     }}
+                                    onClick={() => handleItemClick(item.itemId)}
                                 >
                                     <InboxBubble
-                                        useCM={useCM}
                                         inboxItem={item}
                                         myself={myself}
                                         setMyself={setMyself}
                                         socket={socket}
+                                        useCM={useCM}
                                         useTEM={useTEM}
                                         useUISM={useUISM}
                                     />

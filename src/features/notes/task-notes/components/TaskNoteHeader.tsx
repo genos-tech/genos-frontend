@@ -37,13 +37,13 @@ export const TaskNoteHeader = ({
                 onNodeClick={(noteId) => useNM.loadNote(2, noteId, -1)}
             />
             <NoteHistoryChip
-                useNM={useNM}
-                noteType={2}
-                noteId={useNM.currentTaskNote?.noteId ?? 0}
                 myself={myself}
+                noteId={useNM.currentTaskNote?.noteId ?? 0}
+                noteType={2}
                 setMyself={setMyself}
                 socket={socket}
                 useCM={useCM}
+                useNM={useNM}
                 useUISM={useUISM}
             />
         </Stack>

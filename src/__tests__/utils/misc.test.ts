@@ -2,13 +2,24 @@ import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
+    ChatNoteMetaProps,
+    MyNoteMetaProps,
+    SharedNoteMetaProps,
+    TaskNoteMetaProps,
+} from "../../types/notes";
+import { emptyDmPartnerUser } from "../../utils/defaultProps";
+import {
     bumpGMProfileImageVersion,
     useGMProfileImageVersion,
 } from "../../utils/gmProfileImageVersion";
+import {
+    buildChatNoteTree,
+    buildMyNoteTree,
+    buildSharedNoteTree,
+    buildTaskNoteTree,
+} from "../../utils/note";
 import { areObjectsEqual } from "../../utils/objectHandler";
-import { emptyDmPartnerUser } from "../../utils/defaultProps";
 import { getServiceShortcutModifierKeys, isMac } from "../../utils/platform";
-import { sleepMilliSeconds } from "../../utils/sleep";
 import {
     closeMessagesPane,
     closeSidebar,
@@ -17,18 +28,7 @@ import {
     toggleMessagesPane,
     toggleSidebar,
 } from "../../utils/sidebarUtils";
-import {
-    buildChatNoteTree,
-    buildMyNoteTree,
-    buildSharedNoteTree,
-    buildTaskNoteTree,
-} from "../../utils/note";
-import {
-    ChatNoteMetaProps,
-    MyNoteMetaProps,
-    SharedNoteMetaProps,
-    TaskNoteMetaProps,
-} from "../../types/notes";
+import { sleepMilliSeconds } from "../../utils/sleep";
 
 // ---------------------------------------------------------------------------
 // avatarSrc.ts
@@ -69,7 +69,7 @@ describe("buildAvatarSrc", () => {
         vi.resetModules();
         const buildAvatarSrc = await loadFresh();
         expect(buildAvatarSrc("uploads/avatar.jpg")).toBe(
-            "https://media.example.com/uploads/avatar.jpg",
+            "https://media.example.com/uploads/avatar.jpg"
         );
     });
 
@@ -179,25 +179,25 @@ describe("sidebarUtils", () => {
     it("openSidebar sets body overflow hidden and the slideIn custom property", () => {
         openSidebar();
         expect(document.body.style.overflow).toBe("hidden");
-        expect(
-            document.documentElement.style.getPropertyValue("--SideNavigation-slideIn"),
-        ).toBe("1");
+        expect(document.documentElement.style.getPropertyValue("--SideNavigation-slideIn")).toBe(
+            "1"
+        );
     });
 
     it("closeSidebar removes the slideIn property and body overflow", () => {
         openSidebar();
         closeSidebar();
         expect(document.body.style.overflow).toBe("");
-        expect(
-            document.documentElement.style.getPropertyValue("--SideNavigation-slideIn"),
-        ).toBe("");
+        expect(document.documentElement.style.getPropertyValue("--SideNavigation-slideIn")).toBe(
+            ""
+        );
     });
 
     it("openMessagesPane sets body overflow and the MessagesPane slideIn property", () => {
         openMessagesPane();
         expect(document.body.style.overflow).toBe("hidden");
         expect(document.documentElement.style.getPropertyValue("--MessagesPane-slideIn")).toBe(
-            "1",
+            "1"
         );
     });
 
@@ -205,24 +205,22 @@ describe("sidebarUtils", () => {
         openMessagesPane();
         closeMessagesPane();
         expect(document.body.style.overflow).toBe("");
-        expect(document.documentElement.style.getPropertyValue("--MessagesPane-slideIn")).toBe(
-            "",
-        );
+        expect(document.documentElement.style.getPropertyValue("--MessagesPane-slideIn")).toBe("");
     });
 
     it("toggleSidebar opens from a clean state", () => {
         toggleSidebar();
         // After toggling from no slideIn, expect it to be open (asserted below
         // against the observed jsdom getComputedStyle behavior).
-        expect(
-            document.documentElement.style.getPropertyValue("--SideNavigation-slideIn"),
-        ).toBe("1");
+        expect(document.documentElement.style.getPropertyValue("--SideNavigation-slideIn")).toBe(
+            "1"
+        );
     });
 
     it("toggleMessagesPane opens from a clean state", () => {
         toggleMessagesPane();
         expect(document.documentElement.style.getPropertyValue("--MessagesPane-slideIn")).toBe(
-            "1",
+            "1"
         );
     });
 });
@@ -251,10 +249,7 @@ describe("buildMyNoteTree", () => {
     });
 
     it("nests a child under its parent", () => {
-        const roots = buildMyNoteTree([
-            mk({ noteId: 1 }),
-            mk({ noteId: 2, parentNoteId: 1 }),
-        ]);
+        const roots = buildMyNoteTree([mk({ noteId: 1 }), mk({ noteId: 2, parentNoteId: 1 })]);
         expect(roots).toHaveLength(1);
         expect(roots[0].noteId).toBe(1);
         expect(roots[0].children).toHaveLength(1);

@@ -111,6 +111,7 @@ export function ChannelListV3({ selectedChannelId, onSelect }: ChannelListV3Prop
 
     return (
         <aside
+            data-testid="channel-list-v3"
             style={{
                 display: "flex",
                 flexDirection: "column",
@@ -119,7 +120,6 @@ export function ChannelListV3({ selectedChannelId, onSelect }: ChannelListV3Prop
                 borderRight: "1px solid #ddd",
                 fontFamily: "system-ui, sans-serif",
             }}
-            data-testid="channel-list-v3"
         >
             <header
                 style={{
@@ -134,8 +134,8 @@ export function ChannelListV3({ selectedChannelId, onSelect }: ChannelListV3Prop
                 <strong>Channels (v3)</strong>
                 <span
                     data-testid="channel-list-v3-total-unread"
-                    title={`DM ${unreadByKind[ChannelKind.DM]} | GM ${unreadByKind[ChannelKind.GM]} | PM ${unreadByKind[ChannelKind.PM]} | MDM ${unreadByKind[ChannelKind.MDM]}`}
                     style={{ opacity: 0.7 }}
+                    title={`DM ${unreadByKind[ChannelKind.DM]} | GM ${unreadByKind[ChannelKind.GM]} | PM ${unreadByKind[ChannelKind.PM]} | MDM ${unreadByKind[ChannelKind.MDM]}`}
                 >
                     {totalUnread}
                 </span>
@@ -149,21 +149,22 @@ export function ChannelListV3({ selectedChannelId, onSelect }: ChannelListV3Prop
                 }}
             >
                 <input
+                    data-testid="channel-list-v3-search"
+                    placeholder="Search channels…"
                     type="search"
                     value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    placeholder="Search channels…"
-                    data-testid="channel-list-v3-search"
                     style={{
                         width: "100%",
                         padding: "4px 8px",
                         boxSizing: "border-box",
                         fontSize: 13,
                     }}
+                    onChange={(e) => setQuery(e.target.value)}
                 />
             </div>
 
             <ul
+                data-testid="channel-list-v3-list"
                 style={{
                     flex: 1,
                     overflowY: "auto",
@@ -171,7 +172,6 @@ export function ChannelListV3({ selectedChannelId, onSelect }: ChannelListV3Prop
                     padding: 0,
                     listStyle: "none",
                 }}
-                data-testid="channel-list-v3-list"
             >
                 {isLoading && <li style={{ padding: 12, opacity: 0.5 }}>Loading…</li>}
                 {!isLoading && channels.length === 0 && (
@@ -179,8 +179,8 @@ export function ChannelListV3({ selectedChannelId, onSelect }: ChannelListV3Prop
                 )}
                 {!isLoading && channels.length > 0 && !hasResults && (
                     <li
-                        style={{ padding: 12, opacity: 0.5 }}
                         data-testid="channel-list-v3-no-results"
+                        style={{ padding: 12, opacity: 0.5 }}
                     >
                         No channels match “{query}”.
                     </li>
@@ -192,8 +192,8 @@ export function ChannelListV3({ selectedChannelId, onSelect }: ChannelListV3Prop
                     return (
                         <Fragment key={kind}>
                             <li
-                                data-testid={`channel-list-v3-section-header-${kind}`}
                                 data-collapsed={collapsed ? "true" : "false"}
+                                data-testid={`channel-list-v3-section-header-${kind}`}
                                 style={{
                                     padding: 0,
                                     borderBottom: "1px solid #eee",
@@ -201,10 +201,9 @@ export function ChannelListV3({ selectedChannelId, onSelect }: ChannelListV3Prop
                                 }}
                             >
                                 <button
-                                    type="button"
-                                    onClick={() => toggleKindCollapse(kind)}
-                                    data-testid={`channel-list-v3-section-toggle-${kind}`}
                                     aria-expanded={!collapsed}
+                                    data-testid={`channel-list-v3-section-toggle-${kind}`}
+                                    type="button"
                                     style={{
                                         width: "100%",
                                         padding: "6px 12px",
@@ -217,6 +216,7 @@ export function ChannelListV3({ selectedChannelId, onSelect }: ChannelListV3Prop
                                         textAlign: "left",
                                         font: "inherit",
                                     }}
+                                    onClick={() => toggleKindCollapse(kind)}
                                 >
                                     <span style={{ fontSize: 10, opacity: 0.6 }}>
                                         {collapsed ? "▶" : "▼"}
@@ -253,7 +253,6 @@ export function ChannelListV3({ selectedChannelId, onSelect }: ChannelListV3Prop
                                         <li
                                             key={c.id}
                                             data-testid={`channel-list-v3-item-${c.id}`}
-                                            onClick={() => onSelect(c.id)}
                                             style={{
                                                 padding: "8px 12px",
                                                 borderBottom: "1px solid #eee",
@@ -264,6 +263,7 @@ export function ChannelListV3({ selectedChannelId, onSelect }: ChannelListV3Prop
                                                 alignItems: "center",
                                                 gap: 8,
                                             }}
+                                            onClick={() => onSelect(c.id)}
                                         >
                                             <span
                                                 style={{
@@ -308,16 +308,9 @@ export function ChannelListV3({ selectedChannelId, onSelect }: ChannelListV3Prop
                                                 </span>
                                             )}
                                             <button
-                                                type="button"
-                                                onClick={(e) => {
-                                                    // Stop the row's click handler from firing
-                                                    // → toggling pin shouldn't ALSO open the
-                                                    // channel.
-                                                    e.stopPropagation();
-                                                    void togglePin(c.id, isPinned);
-                                                }}
                                                 data-testid={`channel-list-v3-pin-${c.id}`}
                                                 title={isPinned ? "Unpin channel" : "Pin channel"}
+                                                type="button"
                                                 style={{
                                                     background: "transparent",
                                                     border: "none",
@@ -325,6 +318,13 @@ export function ChannelListV3({ selectedChannelId, onSelect }: ChannelListV3Prop
                                                     padding: 0,
                                                     fontSize: 14,
                                                     opacity: isPinned ? 1 : 0.35,
+                                                }}
+                                                onClick={(e) => {
+                                                    // Stop the row's click handler from firing
+                                                    // → toggling pin shouldn't ALSO open the
+                                                    // channel.
+                                                    e.stopPropagation();
+                                                    void togglePin(c.id, isPinned);
                                                 }}
                                             >
                                                 📌

@@ -97,4 +97,3 @@ export default function useScript(src: string): UseScriptStatus {
 
     return status;
 }
-

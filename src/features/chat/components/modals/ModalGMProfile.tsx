@@ -5,7 +5,7 @@
 // channel-update path replaces these services.
 // `simple-import-sort` is disabled because the prettier import-sort
 // plugin disagrees with it on react-vs-@mui ordering; prettier wins.
-/* eslint-disable sort-keys, simple-import-sort/imports */
+
 import { useEffect, useMemo, useRef, useState } from "react";
 import CloseIcon from "@mui/icons-material/Close";
 import EditIcon from "@mui/icons-material/Edit";

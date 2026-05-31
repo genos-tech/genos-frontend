@@ -107,7 +107,6 @@ export const BubbleUnderBar = (props: BubbleUnderBarTypes) => {
                 {hasReplies && (
                     <Box
                         component="button"
-                        onClick={replayHandler}
                         sx={{
                             display: "inline-flex",
                             alignItems: "center",
@@ -139,6 +138,7 @@ export const BubbleUnderBar = (props: BubbleUnderBarTypes) => {
                                 transform: "translateY(0)",
                             },
                         }}
+                        onClick={replayHandler}
                     >
                         <Typography
                             level="body-xs"

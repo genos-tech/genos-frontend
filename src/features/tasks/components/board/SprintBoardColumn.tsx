@@ -1,9 +1,9 @@
 import React from "react";
+import { Droppable } from "@hello-pangea/dnd";
 import Box from "@mui/joy/Box";
 import { useColorScheme } from "@mui/joy/styles";
 import Typography from "@mui/joy/Typography";
 import { alpha } from "@mui/system";
-import { Droppable } from "@hello-pangea/dnd";
 
 import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
@@ -120,11 +120,11 @@ const SprintBoardColumnImpl = ({
 
             {/* Droppable Area */}
             <Droppable
-                droppableId={column.id}
                 direction="vertical"
-                isDropDisabled={false}
-                isCombineEnabled={false}
+                droppableId={column.id}
                 ignoreContainerClipping={false}
+                isCombineEnabled={false}
+                isDropDisabled={false}
             >
                 {(provided, snapshot) => {
                     const isOver = snapshot.isDraggingOver;
@@ -150,8 +150,8 @@ const SprintBoardColumnImpl = ({
                     )} 50%, transparent 65%, transparent 100%)`;
                     return (
                         <Box
-                            className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                             ref={provided.innerRef}
+                            className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                             {...provided.droppableProps}
                             sx={{
                                 position: "relative",
@@ -257,12 +257,12 @@ const SprintBoardColumnImpl = ({
                                     return (
                                         <SprintBoardCard
                                             key={task.id}
-                                            task={task}
                                             index={index}
+                                            isSelected={isSelected}
                                             myself={myself}
+                                            task={task}
                                             teamMemberProfiles={teamMemberProfiles}
                                             onTaskClick={onTaskClick}
-                                            isSelected={isSelected}
                                         />
                                     );
                                 })

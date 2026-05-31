@@ -81,9 +81,9 @@ export const AvatarWithStatus = (props: AvatarWithStatusProps) => {
         <UserAvatar
             fallbackInitial={fallbackInitial}
             showNameAndEmail={showNameAndEmail}
+            showPulseDot={showPulseDot}
             size={avatarSize}
             userId={targetUserId}
-            showPulseDot={showPulseDot}
         />
     );
 };

@@ -366,9 +366,9 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                         )}
                         <CopyableTaskIdChip
                             key={`task-title-block-${taskContent.id}`}
-                            task={taskContent}
                             fallback="N/A"
                             size="md"
+                            task={taskContent}
                             variant="soft"
                             sx={{
                                 borderRadius: "8px",
@@ -731,7 +731,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                 open={showCloseDiscardConfirm}
                 onClose={() => setShowCloseDiscardConfirm(false)}
             >
-                <ModalDialog variant="outlined" role="alertdialog">
+                <ModalDialog role="alertdialog" variant="outlined">
                     <DialogTitle>
                         <WarningRoundedIcon sx={{ color: "#f59e0b" }} />
                         Close this draft?
@@ -744,8 +744,8 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                     <DialogActions>
                         <Button
                             color="danger"
-                            variant="solid"
                             startDecorator={<CloseRoundedIcon sx={{ fontSize: 16 }} />}
+                            variant="solid"
                             onClick={() => {
                                 setShowCloseDiscardConfirm(false);
                                 performClose();
@@ -755,8 +755,8 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                         </Button>
                         <Button
                             color="primary"
-                            variant="soft"
                             startDecorator={<VisibilityOffRoundedIcon sx={{ fontSize: 16 }} />}
+                            variant="soft"
                             onClick={() => {
                                 setShowCloseDiscardConfirm(false);
                                 performHide();
@@ -841,7 +841,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
             {taskContent.id != null && taskContent.project?.projectId != null && (
                 <ModalTaskDiagram
                     open={openTaskDiagram}
-                    onClose={() => setOpenTaskDiagram(false)}
+                    projectId={Number(taskContent.project.projectId)}
                     myself={myself}
                     // Always anchor the diagram on the WHOLE hierarchy
                     // the task lives in. `rootTaskId` walks up to the
@@ -850,12 +850,12 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                     // diagram from a leaf sub-task would only show
                     // that single node — the user expects to see the
                     // milestone / parent + all siblings + sub-tree.
-                    rootTaskId={Number(taskContent.rootTaskId ?? taskContent.id)}
-                    projectId={Number(taskContent.project.projectId)}
                     rootLabel={`${taskContent.displayId ?? `#${taskContent.id}`} · ${taskContent.title || "Untitled"}`}
-                    useTM={useTM}
+                    rootTaskId={Number(taskContent.rootTaskId ?? taskContent.id)}
                     usePM={usePM}
                     useSM={useSM}
+                    useTM={useTM}
+                    onClose={() => setOpenTaskDiagram(false)}
                 />
             )}
 

@@ -93,10 +93,9 @@ export const NoteHistoryChip = ({
                 }}
             >
                 <Box
+                    aria-label={summary}
                     component="button"
                     type="button"
-                    aria-label={summary}
-                    onClick={() => setOpen(true)}
                     sx={{
                         display: "inline-flex",
                         alignItems: "center",
@@ -124,6 +123,7 @@ export const NoteHistoryChip = ({
                             outlineOffset: 2,
                         },
                     }}
+                    onClick={() => setOpen(true)}
                 >
                     <HistoryRoundedIcon
                         sx={{
@@ -146,16 +146,16 @@ export const NoteHistoryChip = ({
             </Tooltip>
 
             <ModalNoteHistory
-                open={open}
-                onClose={() => setOpen(false)}
-                useNM={useNM}
-                noteType={noteType}
-                noteId={noteId}
                 myself={myself}
+                noteId={noteId}
+                noteType={noteType}
+                open={open}
                 setMyself={setMyself}
                 socket={socket}
                 useCM={useCM}
+                useNM={useNM}
                 useUISM={useUISM}
+                onClose={() => setOpen(false)}
             />
         </>
     );

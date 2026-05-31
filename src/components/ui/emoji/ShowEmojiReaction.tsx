@@ -290,10 +290,10 @@ export const ShowEmojiReaction = (props: ShowEmojiReactionProps) => {
                 >
                     <Chip
                         key={`emoji-chip-${emoji}-${index}`}
+                        size="sm"
                         color={
                             senders.some((u) => u.userId === myself.userId) ? "success" : "neutral"
                         }
-                        size="sm"
                         sx={{
                             fontSize: "0.9rem",
                             cursor: "pointer",

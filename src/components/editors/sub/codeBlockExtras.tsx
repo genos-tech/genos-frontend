@@ -1,5 +1,5 @@
 import { codeBlockOptions } from "@blocknote/code-block";
-import { createExtension, type Dictionary, getLanguageId } from "@blocknote/core";
+import { createExtension, getLanguageId, type Dictionary } from "@blocknote/core";
 import { blockTypeSelectItems, type BlockTypeSelectItem } from "@blocknote/react";
 import { RiCodeBoxLine } from "react-icons/ri";
 

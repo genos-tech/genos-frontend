@@ -34,7 +34,7 @@ export const ActivityReactions: React.FC<ActivityReactionsProps> = ({
             sx={{ ml: "44px" }}
         >
             {/* Reaction notification text */}
-            <Stack direction="row" alignItems="center" spacing={1} sx={{ minWidth: 0, flex: 1 }}>
+            <Stack alignItems="center" direction="row" spacing={1} sx={{ minWidth: 0, flex: 1 }}>
                 <Typography
                     level="body-sm"
                     sx={{
@@ -77,9 +77,13 @@ export const ActivityReactions: React.FC<ActivityReactionsProps> = ({
                     return (
                         <Tooltip
                             key={`tooltip-${index}`}
+                            placement="top"
                             size="sm"
                             variant="outlined"
-                            placement="top"
+                            sx={{
+                                borderRadius: "8px",
+                                fontSize: "0.75rem",
+                            }}
                             title={
                                 senders
                                     .slice(0, 5)
@@ -88,10 +92,6 @@ export const ActivityReactions: React.FC<ActivityReactionsProps> = ({
                                 (senders.length > 5 ? t.chat.reactions.andMore : "") +
                                 t.chat.reactions.reacted
                             }
-                            sx={{
-                                borderRadius: "8px",
-                                fontSize: "0.75rem",
-                            }}
                         >
                             <Box
                                 sx={{
@@ -147,8 +147,8 @@ export const ActivityReactions: React.FC<ActivityReactionsProps> = ({
 
                 {hidden.length > 0 && (
                     <Tooltip
-                        size="sm"
                         placement="top"
+                        size="sm"
                         title={hidden.map(({ emoji, count }) => `${emoji} ${count}`).join("  ")}
                         variant="outlined"
                         sx={{

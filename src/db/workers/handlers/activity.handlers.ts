@@ -22,18 +22,11 @@ const activityService = new ActivityService();
 export const activityHandlers: HandlerMap<ActivityRequests> = {
     addActivityMessage: async ({ activityMessage }) => {
         const ok = await activityService.addActivityMessage(activityMessage);
-        // eslint-disable-next-line no-console
-        console.log(
-            `[worker:addActivityMessage] ok=${ok} key=${activityMessage?.activityId} ` +
-                `tsSent=${activityMessage?.tsSent}`
-        );
         // Sanity check — read back immediately so we can confirm the row
         // actually landed. Diagnoses silent put() failures (e.g. schema
         // mismatch, IndexedDB constraint violation) that `BaseRepository.put`
         // currently swallows.
         const all = await activityService.getAllActivityMessages();
-        // eslint-disable-next-line no-console
-        console.log(`[worker:addActivityMessage] post-write IDB has ${all.length} rows`);
     },
 
     loadActivityHistory: async ({ myself, accessToken }) => {
@@ -99,26 +92,10 @@ export const activityHandlers: HandlerMap<ActivityRequests> = {
 
     popActivityMessages: async ({ myself }) => {
         const messages: ActivityMessageProps[] = await activityService.getAllActivityMessages();
-        // eslint-disable-next-line no-console
-        console.log(
-            `[worker:popActivityMessages] myself.userId=${myself.userId} raw_count=${messages.length}`
-        );
-        // eslint-disable-next-line no-console
-        console.log(
-            "[worker:popActivityMessages] sample raw rows",
-            messages.slice(0, 3).map((m) => ({
-                activityId: m.activityId,
-                activityType: m.activityType,
-                senderId: m.senderId,
-                isThread: m.isThread,
-                mentionedUserIds: m.mentionedUserIds,
-            }))
-        );
         const filtered = messages.filter(
             (m) => !(m.activityType === 2 && myself.userId !== m.senderId)
         );
-        // eslint-disable-next-line no-console
-        console.log(`[worker:popActivityMessages] after filter=${filtered.length}`);
+
         return [...filtered].sort(
             (a, b) => new Date(b.tsSent).getTime() - new Date(a.tsSent).getTime()
         );

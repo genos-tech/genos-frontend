@@ -185,7 +185,6 @@ export const TaskNodeCard = memo((props: NodeProps) => {
 
     return (
         <Box
-            onClick={isExternal ? () => onOpenPreview() : undefined}
             sx={{
                 width: 260,
                 p: 1.25,
@@ -229,6 +228,7 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                       }
                     : undefined,
             }}
+            onClick={isExternal ? () => onOpenPreview() : undefined}
         >
             {/* Handles — fully inert for ghosts. External tasks are
                 a read-only window; editing relations from this diagram
@@ -236,68 +236,68 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                 from the other task's own preview/diagram). Structure
                 AND dependency handles both disable on ghosts. */}
             <Handle
-                type="target"
-                position={Position.Top}
                 id={HANDLE.structureTop}
-                style={{
-                    ...HANDLE_BASE,
-                    background: P.accent,
-                    borderColor: P.accentSoft,
-                    opacity: isExternal ? 0.35 : 1,
-                }}
                 isConnectable={!isExternal}
-            />
-            <Handle
-                type="source"
-                position={Position.Bottom}
-                id={HANDLE.structureBottom}
-                style={{
-                    ...HANDLE_BASE,
-                    background: P.accent,
-                    borderColor: P.accentSoft,
-                    opacity: isExternal ? 0.35 : 1,
-                }}
-                isConnectable={!isExternal}
-            />
-            <Handle
+                position={Position.Top}
                 type="target"
-                position={Position.Left}
-                id={HANDLE.dependencyLeft}
                 style={{
                     ...HANDLE_BASE,
-                    background: "#ff8c00",
-                    borderColor: "#fbbf24",
+                    background: P.accent,
+                    borderColor: P.accentSoft,
                     opacity: isExternal ? 0.35 : 1,
                 }}
-                isConnectable={!isExternal}
             />
             <Handle
+                id={HANDLE.structureBottom}
+                isConnectable={!isExternal}
+                position={Position.Bottom}
                 type="source"
-                position={Position.Right}
-                id={HANDLE.dependencyRight}
+                style={{
+                    ...HANDLE_BASE,
+                    background: P.accent,
+                    borderColor: P.accentSoft,
+                    opacity: isExternal ? 0.35 : 1,
+                }}
+            />
+            <Handle
+                id={HANDLE.dependencyLeft}
+                isConnectable={!isExternal}
+                position={Position.Left}
+                type="target"
                 style={{
                     ...HANDLE_BASE,
                     background: "#ff8c00",
                     borderColor: "#fbbf24",
                     opacity: isExternal ? 0.35 : 1,
                 }}
+            />
+            <Handle
+                id={HANDLE.dependencyRight}
                 isConnectable={!isExternal}
+                position={Position.Right}
+                type="source"
+                style={{
+                    ...HANDLE_BASE,
+                    background: "#ff8c00",
+                    borderColor: "#fbbf24",
+                    opacity: isExternal ? 0.35 : 1,
+                }}
             />
 
             {/* Header row */}
-            <Stack direction="row" alignItems="center" spacing={0.75} sx={{ mb: 0.75 }}>
+            <Stack alignItems="center" direction="row" spacing={0.75} sx={{ mb: 0.75 }}>
                 <CopyableTaskIdChip
-                    task={task}
                     size="sm"
-                    variant="outlined"
                     sx={{ fontWeight: 600, fontFamily: "monospace", borderRadius: "5px" }}
+                    task={task}
+                    variant="outlined"
                 />
                 {/* Status picker — ghosts stay read-only (their status
                     lives in another tree). For everyone else the chip
                     is a dropdown trigger so users can move a task
                     Open → WIP → Closed without opening the preview. */}
                 {isExternal ? (
-                    <StatusChip meta={meta} isDark={isDark} />
+                    <StatusChip isDark={isDark} meta={meta} />
                 ) : (
                     <Dropdown>
                         <MenuButton
@@ -325,11 +325,11 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                                 },
                             }}
                         >
-                            <StatusChip meta={meta} isDark={isDark} />
+                            <StatusChip isDark={isDark} meta={meta} />
                         </MenuButton>
                         <Menu
-                            size="sm"
                             placement="bottom-start"
+                            size="sm"
                             sx={{ minWidth: 140 }}
                             slotProps={{
                                 // `slotProps.root` here spreads onto the
@@ -349,6 +349,7 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                                     <MenuItem
                                         key={s.status}
                                         selected={isActive}
+                                        sx={{ fontWeight: isActive ? 700 : 500 }}
                                         onClick={() => {
                                             if (isActive || s.status == null) return;
                                             void onChange({
@@ -356,7 +357,6 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                                                 statusCode: s.code,
                                             });
                                         }}
-                                        sx={{ fontWeight: isActive ? 700 : 500 }}
                                     >
                                         <Box
                                             sx={{
@@ -385,10 +385,10 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                         )}
                     >
                         <Chip
-                            size="sm"
                             color="warning"
-                            variant="soft"
+                            size="sm"
                             startDecorator={<BlockRoundedIcon sx={{ fontSize: 12 }} />}
+                            variant="soft"
                             sx={{
                                 fontSize: "0.65rem",
                                 fontWeight: 700,
@@ -418,7 +418,6 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                         <IconButton
                             size="sm"
                             variant="plain"
-                            onClick={onOpenPreview}
                             sx={{
                                 "--IconButton-size": "22px",
                                 color: P.textMuted,
@@ -430,6 +429,7 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                                     color: P.accentSoft,
                                 },
                             }}
+                            onClick={onOpenPreview}
                         >
                             <LaunchRoundedIcon sx={{ fontSize: 14 }} />
                         </IconButton>
@@ -440,11 +440,12 @@ export const TaskNodeCard = memo((props: NodeProps) => {
             {/* Title — double-click to edit (disabled for ghosts) */}
             {editing && !isExternal ? (
                 <Input
-                    autoFocus
                     size="sm"
+                    sx={{ mb: 0.75, fontWeight: 600 }}
                     value={draftTitle}
-                    onChange={(e) => setDraftTitle(e.target.value)}
+                    autoFocus
                     onBlur={commitTitle}
+                    onChange={(e) => setDraftTitle(e.target.value)}
                     onKeyDown={(e) => {
                         if (e.key === "Enter") commitTitle();
                         if (e.key === "Escape") {
@@ -452,13 +453,12 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                             setDraftTitle(task.title ?? "");
                         }
                     }}
-                    sx={{ mb: 0.75, fontWeight: 600 }}
                 />
             ) : (
                 <AppTooltip
-                    title={isExternal ? "" : t.tasks.diagram.tooltips.doubleClickToRename}
-                    enterDelay={500}
                     disableHoverListener={isExternal}
+                    enterDelay={500}
+                    title={isExternal ? "" : t.tasks.diagram.tooltips.doubleClickToRename}
                 >
                     <Typography
                         level="body-sm"
@@ -490,8 +490,8 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                 triple-pill row is the diagram's key scheduling cue and
                 deliberately reads compact-but-complete. */}
             <Stack
-                direction="row"
                 alignItems="center"
+                direction="row"
                 spacing={0.5}
                 sx={{ mb: 0.5, minHeight: 22, flexWrap: "wrap", rowGap: 0.5 }}
             >
@@ -512,13 +512,12 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                     const editable = !isExternal;
                     return (
                         <AppTooltip
-                            title={editable ? t.tasks.diagram.tooltips.clickToEditDates : ""}
-                            enterDelay={500}
                             disableHoverListener={!editable}
+                            enterDelay={500}
+                            title={editable ? t.tasks.diagram.tooltips.clickToEditDates : ""}
                         >
                             <Typography
                                 level="body-xs"
-                                onClick={editable ? openDateEditor : undefined}
                                 sx={{
                                     color: isEmpty ? P.textMuted : P.text,
                                     fontWeight: 500,
@@ -535,6 +534,7 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                                           }
                                         : undefined,
                                 }}
+                                onClick={editable ? openDateEditor : undefined}
                             >
                                 {labelText}
                             </Typography>
@@ -559,8 +559,8 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                 {schedule.relativeLabel && (
                     <Chip
                         size="sm"
-                        variant="soft"
                         startDecorator={<ScheduleRoundedIcon sx={{ fontSize: 11 }} />}
+                        variant="soft"
                         sx={{
                             fontSize: "0.6rem",
                             fontWeight: 700,
@@ -576,20 +576,20 @@ export const TaskNodeCard = memo((props: NodeProps) => {
             </Stack>
 
             {/* Footer row */}
-            <Stack direction="row" alignItems="center" spacing={0.75}>
+            <Stack alignItems="center" direction="row" spacing={0.75}>
                 {!isExternal && task.assigneeId && (
                     // Avatar instead of name text — packs more identity
                     // into the same horizontal space and matches the
                     // affordance used everywhere else in the app
                     // (comments, table cells, modals). Tooltip with the
                     // name covers the "who is this?" case.
-                    <AppTooltip title={task.assigneeName ?? ""} enterDelay={400}>
+                    <AppTooltip enterDelay={400} title={task.assigneeName ?? ""}>
                         <Box sx={{ display: "inline-flex" }}>
                             <UserAvatar
-                                userId={task.assigneeId}
-                                size={22}
                                 showNameAndEmail={false}
                                 showPulseDot={false}
+                                size={22}
+                                userId={task.assigneeId}
                             />
                         </Box>
                     </AppTooltip>
@@ -660,7 +660,6 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                         <IconButton
                             size="sm"
                             variant="plain"
-                            onClick={() => void onAddSubtask()}
                             sx={{
                                 "--IconButton-size": "24px",
                                 color: P.accentSoft,
@@ -668,6 +667,7 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                                 borderRadius: "6px",
                                 "&:hover": { opacity: 1, background: P.hoverBg },
                             }}
+                            onClick={() => void onAddSubtask()}
                         >
                             <AddRoundedIcon sx={{ fontSize: 16 }} />
                         </IconButton>
@@ -697,8 +697,8 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                     }}
                 >
                     <Stack
-                        direction="row"
                         alignItems="center"
+                        direction="row"
                         spacing={1}
                         sx={{
                             px: 2,
@@ -719,13 +719,13 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                             <Input
                                 type="date"
                                 value={draftStart}
-                                onChange={(e) => setDraftStart(e.target.value)}
                                 sx={{
                                     "& input::-webkit-calendar-picker-indicator": {
                                         filter: isDark ? "invert()" : "none",
                                         cursor: "pointer",
                                     },
                                 }}
+                                onChange={(e) => setDraftStart(e.target.value)}
                             />
                         </FormControl>
                         <FormControl size="sm">
@@ -735,20 +735,20 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                             <Input
                                 type="date"
                                 value={draftDue}
-                                onChange={(e) => setDraftDue(e.target.value)}
                                 sx={{
                                     "& input::-webkit-calendar-picker-indicator": {
                                         filter: isDark ? "invert()" : "none",
                                         cursor: "pointer",
                                     },
                                 }}
+                                onChange={(e) => setDraftDue(e.target.value)}
                             />
                         </FormControl>
                     </Stack>
                     <Stack
                         direction="row"
-                        spacing={1}
                         justifyContent="flex-end"
+                        spacing={1}
                         sx={{
                             px: 2,
                             py: 1.25,
@@ -757,9 +757,9 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                         }}
                     >
                         <Button
+                            color="neutral"
                             size="sm"
                             variant="plain"
-                            color="neutral"
                             onClick={() => setDateEditorOpen(false)}
                         >
                             Cancel

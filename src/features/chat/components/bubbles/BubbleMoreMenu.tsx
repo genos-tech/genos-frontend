@@ -1,7 +1,7 @@
 // `simple-import-sort` and the prettier import-sort plugin disagree on
 // the order of `react` vs `@mui/...`. Prettier wins (it reformats on
 // save); disable simple-import-sort.
-/* eslint-disable simple-import-sort/imports */
+
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";

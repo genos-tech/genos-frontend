@@ -48,6 +48,12 @@ export const ReconnectGoogleCalendarButton = ({
 
     return (
         <Button
+            color={color}
+            loading={redirecting}
+            size={size}
+            startDecorator={<LinkRoundedIcon />}
+            sx={{ alignSelf: "flex-start" }}
+            variant={variant}
             onClick={() => {
                 setRedirecting(true);
                 void redirectToOAuthConnect("google", accessToken, next, onError).then((ok) => {
@@ -58,12 +64,6 @@ export const ReconnectGoogleCalendarButton = ({
                     if (!ok) setRedirecting(false);
                 });
             }}
-            loading={redirecting}
-            startDecorator={<LinkRoundedIcon />}
-            size={size}
-            variant={variant}
-            color={color}
-            sx={{ alignSelf: "flex-start" }}
         >
             {label}
         </Button>

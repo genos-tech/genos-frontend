@@ -212,11 +212,11 @@ export const ModalManageTags: React.FC<Props> = ({
                     <IconButton
                         size="sm"
                         variant="plain"
-                        onClick={onClose}
                         sx={{
                             color: "rgba(255,255,255,0.5)",
                             "&:hover": { color: "rgba(255,255,255,0.9)" },
                         }}
+                        onClick={onClose}
                     >
                         <CloseRoundedIcon sx={{ fontSize: 18 }} />
                     </IconButton>
@@ -238,13 +238,13 @@ export const ModalManageTags: React.FC<Props> = ({
 
                 {/* Tag List */}
                 <Stack
+                    className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                     spacing={0.5}
                     sx={{
                         overflowY: "auto",
                         maxHeight: "45vh",
                         pr: 0.5,
                     }}
-                    className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                 >
                     {projectTags.length === 0 && (
                         <Typography
@@ -284,14 +284,6 @@ export const ModalManageTags: React.FC<Props> = ({
                                     <Input
                                         size="sm"
                                         value={editName}
-                                        onChange={(e) => setEditName(e.target.value)}
-                                        onKeyDown={(e) => {
-                                            if (e.key === "Enter" && editName.trim()) {
-                                                saveEdit(tag.tagName);
-                                            } else if (e.key === "Escape") {
-                                                cancelEdit();
-                                            }
-                                        }}
                                         sx={{
                                             flex: 1,
                                             "--Input-focusedThickness": "1px",
@@ -302,6 +294,14 @@ export const ModalManageTags: React.FC<Props> = ({
                                             "& input::placeholder": {
                                                 color: "rgba(255,255,255,0.4)",
                                             },
+                                        }}
+                                        onChange={(e) => setEditName(e.target.value)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter" && editName.trim()) {
+                                                saveEdit(tag.tagName);
+                                            } else if (e.key === "Escape") {
+                                                cancelEdit();
+                                            }
                                         }}
                                     />
                                     <ColorPickerMenu
@@ -326,33 +326,29 @@ export const ModalManageTags: React.FC<Props> = ({
                                     >
                                         {editName || t.tasks.modals.manageTags.previewName}
                                     </Chip>
-                                    <AppTooltip
-                                        title={t.tasks.modals.manageTags.saveTooltip}
-                                    >
+                                    <AppTooltip title={t.tasks.modals.manageTags.saveTooltip}>
                                         <IconButton
+                                            disabled={!editName.trim()}
                                             size="sm"
                                             variant="plain"
-                                            disabled={!editName.trim()}
-                                            onClick={() => saveEdit(tag.tagName)}
                                             sx={{
                                                 color: "rgba(124,58,237,0.8)",
                                                 "&:hover": { color: "#7c3aed" },
                                             }}
+                                            onClick={() => saveEdit(tag.tagName)}
                                         >
                                             <CheckRoundedIcon sx={{ fontSize: 18 }} />
                                         </IconButton>
                                     </AppTooltip>
-                                    <AppTooltip
-                                        title={t.tasks.modals.manageTags.cancelTooltip}
-                                    >
+                                    <AppTooltip title={t.tasks.modals.manageTags.cancelTooltip}>
                                         <IconButton
                                             size="sm"
                                             variant="plain"
-                                            onClick={cancelEdit}
                                             sx={{
                                                 color: "rgba(255,255,255,0.4)",
                                                 "&:hover": { color: "rgba(255,255,255,0.8)" },
                                             }}
+                                            onClick={cancelEdit}
                                         >
                                             <CloseRoundedIcon sx={{ fontSize: 18 }} />
                                         </IconButton>
@@ -388,28 +384,28 @@ export const ModalManageTags: React.FC<Props> = ({
                                                 {t.tasks.modals.manageTags.deletePrompt}
                                             </Typography>
                                             <Button
+                                                color="danger"
                                                 size="sm"
                                                 variant="soft"
-                                                color="danger"
-                                                onClick={() => deleteTag(tag.tagName)}
                                                 sx={{
                                                     minHeight: 26,
                                                     fontSize: "0.7rem",
                                                     borderRadius: "6px",
                                                 }}
+                                                onClick={() => deleteTag(tag.tagName)}
                                             >
                                                 {t.tasks.modals.manageTags.yes}
                                             </Button>
                                             <Button
                                                 size="sm"
                                                 variant="plain"
-                                                onClick={() => setConfirmDelete(null)}
                                                 sx={{
                                                     minHeight: 26,
                                                     fontSize: "0.7rem",
                                                     borderRadius: "6px",
                                                     color: "rgba(255,255,255,0.5)",
                                                 }}
+                                                onClick={() => setConfirmDelete(null)}
                                             >
                                                 {t.tasks.modals.manageTags.no}
                                             </Button>
@@ -422,13 +418,13 @@ export const ModalManageTags: React.FC<Props> = ({
                                                 <IconButton
                                                     size="sm"
                                                     variant="plain"
-                                                    onClick={() => startEdit(tag)}
                                                     sx={{
                                                         color: "rgba(255,255,255,0.4)",
                                                         "&:hover": {
                                                             color: "rgba(124,58,237,0.9)",
                                                         },
                                                     }}
+                                                    onClick={() => startEdit(tag)}
                                                 >
                                                     <EditRoundedIcon sx={{ fontSize: 16 }} />
                                                 </IconButton>
@@ -439,15 +435,15 @@ export const ModalManageTags: React.FC<Props> = ({
                                                 <IconButton
                                                     size="sm"
                                                     variant="plain"
-                                                    onClick={() => {
-                                                        setConfirmDelete(tag.tagName);
-                                                        setEditingTag(null);
-                                                    }}
                                                     sx={{
                                                         color: "rgba(255,255,255,0.4)",
                                                         "&:hover": {
                                                             color: "rgba(232,121,195,0.9)",
                                                         },
+                                                    }}
+                                                    onClick={() => {
+                                                        setConfirmDelete(tag.tagName);
+                                                        setEditingTag(null);
                                                     }}
                                                 >
                                                     <DeleteOutlineRoundedIcon
@@ -467,7 +463,6 @@ export const ModalManageTags: React.FC<Props> = ({
                 <Stack direction="row" spacing={1.5} sx={{ justifyContent: "flex-end", mt: 2 }}>
                     <Button
                         variant="plain"
-                        onClick={onClose}
                         sx={{
                             color: "rgba(255, 255, 255, 0.6)",
                             borderRadius: "10px",
@@ -477,6 +472,7 @@ export const ModalManageTags: React.FC<Props> = ({
                                 color: "rgba(255, 255, 255, 0.9)",
                             },
                         }}
+                        onClick={onClose}
                     >
                         {t.tasks.modals.manageTags.closeButton}
                     </Button>

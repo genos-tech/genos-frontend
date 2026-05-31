@@ -33,7 +33,6 @@ export const EditorSendButton = ({ disabled, onSend }: EditorSendButtonProps) =>
 
     return (
         <AppTooltip
-            arrow
             placement="top-end"
             size="sm"
             title={
@@ -72,6 +71,7 @@ export const EditorSendButton = ({ disabled, onSend }: EditorSendButtonProps) =>
                     </Box>
                 </Box>
             }
+            arrow
         >
             <Box
                 sx={{
@@ -89,7 +89,6 @@ export const EditorSendButton = ({ disabled, onSend }: EditorSendButtonProps) =>
                     endDecorator={<SendRoundedIcon sx={{ fontSize: 15 }} />}
                     size="sm"
                     variant="solid"
-                    onClick={onSend}
                     sx={{
                         borderRadius: "10px",
                         fontSize: "0.8125rem",
@@ -125,6 +124,7 @@ export const EditorSendButton = ({ disabled, onSend }: EditorSendButtonProps) =>
                             color: "rgba(255,255,255,0.85)",
                         },
                     }}
+                    onClick={onSend}
                 >
                     {t.common.editor.send}
                 </Button>

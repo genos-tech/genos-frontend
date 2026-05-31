@@ -600,9 +600,8 @@ export const SignUpForm = () => {
                                     {t.admin.auth.signUp.haveAccountPrompt}{" "}
                                     <Link
                                         component="button"
-                                        type="button"
                                         level="title-sm"
-                                        onClick={() => navigate("/signin")}
+                                        type="button"
                                         sx={{
                                             color: styles.linkColor,
                                             fontWeight: 600,
@@ -611,6 +610,7 @@ export const SignUpForm = () => {
                                                 color: styles.linkHover,
                                             },
                                         }}
+                                        onClick={() => navigate("/signin")}
                                     >
                                         {t.admin.auth.signUp.signInLink}
                                     </Link>

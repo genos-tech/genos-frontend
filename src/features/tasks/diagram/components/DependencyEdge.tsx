@@ -47,10 +47,7 @@ export const DependencyEdge = memo(
 
         return (
             <>
-                <g
-                    onMouseEnter={() => setHovered(true)}
-                    onMouseLeave={() => setHovered(false)}
-                >
+                <g onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
                     {/* Native browser tooltip via <title>. Renders on
                         hover without any JS popper. */}
                     <title>{tooltipText}</title>
@@ -64,8 +61,8 @@ export const DependencyEdge = memo(
                         style={{ cursor: "pointer" }}
                     />
                     <BaseEdge
-                        path={path}
                         markerEnd={markerEnd}
+                        path={path}
                         style={{
                             stroke,
                             strokeWidth: active ? 2.5 : 1.75,
@@ -78,6 +75,9 @@ export const DependencyEdge = memo(
                 </g>
                 <EdgeLabelRenderer>
                     <div
+                        className="nodrag nopan"
+                        data-edge-id={id}
+                        title={tooltipText}
                         style={{
                             position: "absolute",
                             transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
@@ -88,19 +88,15 @@ export const DependencyEdge = memo(
                             textTransform: "uppercase",
                             padding: "2px 6px",
                             borderRadius: 4,
-                            background: active
-                                ? "rgba(249,115,22,0.18)"
-                                : "rgba(249,115,22,0.06)",
+                            background: active ? "rgba(249,115,22,0.18)" : "rgba(249,115,22,0.06)",
                             color: active ? "#f97316" : "rgba(249,115,22,0.65)",
                             border: `1px solid ${
                                 active ? "rgba(249,115,22,0.45)" : "rgba(249,115,22,0.18)"
                             }`,
-                            transition: "background 0.15s ease, color 0.15s ease, border-color 0.15s ease",
+                            transition:
+                                "background 0.15s ease, color 0.15s ease, border-color 0.15s ease",
                             userSelect: "none",
                         }}
-                        className="nodrag nopan"
-                        data-edge-id={id}
-                        title={tooltipText}
                         onMouseEnter={() => setHovered(true)}
                         onMouseLeave={() => setHovered(false)}
                     >

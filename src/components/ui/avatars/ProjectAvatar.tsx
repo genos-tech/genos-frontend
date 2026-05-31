@@ -47,7 +47,6 @@ export const ProjectAvatar = (props: ProjectAvatarProps) => {
             </Box>
 
             <ModalProjectProfile
-                useCM={useCM}
                 myself={myself}
                 openModalProjectProfile={openModalProjectProfile}
                 pmChat={pmChat}
@@ -56,21 +55,22 @@ export const ProjectAvatar = (props: ProjectAvatarProps) => {
                 setOpenModalProjectProfile={setOpenModalProjectProfile}
                 setOpenUserProfile={setOpenUserProfile}
                 socket={socket}
+                useCM={useCM}
                 useTEM={useTEM}
                 useUISM={useUISM}
             />
 
             {avatarUserId && (
                 <UserProfile
-                    useCM={useCM}
                     isYou={false}
                     myself={myself}
                     openUserProfile={openUserProfile}
                     setMyself={setMyself}
                     setOpenUserProfile={setOpenUserProfile}
                     socket={socket}
-                    useUISM={useUISM}
+                    useCM={useCM}
                     user={useTEM.teamMemberProfiles[avatarUserId]}
+                    useUISM={useUISM}
                 />
             )}
         </div>

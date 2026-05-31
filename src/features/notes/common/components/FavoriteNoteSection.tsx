@@ -26,7 +26,6 @@ function FavoriteNoteSectionComponent({
         <Box key={groupKey}>
             <ListItem nested>
                 <ListItemButton
-                    onClick={() => setIsExpanded(!isExpanded)}
                     sx={{
                         borderRadius: "8px",
                         py: 0.5,
@@ -42,6 +41,7 @@ function FavoriteNoteSectionComponent({
                                 : "rgba(0,0,0,0.04)",
                         },
                     }}
+                    onClick={() => setIsExpanded(!isExpanded)}
                 >
                     {/* Chevron */}
                     <Box

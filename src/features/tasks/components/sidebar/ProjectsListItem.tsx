@@ -80,9 +80,6 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                 defaultExpanded={true}
                 renderToggle={({ open, setOpen }) => (
                     <ListItemButton
-                        onClick={() => {
-                            setOpen(!open);
-                        }}
                         sx={{
                             borderRadius: "10px",
                             py: 1,
@@ -95,6 +92,9 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                                     ? "rgba(255,255,255,0.06)"
                                     : "rgba(0,0,0,0.04)",
                             },
+                        }}
+                        onClick={() => {
+                            setOpen(!open);
                         }}
                     >
                         <Box
@@ -165,6 +165,30 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                                         renderToggle={({ open, setOpen }) => (
                                             <ListItemButton
                                                 selected={isSelected}
+                                                sx={{
+                                                    overflow: "hidden",
+                                                    borderRadius: "8px",
+                                                    py: 0.75,
+                                                    px: 1.25,
+                                                    ml: 4.5,
+                                                    gap: 1,
+                                                    transition: "all 0.15s ease",
+                                                    "&:hover": {
+                                                        backgroundColor: isDark
+                                                            ? "rgba(255,255,255,0.04)"
+                                                            : "rgba(0,0,0,0.03)",
+                                                    },
+                                                    "&.Mui-selected": {
+                                                        backgroundColor: isDark
+                                                            ? "rgba(251,146,60,0.15)"
+                                                            : "rgba(234,88,12,0.1)",
+                                                        "&:hover": {
+                                                            backgroundColor: isDark
+                                                                ? "rgba(251,146,60,0.2)"
+                                                                : "rgba(234,88,12,0.15)",
+                                                        },
+                                                    },
+                                                }}
                                                 onClick={() => {
                                                     setOpen(!open);
                                                     // Only if the clicked project id is not the same as the current one,
@@ -265,30 +289,6 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                                                         })();
                                                     }
                                                 }}
-                                                sx={{
-                                                    overflow: "hidden",
-                                                    borderRadius: "8px",
-                                                    py: 0.75,
-                                                    px: 1.25,
-                                                    ml: 4.5,
-                                                    gap: 1,
-                                                    transition: "all 0.15s ease",
-                                                    "&:hover": {
-                                                        backgroundColor: isDark
-                                                            ? "rgba(255,255,255,0.04)"
-                                                            : "rgba(0,0,0,0.03)",
-                                                    },
-                                                    "&.Mui-selected": {
-                                                        backgroundColor: isDark
-                                                            ? "rgba(251,146,60,0.15)"
-                                                            : "rgba(234,88,12,0.1)",
-                                                        "&:hover": {
-                                                            backgroundColor: isDark
-                                                                ? "rgba(251,146,60,0.2)"
-                                                                : "rgba(234,88,12,0.15)",
-                                                        },
-                                                    },
-                                                }}
                                             >
                                                 <AssignmentIcon
                                                     sx={{
@@ -352,15 +352,15 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                                     >
                                         <MilestonesListItem
                                             currentProjectId={projectId}
-                                            usePM={usePM}
-                                            useSM={useSM}
-                                            useTM={useTM}
-                                            useTEM={useTEM}
-                                            useCM={useCM}
-                                            useUISM={useUISM}
                                             myself={myself}
                                             setMyself={setMyself}
                                             socket={socket}
+                                            useCM={useCM}
+                                            usePM={usePM}
+                                            useSM={useSM}
+                                            useTEM={useTEM}
+                                            useTM={useTM}
+                                            useUISM={useUISM}
                                         />
                                     </Toggler>
                                 )
@@ -368,7 +368,7 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                         }
                     )}
 
-                    <JoinProjectListItem usePM={usePM} setOpenJoinProject={setOpenJoinProject} />
+                    <JoinProjectListItem setOpenJoinProject={setOpenJoinProject} usePM={usePM} />
 
                     <NewProjectListItem usePM={usePM} />
                 </List>

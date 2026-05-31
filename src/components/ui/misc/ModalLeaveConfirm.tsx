@@ -138,9 +138,8 @@ export const ModalLeaveConfirm = ({
 
                 <Stack direction="row" spacing={1.5} sx={{ justifyContent: "center" }}>
                     <Button
-                        variant="plain"
                         disabled={submitting}
-                        onClick={handleClose}
+                        variant="plain"
                         sx={{
                             color: "rgba(255, 255, 255, 0.6)",
                             borderRadius: "10px",
@@ -150,12 +149,12 @@ export const ModalLeaveConfirm = ({
                                 color: "rgba(255, 255, 255, 0.9)",
                             },
                         }}
+                        onClick={handleClose}
                     >
                         {t.common.leaveConfirm.cancel}
                     </Button>
                     <Button
                         loading={submitting}
-                        onClick={handleConfirm}
                         sx={{
                             background: "linear-gradient(135deg, #c026a8 0%, #9d2386 100%)",
                             borderRadius: "10px",
@@ -168,6 +167,7 @@ export const ModalLeaveConfirm = ({
                                 boxShadow: "0 6px 20px rgba(232,121,195,0.4)",
                             },
                         }}
+                        onClick={handleConfirm}
                     >
                         {t.common.leaveConfirm.leave}
                     </Button>

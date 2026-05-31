@@ -323,10 +323,10 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
     const viewButton = (target: CalendarView, label: string) => (
         <Button
             key={target}
+            aria-pressed={view === target}
             size="sm"
             variant={view === target ? "solid" : "outlined"}
             onClick={() => setView(target)}
-            aria-pressed={view === target}
         >
             {label}
         </Button>
@@ -357,10 +357,10 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
                     sx={{ mb: 1.5, flexShrink: 0, flexWrap: "wrap" }}
                 >
                     <IconButton
+                        aria-label={t.calendar.prev}
                         size="sm"
                         variant="plain"
                         onClick={stepBackward}
-                        aria-label={t.calendar.prev}
                     >
                         <ChevronLeftRoundedIcon />
                     </IconButton>
@@ -368,10 +368,10 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
                         {headerTitle}
                     </Typography>
                     <IconButton
+                        aria-label={t.calendar.next}
                         size="sm"
                         variant="plain"
                         onClick={stepForward}
-                        aria-label={t.calendar.next}
                     >
                         <ChevronRightRoundedIcon />
                     </IconButton>
@@ -391,10 +391,10 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
                     </ButtonGroup>
                     {loading && <CircularProgress size="sm" />}
                     <IconButton
+                        aria-label={t.calendar.close}
                         size="sm"
                         variant="plain"
                         onClick={onClose}
-                        aria-label={t.calendar.close}
                     >
                         <CloseRoundedIcon />
                     </IconButton>
@@ -409,8 +409,8 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
                 {needsConnect && accessToken && (
                     <Alert color="primary" sx={{ mb: 1.5, flexShrink: 0 }}>
                         <Stack
-                            direction="row"
                             alignItems="center"
+                            direction="row"
                             spacing={1.5}
                             sx={{ width: "100%" }}
                         >
@@ -435,8 +435,8 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
                 {needsScope && accessToken && (
                     <Alert color="warning" sx={{ mb: 1.5, flexShrink: 0 }}>
                         <Stack
-                            direction="row"
                             alignItems="center"
+                            direction="row"
                             spacing={1.5}
                             sx={{ width: "100%" }}
                         >
@@ -461,8 +461,8 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
                 {needsReconnect && accessToken && (
                     <Alert color="warning" sx={{ mb: 1.5, flexShrink: 0 }}>
                         <Stack
-                            direction="row"
                             alignItems="center"
+                            direction="row"
                             spacing={1.5}
                             sx={{ width: "100%" }}
                         >
@@ -480,17 +480,17 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
                     <>
                         {view === "month" ? (
                             <MonthView
-                                focused={anchor.startOf("month")}
                                 eventsByDay={eventsByDay}
+                                focused={anchor.startOf("month")}
                                 onCellClick={openCreateOn}
                                 onEventClick={openEdit}
                                 onShowMore={setPopoverDayKey}
                             />
                         ) : (
                             <TimelineView
-                                view={view}
                                 anchor={anchor}
                                 events={events}
+                                view={view}
                                 onCreateAt={openCreateAt}
                                 onEventClick={openEdit}
                             />
@@ -508,10 +508,10 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
                             </Typography>
                             <Box sx={{ flex: 1 }} />
                             <IconButton
+                                aria-label={t.calendar.close}
                                 size="sm"
                                 variant="plain"
                                 onClick={() => setPopoverDayKey(null)}
-                                aria-label={t.calendar.close}
                             >
                                 <CloseRoundedIcon />
                             </IconButton>
@@ -521,9 +521,10 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
                                 (e, idx) => (
                                     <Chip
                                         key={`${e.id}-${idx}`}
-                                        size="md"
-                                        variant="soft"
                                         color={e.hangoutLink ? "success" : "primary"}
+                                        size="md"
+                                        sx={{ cursor: "pointer", justifyContent: "flex-start" }}
+                                        variant="soft"
                                         startDecorator={
                                             e.hangoutLink ? (
                                                 <VideoCameraFrontRoundedIcon
@@ -531,7 +532,6 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
                                                 />
                                             ) : undefined
                                         }
-                                        sx={{ cursor: "pointer", justifyContent: "flex-start" }}
                                         onClick={() => {
                                             setPopoverDayKey(null);
                                             openEdit(e);
@@ -548,17 +548,17 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
                 {accessToken && (
                     <CalendarEventModal
                         accessToken={accessToken}
+                        editingEventId={editingEventId}
+                        initial={eventModalInitial}
                         open={eventModalOpen}
                         onClose={() => setEventModalOpen(false)}
-                        initial={eventModalInitial}
-                        editingEventId={editingEventId}
-                        onSaved={() => {
-                            refreshCurrent();
-                        }}
+                        onError={setError}
                         onDeleted={() => {
                             refreshCurrent();
                         }}
-                        onError={setError}
+                        onSaved={() => {
+                            refreshCurrent();
+                        }}
                     />
                 )}
             </ModalDialog>

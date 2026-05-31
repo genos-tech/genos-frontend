@@ -1,12 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-// ---------------------------------------------------------------------------
-// notificationApi mocks the axios `authApi` factory (proven repo pattern).
-// ---------------------------------------------------------------------------
-vi.mock("../../services/api", () => ({
-    authApi: vi.fn(),
-}));
-
 import { authApi } from "../../services/api";
 import {
     getNotificationPreferences,
@@ -23,6 +16,13 @@ import {
     NotificationIntent,
     NotificationPreference,
 } from "../../services/notifications/types";
+
+// ---------------------------------------------------------------------------
+// notificationApi mocks the axios `authApi` factory (proven repo pattern).
+// ---------------------------------------------------------------------------
+vi.mock("../../services/api", () => ({
+    authApi: vi.fn(),
+}));
 
 const asMock = (fn: unknown) => fn as ReturnType<typeof vi.fn>;
 
@@ -672,9 +672,7 @@ describe("notificationRouter", () => {
 
         it("returns null when myself has no userId", () => {
             const noUser = { userId: "" } as typeof myself;
-            expect(
-                buildIntentFromMessage({ wsType: "chat" }, noUser, useTEM, useCM)
-            ).toBeNull();
+            expect(buildIntentFromMessage({ wsType: "chat" }, noUser, useTEM, useCM)).toBeNull();
         });
 
         it("returns null for an unknown wsType", () => {
@@ -875,12 +873,7 @@ describe("notificationRouter", () => {
 
         it("returns null when sender is me or senderId missing", () => {
             expect(
-                buildIntentFromMessage(
-                    { ...baseActivity, senderId: "me" },
-                    myself,
-                    useTEM,
-                    useCM
-                )
+                buildIntentFromMessage({ ...baseActivity, senderId: "me" }, myself, useTEM, useCM)
             ).toBeNull();
             expect(
                 buildActivityIntent(

@@ -172,7 +172,7 @@ export const useHistoryTracker = ({ useCM, useTM, useSM, useNM, usePM }: Props) 
             : isV3Uuid(hint)
               ? null
               : messageIdFromHint(hint, 2);
-        let messageText: string | null = targetMsg ? previewFromMessage(targetMsg) : null;
+        const messageText: string | null = targetMsg ? previewFromMessage(targetMsg) : null;
         // The ref encodes "have we recorded this (chat, message, text)
         // exact state already?" — including `messageText` means if a
         // later effect run finds the bubble in `messages` (Virtuoso
@@ -259,7 +259,7 @@ export const useHistoryTracker = ({ useCM, useTM, useSM, useNM, usePM }: Props) 
             : isV3Uuid(hint)
               ? null
               : messageIdFromHint(hint, 3);
-        let messageText: string | null = targetMsg ? previewFromMessage(targetMsg) : null;
+        const messageText: string | null = targetMsg ? previewFromMessage(targetMsg) : null;
         // Same retry-on-text pattern as the chat effect — see comment
         // there for the rationale.
         const refKey = `thread:${chatType}:${chatId}:${threadId}:${messageId ?? 0}:${messageText ? "1" : "0"}`;

@@ -24,17 +24,17 @@ const ActivitiesSection = (props: InboxHomeProps & { items: any[]; virtuosoRef: 
     return (
         <InboxSection
             ref={virtuosoRef}
-            useCM={useCM}
+            emptySubtitle={t.inbox.emptyStates.activitiesSubtitle}
+            emptyTitle={t.inbox.emptyStates.activitiesTitle}
+            isRequest={false}
             itemKeyPrefix="inbox-general-items-bubble"
             items={items}
             myself={myself}
             setMyself={setMyself}
             socket={socket}
+            useCM={useCM}
             useTEM={useTEM}
             useUISM={useUISM}
-            emptyTitle={t.inbox.emptyStates.activitiesTitle}
-            emptySubtitle={t.inbox.emptyStates.activitiesSubtitle}
-            isRequest={false}
             selectedItemId={
                 itemId && !Number.isNaN(parseInt(itemId, 10)) ? parseInt(itemId, 10) : undefined
             }
@@ -51,17 +51,17 @@ const RequestsSection = (props: InboxHomeProps & { items: any[]; virtuosoRef: an
     return (
         <InboxSection
             ref={virtuosoRef}
-            useCM={useCM}
+            emptySubtitle={t.inbox.emptyStates.requestsSubtitle}
+            emptyTitle={t.inbox.emptyStates.requestsTitle}
+            isRequest={true}
             itemKeyPrefix="inbox-request-bubble"
             items={items}
             myself={myself}
             setMyself={setMyself}
             socket={socket}
+            useCM={useCM}
             useTEM={useTEM}
             useUISM={useUISM}
-            emptyTitle={t.inbox.emptyStates.requestsTitle}
-            emptySubtitle={t.inbox.emptyStates.requestsSubtitle}
-            isRequest={true}
             selectedItemId={
                 itemId && !Number.isNaN(parseInt(itemId, 10)) ? parseInt(itemId, 10) : undefined
             }
@@ -207,7 +207,7 @@ export const InboxHome = (props: InboxHomeProps) => {
                         />
 
                         {/* Default redirect to requests */}
-                        <Route path="" element={<Navigate to="requests" replace />} />
+                        <Route element={<Navigate to="requests" replace />} path="" />
                     </Routes>
                 </Box>
 

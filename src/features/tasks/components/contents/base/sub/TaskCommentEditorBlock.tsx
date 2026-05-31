@@ -51,7 +51,6 @@ export const TaskCommentEditorBlock = (props: TaskCommentEditorBlockProps) => {
         <Box sx={{ mt: 2 }}>
             {isInEdit === true && editTargetComment && (
                 <BnUpdateTaskCommentEditor
-                    useCM={useCM}
                     isInEdit={isInEdit}
                     isPrivate={task.project?.isPrivate}
                     myself={myself}
@@ -65,16 +64,16 @@ export const TaskCommentEditorBlock = (props: TaskCommentEditorBlockProps) => {
                     targetComment={editTargetComment}
                     taskCommentLines={taskCommentLines}
                     taskComments={taskComments}
-                    taskId={task.id}
                     taskDisplayId={task.displayId}
+                    taskId={task.id}
+                    useCM={useCM}
                     useTEM={useTEM}
-                    useUISM={useUISM}
                     useTM={useTM}
+                    useUISM={useUISM}
                 />
             )}
             {isInEdit === false && (
                 <BnTaskCommentEditor
-                    useCM={useCM}
                     myself={myself}
                     setMyself={setMyself}
                     setTaskCommentLines={setTaskCommentLines}
@@ -83,9 +82,10 @@ export const TaskCommentEditorBlock = (props: TaskCommentEditorBlockProps) => {
                     task={task}
                     taskCommentLines={taskCommentLines}
                     taskComments={taskComments}
+                    useCM={useCM}
                     useTEM={useTEM}
-                    useUISM={useUISM}
                     useTM={useTM}
+                    useUISM={useUISM}
                 />
             )}
         </Box>

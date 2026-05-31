@@ -158,33 +158,30 @@ export const ACTaskSelector = ({
                 borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)",
             }}
         >
-            <Stack direction="row" spacing={1} alignItems="stretch">
+            <Stack alignItems="stretch" direction="row" spacing={1}>
                 {/* Project picker */}
                 <Box sx={{ minWidth: 200, maxWidth: 260, flex: "0 1 220px" }}>
                     <FieldCaption
-                        isDark={isDark}
                         icon={<FolderRoundedIcon sx={CAPTION_ICON_SX} />}
+                        isDark={isDark}
                     >
                         {pickerT.projectLabel}
                     </FieldCaption>
                     <Autocomplete
-                        size={size}
-                        value={selectedProject}
-                        options={projects}
                         getOptionLabel={(opt) => opt?.projectName ?? ""}
                         isOptionEqualToValue={(a, b) => a.projectId === b.projectId}
-                        onChange={(_e, value) => setSelectedProject(value)}
+                        options={projects}
                         placeholder={pickerT.projectPlaceholder}
+                        size={size}
                         startDecorator={<FolderRoundedIcon sx={{ fontSize: 18, opacity: 0.6 }} />}
-                        slotProps={{
-                            listbox: { className: scrollbarClass, sx: LISTBOX_SLOT_SX },
-                        }}
+                        sx={INPUT_SX}
+                        value={selectedProject}
                         renderOption={(props, opt) => (
                             <Box component="li" {...props} key={opt.projectId}>
                                 <Stack
+                                    alignItems="center"
                                     direction="row"
                                     spacing={1}
-                                    alignItems="center"
                                     sx={{ width: "100%", minWidth: 0 }}
                                 >
                                     <FolderRoundedIcon
@@ -218,57 +215,54 @@ export const ACTaskSelector = ({
                                 </Stack>
                             </Box>
                         )}
-                        sx={INPUT_SX}
+                        slotProps={{
+                            listbox: { className: scrollbarClass, sx: LISTBOX_SLOT_SX },
+                        }}
+                        onChange={(_e, value) => setSelectedProject(value)}
                     />
                 </Box>
 
                 {/* Task picker */}
                 <Box sx={{ flex: 1, minWidth: 0 }}>
                     <FieldCaption
-                        isDark={isDark}
                         icon={<AssignmentRoundedIcon sx={CAPTION_ICON_SX} />}
+                        isDark={isDark}
                     >
                         {pickerT.taskLabel}
                     </FieldCaption>
                     <Autocomplete
-                        size={size}
-                        value={selectedTask}
+                        disabled={!selectedProject}
+                        isOptionEqualToValue={(a, b) => a.id === b.id}
                         loading={loading}
                         options={taskOptions}
+                        size={size}
+                        startDecorator={<SearchRoundedIcon sx={{ fontSize: 18, opacity: 0.6 }} />}
+                        sx={INPUT_SX}
+                        value={selectedTask}
+                        endDecorator={
+                            loading ? <CircularProgress size="sm" variant="plain" /> : null
+                        }
                         getOptionLabel={(opt) =>
                             opt ? `${opt.displayId ?? `#${opt.id}`} ${opt.title ?? ""}`.trim() : ""
                         }
-                        isOptionEqualToValue={(a, b) => a.id === b.id}
+                        noOptionsText={
+                            <Typography level="body-sm" sx={{ opacity: 0.6 }}>
+                                {selectedProject ? pickerT.noTasks : pickerT.noProject}
+                            </Typography>
+                        }
                         placeholder={
                             selectedProject
                                 ? pickerT.taskPlaceholder
                                 : pickerT.taskPlaceholderDisabled
                         }
-                        disabled={!selectedProject}
-                        startDecorator={<SearchRoundedIcon sx={{ fontSize: 18, opacity: 0.6 }} />}
-                        endDecorator={
-                            loading ? <CircularProgress size="sm" variant="plain" /> : null
-                        }
-                        onChange={(_e, value) => {
-                            setSelectedTask(value);
-                            if (value && value.id != null && selectedProject) {
-                                onPick({
-                                    taskId: Number(value.id),
-                                    project: selectedProject,
-                                });
-                            }
-                        }}
-                        slotProps={{
-                            listbox: { className: scrollbarClass, sx: LISTBOX_SLOT_SX },
-                        }}
                         renderOption={(props, opt) => {
                             const meta = statusMeta(opt.status);
                             return (
                                 <Box component="li" {...props} key={opt.id}>
                                     <Stack
+                                        alignItems="center"
                                         direction="row"
                                         spacing={1}
-                                        alignItems="center"
                                         sx={{ width: "100%", minWidth: 0 }}
                                     >
                                         <Chip
@@ -282,15 +276,15 @@ export const ACTaskSelector = ({
                                         >
                                             {opt.displayId ?? `#${opt.id}`}
                                         </Chip>
-                                        <StatusChip meta={meta} isDark={isDark} />
+                                        <StatusChip isDark={isDark} meta={meta} />
                                         <Typography
                                             level="body-md"
-                                            noWrap
                                             sx={{
                                                 flex: 1,
                                                 minWidth: 0,
                                                 fontWeight: 500,
                                             }}
+                                            noWrap
                                         >
                                             {opt.title}
                                         </Typography>
@@ -298,12 +292,18 @@ export const ACTaskSelector = ({
                                 </Box>
                             );
                         }}
-                        noOptionsText={
-                            <Typography level="body-sm" sx={{ opacity: 0.6 }}>
-                                {selectedProject ? pickerT.noTasks : pickerT.noProject}
-                            </Typography>
-                        }
-                        sx={INPUT_SX}
+                        slotProps={{
+                            listbox: { className: scrollbarClass, sx: LISTBOX_SLOT_SX },
+                        }}
+                        onChange={(_e, value) => {
+                            setSelectedTask(value);
+                            if (value && value.id != null && selectedProject) {
+                                onPick({
+                                    taskId: Number(value.id),
+                                    project: selectedProject,
+                                });
+                            }
+                        }}
                     />
                 </Box>
             </Stack>
@@ -343,7 +343,7 @@ const FieldCaption = ({
     isDark: boolean;
     children: React.ReactNode;
 }) => (
-    <Stack direction="row" alignItems="center" spacing={0.5} sx={{ mb: 0.5, pl: 0.25 }}>
+    <Stack alignItems="center" direction="row" spacing={0.5} sx={{ mb: 0.5, pl: 0.25 }}>
         {icon}
         <Typography
             level="body-xs"

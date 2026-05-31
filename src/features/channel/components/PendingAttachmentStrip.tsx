@@ -81,9 +81,9 @@ export function PendingAttachmentStrip({
                     </span>
                     <span style={{ opacity: 0.6, flexShrink: 0 }}>{formatSize(p.file.size)}</span>
                     <button
-                        type="button"
-                        onClick={() => onRemove(p.localId)}
                         data-testid={`${testIdPrefix}-pending-remove-${p.localId}`}
+                        title="Remove"
+                        type="button"
                         style={{
                             background: "transparent",
                             border: "none",
@@ -93,7 +93,7 @@ export function PendingAttachmentStrip({
                             fontSize: 14,
                             lineHeight: 1,
                         }}
-                        title="Remove"
+                        onClick={() => onRemove(p.localId)}
                     >
                         ×
                     </button>

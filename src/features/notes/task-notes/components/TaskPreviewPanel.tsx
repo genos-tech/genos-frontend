@@ -69,15 +69,15 @@ export const TaskPreviewPanel = (props: TaskPreviewPanelProps) => {
                     }}
                 >
                     <TaskPreview
-                        useCM={useCM}
-                        useNM={useNM}
                         myself={myself}
-                        usePM={usePM}
                         setMyself={setMyself}
                         socket={socket}
+                        useCM={useCM}
+                        useNM={useNM}
+                        usePM={usePM}
+                        useSM={useSM}
                         useTEM={useTEM}
                         useTM={useTM}
-                        useSM={useSM}
                         useUISM={useUISM}
                     />
                 </Box>

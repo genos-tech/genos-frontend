@@ -355,9 +355,8 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
         ? createPortal(
               <Box
                   ref={menuRef}
-                  role="menu"
                   aria-orientation="vertical"
-                  onClick={(e) => e.stopPropagation()}
+                  role="menu"
                   sx={{
                       position: "fixed",
                       top: menuPosition.top,
@@ -388,6 +387,7 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
                           },
                       },
                   }}
+                  onClick={(e) => e.stopPropagation()}
               >
                   {visibleItems.map((item, index) => {
                       const isFocused = focusedIndex === index;
@@ -408,8 +408,6 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
                               <Box
                                   role="menuitem"
                                   tabIndex={isFocused ? 0 : -1}
-                                  onClick={item.onClick}
-                                  onMouseEnter={() => setFocusedIndex(index)}
                                   sx={{
                                       display: "flex",
                                       alignItems: "center",
@@ -449,6 +447,8 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
                                           transform: "translateX(3px) scale(0.98)",
                                       },
                                   }}
+                                  onClick={item.onClick}
+                                  onMouseEnter={() => setFocusedIndex(index)}
                               >
                                   <Box
                                       sx={{
@@ -511,17 +511,9 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
             {/* Trigger Button */}
             <IconButton
                 ref={buttonRef}
-                size="sm"
-                aria-haspopup="menu"
                 aria-expanded={isOpen}
-                onClick={(e) => {
-                    e.stopPropagation();
-                    if (isOpen) {
-                        closeMenu();
-                    } else {
-                        openMenu();
-                    }
-                }}
+                aria-haspopup="menu"
+                size="sm"
                 sx={{
                     width: 28,
                     height: 28,
@@ -555,6 +547,14 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
                         transform: "scale(0.95)",
                     },
                 }}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    if (isOpen) {
+                        closeMenu();
+                    } else {
+                        openMenu();
+                    }
+                }}
             >
                 <MoreHorizRoundedIcon sx={{ fontSize: 18 }} />
             </IconButton>
@@ -566,14 +566,14 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
             <ModalDeleteMessage
                 accessToken={accessToken}
                 currentThreadChat={thread}
+                flaggedMessages={flaggedMessages}
                 isThread={true}
                 message={message}
                 openDeleteMessage={openDeleteMessage}
                 setCurrentThreadChat={useCM.setCurrentThreadChat}
+                setFlaggedMessages={setFlaggedMessages}
                 setOpenDeleteMessage={setOpenDeleteMessage}
                 socket={socket}
-                flaggedMessages={flaggedMessages}
-                setFlaggedMessages={setFlaggedMessages}
             />
         </Box>
     );

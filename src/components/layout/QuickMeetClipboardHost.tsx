@@ -156,6 +156,8 @@ export const QuickMeetClipboardHost = forwardRef<QuickMeetClipboardHandle, Props
             <Snackbar
                 anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
                 autoHideDuration={snackbar?.kind === "info" ? null : 5000}
+                open={snackbar !== null}
+                variant="soft"
                 color={
                     snackbar?.kind === "error"
                         ? "danger"
@@ -163,8 +165,6 @@ export const QuickMeetClipboardHost = forwardRef<QuickMeetClipboardHandle, Props
                           ? "success"
                           : "neutral"
                 }
-                open={snackbar !== null}
-                variant="soft"
                 endDecorator={
                     snackbar?.needsGrant || snackbar?.needsReconnect ? (
                         <Button size="sm" variant="solid" onClick={handleGrant}>

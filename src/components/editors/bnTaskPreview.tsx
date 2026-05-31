@@ -344,10 +344,10 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                 <FileUploadStatusBadge count={editorUploadCount} />
                 <Box sx={{ position: "absolute", top: 8, right: 8, zIndex: 10 }}>
                     <WrapToggleButtons
-                        unwrapAll={unwrapAll}
                         setUnwrapAll={setUnwrapAll}
-                        unwrapCode={unwrapCode}
                         setUnwrapCode={setUnwrapCode}
+                        unwrapAll={unwrapAll}
+                        unwrapCode={unwrapCode}
                     />
                 </Box>
                 <BlockNoteView
@@ -464,8 +464,8 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
 
                     {/* Adds a mentions menu which opens with the "@" key */}
                     <SuggestionMenuController
-                        triggerCharacter={"@"}
                         suggestionMenuComponent={MentionSuggestionMenu}
+                        triggerCharacter={"@"}
                         getItems={async (query) =>
                             // Gets the mentions menu items
                             filterSuggestionItems(

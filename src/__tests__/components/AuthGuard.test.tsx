@@ -19,9 +19,9 @@ describe("AuthGuard", () => {
         return render(
             <MemoryRouter initialEntries={[initialPath]}>
                 <Routes>
-                    <Route path="/signin" element={<div>Sign In Page</div>} />
+                    <Route element={<div>Sign In Page</div>} path="/signin" />
                     <Route element={<AuthGuard />}>
-                        <Route path="/protected" element={<div>Protected Content</div>} />
+                        <Route element={<div>Protected Content</div>} path="/protected" />
                     </Route>
                 </Routes>
             </MemoryRouter>
@@ -57,9 +57,9 @@ describe("AuthGuard", () => {
         const { container } = render(
             <MemoryRouter initialEntries={["/protected"]}>
                 <Routes>
-                    <Route path="/signin" element={<div>Sign In Page</div>} />
+                    <Route element={<div>Sign In Page</div>} path="/signin" />
                     <Route element={<AuthGuard />}>
-                        <Route path="/protected" element={<div>Protected Content</div>} />
+                        <Route element={<div>Protected Content</div>} path="/protected" />
                     </Route>
                 </Routes>
             </MemoryRouter>

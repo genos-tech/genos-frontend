@@ -169,12 +169,12 @@ export function V3ChatShell() {
 
     return (
         <div
+            data-testid="v3-chat-shell"
             style={{
                 display: "flex",
                 height: "100%",
                 fontFamily: "system-ui, sans-serif",
             }}
-            data-testid="v3-chat-shell"
         >
             <ChannelListV3 selectedChannelId={selected} onSelect={setSelected} />
             <main style={{ flex: 1, display: "flex", minWidth: 0 }}>

@@ -130,8 +130,8 @@ export const BubbleUserName = (props: BubbleUserNameTypes) => {
                 {/* Task-card header (system user OR PM bubble) */}
                 {renderAsTaskCard && (
                     <Stack
-                        direction="row"
                         alignItems="center"
+                        direction="row"
                         spacing={0.75}
                         sx={{ flexWrap: "wrap", gap: 0.5 }}
                     >
@@ -147,8 +147,8 @@ export const BubbleUserName = (props: BubbleUserNameTypes) => {
 
                         {taskId !== null && taskStatusDetails && (
                             <ModernChip
-                                variant="status"
                                 customStyles={getStatusChipStyles(taskStatusDetails, isDark)}
+                                variant="status"
                             >
                                 {taskStatus || "N/A"}
                             </ModernChip>
@@ -176,7 +176,7 @@ export const BubbleUserName = (props: BubbleUserNameTypes) => {
 
                 {/* Message bubble for normal users (not task cards) */}
                 {!renderAsTaskCard && (
-                    <Stack direction="row" alignItems="center" spacing={1}>
+                    <Stack alignItems="center" direction="row" spacing={1}>
                         {isSimpleBubble === false && (
                             <Typography
                                 level="body-sm"

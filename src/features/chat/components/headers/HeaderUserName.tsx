@@ -86,45 +86,45 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                         avatarSize={38}
                         avatarUser={headerUser}
                         chat={chat}
-                        useCM={useCM}
                         isYou={isYou}
                         myself={myself}
                         setMyself={setMyself}
                         socket={socket}
+                        useCM={useCM}
                         useUISM={useUISM}
                     />
                 ) : chat && chat.chatType === 2 ? (
                     <GMAvatar
                         avatarSize={38}
-                        useCM={useCM}
                         gmChat={chat}
                         isYou={isYou}
                         myself={myself}
                         setMyself={setMyself}
                         socket={socket}
+                        useCM={useCM}
                         useTEM={useTEM}
                         useUISM={useUISM}
                     />
                 ) : chat && chat.chatType === 3 ? (
                     <ProjectAvatar
                         avatarSize={38}
-                        useCM={useCM}
                         myself={myself}
                         pmChat={chat}
                         setMyself={setMyself}
                         socket={socket}
+                        useCM={useCM}
                         useTEM={useTEM}
                         useUISM={useUISM}
                     />
                 ) : chat && chat.chatType === 4 ? (
                     <MDMAvatar
+                        size="md"
+                        teamMemberProfiles={useTEM.teamMemberProfiles}
                         members={
                             useCM.allChats.find(
                                 (c) => c.chatId === chat.chatId && c.chatType === 4
                             )?.mdmMembers
                         }
-                        size="md"
-                        teamMemberProfiles={useTEM.teamMemberProfiles}
                     />
                 ) : null}
             </Box>
@@ -153,13 +153,13 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                     {/* Chat name */}
                     {chat?.chatType === 4 ? (
                         <AppTooltip
+                            placement="bottom"
                             title={
                                 useCM.allChats
                                     .find((c) => c.chatId === chat.chatId && c.chatType === 4)
                                     ?.mdmMembers?.map((m) => m.userName)
                                     .join(", ") || chat?.chatName
                             }
-                            placement="bottom"
                             arrow
                         >
                             <Typography
@@ -195,6 +195,11 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                         <Chip
                             size="sm"
                             variant="soft"
+                            startDecorator={
+                                <PulseDot
+                                    color={isOnline ? styles.onlineColor : styles.offlineColor}
+                                />
+                            }
                             sx={{
                                 height: 24,
                                 borderRadius: "8px",
@@ -204,11 +209,6 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                                 fontSize: "11px",
                                 px: 0.75,
                             }}
-                            startDecorator={
-                                <PulseDot
-                                    color={isOnline ? styles.onlineColor : styles.offlineColor}
-                                />
-                            }
                         >
                             <Typography
                                 level="body-xs"

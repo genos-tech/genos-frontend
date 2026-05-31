@@ -23,10 +23,10 @@ export const TaskCustomBarBlock = (props: TaskCustomBarBlockProps) => {
             }}
         >
             <Chip
-                size="sm"
-                variant="soft"
                 color="neutral"
+                size="sm"
                 startDecorator={<CheckIcon sx={{ fontSize: 14 }} />}
+                variant="soft"
                 sx={{
                     fontWeight: 500,
                     fontSize: "13px",

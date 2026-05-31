@@ -1,7 +1,7 @@
 // `simple-import-sort` and the prettier import-sort plugin disagree on the
 // order of `react` vs the alphabetically-earlier `@mui/...` block. Prettier
 // wins (run-on-save reformats it), so disable `simple-import-sort` here.
-/* eslint-disable simple-import-sort/imports */
+
 import * as React from "react";
 import { useState } from "react";
 import AssignmentIcon from "@mui/icons-material/Assignment";

@@ -132,7 +132,7 @@ export const LinkedPrCard = ({ url, accessToken, hideOnNotConnected }: Props) =>
 
     if (result === null) {
         return (
-            <Card variant="outlined" sx={{ p: 1.5 }}>
+            <Card sx={{ p: 1.5 }} variant="outlined">
                 <Stack alignItems="center" sx={{ py: 1 }}>
                     <CircularProgress size="sm" />
                 </Stack>
@@ -146,13 +146,15 @@ export const LinkedPrCard = ({ url, accessToken, hideOnNotConnected }: Props) =>
         // visually noisy. Task metadata view keeps it.
         if (hideOnNotConnected) return null;
         return (
-            <Card variant="outlined" sx={{ p: 1.5 }}>
+            <Card sx={{ p: 1.5 }} variant="outlined">
                 <Stack spacing={1.25}>
                     <Alert color="primary" startDecorator={<GitHubIcon />}>
                         {t.tasks.linkedPr.connectPrompt}
                     </Alert>
                     <Button
                         size="sm"
+                        startDecorator={<LinkRoundedIcon />}
+                        sx={{ alignSelf: "flex-start" }}
                         onClick={() => {
                             void redirectToOAuthConnect(
                                 "github",
@@ -160,8 +162,6 @@ export const LinkedPrCard = ({ url, accessToken, hideOnNotConnected }: Props) =>
                                 window.location.pathname
                             );
                         }}
-                        startDecorator={<LinkRoundedIcon />}
-                        sx={{ alignSelf: "flex-start" }}
                     >
                         {t.tasks.linkedPr.connectButton}
                     </Button>
@@ -173,11 +173,11 @@ export const LinkedPrCard = ({ url, accessToken, hideOnNotConnected }: Props) =>
     if (result.kind === "error") {
         return (
             <Card
-                variant="outlined"
                 component="a"
                 href={url}
-                target="_blank"
                 rel="noreferrer"
+                target="_blank"
+                variant="outlined"
                 sx={{
                     p: 1.5,
                     textDecoration: "none",
@@ -185,7 +185,7 @@ export const LinkedPrCard = ({ url, accessToken, hideOnNotConnected }: Props) =>
                     "&:hover": { borderColor: "primary.500" },
                 }}
             >
-                <Stack direction="row" alignItems="center" spacing={1.25}>
+                <Stack alignItems="center" direction="row" spacing={1.25}>
                     <GitHubIcon sx={{ color: "neutral.500" }} />
                     <Box sx={{ flex: 1, minWidth: 0 }}>
                         <Typography level="body-sm" sx={{ color: "text.secondary" }}>
@@ -215,11 +215,10 @@ export const LinkedPrCard = ({ url, accessToken, hideOnNotConnected }: Props) =>
 
     return (
         <Tooltip
-            arrow
             placement="top-start"
-            variant="plain"
             size="sm"
-            title={<PrHoverDetails payload={result.payload} isDark={isDark} />}
+            title={<PrHoverDetails isDark={isDark} payload={result.payload} />}
+            variant="plain"
             sx={{
                 maxWidth: 320,
                 // The visible surface lives on `HoverDetails`' inner
@@ -235,13 +234,14 @@ export const LinkedPrCard = ({ url, accessToken, hideOnNotConnected }: Props) =>
                 // attached to the inner panel.
                 "--Tooltip-arrowColor": palette.surfaceSolid,
             }}
+            arrow
         >
             <Card
-                variant="outlined"
                 component="a"
                 href={pull.html_url}
-                target="_blank"
                 rel="noreferrer"
+                target="_blank"
+                variant="outlined"
                 sx={{
                     p: 1.5,
                     textDecoration: "none",
@@ -253,10 +253,10 @@ export const LinkedPrCard = ({ url, accessToken, hideOnNotConnected }: Props) =>
                     },
                 }}
             >
-                <Stack direction="row" alignItems="center" spacing={1.25}>
+                <Stack alignItems="center" direction="row" spacing={1.25}>
                     {/* PR state octicon */}
                     <Box sx={{ display: "flex", alignItems: "center" }}>
-                        <PrStateIcon state={prState} size={18} />
+                        <PrStateIcon size={18} state={prState} />
                     </Box>
 
                     {/* Title + repo path */}
@@ -277,9 +277,9 @@ export const LinkedPrCard = ({ url, accessToken, hideOnNotConnected }: Props) =>
                     </Box>
 
                     {/* CI badge */}
-                    <AppTooltip title={ciTooltipLabel(ci, t)} size="sm">
+                    <AppTooltip size="sm" title={ciTooltipLabel(ci, t)}>
                         <Box sx={{ display: "flex", alignItems: "center" }}>
-                            <CiBadge state={ci} size={16} />
+                            <CiBadge size={16} state={ci} />
                         </Box>
                     </AppTooltip>
 

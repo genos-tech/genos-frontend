@@ -342,6 +342,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                 <ChatNoteEditor
                                     body={chatNoteEditor.body}
                                     currentChatNote={activeChatNote}
+                                    currentChatNoteTitle={chatNoteEditor.currentChatNoteTitle}
                                     currentNoteMembers={useNM.currentNoteMembers}
                                     myself={myself}
                                     noteBodySaved={chatNoteEditor.noteBodySaved}
@@ -354,7 +355,6 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                     useCM={useCM}
                                     useTEM={useTEM}
                                     useUISM={useUISM}
-                                    currentChatNoteTitle={chatNoteEditor.currentChatNoteTitle}
                                     onBodyChange={chatNoteEditor.handleBodyChange}
                                     onTitleBlur={chatNoteEditor.handleTitleBlur}
                                     onTitleChange={chatNoteEditor.handleTitleChange}
@@ -375,7 +375,6 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                         <ChatNoteEditorPanel
                             key={inlineChatTab.id}
                             accessToken={accessToken}
-                            isActive
                             myself={myself}
                             setMyself={setMyself}
                             socket={socket}
@@ -384,6 +383,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                             useNM={useNM}
                             useTEM={useTEM}
                             useUISM={useUISM}
+                            isActive
                         />
                     )}
                 </Stack>

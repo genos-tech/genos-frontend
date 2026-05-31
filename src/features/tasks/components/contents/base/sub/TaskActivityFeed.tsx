@@ -176,13 +176,13 @@ const PrCommentActivityRow = ({
 
     return (
         <Stack
-            component={commentUrl ? "a" : "div"}
-            href={commentUrl}
-            target={commentUrl ? "_blank" : undefined}
-            rel={commentUrl ? "noopener noreferrer" : undefined}
-            direction="row"
             alignItems="flex-start"
+            component={commentUrl ? "a" : "div"}
+            direction="row"
+            href={commentUrl}
+            rel={commentUrl ? "noopener noreferrer" : undefined}
             spacing={1.25}
+            target={commentUrl ? "_blank" : undefined}
             sx={{
                 py: 1,
                 px: 1,
@@ -200,8 +200,8 @@ const PrCommentActivityRow = ({
             </Avatar>
             <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Stack
-                    direction="row"
                     alignItems="center"
+                    direction="row"
                     spacing={0.75}
                     sx={{ flexWrap: "wrap", rowGap: 0.25 }}
                 >
@@ -588,8 +588,8 @@ export const TaskActivityFeed = ({
                 return (
                     <Stack
                         key={row.activityId}
-                        direction="row"
                         alignItems="flex-start"
+                        direction="row"
                         spacing={1.25}
                         sx={{
                             py: 1,
@@ -642,9 +642,9 @@ export const TaskActivityFeed = ({
                             </Typography>
                             {showOldChip && (
                                 <ValueChip
-                                    label={oldFmt.label}
                                     fieldName={row.fieldName}
                                     isDark={isDark}
+                                    label={oldFmt.label}
                                 />
                             )}
                             {showOldChip && showNewChip && (
@@ -661,9 +661,9 @@ export const TaskActivityFeed = ({
                             )}
                             {showNewChip && (
                                 <ValueChip
-                                    label={newFmt.label}
                                     fieldName={row.fieldName}
                                     isDark={isDark}
+                                    label={newFmt.label}
                                 />
                             )}
                             <Box sx={{ flexGrow: 1 }} />

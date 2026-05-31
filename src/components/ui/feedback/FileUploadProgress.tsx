@@ -142,7 +142,9 @@ export const UploadingTileBadge = ({
 
     const resolvedLabel =
         label ??
-        (variant === "pending" ? t.common.ui.fileUpload.pending : t.common.ui.fileUpload.uploading);
+        (variant === "pending"
+            ? t.common.ui.fileUpload.pending
+            : t.common.ui.fileUpload.uploading);
 
     return (
         <Box

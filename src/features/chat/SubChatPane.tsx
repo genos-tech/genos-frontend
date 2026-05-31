@@ -2,7 +2,7 @@
 // simple-import-sort disagree on the placement of `./ToDoPane`
 // (auto-fix loops between the two). Prettier wins per project
 // convention.
-/* eslint-disable simple-import-sort/imports */
+
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Sheet } from "@mui/joy";
 import { VirtuosoHandle } from "react-virtuoso";

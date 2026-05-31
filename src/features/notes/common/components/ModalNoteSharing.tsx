@@ -153,8 +153,8 @@ export const ModalNoteSharing = ({
                 }}
             >
                 <Stack
-                    direction="row"
                     alignItems="center"
+                    direction="row"
                     justifyContent="space-between"
                     sx={{ mb: 1 }}
                 >
@@ -163,7 +163,7 @@ export const ModalNoteSharing = ({
                             title: noteTitle || t.notes.defaults.untitled,
                         })}
                     </Typography>
-                    <ModalClose variant="plain" sx={{ position: "static" }} />
+                    <ModalClose sx={{ position: "static" }} variant="plain" />
                 </Stack>
 
                 <Typography
@@ -202,8 +202,8 @@ export const ModalNoteSharing = ({
                                 return (
                                     <Stack
                                         key={m.userId}
-                                        direction="row"
                                         alignItems="center"
+                                        direction="row"
                                         spacing={1.25}
                                         sx={{
                                             px: 1,
@@ -218,6 +218,12 @@ export const ModalNoteSharing = ({
                                     >
                                         <AvatarWithStatus
                                             avatarSize={32}
+                                            isYou={isSelf}
+                                            myself={myself}
+                                            setMyself={setMyself}
+                                            socket={socket}
+                                            useCM={useCM}
+                                            useUISM={useUISM}
                                             avatarUser={
                                                 {
                                                     userId: m.userId,
@@ -225,12 +231,6 @@ export const ModalNoteSharing = ({
                                                     avatarImgPath: m.avatarUrl ?? "",
                                                 } as UserProps
                                             }
-                                            isYou={isSelf}
-                                            myself={myself}
-                                            setMyself={setMyself}
-                                            socket={socket}
-                                            useCM={useCM}
-                                            useUISM={useUISM}
                                         />
                                         <Box
                                             sx={{
@@ -255,48 +255,48 @@ export const ModalNoteSharing = ({
                                             {isSelf && (
                                                 <Chip
                                                     size="sm"
-                                                    variant="soft"
                                                     sx={{ fontSize: 10, flexShrink: 0 }}
+                                                    variant="soft"
                                                 >
                                                     {t.notes.sharing.you}
                                                 </Chip>
                                             )}
                                         </Box>
                                         <Select
-                                            size="sm"
-                                            value={m.roleId}
                                             disabled={disableEdit}
+                                            size="sm"
+                                            sx={{ minWidth: 110 }}
+                                            value={m.roleId}
                                             onChange={(_, v) => {
                                                 if (v != null) handleRoleChange(m, v as number);
                                             }}
-                                            sx={{ minWidth: 110 }}
                                         >
                                             <Option
-                                                value={ROLE_OWNER}
                                                 disabled={isLastOwner || m.roleId !== ROLE_OWNER}
+                                                value={ROLE_OWNER}
                                             >
                                                 {ROLE_LABEL[ROLE_OWNER]}
                                             </Option>
                                             <Option
-                                                value={ROLE_EDITOR}
                                                 disabled={isLastOwner && m.roleId === ROLE_OWNER}
+                                                value={ROLE_EDITOR}
                                             >
                                                 {ROLE_LABEL[ROLE_EDITOR]}
                                             </Option>
                                             <Option
-                                                value={ROLE_VIEWER}
                                                 disabled={isLastOwner && m.roleId === ROLE_OWNER}
+                                                value={ROLE_VIEWER}
                                             >
                                                 {ROLE_LABEL[ROLE_VIEWER]}
                                             </Option>
                                         </Select>
                                         <IconButton
-                                            size="sm"
-                                            variant="plain"
                                             color="danger"
                                             disabled={disableEdit || m.roleId === ROLE_OWNER}
-                                            onClick={() => handleRevoke(m.userId)}
+                                            size="sm"
                                             title={t.notes.sharing.removeAccess}
+                                            variant="plain"
+                                            onClick={() => handleRevoke(m.userId)}
                                         >
                                             <CloseRoundedIcon sx={{ fontSize: 18 }} />
                                         </IconButton>
@@ -325,11 +325,11 @@ export const ModalNoteSharing = ({
                         </Typography>
 
                         <Input
-                            size="sm"
                             placeholder={t.notes.sharing.searchPlaceholder}
+                            size="sm"
+                            sx={{ mb: 1 }}
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            sx={{ mb: 1 }}
                         />
 
                         <Box sx={{ maxHeight: 220, overflow: "auto" }}>
@@ -353,8 +353,8 @@ export const ModalNoteSharing = ({
                                     {candidates.map((u) => (
                                         <Stack
                                             key={u.userId}
-                                            direction="row"
                                             alignItems="center"
+                                            direction="row"
                                             spacing={1.25}
                                             sx={{
                                                 px: 1,
@@ -404,12 +404,12 @@ export const ModalNoteSharing = ({
                                                 </Typography>
                                             </Box>
                                             <Button
+                                                loading={savingUserId === u.userId}
                                                 size="sm"
                                                 variant="soft"
                                                 startDecorator={
                                                     <PersonAddRoundedIcon sx={{ fontSize: 16 }} />
                                                 }
-                                                loading={savingUserId === u.userId}
                                                 onClick={() => handleGrant(u.userId, ROLE_VIEWER)}
                                             >
                                                 {t.notes.sharing.invite}

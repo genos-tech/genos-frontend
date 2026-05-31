@@ -1,24 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-// ---------------------------------------------------------------------------
-// Mock the axios `api` layer used by searchApi + mentionGroupsApi.
-// `authApi(token)` returns either a stubbed axios instance or null (no token).
-// ---------------------------------------------------------------------------
-vi.mock("../../services/api", () => ({
-    authApi: vi.fn(),
-    nonAuthApi: vi.fn(),
-}));
-
-import { authApi } from "../../services/api";
-import {
-    addMentionGroupMembers,
-    createMentionGroup,
-    deleteMentionGroup,
-    listMentionGroups,
-    removeMentionGroupMember,
-    updateMentionGroup,
-} from "../../services/mentionGroupsApi";
-import { searchSpotlight } from "../../services/searchApi";
 import {
     askAgentStream,
     decideAgent,
@@ -30,7 +11,26 @@ import {
     fetchNoteSummary,
     fetchThreadSummary,
 } from "../../services/agentApi";
+import { authApi } from "../../services/api";
+import {
+    addMentionGroupMembers,
+    createMentionGroup,
+    deleteMentionGroup,
+    listMentionGroups,
+    removeMentionGroupMember,
+    updateMentionGroup,
+} from "../../services/mentionGroupsApi";
+import { searchSpotlight } from "../../services/searchApi";
 import { v3ApiBaseURL } from "../../services/v3Api";
+
+// ---------------------------------------------------------------------------
+// Mock the axios `api` layer used by searchApi + mentionGroupsApi.
+// `authApi(token)` returns either a stubbed axios instance or null (no token).
+// ---------------------------------------------------------------------------
+vi.mock("../../services/api", () => ({
+    authApi: vi.fn(),
+    nonAuthApi: vi.fn(),
+}));
 
 const mockedAuthApi = authApi as unknown as ReturnType<typeof vi.fn>;
 
@@ -292,9 +292,7 @@ describe("mentionGroupsApi", () => {
 
         it("returns null when no token", async () => {
             mockedAuthApi.mockReturnValue(null);
-            expect(
-                await removeMentionGroupMember("", { group_id: 1, user_id: "u" })
-            ).toBeNull();
+            expect(await removeMentionGroupMember("", { group_id: 1, user_id: "u" })).toBeNull();
         });
 
         it("returns null on error", async () => {
@@ -379,7 +377,10 @@ describe("agentApi GET helpers", () => {
         });
 
         it("returns null when response not ok", async () => {
-            vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse({}, { ok: false, status: 500 })));
+            vi.stubGlobal(
+                "fetch",
+                vi.fn().mockResolvedValue(jsonResponse({}, { ok: false, status: 500 }))
+            );
             expect(await fetchAgentUsage("tok")).toBeNull();
         });
 
@@ -602,7 +603,11 @@ describe("agentApi summary helpers", () => {
         it("throws server-error data.error when present on not-ok", async () => {
             vi.stubGlobal(
                 "fetch",
-                vi.fn().mockResolvedValue(jsonResponse({ error: "quota exceeded" }, { ok: false, status: 429 }))
+                vi
+                    .fn()
+                    .mockResolvedValue(
+                        jsonResponse({ error: "quota exceeded" }, { ok: false, status: 429 })
+                    )
             );
             await expect(
                 fetchNoteSummary({
@@ -674,7 +679,9 @@ describe("agentApi summary helpers", () => {
         it("throws server error message on not-ok with data.error", async () => {
             vi.stubGlobal(
                 "fetch",
-                vi.fn().mockResolvedValue(jsonResponse({ error: "boom" }, { ok: false, status: 500 }))
+                vi
+                    .fn()
+                    .mockResolvedValue(jsonResponse({ error: "boom" }, { ok: false, status: 500 }))
             );
             await expect(
                 fetchThreadSummary({
@@ -816,14 +823,16 @@ describe("agentApi.askAgentStream", () => {
     });
 
     it("dispatches sources, answer_delta, and done(session_id) in order", async () => {
-        const fetchMock = vi.fn().mockResolvedValue(
-            streamResponse([
-                '{"type":"sources","sources":[{"id":"r1"}]}\n',
-                '{"type":"answer_delta","text":"Hello "}\n',
-                '{"type":"answer_delta","text":"world"}\n',
-                '{"type":"done","session_id":"S42"}\n',
-            ])
-        );
+        const fetchMock = vi
+            .fn()
+            .mockResolvedValue(
+                streamResponse([
+                    '{"type":"sources","sources":[{"id":"r1"}]}\n',
+                    '{"type":"answer_delta","text":"Hello "}\n',
+                    '{"type":"answer_delta","text":"world"}\n',
+                    '{"type":"done","session_id":"S42"}\n',
+                ])
+            );
         vi.stubGlobal("fetch", fetchMock);
         const h = makeHandlers();
 
@@ -837,9 +846,11 @@ describe("agentApi.askAgentStream", () => {
     });
 
     it("handles events split across chunk boundaries", async () => {
-        const fetchMock = vi.fn().mockResolvedValue(
-            streamResponse(['{"type":"answer_de', 'lta","text":"x"}\n{"type":"done"}\n'])
-        );
+        const fetchMock = vi
+            .fn()
+            .mockResolvedValue(
+                streamResponse(['{"type":"answer_de', 'lta","text":"x"}\n{"type":"done"}\n'])
+            );
         vi.stubGlobal("fetch", fetchMock);
         const h = makeHandlers();
 
@@ -850,14 +861,16 @@ describe("agentApi.askAgentStream", () => {
     });
 
     it("dispatches tool_call_* and pending_approval events (pending is terminal)", async () => {
-        const fetchMock = vi.fn().mockResolvedValue(
-            streamResponse([
-                '{"type":"tool_call_start","step":1,"tool_name":"search","arguments":{"q":"x"}}\n',
-                '{"type":"tool_call_result","step":1,"tool_name":"search","summary":"ok"}\n',
-                '{"type":"tool_call_error","step":2,"tool_name":"write","error":"denied"}\n',
-                '{"type":"tool_call_pending_approval","step":3,"tool_name":"write","arguments":{"a":1},"approval_token":"AT","run_id":"RID"}\n',
-            ])
-        );
+        const fetchMock = vi
+            .fn()
+            .mockResolvedValue(
+                streamResponse([
+                    '{"type":"tool_call_start","step":1,"tool_name":"search","arguments":{"q":"x"}}\n',
+                    '{"type":"tool_call_result","step":1,"tool_name":"search","summary":"ok"}\n',
+                    '{"type":"tool_call_error","step":2,"tool_name":"write","error":"denied"}\n',
+                    '{"type":"tool_call_pending_approval","step":3,"tool_name":"write","arguments":{"a":1},"approval_token":"AT","run_id":"RID"}\n',
+                ])
+            );
         vi.stubGlobal("fetch", fetchMock);
         const h = makeHandlers();
 
@@ -890,9 +903,11 @@ describe("agentApi.askAgentStream", () => {
     });
 
     it("dispatches an error event via onError and treats it as terminal", async () => {
-        const fetchMock = vi.fn().mockResolvedValue(
-            streamResponse(['{"type":"error","message":"backend exploded"}\n'])
-        );
+        const fetchMock = vi
+            .fn()
+            .mockResolvedValue(
+                streamResponse(['{"type":"error","message":"backend exploded"}\n'])
+            );
         vi.stubGlobal("fetch", fetchMock);
         const h = makeHandlers();
 
@@ -930,9 +945,9 @@ describe("agentApi.askAgentStream", () => {
     });
 
     it("reports a single malformed-line error when a terminal event follows", async () => {
-        const fetchMock = vi.fn().mockResolvedValue(
-            streamResponse(["garbage\n", '{"type":"done"}\n'])
-        );
+        const fetchMock = vi
+            .fn()
+            .mockResolvedValue(streamResponse(["garbage\n", '{"type":"done"}\n']));
         vi.stubGlobal("fetch", fetchMock);
         const h = makeHandlers();
 
@@ -944,9 +959,9 @@ describe("agentApi.askAgentStream", () => {
     });
 
     it("reports streamEndedUnexpectedly when no terminal event arrives", async () => {
-        const fetchMock = vi.fn().mockResolvedValue(
-            streamResponse(['{"type":"answer_delta","text":"x"}\n'])
-        );
+        const fetchMock = vi
+            .fn()
+            .mockResolvedValue(streamResponse(['{"type":"answer_delta","text":"x"}\n']));
         vi.stubGlobal("fetch", fetchMock);
         const h = makeHandlers();
 
@@ -988,9 +1003,11 @@ describe("agentApi.askAgentStream", () => {
     });
 
     it("prefers data.error message on a not-ok response", async () => {
-        const fetchMock = vi.fn().mockResolvedValue(
-            jsonResponse({ error: "rate limited" }, { ok: false, status: 429 })
-        );
+        const fetchMock = vi
+            .fn()
+            .mockResolvedValue(
+                jsonResponse({ error: "rate limited" }, { ok: false, status: 429 })
+            );
         vi.stubGlobal("fetch", fetchMock);
         const h = makeHandlers();
 
@@ -1120,7 +1137,9 @@ describe("agentApi.decideAgent", () => {
     });
 
     it("POSTs /agent/decide/ with run_id, approval_token, decision and streams done", async () => {
-        const fetchMock = vi.fn().mockResolvedValue(streamResponse(['{"type":"done","session_id":"S1"}\n']));
+        const fetchMock = vi
+            .fn()
+            .mockResolvedValue(streamResponse(['{"type":"done","session_id":"S1"}\n']));
         vi.stubGlobal("fetch", fetchMock);
         const h = makeHandlers();
 

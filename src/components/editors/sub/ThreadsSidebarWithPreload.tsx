@@ -56,9 +56,7 @@ export const ThreadsSidebarWithPreload = ({
     }, [threads, comments.userStore]);
 
     if (!ready) {
-        return (
-            <div style={{ padding: 12, color: "#888" }}>{t.common.editor.loadingComments}</div>
-        );
+        return <div style={{ padding: 12, color: "#888" }}>{t.common.editor.loadingComments}</div>;
     }
 
     return (

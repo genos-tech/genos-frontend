@@ -58,18 +58,18 @@ export const ThreadPanel = ({
             >
                 {useCM.currentThreadChat && (
                     <ThreadPane
-                        useCM={useCM}
-                        usePM={usePM}
                         currentThreadChatId={currentThreadChatId}
                         currentWindowHeight={currentWindowHeight}
                         myself={myself}
                         setMyself={setMyself}
+                        setTodoFromMessageBubble={setTodoFromMessageBubble}
                         socket={socket}
+                        useCM={useCM}
+                        useNM={useNM}
+                        usePM={usePM}
                         useTEM={useTEM}
                         useTM={useTM}
                         useUISM={useUISM}
-                        useNM={useNM}
-                        setTodoFromMessageBubble={setTodoFromMessageBubble}
                     />
                 )}
             </Box>

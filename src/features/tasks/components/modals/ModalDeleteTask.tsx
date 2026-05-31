@@ -1,8 +1,8 @@
 import React, { useState } from "react";
+import { keyframes } from "@emotion/react";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import { Alert, Box, Button, Modal, ModalDialog, Stack, Typography } from "@mui/joy";
-import { keyframes } from "@emotion/react";
 
 import { useTranslation } from "../../../../i18n";
 import { TaskProps } from "../../../../types/tasks";
@@ -80,7 +80,8 @@ export const ModalDeleteTask: React.FC<Props> = ({
                         "linear-gradient(145deg, rgba(30, 30, 40, 0.95) 0%, rgba(20, 20, 28, 0.98) 100%)",
                     border: "1px solid rgba(232,121,195,0.2)",
                     borderRadius: "16px",
-                    boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(232,121,195,0.1)",
+                    boxShadow:
+                        "0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(232,121,195,0.1)",
                     width: { xs: "calc(100vw - 24px)", md: "auto" },
                     minWidth: { xs: 0, md: "360px" },
                     maxWidth: "100vw",
@@ -97,7 +98,8 @@ export const ModalDeleteTask: React.FC<Props> = ({
                         width: 56,
                         height: 56,
                         borderRadius: "14px",
-                        background: "linear-gradient(135deg, rgba(232,121,195,0.15) 0%, rgba(192,38,168,0.15) 100%)",
+                        background:
+                            "linear-gradient(135deg, rgba(232,121,195,0.15) 0%, rgba(192,38,168,0.15) 100%)",
                         border: "1px solid rgba(232,121,195,0.25)",
                         mx: "auto",
                         mb: 2,
@@ -168,7 +170,6 @@ export const ModalDeleteTask: React.FC<Props> = ({
                 <Stack direction="row" spacing={1.5} sx={{ justifyContent: "center" }}>
                     <Button
                         variant="plain"
-                        onClick={() => setOpenDeleteTask(false)}
                         sx={{
                             color: "rgba(255, 255, 255, 0.6)",
                             borderRadius: "10px",
@@ -178,11 +179,11 @@ export const ModalDeleteTask: React.FC<Props> = ({
                                 color: "rgba(255, 255, 255, 0.9)",
                             },
                         }}
+                        onClick={() => setOpenDeleteTask(false)}
                     >
                         {t.tasks.modals.deleteTask.cancelButton}
                     </Button>
                     <Button
-                        onClick={handleDeleteTask}
                         sx={{
                             background: "linear-gradient(135deg, #c026a8 0%, #9d2386 100%)",
                             borderRadius: "10px",
@@ -195,6 +196,7 @@ export const ModalDeleteTask: React.FC<Props> = ({
                                 boxShadow: "0 6px 20px rgba(232,121,195,0.4)",
                             },
                         }}
+                        onClick={handleDeleteTask}
                     >
                         {t.tasks.modals.deleteTask.confirmButton}
                     </Button>

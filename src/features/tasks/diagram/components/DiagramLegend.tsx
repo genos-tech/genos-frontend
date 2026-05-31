@@ -37,8 +37,8 @@ export const DiagramLegend = () => {
                 }}
             >
                 <Stack
-                    direction="row"
                     alignItems="center"
+                    direction="row"
                     spacing={0.5}
                     sx={{
                         px: 1.25,
@@ -64,12 +64,12 @@ export const DiagramLegend = () => {
                         Legend
                     </Typography>
                     <AppTooltip
+                        placement="right"
                         title={
                             open
                                 ? t.tasks.diagram.tooltips.collapse
                                 : t.tasks.diagram.tooltips.expand
                         }
-                        placement="right"
                     >
                         <IconButton
                             size="sm"
@@ -94,9 +94,8 @@ export const DiagramLegend = () => {
                         spacing={0.5}
                         sx={{ px: 1.25, py: 0.75, borderTop: `1px solid ${P.border}` }}
                     >
-                        <Stack direction="row" alignItems="center" spacing={0.75}>
+                        <Stack alignItems="center" direction="row" spacing={0.75}>
                             <Box
-                                aria-hidden
                                 sx={{
                                     width: 28,
                                     height: 2,
@@ -104,6 +103,7 @@ export const DiagramLegend = () => {
                                     borderRadius: 1,
                                     flexShrink: 0,
                                 }}
+                                aria-hidden
                             />
                             <Typography
                                 level="body-xs"
@@ -112,19 +112,19 @@ export const DiagramLegend = () => {
                                 Parent → Child
                             </Typography>
                         </Stack>
-                        <Stack direction="row" alignItems="center" spacing={0.75}>
+                        <Stack alignItems="center" direction="row" spacing={0.75}>
                             <Box
-                                aria-hidden
                                 sx={{
                                     width: 22,
                                     height: 0,
                                     borderTop: "2px dashed #f97316",
                                     flexShrink: 0,
                                 }}
+                                aria-hidden
                             />
                             <Typography
-                                aria-hidden
                                 sx={{ color: "#f97316", fontWeight: 700, lineHeight: 1 }}
+                                aria-hidden
                             >
                                 ▸
                             </Typography>
@@ -135,9 +135,8 @@ export const DiagramLegend = () => {
                                 Blocks
                             </Typography>
                         </Stack>
-                        <Stack direction="row" alignItems="center" spacing={0.75}>
+                        <Stack alignItems="center" direction="row" spacing={0.75}>
                             <Box
-                                aria-hidden
                                 sx={{
                                     width: 28,
                                     border: `1px dashed ${P.textMuted}`,
@@ -146,6 +145,7 @@ export const DiagramLegend = () => {
                                     borderRadius: "2px",
                                     flexShrink: 0,
                                 }}
+                                aria-hidden
                             />
                             <Typography
                                 level="body-xs"

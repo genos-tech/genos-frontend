@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { isLegacyNumericId, isV3Uuid } from "../../utils/legacyId";
 import { parseInternalUrl } from "../../utils/parseInternalUrl";
+import { replaceSpacesWithUnderscore } from "../../utils/stringHelper";
 import {
     formatBytes,
     isFileSizeAllowed,
@@ -9,7 +10,6 @@ import {
     MAX_UPLOAD_FILE_SIZE_LABEL,
     partitionBySize,
 } from "../../utils/uploadLimits";
-import { replaceSpacesWithUnderscore } from "../../utils/stringHelper";
 import { getDomainFromUrl } from "../../utils/urlHandler";
 
 // jsdom default origin is http://localhost:3000 (matches vite.config server.port).
@@ -268,9 +268,7 @@ describe("parseInternalUrl - note targets", () => {
     });
 
     it("parses a chatNote target", () => {
-        expect(
-            parseInternalUrl(`${ORIGIN}/workspace/notes/chat/dm/5/thread/7/note/30`)
-        ).toEqual({
+        expect(parseInternalUrl(`${ORIGIN}/workspace/notes/chat/dm/5/thread/7/note/30`)).toEqual({
             kind: "chatNote",
             chatType: 1,
             chatId: 5,
@@ -280,9 +278,7 @@ describe("parseInternalUrl - note targets", () => {
     });
 
     it("accepts threadId === 0 as the not-in-a-thread sentinel for chat notes", () => {
-        expect(
-            parseInternalUrl(`${ORIGIN}/workspace/notes/chat/dm/5/thread/0/note/30`)
-        ).toEqual({
+        expect(parseInternalUrl(`${ORIGIN}/workspace/notes/chat/dm/5/thread/0/note/30`)).toEqual({
             kind: "chatNote",
             chatType: 1,
             chatId: 5,

@@ -5,7 +5,7 @@
 // slated for replacement by the v3 channel UI. `simple-import-sort`
 // disabled because the prettier import-sort plugin disagrees with it
 // on react-vs-@mui ordering.
-/* eslint-disable sort-keys, react/jsx-sort-props, simple-import-sort/imports */
+/* eslint-disable react/jsx-sort-props */
 import * as React from "react";
 import { Box, ListDivider, ListItem, Stack } from "@mui/joy";
 import ListItemButton from "@mui/joy/ListItemButton";

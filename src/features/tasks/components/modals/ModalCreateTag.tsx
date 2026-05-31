@@ -162,12 +162,6 @@ export const ModalCreateTag: React.FC<Props> = ({ myself, usePM, useTM }) => {
                     <Input
                         placeholder={t.tasks.modals.createTag.namePlaceholder}
                         value={tagName}
-                        onChange={(e) => setTagName(e.target.value)}
-                        onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                                handleCreateTag();
-                            }
-                        }}
                         sx={{
                             flex: 1,
                             "--Input-focusedThickness": "1px",
@@ -180,6 +174,12 @@ export const ModalCreateTag: React.FC<Props> = ({ myself, usePM, useTM }) => {
                             "&:hover": {
                                 borderColor: "rgba(124,58,237,0.3)",
                             },
+                        }}
+                        onChange={(e) => setTagName(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                                handleCreateTag();
+                            }
                         }}
                     />
                     <ColorPickerMenu
@@ -232,7 +232,6 @@ export const ModalCreateTag: React.FC<Props> = ({ myself, usePM, useTM }) => {
                 <Stack direction="row" spacing={1.5} sx={{ justifyContent: "flex-end" }}>
                     <Button
                         variant="plain"
-                        onClick={() => useTM.setOpenCreateTag(false)}
                         sx={{
                             color: "rgba(255, 255, 255, 0.6)",
                             borderRadius: "10px",
@@ -242,12 +241,12 @@ export const ModalCreateTag: React.FC<Props> = ({ myself, usePM, useTM }) => {
                                 color: "rgba(255, 255, 255, 0.9)",
                             },
                         }}
+                        onClick={() => useTM.setOpenCreateTag(false)}
                     >
                         {t.tasks.modals.createTag.cancelButton}
                     </Button>
                     <Button
                         disabled={!tagName.trim()}
-                        onClick={handleCreateTag}
                         sx={{
                             background: "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)",
                             borderRadius: "10px",
@@ -264,6 +263,7 @@ export const ModalCreateTag: React.FC<Props> = ({ myself, usePM, useTM }) => {
                                 color: "rgba(255, 255, 255, 0.3)",
                             },
                         }}
+                        onClick={handleCreateTag}
                     >
                         {t.tasks.modals.createTag.createButton}
                     </Button>

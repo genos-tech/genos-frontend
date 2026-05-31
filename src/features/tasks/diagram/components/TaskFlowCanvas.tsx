@@ -1,3 +1,5 @@
+import "@xyflow/react/dist/style.css";
+
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import { Alert, Box, CircularProgress, IconButton, Stack, Typography } from "@mui/joy";
@@ -21,8 +23,6 @@ import {
     reconnectEdge,
     useReactFlow,
 } from "@xyflow/react";
-
-import "@xyflow/react/dist/style.css";
 
 import { useAuth } from "../../../../context/AuthContext";
 import { invalidateCachedFullTask } from "../../../../db/services/task-full.service";
@@ -987,8 +987,8 @@ const CanvasInner = ({
             {error && (
                 <Alert
                     color="danger"
-                    variant="soft"
                     size="sm"
+                    variant="soft"
                     endDecorator={
                         <IconButton
                             color="danger"
@@ -1011,30 +1011,31 @@ const CanvasInner = ({
                 </Alert>
             )}
             <ReactFlow
-                nodes={nodes}
-                edges={edges}
-                nodeTypes={nodeTypes}
-                edgeTypes={edgeTypes}
-                onNodesChange={onNodesChange}
-                onEdgesChange={onEdgesChange}
-                onConnect={onConnectFresh}
-                onReconnect={onReconnect}
+                colorMode={isDark ? "dark" : "light"}
                 defaultEdgeOptions={{ animated: false }}
+                deleteKeyCode={["Backspace", "Delete"]}
+                edges={edges}
+                edgeTypes={edgeTypes}
+                maxZoom={2}
+                minZoom={0.25}
+                nodes={nodes}
+                nodeTypes={nodeTypes}
                 proOptions={{ hideAttribution: true }}
                 fitView
-                minZoom={0.25}
-                maxZoom={2}
-                deleteKeyCode={["Backspace", "Delete"]}
-                colorMode={isDark ? "dark" : "light"}
+                onConnect={onConnectFresh}
+                onEdgesChange={onEdgesChange}
+                onNodesChange={onNodesChange}
+                onReconnect={onReconnect}
             >
                 <Background
-                    variant={BackgroundVariant.Dots}
+                    color={isDark ? "rgba(124,58,237,0.2)" : "rgba(124,58,237,0.18)"}
                     gap={20}
                     size={1}
-                    color={isDark ? "rgba(124,58,237,0.2)" : "rgba(124,58,237,0.18)"}
+                    variant={BackgroundVariant.Dots}
                 />
                 <Controls showInteractive={false} />
                 <MiniMap
+                    maskColor={isDark ? "rgba(20,14,34,0.65)" : "rgba(252,250,255,0.65)"}
                     nodeColor={(n) => {
                         const d = n.data as unknown as TaskNodeData;
                         if (d?.isExternal) return "#94a3b8";
@@ -1043,7 +1044,6 @@ const CanvasInner = ({
                     }}
                     pannable
                     zoomable
-                    maskColor={isDark ? "rgba(20,14,34,0.65)" : "rgba(252,250,255,0.65)"}
                 />
                 <DiagramLegend />
             </ReactFlow>

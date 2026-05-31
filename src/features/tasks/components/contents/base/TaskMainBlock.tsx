@@ -465,10 +465,10 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                 <Box sx={{ mb: 1 }}>
                     <AppTooltip title={t.tasks.dependencies.blockedTooltip}>
                         <Chip
-                            size="sm"
                             color="warning"
-                            variant="soft"
+                            size="sm"
                             startDecorator={<BlockRoundedIcon sx={{ fontSize: 14 }} />}
+                            variant="soft"
                             sx={{
                                 fontWeight: 700,
                                 letterSpacing: "0.04em",
@@ -508,18 +508,17 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             // unassigned). When null, render the empty
                             // placeholder avatar — `AvatarWithStatus`
                             // already handles `avatarUser=undefined`.
-                            avatarUser={
-                                assignee ? useTEM.teamMemberProfiles[assignee.userId] : undefined
-                            }
-                            useCM={useCM}
                             isYou={!!assignee && myself.userId === assignee.userId}
                             myself={myself}
                             setMyself={setMyself}
                             socket={socket}
+                            useCM={useCM}
                             useUISM={useUISM}
+                            avatarUser={
+                                assignee ? useTEM.teamMemberProfiles[assignee.userId] : undefined
+                            }
                         />
                         <ACTeamUsers
-                            useCM={useCM}
                             initialUser={taskContent.assignee}
                             isAssignee={true}
                             isOpenTeamMembersList={isOpenTeamMembersList}
@@ -531,6 +530,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             setUser={setAssignee}
                             socket={socket}
                             taskContent={taskContent}
+                            useCM={useCM}
                             useTEM={useTEM}
                             useUISM={useUISM}
                         />
@@ -552,15 +552,14 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                     >
                         <AvatarWithStatus
                             avatarUser={useTEM.teamMemberProfiles[reporter.userId]}
-                            useCM={useCM}
                             isYou={myself.userId === reporter.userId}
                             myself={myself}
                             setMyself={setMyself}
                             socket={socket}
+                            useCM={useCM}
                             useUISM={useUISM}
                         />
                         <ACTeamUsers
-                            useCM={useCM}
                             initialUser={taskContent.reporter}
                             isAssignee={false}
                             isOpenTeamMembersList={isOpenTeamMembersList}
@@ -568,26 +567,27 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             setIsOpenTeamMembersList={setIsOpenTeamMembersList}
                             setMyself={setMyself}
                             setTaskContent={setTaskContent}
+                            socket={socket}
                             setTaskUpdated={setTaskUpdated}
                             // Adapt the non-nullable reporter setter to the
                             // wider `setUser: UserProps | null` signature
                             // ACTeamUsers needs. The picker only emits null
                             // for the assignee branch (isAssignee=true), so
                             // this null is unreachable in practice.
+                            taskContent={taskContent}
+                            useCM={useCM}
+                            useTEM={useTEM}
+                            useUISM={useUISM}
                             setUser={(value) => {
                                 if (value) setReporter(value);
                             }}
-                            socket={socket}
-                            taskContent={taskContent}
-                            useTEM={useTEM}
-                            useUISM={useUISM}
                         />
                     </Box>
                 </ListItem>
 
                 {/* Project and Tags Row */}
-                <Grid spacing={1} container sx={{ mt: 0.5 }}>
-                    <Grid xs={12} sm={6}>
+                <Grid spacing={1} sx={{ mt: 0.5 }} container>
+                    <Grid sm={6} xs={12}>
                         <ListItem sx={{ display: "flex", alignItems: "center", p: 0 }}>
                             <FieldLabel isDark={isDark}>{t.tasks.fields.project}</FieldLabel>
                             <ACTeamProjects
@@ -600,14 +600,14 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             />
                         </ListItem>
                     </Grid>
-                    <Grid xs={12} sm={6}>
+                    <Grid sm={6} xs={12}>
                         <ListItem sx={{ display: "flex", alignItems: "center", p: 0 }}>
                             <FieldLabel isDark={isDark}>{t.tasks.fields.tags}</FieldLabel>
                             <AppTooltip title={t.tasks.tooltips.createNewTag}>
                                 <IconButton
                                     size="sm"
-                                    variant="plain"
                                     sx={subtleIconButtonSx(isDark)}
+                                    variant="plain"
                                     onClick={() => useTM.setOpenCreateTag(true)}
                                 >
                                     <AddRoundedIcon sx={{ fontSize: 18 }} />
@@ -616,8 +616,8 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             <AppTooltip title={t.tasks.tooltips.manageTags}>
                                 <IconButton
                                     size="sm"
-                                    variant="plain"
                                     sx={subtleIconButtonSx(isDark)}
+                                    variant="plain"
                                     onClick={() => setOpenManageTags(true)}
                                 >
                                     <SettingsRoundedIcon sx={{ fontSize: 16 }} />
@@ -625,12 +625,12 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             </AppTooltip>
                             <ModalManageTags
                                 myself={myself}
-                                usePM={usePM}
-                                useTM={useTM}
                                 open={openManageTags}
-                                onClose={() => setOpenManageTags(false)}
                                 projectTags={projectTags}
                                 setProjectTags={setProjectTags}
+                                usePM={usePM}
+                                useTM={useTM}
+                                onClose={() => setOpenManageTags(false)}
                             />
                             <ACProjectTags
                                 isOpenTagList={isOpenTagList}
@@ -659,12 +659,31 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                         </FieldLabel>
                         <Box sx={{ flex: 1, minWidth: 0 }}>
                             <SprintMilestonePicker
-                                projectId={taskContent?.project?.projectId}
-                                useSM={useSM}
-                                sprintId={(taskContent as any)?.sprintId ?? null}
                                 milestoneId={(taskContent as any)?.milestoneId ?? null}
-                                showSprint={isMilestone === true}
+                                projectId={taskContent?.project?.projectId}
                                 showMilestone={isMilestone !== true}
+                                showSprint={isMilestone === true}
+                                sprintId={(taskContent as any)?.sprintId ?? null}
+                                useSM={useSM}
+                                onChangeMilestone={(mid, taskId, autoSyncedSprint) => {
+                                    // Picking a milestone may also
+                                    // auto-sync the sprint linkage —
+                                    // both updates MUST land in a
+                                    // single `setTaskContent` call so
+                                    // they don't clobber each other
+                                    // inside the same React batch
+                                    // (see the picker's
+                                    // `onChangeMilestone` doc).
+                                    setTaskContent({
+                                        ...(taskContent as any),
+                                        milestoneId: mid,
+                                        parentTaskId: taskId, // Changing the milestone -> changing the parent task too.
+                                        ...(autoSyncedSprint
+                                            ? { sprintId: autoSyncedSprint.sprintId }
+                                            : {}),
+                                    } as TaskProps);
+                                    setTaskUpdated?.(true);
+                                }}
                                 onChangeSprint={(sid) => {
                                     // For milestones, syncing the
                                     // sprint also pushes its end date
@@ -688,25 +707,6 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                     } as TaskProps);
                                     setTaskUpdated?.(true);
                                 }}
-                                onChangeMilestone={(mid, taskId, autoSyncedSprint) => {
-                                    // Picking a milestone may also
-                                    // auto-sync the sprint linkage —
-                                    // both updates MUST land in a
-                                    // single `setTaskContent` call so
-                                    // they don't clobber each other
-                                    // inside the same React batch
-                                    // (see the picker's
-                                    // `onChangeMilestone` doc).
-                                    setTaskContent({
-                                        ...(taskContent as any),
-                                        milestoneId: mid,
-                                        parentTaskId: taskId, // Changing the milestone -> changing the parent task too.
-                                        ...(autoSyncedSprint
-                                            ? { sprintId: autoSyncedSprint.sprintId }
-                                            : {}),
-                                    } as TaskProps);
-                                    setTaskUpdated?.(true);
-                                }}
                             />
                         </Box>
                     </ListItem>
@@ -714,7 +714,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
 
                 {/* Priority and Effort Level Row */}
                 <Grid spacing={1} container>
-                    <Grid xs={12} sm={6}>
+                    <Grid sm={6} xs={12}>
                         <ListItem sx={{ display: "flex", alignItems: "center", p: 0 }}>
                             <FieldLabel isDark={isDark}>{t.tasks.fields.priority}</FieldLabel>
                             <ACTaskPriority
@@ -724,7 +724,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             />
                         </ListItem>
                     </Grid>
-                    <Grid xs={12} sm={6}>
+                    <Grid sm={6} xs={12}>
                         <ListItem sx={{ display: "flex", alignItems: "center", p: 0 }}>
                             <FieldLabel isDark={isDark}>{t.tasks.fields.effortLevel}</FieldLabel>
                             <ACTaskEffortLevel
@@ -769,8 +769,8 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                 <ListItem sx={{ display: "flex", alignItems: "center" }}>
                     <FieldLabel isDark={isDark}>{t.tasks.fields.dueDate}</FieldLabel>
                     <Stack
-                        direction="row"
                         alignItems="center"
+                        direction="row"
                         spacing={1}
                         sx={{ flex: 1, minWidth: 0, flexWrap: "wrap" }}
                     >
@@ -795,8 +795,8 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             <AppTooltip title={t.tasks.tooltips.addStartDate}>
                                 <IconButton
                                     size="sm"
-                                    variant="plain"
                                     sx={subtleIconButtonSx(isDark)}
+                                    variant="plain"
                                     onClick={() => setExplicitlyShowStartDate(true)}
                                 >
                                     <AddRoundedIcon sx={{ fontSize: 18 }} />
@@ -809,8 +809,8 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                 {/* Links */}
                 <ListItem sx={{ display: "flex", alignItems: "flex-start" }}>
                     <Stack
-                        direction="row"
                         alignItems="center"
+                        direction="row"
                         spacing={0.25}
                         sx={{ minWidth: `${FIELD_LABEL_MIN_WIDTH}px` }}
                     >
@@ -856,22 +856,22 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                 {linkedBranches.length > 0 && (
                     <ListItem sx={{ display: "flex", alignItems: "flex-start" }}>
                         <Stack
-                            direction="row"
                             alignItems="center"
+                            direction="row"
                             spacing={0.25}
                             sx={{ minWidth: `${FIELD_LABEL_MIN_WIDTH}px` }}
                         >
                             <FieldLabel isDark={isDark}>{t.tasks.fields.branches}</FieldLabel>
                             <AppTooltip title={t.tasks.tooltips.refreshBranches}>
                                 <IconButton
-                                    size="sm"
-                                    variant="plain"
                                     color="neutral"
                                     disabled={branchesRefreshing}
+                                    size="sm"
+                                    sx={subtleIconButtonSx(isDark)}
+                                    variant="plain"
                                     onClick={() => {
                                         void fetchLinkedBranches({ bypassCache: true });
                                     }}
-                                    sx={subtleIconButtonSx(isDark)}
                                 >
                                     <RefreshRoundedIcon
                                         sx={{
@@ -904,9 +904,9 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                     <Chip
                                         component="a"
                                         href={b.url}
-                                        target="_blank"
                                         rel="noopener noreferrer"
                                         size="sm"
+                                        target="_blank"
                                         variant="outlined"
                                         sx={{
                                             borderRadius: "5px",
@@ -943,11 +943,11 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                     create mode by the block itself — empty-task rows
                     pre-persistence shouldn't accept dependencies. */}
                 <TaskDependenciesBlock
-                    taskContent={taskContent}
+                    isPreviewMode={isPreviewMode}
                     myself={myself}
+                    taskContent={taskContent}
                     usePM={usePM}
                     useTM={useTM}
-                    isPreviewMode={isPreviewMode}
                 />
 
                 {/* Parent Task (only if exists). Uses the same chip
@@ -986,24 +986,24 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             }}
                         >
                             <AvatarWithStatus
+                                myself={myself}
+                                setMyself={setMyself}
+                                socket={socket}
+                                useCM={useCM}
+                                useUISM={useUISM}
                                 avatarUser={
                                     parentTask.assignee
                                         ? useTEM.teamMemberProfiles[parentTask.assignee.userId]
                                         : undefined
                                 }
-                                useCM={useCM}
                                 isYou={
                                     !!parentTask.assignee &&
                                     myself.userId === parentTask.assignee.userId
                                 }
-                                myself={myself}
-                                setMyself={setMyself}
-                                socket={socket}
-                                useUISM={useUISM}
                             />
                             <CopyableTaskIdChip
-                                task={parentTask}
                                 size="sm"
+                                task={parentTask}
                                 variant="outlined"
                                 sx={{
                                     fontFamily: "monospace",
@@ -1011,7 +1011,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                     borderRadius: "5px",
                                 }}
                             />
-                            <StatusChip meta={parentTask.status} isDark={isDark} />
+                            <StatusChip isDark={isDark} meta={parentTask.status} />
                             <Typography
                                 level="body-sm"
                                 sx={{

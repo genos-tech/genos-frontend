@@ -92,11 +92,11 @@ export const PrHoverDetails = ({ payload, isDark, includeHeader = false }: Props
             )}
 
             {author && (
-                <Stack direction="row" alignItems="center" spacing={1}>
+                <Stack alignItems="center" direction="row" spacing={1}>
                     {avatar && (
                         <Avatar
-                            src={avatar}
                             size="sm"
+                            src={avatar}
                             sx={{ width: 20, height: 20, fontSize: 10 }}
                         />
                     )}

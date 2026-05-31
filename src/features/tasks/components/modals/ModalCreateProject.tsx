@@ -224,12 +224,6 @@ export const ModalCreateProject: React.FC<Props> = ({ myself, usePM, setIsNewPro
                 <Input
                     placeholder={t.tasks.modals.createProject.namePlaceholder}
                     value={projectName}
-                    onChange={(e) => setProjectName(e.target.value)}
-                    onKeyDown={(e) => {
-                        if (e.key === "Enter" && projectName.trim()) {
-                            handleCreateProject();
-                        }
-                    }}
                     sx={{
                         mb: 2,
                         "--Input-focusedThickness": "1px",
@@ -245,6 +239,12 @@ export const ModalCreateProject: React.FC<Props> = ({ myself, usePM, setIsNewPro
                         "& input::placeholder": {
                             color: "rgba(255, 255, 255, 0.4)",
                         },
+                    }}
+                    onChange={(e) => setProjectName(e.target.value)}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter" && projectName.trim()) {
+                            handleCreateProject();
+                        }
                     }}
                 />
 
@@ -269,9 +269,9 @@ export const ModalCreateProject: React.FC<Props> = ({ myself, usePM, setIsNewPro
                     <Checkbox
                         checked={isPrivate}
                         color="neutral"
+                        sx={{ pointerEvents: "none" }}
                         variant="soft"
                         onChange={(e) => setIsPrivate(e.target.checked)}
-                        sx={{ pointerEvents: "none" }}
                     />
                     {isPrivate ? (
                         <LockOutlinedIcon
@@ -313,7 +313,6 @@ export const ModalCreateProject: React.FC<Props> = ({ myself, usePM, setIsNewPro
                 <Stack direction="row" spacing={1.5} sx={{ justifyContent: "flex-end" }}>
                     <Button
                         variant="plain"
-                        onClick={() => usePM.setOpenCreateProject(false)}
                         sx={{
                             color: "rgba(255, 255, 255, 0.6)",
                             borderRadius: "10px",
@@ -323,12 +322,12 @@ export const ModalCreateProject: React.FC<Props> = ({ myself, usePM, setIsNewPro
                                 color: "rgba(255, 255, 255, 0.9)",
                             },
                         }}
+                        onClick={() => usePM.setOpenCreateProject(false)}
                     >
                         {t.tasks.modals.createProject.cancelButton}
                     </Button>
                     <Button
                         disabled={!projectName.trim()}
-                        onClick={handleCreateProject}
                         sx={{
                             background: "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)",
                             borderRadius: "10px",
@@ -345,6 +344,7 @@ export const ModalCreateProject: React.FC<Props> = ({ myself, usePM, setIsNewPro
                                 color: "rgba(255, 255, 255, 0.3)",
                             },
                         }}
+                        onClick={handleCreateProject}
                     >
                         {t.tasks.modals.createProject.createButton}
                     </Button>

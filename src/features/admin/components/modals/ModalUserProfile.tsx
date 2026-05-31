@@ -240,12 +240,12 @@ export const UserProfile = (props: UserProfileProps) => {
                         picker. `calc(50vw - 175px)` horizontally centers a
                         ~350px-wide emoji-mart picker on any viewport. */}
                         <EmojiPicker
+                            pickerBottomPosition="20vh"
+                            pickerLeftPosition="calc(50vw - 175px)"
                             setSelectedEmoji={setSelectedEmoji}
                             setShowEmojiPicker={setShowEmojiPicker}
                             showEmojiPicker={showEmojiPicker}
                             useFixedPosition
-                            pickerBottomPosition="20vh"
-                            pickerLeftPosition="calc(50vw - 175px)"
                         />
                         <Box
                             sx={{
@@ -333,9 +333,9 @@ export const UserProfile = (props: UserProfileProps) => {
                                 }}
                             >
                                 <Stack
+                                    alignItems={{ xs: "stretch", md: "flex-start" }}
                                     direction={{ xs: "column", md: "row" }}
                                     spacing={{ xs: 2, md: 6 }}
-                                    alignItems={{ xs: "stretch", md: "flex-start" }}
                                     sx={{ width: "100%", minWidth: 0 }}
                                 >
                                     <Box
@@ -391,8 +391,8 @@ export const UserProfile = (props: UserProfileProps) => {
                                                     variant="outlined"
                                                 >
                                                     <IconButton
-                                                        variant="soft"
                                                         size="sm"
+                                                        variant="soft"
                                                         sx={{
                                                             background: isDark
                                                                 ? "linear-gradient(135deg, rgba(124,58,237,0.3) 0%, rgba(139,92,246,0.3) 100%)"
@@ -441,8 +441,8 @@ export const UserProfile = (props: UserProfileProps) => {
 
                                         <Stack
                                             direction={{ xs: "column", sm: "row" }}
-                                            spacing={2}
                                             flexWrap="wrap"
+                                            spacing={2}
                                         >
                                             <Typography
                                                 component="a"
@@ -731,6 +731,8 @@ export const UserProfile = (props: UserProfileProps) => {
                             }}
                         >
                             <Tooltip
+                                sx={{ zIndex: 10100 }}
+                                variant="outlined"
                                 title={
                                     isYou === true
                                         ? t.admin.userProfile.dmToMyself
@@ -740,8 +742,6 @@ export const UserProfile = (props: UserProfileProps) => {
                                             })
                                           : t.admin.userProfile.dmToUserFallback
                                 }
-                                variant="outlined"
-                                sx={{ zIndex: 10100 }}
                             >
                                 <Button
                                     size="sm"

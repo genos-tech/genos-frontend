@@ -39,12 +39,12 @@ export const TaskCreateBodyBlock = (props: TaskCreateBodyBlockProps) => {
                 <div className="md-content">
                     <BnTaskPreview
                         body={body || []}
-                        useCM={useCM}
                         myself={myself}
                         setBody={setBody}
                         setMyself={setMyself}
                         socket={socket}
                         taskId={taskId}
+                        useCM={useCM}
                         useTEM={useTEM}
                         useUISM={useUISM}
                         onEditorReady={onEditorReady}

@@ -457,10 +457,10 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                             {!isMobile && (
                                 <WrapToggleToolbarButtons
                                     key={"wrapToggleButtons"}
-                                    unwrapAll={unwrapAll}
                                     setUnwrapAll={setUnwrapAll}
-                                    unwrapCode={unwrapCode}
                                     setUnwrapCode={setUnwrapCode}
+                                    unwrapAll={unwrapAll}
+                                    unwrapCode={unwrapCode}
                                 />
                             )}
                         </FormattingToolbar>
@@ -468,8 +468,8 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
 
                     {/* Adds a mentions menu which opens with the "@" key */}
                     <SuggestionMenuController
-                        triggerCharacter={"@"}
                         suggestionMenuComponent={MentionSuggestionMenu}
+                        triggerCharacter={"@"}
                         getItems={async (query) =>
                             // Gets the mentions menu items
                             filterSuggestionItems(

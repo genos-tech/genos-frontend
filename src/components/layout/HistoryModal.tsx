@@ -189,11 +189,11 @@ const renderChatAvatar = (
     }
     return (
         <GroupOrProjectAvatar
+            isDark={isDark}
+            src={undefined}
             fallback={
                 <ChatBubbleOutlineRoundedIcon sx={{ fontSize: AVATAR_FALLBACK_ICON_SIZE }} />
             }
-            isDark={isDark}
-            src={undefined}
         />
     );
 };
@@ -375,6 +375,7 @@ const SmallChip = ({
         <Chip
             size="sm"
             startDecorator={icon}
+            variant="soft"
             sx={{
                 "--Chip-paddingInline": "6px",
                 "--Chip-minHeight": "18px",
@@ -384,7 +385,6 @@ const SmallChip = ({
                 bgcolor: isDark ? `${c}22` : `${c}1a`,
                 border: `1px solid ${isDark ? `${c}33` : `${c}26`}`,
             }}
-            variant="soft"
         >
             {label}
         </Chip>
@@ -420,6 +420,7 @@ const TaskStatusChip = ({ status, isDark }: { status: string; isDark: boolean })
     return (
         <Chip
             size="sm"
+            variant="soft"
             sx={{
                 "--Chip-paddingInline": "6px",
                 "--Chip-minHeight": "18px",
@@ -431,7 +432,6 @@ const TaskStatusChip = ({ status, isDark }: { status: string; isDark: boolean })
                 border: "1px solid",
                 borderColor: alpha(color, isDark ? 0.3 : 0.25),
             }}
-            variant="soft"
         >
             {status}
         </Chip>
@@ -504,6 +504,10 @@ export const HistoryModal = ({
                     <HistoryRow
                         key={`thread-${entry.chatType}-${entry.chatId}-${entry.threadId}-${entry.messageId ?? 0}-${entry.openedAt}`}
                         avatar={renderChatAvatar(entry.chatType, chat, isDark)}
+                        isDark={isDark}
+                        label={entry.label}
+                        subtitle={subtitle}
+                        timestamp={entry.openedAt}
                         chips={
                             <SmallChip
                                 color={CHIP_COLORS.thread}
@@ -513,10 +517,6 @@ export const HistoryModal = ({
                             />
                         }
                         chipsBeforeLabel
-                        isDark={isDark}
-                        label={entry.label}
-                        subtitle={subtitle}
-                        timestamp={entry.openedAt}
                         onClick={() => onOpenThread(entry)}
                     />
                 );
@@ -529,11 +529,11 @@ export const HistoryModal = ({
                         key={`task-${entry.taskId}-${entry.openedAt}`}
                         avatar={renderProjectAvatar(useCM.allChats, entry.projectId, isDark)}
                         chips={status ? <TaskStatusChip isDark={isDark} status={status} /> : null}
-                        chipsBeforeLabel
                         isDark={isDark}
                         label={entry.label}
                         subtitle={entry.projectName || undefined}
                         timestamp={entry.openedAt}
+                        chipsBeforeLabel
                         onClick={() => onOpenTask(entry)}
                     />
                 );
@@ -543,6 +543,10 @@ export const HistoryModal = ({
                     <HistoryRow
                         key={`milestone-${entry.milestoneId}-${entry.openedAt}`}
                         avatar={renderProjectAvatar(useCM.allChats, entry.projectId, isDark)}
+                        isDark={isDark}
+                        label={entry.label}
+                        subtitle={entry.projectName || undefined}
+                        timestamp={entry.openedAt}
                         chips={
                             <SmallChip
                                 color={CHIP_COLORS.milestone}
@@ -552,10 +556,6 @@ export const HistoryModal = ({
                             />
                         }
                         chipsBeforeLabel
-                        isDark={isDark}
-                        label={entry.label}
-                        subtitle={entry.projectName || undefined}
-                        timestamp={entry.openedAt}
                         onClick={() => onOpenMilestone(entry)}
                     />
                 );
@@ -589,11 +589,11 @@ export const HistoryModal = ({
                 } else {
                     noteAvatar = (
                         <GroupOrProjectAvatar
+                            isDark={isDark}
+                            src={undefined}
                             fallback={
                                 <NoteAltRoundedIcon sx={{ fontSize: AVATAR_FALLBACK_ICON_SIZE }} />
                             }
-                            isDark={isDark}
-                            src={undefined}
                         />
                     );
                 }
@@ -601,6 +601,10 @@ export const HistoryModal = ({
                     <HistoryRow
                         key={`note-${entry.noteType}-${entry.noteId}-${entry.openedAt}`}
                         avatar={noteAvatar}
+                        isDark={isDark}
+                        label={entry.label}
+                        subtitle={subtitle || undefined}
+                        timestamp={entry.openedAt}
                         chips={
                             visual ? (
                                 <SmallChip
@@ -612,10 +616,6 @@ export const HistoryModal = ({
                             ) : null
                         }
                         chipsBeforeLabel
-                        isDark={isDark}
-                        label={entry.label}
-                        subtitle={subtitle || undefined}
-                        timestamp={entry.openedAt}
                         onClick={() => onOpenNote(entry)}
                     />
                 );

@@ -65,7 +65,6 @@ export const ServiceSwitcherOverlay = ({
 
     return (
         <Box
-            aria-hidden
             sx={{
                 position: "fixed",
                 inset: 0,
@@ -75,6 +74,7 @@ export const ServiceSwitcherOverlay = ({
                 zIndex: 13000,
                 pointerEvents: "none",
             }}
+            aria-hidden
         >
             <Sheet
                 variant="soft"
@@ -88,9 +88,7 @@ export const ServiceSwitcherOverlay = ({
                     gap: 1.5,
                     backdropFilter: "blur(20px) saturate(180%)",
                     WebkitBackdropFilter: "blur(20px) saturate(180%)",
-                    background: isDark
-                        ? "rgba(30,20,46,0.82)"
-                        : "rgba(250,248,255,0.85)",
+                    background: isDark ? "rgba(30,20,46,0.82)" : "rgba(250,248,255,0.85)",
                     border: "1px solid",
                     borderColor: palette.border,
                     boxShadow: isDark

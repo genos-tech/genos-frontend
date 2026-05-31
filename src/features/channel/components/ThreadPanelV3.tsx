@@ -88,13 +88,13 @@ export function ThreadPanelV3({ channelId, rootMessageId, onClose }: ThreadPanel
 
     return (
         <div
+            data-testid="thread-panel-v3"
             style={{
                 display: "flex",
                 flexDirection: "column",
                 height: "100%",
                 fontFamily: "system-ui, sans-serif",
             }}
-            data-testid="thread-panel-v3"
         >
             <header
                 style={{
@@ -109,33 +109,33 @@ export function ThreadPanelV3({ channelId, rootMessageId, onClose }: ThreadPanel
             >
                 <span>Thread</span>
                 <button
+                    data-testid="thread-panel-v3-close"
+                    style={{ fontSize: 12 }}
                     type="button"
                     onClick={onClose}
-                    style={{ fontSize: 12 }}
-                    data-testid="thread-panel-v3-close"
                 >
                     Close
                 </button>
             </header>
 
             <div
+                data-testid="thread-panel-v3-body"
                 style={{
                     flex: 1,
                     overflowY: "auto",
                     padding: "8px 12px",
                 }}
-                data-testid="thread-panel-v3-body"
             >
                 {isLoading && <div style={{ opacity: 0.5 }}>Loading thread…</div>}
                 {!isLoading && root && (
                     <>
                         <div
+                            data-testid="thread-panel-v3-root"
                             style={{
                                 paddingBottom: 8,
                                 borderBottom: "1px solid #eee",
                                 marginBottom: 8,
                             }}
-                            data-testid="thread-panel-v3-root"
                         >
                             <strong>{root.sender?.userName ?? "system"}:</strong>{" "}
                             {root.deletedAt ? (
@@ -149,14 +149,8 @@ export function ThreadPanelV3({ channelId, rootMessageId, onClose }: ThreadPanel
                             )}
                             {!root.deletedAt && (
                                 <button
-                                    type="button"
-                                    onClick={() =>
-                                        void toggleFlag(
-                                            root.id,
-                                            snapshot.flagByMessageId.has(root.id)
-                                        )
-                                    }
                                     data-testid={`thread-panel-v3-flag-${root.id}`}
+                                    type="button"
                                     style={{
                                         marginLeft: 6,
                                         background: "transparent",
@@ -168,29 +162,35 @@ export function ThreadPanelV3({ channelId, rootMessageId, onClose }: ThreadPanel
                                     title={
                                         snapshot.flagByMessageId.has(root.id) ? "Unflag" : "Flag"
                                     }
+                                    onClick={() =>
+                                        void toggleFlag(
+                                            root.id,
+                                            snapshot.flagByMessageId.has(root.id)
+                                        )
+                                    }
                                 >
                                     ⭐
                                 </button>
                             )}
                             {!root.deletedAt && root.attachments.length > 0 && (
                                 <MessageAttachments
-                                    messageId={root.id}
                                     attachments={root.attachments}
+                                    messageId={root.id}
                                 />
                             )}
                         </div>
                         <ul
-                            style={{ listStyle: "none", margin: 0, padding: 0 }}
                             data-testid="thread-panel-v3-replies"
+                            style={{ listStyle: "none", margin: 0, padding: 0 }}
                         >
                             {replies.map((r) => (
                                 <li
                                     key={r.id}
+                                    data-testid={`thread-panel-v3-reply-${r.id}`}
                                     style={{
                                         padding: "4px 0",
                                         opacity: r.deletedAt ? 0.4 : 1,
                                     }}
-                                    data-testid={`thread-panel-v3-reply-${r.id}`}
                                 >
                                     <strong>{r.sender?.userName ?? "system"}:</strong>{" "}
                                     {r.deletedAt ? (
@@ -215,14 +215,8 @@ export function ThreadPanelV3({ channelId, rootMessageId, onClose }: ThreadPanel
                                     )}
                                     {!r.deletedAt && (
                                         <button
-                                            type="button"
-                                            onClick={() =>
-                                                void toggleFlag(
-                                                    r.id,
-                                                    snapshot.flagByMessageId.has(r.id)
-                                                )
-                                            }
                                             data-testid={`thread-panel-v3-flag-${r.id}`}
+                                            type="button"
                                             style={{
                                                 marginLeft: 6,
                                                 background: "transparent",
@@ -238,14 +232,20 @@ export function ThreadPanelV3({ channelId, rootMessageId, onClose }: ThreadPanel
                                                     ? "Unflag"
                                                     : "Flag"
                                             }
+                                            onClick={() =>
+                                                void toggleFlag(
+                                                    r.id,
+                                                    snapshot.flagByMessageId.has(r.id)
+                                                )
+                                            }
                                         >
                                             ⭐
                                         </button>
                                     )}
                                     {!r.deletedAt && r.attachments.length > 0 && (
                                         <MessageAttachments
-                                            messageId={r.id}
                                             attachments={r.attachments}
+                                            messageId={r.id}
                                         />
                                     )}
                                 </li>
@@ -263,12 +263,12 @@ export function ThreadPanelV3({ channelId, rootMessageId, onClose }: ThreadPanel
 
             {error && (
                 <div
+                    role="alert"
                     style={{
                         color: "crimson",
                         padding: "4px 12px",
                         fontSize: 12,
                     }}
-                    role="alert"
                     onClick={() => setError(null)}
                 >
                     {error} (click to dismiss)
@@ -277,20 +277,20 @@ export function ThreadPanelV3({ channelId, rootMessageId, onClose }: ThreadPanel
 
             <PendingAttachmentStrip
                 pending={attachments.pending}
-                onRemove={attachments.removeAt}
                 testIdPrefix="thread-panel-v3"
+                onRemove={attachments.removeAt}
             />
             <form
-                onSubmit={(e) => {
-                    e.preventDefault();
-                    void send();
-                }}
                 style={{
                     display: "flex",
                     gap: 8,
                     padding: "8px 12px",
                     borderTop: "1px solid #ddd",
                     position: "relative",
+                }}
+                onSubmit={(e) => {
+                    e.preventDefault();
+                    void send();
                 }}
             >
                 {mention.pickerOpen && (
@@ -313,12 +313,8 @@ export function ThreadPanelV3({ channelId, rootMessageId, onClose }: ThreadPanel
                         {mention.suggestions.map((s) => (
                             <button
                                 key={s.userId}
-                                type="button"
-                                onMouseDown={(e) => {
-                                    e.preventDefault();
-                                    mention.selectCandidate(s);
-                                }}
                                 data-testid={`thread-panel-v3-mention-option-${s.userId}`}
+                                type="button"
                                 style={{
                                     display: "block",
                                     width: "100%",
@@ -328,6 +324,10 @@ export function ThreadPanelV3({ channelId, rootMessageId, onClose }: ThreadPanel
                                     border: "none",
                                     cursor: "pointer",
                                 }}
+                                onMouseDown={(e) => {
+                                    e.preventDefault();
+                                    mention.selectCandidate(s);
+                                }}
                             >
                                 @{s.userName}
                             </button>
@@ -336,48 +336,49 @@ export function ThreadPanelV3({ channelId, rootMessageId, onClose }: ThreadPanel
                 )}
                 <input
                     ref={fileInputRef}
+                    data-testid="thread-panel-v3-file-input"
+                    style={{ display: "none" }}
                     type="file"
                     multiple
                     onChange={(e) => {
                         attachments.addFiles(e.target.files);
                         e.target.value = "";
                     }}
-                    style={{ display: "none" }}
-                    data-testid="thread-panel-v3-file-input"
                 />
                 <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
+                    data-testid="thread-panel-v3-attach"
                     disabled={busy || !root}
                     style={{ fontSize: 14 }}
                     title="Attach file(s)"
-                    data-testid="thread-panel-v3-attach"
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
                 >
                     📎
                 </button>
                 <input
+                    data-testid="thread-panel-v3-input"
+                    disabled={busy || !root}
+                    placeholder="Reply…  (type @ to mention)"
+                    style={{ flex: 1, padding: "4px 8px" }}
                     type="text"
                     value={mention.draft}
                     onChange={(e) => {
                         mention.setDraft(e.target.value);
                         mention.setCaret(e.target.selectionStart ?? e.target.value.length);
                     }}
-                    onKeyUp={(e) =>
-                        mention.setCaret(
-                            e.currentTarget.selectionStart ?? e.currentTarget.value.length
-                        )
-                    }
                     onClick={(e) =>
                         mention.setCaret(
                             e.currentTarget.selectionStart ?? e.currentTarget.value.length
                         )
                     }
-                    placeholder="Reply…  (type @ to mention)"
-                    disabled={busy || !root}
-                    style={{ flex: 1, padding: "4px 8px" }}
-                    data-testid="thread-panel-v3-input"
+                    onKeyUp={(e) =>
+                        mention.setCaret(
+                            e.currentTarget.selectionStart ?? e.currentTarget.value.length
+                        )
+                    }
                 />
                 <button
+                    data-testid="thread-panel-v3-send"
                     type="submit"
                     disabled={
                         busy ||
@@ -386,7 +387,6 @@ export function ThreadPanelV3({ channelId, rootMessageId, onClose }: ThreadPanel
                         (!mention.draft.trim() &&
                             !attachments.pending.some((p) => p.error === null))
                     }
-                    data-testid="thread-panel-v3-send"
                 >
                     {attachments.isUploading ? "Uploading…" : "Reply"}
                 </button>

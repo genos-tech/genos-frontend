@@ -189,10 +189,6 @@ export const ModalDeleteTaskNote: React.FC<Props> = ({
                 <Stack direction="row" spacing={1.5} sx={{ justifyContent: "center" }}>
                     <Button
                         variant="plain"
-                        onClick={() => {
-                            setOpenDeleteNote(false);
-                            setErrorMessage(null);
-                        }}
                         sx={{
                             color: "rgba(255, 255, 255, 0.6)",
                             borderRadius: "10px",
@@ -202,11 +198,14 @@ export const ModalDeleteTaskNote: React.FC<Props> = ({
                                 color: "rgba(255, 255, 255, 0.9)",
                             },
                         }}
+                        onClick={() => {
+                            setOpenDeleteNote(false);
+                            setErrorMessage(null);
+                        }}
                     >
                         {t.notes.deleteModal.cancel}
                     </Button>
                     <Button
-                        onClick={handleDeleteNote}
                         sx={{
                             background: "linear-gradient(135deg, #c026a8 0%, #9d2386 100%)",
                             borderRadius: "10px",
@@ -219,6 +218,7 @@ export const ModalDeleteTaskNote: React.FC<Props> = ({
                                 boxShadow: "0 6px 20px rgba(232,121,195,0.4)",
                             },
                         }}
+                        onClick={handleDeleteNote}
                     >
                         {t.notes.deleteModal.confirm}
                     </Button>

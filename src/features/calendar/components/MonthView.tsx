@@ -177,15 +177,15 @@ export const MonthView = ({
                                 {visibleChips.map((e, idx) => (
                                     <Tooltip
                                         key={`${e.id}-${idx}`}
-                                        title={e.summary || "(no title)"}
                                         size="sm"
-                                        variant="outlined"
                                         sx={{ borderRadius: "8px" }}
+                                        title={e.summary || "(no title)"}
+                                        variant="outlined"
                                     >
                                         <Chip
+                                            color={e.hangoutLink ? "success" : "primary"}
                                             size="sm"
                                             variant="soft"
-                                            color={e.hangoutLink ? "success" : "primary"}
                                             startDecorator={
                                                 e.hangoutLink ? (
                                                     <VideoCameraFrontRoundedIcon
@@ -213,10 +213,10 @@ export const MonthView = ({
                                 ))}
                                 {overflow > 0 && (
                                     <Chip
-                                        size="sm"
-                                        variant="plain"
                                         color="neutral"
+                                        size="sm"
                                         sx={{ cursor: "pointer" }}
+                                        variant="plain"
                                         onClick={(ev) => {
                                             ev.stopPropagation();
                                             onShowMore(key);

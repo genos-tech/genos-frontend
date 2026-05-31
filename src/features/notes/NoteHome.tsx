@@ -59,12 +59,12 @@ export const NoteHome = (props: NoteHomeProps) => {
                 <Panel id={"2"} maxSize={85} minSize={35} order={2}>
                     <Box sx={noteContentBox}>
                         <NoteContentRenderer
-                            useCM={useCM}
                             myself={myself}
-                            useNM={useNM}
-                            usePM={usePM}
                             setMyself={setMyself}
                             socket={socket}
+                            useCM={useCM}
+                            useNM={useNM}
+                            usePM={usePM}
                             useTEM={useTEM}
                             useTM={useTM}
                             useUISM={useUISM}
@@ -78,12 +78,12 @@ export const NoteHome = (props: NoteHomeProps) => {
             <Panel id={"3"} maxSize={85} minSize={35} order={3}>
                 <Box sx={noteContentBox}>
                     <NoteContentRenderer
-                        useCM={useCM}
                         myself={myself}
-                        useNM={useNM}
-                        usePM={usePM}
                         setMyself={setMyself}
                         socket={socket}
+                        useCM={useCM}
+                        useNM={useNM}
+                        usePM={usePM}
                         useTEM={useTEM}
                         useTM={useTM}
                         useUISM={useUISM}
@@ -101,22 +101,22 @@ export const NoteHome = (props: NoteHomeProps) => {
 
                 {isMobile ? (
                     <MobileNoteHome
-                        useTEM={useTEM}
-                        socket={socket}
                         myself={myself}
                         setMyself={setMyself}
-                        useUISM={useUISM}
-                        useNM={useNM}
+                        socket={socket}
                         useCM={useCM}
+                        useNM={useNM}
                         usePM={usePM}
-                        useTM={useTM}
                         useSM={useSM}
+                        useTEM={useTEM}
+                        useTM={useTM}
+                        useUISM={useUISM}
                     />
                 ) : (
                     <PanelGroup direction="horizontal" style={{ flex: 1 }}>
                         <Panel id={"1"} maxSize={25} minSize={10} order={1}>
                             <Box sx={ls.sidebarPanel}>
-                                <NoteSidebar useNM={useNM} allChats={useCM.allChats} />
+                                <NoteSidebar allChats={useCM.allChats} useNM={useNM} />
                             </Box>
                         </Panel>
 
@@ -125,15 +125,15 @@ export const NoteHome = (props: NoteHomeProps) => {
                         {renderMainContent()}
 
                         <TaskPreviewPanel
-                            useCM={useCM}
                             myself={myself}
-                            useNM={useNM}
-                            usePM={usePM}
                             setMyself={setMyself}
                             socket={socket}
+                            useCM={useCM}
+                            useNM={useNM}
+                            usePM={usePM}
+                            useSM={useSM}
                             useTEM={useTEM}
                             useTM={useTM}
-                            useSM={useSM}
                             useUISM={useUISM}
                         />
                     </PanelGroup>

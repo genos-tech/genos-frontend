@@ -100,7 +100,7 @@ const DependencyRow = ({
             >
                 {ref_.displayId ?? `#${ref_.otherTaskId}`}
             </Chip>
-            <StatusChip meta={ref_.status} isDark={isDark} />
+            <StatusChip isDark={isDark} meta={ref_.status} />
             <Typography level="body-md" sx={{ flex: 1, minWidth: 0, fontWeight: 500 }} noWrap>
                 {ref_.title}
             </Typography>
@@ -124,12 +124,12 @@ const DependencyRow = ({
                     color="danger"
                     size="sm"
                     variant="plain"
-                    onClick={onRemove}
                     sx={{
                         "--IconButton-size": "28px",
                         opacity: 0.7,
                         "&:hover": { opacity: 1 },
                     }}
+                    onClick={onRemove}
                 >
                     <LinkOffRoundedIcon sx={{ fontSize: 18 }} />
                 </IconButton>
@@ -259,7 +259,7 @@ export const ModalManageDependencies = ({
                 />
 
                 <DialogTitle sx={{ px: 3, pt: 2.5, pb: 1 }}>
-                    <Stack direction="row" alignItems="center" spacing={1.25}>
+                    <Stack alignItems="center" direction="row" spacing={1.25}>
                         <Box
                             sx={{
                                 width: 30,
@@ -286,11 +286,11 @@ export const ModalManageDependencies = ({
                         </Stack>
                     </Stack>
                     <IconButton
-                        variant="plain"
                         color="neutral"
                         size="sm"
-                        onClick={onClose}
                         sx={{ position: "absolute", top: 12, right: 12 }}
+                        variant="plain"
+                        onClick={onClose}
                     >
                         <CloseRoundedIcon />
                     </IconButton>
@@ -331,19 +331,19 @@ export const ModalManageDependencies = ({
                             return (
                                 <DependencySection
                                     key={k}
-                                    kind={k}
-                                    title={title}
+                                    busy={busy}
+                                    defaultProjectId={initialProjectId}
+                                    deps={items}
                                     description={description}
                                     emptyLabel={depsT.modal.emptySection}
-                                    removeTooltip={depsT.modal.removeTooltip}
-                                    deps={items}
                                     excludeIds={excludeIds}
                                     isDark={isDark}
+                                    kind={k}
                                     myself={myself}
-                                    usePM={usePM}
-                                    defaultProjectId={initialProjectId}
+                                    removeTooltip={depsT.modal.removeTooltip}
                                     resetKey={resetKey}
-                                    busy={busy}
+                                    title={title}
+                                    usePM={usePM}
                                     onAdd={(p) => handleAdd(k, p)}
                                     onRemove={handleRemove}
                                 />
@@ -409,7 +409,7 @@ const DependencySection = ({
                 borderColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.04)",
             }}
         >
-            <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.25 }}>
+            <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 1.25 }}>
                 <Box
                     sx={{
                         width: 26,
@@ -427,7 +427,7 @@ const DependencySection = ({
                 <Typography level="title-md" sx={{ fontWeight: 700 }}>
                     {title}
                 </Typography>
-                <Chip size="sm" variant="soft" sx={{ fontWeight: 600, borderRadius: "5px" }}>
+                <Chip size="sm" sx={{ fontWeight: 600, borderRadius: "5px" }} variant="soft">
                     {deps.length}
                 </Chip>
                 <Typography level="body-sm" sx={{ opacity: 0.7, flex: 1 }}>

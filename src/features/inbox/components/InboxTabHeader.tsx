@@ -65,7 +65,6 @@ export const InboxTabHeader = ({ requestCount }: InboxTabHeaderProps) => {
                 return (
                     <Box
                         key={tab.id}
-                        onClick={() => navigate(tab.path)}
                         sx={{
                             display: "flex",
                             alignItems: "center",
@@ -96,6 +95,7 @@ export const InboxTabHeader = ({ requestCount }: InboxTabHeaderProps) => {
                                       : "rgba(0,0,0,0.03)",
                             },
                         }}
+                        onClick={() => navigate(tab.path)}
                     >
                         <Box
                             sx={{

@@ -72,17 +72,17 @@ export const TaskPreviewPanel = ({
                 }}
             >
                 <TaskPreview
-                    useCM={useCM}
                     myself={myself}
                     setMyself={setMyself}
+                    setTodoFromMessageBubble={setTodoFromMessageBubble}
                     socket={socket}
-                    useTEM={useTEM}
-                    useTM={useTM}
-                    useSM={useSM}
-                    useUISM={useUISM}
+                    useCM={useCM}
                     useNM={useNM}
                     usePM={usePM}
-                    setTodoFromMessageBubble={setTodoFromMessageBubble}
+                    useSM={useSM}
+                    useTEM={useTEM}
+                    useTM={useTM}
+                    useUISM={useUISM}
                 />
             </Box>
         </Panel>

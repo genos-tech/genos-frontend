@@ -336,10 +336,6 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                 return (
                     <IconButton
                         size="small"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            toggleExpand(taskIdStr);
-                        }}
                         sx={{
                             color: mode === "dark" ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.45)",
                             p: 0,
@@ -349,6 +345,10 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                 color:
                                     mode === "dark" ? "rgba(255,255,255,0.9)" : "rgba(0,0,0,0.8)",
                             },
+                        }}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            toggleExpand(taskIdStr);
                         }}
                     >
                         {isExpanded ? (
@@ -363,10 +363,6 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                 return (
                     <IconButton
                         size="small"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            openPreview();
-                        }}
                         sx={{
                             color: isMilestoneRow
                                 ? "#f97316"
@@ -381,6 +377,10 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                       ? "rgba(167,139,250,0.15)"
                                       : "rgba(124,58,237,0.1)",
                             },
+                        }}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            openPreview();
                         }}
                     >
                         <Typography
@@ -405,13 +405,25 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                 if (editingField === "status") {
                     return (
                         <Select
-                            value={(value as string) || ""}
-                            size="small"
                             open={true}
-                            onClose={handleCancelEdit}
-                            onChange={(e: SelectChangeEvent) => {
-                                handleSelectChange("status", e.target.value);
-                                handleCancelEdit();
+                            size="small"
+                            value={(value as string) || ""}
+                            MenuProps={{
+                                PaperProps: {
+                                    sx: {
+                                        backgroundColor: mode === "dark" ? "#1a1a2e" : "#ffffff",
+                                        borderRadius: "8px",
+                                        border:
+                                            mode === "dark"
+                                                ? "1px solid rgba(255, 255, 255, 0.1)"
+                                                : "1px solid rgba(0, 0, 0, 0.08)",
+                                        boxShadow:
+                                            mode === "dark"
+                                                ? "0 8px 24px rgba(0, 0, 0, 0.4)"
+                                                : "0 8px 24px rgba(0, 0, 0, 0.1)",
+                                        mt: 0.5,
+                                    },
+                                },
                             }}
                             renderValue={(selected) => {
                                 const opt = statusOptions.find((o) => o.value === selected);
@@ -429,23 +441,6 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                         }}
                                     />
                                 ) : null;
-                            }}
-                            MenuProps={{
-                                PaperProps: {
-                                    sx: {
-                                        backgroundColor: mode === "dark" ? "#1a1a2e" : "#ffffff",
-                                        borderRadius: "8px",
-                                        border:
-                                            mode === "dark"
-                                                ? "1px solid rgba(255, 255, 255, 0.1)"
-                                                : "1px solid rgba(0, 0, 0, 0.08)",
-                                        boxShadow:
-                                            mode === "dark"
-                                                ? "0 8px 24px rgba(0, 0, 0, 0.4)"
-                                                : "0 8px 24px rgba(0, 0, 0, 0.1)",
-                                        mt: 0.5,
-                                    },
-                                },
                             }}
                             sx={{
                                 minWidth: 110,
@@ -465,6 +460,11 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                 "&:hover .MuiOutlinedInput-notchedOutline": {
                                     borderColor: mode === "dark" ? "#a78bfa" : "#7c3aed",
                                 },
+                            }}
+                            onClose={handleCancelEdit}
+                            onChange={(e: SelectChangeEvent) => {
+                                handleSelectChange("status", e.target.value);
+                                handleCancelEdit();
                             }}
                         >
                             {statusOptions.map((opt) => (
@@ -507,7 +507,6 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                         icon={statusOption.icon}
                         label={statusOption.label}
                         size="small"
-                        onClick={() => handleStartEdit("status", value as string)}
                         sx={{
                             cursor: "pointer",
                             backgroundColor: alpha(
@@ -527,6 +526,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                         : "rgba(36, 167, 0, 0.53)",
                             },
                         }}
+                        onClick={() => handleStartEdit("status", value as string)}
                     />
                 ) : null;
 
@@ -536,7 +536,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                 // fetch + the empty case (no display ID, no GitHub
                 // connection, no matching PRs → renders nothing).
                 if (task.id == null) return null;
-                return <PrStatusCell taskId={task.id} accessToken={accessToken} />;
+                return <PrStatusCell accessToken={accessToken} taskId={task.id} />;
             }
 
             case "tags":
@@ -575,16 +575,8 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                 if (editingField === "title") {
                     return (
                         <TextField
-                            value={editValue}
                             size="small"
-                            autoFocus
-                            fullWidth
-                            onChange={(e) => setEditValue(e.target.value)}
-                            onBlur={() => handleSaveEdit("title")}
-                            onKeyDown={(e) => {
-                                if (e.key === "Enter") handleSaveEdit("title");
-                                if (e.key === "Escape") handleCancelEdit();
-                            }}
+                            value={editValue}
                             sx={{
                                 "& .MuiInputBase-input": {
                                     color: mode === "dark" ? "white" : "black",
@@ -596,12 +588,19 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                 },
                                 ml: depth > 0 ? depth * 1.5 : 0,
                             }}
+                            autoFocus
+                            fullWidth
+                            onBlur={() => handleSaveEdit("title")}
+                            onChange={(e) => setEditValue(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") handleSaveEdit("title");
+                                if (e.key === "Escape") handleCancelEdit();
+                            }}
                         />
                     );
                 }
                 return (
                     <Box
-                        onClick={() => handleStartEdit("title", task.title || "")}
                         sx={{
                             cursor: "pointer",
                             display: "flex",
@@ -617,6 +616,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                       : "#7c3aed",
                             },
                         }}
+                        onClick={() => handleStartEdit("title", task.title || "")}
                     >
                         {isMilestoneRow && (
                             <FlagRoundedIcon
@@ -624,8 +624,8 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                             />
                         )}
                         <Typography
-                            level="body-sm"
                             className="task-row-title"
+                            level="body-sm"
                             sx={{
                                 fontWeight: isMilestoneRow ? 600 : depth > 0 ? 400 : 500,
                                 opacity: depth > 0 ? 0.85 : 1,
@@ -648,17 +648,13 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                     );
                     return (
                         <Autocomplete
-                            open={true}
-                            size="small"
-                            fullWidth
-                            options={teamMembers}
-                            value={currentAssignee || null}
-                            getOptionLabel={(option) => `${option.userName} ${option.userEmail}`}
-                            isOptionEqualToValue={(option, value) =>
-                                option.userId === value?.userId
-                            }
-                            clearOnBlur={false}
                             blurOnSelect={true}
+                            clearOnBlur={false}
+                            getOptionLabel={(option) => `${option.userName} ${option.userEmail}`}
+                            open={true}
+                            options={teamMembers}
+                            size="small"
+                            value={currentAssignee || null}
                             filterOptions={(options, { inputValue }) => {
                                 const searchTerm = inputValue.toLowerCase();
                                 return options.filter(
@@ -667,19 +663,28 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                         option.userEmail.toLowerCase().includes(searchTerm)
                                 );
                             }}
-                            onClose={(_, reason) => {
-                                // Only close when clicking outside or pressing escape
-                                // Don't close when clearing the input
-                                if (reason === "blur" || reason === "escape") {
-                                    handleCancelEdit();
-                                }
-                            }}
-                            onChange={(_, newValue) => {
-                                if (newValue) {
-                                    handleSelectChange("assigneeId", newValue.userId);
-                                    handleCancelEdit();
-                                }
-                                // Don't close when clearing - let user continue typing
+                            isOptionEqualToValue={(option, value) =>
+                                option.userId === value?.userId
+                            }
+                            ListboxProps={{
+                                sx: {
+                                    maxHeight: 280,
+                                    overflow: "auto",
+                                    padding: "4px 0",
+                                    "&::-webkit-scrollbar": {
+                                        width: "6px",
+                                    },
+                                    "&::-webkit-scrollbar-track": {
+                                        background: "transparent",
+                                    },
+                                    "&::-webkit-scrollbar-thumb": {
+                                        background:
+                                            mode === "dark"
+                                                ? "rgba(255, 255, 255, 0.15)"
+                                                : "rgba(0, 0, 0, 0.15)",
+                                        borderRadius: "3px",
+                                    },
+                                },
                             }}
                             PaperComponent={({ children, ...props }) => (
                                 <Paper
@@ -706,96 +711,9 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                     {children}
                                 </Paper>
                             )}
-                            ListboxProps={{
-                                sx: {
-                                    maxHeight: 280,
-                                    overflow: "auto",
-                                    padding: "4px 0",
-                                    "&::-webkit-scrollbar": {
-                                        width: "6px",
-                                    },
-                                    "&::-webkit-scrollbar-track": {
-                                        background: "transparent",
-                                    },
-                                    "&::-webkit-scrollbar-thumb": {
-                                        background:
-                                            mode === "dark"
-                                                ? "rgba(255, 255, 255, 0.15)"
-                                                : "rgba(0, 0, 0, 0.15)",
-                                        borderRadius: "3px",
-                                    },
-                                },
-                            }}
-                            renderOption={(props, option) => {
-                                const isSelected = option.userId === task.assigneeId;
-                                const { key, ...restProps } = props;
-                                return (
-                                    <Box
-                                        component="li"
-                                        key={key}
-                                        {...restProps}
-                                        sx={{
-                                            py: 1,
-                                            px: 1.5,
-                                            mx: 0.5,
-                                            my: 0.25,
-                                            borderRadius: "8px",
-                                            transition: "all 0.15s ease",
-                                            backgroundColor: isSelected
-                                                ? mode === "dark"
-                                                    ? "rgba(167,139,250,0.15)"
-                                                    : "rgba(124,58,237,0.08)"
-                                                : "transparent",
-                                            "&:hover": {
-                                                backgroundColor:
-                                                    mode === "dark"
-                                                        ? "rgba(167,139,250,0.2)"
-                                                        : "rgba(124,58,237,0.12)",
-                                            },
-                                            display: "flex",
-                                            gap: 1.5,
-                                            alignItems: "center",
-                                            cursor: "pointer",
-                                        }}
-                                    >
-                                        <UserAvatar userId={option.userId} clickable={false} />
-                                        <Box sx={{ flex: 1, minWidth: 0 }}>
-                                            <Typography
-                                                level="body-sm"
-                                                sx={{
-                                                    fontWeight: isSelected ? 600 : 500,
-                                                    color: mode === "dark" ? "#e8e8e8" : "#1a1a1a",
-                                                    lineHeight: 1.3,
-                                                    overflow: "hidden",
-                                                    textOverflow: "ellipsis",
-                                                    whiteSpace: "nowrap",
-                                                }}
-                                            >
-                                                {option.userName}
-                                            </Typography>
-                                            <Typography
-                                                level="body-xs"
-                                                sx={{
-                                                    color:
-                                                        mode === "dark"
-                                                            ? "rgba(255, 255, 255, 0.5)"
-                                                            : "rgba(0, 0, 0, 0.5)",
-                                                    fontSize: "0.7rem",
-                                                    overflow: "hidden",
-                                                    textOverflow: "ellipsis",
-                                                    whiteSpace: "nowrap",
-                                                }}
-                                            >
-                                                {option.userEmail}
-                                            </Typography>
-                                        </Box>
-                                    </Box>
-                                );
-                            }}
                             renderInput={(params) => (
                                 <TextField
                                     {...params}
-                                    autoFocus
                                     placeholder={t.tasks.table.searchMembersPlaceholder}
                                     sx={{
                                         minWidth: 180,
@@ -834,8 +752,75 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                             },
                                         },
                                     }}
+                                    autoFocus
                                 />
                             )}
+                            renderOption={(props, option) => {
+                                const isSelected = option.userId === task.assigneeId;
+                                const { key, ...restProps } = props;
+                                return (
+                                    <Box
+                                        key={key}
+                                        component="li"
+                                        {...restProps}
+                                        sx={{
+                                            py: 1,
+                                            px: 1.5,
+                                            mx: 0.5,
+                                            my: 0.25,
+                                            borderRadius: "8px",
+                                            transition: "all 0.15s ease",
+                                            backgroundColor: isSelected
+                                                ? mode === "dark"
+                                                    ? "rgba(167,139,250,0.15)"
+                                                    : "rgba(124,58,237,0.08)"
+                                                : "transparent",
+                                            "&:hover": {
+                                                backgroundColor:
+                                                    mode === "dark"
+                                                        ? "rgba(167,139,250,0.2)"
+                                                        : "rgba(124,58,237,0.12)",
+                                            },
+                                            display: "flex",
+                                            gap: 1.5,
+                                            alignItems: "center",
+                                            cursor: "pointer",
+                                        }}
+                                    >
+                                        <UserAvatar clickable={false} userId={option.userId} />
+                                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                                            <Typography
+                                                level="body-sm"
+                                                sx={{
+                                                    fontWeight: isSelected ? 600 : 500,
+                                                    color: mode === "dark" ? "#e8e8e8" : "#1a1a1a",
+                                                    lineHeight: 1.3,
+                                                    overflow: "hidden",
+                                                    textOverflow: "ellipsis",
+                                                    whiteSpace: "nowrap",
+                                                }}
+                                            >
+                                                {option.userName}
+                                            </Typography>
+                                            <Typography
+                                                level="body-xs"
+                                                sx={{
+                                                    color:
+                                                        mode === "dark"
+                                                            ? "rgba(255, 255, 255, 0.5)"
+                                                            : "rgba(0, 0, 0, 0.5)",
+                                                    fontSize: "0.7rem",
+                                                    overflow: "hidden",
+                                                    textOverflow: "ellipsis",
+                                                    whiteSpace: "nowrap",
+                                                }}
+                                            >
+                                                {option.userEmail}
+                                            </Typography>
+                                        </Box>
+                                    </Box>
+                                );
+                            }}
                             sx={{
                                 "& .MuiAutocomplete-popupIndicator": {
                                     color:
@@ -849,6 +834,21 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                             ? "rgba(255, 255, 255, 0.5)"
                                             : "rgba(0, 0, 0, 0.5)",
                                 },
+                            }}
+                            fullWidth
+                            onChange={(_, newValue) => {
+                                if (newValue) {
+                                    handleSelectChange("assigneeId", newValue.userId);
+                                    handleCancelEdit();
+                                }
+                                // Don't close when clearing - let user continue typing
+                            }}
+                            onClose={(_, reason) => {
+                                // Only close when clicking outside or pressing escape
+                                // Don't close when clearing the input
+                                if (reason === "blur" || reason === "escape") {
+                                    handleCancelEdit();
+                                }
                             }}
                         />
                     );
@@ -934,30 +934,9 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                 if (editingField === "priority") {
                     return (
                         <Select
-                            value={(value as string) || ""}
-                            size="small"
                             open={true}
-                            onClose={handleCancelEdit}
-                            onChange={(e: SelectChangeEvent) => {
-                                handleSelectChange("priority", e.target.value);
-                                handleCancelEdit();
-                            }}
-                            renderValue={(selected) => {
-                                const opt = priorities.find((p) => p.priority === selected);
-                                return opt ? (
-                                    <Chip
-                                        label={opt.priority}
-                                        size="small"
-                                        sx={{
-                                            backgroundColor: alpha(opt.color || "#888", 0.75),
-                                            color: opt.textColor,
-                                            fontWeight: "bold",
-                                            borderRadius: "5px",
-                                            minWidth: 60,
-                                        }}
-                                    />
-                                ) : null;
-                            }}
+                            size="small"
+                            value={(value as string) || ""}
                             MenuProps={{
                                 PaperProps: {
                                     sx: {
@@ -974,6 +953,22 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                         mt: 0.5,
                                     },
                                 },
+                            }}
+                            renderValue={(selected) => {
+                                const opt = priorities.find((p) => p.priority === selected);
+                                return opt ? (
+                                    <Chip
+                                        label={opt.priority}
+                                        size="small"
+                                        sx={{
+                                            backgroundColor: alpha(opt.color || "#888", 0.75),
+                                            color: opt.textColor,
+                                            fontWeight: "bold",
+                                            borderRadius: "5px",
+                                            minWidth: 60,
+                                        }}
+                                    />
+                                ) : null;
                             }}
                             sx={{
                                 minWidth: 100,
@@ -993,6 +988,11 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                 "&:hover .MuiOutlinedInput-notchedOutline": {
                                     borderColor: mode === "dark" ? "#a78bfa" : "#7c3aed",
                                 },
+                            }}
+                            onClose={handleCancelEdit}
+                            onChange={(e: SelectChangeEvent) => {
+                                handleSelectChange("priority", e.target.value);
+                                handleCancelEdit();
                             }}
                         >
                             {priorities.map((opt) => (
@@ -1033,7 +1033,6 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                     <Chip
                         label={priorityOption.priority}
                         size="small"
-                        onClick={() => handleStartEdit("priority", value as string)}
                         sx={{
                             cursor: "pointer",
                             backgroundColor: alpha(
@@ -1052,6 +1051,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                         : "rgba(36, 167, 0, 0.53)",
                             },
                         }}
+                        onClick={() => handleStartEdit("priority", value as string)}
                     />
                 ) : null;
 
@@ -1060,30 +1060,9 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                 if (editingField === "effortLevel") {
                     return (
                         <Select
-                            value={(value as string) || ""}
-                            size="small"
                             open={true}
-                            onClose={handleCancelEdit}
-                            onChange={(e: SelectChangeEvent) => {
-                                handleSelectChange("effortLevel", e.target.value);
-                                handleCancelEdit();
-                            }}
-                            renderValue={(selected) => {
-                                const opt = effortLevels.find((e) => e.level === selected);
-                                return opt ? (
-                                    <Chip
-                                        label={opt.level}
-                                        size="small"
-                                        sx={{
-                                            backgroundColor: alpha(opt.color || "#888", 0.75),
-                                            color: opt.textColor,
-                                            fontWeight: "bold",
-                                            borderRadius: "5px",
-                                            minWidth: 50,
-                                        }}
-                                    />
-                                ) : null;
-                            }}
+                            size="small"
+                            value={(value as string) || ""}
                             MenuProps={{
                                 PaperProps: {
                                     sx: {
@@ -1100,6 +1079,22 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                         mt: 0.5,
                                     },
                                 },
+                            }}
+                            renderValue={(selected) => {
+                                const opt = effortLevels.find((e) => e.level === selected);
+                                return opt ? (
+                                    <Chip
+                                        label={opt.level}
+                                        size="small"
+                                        sx={{
+                                            backgroundColor: alpha(opt.color || "#888", 0.75),
+                                            color: opt.textColor,
+                                            fontWeight: "bold",
+                                            borderRadius: "5px",
+                                            minWidth: 50,
+                                        }}
+                                    />
+                                ) : null;
                             }}
                             sx={{
                                 minWidth: 90,
@@ -1119,6 +1114,11 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                 "&:hover .MuiOutlinedInput-notchedOutline": {
                                     borderColor: mode === "dark" ? "#a78bfa" : "#7c3aed",
                                 },
+                            }}
+                            onClose={handleCancelEdit}
+                            onChange={(e: SelectChangeEvent) => {
+                                handleSelectChange("effortLevel", e.target.value);
+                                handleCancelEdit();
                             }}
                         >
                             {effortLevels.map((opt) => (
@@ -1159,7 +1159,6 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                     <Chip
                         label={effortOption.level}
                         size="small"
-                        onClick={() => handleStartEdit("effortLevel", value as string)}
                         sx={{
                             cursor: "pointer",
                             backgroundColor: alpha(
@@ -1178,6 +1177,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                         : "rgba(36, 167, 0, 0.53)",
                             },
                         }}
+                        onClick={() => handleStartEdit("effortLevel", value as string)}
                     />
                 ) : null;
 
@@ -1236,13 +1236,6 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                         <input
                             type="date"
                             value={editValue}
-                            autoFocus
-                            onChange={(e) => setEditValue(e.target.value)}
-                            onBlur={() => handleSaveEdit("dueDate")}
-                            onKeyDown={(e) => {
-                                if (e.key === "Enter") handleSaveEdit("dueDate");
-                                if (e.key === "Escape") handleCancelEdit();
-                            }}
                             style={{
                                 width: "100%",
                                 padding: "6px 10px",
@@ -1252,18 +1245,19 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                 backgroundColor: mode === "dark" ? "#1e1e1e" : "#fff",
                                 color: mode === "dark" ? "#e0e0e0" : "#333",
                             }}
+                            autoFocus
+                            onBlur={() => handleSaveEdit("dueDate")}
+                            onChange={(e) => setEditValue(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") handleSaveEdit("dueDate");
+                                if (e.key === "Escape") handleCancelEdit();
+                            }}
                         />
                     );
                 }
                 return (
                     <Typography
                         level="body-sm"
-                        onClick={() =>
-                            handleStartEdit(
-                                "dueDate",
-                                task.dueDate ? dayjs(task.dueDate).format("YYYY-MM-DD") : ""
-                            )
-                        }
                         sx={{
                             cursor: "pointer",
                             fontWeight: 500,
@@ -1271,6 +1265,12 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                 color: mode === "dark" ? "#a78bfa" : "#7c3aed",
                             },
                         }}
+                        onClick={() =>
+                            handleStartEdit(
+                                "dueDate",
+                                task.dueDate ? dayjs(task.dueDate).format("YYYY-MM-DD") : ""
+                            )
+                        }
                     >
                         {task.dueDate ? dayjs(task.dueDate).format("YYYY-MM-DD") : "-"}
                     </Typography>

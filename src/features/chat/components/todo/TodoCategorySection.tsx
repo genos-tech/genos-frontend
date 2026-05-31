@@ -133,10 +133,10 @@ export const TodoCategorySection = (props: TodoCategorySectionProps) => {
                             key={item.itemId}
                             categories={categories}
                             item={item}
-                            subitems={subitemsByParent.get(item.itemId) ?? []}
                             myself={myself}
                             setMyself={setMyself}
                             socket={socket}
+                            subitems={subitemsByParent.get(item.itemId) ?? []}
                             useCM={useCM}
                             useTEM={useTEM}
                             useUISM={useUISM}

@@ -259,7 +259,6 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                         <TaskNoteEditorPanel
                             key={inlineTaskTab.id}
                             accessToken={accessToken}
-                            isActive
                             myself={myself}
                             setMyself={setMyself}
                             socket={socket}
@@ -268,6 +267,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                             useNM={useNM}
                             useTEM={useTEM}
                             useUISM={useUISM}
+                            isActive
                         />
                     )}
                 </>

@@ -79,13 +79,13 @@ export function MessagesPaneV3({ channelId, onOpenThread }: MessagesPaneV3Props)
 
     return (
         <div
+            data-testid="messages-pane-v3"
             style={{
                 display: "flex",
                 flexDirection: "column",
                 height: "100%",
                 fontFamily: "system-ui, sans-serif",
             }}
-            data-testid="messages-pane-v3"
         >
             <header
                 style={{
@@ -99,6 +99,7 @@ export function MessagesPaneV3({ channelId, onOpenThread }: MessagesPaneV3Props)
             </header>
 
             <ul
+                data-testid="messages-pane-v3-list"
                 style={{
                     flex: 1,
                     overflowY: "auto",
@@ -106,15 +107,14 @@ export function MessagesPaneV3({ channelId, onOpenThread }: MessagesPaneV3Props)
                     padding: "8px 12px",
                     listStyle: "none",
                 }}
-                data-testid="messages-pane-v3-list"
             >
                 {messages.map((m) => (
                     <MessageRow
                         key={m.id}
-                        message={m}
                         channelId={channelId}
                         channelKind={channel.kind}
                         isFlagged={snapshot.flagByMessageId.has(m.id)}
+                        message={m}
                         onError={setError}
                         onOpenThread={onOpenThread}
                     />
@@ -124,12 +124,12 @@ export function MessagesPaneV3({ channelId, onOpenThread }: MessagesPaneV3Props)
 
             {error && (
                 <div
+                    role="alert"
                     style={{
                         color: "crimson",
                         padding: "4px 12px",
                         fontSize: 12,
                     }}
-                    role="alert"
                     onClick={() => setError(null)}
                 >
                     {error} (click to dismiss)
@@ -139,8 +139,8 @@ export function MessagesPaneV3({ channelId, onOpenThread }: MessagesPaneV3Props)
             <MessageComposerV3
                 channelId={channelId}
                 currentUserId={currentUserId}
-                onError={setError}
                 testIdPrefix="messages-pane-v3"
+                onError={setError}
             />
         </div>
     );
@@ -252,11 +252,16 @@ function MessageRow({
 
     return (
         <li
-            id={`message-${message.id}`}
             data-testid={`message-row-${message.id}`}
+            id={`message-${message.id}`}
+            style={{
+                padding: "6px 0",
+                opacity: message.deletedAt ? 0.4 : 1,
+                fontStyle: message.deletedAt ? "italic" : "normal",
+            }}
+            onFocus={() => setHovered(true)}
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
-            onFocus={() => setHovered(true)}
             onBlur={(e) => {
                 // Keep the toolbar visible if focus moves to a child
                 // (e.g. clicking the react button to open the emoji
@@ -265,32 +270,27 @@ function MessageRow({
                     setHovered(false);
                 }
             }}
-            style={{
-                padding: "6px 0",
-                opacity: message.deletedAt ? 0.4 : 1,
-                fontStyle: message.deletedAt ? "italic" : "normal",
-            }}
         >
             <div style={{ display: "flex", gap: 6, alignItems: "baseline" }}>
                 <strong>{message.sender?.userName ?? "system"}:</strong>{" "}
                 {editing ? (
                     <span style={{ display: "flex", gap: 4, flex: 1 }}>
                         <input
+                            data-testid={`message-row-edit-input-${message.id}`}
+                            style={{ flex: 1, padding: "2px 6px" }}
                             type="text"
                             value={editDraft}
+                            autoFocus
                             onChange={(e) => setEditDraft(e.target.value)}
                             onKeyDown={(e) => {
                                 if (e.key === "Enter") void handleSaveEdit();
                                 if (e.key === "Escape") handleCancelEdit();
                             }}
-                            autoFocus
-                            style={{ flex: 1, padding: "2px 6px" }}
-                            data-testid={`message-row-edit-input-${message.id}`}
                         />
                         <button
+                            data-testid={`message-row-edit-save-${message.id}`}
                             type="button"
                             onClick={() => void handleSaveEdit()}
-                            data-testid={`message-row-edit-save-${message.id}`}
                         >
                             Save
                         </button>
@@ -316,6 +316,7 @@ function MessageRow({
                         {!message.deletedAt && mentionsMe(message) && (
                             <span
                                 data-testid={`message-row-mention-me-${message.id}`}
+                                title="This message mentions you"
                                 style={{
                                     marginLeft: 6,
                                     padding: "0 4px",
@@ -326,7 +327,6 @@ function MessageRow({
                                     fontWeight: 700,
                                     textTransform: "uppercase",
                                 }}
-                                title="This message mentions you"
                             >
                                 @you
                             </span>
@@ -355,28 +355,29 @@ function MessageRow({
                         // keep the toolbar visible while it's open even
                         // if hover has moved away — otherwise the user
                         // can't see what they're clicking on.
-                        visible={hovered || showEmoji}
-                        onFlag={() => void handleToggleFlag()}
                         isFlagged={isFlagged}
+                        isMine={!!isMine}
+                        replyCount={message.replyCount}
+                        visible={hovered || showEmoji}
+                        onCopyLink={copyLink}
+                        onDelete={() => void handleDelete()}
+                        onFlag={() => void handleToggleFlag()}
                         onReact={() => setShowEmoji((v) => !v)}
+                        onEdit={() => {
+                            setEditDraft(message.bodyText);
+                            setEditing(true);
+                        }}
                         onReply={
                             onOpenThread && !message.isThreadReply
                                 ? () => onOpenThread(message.id)
                                 : undefined
                         }
-                        replyCount={message.replyCount}
-                        onCopyLink={copyLink}
-                        isMine={!!isMine}
-                        onEdit={() => {
-                            setEditDraft(message.bodyText);
-                            setEditing(true);
-                        }}
-                        onDelete={() => void handleDelete()}
                     />
                 )}
             </div>
             {showEmoji && !editing && !message.deletedAt && (
                 <div
+                    data-testid={`message-row-emoji-picker-${message.id}`}
                     style={{
                         marginTop: 4,
                         display: "flex",
@@ -386,13 +387,12 @@ function MessageRow({
                         borderRadius: 4,
                         width: "fit-content",
                     }}
-                    data-testid={`message-row-emoji-picker-${message.id}`}
                 >
                     {QUICK_EMOJI.map((e) => (
                         <button
                             key={e}
+                            data-testid={`message-row-emoji-${message.id}-${e}`}
                             type="button"
-                            onClick={() => void handleToggleReaction(e)}
                             style={{
                                 fontSize: 14,
                                 padding: "2px 6px",
@@ -400,7 +400,7 @@ function MessageRow({
                                 border: "1px solid transparent",
                                 cursor: "pointer",
                             }}
-                            data-testid={`message-row-emoji-${message.id}-${e}`}
+                            onClick={() => void handleToggleReaction(e)}
                         >
                             {e}
                         </button>
@@ -408,7 +408,7 @@ function MessageRow({
                 </div>
             )}
             {!message.deletedAt && message.attachments.length > 0 && (
-                <MessageAttachments messageId={message.id} attachments={message.attachments} />
+                <MessageAttachments attachments={message.attachments} messageId={message.id} />
             )}
             {message.reactions.length > 0 && !message.deletedAt && (
                 <ReactionChips
@@ -451,16 +451,15 @@ function ReactionChips({ messageId, reactions, onToggle }: ReactionChipsProps) {
     }
     return (
         <div
-            style={{ display: "flex", gap: 4, marginTop: 4 }}
             data-testid={`message-row-reactions-${messageId}`}
+            style={{ display: "flex", gap: 4, marginTop: 4 }}
         >
             {Array.from(byEmoji.entries()).map(([emoji, info]) => (
                 <button
                     key={emoji}
-                    type="button"
-                    onClick={() => onToggle(emoji)}
-                    title={info.names.join(", ")}
                     data-testid={`message-row-reaction-chip-${messageId}-${emoji}`}
+                    title={info.names.join(", ")}
+                    type="button"
                     style={{
                         fontSize: 12,
                         padding: "0 6px",
@@ -469,6 +468,7 @@ function ReactionChips({ messageId, reactions, onToggle }: ReactionChipsProps) {
                         background: info.mine ? "#eaf" : "#f4f4f4",
                         cursor: "pointer",
                     }}
+                    onClick={() => onToggle(emoji)}
                 >
                     {emoji} {info.count}
                 </button>

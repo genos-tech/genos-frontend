@@ -56,11 +56,10 @@ export function NoteTypeSection({
     };
 
     return (
-        <ListItem nested sx={{ mt: 0.5 }}>
+        <ListItem sx={{ mt: 0.5 }} nested>
             <ListItemButton
-                selected={isSelected}
-                onClick={handleClick}
                 disabled={isDisabled}
+                selected={isSelected}
                 sx={{
                     borderRadius: "10px",
                     py: 0.875,
@@ -88,6 +87,7 @@ export function NoteTypeSection({
                         opacity: 0.5,
                     },
                 }}
+                onClick={handleClick}
             >
                 <Box
                     sx={{
@@ -120,7 +120,6 @@ export function NoteTypeSection({
                 </ListItemContent>
                 {!isDisabled && (
                     <Box
-                        onClick={handleChevronClick}
                         sx={{
                             display: "flex",
                             alignItems: "center",
@@ -135,6 +134,7 @@ export function NoteTypeSection({
                                     : "rgba(0,0,0,0.08)",
                             },
                         }}
+                        onClick={handleChevronClick}
                     >
                         <ChevronRightRoundedIcon
                             sx={{

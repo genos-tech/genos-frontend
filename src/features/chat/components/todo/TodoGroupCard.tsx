@@ -199,12 +199,12 @@ export const TodoGroupCard = (props: TodoGroupCardProps) => {
                         useTEM={useTEM}
                         useUISM={useUISM}
                         onAddItem={(t, cId) => onAddItem(group.localDate, t, cId)}
-                        onAddSubitem={(parentItemId, t) =>
-                            onAddSubitem(group.localDate, parentItemId, t)
-                        }
                         onCategoryCreate={onCategoryCreate}
                         onDeleteItem={onDeleteItem}
                         onPatchItem={onPatchItem}
+                        onAddSubitem={(parentItemId, t) =>
+                            onAddSubitem(group.localDate, parentItemId, t)
+                        }
                     />
                 ))}
             </Card>

@@ -1,4 +1,3 @@
-/* eslint-disable simple-import-sort/imports */
 // `simple-import-sort` and the prettier import-sort plugin disagree on
 // the order of `react` vs the alphabetically-earlier `@mui/...` block.
 // Prettier wins (it reformats on save); disable simple-import-sort.

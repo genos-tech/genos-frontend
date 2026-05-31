@@ -2,7 +2,7 @@
 // legacy chat sidebar list carries Joy UI `sx` prop objects whose visual
 // grouping (positioning → sizing → typography → colors) is intentional,
 // and the file is slated for replacement by the v3 channel sidebar.
-/* eslint-disable sort-keys, simple-import-sort/imports */
+
 import { useEffect, useMemo, useRef, useState } from "react";
 import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
 import FlagOutlinedIcon from "@mui/icons-material/FlagOutlined";

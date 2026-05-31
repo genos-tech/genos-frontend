@@ -726,8 +726,8 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                             useCM={useCM}
                             useNM={useNM}
                             usePM={usePM}
-                            useTM={useTM}
                             useSM={useSM}
+                            useTM={useTM}
                             useUISM={useUISM}
                         />
                     }
@@ -870,7 +870,6 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                             isInEdit={isInEdit}
                             isLoadingTaskActivities={isLoadingTaskActivities}
                             myself={myself}
-                            onAttachmentDeleted={handleAttachmentDeleted}
                             setEditTargetComment={setEditTargetComment}
                             setIsInEdit={setIsInEdit}
                             setMyself={setMyself}
@@ -893,6 +892,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                             useTEM={useTEM}
                             useTM={useTM}
                             useUISM={useUISM}
+                            onAttachmentDeleted={handleAttachmentDeleted}
                         />
                     }
                 />
@@ -2210,7 +2210,6 @@ const MilestonePreviewInner = ({
                         isInEdit={isInEdit}
                         isLoadingTaskActivities={isLoadingTaskActivities}
                         myself={myself}
-                        onAttachmentDeleted={handleAttachmentDeleted}
                         setEditTargetComment={setEditTargetComment}
                         setIsInEdit={setIsInEdit}
                         setMyself={setMyself}
@@ -2232,6 +2231,7 @@ const MilestonePreviewInner = ({
                         useTEM={useTEM}
                         useTM={useTM}
                         useUISM={useUISM}
+                        onAttachmentDeleted={handleAttachmentDeleted}
                     />
                 ) : null
             }
@@ -2246,15 +2246,15 @@ const MilestonePreviewInner = ({
             {previewLayout}
             {milestone.taskId != null && milestone.projectId != null && (
                 <ModalTaskDiagram
-                    open={openTaskDiagram}
-                    onClose={() => setOpenTaskDiagram(false)}
                     myself={myself}
-                    rootTaskId={milestone.taskId}
+                    open={openTaskDiagram}
                     projectId={milestone.projectId}
                     rootLabel={`${milestone.title || "Milestone"} · diagram`}
-                    useTM={useTM}
+                    rootTaskId={milestone.taskId}
                     usePM={usePM}
                     useSM={useSM}
+                    useTM={useTM}
+                    onClose={() => setOpenTaskDiagram(false)}
                 />
             )}
         </>

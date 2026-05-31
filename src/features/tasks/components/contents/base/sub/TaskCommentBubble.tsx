@@ -320,12 +320,12 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                 myself={myself}
                 projectId={currentProjectId}
                 projectName={currentProjectName}
-                taskDisplayId={currentTaskDisplayId}
                 reactions={reactions}
                 setReactions={setReactions}
                 setShowEmojiPicker={setShowEmojiPicker}
                 showUnderBarOption={showUnderBarOption}
                 socket={socket}
+                taskDisplayId={currentTaskDisplayId}
             />
         </Box>
     );
@@ -376,6 +376,8 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                     transition: "background-color 0.15s ease",
                 }}
                 onClick={onCommentClick}
+                onMouseEnter={() => setShowUnderBarOption(true)}
+                onMouseLeave={() => setShowUnderBarOption(false)}
                 onDoubleClick={
                     doubleClickTodoEnabled
                         ? () => {
@@ -388,8 +390,6 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                           }
                         : undefined
                 }
-                onMouseEnter={() => setShowUnderBarOption(true)}
-                onMouseLeave={() => setShowUnderBarOption(false)}
             >
                 {emojiPickerPositionCalculated === true && (
                     <EmojiPicker
@@ -407,8 +407,6 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                 {showUnderBarOption === true && (
                     <Box
                         ref={toolbarRef}
-                        onClick={(e) => e.stopPropagation()}
-                        onDoubleClick={(e) => e.stopPropagation()}
                         sx={{
                             position: "absolute",
                             top: COMPACT_TOOLBAR_OFFSET.top,
@@ -423,8 +421,10 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                                 ? "0 2px 8px rgba(0,0,0,0.4)"
                                 : "0 2px 8px rgba(0,0,0,0.1)",
                         }}
+                        onClick={(e) => e.stopPropagation()}
+                        onDoubleClick={(e) => e.stopPropagation()}
                     >
-                        <Stack direction="row" alignItems="center" spacing={0.25}>
+                        <Stack alignItems="center" direction="row" spacing={0.25}>
                             {wrapToggleButtons}
                             {editButton}
                         </Stack>
@@ -605,7 +605,7 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                             transition: "opacity 0.15s ease",
                         }}
                     >
-                        <Stack direction="row" alignItems="center" spacing={0.25}>
+                        <Stack alignItems="center" direction="row" spacing={0.25}>
                             {wrapToggleButtons}
                             {editButton}
                         </Stack>

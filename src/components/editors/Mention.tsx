@@ -109,15 +109,15 @@ export const CreateMentionSpec = (
                         </Box>
 
                         <UserProfile
-                            useCM={useCM}
                             isYou={myself.userId === userId ? true : false}
                             myself={myself}
                             openUserProfile={openUserProfile}
                             setMyself={setMyself}
                             setOpenUserProfile={setOpenUserProfile}
                             socket={socket}
-                            useUISM={useUISM}
+                            useCM={useCM}
                             user={teamMemberProfiles[userId]}
+                            useUISM={useUISM}
                         />
                     </>
                 );
@@ -295,7 +295,7 @@ export const MentionMenuItems = (
                         </Typography>
                     )}
                 </Box>
-                <Chip size="sm" variant="soft" color="success" sx={{ ml: "auto" }}>
+                <Chip color="success" size="sm" sx={{ ml: "auto" }} variant="soft">
                     {g.memberCount}
                 </Chip>
             </Box>
@@ -472,7 +472,7 @@ export const MentionSuggestionMenu = <T extends DefaultReactSuggestionItem>(
     const { items, loadingState, selectedIndex, onItemClick } = props;
 
     return (
-        <Components.SuggestionMenu.Root id="bn-suggestion-menu" className="bn-suggestion-menu">
+        <Components.SuggestionMenu.Root className="bn-suggestion-menu" id="bn-suggestion-menu">
             {items.map((item, i) => (
                 <Box
                     key={item.title || i}
@@ -482,8 +482,6 @@ export const MentionSuggestionMenu = <T extends DefaultReactSuggestionItem>(
                     // to stop the editor from blurring before the click
                     // commits — keep the same behavior so a click on a row
                     // doesn't drop the menu first.
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => onItemClick?.(item)}
                     sx={{
                         cursor: "pointer",
                         px: 1,
@@ -496,6 +494,8 @@ export const MentionSuggestionMenu = <T extends DefaultReactSuggestionItem>(
                             backgroundColor: "rgba(124,58,237,0.08)",
                         },
                     }}
+                    onClick={() => onItemClick?.(item)}
+                    onMouseDown={(e) => e.preventDefault()}
                 >
                     {item.icon}
                 </Box>

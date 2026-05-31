@@ -858,8 +858,8 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                                         {prUrls.map((url) => (
                                             <LinkedPrCard
                                                 key={url}
-                                                url={url}
                                                 accessToken={accessToken ?? ""}
+                                                url={url}
                                             />
                                         ))}
                                     </Stack>
@@ -1039,7 +1039,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                         open={showMilestoneDiscardConfirm}
                         onClose={() => setShowMilestoneDiscardConfirm(false)}
                     >
-                        <ModalDialog variant="outlined" role="alertdialog">
+                        <ModalDialog role="alertdialog" variant="outlined">
                             <DialogTitle>
                                 <WarningRoundedIcon sx={{ color: "#f59e0b" }} />
                                 Discard this milestone draft?
@@ -1052,8 +1052,8 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                             <DialogActions>
                                 <Button
                                     color="danger"
-                                    variant="solid"
                                     startDecorator={<CloseRoundedIcon sx={{ fontSize: 16 }} />}
+                                    variant="solid"
                                     onClick={() => {
                                         setShowMilestoneDiscardConfirm(false);
                                         performMilestoneCancel();

@@ -330,14 +330,14 @@ export const CalendarEventModal = ({
                     <FormControl>
                         <FormLabel>{t.calendar.attendees.label}</FormLabel>
                         <Autocomplete
-                            multiple
-                            options={teamOptions}
+                            isOptionEqualToValue={(a, b) => attendeeKey(a) === attendeeKey(b)}
+                            noOptionsText={t.calendar.attendees.noResults}
                             value={form.attendees}
                             // Equality by email so options the user
                             // already picked render with the "selected"
                             // indicator and don't appear duplicated in
                             // the dropdown.
-                            isOptionEqualToValue={(a, b) => attendeeKey(a) === attendeeKey(b)}
+                            options={teamOptions}
                             getOptionLabel={(o) => o.displayName}
                             // Filter manually so "alice" matches both
                             // name AND email — Joy's default only
@@ -354,8 +354,6 @@ export const CalendarEventModal = ({
                             placeholder={
                                 form.attendees.length === 0 ? t.calendar.attendees.placeholder : ""
                             }
-                            noOptionsText={t.calendar.attendees.noResults}
-                            onChange={(_e, next) => setForm((f) => ({ ...f, attendees: next }))}
                             renderOption={(props, option) => (
                                 <AutocompleteOption {...props} key={attendeeKey(option)}>
                                     <ListItemDecorator>
@@ -384,6 +382,8 @@ export const CalendarEventModal = ({
                                     </ListItemContent>
                                 </AutocompleteOption>
                             )}
+                            multiple
+                            onChange={(_e, next) => setForm((f) => ({ ...f, attendees: next }))}
                         />
                         <FormHelperText>
                             {form.attendees.length === 0
@@ -402,8 +402,8 @@ export const CalendarEventModal = ({
                         onChange={(e) => setForm((f) => ({ ...f, addMeet: e.target.checked }))}
                     />
                     <Stack
-                        direction="row"
                         alignItems="center"
+                        direction="row"
                         spacing={1}
                         sx={{ flexWrap: "wrap" }}
                     >
@@ -413,9 +413,9 @@ export const CalendarEventModal = ({
                             again or the 4 s timer reverts it. */}
                         {editingEventId && (
                             <Button
-                                variant={deleteConfirm ? "solid" : "outlined"}
                                 color="danger"
                                 disabled={deleting || submitting}
+                                variant={deleteConfirm ? "solid" : "outlined"}
                                 onClick={handleDelete}
                             >
                                 {deleting
@@ -426,7 +426,7 @@ export const CalendarEventModal = ({
                             </Button>
                         )}
                         <Box sx={{ flex: 1 }} />
-                        <Button variant="plain" disabled={deleting} onClick={onClose}>
+                        <Button disabled={deleting} variant="plain" onClick={onClose}>
                             Cancel
                         </Button>
                         <Button disabled={submitting || deleting} onClick={submitForm}>

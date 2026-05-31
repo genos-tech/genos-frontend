@@ -511,14 +511,14 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
                 setEditTargetMessage={setEditTargetMessage}
                 setFlaggedMessages={useCM.setFlaggedMessages}
                 setIsInEdit={setIsInEdit}
+                setUnwrapAll={setUnwrapAll}
+                setUnwrapCode={setUnwrapCode}
                 socket={socket}
+                unwrapAll={unwrapAll}
+                unwrapCode={unwrapCode}
                 useCM={useCM}
                 usePM={usePM}
                 useTM={useTM}
-                unwrapAll={unwrapAll}
-                setUnwrapAll={setUnwrapAll}
-                unwrapCode={unwrapCode}
-                setUnwrapCode={setUnwrapCode}
             />
         </Stack>
     );
@@ -533,8 +533,8 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
 
         const messageBody = message.content && message.content.length > 0 && (
             <AppTooltip
-                placement="right"
                 enterDelay={1000}
+                placement="right"
                 title={
                     <>
                         {chat.chatType === 3 ? t.chat.bubble.clickToOpenTask : null}
@@ -594,10 +594,10 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
                 onDoubleClick={doubleClickTodoEnabled ? handleAddMessageToToDo : undefined}
                 onMouseEnter={() => setShowUnderBarOption(true)}
                 onMouseLeave={() => setShowUnderBarOption(false)}
-                onTouchStart={longPress.onTouchStart}
+                onTouchCancel={longPress.onTouchCancel}
                 onTouchEnd={longPress.onTouchEnd}
                 onTouchMove={longPress.onTouchMove}
-                onTouchCancel={longPress.onTouchCancel}
+                onTouchStart={longPress.onTouchStart}
             >
                 {emojiPickerPositionCalculated === true && (
                     <EmojiPicker
@@ -615,8 +615,6 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
                 {showUnderBarOption === true && (
                     <Box
                         ref={toolbarRef}
-                        onClick={(e) => e.stopPropagation()}
-                        onDoubleClick={(e) => e.stopPropagation()}
                         sx={{
                             position: "absolute",
                             top: COMPACT_TOOLBAR_OFFSET.top,
@@ -631,6 +629,8 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
                                 ? "0 2px 8px rgba(0,0,0,0.4)"
                                 : "0 2px 8px rgba(0,0,0,0.1)",
                         }}
+                        onClick={(e) => e.stopPropagation()}
+                        onDoubleClick={(e) => e.stopPropagation()}
                     >
                         <BubbleActions />
                     </Box>
@@ -652,13 +652,13 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
                         {!isSimpleBubble && (
                             <BubbleUserName
                                 chatType={chat.chatType}
+                                displayId={message.displayId}
                                 dtSent={dtSent}
                                 isSent={isSent}
                                 isSimpleBubble={false}
                                 isThread={false}
                                 sender={message.sender}
                                 taskId={message.taskId}
-                                displayId={message.displayId}
                                 taskStatus={message.taskStatus}
                                 tsSent={message.tsSent}
                                 tsUpdated={message.tsUpdated}
@@ -739,8 +739,8 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
                         />
                     )}
                     <AppTooltip
-                        placement="right"
                         enterDelay={1000}
+                        placement="right"
                         title={
                             <>
                                 {chat.chatType === 3 ? t.chat.bubble.clickToOpenTask : null}
@@ -793,15 +793,15 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
                                 },
                             }}
                             onClick={handleMessageClick}
+                            onMouseEnter={() => setShowUnderBarOption(true)}
+                            onMouseLeave={() => setShowUnderBarOption(false)}
+                            onTouchCancel={longPress.onTouchCancel}
+                            onTouchEnd={longPress.onTouchEnd}
+                            onTouchMove={longPress.onTouchMove}
+                            onTouchStart={longPress.onTouchStart}
                             onDoubleClick={
                                 doubleClickTodoEnabled ? handleAddMessageToToDo : undefined
                             }
-                            onMouseEnter={() => setShowUnderBarOption(true)}
-                            onMouseLeave={() => setShowUnderBarOption(false)}
-                            onTouchStart={longPress.onTouchStart}
-                            onTouchEnd={longPress.onTouchEnd}
-                            onTouchMove={longPress.onTouchMove}
-                            onTouchCancel={longPress.onTouchCancel}
                         >
                             {/* Subtle highlight for sent messages */}
                             {isSent && !isFocused && (
@@ -830,13 +830,13 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
                                     >
                                         <BubbleUserName
                                             chatType={chat.chatType}
+                                            displayId={message.displayId}
                                             dtSent={dtSent}
                                             isSent={isSent}
                                             isSimpleBubble={isSimpleBubble}
                                             isThread={false}
                                             sender={message.sender}
                                             taskId={message.taskId}
-                                            displayId={message.displayId}
                                             taskStatus={message.taskStatus}
                                             tsSent={message.tsSent}
                                             tsUpdated={message.tsUpdated}
@@ -863,13 +863,13 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
                                             <Stack alignItems="center" direction="row" spacing={0}>
                                                 <BubbleUserName
                                                     chatType={chat.chatType}
+                                                    displayId={message.displayId}
                                                     dtSent={dtSent}
                                                     isSent={isSent}
                                                     isSimpleBubble={isSimpleBubble}
                                                     isThread={false}
                                                     sender={message.sender}
                                                     taskId={message.taskId}
-                                                    displayId={message.displayId}
                                                     taskStatus={message.taskStatus}
                                                     tsSent={message.tsSent}
                                                     tsUpdated={message.tsUpdated}

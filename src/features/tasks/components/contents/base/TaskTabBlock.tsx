@@ -399,13 +399,13 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                             itself can't carry binary blocks. */}
                         <Box
                             sx={{ position: "relative" }}
+                            onDrop={handleDroppedFiles}
                             onDragOver={(e) => {
                                 e.preventDefault();
                                 if (e.dataTransfer?.types?.includes("Files")) {
                                     e.dataTransfer.dropEffect = "copy";
                                 }
                             }}
-                            onDrop={handleDroppedFiles}
                         >
                             <TaskCommentList
                                 currentProjectId={taskContent.project?.projectId}

@@ -218,7 +218,7 @@ export const useChatManagement = (
 
     const funcSetActivityMessages = async () => {
         const activityMessages: ActivityMessageProps[] = await popActivityMessages(myself);
-        // eslint-disable-next-line no-console
+
         console.log(
             `[funcSetActivityMessages] popped ${activityMessages?.length ?? 0} entries from IDB`
         );
@@ -526,7 +526,6 @@ export const useChatManagement = (
     // the one that fires.
     useEffect(() => {
         const onActivity = () => {
-            // eslint-disable-next-line no-console
             console.log("[useChatManagement] v3:activity:created → funcSetActivityMessages");
             void funcSetActivityMessages();
         };

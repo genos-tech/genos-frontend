@@ -45,8 +45,8 @@ export const createMentionSpecV3 = (currentUserId: string | null) =>
                 const isMe = !!currentUserId && userId === currentUserId;
                 return (
                     <span
-                        data-testid={`mention-chip-v3-${userId}`}
                         data-is-self={isMe ? "true" : "false"}
+                        data-testid={`mention-chip-v3-${userId}`}
                         style={{
                             background: isMe ? SELF_BG : OTHER_BG,
                             color: isMe ? SELF_FG : OTHER_FG,

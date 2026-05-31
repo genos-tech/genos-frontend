@@ -63,16 +63,16 @@ export const CreateTaskPanel = ({
             >
                 <CreateTaskForm
                     chatType={useCM.currentThreadChat?.chatType || -1}
-                    useCM={useCM}
                     myself={myself}
-                    usePM={usePM}
                     setMyself={setMyself}
                     socket={socket}
+                    useCM={useCM}
+                    useNM={useNM}
+                    usePM={usePM}
+                    useSM={useSM}
                     useTEM={useTEM}
                     useTM={useTM}
                     useUISM={useUISM}
-                    useNM={useNM}
-                    useSM={useSM}
                 />
             </Box>
         </Panel>

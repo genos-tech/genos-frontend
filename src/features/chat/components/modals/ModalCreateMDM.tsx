@@ -212,9 +212,9 @@ export const ModalCreateMDM: React.FC<Props> = ({
                         {selectedMembers.map((member) => (
                             <Chip
                                 key={member.userId}
+                                color="success"
                                 size="sm"
                                 variant="soft"
-                                color="success"
                                 endDecorator={
                                     <CloseRoundedIcon
                                         sx={{ fontSize: 14, cursor: "pointer" }}
@@ -236,7 +236,6 @@ export const ModalCreateMDM: React.FC<Props> = ({
                 <Input
                     placeholder={t.chat.modals.createMDM.searchPlaceholder}
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
                     startDecorator={
                         <SearchRoundedIcon sx={{ color: "rgba(255, 255, 255, 0.4)" }} />
                     }
@@ -252,6 +251,7 @@ export const ModalCreateMDM: React.FC<Props> = ({
                             borderColor: "rgba(124,58,237,0.3)",
                         },
                     }}
+                    onChange={(e) => setSearchQuery(e.target.value)}
                 />
 
                 {/* Member List */}
@@ -286,7 +286,6 @@ export const ModalCreateMDM: React.FC<Props> = ({
                             return (
                                 <Box
                                     key={member.userId}
-                                    onClick={() => handleToggleMember(member)}
                                     sx={{
                                         display: "flex",
                                         alignItems: "center",
@@ -307,21 +306,22 @@ export const ModalCreateMDM: React.FC<Props> = ({
                                             borderBottom: "none",
                                         },
                                     }}
+                                    onClick={() => handleToggleMember(member)}
                                 >
                                     <Checkbox
                                         checked={isSelected}
                                         color="success"
-                                        variant="soft"
                                         sx={{ pointerEvents: "none" }}
+                                        variant="soft"
                                     />
                                     <AvatarWithStatus
                                         avatarUser={member}
-                                        useCM={useCM}
                                         isYou={false}
                                         myself={myself}
                                         setMyself={setMyself}
                                         showNameAndEmail={false}
                                         socket={socket}
+                                        useCM={useCM}
                                         useUISM={useUISM}
                                     />
                                     <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -391,7 +391,6 @@ export const ModalCreateMDM: React.FC<Props> = ({
                 <Stack direction="row" spacing={1.5} sx={{ justifyContent: "flex-end" }}>
                     <Button
                         variant="plain"
-                        onClick={() => setOpen(false)}
                         sx={{
                             color: "rgba(255, 255, 255, 0.6)",
                             borderRadius: "10px",
@@ -401,13 +400,13 @@ export const ModalCreateMDM: React.FC<Props> = ({
                                 color: "rgba(255, 255, 255, 0.9)",
                             },
                         }}
+                        onClick={() => setOpen(false)}
                     >
                         {t.chat.modals.createMDM.cancel}
                     </Button>
                     <Button
                         disabled={selectedMembers.length < 2 || isLoading}
                         loading={isLoading}
-                        onClick={handleCreateMDM}
                         sx={{
                             background: "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)",
                             borderRadius: "10px",
@@ -424,6 +423,7 @@ export const ModalCreateMDM: React.FC<Props> = ({
                                 color: "rgba(255, 255, 255, 0.3)",
                             },
                         }}
+                        onClick={handleCreateMDM}
                     >
                         {t.chat.modals.createMDM.startConversation}
                     </Button>

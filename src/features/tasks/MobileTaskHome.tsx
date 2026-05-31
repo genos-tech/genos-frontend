@@ -82,10 +82,9 @@ const MobileOverlay = ({
             }}
         >
             <IconButton
-                onClick={onClose}
+                aria-label="Close"
                 size="sm"
                 variant="plain"
-                aria-label="Close"
                 sx={{
                     position: "absolute",
                     top: 8,
@@ -97,6 +96,7 @@ const MobileOverlay = ({
                         background: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)",
                     },
                 }}
+                onClick={onClose}
             >
                 <CloseRoundedIcon sx={{ fontSize: 20 }} />
             </IconButton>
@@ -204,11 +204,11 @@ export const MobileTaskHome = (props: MobileTaskHomeProps) => {
                     }}
                 >
                     <IconButton
+                        aria-label="Back"
                         size="sm"
+                        sx={{ flexShrink: 0 }}
                         variant="plain"
                         onClick={showDashboard ? handleBackFromDashboard : handleBackToProjects}
-                        aria-label="Back"
-                        sx={{ flexShrink: 0 }}
                     >
                         <ArrowBackIosNewRoundedIcon sx={{ fontSize: 18 }} />
                     </IconButton>
@@ -232,23 +232,22 @@ export const MobileTaskHome = (props: MobileTaskHomeProps) => {
                     {hasProject && (
                         <>
                             <IconButton
+                                aria-label="List view"
+                                color={showList ? "primary" : "neutral"}
                                 size="sm"
                                 variant={showList ? "soft" : "plain"}
-                                color={showList ? "primary" : "neutral"}
-                                onClick={() => useTM.setIsTaskDashboardVisible(false)}
-                                aria-label="List view"
                                 sx={{
                                     color: showList ? (isDark ? "#a78bfa" : "#7c3aed") : undefined,
                                 }}
+                                onClick={() => useTM.setIsTaskDashboardVisible(false)}
                             >
                                 <ListAltRoundedIcon sx={{ fontSize: 18 }} />
                             </IconButton>
                             <IconButton
+                                aria-label="Dashboard"
+                                color={showDashboard ? "primary" : "neutral"}
                                 size="sm"
                                 variant={showDashboard ? "soft" : "plain"}
-                                color={showDashboard ? "primary" : "neutral"}
-                                onClick={() => useTM.setIsTaskDashboardVisible(true)}
-                                aria-label="Dashboard"
                                 sx={{
                                     color: showDashboard
                                         ? isDark
@@ -256,17 +255,18 @@ export const MobileTaskHome = (props: MobileTaskHomeProps) => {
                                             : "#7c3aed"
                                         : undefined,
                                 }}
+                                onClick={() => useTM.setIsTaskDashboardVisible(true)}
                             >
                                 <DashboardRoundedIcon sx={{ fontSize: 18 }} />
                             </IconButton>
 
                             <IconButton
-                                size="sm"
-                                variant="solid"
-                                color="primary"
-                                onClick={handleCreateTaskClick}
                                 aria-label="Create task"
+                                color="primary"
+                                size="sm"
                                 sx={{ flexShrink: 0 }}
+                                variant="solid"
+                                onClick={handleCreateTaskClick}
                             >
                                 <AddIcon sx={{ fontSize: 18 }} />
                             </IconButton>
@@ -275,12 +275,12 @@ export const MobileTaskHome = (props: MobileTaskHomeProps) => {
 
                     <Dropdown>
                         <MenuButton
-                            slots={{ root: IconButton }}
                             slotProps={{ root: { size: "sm", variant: "plain" } }}
+                            slots={{ root: IconButton }}
                         >
                             <MoreVertRoundedIcon sx={{ fontSize: 20 }} />
                         </MenuButton>
-                        <Menu size="sm" placement="bottom-end" sx={{ minWidth: 180 }}>
+                        <Menu placement="bottom-end" size="sm" sx={{ minWidth: 180 }}>
                             <MenuItem
                                 onClick={async () => {
                                     if (usePM.currentProject?.projectId) {
@@ -429,17 +429,17 @@ export const MobileTaskHome = (props: MobileTaskHomeProps) => {
                         )}
                         {activeNoteType === 3 && useNM.currentChatNote && (
                             <ChatNoteMain
+                                isInChatPage={false}
                                 isInTaskPage={true}
                                 myself={myself}
                                 setMyself={setMyself}
                                 socket={socket}
                                 useCM={useCM}
                                 useNM={useNM}
+                                usePM={usePM}
                                 useTEM={useTEM}
                                 useTM={useTM}
                                 useUISM={useUISM}
-                                isInChatPage={false}
-                                usePM={usePM}
                             />
                         )}
                     </Box>

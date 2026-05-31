@@ -85,17 +85,20 @@ export const NoteBreadcrumbs = ({
     const scheme = colorSchemes[color];
     const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-    // Hidden on mobile per design — the compact mobile header already
-    // shows the current note title; the full breadcrumb trail is
-    // desktop chrome that would line-wrap awkwardly at 390px anyway.
-    if (isMobile) return null;
-
-    // Auto-scroll to the rightmost position when noteChain changes
+    // Auto-scroll to the rightmost position when noteChain changes.
+    // Must run before any early return so the hook order is stable across
+    // renders (react-hooks/rules-of-hooks) — `isMobile` flipping would
+    // otherwise change the hook count and crash React.
     useEffect(() => {
         if (scrollContainerRef.current) {
             scrollContainerRef.current.scrollLeft = scrollContainerRef.current.scrollWidth;
         }
     }, [noteChain]);
+
+    // Hidden on mobile per design — the compact mobile header already
+    // shows the current note title; the full breadcrumb trail is
+    // desktop chrome that would line-wrap awkwardly at 390px anyway.
+    if (isMobile) return null;
 
     const truncateTitle = (title: string) => {
         if (title.length > maxTitleLength) {
@@ -203,7 +206,6 @@ export const NoteBreadcrumbs = ({
 
                             {/* Breadcrumb Item */}
                             <Tooltip
-                                arrow
                                 placement="bottom"
                                 size="sm"
                                 title={node.title}
@@ -214,6 +216,7 @@ export const NoteBreadcrumbs = ({
                                         color: "background.level2",
                                     },
                                 }}
+                                arrow
                             >
                                 <Typography
                                     component="button"

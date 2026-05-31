@@ -125,21 +125,21 @@ export const TaskDependenciesBlock = ({
             ) : (
                 <>
                     <DependencyRow
+                        addTooltip={fmt(depsT.addRowTooltip, { label: depsT.blockingLabel })}
                         deps={deps.blocking}
                         icon={<BlockRoundedIcon sx={{ fontSize: 14, color: "#ff8c00" }} />}
                         isDark={isDark}
                         label={depsT.blockingLabel}
-                        addTooltip={fmt(depsT.addRowTooltip, { label: depsT.blockingLabel })}
                         noneLabel={depsT.noneLabel}
                         onAdd={() => openModal("blocking")}
                         onChipClick={handleChipClick}
                     />
                     <DependencyRow
+                        addTooltip={fmt(depsT.addRowTooltip, { label: depsT.blockedByLabel })}
                         deps={deps.blockedBy}
                         icon={<BlockRoundedIcon sx={{ fontSize: 14, color: "#b91c1c" }} />}
                         isDark={isDark}
                         label={depsT.blockedByLabel}
-                        addTooltip={fmt(depsT.addRowTooltip, { label: depsT.blockedByLabel })}
                         noneLabel={depsT.noneLabel}
                         onAdd={() => openModal("blockedBy")}
                         onChipClick={handleChipClick}
@@ -281,7 +281,7 @@ const DependencyChip = ({
                 >
                     {ref_.displayId ?? `#${ref_.otherTaskId}`}
                 </Chip>
-                <StatusChip meta={ref_.status} isDark={isDark} />
+                <StatusChip isDark={isDark} meta={ref_.status} />
                 <Typography
                     level="body-sm"
                     sx={{

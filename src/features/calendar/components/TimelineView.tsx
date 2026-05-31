@@ -233,16 +233,12 @@ export const TimelineView = ({
                             {allDayEvents.map((e) => (
                                 <Tooltip
                                     key={e.id}
-                                    title={e.summary || "(no title)"}
                                     size="sm"
-                                    variant="outlined"
                                     sx={{ borderRadius: "8px" }}
+                                    title={e.summary || "(no title)"}
+                                    variant="outlined"
                                 >
                                     <Box
-                                        onClick={(ev) => {
-                                            ev.stopPropagation();
-                                            onEventClick(e);
-                                        }}
                                         sx={{
                                             cursor: "pointer",
                                             backgroundColor: e.hangoutLink
@@ -261,6 +257,10 @@ export const TimelineView = ({
                                             "&:hover": {
                                                 backgroundColor: eventBlueHover,
                                             },
+                                        }}
+                                        onClick={(ev) => {
+                                            ev.stopPropagation();
+                                            onEventClick(e);
                                         }}
                                     >
                                         {e.summary || "(no title)"}
@@ -366,16 +366,12 @@ export const TimelineView = ({
                                     return (
                                         <Tooltip
                                             key={event.id}
-                                            title={`${event.summary || "(no title)"} · ${start.format("h:mm A")}–${end.format("h:mm A")}`}
                                             size="sm"
-                                            variant="outlined"
                                             sx={{ borderRadius: "8px" }}
+                                            title={`${event.summary || "(no title)"} · ${start.format("h:mm A")}–${end.format("h:mm A")}`}
+                                            variant="outlined"
                                         >
                                             <Box
-                                                onClick={(ev) => {
-                                                    ev.stopPropagation();
-                                                    onEventClick(event);
-                                                }}
                                                 sx={{
                                                     position: "absolute",
                                                     top,
@@ -401,6 +397,10 @@ export const TimelineView = ({
                                                     "&:hover": {
                                                         backgroundColor: eventBlueHover,
                                                     },
+                                                }}
+                                                onClick={(ev) => {
+                                                    ev.stopPropagation();
+                                                    onEventClick(event);
                                                 }}
                                             >
                                                 <Box
