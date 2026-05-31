@@ -316,7 +316,12 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
             const targetThreadMsg = threadMessages.find(
                 (m: ThreadMessageProps) => m.messageIdWithChatIdAndThreadId === v3MessageUuid
             );
-            if (!targetThreadMsg || targetThreadMsg.isDeleted === true) {
+            // The v3 thread adapter (v3ThreadMessagesToLegacy) filters out
+            // soft-deleted rows (deletedAt) and returns [] when the root is
+            // deleted, so a deleted source message is simply absent here —
+            // absence is the deletion signal (the legacy `isDeleted` flag no
+            // longer exists on ThreadMessageProps).
+            if (!targetThreadMsg) {
                 setSourceDeleted(true);
                 return;
             }
