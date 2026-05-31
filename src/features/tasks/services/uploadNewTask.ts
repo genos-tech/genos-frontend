@@ -227,14 +227,6 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                         };
                         // Top-level "task created" message in the PM channel.
                         try {
-                            console.log("[uploadNewTask] sending PM task-create message", {
-                                channelId: pmChannel.id,
-                                projectId: pmChannel.projectId,
-                                metadata: taskMetadata,
-                                bodyBlocks: Array.isArray(createTaskMessage)
-                                    ? createTaskMessage.length
-                                    : "n/a",
-                            });
                             const sent = await channelService.send(
                                 pmChannel.id,
                                 createTaskMessage,
@@ -243,11 +235,6 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                                     metadata: taskMetadata,
                                 }
                             );
-
-                            console.log("[uploadNewTask] PM task-create message sent", {
-                                messageId: sent?.id,
-                                channelId: sent?.channelId,
-                            });
                             // First thread reply on the task message —
                             // legacy posted a follow-up that lives in the
                             // task's thread pane. `parentId = sent.id`

@@ -303,8 +303,16 @@ export const ChatNoteHeader = ({
                     </Box>
                 )}
 
-                {/* Open Related Chat Button */}
-                {isInChatPage === false && (
+                {/* Open Related Chat Button. Gated on `chat` — the
+                    resolved `AllChatProps` for this note's channel (found
+                    in `useCM.allChats` by the note's channel UUID). When
+                    the note has no resolvable channel (e.g. a stale/NULL
+                    `channel` row, or a channel the user can't see), `chat`
+                    is undefined and we hide the button rather than fire
+                    `moveToSpecificChat` with a falsy id (which logged
+                    "Chat not found: chatId=0"). We pass the chat's own
+                    verified chatType/chatId so the lookup can't miss. */}
+                {isInChatPage === false && chat && (
                     <Tooltip
                         size="sm"
                         title={t.notes.header.openRelatedChat}
@@ -321,9 +329,21 @@ export const ChatNoteHeader = ({
                             sx={actionButtonStyle}
                             variant="plain"
                             onClick={() => {
+                                // Seed the chat-panel note state with the note
+                                // the user is already viewing BEFORE navigating.
+                                // moveToSpecificChat only flips the visibility
+                                // flag (setIsChatNoteVisibleInChat); it never
+                                // populates chatPanelApi.note, so without this
+                                // the chat-page ChatNoteMain reads a null
+                                // chatPanelApi.note and renders an empty pane.
+                                // setNote (not openOrCreate) carries the exact
+                                // child note + its body with no refetch.
+                                if (useNM.currentChatNote) {
+                                    useNM.chatPanelApi.setNote(useNM.currentChatNote);
+                                }
                                 useCM.moveToSpecificChat(
-                                    useNM.currentChatNote?.chatType || 0,
-                                    useNM.currentChatNote?.chatId || 0,
+                                    chat.chatType,
+                                    chat.chatId,
                                     useNM.currentChatNote?.threadId || 0,
                                     true,
                                     false,

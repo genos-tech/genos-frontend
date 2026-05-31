@@ -164,6 +164,33 @@ export const ChatHome = (props: ChatHomeProps) => {
         };
     }, [useTM.isTaskPreviewVisible, useTM.currentPreviewTaskId]);
 
+    // Consume the cross-page "open task preview on chat" intent. Set by
+    // moveToSpecificChat (only when the opened thread carries a task, so
+    // currentPreviewTaskId is fresh and matching), this flag survives the
+    // task->chat route swap that remounts ChatHome — the sticky-flag effect
+    // above can't observe the false->true transition because it happens
+    // before this component mounts. We flip both gating pieces directly:
+    // isTaskPreviewVisible (the chatHome.tsx:461 gate) and
+    // initialTaskPreviewVisible (set directly, not via the effect above,
+    // which won't fire if this task was already the preview on mount). The
+    // panel's `currentPreviewTask` is loaded by the App-level auto-loader
+    // (useProjectTaskManagement) from currentPreviewTaskId + currentProject.
+    // We also clear a stale isCreatingTask.flag so the CreateTaskPanel
+    // (chatHome.tsx:434) doesn't render in place of the preview, and we
+    // consume (clear) the intent so a later chat mount can't re-open it.
+    useEffect(() => {
+        if (!useCM.isThreadTaskVisible) return;
+        useTM.setIsTaskPreviewVisible(true);
+        setInitialTaskPreviewVisible(true);
+        useTM.setIsCreatingTask((prev) => ({ ...prev, flag: false }));
+        useCM.setIsThreadTaskVisible(false);
+        // Intentional: consume strictly on the intent flag. currentPreviewTaskId
+        // is set synchronously in moveToSpecificChat before navigate, so it is
+        // already present by the time this effect runs on mount; the setters are
+        // stable and excluded to avoid re-running.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [useCM.isThreadTaskVisible]);
+
     // Add a new todo from a message
     useEffect(() => {
         if (todoFromMessageBubble) {
@@ -459,7 +486,24 @@ export const ChatHome = (props: ChatHomeProps) => {
                         render here. Mirrors TaskHomeLayout.tsx. */}
                             {initialTaskPreviewVisible &&
                                 useTM.isTaskPreviewVisible === true &&
-                                (useTM.currentPreviewTask ||
+                                // Id-match guard: only render the preview when
+                                // the loaded `currentPreviewTask` is the task
+                                // the chat page asked for. `loadTask` keeps a
+                                // previously-loaded (different) task in
+                                // `currentPreviewTask` on an empty/failed load
+                                // (useTaskManagement.ts:432 only sets on
+                                // length>0). Without this match, a chat path
+                                // that can't resolve the right project (e.g. a
+                                // DM/GM task thread whose project isn't current)
+                                // would render the STALE task. Stringify both —
+                                // the id types are mixed across the codebase
+                                // (TaskProps.id:number vs the string ids on
+                                // table rows). Milestone previews leave
+                                // currentPreviewTask undefined, so keep their
+                                // own branch unguarded.
+                                ((useTM.currentPreviewTask &&
+                                    String(useTM.currentPreviewTask.id) ===
+                                        String(useTM.currentPreviewTaskId)) ||
                                     useTM.currentPreviewKind === "milestone") && (
                                     <>
                                         <ResizeHandle key="task-preview-resize-handle" />

@@ -489,6 +489,16 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                         },
                                     }}
                                     onClick={() => {
+                                        // Ensure the project is set so the
+                                        // App-level auto-loader can fetch the
+                                        // preview task on the chat page. The
+                                        // thread's own project may be null for
+                                        // DM/GM threads (no message carries a
+                                        // project); taskContent.project is the
+                                        // reliable source here.
+                                        if (taskContent.project) {
+                                            usePM.setCurrentProject(taskContent.project);
+                                        }
                                         useCM.moveToSpecificChat(
                                             taskContent.chatType!,
                                             taskContent.chatId!,
@@ -496,7 +506,15 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                             false,
                                             true,
                                             useTM.setCurrentPreviewTaskId,
-                                            usePM.setCurrentProject
+                                            usePM.setCurrentProject,
+                                            undefined,
+                                            // Open the task preview ON THE CHAT
+                                            // PAGE — this entry point is the one
+                                            // the bug names. Distinct from the
+                                            // legacy flag above (deep-link
+                                            // callers pass that true and must
+                                            // not open the chat-page preview).
+                                            true
                                         );
                                     }}
                                 >
@@ -570,6 +588,14 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                         taskContent.chatType !== null &&
                                         taskContent.chatId !== null,
                                     onClick: () => {
+                                        // See the "Check Thread" button above:
+                                        // seed the project so the chat-page
+                                        // auto-loader can fetch the preview task
+                                        // even for DM/GM threads whose own
+                                        // project is null.
+                                        if (taskContent.project) {
+                                            usePM.setCurrentProject(taskContent.project);
+                                        }
                                         useCM.moveToSpecificChat(
                                             taskContent.chatType!,
                                             taskContent.chatId!,
@@ -577,7 +603,14 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                             false,
                                             true,
                                             useTM.setCurrentPreviewTaskId,
-                                            usePM.setCurrentProject
+                                            usePM.setCurrentProject,
+                                            undefined,
+                                            // Open the task preview ON THE CHAT
+                                            // PAGE (see the "Check Thread"
+                                            // button above for why this is a
+                                            // dedicated flag, not the legacy
+                                            // openThreadTaskPreview).
+                                            true
                                         );
                                     },
                                 },
