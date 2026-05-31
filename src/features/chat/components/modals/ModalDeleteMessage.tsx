@@ -129,7 +129,9 @@ export const ModalDeleteMessage: React.FC<Props> = ({
                     message.chatType,
                     message.chatId as unknown as string,
                     message.threadId,
-                    message.messageIdWithChatIdAndThreadId ?? "",
+                    // `isThread` branch ⇒ message is a ThreadMessageProps (this
+                    // field is thread-only); narrow the MessageProps|ThreadMessageProps union.
+                    (message as ThreadMessageProps).messageIdWithChatIdAndThreadId ?? "",
                     setErrorMessage
                 );
             } catch (err) {
@@ -173,7 +175,9 @@ export const ModalDeleteMessage: React.FC<Props> = ({
                     accessToken,
                     message.chatType,
                     message.chatId as unknown as string,
-                    message.messageIdWithChatId ?? "",
+                    // non-thread branch ⇒ message is a MessageProps (this field
+                    // is main-pane-only); narrow the union.
+                    (message as MessageProps).messageIdWithChatId ?? "",
                     setErrorMessage
                 );
             } catch (err) {
