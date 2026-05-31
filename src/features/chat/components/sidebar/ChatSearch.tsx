@@ -97,20 +97,31 @@ export const ChatSearch = (props: ChatSearchProps) => {
             }
         } else if (value.userId) {
             const otherUserId = value.userId;
-            for (const c of snapshot.channels.values()) {
-                if (c.kind !== ChannelKind.DM) continue;
-                const roster = snapshot.membersByChannel.get(c.id) ?? [];
-                const ids = new Set(roster.map((m) => m.userId));
-                if (ids.size === 2 && ids.has(myself.userId) && ids.has(otherUserId)) {
-                    channel = c;
-                    break;
+            // Self-DM (you searched your own name): the personal scratch
+            // chat that backs the todo / calendar panes. Its roster is just
+            // {you} (size 1), so the size===2 partner scan below can't match
+            // it — and guessing it from roster size risks grabbing a regular
+            // DM that decayed to one member. Skip the snapshot scan and let
+            // the backend resolve it authoritatively: createChannel is
+            // idempotent by canonical pair, so it returns the existing
+            // self-DM (created on team join) rather than a duplicate.
+            const isSelfDm = otherUserId === myself.userId;
+            if (!isSelfDm) {
+                for (const c of snapshot.channels.values()) {
+                    if (c.kind !== ChannelKind.DM) continue;
+                    const roster = snapshot.membersByChannel.get(c.id) ?? [];
+                    const ids = new Set(roster.map((m) => m.userId));
+                    if (ids.size === 2 && ids.has(myself.userId) && ids.has(otherUserId)) {
+                        channel = c;
+                        break;
+                    }
                 }
             }
             if (!channel) {
-                // No DM yet — ask the backend to create one.
-                // createChannel is idempotent for DM (via
-                // `ChannelDirectPair`) so a race against another tab
-                // is safe.
+                // No DM yet (or the self-DM) — ask the backend. createChannel
+                // is idempotent for DM (via `ChannelDirectPair`), so a race
+                // against another tab — or a self-DM that already exists —
+                // returns the existing channel rather than erroring.
                 try {
                     channel = await channelService.createChannel({
                         kind: ChannelKind.DM,
