@@ -32,7 +32,7 @@ type ChatSearchProps = {
     socket: Socket | null;
     openSearchBox: boolean;
     setOpenSearchBox: (value: boolean) => void;
-    setOpenJoinGM: (value: { flag: boolean; chatId: number; chatName: string }) => void;
+    setOpenJoinGM: (value: { flag: boolean; chatId: string; chatName: string }) => void;
     useTEM: TeamManagementState;
     setMyself: (value: UserProps) => void;
     useCM: ChatManagementState;
@@ -65,11 +65,11 @@ export const ChatSearch = (props: ChatSearchProps) => {
         const isGroup = value.type === "Group";
         const _chatType = isGroup ? 2 : 1;
 
-        // If the user tries to join a private GM, show the modal to
-        // get approval from the GM owner. The join flow still keys on the
-        // legacy GM id, so pass `legacyChatId` through.
+        // If the user tries to join a private GM, show the modal to get
+        // approval from the GM owner. v3 GMs have no legacy id, so the join
+        // flow keys on the v3 channel UUID (`channelId`).
         if (_chatType === 2 && value.isPrivate === true && value.isJoined === false) {
-            setOpenJoinGM({ flag: true, chatId: value.legacyChatId ?? 0, chatName: value.name });
+            setOpenJoinGM({ flag: true, chatId: value.channelId ?? "", chatName: value.name });
             return;
         }
 
