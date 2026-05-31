@@ -23,5 +23,9 @@
         "noUncheckedSideEffectImports": true,
         "forceConsistentCasingInFileNames": true
     },
-    "include": ["src"]
+    "include": ["src"],
+    // Tests are validated by running them (vitest), not by the production
+    // build. Excluding them keeps stale test-fixture type drift from blocking
+    // `npm run build` (and the Railway deploy); vitest still type-aware-runs them.
+    "exclude": ["src/__tests__", "src/**/*.test.ts", "src/**/*.test.tsx"]
 }

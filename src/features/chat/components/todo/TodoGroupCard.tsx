@@ -5,13 +5,14 @@ import { Box, Card, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
+import { UpdateTodoItemPatch } from "./services/todoItems";
+
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
 import { TodoCategoryProps, TodoGroupProps } from "../../../../types/chat";
 import { getLocalCurrentDate } from "../../../../utils/dateUtils";
-import { UpdateTodoItemPatch } from "../../services/todoItems";
 import { TodoCategorySection } from "./TodoCategorySection";
 
 const COLORS = {
