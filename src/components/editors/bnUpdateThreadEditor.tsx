@@ -64,8 +64,8 @@ import {
     getBlockTypeSelectItemsWithCodeBlock,
 } from "./sub/codeBlockExtras";
 
-const base_url = import.meta.env.VITE_API_BASE_URL;
-const django_url = import.meta.env.VITE_DJANGO_URL;
+// Chat attachment upload uses channelService.uploadInlineFile (v3); the
+// legacy VITE_API_BASE_URL / VITE_DJANGO_URL upload consts were removed.
 
 type BnUpdateThreadEditorProps = {
     useTEM: TeamManagementState;
@@ -153,30 +153,10 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
 
     const uploadFile = guardUploadFile(
         trackUpload(async (file: File) => {
-            const formData = new FormData();
-            formData.append("team_id", String(myself.teamId));
-            formData.append("chat_type", String(thread.chatType));
-            formData.append("chat_id", String(message.chatId));
-            formData.append("message_id", String(message.messageId));
-            formData.append("thread_id", String(message.threadId));
-            formData.append("uploader", myself.userId);
-            formData.append("chat_attachment_file", file);
-            const uploadChatAttachmentResponse = await fetch(`${base_url}/chat/attachment/`, {
-                method: "POST",
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                },
-                body: formData,
-            });
-            const uploadChatAttachmentData = await uploadChatAttachmentResponse.json();
-
-            if (!uploadChatAttachmentResponse.ok) {
-                throw new Error(
-                    uploadChatAttachmentData.message || t.common.editor.attachmentUploadFailed
-                );
-            }
-
-            return `${django_url}${uploadChatAttachmentData.chatAttachmentUrl}`;
+            // v3: compose-time inline upload via the channel-scoped uploader
+            // (returns an absolute URL; no `django_url` prepend). Replaces
+            // the deleted `/chat/attachment/` route.
+            return channelService.uploadInlineFile(String(message.chatId), file);
         })
     );
 

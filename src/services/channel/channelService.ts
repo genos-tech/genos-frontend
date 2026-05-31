@@ -999,6 +999,34 @@ export class ChannelService {
         }
     }
 
+    /**
+     * Compose-time inline file upload for the chat editors.
+     *
+     * BlockNote's `uploadFile` callback fires while the user is still
+     * composing — before any Message exists — so it can't use the
+     * message-scoped `uploadAttachment`. This posts to the channel-scoped
+     * `/uploads/` route (membership-gated, no DB row) and returns the
+     * absolute URL the server stored the file at; the editor embeds it as
+     * an image/file block in the message body. Returns the URL verbatim —
+     * do NOT prepend any base (the server returns an absolute URL).
+     */
+    async uploadInlineFile(channelId: string, file: File): Promise<string> {
+        const form = new FormData();
+        form.append("file", file);
+        if (file.type) form.append("mime", file.type);
+        try {
+            // See uploadAttachment: never set Content-Type manually for a
+            // FormData body — axios sets the multipart boundary itself.
+            const res = await this.api().post<{ url: string }>(
+                `/api/v3/channels/${channelId}/uploads/`,
+                form
+            );
+            return res.data.url;
+        } catch (e) {
+            throw unwrapAxiosError(e);
+        }
+    }
+
     // ---- Pending send queue ----------------------------------------------
     //
     // See the `PendingMessage` interface for the full contract. The

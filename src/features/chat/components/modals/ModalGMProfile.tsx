@@ -46,6 +46,7 @@ import { TeamManagementState } from "../../../../hooks/common/useTeamManagement"
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { fmt, useTranslation } from "../../../../i18n";
 import { channelService } from "../../../../services/channel/channelService";
+import { v3ApiBaseURL } from "../../../../services/v3Api";
 import { UserProps } from "../../../../types/admin";
 import { ChannelKind } from "../../../../types/channel";
 import { AllChatProps, GMProfileProps } from "../../../../types/chat";
@@ -56,7 +57,8 @@ import {
 } from "../../../../utils/gmProfileImageVersion";
 import { resolveLegacyChatId } from "../../utils/channelIdResolvers";
 
-const base_url = import.meta.env.VITE_API_BASE_URL;
+// GM profile-image upload uses the v3 host root (v3ApiBaseURL); the
+// legacy VITE_API_BASE_URL (`…/api/v2`) was double-prefixing the v3 path.
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
 type ModalGMProfileProps = {
@@ -285,7 +287,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
         // the response body's `profileImageUrl` is the URL the FE
         // should display next.
         const uploadProfileImageResponse = await fetch(
-            `${base_url}/api/v3/channels/${gmChat.chatId}/profile/image/`,
+            `${v3ApiBaseURL()}/api/v3/channels/${gmChat.chatId}/profile/image/`,
             {
                 method: "PUT",
                 headers: {
