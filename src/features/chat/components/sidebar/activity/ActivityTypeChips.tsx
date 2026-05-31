@@ -10,6 +10,12 @@ import { formatTaskDisplayId } from "../../../../tasks/utils/taskDisplayId";
 interface ActivityTypeChipsProps {
     activity: ActivityMessageProps;
     chatTypeLookup: { [key: number]: string };
+    /** Viewer-correct project/channel name resolved from the live chat
+     *  list by the parent (`ActivityHeader`). The activity payload's
+     *  `chatName` is frozen at adapt time and can be a `"?"` placeholder
+     *  when the source channel wasn't loaded yet; this overrides it for
+     *  the project chip. Falls back to `activity.chatName` when omitted. */
+    resolvedChatName?: string;
 }
 
 // Chip color configurations
@@ -139,6 +145,7 @@ const ModernChip: React.FC<ModernChipProps> = ({
 export const ActivityTypeChips: React.FC<ActivityTypeChipsProps> = ({
     activity,
     chatTypeLookup,
+    resolvedChatName,
 }) => {
     const { mode } = useColorScheme();
     const { t } = useTranslation();
@@ -175,6 +182,11 @@ export const ActivityTypeChips: React.FC<ActivityTypeChipsProps> = ({
     const showProjectAndTaskChips =
         activity.chatType === 3 || isTaskComment || isTaskBody || isTaskNote;
 
+    // Prefer the parent's live-resolved name over the frozen payload
+    // value (which can be the `"?"` placeholder for channel-backed
+    // surfaces whose channel wasn't loaded at adapt time).
+    const projectChipName = resolvedChatName ?? activity.chatName;
+
     return (
         <Stack
             direction="row"
@@ -191,9 +203,9 @@ export const ActivityTypeChips: React.FC<ActivityTypeChipsProps> = ({
                         (set to the note title, not the project name) so
                         this gracefully falls back to just the task ID
                         chip. */}
-                    {!!activity.chatName && !isTaskNote && (
+                    {!!projectChipName && projectChipName !== "?" && !isTaskNote && (
                         <ModernChip
-                            label={activity.chatName}
+                            label={projectChipName}
                             colorScheme={CHIP_COLORS.project}
                             isDark={isDark}
                             variant="filled"
