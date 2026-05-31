@@ -62,9 +62,7 @@ export default defineConfig({
             // generation — memory-heavy on a 6k-module app and a dev-only
             // analysis tool. Skip it entirely in CI (it contributed to the
             // GitHub Actions heap OOM); keep it for local builds.
-            plugins: process.env.CI
-                ? []
-                : [visualizer({ filename: "stats.html", open: true })],
+            plugins: process.env.CI ? [] : [visualizer({ filename: "stats.html", open: true })],
         },
     },
     test: {
