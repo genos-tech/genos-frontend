@@ -140,51 +140,6 @@ export class NoteService {
         return this.chatNoteRepo.noteExists(noteId);
     }
 
-    // Search notes by content
-    async searchNotesByContent(
-        searchTerm: string,
-        type?: "personal" | "task" | "chat"
-    ): Promise<any[]> {
-        const allNotes: any[] = [];
-
-        if (!type || type === "personal") {
-            allNotes.push(...(await this.getAllPersonalNotes()));
-        }
-        if (!type || type === "task") {
-            allNotes.push(...(await this.getAllTaskNotes()));
-        }
-        if (!type || type === "chat") {
-            allNotes.push(...(await this.getAllChatNotes()));
-        }
-
-        return allNotes.filter(
-            (note) =>
-                note.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                note.content.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-    }
-
-    // Get notes by date range
-    async getNotesByDateRange(
-        startDate: number,
-        endDate: number,
-        type?: "personal" | "task" | "chat"
-    ): Promise<any[]> {
-        const allNotes: any[] = [];
-
-        if (!type || type === "personal") {
-            allNotes.push(...(await this.getAllPersonalNotes()));
-        }
-        if (!type || type === "task") {
-            allNotes.push(...(await this.getAllTaskNotes()));
-        }
-        if (!type || type === "chat") {
-            allNotes.push(...(await this.getAllChatNotes()));
-        }
-
-        return allNotes.filter((note) => note.createdAt >= startDate && note.createdAt <= endDate);
-    }
-
     // Get all notes for a user
     async getAllNotesForUser(userId: string): Promise<any[]> {
         const personalNotes = await this.getPersonalNotesByUser(userId);
