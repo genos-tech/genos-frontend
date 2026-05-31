@@ -61,7 +61,7 @@ export default defineConfig({
             plugins: [
                 visualizer({
                     filename: "stats.html",
-                    open: true, // opens in browser after build
+                    open: !process.env.CI, // opens in browser after build (never in CI/headless)
                 }),
             ],
         },
@@ -70,5 +70,33 @@ export default defineConfig({
         environment: "jsdom",
         globals: true,
         setupFiles: ["./src/__tests__/setup.ts"],
+        coverage: {
+            provider: "v8",
+            reporter: ["text-summary", "lcov"],
+            // Collect-and-report only (no thresholds at baseline). Scope to
+            // the targeted, testable layers; ratchet per-glob thresholds in
+            // later once a green coverage baseline lands.
+            include: [
+                "src/services/**",
+                "src/db/repositories/**",
+                "src/db/services/**",
+                "src/db/utils/**",
+                "src/utils/**",
+                "src/hooks/**",
+                "src/context/**",
+            ],
+            exclude: [
+                "src/__tests__/**",
+                "src/types/**",
+                "src/i18n/**",
+                "src/lp/**",
+                "src/theme/**",
+                "src/assets/**",
+                "src/main.tsx",
+                "src/App.tsx",
+                "src/db/workers/*Worker.ts",
+                "**/*.d.ts",
+            ],
+        },
     },
 });
