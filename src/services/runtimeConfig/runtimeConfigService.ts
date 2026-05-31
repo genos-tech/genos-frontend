@@ -199,7 +199,9 @@ class RuntimeConfigService {
             try {
                 const api = authApi(this._accessToken);
                 if (!api) return;
-                const res = await api.get<RuntimeConfig>("/api/runtime-config/");
+                // authApi's base already ends in `/api/v2`, so this
+                // resolves to `/api/v2/runtime-config/`.
+                const res = await api.get<RuntimeConfig>("/runtime-config/");
                 const next = this._normalize(res.data);
                 const changed = JSON.stringify(this._config) !== JSON.stringify(next);
                 this._config = next;

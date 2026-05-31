@@ -168,7 +168,7 @@ export const App = () => {
     // directly. Side-by-side until the legacy paths are deleted.
     useChannelServiceBootstrap(accessToken, myself.userId || null);
 
-    // Runtime config: poll `/api/runtime-config` on auth ready and every
+    // Runtime config: poll `/api/v2/runtime-config` on auth ready and every
     // 60s. Source of truth for the per-chat-type v3 rollout flags and
     // the panic switch. Silent / fail-closed if the endpoint errors.
     useRuntimeConfigBootstrap(accessToken, myself.userId || null);
