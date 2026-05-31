@@ -224,10 +224,6 @@ export const useChatManagement = (
 
     const funcSetActivityMessages = async () => {
         const activityMessages: ActivityMessageProps[] = await popActivityMessages(myself);
-
-        console.log(
-            `[funcSetActivityMessages] popped ${activityMessages?.length ?? 0} entries from IDB`
-        );
         if (activityMessages) {
             setActivityMessages(activityMessages);
             setUnReadActivityMessageCounts(countUnreadActivityMessages(activityMessages));
