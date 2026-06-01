@@ -55,6 +55,10 @@ interface V3ActivityWire {
         isThreadReply: boolean;
         taskId?: number | null;
         displayId?: string | null;
+        // PM messages carry task fields in `metadata`; task-comment
+        // mirrors set `{ taskCommentId }` here — the notification router's
+        // task-comment discriminator.
+        metadata?: Record<string, unknown> | null;
     };
     meta: Record<string, unknown>;
     isRead: boolean;
@@ -104,6 +108,16 @@ export function v3ActivityToLegacy(a: V3ActivityWire, myself: UserProps): Activi
         const taskId = num(meta.taskId) ?? 0;
         const projectId = num(meta.projectId);
         const noteId = num(meta.noteId) ?? 0;
+        // Chat-note (surface 8) mentions carry the PARENT chat's routing in
+        // meta so a clicked notification can deep-link to the note. Other
+        // surfaces leave these unset. `chatId` is opaque (legacy number or
+        // v3 UUID string) so it's read as-is, not coerced to a number.
+        const noteChatType = num(meta.chatType);
+        const noteChatId =
+            typeof meta.chatId === "string" || typeof meta.chatId === "number"
+                ? meta.chatId
+                : undefined;
+        const noteThreadId = num(meta.threadId);
         // Notes route by `chatId === noteId`; task body routes by
         // projectId + taskId (its chatId slot mirrors the legacy
         // project-id packing).
@@ -142,6 +156,10 @@ export function v3ActivityToLegacy(a: V3ActivityWire, myself: UserProps): Activi
                 ? ({ senderName: a.actor.userName } as Partial<ActivityMessageProps>)
                 : {}),
             systemUserId: undefined,
+            // Parent-chat routing for chat-note (surface 8) deep-linking.
+            noteChatType,
+            noteChatId,
+            noteThreadId,
         } as ActivityMessageProps;
     }
 
@@ -212,5 +230,9 @@ export function v3ActivityToLegacy(a: V3ActivityWire, myself: UserProps): Activi
             ? ({ senderName: a.actor.userName } as Partial<ActivityMessageProps>)
             : {}),
         systemUserId: msg.sender?.isSystemUser ? msg.sender.userId : undefined,
+        // Task comments are mirrored as PM thread replies but carry a
+        // `taskCommentId` in metadata — the router uses this to treat them
+        // as real-user task comments, not bot lifecycle bubbles.
+        isTaskComment: !!(msg.metadata && (msg.metadata as Record<string, unknown>).taskCommentId),
     } as ActivityMessageProps;
 }

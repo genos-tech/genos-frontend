@@ -20,6 +20,7 @@ type NoteMentionPayload = {
     // chat-note only
     chatType?: number;
     chatId?: number;
+    threadId?: number;
     // task-note only
     projectId?: number;
     taskId?: number;
@@ -41,6 +42,7 @@ export const emitNoteMention = (socket: Socket | null, payload: NoteMentionPaylo
         removed_user_ids: payload.removedUserIds,
         ...(payload.chatType !== undefined ? { chat_type: payload.chatType } : {}),
         ...(payload.chatId !== undefined ? { chat_id: payload.chatId } : {}),
+        ...(payload.threadId !== undefined ? { thread_id: payload.threadId } : {}),
         ...(payload.projectId !== undefined ? { project_id: payload.projectId } : {}),
         ...(payload.taskId !== undefined ? { task_id: payload.taskId } : {}),
         ...(payload.taskDisplayId ? { display_id: payload.taskDisplayId } : {}),

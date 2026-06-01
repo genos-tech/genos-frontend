@@ -5,6 +5,7 @@ import { Socket } from "socket.io-client";
 
 import { ResizeHandle } from "../../components/ui/ResizeHandle";
 import { LayoutStyles } from "../../components/ui/styles/commonStyle";
+import { useAuth } from "../../context/AuthContext";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { useIsMobile } from "../../hooks/common/useIsMobile";
 import { ProjectManagementState } from "../../hooks/common/useProjectManagement";
@@ -17,6 +18,8 @@ import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../types/admin";
 import { NoteContentRenderer } from "./common/components/NoteContentRenderer";
 import { NoteSidebar } from "./common/components/NoteSidebar";
+import { NoteUnreadProvider } from "./common/context/NoteUnreadContext";
+import { useNoteMentionUnread } from "./common/hooks/useNoteMentionUnread";
 import { useNoteRouting } from "./common/hooks/useNoteRouting";
 import { MobileNoteHome } from "./MobileNoteHome";
 import { TaskPreviewPanel } from "./task-notes/components/TaskPreviewPanel";
@@ -40,6 +43,11 @@ export const NoteHome = (props: NoteHomeProps) => {
 
     // URL-based routing for notes
     useNoteRouting({ useNM });
+
+    const { accessToken } = useAuth();
+    // Unread @mention state for notes (per-note dots + the "Unread"
+    // sidebar section + mark-read-on-open). Derived from the activity feed.
+    const noteUnread = useNoteMentionUnread(useCM, myself, accessToken);
 
     const { mode } = useColorScheme();
     const isMobile = useIsMobile();
@@ -94,37 +102,14 @@ export const NoteHome = (props: NoteHomeProps) => {
     };
 
     return (
-        <Box sx={LayoutStyles.outerWrapper}>
-            <Sheet sx={ls.serviceSurface}>
-                <Box sx={ls.decorTopRight} />
-                <Box sx={ls.decorBottomLeft} />
+        <NoteUnreadProvider value={noteUnread}>
+            <Box sx={LayoutStyles.outerWrapper}>
+                <Sheet sx={ls.serviceSurface}>
+                    <Box sx={ls.decorTopRight} />
+                    <Box sx={ls.decorBottomLeft} />
 
-                {isMobile ? (
-                    <MobileNoteHome
-                        myself={myself}
-                        setMyself={setMyself}
-                        socket={socket}
-                        useCM={useCM}
-                        useNM={useNM}
-                        usePM={usePM}
-                        useSM={useSM}
-                        useTEM={useTEM}
-                        useTM={useTM}
-                        useUISM={useUISM}
-                    />
-                ) : (
-                    <PanelGroup direction="horizontal" style={{ flex: 1 }}>
-                        <Panel id={"1"} maxSize={25} minSize={10} order={1}>
-                            <Box sx={ls.sidebarPanel}>
-                                <NoteSidebar allChats={useCM.allChats} useNM={useNM} />
-                            </Box>
-                        </Panel>
-
-                        <ResizeHandle className="note-resize-handle" />
-
-                        {renderMainContent()}
-
-                        <TaskPreviewPanel
+                    {isMobile ? (
+                        <MobileNoteHome
                             myself={myself}
                             setMyself={setMyself}
                             socket={socket}
@@ -136,13 +121,37 @@ export const NoteHome = (props: NoteHomeProps) => {
                             useTM={useTM}
                             useUISM={useUISM}
                         />
-                    </PanelGroup>
-                )}
-            </Sheet>
+                    ) : (
+                        <PanelGroup direction="horizontal" style={{ flex: 1 }}>
+                            <Panel id={"1"} maxSize={25} minSize={10} order={1}>
+                                <Box sx={ls.sidebarPanel}>
+                                    <NoteSidebar allChats={useCM.allChats} useNM={useNM} />
+                                </Box>
+                            </Panel>
 
-            {/* Hover Animation with CSS */}
-            <style>
-                {`
+                            <ResizeHandle className="note-resize-handle" />
+
+                            {renderMainContent()}
+
+                            <TaskPreviewPanel
+                                myself={myself}
+                                setMyself={setMyself}
+                                socket={socket}
+                                useCM={useCM}
+                                useNM={useNM}
+                                usePM={usePM}
+                                useSM={useSM}
+                                useTEM={useTEM}
+                                useTM={useTM}
+                                useUISM={useUISM}
+                            />
+                        </PanelGroup>
+                    )}
+                </Sheet>
+
+                {/* Hover Animation with CSS */}
+                <style>
+                    {`
                 .note-resize-handle {
                     transition: all 0.3s ease-in-out;
                 }
@@ -151,7 +160,8 @@ export const NoteHome = (props: NoteHomeProps) => {
                     width: 8px !important;
                 }
                 `}
-            </style>
-        </Box>
+                </style>
+            </Box>
+        </NoteUnreadProvider>
     );
 };

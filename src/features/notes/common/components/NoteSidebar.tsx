@@ -2,6 +2,7 @@ import { useEffect, useMemo } from "react";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
+import MarkChatUnreadRoundedIcon from "@mui/icons-material/MarkChatUnreadRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
 import ShareRoundedIcon from "@mui/icons-material/ShareRounded";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
@@ -21,6 +22,7 @@ import {
 } from "../../../../types/notes";
 import { formatTaskDisplayId } from "../../../tasks/utils/taskDisplayId";
 import { ChildNoteCreator } from "../../chat-notes/components/ChildNoteCreator";
+import { useNoteUnread } from "../context/NoteUnreadContext";
 import { useNoteTreeState } from "../hooks/useNoteTreeState";
 import { ChatNoteMetaTreeNode, TaskNoteMetaTreeNode } from "../types/noteTypes";
 import { FavoriteNoteItem } from "./FavoriteNoteItem";
@@ -332,6 +334,48 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const { t } = useTranslation();
+    // Unread @mention state (from the activity feed). Drives the "Unread"
+    // section here and the per-note dots inside the tree/recents/favorites.
+    const { unreadNotes } = useNoteUnread();
+
+    // Resolve a note's full metadata (for the subtitle: e.g. "DM" on chat
+    // notes, project/task on task notes) from the loaded meta lists. Falls
+    // back to a title-only stub when the note isn't in the loaded set.
+    const findNoteMeta = (
+        noteType: number,
+        noteId: number
+    ): MyNoteMetaProps | TaskNoteMetaProps | ChatNoteMetaProps => {
+        const found =
+            noteType === 2
+                ? useNM.taskNoteMeta.find((n) => n.noteId === noteId)
+                : noteType === 3
+                  ? useNM.chatNoteMeta.find((n) => n.noteId === noteId)
+                  : useNM.myNoteMeta.find((n) => n.noteId === noteId);
+        return found ?? ({ noteId } as MyNoteMetaProps);
+    };
+
+    // "Unread" section content: notes with unread @mentions, rendered with
+    // the SAME row as Recents (icon + title + sub-label + unread dot).
+    // RecentNoteItem opens the note (loadNote) and marks it read on click,
+    // which clears it from this list.
+    const renderUnreadNotes = () => (
+        <Box>
+            {unreadNotes.map((n) => {
+                const found = findNoteMeta(n.noteType, n.noteId);
+                // Fall back to the activity's title without mutating the
+                // shared meta object from the loaded lists.
+                const meta = found.title ? found : { ...found, title: n.title };
+                return (
+                    <RecentNoteItem
+                        key={`unread-${n.noteType}-${n.noteId}`}
+                        note={meta}
+                        noteType={n.noteType}
+                        useNM={useNM}
+                    />
+                );
+            })}
+        </Box>
+    );
 
     // Load favorite notes on mount
     useEffect(() => {
@@ -928,6 +972,19 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                     >
                         {renderRecentNotes()}
                     </NoteTypeSection>
+
+                    {/* Unread Section — bottom of the pinned sections (after
+                        Recents), only shown when there are unread @mentions. */}
+                    {unreadNotes.length > 0 && (
+                        <NoteTypeSection
+                            icon={<MarkChatUnreadRoundedIcon sx={{ fontSize: 18 }} />}
+                            noteType={7} // 7 = unread (distinct from 0-6)
+                            title={fmt(t.notes.sidebar.unread, { count: unreadNotes.length })}
+                            useNM={useNM}
+                        >
+                            {renderUnreadNotes()}
+                        </NoteTypeSection>
+                    )}
 
                     {/* Section Divider */}
                     <Box sx={{ pt: 1.5, pb: 0.5, px: 1 }}>

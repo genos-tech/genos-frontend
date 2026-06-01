@@ -1170,6 +1170,80 @@ describe("notificationRouter", () => {
             expect(result!.title).toBe("Bob commented on a task");
         });
 
+        // Task comments are mirrored as PM thread replies (chatType 3 +
+        // isThread) tagged with isTaskComment — they must NOT be eaten by
+        // the bot-thread suppression, and route to the task-comment cats.
+        it("does NOT suppress a plain task comment (PM thread, isTaskComment) and routes to task_comments", () => {
+            const tc = {
+                ...baseActivity,
+                chatType: 3,
+                isThread: true,
+                isTaskComment: true,
+                taskId: 99,
+            };
+            const result = buildActivityIntent(tc as never, myself, useTEM, useCM);
+            expect(result).not.toBeNull();
+            expect(result!.category).toBe("task_comments");
+            expect(result!.source!.taskId).toBe(99);
+        });
+
+        it("routes a @mention inside a task comment to mention_task_comment", () => {
+            const tc = {
+                ...baseActivity,
+                chatType: 3,
+                isThread: true,
+                isTaskComment: true,
+                taskId: 99,
+                mentionedUserIds: ["me"],
+            };
+            const result = buildActivityIntent(tc as never, myself, useTEM, useCM);
+            expect(result!.category).toBe("mention_task_comment");
+        });
+
+        it("STILL suppresses a bot lifecycle PM thread bubble (chatType 3, isThread, not a task comment)", () => {
+            const bubble = {
+                ...baseActivity,
+                chatType: 3,
+                isThread: true,
+                mentionedUserIds: ["me"],
+            };
+            expect(buildActivityIntent(bubble as never, myself, useTEM, useCM)).toBeNull();
+        });
+
+        it("chat-note mention (surface 8) carries the PARENT chat routing on the source", () => {
+            const cn = {
+                ...baseActivity,
+                chatType: 8,
+                chatId: 555, // note id (adapter packs noteId into chatId)
+                mentionedUserIds: ["me"],
+                noteChatType: 2,
+                noteChatId: "chan-uuid",
+                noteThreadId: 7,
+            };
+            const result = buildActivityIntent(cn as never, myself, useTEM, useCM);
+            expect(result!.category).toBe("mention_note_chat");
+            expect(result!.source!.noteId).toBe(555);
+            expect(result!.source!.surfaceType).toBe(8);
+            // Parent chat routing (for deep-linking the note), not the surface.
+            expect(result!.source!.chatType).toBe(2);
+            expect(result!.source!.chatId).toBe("chan-uuid");
+            expect(result!.source!.threadId).toBe(7);
+        });
+
+        it("chat-note mention without parent routing keeps surface code + noteId (graceful fallback path)", () => {
+            const cn = {
+                ...baseActivity,
+                chatType: 8,
+                chatId: 555,
+                mentionedUserIds: ["me"],
+            };
+            const result = buildActivityIntent(cn as never, myself, useTEM, useCM);
+            expect(result!.source!.noteId).toBe(555);
+            expect(result!.source!.surfaceType).toBe(8);
+            // No parent routing -> chatType stays the surface code.
+            expect(result!.source!.chatType).toBe(8);
+        });
+
         it("returns null when neither mentioned nor a chatType-4 activity", () => {
             // chatType 2, not mentioned -> no category.
             const result = buildIntentFromMessage(baseActivity, myself, useTEM, useCM);

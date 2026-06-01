@@ -35,6 +35,7 @@ export const sendUpdatedChatNote = async (
                     removedUserIds: res.data.removed_user_ids ?? [],
                     chatType: updatedNote.chatType,
                     chatId: updatedNote.chatId,
+                    threadId: updatedNote.threadId,
                 });
             }
         } else {

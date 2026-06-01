@@ -8,6 +8,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { useTranslation } from "../../../../i18n";
 import { ChatNoteMetaProps, MyNoteMetaProps, TaskNoteMetaProps } from "../../../../types/notes";
+import { useNoteUnread } from "../context/NoteUnreadContext";
 
 interface RecentNoteItemProps {
     note: MyNoteMetaProps | TaskNoteMetaProps | ChatNoteMetaProps;
@@ -45,6 +46,8 @@ function RecentNoteItemComponent({ note, noteType, useNM }: RecentNoteItemProps)
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const { t } = useTranslation();
+    const { isUnread, markRead } = useNoteUnread();
+    const hasUnread = isUnread(noteType, note.noteId);
 
     const getChatTypeLabel = (chatType: number): string => {
         switch (chatType) {
@@ -77,6 +80,7 @@ function RecentNoteItemComponent({ note, noteType, useNM }: RecentNoteItemProps)
         // turn promotes this row to the top of the recents list — so we
         // don't need to call recordNoteOpen ourselves here.
         useNM.loadNote(noteType, note.noteId, -1);
+        if (hasUnread) markRead(noteType, note.noteId);
     };
 
     // Per-type sub-label so the user can distinguish identically-titled
@@ -179,6 +183,17 @@ function RecentNoteItemComponent({ note, noteType, useNM }: RecentNoteItemProps)
                         </Typography>
                     )}
                 </ListItemContent>
+                {hasUnread && (
+                    <Box
+                        sx={{
+                            width: 8,
+                            height: 8,
+                            borderRadius: "50%",
+                            flexShrink: 0,
+                            backgroundColor: isDark ? "#a78bfa" : "#7c3aed",
+                        }}
+                    />
+                )}
             </ListItemButton>
         </ListItem>
     );

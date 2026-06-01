@@ -291,26 +291,31 @@ export const buildActivityIntent = (
     if (activity.activityType === 2) return null;
     if (!activity.senderId || activity.senderId === myself.userId) return null;
 
+    // Task comments are mirrored as PM thread replies (chatType 3 +
+    // isThread) but are authored by a REAL user, not the project bot —
+    // the v3 mirror tags them with `message.metadata.taskCommentId`,
+    // surfaced here as `isTaskComment`. They must NOT be treated as bot
+    // lifecycle bubbles (or they'd be suppressed below and never notify).
+    const isTaskComment = activity.isTaskComment === true;
+
     // PM activities are unconditionally sent as the project's system
     // user — `message_handlers.py` overrides `sender_user_id` to
-    // `system_user_id` for every chat_type=3 broadcast (see the
-    // `if chat_type == 3: if system_user_id: sender_user_id = ...`
-    // block). So `chatType === 3` is sufficient on its own to identify
-    // the bot path; the `activity.systemUserId === activity.senderId`
-    // check is a defensive extra for the day that invariant changes.
-    // Using `||` here also keeps the rule working when the Flask
-    // backend hasn't been restarted with the new payload yet.
+    // `system_user_id` for every chat_type=3 broadcast. So `chatType === 3`
+    // identifies the bot path; the `systemUserId === senderId` check is a
+    // defensive extra. We exclude `isTaskComment` so genuine task comments
+    // (real sender) keep their real-sender title/icon and are not eaten by
+    // the thread-suppression rule.
     const senderIsBot =
         (!!activity.systemUserId && activity.senderId === activity.systemUserId) ||
-        activity.chatType === 3;
+        (activity.chatType === 3 && !isTaskComment);
 
     // Suppress PM thread bubbles posted by the bot — they're always
     // lifecycle bookkeeping ("New task created by @you", "@you moved
     // this task to In Progress") and the user being mentioned IS the
     // user who just took the action, so the notification is
-    // self-attribution. The PM chat-level activity that fans out on
-    // the same write still carries the actionable mention (e.g.
-    // assignee tag on the task card) and is left alone.
+    // self-attribution. Task comments are exempt (senderIsBot is false
+    // for them). NOTE: a real human @mention in a NON-task PM thread is
+    // also still suppressed here — a known, accepted limitation.
     if (senderIsBot && activity.isThread === true) {
         return null;
     }
@@ -321,9 +326,12 @@ export const buildActivityIntent = (
 
     let category: NotificationCategory | null = null;
     if (mentionsMe) {
-        category = classifyMention(activity);
-    } else if (activity.chatType === 4) {
-        // chatType 4 in the activity feed denotes task-comment activity.
+        // A mention inside a task comment is a task-comment mention,
+        // regardless of the PM channel surface it physically lives in.
+        category = isTaskComment ? "mention_task_comment" : classifyMention(activity);
+    } else if (activity.chatType === 4 || isTaskComment) {
+        // chatType 4 = legacy task-comment routing; `isTaskComment` = v3
+        // task-comment mirror. Either way: a plain (non-mention) comment.
         category = "task_comments";
     }
     if (!category) return null;
@@ -368,6 +376,17 @@ export const buildActivityIntent = (
     const senderImage = useTEM.teamMemberProfiles[activity.senderId]?.avatarImgPath;
     const icon = buildAvatarSrc(projectImage || senderImage);
 
+    const isNoteSurface =
+        activity.chatType === 6 || activity.chatType === 7 || activity.chatType === 8;
+    // Chat-note (surface 8) mentions carry their PARENT chat's routing
+    // (chatType/chatId/threadId) so the click handler can deep-link to the
+    // note. Use it for chatType/chatId/threadId (keeping noteId + surfaceType
+    // for note identity). Other surfaces keep the surface code in chatType.
+    const hasParentChat =
+        activity.chatType === 8 &&
+        activity.noteChatType !== undefined &&
+        activity.noteChatId !== undefined;
+
     // Keys sorted per `sort-keys`.
     return {
         body: truncate(activity.firstLineContent || ""),
@@ -376,19 +395,22 @@ export const buildActivityIntent = (
         id: `activity:${category}:${activity.activityId}`,
         senderId: activity.senderId,
         source: {
-            chatId: activity.chatId !== undefined ? String(activity.chatId) : undefined,
-            chatType: activity.chatType,
+            chatId: hasParentChat
+                ? String(activity.noteChatId)
+                : activity.chatId !== undefined
+                  ? String(activity.chatId)
+                  : undefined,
+            chatType: hasParentChat ? activity.noteChatType : activity.chatType,
             // For note mentions (surface 6/7/8) the adapter packs the note
             // id into `chatId`; surface it explicitly so per-object note
             // muting never has to read the overloaded `chatId`.
-            noteId:
-                activity.chatType === 6 || activity.chatType === 7 || activity.chatType === 8
-                    ? activity.chatId || undefined
-                    : undefined,
+            noteId: isNoteSurface ? activity.chatId || undefined : undefined,
             projectId: activity.projectId || undefined,
             surfaceType: activity.chatType,
             taskId: activity.taskId || undefined,
-            threadId: activity.threadId || undefined,
+            threadId: hasParentChat
+                ? (activity.noteThreadId ?? undefined)
+                : activity.threadId || undefined,
         },
         title,
     };

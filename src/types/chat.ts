@@ -135,6 +135,23 @@ export type ActivityMessageProps = {
     // recognize bot-narrated lifecycle messages (sender === systemUserId)
     // and suppress the self-attribution toast.
     systemUserId?: string;
+    // True when the underlying message is a task comment (the v3 mirror
+    // sets `message.metadata.taskCommentId`). Task comments live as PM
+    // thread replies (chatType 3 + isThread) but are authored by a real
+    // user — the notification router uses this to exempt them from the
+    // bot-thread suppression and to route them to the task-comment
+    // categories rather than mention_thread.
+    isTaskComment?: boolean;
+    // Parent-chat routing for CHAT-NOTE mentions (surface 8). The note's
+    // own id rides in `chatId` for surface activities, so the chat the
+    // note belongs to is carried separately here so a clicked chat-note
+    // notification can build its deep URL. Only populated for surface 8
+    // (and only once the backend includes them in the activity meta).
+    noteChatType?: number;
+    // Opaque: the parent chat id may be a numeric legacy id or a v3 UUID
+    // string — carried as-is and stringified at the navigation boundary.
+    noteChatId?: string | number;
+    noteThreadId?: number;
 };
 
 export type MessageProps = {
