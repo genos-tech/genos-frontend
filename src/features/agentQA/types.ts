@@ -47,6 +47,11 @@ export interface AskState {
     // on this rather than `askedQuery` so identical-text re-asks don't
     // bleed state across turns.
     turnId: number;
+    // AgentRun id returned on the `done` event. Carried so the completed
+    // turn can attach 👍/👎 feedback (F1). Null/absent until the turn
+    // finishes; optional so the un-migrated Spotlight loop (which reuses
+    // this type) compiles without threading it.
+    runId?: string | null;
 }
 
 // Immutable snapshot of a finished turn. Promoted into the `turns` array
@@ -59,6 +64,10 @@ export interface CompletedTurn {
     answerSources: SpotlightResult[];
     toolEvents: ToolEvent[];
     askError: string | null;
+    // AgentRun id for this turn (F1 feedback target). Absent for turns
+    // restored from older snapshots / cancelled before `done`. Optional so
+    // the un-migrated Spotlight loop (which reuses this type) compiles.
+    runId?: string | null;
 }
 
 // Soft cap on how many completed turns we hold in client memory. The
@@ -78,6 +87,7 @@ export const EMPTY_ASK_STATE: AskState = {
     pendingApproval: null,
     sessionId: null,
     turnId: 0,
+    runId: null,
 };
 
 // i18n labels for the conversation / input / approval / action UI. Each
@@ -99,6 +109,10 @@ export interface AgentQALabels {
         copyAnswer: string;
         copied: string;
         retry: string;
+        // 👍/👎 feedback (F1). Optional so existing locale label sets
+        // don't break; the component falls back to plain English titles.
+        feedbackUp?: string;
+        feedbackDown?: string;
     };
     states: {
         streaming: string;
@@ -143,4 +157,8 @@ export interface UseAgentQAReturn {
     // Lets callers do partial resets without accidentally wiping the
     // other half.
     reset: (args: { sessionId?: string | null; turns?: CompletedTurn[] }) => void;
+    // Record 👍/👎 on a finished turn (F1). `rating`: 1 = up, -1 = down,
+    // 0 = cleared. Fire-and-forget; failures are swallowed (feedback is
+    // best-effort telemetry, never blocks the UI).
+    submitFeedback: (runId: string, rating: number) => void;
 }

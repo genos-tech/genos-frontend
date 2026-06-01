@@ -19,7 +19,12 @@
 
 import { useCallback, useRef, useState } from "react";
 
-import { askAgentStream, decideAgent, type PendingApprovalPayload } from "../../services/agentApi";
+import {
+    askAgentStream,
+    decideAgent,
+    submitAgentFeedback,
+    type PendingApprovalPayload,
+} from "../../services/agentApi";
 import type { SpotlightResult } from "../spotlight/types";
 import {
     EMPTY_ASK_STATE,
@@ -77,6 +82,7 @@ export const useAgentQA = ({
                     answerSources: prev.answerSources,
                     toolEvents: prev.toolEvents,
                     askError: prev.askError,
+                    runId: prev.runId,
                 };
                 setTurns((prevTurns) => {
                     const next = [...prevTurns, snapshot];
@@ -111,13 +117,14 @@ export const useAgentQA = ({
                         stillCurrent(prev) ? { ...prev, answer: prev.answer + text } : prev
                     );
                 },
-                onDone: (sessionId?: string) => {
+                onDone: (sessionId?: string, runId?: string) => {
                     setAsk((prev) =>
                         stillCurrent(prev)
                             ? {
                                   ...prev,
                                   isStreaming: false,
                                   ...(sessionId !== undefined ? { sessionId } : {}),
+                                  ...(runId ? { runId } : {}),
                               }
                             : prev
                     );
@@ -262,6 +269,7 @@ export const useAgentQA = ({
                 pendingApproval: null,
                 sessionId: ask.sessionId,
                 turnId: askedTurnId,
+                runId: null,
             });
 
             // Consume the "new conversation" flag (set by clearConversation).
@@ -369,6 +377,7 @@ export const useAgentQA = ({
                         answerSources: prev.answerSources,
                         toolEvents: prev.toolEvents,
                         askError: prev.askError,
+                        runId: prev.runId,
                     };
                     setTurns((prevTurns) => {
                         const next = [...prevTurns, snapshot];
@@ -436,6 +445,18 @@ export const useAgentQA = ({
         });
     }, []);
 
+    // ---- Record 👍/👎 on a finished turn (F1). ----
+    // Fire-and-forget: the answer is already shown, so a feedback POST
+    // failing must never surface to the user. The component owns the
+    // optimistic button state; this just persists the signal.
+    const submitFeedback = useCallback(
+        (runId: string, rating: number) => {
+            if (!runId || !accessToken) return;
+            void submitAgentFeedback({ runId, rating, accessToken });
+        },
+        [accessToken]
+    );
+
     return {
         query,
         setQuery,
@@ -448,5 +469,6 @@ export const useAgentQA = ({
         onReject,
         clearConversation,
         reset,
+        submitFeedback,
     };
 };

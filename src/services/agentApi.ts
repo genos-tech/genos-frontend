@@ -57,7 +57,7 @@ export interface PendingApprovalPayload {
 export type AgentEvent =
     | { type: "sources"; sources: SpotlightResult[] }
     | { type: "answer_delta"; text: string }
-    | { type: "done"; session_id?: string }
+    | { type: "done"; session_id?: string; run_id?: string }
     | { type: "error"; message: string }
     | ({ type: "tool_call_start" } & ToolCallStartPayload)
     | ({ type: "tool_call_result" } & ToolCallResultPayload)
@@ -67,7 +67,7 @@ export type AgentEvent =
 interface BaseStreamHandlers {
     onSources: (sources: SpotlightResult[]) => void;
     onDelta: (text: string) => void;
-    onDone: (sessionId?: string) => void;
+    onDone: (sessionId?: string, runId?: string) => void;
     onError: (message: string) => void;
     onToolStart?: (payload: ToolCallStartPayload) => void;
     onToolResult?: (payload: ToolCallResultPayload) => void;
@@ -407,6 +407,33 @@ export async function fetchAgentSessionDetail(args: {
     }
 }
 
+// F1 — record 👍/👎 on an answer (SPOTLIGHT_QUALITY_ARCHITECTURE.md §Q0).
+// `rating`: 1 = up, -1 = down, 0 = cleared. Best-effort: returns true on a
+// 2xx, false otherwise; never throws (feedback must not break the UI).
+export async function submitAgentFeedback(args: {
+    runId: string;
+    rating: number;
+    accessToken: string;
+    comment?: string;
+}): Promise<boolean> {
+    try {
+        const resp = await fetch(
+            `${API_BASE}/agent/runs/${encodeURIComponent(args.runId)}/feedback/`,
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${args.accessToken}`,
+                },
+                body: JSON.stringify({ rating: args.rating, comment: args.comment ?? "" }),
+            }
+        );
+        return resp.ok;
+    } catch {
+        return false;
+    }
+}
+
 export async function askAgentStream(args: AskAgentArgs): Promise<void> {
     if (!args.accessToken) {
         args.onError(getMessages().services.agent.notSignedIn);
@@ -597,7 +624,7 @@ function dispatchLine(line: string, h: BaseStreamHandlers): boolean {
             if (evt.text) h.onDelta(evt.text);
             return false;
         case "done":
-            h.onDone(evt.session_id);
+            h.onDone(evt.session_id, evt.run_id);
             return true; // terminal: clean finish
         case "error":
             h.onError(evt.message || getMessages().services.agent.unknownError);
