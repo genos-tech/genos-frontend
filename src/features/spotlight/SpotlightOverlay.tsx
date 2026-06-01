@@ -60,8 +60,10 @@ import { purplePalette } from "../../theme/purplePalette";
 // (ThreadAskModal etc.) that renders the same theme.
 import {
     ApprovalCard,
+    CITATION_HREF_PREFIX,
     DARK_TEXT_STRONG,
     markdownAnswerSx,
+    rewriteCitations,
     ToolProgressList,
     type AskState,
     type CompletedTurn,
@@ -1068,53 +1070,12 @@ interface TurnViewProps {
     ts: SpotlightMessages;
 }
 
-// Matches the citation tokens the prompt (`prompts.py`) instructs the
-// model to emit: one or more colon-separated segments inside square
-// brackets, e.g. "[task:123]", "[chat:pm:1:thread:3]",
-// "[note:personal:50]", "[project:5]". The bracketed text must start
-// with a known entity-type prefix so we don't accidentally rewrite a
-// user's literal `[reminder: ship by Friday]`-style aside.
-const CITATION_PATTERN = /\[((?:chat|task|note|project):[^\]\s]+)\]/g;
-
-// Internal href scheme used by `rewriteCitations` so the ReactMarkdown
-// `a` override can recognise an inline citation and trigger the preview
-// modal instead of navigating. Format: "spotlight-citation:<token>"
-// where <token> is the same string the citation regex captures.
-const CITATION_HREF_PREFIX = "spotlight-citation:";
-
-/** Strip every inline `[type:id]` citation token from the LLM answer.
- *
- *  History: an earlier version of this helper replaced each token with
- *  a markdown link whose label was the cited entity's TITLE. That gave
- *  the user a clickable affordance, but it read awkwardly — the LLM
- *  tended to write `... per the perf-budget decision [task:42]`, which
- *  then rendered as `... per the perf-budget decision Lighthouse >= 95
- *  task`. Titles aren't grammatical continuations of sentences, so the
- *  rendered prose felt broken.
- *
- *  New rule: strip the tokens. Every cited source surfaces in the
- *  chips row below the answer (see the `answerSources` chip rendering
- *  later in this file) — that's the single discovery surface now.
- *
- *  Token-strip regex consumes one optional preceding space/tab so we
- *  don't leave double-spaces or " ." artifacts. Newlines are NOT
- *  consumed — paragraph breaks must survive.
- *
- *  `sourcesById` + `ts` are kept in the signature so the call site
- *  doesn't change; they're intentionally unused under the new rule.
- */
-const _CITATION_STRIP_PATTERN_LOCAL = /[ \t]?\[(?:chat|task|note|project):[^\]\s]+\]/g;
-
-function rewriteCitations(
-    answer: string,
-    sourcesById: Map<string, SpotlightResult>,
-    ts: SpotlightMessages
-): string {
-    if (!answer) return answer;
-    void sourcesById; // intentionally unused under the new chips-only rule
-    void ts;
-    return answer.replace(_CITATION_STRIP_PATTERN_LOCAL, "");
-}
+// Citation-token parsing (CITATION_PATTERN / CITATION_HREF_PREFIX /
+// rewriteCitations) is the canonical implementation in
+// `features/agentQA/citationUtils.ts` — imported above. SpotlightOverlay
+// previously kept its own byte-identical copy (chips-only strip); they've
+// now converged so the parsing rule can't drift between the two surfaces
+// (SPOTLIGHT_QUALITY_ARCHITECTURE.md §4.6).
 
 interface CitationLinkProps {
     href?: string;
@@ -1234,8 +1195,8 @@ const TurnViewInner = ({
     }, [answerSources]);
 
     const answerForRender = useMemo(
-        () => rewriteCitations(answer, sourcesById, ts),
-        [answer, sourcesById, ts]
+        () => rewriteCitations(answer, sourcesById),
+        [answer, sourcesById]
     );
 
     const handleCopy = useCallback(() => {
@@ -1863,8 +1824,8 @@ const HistoryArchiveTurn = ({ turn, isDark, ts, onPreview }: HistoryArchiveTurnP
     }, [turn.sources]);
 
     const answerForRender = useMemo(
-        () => rewriteCitations(turn.answer, sourcesById, ts),
-        [turn.answer, sourcesById, ts]
+        () => rewriteCitations(turn.answer, sourcesById),
+        [turn.answer, sourcesById]
     );
 
     return (
