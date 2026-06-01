@@ -5,7 +5,33 @@ import { UserProps } from "../../types/admin";
 import { ActivityMessageProps, NewMessageProps, NewThreadMessageProps } from "../../types/chat";
 import { InboxItemProps } from "../../types/common";
 import { buildAvatarSrc } from "../../utils/avatarSrc";
+import { CATEGORY_BY_KEY, NotificationCategory } from "./categories";
 import { NotificationIntent } from "./types";
+
+/**
+ * Map a mention activity to its fine sub-category from the surface encoded
+ * in `chatType` (the v3→legacy adapter packs surface_type here):
+ *   4 = task comment, 5 = task body, 6/7/8 = my/task/chat note,
+ *   else a thread reply -> mention_thread, else (1/2/3) -> mention_chat.
+ * Surface / special chatTypes are checked BEFORE `isThread` because task
+ * comments are stored as thread replies and must stay in their own bucket.
+ */
+const classifyMention = (activity: ActivityMessageProps): NotificationCategory => {
+    switch (activity.chatType) {
+        case 4:
+            return "mention_task_comment";
+        case 5:
+            return "mention_task_body";
+        case 6:
+            return "mention_note_my";
+        case 7:
+            return "mention_note_task";
+        case 8:
+            return "mention_note_chat";
+    }
+    if (activity.isThread === true) return "mention_thread";
+    return "mention_chat";
+};
 
 // ---------------------------------------------------------------------
 // Avatar resolution
@@ -293,9 +319,9 @@ export const buildActivityIntent = (
         ? (activity.mentionedUserIds as string[]).includes(myself.userId)
         : false;
 
-    let category: NotificationIntent["category"] | null = null;
+    let category: NotificationCategory | null = null;
     if (mentionsMe) {
-        category = "mentions";
+        category = classifyMention(activity);
     } else if (activity.chatType === 4) {
         // chatType 4 in the activity feed denotes task-comment activity.
         category = "task_comments";
@@ -313,12 +339,14 @@ export const buildActivityIntent = (
     // user — `senderIsBot` is already computed at the top of this
     // function and reused here so the redundant-prefix fix kicks in
     // whether or not the backend payload carries `systemUserId`.
-    const title =
-        category === "mentions"
-            ? senderIsBot
-                ? fmt(routerMessages.mentionTitleByBot, { subjectLabel })
-                : fmt(routerMessages.mentionTitle, { senderName, subjectLabel })
-            : fmt(routerMessages.taskCommentTitle, { senderName });
+    // All `mention_*` keys live in the "mentions" group and share the
+    // mention/bot title; plain `task_comments` uses the comment title.
+    const isMention = CATEGORY_BY_KEY[category]?.group === "mentions";
+    const title = isMention
+        ? senderIsBot
+            ? fmt(routerMessages.mentionTitleByBot, { subjectLabel })
+            : fmt(routerMessages.mentionTitle, { senderName, subjectLabel })
+        : fmt(routerMessages.taskCommentTitle, { senderName });
 
     // Project-scoped activity (mentions in a PM bubble, task comments) gets
     // the project avatar so the user can see at a glance which project the
@@ -350,7 +378,15 @@ export const buildActivityIntent = (
         source: {
             chatId: activity.chatId !== undefined ? String(activity.chatId) : undefined,
             chatType: activity.chatType,
+            // For note mentions (surface 6/7/8) the adapter packs the note
+            // id into `chatId`; surface it explicitly so per-object note
+            // muting never has to read the overloaded `chatId`.
+            noteId:
+                activity.chatType === 6 || activity.chatType === 7 || activity.chatType === 8
+                    ? activity.chatId || undefined
+                    : undefined,
             projectId: activity.projectId || undefined,
+            surfaceType: activity.chatType,
             taskId: activity.taskId || undefined,
             threadId: activity.threadId || undefined,
         },

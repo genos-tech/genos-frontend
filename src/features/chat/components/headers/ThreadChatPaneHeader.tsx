@@ -37,7 +37,7 @@ import { useIsMobile } from "../../../../hooks/common/useIsMobile";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
-import { MuteToggleButton } from "../../../../services/notifications/MuteToggleButton";
+import { MuteTargetButton } from "../../../../services/notifications/MuteTargetButton";
 import { UserProps } from "../../../../types/admin";
 import { ThreadProps } from "../../../../types/chat";
 import { CHAT_TYPE_CODE, SpotlightResult } from "../../../spotlight/types";
@@ -473,14 +473,16 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
 
             {/* Right section: Task info + Actions */}
             <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
-                {/* Per-chat mute toggle (mutes the parent chat, which also
-                    silences thread replies and any task-comment activity
-                    rooted in the same chat). */}
+                {/* Thread-scoped mute: silences replies/mentions for THIS
+                    thread only (the whole-chat mute lives on the main chat
+                    header). Keyed on the thread id; matches notification
+                    intents whose `source.threadId` equals it. */}
                 {useCM.currentThreadChat && (
-                    <MuteToggleButton
+                    <MuteTargetButton
+                        targetType="thread"
+                        targetId={useCM.currentThreadChat.threadId}
                         chatType={useCM.currentThreadChat.chatType}
-                        chatId={useCM.currentThreadChat.chatId}
-                        chatName={useCM.currentThreadChat.chatName}
+                        label={useCM.currentThreadChat.chatName}
                     />
                 )}
 

@@ -13,33 +13,40 @@ import {
 } from "@mui/joy";
 
 import { fmt, Messages, useTranslation } from "../../i18n";
+import { CATEGORY_BY_KEY, CATEGORY_GROUPS, CoarseGroup, NotificationCategory } from "./categories";
 import { useNotificationsContext } from "./NotificationsContext";
-import { NotificationCategory } from "./types";
+import { MutedTargetType } from "./types";
 
-type CategoryLabel = {
-    id: NotificationCategory;
-    label: string;
-    description: string;
+// Group heading label — reuse the coarse category labels as the umbrella.
+const groupLabel = (group: CoarseGroup, t: Messages): string => {
+    const cats = t.services.notifications.categories;
+    switch (group) {
+        case "chats":
+            return cats.chats;
+        case "thread_replies":
+            return cats.threadReplies;
+        case "mentions":
+            return cats.mentions;
+        case "task_comments":
+            return cats.taskComments;
+        case "inbox":
+            return cats.inbox;
+    }
 };
 
-const buildCategoryLabels = (t: Messages): CategoryLabel[] => {
-    const cats = t.services.notifications.categories;
-    const descs = t.services.notifications.settings.categoryDescriptions;
-    return [
-        { id: "chats", label: cats.chats, description: descs.chats },
-        {
-            id: "thread_replies",
-            label: cats.threadReplies,
-            description: descs.threadReplies,
-        },
-        { id: "mentions", label: cats.mentions, description: descs.mentions },
-        {
-            id: "task_comments",
-            label: cats.taskComments,
-            description: descs.taskComments,
-        },
-        { id: "inbox", label: cats.inbox, description: descs.inbox },
-    ];
+// Per-category label/description resolved from the registry's i18n keys.
+// Accept `string` (the registry's `key` field is typed `string`) and look
+// up against loose records — the keys are guaranteed present in en, the
+// typed `Messages` source.
+const categoryLabel = (key: string, t: Messages): string => {
+    const entry = CATEGORY_BY_KEY[key as NotificationCategory];
+    const cats = t.services.notifications.categories as Record<string, string>;
+    return (entry && cats[entry.labelKey]) || key;
+};
+const categoryDescription = (key: string, t: Messages): string => {
+    const entry = CATEGORY_BY_KEY[key as NotificationCategory];
+    const descs = t.services.notifications.settings.categoryDescriptions as Record<string, string>;
+    return (entry && descs[entry.descriptionKey]) || "";
 };
 
 const labelForChatType = (chatType: number, t: Messages): string => {
@@ -58,6 +65,11 @@ const labelForChatType = (chatType: number, t: Messages): string => {
     }
 };
 
+const labelForTargetType = (targetType: MutedTargetType, t: Messages): string => {
+    const labels = t.services.notifications.settings.targetTypeLabels;
+    return labels[targetType] ?? targetType;
+};
+
 /**
  * Self-contained notification settings UI. Drops into any modal/page that
  * lives inside `<NotificationsProvider>`. Renders nothing if no provider is
@@ -73,12 +85,13 @@ export const NotificationSettingsPanel = () => {
         permission,
         requestPermission,
         setMasterEnabled,
-        setCategoryEnabled,
+        setGroupEnabled,
+        setSubCategoryEnabled,
         unmute,
+        unmuteTarget,
     } = ctx;
 
     const masterDisabled = !preferences.masterEnabled;
-    const categoryLabels = buildCategoryLabels(t);
     const settingsMessages = t.services.notifications.settings;
 
     return (
@@ -132,25 +145,21 @@ export const NotificationSettingsPanel = () => {
 
             <Divider />
 
-            {/* Category toggles */}
-            <Stack spacing={1.25} sx={{ mt: 1.5, opacity: masterDisabled ? 0.5 : 1 }}>
-                {categoryLabels.map((cat, idx) => {
-                    const enabled = (() => {
-                        switch (cat.id) {
-                            case "chats":
-                                return preferences.enableChats;
-                            case "thread_replies":
-                                return preferences.enableThreadReplies;
-                            case "mentions":
-                                return preferences.enableMentions;
-                            case "task_comments":
-                                return preferences.enableTaskComments;
-                            case "inbox":
-                                return preferences.enableInbox;
-                        }
-                    })();
+            {/* Category groups: each group is a master switch (drives the
+                coarse boolean); the mentions group also exposes per-surface
+                sub-toggles (driven by categorySettings). */}
+            <Stack spacing={1.5} sx={{ mt: 1.5, opacity: masterDisabled ? 0.5 : 1 }}>
+                {CATEGORY_GROUPS.map((g, idx) => {
+                    const groupOn = preferences[g.field] as boolean;
+                    // Sub-toggles to render under this group (single-sub
+                    // groups hide their lone member — the group toggle is it).
+                    const subEntries = g.entries.filter((e) => !e.hideSubToggle);
+                    // For a single-sub group, surface that entry's description
+                    // on the group row; for mentions, use the lead entry's
+                    // generic description.
+                    const headRowDesc = categoryDescription(g.entries[0].key, t);
                     return (
-                        <Box key={cat.id}>
+                        <Box key={g.group}>
                             <Stack
                                 alignItems="center"
                                 direction="row"
@@ -158,16 +167,58 @@ export const NotificationSettingsPanel = () => {
                                 spacing={2}
                             >
                                 <Box sx={{ minWidth: 0, flex: 1 }}>
-                                    <Typography level="title-sm">{cat.label}</Typography>
-                                    <Typography level="body-xs">{cat.description}</Typography>
+                                    <Typography level="title-sm">
+                                        {groupLabel(g.group, t)}
+                                    </Typography>
+                                    <Typography level="body-xs">{headRowDesc}</Typography>
                                 </Box>
                                 <Switch
-                                    checked={enabled}
+                                    checked={groupOn}
                                     disabled={masterDisabled}
-                                    onChange={(e) => setCategoryEnabled(cat.id, e.target.checked)}
+                                    onChange={(e) => setGroupEnabled(g.group, e.target.checked)}
                                 />
                             </Stack>
-                            {idx < categoryLabels.length - 1 && <Divider sx={{ mt: 1.25 }} />}
+
+                            {subEntries.length > 0 && (
+                                <Stack spacing={1} sx={{ mt: 1, pl: 2 }}>
+                                    {subEntries.map((entry) => {
+                                        const subOn =
+                                            preferences.categorySettings[entry.key] ??
+                                            entry.defaultEnabled;
+                                        return (
+                                            <Stack
+                                                key={entry.key}
+                                                alignItems="center"
+                                                direction="row"
+                                                justifyContent="space-between"
+                                                spacing={2}
+                                            >
+                                                <Box sx={{ minWidth: 0, flex: 1 }}>
+                                                    <Typography level="body-sm">
+                                                        {categoryLabel(entry.key, t)}
+                                                    </Typography>
+                                                    <Typography level="body-xs">
+                                                        {categoryDescription(entry.key, t)}
+                                                    </Typography>
+                                                </Box>
+                                                <Switch
+                                                    checked={subOn}
+                                                    disabled={masterDisabled || !groupOn}
+                                                    size="sm"
+                                                    onChange={(e) =>
+                                                        setSubCategoryEnabled(
+                                                            entry.key as NotificationCategory,
+                                                            e.target.checked
+                                                        )
+                                                    }
+                                                />
+                                            </Stack>
+                                        );
+                                    })}
+                                </Stack>
+                            )}
+
+                            {idx < CATEGORY_GROUPS.length - 1 && <Divider sx={{ mt: 1.5 }} />}
                         </Box>
                     );
                 })}
@@ -185,12 +236,7 @@ export const NotificationSettingsPanel = () => {
             ) : (
                 <Stack spacing={0.75} sx={{ mt: 0.5 }}>
                     {preferences.mutedChats.map((m) => {
-                        // Prefer the persisted display name; fall back to
-                        // the raw chat id for legacy entries (older mutes
-                        // that pre-date the `chatName` field).
                         const displayName = m.chatName || m.chatId;
-                        // const showRawId = !!m.chatName && m.chatName !== m.chatId;
-                        const showRawId = false;
                         return (
                             <Stack
                                 key={`${m.chatType}:${m.chatId}`}
@@ -223,20 +269,6 @@ export const NotificationSettingsPanel = () => {
                                         >
                                             {displayName}
                                         </Typography>
-                                        {showRawId && (
-                                            <Typography
-                                                level="body-xs"
-                                                title={`Chat ID: ${m.chatId}`}
-                                                sx={{
-                                                    color: "neutral.plainColor",
-                                                    opacity: 0.6,
-                                                    fontFamily: "monospace",
-                                                }}
-                                                noWrap
-                                            >
-                                                #{m.chatId}
-                                            </Typography>
-                                        )}
                                     </Stack>
                                 </Stack>
                                 <IconButton
@@ -246,6 +278,75 @@ export const NotificationSettingsPanel = () => {
                                         name: displayName,
                                     })}
                                     onClick={() => unmute(m.chatType, m.chatId)}
+                                >
+                                    <NotificationsActiveRounded />
+                                </IconButton>
+                            </Stack>
+                        );
+                    })}
+                </Stack>
+            )}
+
+            {/* Muted items (per-object: threads / tasks / notes) */}
+            <Divider sx={{ mt: 2 }} />
+            <Typography level="title-sm" sx={{ mt: 1.5, mb: 0.5 }}>
+                {fmt(settingsMessages.mutedTargetsHeading, {
+                    count: preferences.mutedTargets.length,
+                })}
+            </Typography>
+            {preferences.mutedTargets.length === 0 ? (
+                <Typography level="body-xs">{settingsMessages.noMutedTargets}</Typography>
+            ) : (
+                <Stack spacing={0.75} sx={{ mt: 0.5 }}>
+                    {preferences.mutedTargets.map((target) => {
+                        const displayName = target.label || target.targetId;
+                        return (
+                            <Stack
+                                key={`${target.targetType}:${target.targetId}`}
+                                alignItems="center"
+                                direction="row"
+                                justifyContent="space-between"
+                                spacing={1}
+                                sx={{
+                                    px: 1.25,
+                                    py: 0.5,
+                                    borderRadius: "md",
+                                    bgcolor: "background.level1",
+                                }}
+                            >
+                                <Stack
+                                    alignItems="center"
+                                    direction="row"
+                                    spacing={1}
+                                    sx={{ minWidth: 0, flex: 1, flexWrap: "wrap" }}
+                                >
+                                    <Chip size="sm" variant="soft">
+                                        {labelForTargetType(target.targetType, t)}
+                                    </Chip>
+                                    <Typography
+                                        level="body-sm"
+                                        sx={{ fontWeight: 600, minWidth: 0 }}
+                                        title={displayName}
+                                        noWrap
+                                    >
+                                        {displayName}
+                                    </Typography>
+                                    {/* Optional category scope. Absent = all. */}
+                                    {target.categories?.map((c) => (
+                                        <Chip key={c} color="neutral" size="sm" variant="outlined">
+                                            {categoryLabel(c, t)}
+                                        </Chip>
+                                    ))}
+                                </Stack>
+                                <IconButton
+                                    size="sm"
+                                    variant="plain"
+                                    aria-label={fmt(settingsMessages.unmuteAriaLabel, {
+                                        name: displayName,
+                                    })}
+                                    onClick={() =>
+                                        unmuteTarget(target.targetType, target.targetId)
+                                    }
                                 >
                                     <NotificationsActiveRounded />
                                 </IconButton>

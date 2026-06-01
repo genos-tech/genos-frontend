@@ -6,6 +6,8 @@ import CancelIcon from "@mui/icons-material/Cancel";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import NoteAddRoundedIcon from "@mui/icons-material/NoteAddRounded";
+import NotificationsActiveRoundedIcon from "@mui/icons-material/NotificationsActiveRounded";
+import NotificationsOffRoundedIcon from "@mui/icons-material/NotificationsOffRounded";
 import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
 import PersonAddRoundedIcon from "@mui/icons-material/PersonAddRounded";
 import { Box, IconButton, Stack, Tooltip, Typography } from "@mui/joy";
@@ -24,6 +26,7 @@ import { TeamManagementState } from "../../../../hooks/common/useTeamManagement"
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { fmt, useTranslation } from "../../../../i18n";
+import { useNotificationsContext } from "../../../../services/notifications/NotificationsContext";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps } from "../../../../types/chat";
 import { TaskProps } from "../../../../types/tasks";
@@ -78,6 +81,8 @@ export const NoteHeaderActions = ({
     const styles = isDark ? NoteHeaderActionsStyles.dark : NoteHeaderActionsStyles.light;
     const navigate = useNavigate();
     const { t } = useTranslation();
+    // Per-note notification mute (in the ⋮ menu, not a header icon).
+    const notifCtx = useNotificationsContext();
 
     // Resolve the active note from useNM based on noteType so the share
     // modal targets the note shown in this header. noteType=4 (shared
@@ -715,6 +720,37 @@ export const NoteHeaderActions = ({
                         label: t.notes.header.childNote,
                         icon: <AddIcon sx={{ fontSize: 18 }} />,
                         onClick: onCreateChildNote,
+                    },
+                    {
+                        id: "muteNote",
+                        label:
+                            notifCtx &&
+                            activeNoteId != null &&
+                            notifCtx.isTargetMutedByKey("note", activeNoteId)
+                                ? t.services.notifications.muteButton.unmute
+                                : t.services.notifications.muteButton.mute,
+                        icon:
+                            notifCtx &&
+                            activeNoteId != null &&
+                            notifCtx.isTargetMutedByKey("note", activeNoteId) ? (
+                                <NotificationsOffRoundedIcon sx={{ fontSize: 18 }} />
+                            ) : (
+                                <NotificationsActiveRoundedIcon sx={{ fontSize: 18 }} />
+                            ),
+                        visible: !!notifCtx && activeNoteId != null,
+                        onClick: () => {
+                            if (!notifCtx || activeNoteId == null) return;
+                            const id = String(activeNoteId);
+                            if (notifCtx.isTargetMutedByKey("note", id)) {
+                                notifCtx.unmuteTarget("note", id);
+                            } else {
+                                notifCtx.muteTarget({
+                                    targetType: "note",
+                                    targetId: id,
+                                    label: activeNoteTitle,
+                                });
+                            }
+                        },
                     },
                     {
                         id: "deleteNote",

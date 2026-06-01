@@ -1,8 +1,10 @@
+import { CATEGORY_BY_KEY, COARSE_FIELD, CoarseGroup, NotificationCategory } from "./categories";
 import {
     ActiveSurface,
     DEFAULT_NOTIFICATION_PREFERENCE,
     MutedChatRef,
-    NotificationCategory,
+    MutedTargetRef,
+    MutedTargetType,
     NotificationDispatch,
     NotificationIntent,
     NotificationPreference,
@@ -127,7 +129,12 @@ export class NotificationManager {
     // Replace the full prefs blob (e.g. after the initial backend GET).
     // Does NOT trigger the onPreferencesChange callback.
     hydratePreferences(prefs: NotificationPreference) {
-        this.prefs = { ...prefs, mutedChats: [...prefs.mutedChats] };
+        this.prefs = {
+            ...prefs,
+            categorySettings: { ...prefs.categorySettings },
+            mutedChats: [...prefs.mutedChats],
+            mutedTargets: [...prefs.mutedTargets],
+        };
         this.notifyPrefListeners();
     }
 
@@ -164,37 +171,39 @@ export class NotificationManager {
         this.commitPatch({ masterEnabled: value });
     }
 
-    setCategoryEnabled(category: NotificationCategory, value: boolean) {
-        const key: keyof NotificationPreference = (() => {
-            switch (category) {
-                case "chats":
-                    return "enableChats";
-                case "thread_replies":
-                    return "enableThreadReplies";
-                case "mentions":
-                    return "enableMentions";
-                case "task_comments":
-                    return "enableTaskComments";
-                case "inbox":
-                    return "enableInbox";
-            }
-        })();
-        this.commitPatch({ [key]: value } as Partial<NotificationPreference>);
+    /**
+     * Set a coarse *group* master (writes the legacy boolean column). When
+     * off it hard-gates every sub-category in the group regardless of
+     * `categorySettings`.
+     */
+    setGroupEnabled(group: CoarseGroup, value: boolean) {
+        this.commitPatch({ [COARSE_FIELD[group]]: value } as Partial<NotificationPreference>);
     }
 
+    /**
+     * Set a fine sub-category override. Always commits the FULL
+     * `categorySettings` map (the backend JSON field is replaced wholesale,
+     * not merged) — never send a single-key delta.
+     */
+    setSubCategoryEnabled(category: NotificationCategory, value: boolean) {
+        const next = { ...this.prefs.categorySettings, [category]: value };
+        this.commitPatch({ categorySettings: next });
+    }
+
+    /**
+     * Resolve whether a fine category notifies. The order encodes the
+     * backward-compat hard-gate:
+     *   masterEnabled && coarseGroupOn && (categorySettings[key] ?? default)
+     * — an old client that turned a group off still suppresses every
+     * sub-category under it.
+     */
     isCategoryEnabled(category: NotificationCategory): boolean {
-        switch (category) {
-            case "chats":
-                return this.prefs.enableChats;
-            case "thread_replies":
-                return this.prefs.enableThreadReplies;
-            case "mentions":
-                return this.prefs.enableMentions;
-            case "task_comments":
-                return this.prefs.enableTaskComments;
-            case "inbox":
-                return this.prefs.enableInbox;
-        }
+        const entry = CATEGORY_BY_KEY[category];
+        if (!entry) return false;
+        if (!this.prefs.masterEnabled) return false;
+        const coarseOn = this.prefs[COARSE_FIELD[entry.group]] as boolean;
+        if (!coarseOn) return false;
+        return this.prefs.categorySettings[category] ?? entry.defaultEnabled;
     }
 
     isMuted(chatType: number, chatId: string): boolean {
@@ -222,6 +231,79 @@ export class NotificationManager {
         this.commitPatch({ mutedChats: next });
     }
 
+    // ----- Per-object mute targets (thread / task / note) -----------------
+    //
+    // Identity is `(targetType, targetId)`. `categories` is a mutable scope
+    // attribute, NOT part of identity — re-muting the same object with a
+    // different scope upserts (replaces) the existing entry.
+
+    isTargetMutedByKey(targetType: MutedTargetType, targetId: string | number): boolean {
+        const id = String(targetId);
+        return this.prefs.mutedTargets.some(
+            (t) => t.targetType === targetType && t.targetId === id
+        );
+    }
+
+    /**
+     * Add (or replace, by `(targetType, targetId)`) a per-object mute.
+     * `targetId` is normalized to a string so stored and compared forms
+     * always match.
+     */
+    muteTarget(entry: MutedTargetRef) {
+        const targetId = String(entry.targetId);
+        const next = this.prefs.mutedTargets.filter(
+            (t) => !(t.targetType === entry.targetType && t.targetId === targetId)
+        );
+        next.push({ ...entry, targetId });
+        this.commitPatch({ mutedTargets: next });
+    }
+
+    unmuteTarget(targetType: MutedTargetType, targetId: string | number) {
+        const id = String(targetId);
+        if (!this.isTargetMutedByKey(targetType, id)) return;
+        const next = this.prefs.mutedTargets.filter(
+            (t) => !(t.targetType === targetType && t.targetId === id)
+        );
+        this.commitPatch({ mutedTargets: next });
+    }
+
+    /**
+     * True when any `mutedTargets` entry matches this intent. Matches
+     * per-object using the EXPLICIT source fields (threadId / taskId /
+     * noteId) — never the overloaded `chatId` — and honors the optional
+     * per-entry `categories` scope.
+     */
+    private isTargetMuted(intent: NotificationIntent): boolean {
+        const src = intent.source;
+        if (!src) return false;
+        return this.prefs.mutedTargets.some((t) => {
+            // Category scope: when set, only mute intents in those categories.
+            if (t.categories && t.categories.length > 0) {
+                if (!t.categories.includes(intent.category)) return false;
+            }
+            switch (t.targetType) {
+                case "chat":
+                    return (
+                        src.chatType !== undefined &&
+                        t.chatType !== undefined &&
+                        src.chatType === t.chatType &&
+                        src.chatId === t.targetId
+                    );
+                case "thread":
+                    if (src.threadId === undefined) return false;
+                    if (String(src.threadId) !== t.targetId) return false;
+                    if (t.chatType !== undefined && src.chatType !== t.chatType) return false;
+                    return true;
+                case "task":
+                    return src.taskId !== undefined && String(src.taskId) === t.targetId;
+                case "note":
+                    return src.noteId !== undefined && String(src.noteId) === t.targetId;
+                default:
+                    return false;
+            }
+        });
+    }
+
     private pruneSeen() {
         const now = Date.now();
         for (const [id, seenAt] of this.seenIds.entries()) {
@@ -233,27 +315,35 @@ export class NotificationManager {
 
     /**
      * Decide what to do with a translated intent. Order of checks:
-     *   1. self-origin     -> ignored-self
-     *   2. master / cat    -> ignored-disabled
-     *   3. muted chat      -> ignored-muted
-     *   4. dedupe          -> ignored-duplicate
-     *   5. active surface  -> ignored-active-surface (only when foreground)
-     *   6. dispatch        -> browser (hidden tab) or toast (foreground)
+     *   1. self-origin       -> ignored-self
+     *   2. master / cat      -> ignored-disabled
+     *   3. muted chat/target -> ignored-muted
+     *   4. dedupe            -> ignored-duplicate
+     *   5. active surface    -> ignored-active-surface (only when foreground)
+     *   6. dispatch          -> browser (hidden tab) or toast (foreground)
      */
     notify(intent: NotificationIntent): NotificationDispatch {
         if (intent.senderId && intent.senderId === this.currentUserId) {
             return "ignored-self";
         }
 
-        if (!this.prefs.masterEnabled || !this.isCategoryEnabled(intent.category)) {
+        // `masterEnabled` is folded into `isCategoryEnabled` (checked once).
+        if (!this.isCategoryEnabled(intent.category)) {
             return "ignored-disabled";
         }
 
+        // Coarse "whole chat" mute.
         if (
             intent.source?.chatType !== undefined &&
             intent.source?.chatId !== undefined &&
             this.isMuted(intent.source.chatType, intent.source.chatId)
         ) {
+            return "ignored-muted";
+        }
+
+        // Fine per-object mute (thread / task / note), optionally
+        // category-scoped. Either mute matching is sufficient -> muted.
+        if (this.isTargetMuted(intent)) {
             return "ignored-muted";
         }
 

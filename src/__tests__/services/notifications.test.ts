@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { authApi } from "../../services/api";
+import { NOTIFICATION_CATEGORIES } from "../../services/notifications/categories";
 import {
     getNotificationPreferences,
     toWire,
@@ -103,6 +104,41 @@ describe("notificationApi", () => {
             const out = toWire({ masterEnabled: false });
             expect(out).toEqual({ master_enabled: false });
         });
+
+        it("sends the FULL categorySettings map (JSON field replace)", () => {
+            const out = toWire({
+                categorySettings: { mention_chat: false, mention_task_body: true },
+            });
+            expect(out.category_settings).toEqual({
+                mention_chat: false,
+                mention_task_body: true,
+            });
+        });
+
+        it("serializes mutedTargets, omitting absent optional fields", () => {
+            const out = toWire({
+                mutedTargets: [
+                    { targetType: "task", targetId: "7", label: "Ship v2" },
+                    {
+                        targetType: "thread",
+                        targetId: "t-9",
+                        chatType: 2,
+                        categories: ["mention_thread"],
+                    },
+                    { targetType: "note", targetId: "n-3" },
+                ],
+            });
+            expect(out.muted_targets).toEqual([
+                { target_type: "task", target_id: "7", label: "Ship v2" },
+                {
+                    target_type: "thread",
+                    target_id: "t-9",
+                    chat_type: 2,
+                    categories: ["mention_thread"],
+                },
+                { target_type: "note", target_id: "n-3" },
+            ]);
+        });
     });
 
     describe("getNotificationPreferences", () => {
@@ -127,11 +163,45 @@ describe("notificationApi", () => {
                 enableMentions: true,
                 enableTaskComments: false,
                 enableInbox: true,
+                // Absent on the wire fixture -> defaulted by fromWire.
+                categorySettings: {},
                 mutedChats: [
                     { chatType: 1, chatId: "abc", chatName: "Alice" },
                     { chatType: 2, chatId: "g-1" },
                 ],
+                mutedTargets: [],
             });
+        });
+
+        it("maps category_settings and muted_targets from the wire", async () => {
+            const get = vi.fn().mockResolvedValue({
+                data: {
+                    ...wire,
+                    category_settings: { mention_task_body: false },
+                    muted_targets: [
+                        { target_type: "task", target_id: "7", label: "Ship v2" },
+                        {
+                            target_type: "thread",
+                            target_id: "t-9",
+                            chat_type: 2,
+                            categories: ["mention_thread"],
+                        },
+                    ],
+                },
+            });
+            asMock(authApi).mockReturnValue({ get });
+
+            const result = await getNotificationPreferences("tok");
+            expect(result.categorySettings).toEqual({ mention_task_body: false });
+            expect(result.mutedTargets).toEqual([
+                { targetType: "task", targetId: "7", label: "Ship v2" },
+                {
+                    targetType: "thread",
+                    targetId: "t-9",
+                    chatType: 2,
+                    categories: ["mention_thread"],
+                },
+            ]);
         });
 
         it("treats a missing muted_chats field as an empty array", async () => {
@@ -271,26 +341,174 @@ describe("NotificationManager", () => {
         });
     });
 
-    describe("category toggles", () => {
-        const cases: Array<[Parameters<NotificationManager["setCategoryEnabled"]>[0], string]> = [
-            ["chats", "enableChats"],
-            ["thread_replies", "enableThreadReplies"],
-            ["mentions", "enableMentions"],
-            ["task_comments", "enableTaskComments"],
-            ["inbox", "enableInbox"],
-        ];
+    describe("category toggles (registry resolver)", () => {
+        const groupCases: Array<[Parameters<NotificationManager["setGroupEnabled"]>[0], string]> =
+            [
+                ["chats", "enableChats"],
+                ["thread_replies", "enableThreadReplies"],
+                ["mentions", "enableMentions"],
+                ["task_comments", "enableTaskComments"],
+                ["inbox", "enableInbox"],
+            ];
 
-        it.each(cases)("setCategoryEnabled(%s) patches %s", (category, key) => {
+        it.each(groupCases)("setGroupEnabled(%s) patches the coarse %s column", (group, key) => {
             const onPreferencesChange = vi.fn();
             const mgr = new NotificationManager({ currentUserId: "me", onPreferencesChange });
-            mgr.setCategoryEnabled(category, false);
+            mgr.setGroupEnabled(group, false);
             expect(onPreferencesChange).toHaveBeenCalledWith({ [key]: false });
-            expect(mgr.isCategoryEnabled(category)).toBe(false);
         });
 
-        it.each(cases)("isCategoryEnabled(%s) reflects defaults (true)", (category) => {
+        it("every registry category is enabled by default", () => {
             const mgr = new NotificationManager({ currentUserId: "me" });
-            expect(mgr.isCategoryEnabled(category)).toBe(true);
+            for (const c of NOTIFICATION_CATEGORIES) {
+                expect(mgr.isCategoryEnabled(c.key)).toBe(true);
+            }
+        });
+
+        it("coarse group OFF hard-gates ALL its sub-categories, even if a sub override is true", () => {
+            const mgr = new NotificationManager({ currentUserId: "me" });
+            // Explicitly enable a sub, then turn the whole mentions group off.
+            mgr.setSubCategoryEnabled("mention_task_body", true);
+            mgr.setGroupEnabled("mentions", false);
+            expect(mgr.isCategoryEnabled("mention_task_body")).toBe(false);
+            expect(mgr.isCategoryEnabled("mention_chat")).toBe(false);
+            // A category in a different group is unaffected.
+            expect(mgr.isCategoryEnabled("chats")).toBe(true);
+        });
+
+        it("setSubCategoryEnabled disables one sub-category while siblings stay on", () => {
+            const onPreferencesChange = vi.fn();
+            const mgr = new NotificationManager({ currentUserId: "me", onPreferencesChange });
+            mgr.setSubCategoryEnabled("mention_task_body", false);
+            // Commits the FULL map, not a single-key delta.
+            expect(onPreferencesChange).toHaveBeenCalledWith({
+                categorySettings: { mention_task_body: false },
+            });
+            expect(mgr.isCategoryEnabled("mention_task_body")).toBe(false);
+            expect(mgr.isCategoryEnabled("mention_chat")).toBe(true);
+        });
+
+        it("masterEnabled OFF disables every category", () => {
+            const mgr = new NotificationManager({ currentUserId: "me" });
+            mgr.setMasterEnabled(false);
+            expect(mgr.isCategoryEnabled("chats")).toBe(false);
+            expect(mgr.isCategoryEnabled("mention_chat")).toBe(false);
+        });
+    });
+
+    describe("per-object mute targets", () => {
+        it("muteTarget adds an entry; isTargetMutedByKey reflects it; identity is (type,id)", () => {
+            const onPreferencesChange = vi.fn();
+            const mgr = new NotificationManager({ currentUserId: "me", onPreferencesChange });
+            mgr.muteTarget({ targetType: "task", targetId: 7, label: "Ship v2" });
+            expect(mgr.isTargetMutedByKey("task", 7)).toBe(true);
+            expect(mgr.isTargetMutedByKey("task", "7")).toBe(true);
+            expect(mgr.isTargetMutedByKey("note", 7)).toBe(false);
+            expect(mgr.getPreferences().mutedTargets).toEqual([
+                { targetType: "task", targetId: "7", label: "Ship v2" },
+            ]);
+        });
+
+        it("muteTarget upserts by (type,id) — re-muting replaces scope, not duplicates", () => {
+            const mgr = new NotificationManager({ currentUserId: "me" });
+            mgr.muteTarget({ targetType: "task", targetId: "7" });
+            mgr.muteTarget({
+                targetType: "task",
+                targetId: "7",
+                categories: ["mention_task_body"],
+            });
+            expect(mgr.getPreferences().mutedTargets).toEqual([
+                { targetType: "task", targetId: "7", categories: ["mention_task_body"] },
+            ]);
+        });
+
+        it("unmuteTarget removes by key regardless of scope; absent is a no-op", () => {
+            const onPreferencesChange = vi.fn();
+            const mgr = new NotificationManager({ currentUserId: "me", onPreferencesChange });
+            mgr.muteTarget({ targetType: "note", targetId: "n-3" });
+            onPreferencesChange.mockClear();
+            mgr.unmuteTarget("note", "n-3");
+            expect(mgr.isTargetMutedByKey("note", "n-3")).toBe(false);
+            expect(onPreferencesChange).toHaveBeenCalledTimes(1);
+            mgr.unmuteTarget("note", "n-3");
+            expect(onPreferencesChange).toHaveBeenCalledTimes(1);
+        });
+
+        it("notify() ignores an intent matching a muted task target (by source.taskId)", () => {
+            const mgr = new NotificationManager({ currentUserId: "me" });
+            mgr.muteTarget({ targetType: "task", targetId: 55 });
+            // A plain task comment carries source.taskId.
+            const comment = intent({
+                id: "activity:task_comments:9",
+                category: "task_comments",
+                source: { chatType: 4, chatId: "c1", taskId: 55 },
+            });
+            expect(mgr.notify(comment)).toBe("ignored-muted");
+        });
+
+        it("notify() ignores a muted thread target but not other threads in the same chat", () => {
+            const mgr = new NotificationManager({ currentUserId: "me" });
+            mgr.muteTarget({ targetType: "thread", targetId: 7, chatType: 2 });
+            const muted = intent({
+                id: "thread:2:42:7:1",
+                category: "thread_replies",
+                source: { chatType: 2, chatId: "42", threadId: 7 },
+            });
+            expect(mgr.notify(muted)).toBe("ignored-muted");
+
+            const other = intent({
+                id: "thread:2:42:8:1",
+                category: "thread_replies",
+                source: { chatType: 2, chatId: "42", threadId: 8 },
+            });
+            const toast = vi.fn();
+            mgr.subscribeToasts(toast);
+            expect(mgr.notify(other)).toBe("toast");
+        });
+
+        it("notify() ignores a muted note target (by source.noteId, never chatId overload)", () => {
+            const mgr = new NotificationManager({ currentUserId: "me" });
+            mgr.muteTarget({ targetType: "note", targetId: 12 });
+            // Note mention: chatId holds the noteId, but matching uses noteId.
+            const noteMention = intent({
+                id: "activity:mention_note_task:9",
+                category: "mention_note_task",
+                source: { chatType: 7, chatId: "12", noteId: 12, surfaceType: 7 },
+            });
+            expect(mgr.notify(noteMention)).toBe("ignored-muted");
+        });
+
+        it("category-scoped mute applies only to listed categories", () => {
+            const mgr = new NotificationManager({ currentUserId: "me" });
+            // Mute mentions from task 55, but keep its plain comments.
+            mgr.muteTarget({
+                targetType: "task",
+                targetId: 55,
+                categories: ["mention_task_comment"],
+            });
+            const mention = intent({
+                id: "a:mention_task_comment:1",
+                category: "mention_task_comment",
+                source: { chatType: 4, chatId: "c1", taskId: 55 },
+            });
+            expect(mgr.notify(mention)).toBe("ignored-muted");
+
+            const comment = intent({
+                id: "a:task_comments:2",
+                category: "task_comments",
+                source: { chatType: 4, chatId: "c1", taskId: 55 },
+            });
+            const toast = vi.fn();
+            mgr.subscribeToasts(toast);
+            expect(mgr.notify(comment)).toBe("toast");
+        });
+
+        it("source-less intents (inbox) bypass per-object mute", () => {
+            const mgr = new NotificationManager({ currentUserId: "me" });
+            mgr.muteTarget({ targetType: "task", targetId: 55 });
+            const toast = vi.fn();
+            mgr.subscribeToasts(toast);
+            expect(mgr.notify(intent({ category: "inbox", source: undefined }))).toBe("toast");
         });
     });
 
@@ -363,7 +581,7 @@ describe("NotificationManager", () => {
 
         it("ignores when the intent's category is disabled", () => {
             const mgr = new NotificationManager({ currentUserId: "me" });
-            mgr.setCategoryEnabled("chats", false);
+            mgr.setGroupEnabled("chats", false);
             expect(mgr.notify(intent({ category: "chats" }))).toBe("ignored-disabled");
         });
 
@@ -467,8 +685,8 @@ describe("NotificationManager", () => {
 
             // A mention tied to the same task is NOT suppressed.
             const mention = intent({
-                id: "activity:mentions:2",
-                category: "mentions",
+                id: "activity:mention_chat:2",
+                category: "mention_chat",
                 source: { chatType: 3, chatId: "c2", taskId: 55 },
             });
             const toast = vi.fn();
@@ -885,13 +1103,52 @@ describe("notificationRouter", () => {
             ).toBeNull();
         });
 
-        it("builds a mentions intent when I'm mentioned (non-bot sender)", () => {
+        it("builds a mention_chat intent when I'm mentioned in a chat (non-bot sender)", () => {
             const m = { ...baseActivity, mentionedUserIds: ["me"] };
             const result = buildIntentFromMessage(m, myself, useTEM, useCM);
             expect(result).not.toBeNull();
-            expect(result!.category).toBe("mentions");
-            expect(result!.id).toBe("activity:mentions:act-1");
+            expect(result!.category).toBe("mention_chat");
+            expect(result!.id).toBe("activity:mention_chat:act-1");
             expect(result!.title).toBe("Bob mentioned you in #Cool Group");
+        });
+
+        it("classifies mention sub-types from the surface chatType / isThread", () => {
+            const mk = (over: Record<string, unknown>) =>
+                buildActivityIntent(
+                    { ...baseActivity, mentionedUserIds: ["me"], ...over } as never,
+                    myself,
+                    useTEM,
+                    useCM
+                );
+            // isThread on a channel mention -> thread mention.
+            expect(mk({ chatType: 2, isThread: true })!.category).toBe("mention_thread");
+            // Surface / special chatTypes win (task comment is a thread reply).
+            expect(mk({ chatType: 4, isThread: true })!.category).toBe("mention_task_comment");
+            expect(mk({ chatType: 5 })!.category).toBe("mention_task_body");
+            expect(mk({ chatType: 6 })!.category).toBe("mention_note_my");
+            expect(mk({ chatType: 7 })!.category).toBe("mention_note_task");
+            expect(mk({ chatType: 8 })!.category).toBe("mention_note_chat");
+            // Plain DM/GM channel mention.
+            expect(mk({ chatType: 1 })!.category).toBe("mention_chat");
+        });
+
+        it("populates source.noteId/surfaceType for note mentions (6/7/8) only", () => {
+            const note = buildActivityIntent(
+                { ...baseActivity, mentionedUserIds: ["me"], chatType: 7, chatId: 12 } as never,
+                myself,
+                useTEM,
+                useCM
+            );
+            expect(note!.source!.noteId).toBe(12);
+            expect(note!.source!.surfaceType).toBe(7);
+
+            const chat = buildActivityIntent(
+                { ...baseActivity, mentionedUserIds: ["me"], chatType: 2, chatId: 42 } as never,
+                myself,
+                useTEM,
+                useCM
+            );
+            expect(chat!.source!.noteId).toBeUndefined();
         });
 
         it("uses the project label when projectName is present", () => {

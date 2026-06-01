@@ -8,6 +8,8 @@ import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import LocalOfferRoundedIcon from "@mui/icons-material/LocalOfferRounded";
 import NoteAltRoundedIcon from "@mui/icons-material/NoteAltRounded";
+import NotificationsActiveRoundedIcon from "@mui/icons-material/NotificationsActiveRounded";
+import NotificationsOffRoundedIcon from "@mui/icons-material/NotificationsOffRounded";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
 import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
@@ -45,6 +47,7 @@ import { NoteManagementState } from "../../../../../hooks/notes/useNoteManagemen
 import { SprintMilestoneManagementState } from "../../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../../i18n";
+import { useNotificationsContext } from "../../../../../services/notifications/NotificationsContext";
 import { UserProps } from "../../../../../types/admin";
 import { TaskNoteProps } from "../../../../../types/notes";
 import { TaskProps } from "../../../../../types/tasks";
@@ -115,6 +118,9 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
     const isDark = mode === "dark";
     const styles = isDark ? TaskHeaderStyles.dark : TaskHeaderStyles.light;
     const { t } = useTranslation();
+    // Per-task notification mute (lives in the ⋮ menu below, not as a
+    // header icon). Null when rendered outside the NotificationsProvider.
+    const notifCtx = useNotificationsContext();
     const location = useLocation();
     // True when the user is currently inside the Tasks service (any URL
     // under `/workspace/tasks`). Mirrors the active-route detection used by the
@@ -695,6 +701,39 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                     icon: <AddIcon sx={{ fontSize: 18 }} />,
                                     onClick: () => {
                                         usePM.setOpenCreateProject(true);
+                                    },
+                                },
+                                {
+                                    id: "muteTask",
+                                    label:
+                                        notifCtx &&
+                                        taskContent.id != null &&
+                                        notifCtx.isTargetMutedByKey("task", taskContent.id)
+                                            ? t.services.notifications.muteButton.unmute
+                                            : t.services.notifications.muteButton.mute,
+                                    icon:
+                                        notifCtx &&
+                                        taskContent.id != null &&
+                                        notifCtx.isTargetMutedByKey("task", taskContent.id) ? (
+                                            <NotificationsOffRoundedIcon sx={{ fontSize: 18 }} />
+                                        ) : (
+                                            <NotificationsActiveRoundedIcon
+                                                sx={{ fontSize: 18 }}
+                                            />
+                                        ),
+                                    visible: !!notifCtx && taskContent.id != null,
+                                    onClick: () => {
+                                        if (!notifCtx || taskContent.id == null) return;
+                                        const id = String(taskContent.id);
+                                        if (notifCtx.isTargetMutedByKey("task", id)) {
+                                            notifCtx.unmuteTarget("task", id);
+                                        } else {
+                                            notifCtx.muteTarget({
+                                                targetType: "task",
+                                                targetId: id,
+                                                label: taskContent.title,
+                                            });
+                                        }
                                     },
                                 },
                                 {
