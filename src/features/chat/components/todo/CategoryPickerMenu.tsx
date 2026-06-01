@@ -1,6 +1,7 @@
 import { useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import CheckIcon from "@mui/icons-material/Check";
+import LocalOfferRoundedIcon from "@mui/icons-material/LocalOfferRounded";
 import {
     Box,
     Dropdown,
@@ -13,6 +14,7 @@ import {
     Typography,
 } from "@mui/joy";
 
+import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { TodoCategoryProps } from "../../../../types/chat";
 
 interface CategoryPickerMenuProps {
@@ -42,21 +44,24 @@ export const CategoryPickerMenu = (props: CategoryPickerMenuProps) => {
 
     return (
         <Dropdown>
-            <MenuButton
-                size="sm"
-                variant="plain"
-                sx={{
-                    fontSize: "0.75rem",
-                    fontWeight: 500,
-                    borderRadius: "6px",
-                    px: 1,
-                    py: 0.25,
-                    minHeight: 0,
-                    opacity: triggerLabel ? 0.95 : 0.55,
-                }}
-            >
-                {triggerLabel ?? "Add tag"}
-            </MenuButton>
+            <AppTooltip title={triggerLabel ? `Tag: ${triggerLabel}` : "Add tag"}>
+                <MenuButton
+                    slots={{ root: IconButton }}
+                    slotProps={{
+                        root: {
+                            size: "sm",
+                            variant: "plain",
+                            // Tinted when a tag is set, muted when not — the
+                            // tag name itself shows on the section header, so
+                            // the trigger only needs to signal tagged/untagged.
+                            color: triggerLabel ? "primary" : "neutral",
+                            sx: { borderRadius: "6px", opacity: triggerLabel ? 1 : 0.6 },
+                        },
+                    }}
+                >
+                    <LocalOfferRoundedIcon sx={{ fontSize: 16 }} />
+                </MenuButton>
+            </AppTooltip>
             <Menu placement="bottom-end" size="sm" sx={{ minWidth: 200 }}>
                 <MenuItem onClick={() => onSelect(null)}>
                     <Box sx={{ width: 18 }}>

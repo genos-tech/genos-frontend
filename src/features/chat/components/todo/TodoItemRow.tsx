@@ -5,7 +5,7 @@ import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import ExpandLessRoundedIcon from "@mui/icons-material/ExpandLessRounded";
 import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
 import SubdirectoryArrowRightRoundedIcon from "@mui/icons-material/SubdirectoryArrowRightRounded";
-import { Box, Checkbox, IconButton, Input, Stack, Textarea } from "@mui/joy";
+import { Box, Checkbox, IconButton, Input, Stack } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
@@ -171,54 +171,37 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
                     size="sm"
                     onChange={(e) => onToggleComplete(item.itemId, e.target.checked)}
                 />
-                <Textarea
-                    maxRows={6}
-                    minRows={1}
+                <Input
                     placeholder="Untitled todo"
                     size="sm"
                     value={title}
                     variant="plain"
                     sx={{
                         flex: 1,
-                        textDecoration: item.isCompleted ? "line-through" : undefined,
-                        opacity: item.isCompleted ? 0.55 : 1,
                         fontSize: "0.9rem",
-                        // Strip Textarea's default chrome so it sits flush
-                        // like the original single-line Input.
+                        // Sit flush with the row — no border/background chrome.
                         background: "transparent",
                         minHeight: 0,
                         py: 0,
-                        "--Textarea-paddingBlock": "0px",
-                        "& textarea": { px: 0, resize: "none" },
+                        "& input": {
+                            px: 0,
+                            textDecoration: item.isCompleted ? "line-through" : undefined,
+                            opacity: item.isCompleted ? 0.55 : 1,
+                        },
                     }}
+                    onChange={(e) => setTitle(e.target.value)}
                     onBlur={() => {
                         if (title !== item.title) onTitleCommit(item.itemId, title);
                     }}
-                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                        setTitle(e.target.value)
-                    }
-                    onKeyDown={(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-                        // Enter inserts a newline by default (Textarea
-                        // behavior). Cmd/Ctrl+Enter commits without
-                        // leaving the field, which is consistent with
-                        // the chat editor's send shortcut.
-                        if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                    onKeyDown={(e) => {
+                        // Single-line title: Enter commits and leaves the
+                        // field (blur fires onTitleCommit).
+                        if (e.key === "Enter") {
                             e.preventDefault();
-                            (e.target as HTMLTextAreaElement).blur();
+                            (e.target as HTMLInputElement).blur();
                         }
                     }}
                 />
-                {/* Children inherit the parent's tag — hide the picker
-                    on child rows to avoid implying otherwise. */}
-                {!isChild && (
-                    <CategoryPickerMenu
-                        categories={categories}
-                        currentCategoryId={item.categoryId}
-                        triggerLabel={currentCategory ? currentCategory.name : null}
-                        onCreate={onCategoryCreate}
-                        onSelect={(categoryId) => onCategoryChange(item.itemId, categoryId)}
-                    />
-                )}
                 <AppTooltip title={notesExpanded ? "Collapse notes" : "Expand notes"}>
                     <IconButton
                         size="sm"
@@ -236,6 +219,18 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
                         )}
                     </IconButton>
                 </AppTooltip>
+                {/* Tag picker sits right beside the subitem control. Both
+                    are top-level-only actions; children inherit the parent's
+                    tag, so the picker is hidden on child rows. */}
+                {!isChild && (
+                    <CategoryPickerMenu
+                        categories={categories}
+                        currentCategoryId={item.categoryId}
+                        triggerLabel={currentCategory ? currentCategory.name : null}
+                        onCreate={onCategoryCreate}
+                        onSelect={(categoryId) => onCategoryChange(item.itemId, categoryId)}
+                    />
+                )}
                 {/* "+ subitem" only on top-level rows. */}
                 {!isChild && onAddSubitem && (
                     <AppTooltip title="Add subitem">
