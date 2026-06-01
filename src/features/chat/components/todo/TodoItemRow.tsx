@@ -136,6 +136,22 @@ const renderTitleWithLinks = (text: string): ReactNode => {
 // over a selection isn't mistaken for a link.
 const SCHEME_LESS_DOMAIN_RE = /^(www\.)?[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}(:\d+)?(\/\S*)?$/i;
 
+// Common web TLDs, used to tell a bare scheme-less domain ("example.com") apart
+// from a dotted word like "Node.js" or "file.txt" pasted over a selection. Not
+// exhaustive — an unrecognized bare TLD simply isn't auto-linked (paste with an
+// https:// scheme or a /path to force it). Deliberately omits extensions that
+// happen to be ccTLDs (py, rs, sh, md, …) since a pasted word is far likelier
+// than those bare domains in a todo title.
+// prettier-ignore
+const COMMON_TLDS = new Set([
+    "com", "org", "net", "edu", "gov", "mil", "int", "io", "co", "ai",
+    "app", "dev", "xyz", "info", "biz", "me", "tv", "cc", "cloud", "tech",
+    "online", "site", "store", "blog", "page", "link", "live", "news",
+    "us", "uk", "ca", "de", "fr", "jp", "cn", "au", "in", "br", "ru",
+    "nl", "eu", "ch", "es", "it", "se", "no", "fi", "dk", "kr", "sg",
+    "hk", "tw", "nz", "ie", "be", "at", "pt", "pl", "cz", "mx", "za",
+]);
+
 // Decide whether pasted clipboard text should become a link, returning the
 // normalized href (https:// added when the scheme is missing) or null. Accepts
 // absolute http(s) URLs and scheme-less domains; rejects everything else so a
@@ -144,7 +160,14 @@ const toLinkableUrl = (raw: string): string | null => {
     const s = raw.trim();
     if (!s || /\s/.test(s)) return null;
     if (/^https?:\/\/\S+$/i.test(s)) return s;
-    if (SCHEME_LESS_DOMAIN_RE.test(s)) return `https://${s}`;
+    if (!SCHEME_LESS_DOMAIN_RE.test(s)) return null;
+    // Scheme-less + domain-shaped. Require a strong "this is a link" signal — a
+    // www. prefix, an explicit /path, or a recognized web TLD — so a dotted
+    // word like "Node.js" or "file.txt" stays plain text.
+    const tld = (s.split("/")[0].split(":")[0].split(".").pop() ?? "").toLowerCase();
+    if (/^www\./i.test(s) || s.includes("/") || COMMON_TLDS.has(tld)) {
+        return `https://${s}`;
+    }
     return null;
 };
 

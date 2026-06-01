@@ -92,12 +92,33 @@ describe("TodoItemRow — paste-a-URL-over-a-selection makes the word a link", (
         expect(input.value).toBe("Read [spec](https://www.example.com/docs)");
     });
 
+    it("works for a common non-.com TLD (example.io)", () => {
+        const { container, getByText } = renderRow("Read spec");
+        const input = openEditor(container, getByText, "Read spec");
+        pasteOver(input, 5, 9, "example.io");
+        expect(input.value).toBe("Read [spec](https://example.io)");
+    });
+
     it("leaves a non-URL paste to the browser default (no rewrite)", () => {
         const { container, getByText } = renderRow("Read spec");
         const input = openEditor(container, getByText, "Read spec");
         pasteOver(input, 5, 9, "just some words");
         // jsdom performs no default paste, so the value is unchanged — the key
         // point is that our handler did NOT rewrite it into a link.
+        expect(input.value).toBe("Read spec");
+    });
+
+    it("does NOT link a dotted word like Node.js (.js isn't a web TLD)", () => {
+        const { container, getByText } = renderRow("Read spec");
+        const input = openEditor(container, getByText, "Read spec");
+        pasteOver(input, 5, 9, "Node.js");
+        expect(input.value).toBe("Read spec"); // no rewrite → normal replace
+    });
+
+    it("does NOT link a filename like file.txt", () => {
+        const { container, getByText } = renderRow("Read spec");
+        const input = openEditor(container, getByText, "Read spec");
+        pasteOver(input, 5, 9, "file.txt");
         expect(input.value).toBe("Read spec");
     });
 });
