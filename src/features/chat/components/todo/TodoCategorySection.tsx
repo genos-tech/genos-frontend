@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
 import AddIcon from "@mui/icons-material/Add";
 import ExpandLessRoundedIcon from "@mui/icons-material/ExpandLessRounded";
@@ -14,6 +14,7 @@ import { TeamManagementState } from "../../../../hooks/common/useTeamManagement"
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
 import { TodoCategoryProps, TodoItemProps } from "../../../../types/chat";
+import { useLinkifyPaste } from "./titleLinks";
 import { TodoItemRow } from "./TodoItemRow";
 
 interface TodoCategorySectionProps {
@@ -57,6 +58,10 @@ export const TodoCategorySection = (props: TodoCategorySectionProps) => {
 
     const [collapsed, setCollapsed] = useState(false);
     const [newTitle, setNewTitle] = useState("");
+
+    // Paste a URL over a selected word in the "+ Add item" field → "[word](url)".
+    const addInputRef = useRef<HTMLInputElement | null>(null);
+    useLinkifyPaste(addInputRef, newTitle, setNewTitle);
 
     // Group children under their parents so TodoItemRow renders the tree.
     const { topLevelItems, subitemsByParent } = useMemo(() => {
@@ -162,6 +167,7 @@ export const TodoCategorySection = (props: TodoCategorySectionProps) => {
                         <Input
                             placeholder="+ Add item"
                             size="sm"
+                            slotProps={{ input: { ref: addInputRef } }}
                             sx={{ flex: 1, fontSize: "0.85rem", "& input": { px: 0 } }}
                             value={newTitle}
                             variant="plain"

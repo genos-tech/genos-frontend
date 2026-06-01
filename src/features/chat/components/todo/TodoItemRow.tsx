@@ -16,6 +16,7 @@ import { UIStateManagementState } from "../../../../hooks/common/useUIStateManag
 import { UserProps } from "../../../../types/admin";
 import { TodoCategoryProps, TodoItemProps } from "../../../../types/chat";
 import { CategoryPickerMenu } from "./CategoryPickerMenu";
+import { useLinkifyPaste } from "./titleLinks";
 import { TodoNotesEditor } from "./TodoNotesEditor";
 
 interface TodoItemRowProps {
@@ -131,70 +132,6 @@ const renderTitleWithLinks = (text: string): ReactNode => {
     return out;
 };
 
-// Scheme-less but clearly domain-shaped text: "example.com", "www.x.io/path".
-// Requires a dotted alphabetic TLD and no whitespace, so ordinary text pasted
-// over a selection isn't mistaken for a link.
-const SCHEME_LESS_DOMAIN_RE = /^(www\.)?[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}(:\d+)?(\/\S*)?$/i;
-
-// Common web TLDs, used to tell a bare scheme-less domain ("example.com") apart
-// from a dotted word like "Node.js" or "file.txt" pasted over a selection. Not
-// exhaustive — an unrecognized bare TLD simply isn't auto-linked (paste with an
-// https:// scheme or a /path to force it). Deliberately omits extensions that
-// happen to be ccTLDs (py, rs, sh, md, …) since a pasted word is far likelier
-// than those bare domains in a todo title.
-// prettier-ignore
-const COMMON_TLDS = new Set([
-    "com", "org", "net", "edu", "gov", "mil", "int", "io", "co", "ai",
-    "app", "dev", "xyz", "info", "biz", "me", "tv", "cc", "cloud", "tech",
-    "online", "site", "store", "blog", "page", "link", "live", "news",
-    "us", "uk", "ca", "de", "fr", "jp", "cn", "au", "in", "br", "ru",
-    "nl", "eu", "ch", "es", "it", "se", "no", "fi", "dk", "kr", "sg",
-    "hk", "tw", "nz", "ie", "be", "at", "pt", "pl", "cz", "mx", "za",
-]);
-
-// Decide whether pasted clipboard text should become a link, returning the
-// normalized href (https:// added when the scheme is missing) or null. Accepts
-// absolute http(s) URLs and scheme-less domains; rejects everything else so a
-// plain word/phrase pasted over a selection stays a normal replace.
-const toLinkableUrl = (raw: string): string | null => {
-    const s = raw.trim();
-    if (!s || /\s/.test(s)) return null;
-    if (/^https?:\/\/\S+$/i.test(s)) return s;
-    if (!SCHEME_LESS_DOMAIN_RE.test(s)) return null;
-    // Scheme-less + domain-shaped. Require a strong "this is a link" signal — a
-    // www. prefix, an explicit /path, or a recognized web TLD — so a dotted
-    // word like "Node.js" or "file.txt" stays plain text.
-    const tld = (s.split("/")[0].split(":")[0].split(".").pop() ?? "").toLowerCase();
-    if (/^www\./i.test(s) || s.includes("/") || COMMON_TLDS.has(tld)) {
-        return `https://${s}`;
-    }
-    return null;
-};
-
-// Rich-text-style linking without a rich editor: when a URL is pasted over a
-// non-empty selection, wrap the selected text as "[selection](url)" — which
-// read mode then renders as a clickable word. Returns the rewritten value plus
-// the caret position to restore, or null when the paste should fall through to
-// the browser's default (no selection, or the clipboard isn't a single URL).
-const linkifyPasteOverSelection = (
-    value: string,
-    selStart: number,
-    selEnd: number,
-    pasted: string
-): { value: string; caret: number } | null => {
-    if (selStart === selEnd) return null;
-    const url = toLinkableUrl(pasted);
-    if (url === null) return null;
-    // Escape parens so URLs like Wikipedia's "…_(disambiguation)" don't get
-    // truncated at the first ")" when the markdown link is parsed back.
-    const safeUrl = url.replace(/\(/g, "%28").replace(/\)/g, "%29");
-    const markdown = `[${value.slice(selStart, selEnd)}](${safeUrl})`;
-    return {
-        value: value.slice(0, selStart) + markdown + value.slice(selEnd),
-        caret: selStart + markdown.length,
-    };
-};
-
 export const TodoItemRow = (props: TodoItemRowProps) => {
     const {
         item,
@@ -226,11 +163,10 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     // Set on Escape so the blur that follows restores instead of committing.
     const skipTitleCommitRef = useRef(false);
-    // The title <input> + a pending caret position, so a paste-over-selection
-    // can restore the caret after we rewrite the controlled value (which would
-    // otherwise bounce it to the end of the field).
+    // Refs to the title editor + subitem-add <input>s, so paste-to-link can be
+    // wired onto each (see useLinkifyPaste below).
     const titleInputRef = useRef<HTMLInputElement | null>(null);
-    const pendingTitleCaretRef = useRef<number | null>(null);
+    const subitemInputRef = useRef<HTMLInputElement | null>(null);
     // Default to expanded when the item ships with actual notes content
     // (i.e. not just the placeholder empty paragraph) so the user sees
     // them without an extra click. Empty notes stay collapsed.
@@ -257,40 +193,14 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
     useEffect(() => {
         setTitle(item.title);
     }, [item.title]);
-    // After a paste-over-selection rewrites the title, put the caret back just
-    // past the inserted "[label](url)" rather than at the end of the field.
-    useEffect(() => {
-        if (pendingTitleCaretRef.current !== null && titleInputRef.current) {
-            const pos = pendingTitleCaretRef.current;
-            titleInputRef.current.setSelectionRange(pos, pos);
-            pendingTitleCaretRef.current = null;
-        }
-    }, [title]);
-    // Paste-to-link is wired as a NATIVE listener on the real <input>, not a
-    // React/Joy onPaste prop: Joy's synthetic-event forwarding fires under
-    // jsdom but not on an actual browser paste. Value/selection are read off
-    // the element (never a stale closure), so this stays correct as the user
-    // types.
-    useEffect(() => {
-        const input = titleInputRef.current;
-        if (!input) return;
-        const onPaste = (e: ClipboardEvent) => {
-            const pasted =
-                e.clipboardData?.getData("text/plain") || e.clipboardData?.getData("text") || "";
-            const { selectionStart, selectionEnd, value } = input;
-            if (selectionStart === null || selectionEnd === null) return;
-            const result = linkifyPasteOverSelection(value, selectionStart, selectionEnd, pasted);
-            if (!result) return;
-            e.preventDefault();
-            pendingTitleCaretRef.current = result.caret;
-            setTitle(result.value);
-        };
-        input.addEventListener("paste", onPaste);
-        return () => input.removeEventListener("paste", onPaste);
-    }, [isEditingTitle]);
     useEffect(() => {
         setNotesBody(ensureNonEmpty(item.notes));
     }, [item.notes]);
+
+    // Paste a URL over a selected word → "[word](url)" in both the title
+    // editor (only mounted while editing) and the subitem-add input.
+    useLinkifyPaste(titleInputRef, title, setTitle, isEditingTitle);
+    useLinkifyPaste(subitemInputRef, newSubitemTitle, setNewSubitemTitle, subitemAddOpen);
 
     // Periodic notes auto-save while expanded — mirrors the prior
     // TodoBubble cadence (was 3s for the whole-day doc; tighter here
@@ -534,6 +444,7 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
                             <Input
                                 placeholder="+ Add subitem"
                                 size="sm"
+                                slotProps={{ input: { ref: subitemInputRef } }}
                                 value={newSubitemTitle}
                                 variant="plain"
                                 sx={{
