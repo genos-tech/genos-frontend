@@ -11,6 +11,8 @@ import { useMemo, useState } from "react";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import ReplayRoundedIcon from "@mui/icons-material/ReplayRounded";
+import ThumbDownAltRoundedIcon from "@mui/icons-material/ThumbDownAltRounded";
+import ThumbUpAltRoundedIcon from "@mui/icons-material/ThumbUpAltRounded";
 import { Box, IconButton, Stack, Typography } from "@mui/joy";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -86,6 +88,7 @@ export const AgentQAConversation = ({
                     sourcesById={sourcesById}
                     turn={turn}
                     onRetry={state.onAsk}
+                    onFeedback={state.submitFeedback}
                     onSelectSource={onSelectSource}
                 />
             ))}
@@ -110,6 +113,7 @@ const TurnRow = ({
     sourcesById,
     onSelectSource,
     onRetry,
+    onFeedback,
 }: {
     turn: CompletedTurn;
     labels: AgentQALabels;
@@ -117,8 +121,19 @@ const TurnRow = ({
     sourcesById: Map<string, SpotlightResult>;
     onSelectSource?: (source: SpotlightResult) => void;
     onRetry?: (askedQuery: string) => void;
+    onFeedback?: (runId: string, rating: number) => void;
 }) => {
     const [copied, setCopied] = useState(false);
+    // Optimistic local vote (0 = none, 1 = 👍, -1 = 👎). Re-clicking the
+    // active thumb clears it (rating 0). The POST is fire-and-forget.
+    const [rating, setRating] = useState(0);
+    const handleFeedback = (next: number) => {
+        if (!turn.runId || !onFeedback) return;
+        const applied = rating === next ? 0 : next;
+        setRating(applied);
+        onFeedback(turn.runId, applied);
+    };
+    const showFeedback = Boolean(turn.runId) && Boolean(onFeedback) && !turn.askError;
     const handleCopy = () => {
         if (!turn.answer) return;
         navigator.clipboard
@@ -194,7 +209,7 @@ const TurnRow = ({
                     <SourceChips sources={chipSources} onSelectSource={onSelectSource} />
                 </Box>
             )}
-            {(showCopy || showRetry) && (
+            {(showCopy || showRetry || showFeedback) && (
                 <Box
                     sx={{
                         display: "flex",
@@ -203,6 +218,30 @@ const TurnRow = ({
                         mt: 0.25,
                     }}
                 >
+                    {showFeedback && (
+                        <>
+                            <IconButton
+                                color={rating === 1 ? "success" : "neutral"}
+                                size="sm"
+                                sx={{ minWidth: 0, p: "3px" }}
+                                title={labels.actions.feedbackUp ?? "Good answer"}
+                                variant={rating === 1 ? "soft" : "plain"}
+                                onClick={() => handleFeedback(1)}
+                            >
+                                <ThumbUpAltRoundedIcon sx={{ fontSize: 14 }} />
+                            </IconButton>
+                            <IconButton
+                                color={rating === -1 ? "danger" : "neutral"}
+                                size="sm"
+                                sx={{ minWidth: 0, p: "3px" }}
+                                title={labels.actions.feedbackDown ?? "Needs work"}
+                                variant={rating === -1 ? "soft" : "plain"}
+                                onClick={() => handleFeedback(-1)}
+                            >
+                                <ThumbDownAltRoundedIcon sx={{ fontSize: 14 }} />
+                            </IconButton>
+                        </>
+                    )}
                     {showCopy && (
                         <IconButton
                             color={copied ? "success" : "neutral"}

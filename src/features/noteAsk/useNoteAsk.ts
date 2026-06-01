@@ -37,6 +37,8 @@ const sessionTurnToCompleted = (turn: AgentSessionTurn, index: number): Complete
     answerSources: turn.sources || [],
     toolEvents: [],
     askError: turn.error || null,
+    // Carry run_id so restored turns can still be rated (F1).
+    runId: turn.run_id,
 });
 
 // How often we re-check the server's fingerprint while the modal is
