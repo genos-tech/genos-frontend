@@ -11,6 +11,7 @@ import {
     taskMessageTemplate,
 } from "../utils/TaskMessageTemplate";
 import { addTask } from "./addTask";
+import { findPmChannelForProject } from "./findPmChannel";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
@@ -208,15 +209,52 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                 // `kind=PM` + matching `projectId`.
                 const createTaskMessage = taskMessageTemplate(myself, taskContent);
                 if (taskContent.project && createTaskMessage) {
-                    const pmChannel = [...channelService.getSnapshot().channels.values()].find(
-                        (ch) =>
-                            ch.kind === ChannelKind.PM &&
-                            ch.projectId === taskContent.project!.projectId
+                    const projectId = taskContent.project.projectId;
+                    let pmChannel = findPmChannelForProject(
+                        channelService.getSnapshot().channels.values(),
+                        projectId
                     );
+                    // PM channels for the snapshot are seeded once on app boot
+                    // (useChatManagement → loadV3Chats) and from IDB, so the
+                    // snapshot can be stale — the project's PM channel may have
+                    // been created/joined after that load, or the boot fetch
+                    // raced/failed. Re-fetch the channel list once, register the
+                    // PM row we need, and retry before giving up. Capture the
+                    // API's PM rows so a surviving failure is self-diagnosing.
+                    let pmChannelsFromApi: Array<{ id: string; projectId: number | null }> | null =
+                        null;
                     if (!pmChannel) {
+                        try {
+                            const fresh = await channelService.listChannels();
+                            pmChannelsFromApi = fresh
+                                .filter((ch) => ch.kind === ChannelKind.PM)
+                                .map((ch) => ({ id: ch.id, projectId: ch.projectId }));
+                            const freshPm = findPmChannelForProject(fresh, projectId);
+                            if (freshPm) {
+                                channelService.handleChannelCreated(freshPm);
+                                pmChannel = freshPm;
+                            }
+                        } catch (e) {
+                            console.error(
+                                "uploadNewTask: failed to refresh channels for PM lookup",
+                                e
+                            );
+                        }
+                    }
+
+                    if (!pmChannel) {
+                        // Still nothing after a fresh fetch → the user genuinely
+                        // has no PM channel for this project in their channel
+                        // list (not a member, or the row carries a null
+                        // projectId). The dump distinguishes that from a
+                        // transient miss.
                         console.error(
                             "uploadNewTask: PM channel not found in channelService snapshot",
-                            { projectId: taskContent.project.projectId }
+                            {
+                                projectId,
+                                projectIdType: typeof projectId,
+                                pmChannelsFromApi,
+                            }
                         );
                     } else {
                         const taskMetadata = {
