@@ -830,7 +830,7 @@ describe("agentApi.askAgentStream", () => {
                     '{"type":"sources","sources":[{"id":"r1"}]}\n',
                     '{"type":"answer_delta","text":"Hello "}\n',
                     '{"type":"answer_delta","text":"world"}\n',
-                    '{"type":"done","session_id":"S42"}\n',
+                    '{"type":"done","session_id":"S42","run_id":"R42"}\n',
                 ])
             );
         vi.stubGlobal("fetch", fetchMock);
@@ -841,7 +841,8 @@ describe("agentApi.askAgentStream", () => {
         expect(h.onSources).toHaveBeenCalledWith([{ id: "r1" }]);
         expect(h.onDelta).toHaveBeenNthCalledWith(1, "Hello ");
         expect(h.onDelta).toHaveBeenNthCalledWith(2, "world");
-        expect(h.onDone).toHaveBeenCalledWith("S42");
+        // onDone now receives (session_id, run_id) — run_id is the F1 feedback target.
+        expect(h.onDone).toHaveBeenCalledWith("S42", "R42");
         expect(h.onError).not.toHaveBeenCalled();
     });
 
@@ -857,7 +858,7 @@ describe("agentApi.askAgentStream", () => {
         await askAgentStream({ ...h, query: "q", teamId: "t", accessToken: "tok" });
 
         expect(h.onDelta).toHaveBeenCalledWith("x");
-        expect(h.onDone).toHaveBeenCalledWith(undefined);
+        expect(h.onDone).toHaveBeenCalledWith(undefined, undefined);
     });
 
     it("dispatches tool_call_* and pending_approval events (pending is terminal)", async () => {
@@ -955,7 +956,7 @@ describe("agentApi.askAgentStream", () => {
 
         expect(h.onError).toHaveBeenCalledTimes(1);
         expect(h.onError).toHaveBeenCalledWith("Malformed NDJSON line: garbage");
-        expect(h.onDone).toHaveBeenCalledWith(undefined);
+        expect(h.onDone).toHaveBeenCalledWith(undefined, undefined);
     });
 
     it("reports streamEndedUnexpectedly when no terminal event arrives", async () => {
@@ -981,7 +982,7 @@ describe("agentApi.askAgentStream", () => {
 
         await askAgentStream({ ...h, query: "q", teamId: "t", accessToken: "tok" });
 
-        expect(h.onDone).toHaveBeenCalledWith(undefined);
+        expect(h.onDone).toHaveBeenCalledWith(undefined, undefined);
         expect(h.onError).not.toHaveBeenCalled();
     });
 
@@ -1160,7 +1161,7 @@ describe("agentApi.decideAgent", () => {
             approval_token: "TOKEN",
             decision: "reject",
         });
-        expect(h.onDone).toHaveBeenCalledWith("S1");
+        expect(h.onDone).toHaveBeenCalledWith("S1", undefined);
     });
 });
 
