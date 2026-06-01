@@ -1,11 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import ExpandLessRoundedIcon from "@mui/icons-material/ExpandLessRounded";
 import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
 import SubdirectoryArrowRightRoundedIcon from "@mui/icons-material/SubdirectoryArrowRightRounded";
-import { Box, Checkbox, IconButton, Input, Stack } from "@mui/joy";
+import { Box, Checkbox, IconButton, Input, Link, Stack } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
@@ -73,6 +73,128 @@ const ensureNonEmpty = (body: PartialBlock[] | null | undefined): PartialBlock[]
     return body;
 };
 
+// Two link forms are recognized inside the otherwise-plain title:
+//   * Markdown links — [label](https://…) → the *label* becomes clickable.
+//   * Bare http(s) URLs — https://… → the URL itself becomes clickable.
+// The title is still stored verbatim as plain text (the raw "[label](url)"
+// markdown included); this only changes how it's drawn in the row's read
+// state, and edit mode shows the raw text back so links stay editable.
+const LINK_RE = /\[([^\]]+)\]\(([^)\s]+)\)|(https?:\/\/[^\s]+)/g;
+
+// Only http(s) links are allowed through, so a "[x](javascript:…)" stays inert
+// plain text — building <Link> elements here then carries no injection risk.
+const isSafeHref = (url: string): boolean => /^https?:\/\//i.test(url);
+
+const renderTitleWithLinks = (text: string): ReactNode => {
+    const out: ReactNode[] = [];
+    let lastIndex = 0;
+    for (const match of text.matchAll(LINK_RE)) {
+        const [whole, mdLabel, mdUrl, bareUrl] = match;
+        const start = match.index;
+
+        let label: string;
+        let href: string;
+        let consumed: number;
+        if (mdUrl !== undefined) {
+            // Unsafe markdown href: leave the whole "[label](url)" as text.
+            if (!isSafeHref(mdUrl)) continue;
+            href = mdUrl;
+            label = mdLabel;
+            consumed = whole.length;
+        } else {
+            // Bare URL: don't swallow trailing sentence punctuation
+            // (e.g. "see https://x.com." or a URL wrapped in parens).
+            href = bareUrl.replace(/[.,;:!?)\]}'"]+$/, "");
+            label = href;
+            consumed = href.length;
+        }
+
+        if (start > lastIndex) out.push(text.slice(lastIndex, start));
+        out.push(
+            // onClick stopPropagation: opening the link must not also flip
+            // the row into edit mode.
+            <Link
+                key={start}
+                href={href}
+                rel="noopener noreferrer"
+                sx={{ fontSize: "inherit", color: "primary.500" }}
+                target="_blank"
+                underline="always"
+                onClick={(e) => e.stopPropagation()}
+            >
+                {label}
+            </Link>
+        );
+        lastIndex = start + consumed;
+    }
+    if (lastIndex < text.length) out.push(text.slice(lastIndex));
+    return out;
+};
+
+// Scheme-less but clearly domain-shaped text: "example.com", "www.x.io/path".
+// Requires a dotted alphabetic TLD and no whitespace, so ordinary text pasted
+// over a selection isn't mistaken for a link.
+const SCHEME_LESS_DOMAIN_RE = /^(www\.)?[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}(:\d+)?(\/\S*)?$/i;
+
+// Common web TLDs, used to tell a bare scheme-less domain ("example.com") apart
+// from a dotted word like "Node.js" or "file.txt" pasted over a selection. Not
+// exhaustive — an unrecognized bare TLD simply isn't auto-linked (paste with an
+// https:// scheme or a /path to force it). Deliberately omits extensions that
+// happen to be ccTLDs (py, rs, sh, md, …) since a pasted word is far likelier
+// than those bare domains in a todo title.
+// prettier-ignore
+const COMMON_TLDS = new Set([
+    "com", "org", "net", "edu", "gov", "mil", "int", "io", "co", "ai",
+    "app", "dev", "xyz", "info", "biz", "me", "tv", "cc", "cloud", "tech",
+    "online", "site", "store", "blog", "page", "link", "live", "news",
+    "us", "uk", "ca", "de", "fr", "jp", "cn", "au", "in", "br", "ru",
+    "nl", "eu", "ch", "es", "it", "se", "no", "fi", "dk", "kr", "sg",
+    "hk", "tw", "nz", "ie", "be", "at", "pt", "pl", "cz", "mx", "za",
+]);
+
+// Decide whether pasted clipboard text should become a link, returning the
+// normalized href (https:// added when the scheme is missing) or null. Accepts
+// absolute http(s) URLs and scheme-less domains; rejects everything else so a
+// plain word/phrase pasted over a selection stays a normal replace.
+const toLinkableUrl = (raw: string): string | null => {
+    const s = raw.trim();
+    if (!s || /\s/.test(s)) return null;
+    if (/^https?:\/\/\S+$/i.test(s)) return s;
+    if (!SCHEME_LESS_DOMAIN_RE.test(s)) return null;
+    // Scheme-less + domain-shaped. Require a strong "this is a link" signal — a
+    // www. prefix, an explicit /path, or a recognized web TLD — so a dotted
+    // word like "Node.js" or "file.txt" stays plain text.
+    const tld = (s.split("/")[0].split(":")[0].split(".").pop() ?? "").toLowerCase();
+    if (/^www\./i.test(s) || s.includes("/") || COMMON_TLDS.has(tld)) {
+        return `https://${s}`;
+    }
+    return null;
+};
+
+// Rich-text-style linking without a rich editor: when a URL is pasted over a
+// non-empty selection, wrap the selected text as "[selection](url)" — which
+// read mode then renders as a clickable word. Returns the rewritten value plus
+// the caret position to restore, or null when the paste should fall through to
+// the browser's default (no selection, or the clipboard isn't a single URL).
+const linkifyPasteOverSelection = (
+    value: string,
+    selStart: number,
+    selEnd: number,
+    pasted: string
+): { value: string; caret: number } | null => {
+    if (selStart === selEnd) return null;
+    const url = toLinkableUrl(pasted);
+    if (url === null) return null;
+    // Escape parens so URLs like Wikipedia's "…_(disambiguation)" don't get
+    // truncated at the first ")" when the markdown link is parsed back.
+    const safeUrl = url.replace(/\(/g, "%28").replace(/\)/g, "%29");
+    const markdown = `[${value.slice(selStart, selEnd)}](${safeUrl})`;
+    return {
+        value: value.slice(0, selStart) + markdown + value.slice(selEnd),
+        caret: selStart + markdown.length,
+    };
+};
+
 export const TodoItemRow = (props: TodoItemRowProps) => {
     const {
         item,
@@ -99,6 +221,16 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
     const isDark = mode === "dark";
 
     const [title, setTitle] = useState(item.title);
+    // Read mode renders the title with clickable links; clicking the text
+    // flips to an editable <Input> (an <input> can't host clickable links).
+    const [isEditingTitle, setIsEditingTitle] = useState(false);
+    // Set on Escape so the blur that follows restores instead of committing.
+    const skipTitleCommitRef = useRef(false);
+    // The title <input> + a pending caret position, so a paste-over-selection
+    // can restore the caret after we rewrite the controlled value (which would
+    // otherwise bounce it to the end of the field).
+    const titleInputRef = useRef<HTMLInputElement | null>(null);
+    const pendingTitleCaretRef = useRef<number | null>(null);
     // Default to expanded when the item ships with actual notes content
     // (i.e. not just the placeholder empty paragraph) so the user sees
     // them without an extra click. Empty notes stay collapsed.
@@ -125,6 +257,37 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
     useEffect(() => {
         setTitle(item.title);
     }, [item.title]);
+    // After a paste-over-selection rewrites the title, put the caret back just
+    // past the inserted "[label](url)" rather than at the end of the field.
+    useEffect(() => {
+        if (pendingTitleCaretRef.current !== null && titleInputRef.current) {
+            const pos = pendingTitleCaretRef.current;
+            titleInputRef.current.setSelectionRange(pos, pos);
+            pendingTitleCaretRef.current = null;
+        }
+    }, [title]);
+    // Paste-to-link is wired as a NATIVE listener on the real <input>, not a
+    // React/Joy onPaste prop: Joy's synthetic-event forwarding fires under
+    // jsdom but not on an actual browser paste. Value/selection are read off
+    // the element (never a stale closure), so this stays correct as the user
+    // types.
+    useEffect(() => {
+        const input = titleInputRef.current;
+        if (!input) return;
+        const onPaste = (e: ClipboardEvent) => {
+            const pasted =
+                e.clipboardData?.getData("text/plain") || e.clipboardData?.getData("text") || "";
+            const { selectionStart, selectionEnd, value } = input;
+            if (selectionStart === null || selectionEnd === null) return;
+            const result = linkifyPasteOverSelection(value, selectionStart, selectionEnd, pasted);
+            if (!result) return;
+            e.preventDefault();
+            pendingTitleCaretRef.current = result.caret;
+            setTitle(result.value);
+        };
+        input.addEventListener("paste", onPaste);
+        return () => input.removeEventListener("paste", onPaste);
+    }, [isEditingTitle]);
     useEffect(() => {
         setNotesBody(ensureNonEmpty(item.notes));
     }, [item.notes]);
@@ -171,37 +334,75 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
                     size="sm"
                     onChange={(e) => onToggleComplete(item.itemId, e.target.checked)}
                 />
-                <Input
-                    placeholder="Untitled todo"
-                    size="sm"
-                    value={title}
-                    variant="plain"
-                    sx={{
-                        flex: 1,
-                        fontSize: "0.9rem",
-                        // Sit flush with the row — no border/background chrome.
-                        background: "transparent",
-                        minHeight: 0,
-                        py: 0,
-                        "& input": {
-                            px: 0,
+                {isEditingTitle ? (
+                    <Input
+                        // Select a word, paste a URL → the word becomes
+                        // "[word](url)"; the paste is handled by a native paste
+                        // listener wired to this ref (see the effect above).
+                        placeholder="Untitled todo"
+                        size="sm"
+                        slotProps={{ input: { ref: titleInputRef } }}
+                        value={title}
+                        variant="plain"
+                        sx={{
+                            flex: 1,
+                            fontSize: "0.9rem",
+                            // Sit flush with the row — no border/background chrome.
+                            background: "transparent",
+                            minHeight: 0,
+                            py: 0,
+                            "& input": {
+                                px: 0,
+                                textDecoration: item.isCompleted ? "line-through" : undefined,
+                                opacity: item.isCompleted ? 0.55 : 1,
+                            },
+                        }}
+                        autoFocus
+                        onChange={(e) => setTitle(e.target.value)}
+                        onBlur={() => {
+                            if (skipTitleCommitRef.current) {
+                                skipTitleCommitRef.current = false;
+                                setTitle(item.title);
+                            } else if (title !== item.title) {
+                                onTitleCommit(item.itemId, title);
+                            }
+                            setIsEditingTitle(false);
+                        }}
+                        onKeyDown={(e) => {
+                            // Enter commits (blur fires onTitleCommit); Escape
+                            // cancels and restores the last-saved title. Both
+                            // just blur — onBlur owns the commit/restore logic.
+                            if (e.key === "Enter") {
+                                e.preventDefault();
+                                e.currentTarget.blur();
+                            } else if (e.key === "Escape") {
+                                e.preventDefault();
+                                skipTitleCommitRef.current = true;
+                                e.currentTarget.blur();
+                            }
+                        }}
+                    />
+                ) : (
+                    <Box
+                        sx={{
+                            flex: 1,
+                            fontSize: "0.9rem",
+                            lineHeight: 1.5,
+                            cursor: "text",
+                            wordBreak: "break-word",
                             textDecoration: item.isCompleted ? "line-through" : undefined,
                             opacity: item.isCompleted ? 0.55 : 1,
-                        },
-                    }}
-                    onChange={(e) => setTitle(e.target.value)}
-                    onBlur={() => {
-                        if (title !== item.title) onTitleCommit(item.itemId, title);
-                    }}
-                    onKeyDown={(e) => {
-                        // Single-line title: Enter commits and leaves the
-                        // field (blur fires onTitleCommit).
-                        if (e.key === "Enter") {
-                            e.preventDefault();
-                            (e.target as HTMLInputElement).blur();
-                        }
-                    }}
-                />
+                            color: title
+                                ? undefined
+                                : isDark
+                                  ? "rgba(255,255,255,0.4)"
+                                  : "rgba(0,0,0,0.4)",
+                        }}
+                        onClick={() => setIsEditingTitle(true)}
+                    >
+                        {title ? renderTitleWithLinks(title) : "Untitled todo"}
+                    </Box>
+                )}
                 <AppTooltip title={notesExpanded ? "Collapse notes" : "Expand notes"}>
                     <IconButton
                         size="sm"
