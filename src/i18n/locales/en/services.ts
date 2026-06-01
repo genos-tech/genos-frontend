@@ -20,6 +20,14 @@ export const services = {
             mentions: "Mentions",
             taskComments: "Task comments",
             inbox: "Inbox",
+            // Fine-grained mention sub-categories (registry-driven).
+            mentionChat: "In a chat message",
+            mentionThread: "In a thread reply",
+            mentionTaskBody: "In a task description",
+            mentionTaskComment: "In a task comment",
+            mentionNoteMy: "In My Notes",
+            mentionNoteTask: "In a task note",
+            mentionNoteChat: "In a chat note",
         },
         // Top banner (PermissionBanner.tsx) prompting the user to grant
         // browser-notification permission.
@@ -42,13 +50,31 @@ export const services = {
             allow: "Allow",
             mutedChatsHeading: "Muted chats ({count})",
             noMutedChats: "No muted chats. Use the bell icon in any chat header to mute it.",
+            mutedTargetsHeading: "Muted items ({count})",
+            noMutedTargets:
+                "No muted items. Mute a specific thread, task, or note from its header or ⋮ menu.",
             unmuteAriaLabel: "Unmute {name}",
+            // Labels for the per-object mute list, by target type.
+            targetTypeLabels: {
+                chat: "Chat",
+                thread: "Thread",
+                task: "Task",
+                note: "Note",
+            },
             categoryDescriptions: {
                 chats: "Direct messages, group chats, and project chat messages.",
                 threadReplies: "Replies posted under any message you can see.",
                 mentions: "When someone @-mentions you anywhere.",
                 taskComments: "New comments on tasks you participate in.",
                 inbox: "Join requests, approvals, and other inbox items.",
+                // Fine-grained mention sub-category descriptions.
+                mentionChat: "When someone @-mentions you in a chat message.",
+                mentionThread: "When someone @-mentions you in a thread reply.",
+                mentionTaskBody: "When someone @-mentions you in a task description.",
+                mentionTaskComment: "When someone @-mentions you in a task comment.",
+                mentionNoteMy: "When someone @-mentions you in My Notes.",
+                mentionNoteTask: "When someone @-mentions you in a task note.",
+                mentionNoteChat: "When someone @-mentions you in a chat note.",
             },
         },
         // Display labels for chat-type integers. Two separate maps:

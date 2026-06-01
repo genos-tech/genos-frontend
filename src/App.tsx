@@ -383,6 +383,28 @@ export const App = () => {
                 return;
             }
 
+            // Note mentions (surface 6/7/8): open the NOTE, not the task or
+            // chat it lives in. MUST branch before the task/chat branches —
+            // a task-note mention carries taskId+projectId (which would
+            // otherwise open the task) and a chat-note carries chat routing
+            // (which would otherwise hit the chat branch). Open via
+            // `loadNote(noteType, noteId)` — the same path the Unread sidebar
+            // uses — so it works for EVERY note type by id alone, with no
+            // dependence on URL params or the backend shipping parent-chat
+            // routing. `navigate("/workspace/notes")` just ensures the notes
+            // surface is mounted; `loadNote` then opens the specific note and
+            // `useNoteRouting` syncs the deep URL.
+            if (src.surfaceType === 6 || src.surfaceType === 7 || src.surfaceType === 8) {
+                const noteId = src.noteId;
+                navigate("/workspace/notes");
+                if (noteId !== undefined) {
+                    const noteType = src.surfaceType - 5; // 6→1 (my), 7→2 (task), 8→3 (chat)
+                    useNM.setCurrentNoteType(noteType);
+                    void useNM.loadNote(noteType, noteId, -1);
+                }
+                return;
+            }
+
             // Task / milestone: navigate to the task deep URL when we have
             // both ids; otherwise fall through to the chat branch.
             if (src.taskId !== undefined && src.projectId !== undefined) {
@@ -416,7 +438,7 @@ export const App = () => {
             // Defensive fallback: surface the chat service.
             navigate("/workspace/chat");
         },
-        [useCM, useTM, usePM, navigate]
+        [useCM, useTM, usePM, useNM, navigate]
     );
 
     // Web notifications: hydrates prefs from backend, owns permission state,

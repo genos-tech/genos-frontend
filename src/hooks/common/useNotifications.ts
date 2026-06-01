@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { CoarseGroup, NotificationCategory } from "../../services/notifications/categories";
 import {
     getNotificationPreferences,
     updateNotificationPreferences,
@@ -7,7 +8,8 @@ import {
 import { NotificationManager } from "../../services/notifications/notificationManager";
 import {
     ActiveSurface,
-    NotificationCategory,
+    MutedTargetRef,
+    MutedTargetType,
     NotificationIntent,
     NotificationPreference,
 } from "../../services/notifications/types";
@@ -33,10 +35,17 @@ export interface NotificationsState {
     permission: WebNotificationPermission;
     requestPermission: () => Promise<WebNotificationPermission>;
     setMasterEnabled: (value: boolean) => void;
-    setCategoryEnabled: (category: NotificationCategory, value: boolean) => void;
+    /** Toggle a coarse group master (e.g. all mentions). */
+    setGroupEnabled: (group: CoarseGroup, value: boolean) => void;
+    /** Toggle a fine sub-category (e.g. task-body mentions). */
+    setSubCategoryEnabled: (category: NotificationCategory, value: boolean) => void;
     mute: (chatType: number, chatId: string, chatName?: string) => void;
     unmute: (chatType: number, chatId: string) => void;
     isMuted: (chatType: number, chatId: string) => boolean;
+    /** Add/replace a per-object mute (thread / task / note). */
+    muteTarget: (entry: MutedTargetRef) => void;
+    unmuteTarget: (targetType: MutedTargetType, targetId: string | number) => void;
+    isTargetMutedByKey: (targetType: MutedTargetType, targetId: string | number) => boolean;
     setActiveSurface: (surface: ActiveSurface | null) => void;
     subscribeToasts: (listener: (intent: NotificationIntent) => void) => () => void;
 }
@@ -110,10 +119,18 @@ export const useNotifications = (
         readPermission()
     );
 
-    // Mirror manager prefs into React state so consumers re-render.
+    // Mirror manager prefs into React state so consumers re-render. Clone
+    // the mutable collections so a later in-place manager update can't
+    // mutate the snapshot React is holding (and a new reference triggers
+    // the re-render).
     useEffect(() => {
         return manager.subscribePreferences((next) => {
-            setPreferences({ ...next, mutedChats: [...next.mutedChats] });
+            setPreferences({
+                ...next,
+                categorySettings: { ...next.categorySettings },
+                mutedChats: [...next.mutedChats],
+                mutedTargets: [...next.mutedTargets],
+            });
         });
     }, [manager]);
 
@@ -164,9 +181,13 @@ export const useNotifications = (
         (value: boolean) => manager.setMasterEnabled(value),
         [manager]
     );
-    const setCategoryEnabled = useCallback(
+    const setGroupEnabled = useCallback(
+        (group: CoarseGroup, value: boolean) => manager.setGroupEnabled(group, value),
+        [manager]
+    );
+    const setSubCategoryEnabled = useCallback(
         (category: NotificationCategory, value: boolean) =>
-            manager.setCategoryEnabled(category, value),
+            manager.setSubCategoryEnabled(category, value),
         [manager]
     );
     const mute = useCallback(
@@ -180,6 +201,20 @@ export const useNotifications = (
     );
     const isMuted = useCallback(
         (chatType: number, chatId: string) => manager.isMuted(chatType, chatId),
+        [manager]
+    );
+    const muteTarget = useCallback(
+        (entry: MutedTargetRef) => manager.muteTarget(entry),
+        [manager]
+    );
+    const unmuteTarget = useCallback(
+        (targetType: MutedTargetType, targetId: string | number) =>
+            manager.unmuteTarget(targetType, targetId),
+        [manager]
+    );
+    const isTargetMutedByKey = useCallback(
+        (targetType: MutedTargetType, targetId: string | number) =>
+            manager.isTargetMutedByKey(targetType, targetId),
         [manager]
     );
     const setActiveSurface = useCallback(
@@ -197,10 +232,14 @@ export const useNotifications = (
         permission,
         requestPermission,
         setMasterEnabled,
-        setCategoryEnabled,
+        setGroupEnabled,
+        setSubCategoryEnabled,
         mute,
         unmute,
         isMuted,
+        muteTarget,
+        unmuteTarget,
+        isTargetMutedByKey,
         setActiveSurface,
         subscribeToasts,
     };

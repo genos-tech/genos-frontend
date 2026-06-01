@@ -6,6 +6,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { useTranslation } from "../../../../i18n";
 import { ChatNoteMetaProps, MyNoteMetaProps, TaskNoteMetaProps } from "../../../../types/notes";
+import { useNoteUnread } from "../context/NoteUnreadContext";
 
 interface FavoriteNoteItemProps {
     note: MyNoteMetaProps | TaskNoteMetaProps | ChatNoteMetaProps;
@@ -17,6 +18,8 @@ function FavoriteNoteItemComponent({ note, noteType, useNM }: FavoriteNoteItemPr
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const { t } = useTranslation();
+    const { isUnread, markRead } = useNoteUnread();
+    const hasUnread = isUnread(noteType, note.noteId);
 
     const getChatTypeLabel = (chatType: number): string => {
         switch (chatType) {
@@ -47,6 +50,7 @@ function FavoriteNoteItemComponent({ note, noteType, useNM }: FavoriteNoteItemPr
         useNM.setCurrentNoteType(noteType);
         localStorage.setItem("lastOpenNoteType", String(noteType));
         useNM.loadNote(noteType, note.noteId, -1);
+        if (hasUnread) markRead(noteType, note.noteId);
     };
 
     const handleRemoveFavorite = async (e: React.MouseEvent) => {
@@ -108,20 +112,24 @@ function FavoriteNoteItemComponent({ note, noteType, useNM }: FavoriteNoteItemPr
                 }}
                 onClick={handleClick}
             >
-                {/* Note indicator dot */}
+                {/* Note indicator dot — red when there's an unread @mention. */}
                 <Box
                     sx={{
-                        width: 6,
-                        height: 6,
+                        width: hasUnread ? 8 : 6,
+                        height: hasUnread ? 8 : 6,
                         borderRadius: "50%",
                         flexShrink: 0,
-                        backgroundColor: isSelected
+                        backgroundColor: hasUnread
                             ? isDark
                                 ? "#a78bfa"
-                                : "#6d28d9"
-                            : isDark
-                              ? "rgba(255,255,255,0.2)"
-                              : "rgba(0,0,0,0.15)",
+                                : "#7c3aed"
+                            : isSelected
+                              ? isDark
+                                  ? "#a78bfa"
+                                  : "#6d28d9"
+                              : isDark
+                                ? "rgba(255,255,255,0.2)"
+                                : "rgba(0,0,0,0.15)",
                         transition: "all 0.2s ease",
                     }}
                 />

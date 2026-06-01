@@ -15,6 +15,7 @@ import { useColorScheme } from "@mui/joy/styles";
 
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { useTranslation } from "../../../../i18n";
+import { useNoteUnread } from "../context/NoteUnreadContext";
 import { BaseNoteTreeNode } from "../types/noteTypes";
 
 interface NoteTreeRendererProps<T extends BaseNoteTreeNode> {
@@ -39,6 +40,8 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const { t } = useTranslation();
+    const { isUnread, markRead } = useNoteUnread();
+    const hasUnread = isUnread(noteType, node.noteId);
 
     // Open state is owned by useNoteManagement so the whole tree shares a
     // single Set instead of one useState + useEffect per row. Sticky
@@ -66,6 +69,8 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
         useNM.setCurrentNoteType(noteType);
         localStorage.setItem("lastOpenNoteType", String(noteType));
         useNM.loadNote(noteType, node.noteId, -1);
+        // Opening a note clears its unread @mentions (chat-style read).
+        if (hasUnread) markRead(noteType, node.noteId);
 
         // If the node has children and we're clicking it, expand it
         if (hasChildren && !open) {
@@ -184,20 +189,25 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
                         />
                     </Box>
 
-                    {/* Note indicator dot */}
+                    {/* Note indicator dot — turns red when there's an unread
+                        @mention (cleared on open). */}
                     <Box
                         sx={{
-                            width: 6,
-                            height: 6,
+                            width: hasUnread ? 8 : 6,
+                            height: hasUnread ? 8 : 6,
                             borderRadius: "50%",
                             flexShrink: 0,
-                            backgroundColor: isSelected
+                            backgroundColor: hasUnread
                                 ? isDark
                                     ? "#a78bfa"
-                                    : "#6d28d9"
-                                : isDark
-                                  ? "rgba(255,255,255,0.2)"
-                                  : "rgba(0,0,0,0.15)",
+                                    : "#7c3aed"
+                                : isSelected
+                                  ? isDark
+                                      ? "#a78bfa"
+                                      : "#6d28d9"
+                                  : isDark
+                                    ? "rgba(255,255,255,0.2)"
+                                    : "rgba(0,0,0,0.15)",
                             transition: "all 0.2s ease",
                         }}
                     />
@@ -206,7 +216,7 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
                         <Typography
                             level="body-xs"
                             sx={{
-                                fontWeight: isSelected ? 500 : 400,
+                                fontWeight: hasUnread ? 700 : isSelected ? 500 : 400,
                                 overflow: "hidden",
                                 textOverflow: "ellipsis",
                                 whiteSpace: "nowrap",

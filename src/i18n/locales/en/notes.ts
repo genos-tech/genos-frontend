@@ -17,6 +17,7 @@ export const notes = {
     },
     sidebar: {
         home: "Home",
+        unread: "Unread ({count})",
         favorites: "Favorites",
         recents: "Recents",
         workspaces: "Workspaces",
