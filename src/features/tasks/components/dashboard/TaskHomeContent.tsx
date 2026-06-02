@@ -52,7 +52,7 @@ import { TaskTableProps } from "../../../../types/tasks";
 import { SprintConfigDialog } from "../../sprint-milestone/components/SprintConfigDialog";
 import { SprintManagerDialog } from "../../sprint-milestone/components/SprintManagerDialog";
 import { SprintMilestonesSection } from "../../sprint-milestone/components/SprintMilestonesSection";
-import { Sprint } from "../../sprint-milestone/types";
+import { Milestone, Sprint } from "../../sprint-milestone/types";
 import { predefinedPriorityFilters } from "../../types/TaskTableTypes";
 import { CopyableTaskIdText } from "../CopyableTaskId";
 
@@ -309,49 +309,42 @@ export const TaskHomeContent = ({
     }, [effectiveTasks]);
 
     // ── Sprint-scoped metrics ──
-    // All counts use effectiveTasks so Deleted (and orphans of Deleted parents)
-    // are excluded. "Closed in sprint" uses the effective close date so a
-    // sub-task counts when its parent was closed during the sprint window.
-    //
-    // `created` / `closed` / `updated` are three INDEPENDENT counts — they
-    // are not subsets of each other. A task created before the sprint and
-    // closed during it lands in `closed` but not `created`, so `closed >
-    // created` is expected whenever there's carryover from prior work.
-    //
-    // For "X / Y closed" to make sense, the denominator must be the sprint
-    // SCOPE — the set of tasks that moved through the sprint window
-    // (created in sprint ∪ closed in sprint, deduped by id). That set is a
-    // proper superset of `closedInSprint`, so the ratio is always well-
-    // defined and ≤ 100%.
+    // The Sprint Summary header and the "Sprint Insights" milestone cards
+    // must always agree, so they are driven by the SAME data: the project's
+    // milestones filtered to the selected sprint. `sprintMilestones` mirrors
+    // the exact filter SprintMilestonesSection applies, so summing the cards
+    // below reproduces the header here by construction.
+    const sprintMilestones = useMemo<Milestone[]>(() => {
+        const projectId = usePM.currentProject?.projectId;
+        if (!projectId) return [];
+        const all = useSM.projectMilestones[projectId] ?? [];
+        return all.filter((m) =>
+            selectedSprint ? m.sprintId === selectedSprint.sprintId : m.sprintId == null
+        );
+    }, [usePM.currentProject?.projectId, selectedSprint?.sprintId, useSM.projectMilestones]);
+
+    // Roll the per-milestone task counts up into one sprint total.
+    // Each milestone's `tasksTotal` / `tasksClosed` already excludes Deleted
+    // tasks and includes the FULL sub-task sub-tree — the backend cascades a
+    // milestone's FK down the `parent_task_id` chain — so this aggregate
+    // satisfies "ignore Deleted, count every sub-task" without any extra
+    // walking here. Tasks attached to the sprint but to no milestone are
+    // intentionally out of scope: the header is defined as the sum of its
+    // milestones precisely so the two numbers can never diverge.
     const sprintStats = useMemo(() => {
-        const createdInSprint = effectiveTasks.filter((t) => {
-            const d = t.createdDate ? new Date(t.createdDate).getTime() : 0;
-            return d >= sprintStart && d <= now;
-        });
-        const closedInSprint = effectiveTasks.filter((t) => {
-            if (t.effectiveStatus !== "Closed") return false;
-            const d = t.effectiveCloseDate ? new Date(t.effectiveCloseDate).getTime() : 0;
-            return d >= sprintStart && d <= now;
-        });
-        const updatedInSprint = effectiveTasks.filter((t) => {
-            const d = t.updatedAt ? new Date(t.updatedAt).getTime() : 0;
-            return d >= sprintStart && d <= now;
-        });
-        const scopeIds = new Set<string>();
-        for (const t of createdInSprint) {
-            if (t.id != null) scopeIds.add(String(t.id));
-        }
-        for (const t of closedInSprint) {
-            if (t.id != null) scopeIds.add(String(t.id));
+        let total = 0;
+        let closed = 0;
+        for (const m of sprintMilestones) {
+            total += m.tasksTotal ?? 0;
+            closed += m.tasksClosed ?? 0;
         }
         return {
-            created: createdInSprint.length,
-            closed: closedInSprint.length,
-            updated: updatedInSprint.length,
-            net: createdInSprint.length - closedInSprint.length,
-            scope: scopeIds.size,
+            milestones: sprintMilestones.length,
+            total,
+            closed,
+            remaining: Math.max(0, total - closed),
         };
-    }, [effectiveTasks, sprintStart, now]);
+    }, [sprintMilestones]);
 
     // ── Assignee workload ──
     const assigneeWorkload = useMemo(() => {
@@ -729,14 +722,13 @@ export const TaskHomeContent = ({
         None: "#94a3b8",
     };
 
-    // Sprint-scoped progress percentage. Used in place of the previous
-    // overall-progress bar inside the Sprint Summary card so the sprint
-    // section's numbers don't mix in project-wide data. Denominator is
-    // the sprint SCOPE (created ∪ closed in window) so carryover work
-    // counts toward the bar and the value can never exceed 100%.
+    // Sprint completion percentage — closed vs total across the selected
+    // sprint's milestones. Same numerator/denominator as the "{closed} /
+    // {total}" label and the per-milestone progress bars below, so every
+    // sprint figure on the dashboard tells one story.
     const sprintProgressPct =
-        sprintStats.scope > 0
-            ? Math.min(100, Math.round((sprintStats.closed / sprintStats.scope) * 100))
+        sprintStats.total > 0
+            ? Math.min(100, Math.round((sprintStats.closed / sprintStats.total) * 100))
             : 0;
 
     // PUNCH LIST (v3 chatId migration): `AllChatProps.chatId` is `string`
@@ -1151,7 +1143,7 @@ export const TaskHomeContent = ({
                                             level="body-sm"
                                             sx={{ color: textSecondary, fontWeight: 500 }}
                                         >
-                                            {sprintStats.closed} / {sprintStats.scope} closed
+                                            {sprintStats.closed} / {sprintStats.total} closed
                                         </Typography>
                                     </Stack>
                                     <LinearProgress
@@ -1169,12 +1161,31 @@ export const TaskHomeContent = ({
                                     />
                                 </Box>
 
-                                {/* Sprint-scoped quick chips */}
+                                {/* Sprint roll-up chips — every value is a
+                                    slice of the same milestone aggregate that
+                                    drives the progress bar, so Tasks = Done +
+                                    Remaining and nothing here can contradict
+                                    the cards below. */}
                                 <Stack direction="row" flexWrap="wrap" spacing={1.5} useFlexGap>
                                     <Chip
                                         size="md"
-                                        startDecorator={<AddRoundedIcon sx={{ fontSize: 16 }} />}
+                                        startDecorator={<FlagRoundedIcon sx={{ fontSize: 16 }} />}
                                         variant="soft"
+                                        sx={{
+                                            backgroundColor: isDark
+                                                ? "rgba(147,51,234,0.12)"
+                                                : "rgba(147,51,234,0.1)",
+                                            color: "#a855f7",
+                                        }}
+                                    >
+                                        {sprintStats.milestones} Milestones
+                                    </Chip>
+                                    <Chip
+                                        size="md"
+                                        variant="soft"
+                                        startDecorator={
+                                            <AssignmentRoundedIcon sx={{ fontSize: 16 }} />
+                                        }
                                         sx={{
                                             backgroundColor: isDark
                                                 ? "rgba(59,130,246,0.12)"
@@ -1182,7 +1193,7 @@ export const TaskHomeContent = ({
                                             color: "#3b82f6",
                                         }}
                                     >
-                                        {sprintStats.created} Created
+                                        {sprintStats.total} Tasks
                                     </Chip>
                                     <Chip
                                         size="md"
@@ -1197,43 +1208,22 @@ export const TaskHomeContent = ({
                                             color: "#22c55e",
                                         }}
                                     >
-                                        {sprintStats.closed} Closed
+                                        {sprintStats.closed} Done
                                     </Chip>
                                     <Chip
                                         size="md"
                                         variant="soft"
                                         startDecorator={
-                                            <TrendingUpRoundedIcon sx={{ fontSize: 16 }} />
-                                        }
-                                        sx={{
-                                            backgroundColor:
-                                                sprintStats.net <= 0
-                                                    ? isDark
-                                                        ? "rgba(34,197,94,0.12)"
-                                                        : "rgba(34,197,94,0.1)"
-                                                    : isDark
-                                                      ? "rgba(251,146,60,0.12)"
-                                                      : "rgba(251,146,60,0.1)",
-                                            color: sprintStats.net <= 0 ? "#22c55e" : "#fb923c",
-                                        }}
-                                    >
-                                        {sprintStats.net > 0 ? "+" : ""}
-                                        {sprintStats.net} Net
-                                    </Chip>
-                                    <Chip
-                                        size="md"
-                                        variant="soft"
-                                        startDecorator={
-                                            <AssignmentRoundedIcon sx={{ fontSize: 16 }} />
+                                            <PendingActionsRoundedIcon sx={{ fontSize: 16 }} />
                                         }
                                         sx={{
                                             backgroundColor: isDark
-                                                ? "rgba(147,51,234,0.12)"
-                                                : "rgba(147,51,234,0.1)",
-                                            color: "#a855f7",
+                                                ? "rgba(251,146,60,0.12)"
+                                                : "rgba(251,146,60,0.1)",
+                                            color: "#fb923c",
                                         }}
                                     >
-                                        {sprintStats.updated} Updated
+                                        {sprintStats.remaining} Remaining
                                     </Chip>
                                 </Stack>
                             </Stack>

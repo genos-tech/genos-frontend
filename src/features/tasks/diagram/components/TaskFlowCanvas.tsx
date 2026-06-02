@@ -115,16 +115,27 @@ const addDaysIso = (iso: string, days: number): string => {
     return `${y}-${m}-${day}`;
 };
 
+// Soft-deleted rows the rest of the app never exposes (table, sidebar,
+// search) and which the canvas always hides. Shared by every stats
+// helper so a Deleted task never leaks into a count or a span. Mirrors
+// the local predicate inside `buildNodesAndEdges`.
+const isDeletedStatus = (status: string | null | undefined): boolean =>
+    (status ?? "").toLowerCase() === "deleted";
+
 const computeOverview = (
     graph: TaskGraph,
     rootTaskId: number,
     sprintByTaskId: Map<number, Sprint>,
     openBlockerCountByTask: Map<number, number>
 ): ScheduleOverview => {
+    // Deleted tasks are excluded from every overview figure (progress,
+    // span, overdue/due-soon/blocked) so the header matches the graph,
+    // which never renders them.
+    const liveTasks = graph.tasks.filter((t) => !isDeletedStatus(t.status));
     // Span: min(start) → max(due) across visible (non-ghost) tasks.
     let spanStart: string | null = null;
     let spanEnd: string | null = null;
-    for (const t of graph.tasks) {
+    for (const t of liveTasks) {
         if (t.startDate && (spanStart == null || t.startDate < spanStart)) {
             spanStart = t.startDate;
         }
@@ -149,7 +160,7 @@ const computeOverview = (
     let overdueCount = 0;
     let dueSoonCount = 0;
     let blockedCount = 0;
-    for (const t of graph.tasks) {
+    for (const t of liveTasks) {
         if (t.id == null) continue;
         const taskId = Number(t.id);
         const isClosed = (t.status ?? "").toLowerCase() === "closed";
@@ -251,6 +262,10 @@ const computeDescendantCounts = (
         const children = byParent.get(rootId) ?? [];
         for (const child of children) {
             if (child.id == null) continue;
+            // Skip Deleted sub-tasks (and their now-deleted subtree) so a
+            // milestone node's "closed / total" badge matches the header
+            // overview, which also excludes them.
+            if (isDeletedStatus(child.status)) continue;
             total += 1;
             if ((child.status ?? "").toLowerCase() === "closed") closed += 1;
             const sub = walk(Number(child.id));
@@ -357,13 +372,11 @@ const buildNodesAndEdges = (
     // diagram would surface dead data with no way to act on it. Also
     // applied to ghost dependency refs so a "blocker" pointing at a
     // deleted task from another project doesn't leak in.
-    const isDeleted = (status: string | null | undefined): boolean =>
-        (status ?? "").toLowerCase() === "deleted";
     const hiddenTaskIds = new Set<number>();
     for (const t of graph.tasks) {
         if (t.id == null) continue;
         const taskId = Number(t.id);
-        if (isDeleted(t.status)) {
+        if (isDeletedStatus(t.status)) {
             hiddenTaskIds.add(taskId);
             continue;
         }
@@ -379,7 +392,7 @@ const buildNodesAndEdges = (
     // Deleted ghosts: synthesised from TaskDependencyRef which carries
     // status in the same shape as internal rows, so the same predicate
     // works.
-    const visibleExternalTasks = graph.externalTasks.filter((t) => !isDeleted(t.status));
+    const visibleExternalTasks = graph.externalTasks.filter((t) => !isDeletedStatus(t.status));
 
     // Pre-sort so each parent's sibling columns render ordered by task
     // id and so blocker/blocked sibling pairs sit adjacent (blocker
