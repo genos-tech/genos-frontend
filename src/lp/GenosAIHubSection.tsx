@@ -8,22 +8,22 @@ export default function GenosAIHubImageSection({ lang = "ja" }: { lang?: Lang })
         lang === "ja"
             ? {
                   eyebrow: "How Genos works",
-                  title: "AI Agentが、チームの仕事のつながりを理解する。",
-                  body: "Genosでは、Chat、Task、NoteがAI Agentから見える同じcontext layerに保存されます。ユーザーはAIに質問するだけで、関連する議論、進行中のタスク、残された仕様やメモを横断して確認できます。",
+                  title: "Genos AIが、チームの仕事のつながりを理解する。",
+                  body: "Genosでは、Chat、Task、NoteがGenos AIから見える同じcontext layerに保存されます。ユーザーはAIに質問するだけで、関連する議論、進行中のタスク、残された仕様やメモを横断して確認できます。",
                   chips: ["Context search", "Q&A", "要約", "次アクション"],
                   caption:
                       "Genosのコアは、AIを後付けのChatbotとして置くことではありません。チームの会話・タスク・ドキュメントを、AIが理解できるプロジェクト記憶として蓄積することです。",
-                  imageAlt: "GenosのAI AgentがUser、Chat、Task、Noteとつながる概念図",
+                  imageAlt: "Genos AIがUser、Chat、Task、Noteとつながる概念図",
               }
             : {
                   eyebrow: "How Genos works",
-                  title: "AI agents understand the connections across your team’s work.",
-                  body: "In Genos, Chat, Task, and Note live in the same context layer that AI agents can access. Users can ask a question and get answers across related discussions, active tasks, specs, notes, and decisions.",
+                  title: "Genos AI understands the connections across your team’s work.",
+                  body: "In Genos, Chat, Task, and Note live in the same context layer that Genos AI can access. Users can ask a question and get answers across related discussions, active tasks, specs, notes, and decisions.",
                   chips: ["Context search", "Q&A", "Summary", "Next actions"],
                   caption:
                       "The core idea is not to add AI as a chatbot on top. Genos stores your team’s conversations, tasks, and docs as connected project memory that AI can understand.",
                   imageAlt:
-                      "A conceptual diagram showing Genos AI Agent connected with User, Chat, Task, and Note",
+                      "A conceptual diagram showing Genos AI connected with User, Chat, Task, and Note",
               };
 
     return (

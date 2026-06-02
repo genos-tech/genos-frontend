@@ -45,7 +45,7 @@ const copy = {
             badge: "MVP公開中 / Software & Product teams向け",
             title: "AIが仕事の流れを理解する、",
             titleSub: "Context OS for product teams.",
-            lead: "Genosは、チャット・タスク・ドキュメントをAIが参照しやすい形でつなぐ、software / product team向けのワークスペースです。Slack、Jira、Notionに分断された議論・意思決定・タスクの経緯を、検索とAIエージェントが活用できるチームのコンテキストとして蓄積します。",
+            lead: "Genosは、チャット・タスク・ドキュメントをAIが参照しやすい形でつなぐ、software / product team向けのワークスペースです。Slack、Jira、Notionに分断された議論・意思決定・タスクの経緯を、検索とGenos AIが活用できるチームのコンテキストとして蓄積します。",
             primary: "デモを試す",
             secondary: "仕組みを見る",
             footnote:
@@ -54,7 +54,7 @@ const copy = {
         socialProof: [
             "AIが参照できるチームのコンテキストを蓄積",
             "Software / Product teams向けに設計",
-            "Chat / Task / Note / Search / AI Agentを接続",
+            "Chat / Task / Note / Search / Genos AIを接続",
         ],
         problem: {
             eyebrow: "The problem",
@@ -78,7 +78,7 @@ const copy = {
         solution: {
             eyebrow: "AI-native context layer",
             title: "Genosは、チームの仕事をAIが読める構造に変える。",
-            body: "Genosでは、Chat、Task、Noteが単なる別機能ではなく、互いにリンクされたチームのコンテキストとして保存されます。AI Agentは、会話の経緯、タスクの状態、ドキュメントの内容を横断して参照し、検索・要約・Q&A・次アクション提案に活用できます。",
+            body: "Genosでは、Chat、Task、Noteが単なる別機能ではなく、互いにリンクされたチームのコンテキストとして保存されます。Genos AIは、会話の経緯、タスクの状態、ドキュメントの内容を横断して参照し、検索・要約・Q&A・次アクション提案に活用できます。",
         },
         features: [
             {
@@ -121,10 +121,10 @@ const copy = {
         context: {
             eyebrow: "Context operating system",
             title: "AIに必要なのは、ただのデータではなく、仕事のつながりです。",
-            body: "AI Agentが本当に役立つには、チームの会話、タスク、ドキュメントをバラバラの断片ではなく、つながったプロジェクト記憶として扱える必要があります。Genosは、software / product teamの日々の仕事を、AIが理解しやすいcontext graphとして蓄積します。",
+            body: "Genos AIが本当に役立つには、チームの会話、タスク、ドキュメントをバラバラの断片ではなく、つながったプロジェクト記憶として扱える必要があります。Genosは、software / product teamの日々の仕事を、AIが理解しやすいcontext graphとして蓄積します。",
             points: [
                 "会話・タスク・ノートを横断検索",
-                "AI Agentがプロジェクトの経緯と現在の状態を参照",
+                "Genos AIがプロジェクトの経緯と現在の状態を参照",
                 "仕様変更、意思決定、未完了タスクの履歴を自然に蓄積",
                 "新メンバーが過去の議論と判断理由を追いやすい",
             ],
@@ -148,10 +148,24 @@ const copy = {
             ],
         },
         ai: {
-            eyebrow: "AI Agent beta",
-            title: "Genosは、AI Agentがチームのコンテキストを扱える基盤を作っています。",
-            body: "GenosはOpenAI APIを利用したAI Agent機能をMVPとして検証中です。現在は、関連するChat、Task、Noteを横断して検索・要約・Q&Aを行う体験を改善しています。完璧な自律エージェントではなく、まずはチームの議論、タスク、ドキュメントをAIが参照しやすい形で蓄積することに重点を置いています。",
-            items: ["Context search", "Q&A", "要約", "次アクション提案"],
+            eyebrow: "Genos AI",
+            title: "チームの仕事について、Genosに何でも聞ける。",
+            body: "Genosは、チームのチャット・タスク・ノートを横断して読み取ります。だから普段の言葉で質問するだけで、根拠となった元の場所へのリンク付きで答えが返ってきます。長いスレッドや分厚い仕様書も、短時間で要点に。過去のやり取りをさかのぼる必要はありません。",
+            agentTagline: "質問も、要約も、キャッチアップも。",
+            capabilities: [
+                {
+                    title: "何でも質問",
+                    desc: "普段の言葉で質問するだけ。チャット・タスク・ノートを横断した答えが、出典リンク付きで返ってきます。",
+                },
+                {
+                    title: "スレッドを要約",
+                    desc: "長い議論もすぐに要点を把握。そのまま続けて質問もできます。",
+                },
+                {
+                    title: "ノートを要約",
+                    desc: "長い仕様書やドキュメントを分かりやすい要約に。気になる点はそのまま質問できます。",
+                },
+            ],
         },
         comparison: {
             eyebrow: "Why Genos",
@@ -182,7 +196,7 @@ const copy = {
         },
         cta: {
             title: "AIがチームの仕事を理解する構造を、一緒に検証してください。",
-            body: "Genosは現在MVPとして公開中です。AI Agentはまだ発展途上ですが、Chat、Task、Noteをつなげてチームのコンテキストを蓄積する体験を、software / product teamのinitial usersと一緒に磨いていきたいと考えています。",
+            body: "Genosは現在MVPとして公開中です。Genos AIはまだ発展途上ですが、Chat、Task、Noteをつなげてチームのコンテキストを蓄積する体験を、software / product teamのinitial usersと一緒に磨いていきたいと考えています。",
             primary: "デモを試す",
             secondary: "フィードバックする",
         },
@@ -204,11 +218,11 @@ const copy = {
                 },
                 {
                     q: "Slack、Jira、Notionとは何が違いますか？",
-                    a: "Genosは、単にChat、Task、Noteを同じ画面に置くことではなく、それらをAIが参照できるチームのコンテキストとして接続することを重視しています。AI Agentが関連する会話、タスク、ドキュメントを横断して扱える構造を目指しています。",
+                    a: "Genosは、単にChat、Task、Noteを同じ画面に置くことではなく、それらをAIが参照できるチームのコンテキストとして接続することを重視しています。Genos AIが関連する会話、タスク、ドキュメントを横断して扱える構造を目指しています。",
                 },
                 {
-                    q: "AI Agentはどこまで使えますか？",
-                    a: "現在のAI Agent機能はMVP / betaとして提供しています。関連するChat、Task、Noteをもとにした検索、要約、Q&Aなどを検証中です。今後、チームのコンテキストをより深く理解し、次アクション提案やナレッジ活用を支援できるよう改善していきます。",
+                    q: "Genos AIは何ができますか？",
+                    a: "普段の言葉で質問すると、チームのチャット・タスク・ノートを横断して、出典リンク付きの答えが返ってきます。長いスレッドやノートもワンクリックで要約でき、そのまま続けて質問もできます。チームに使ってもらいながら、継続的に改善しています。",
                 },
             ],
         },
@@ -232,7 +246,7 @@ const copy = {
             badge: "MVP is live / Built for software & product teams",
             title: "Context OS",
             titleSub: "for AI-native teams.",
-            lead: "Genos connects chat, tasks, and docs into a context layer that AI agents can use. Instead of leaving decisions scattered across Slack, Jira, and Notion, Genos turns your team’s work history into searchable, actionable context for AI.",
+            lead: "Genos connects chat, tasks, and docs into a context layer that Genos AI can use. Instead of leaving decisions scattered across Slack, Jira, and Notion, Genos turns your team’s work history into searchable, actionable context for AI.",
             primary: "Try the demo",
             secondary: "See how it works",
             footnote:
@@ -241,7 +255,7 @@ const copy = {
         socialProof: [
             "Build team context that AI can use",
             "Designed for software & product teams",
-            "Connects Chat / Task / Note / Search / AI Agent",
+            "Connects Chat / Task / Note / Search / Genos AI",
         ],
         problem: {
             eyebrow: "The problem",
@@ -265,7 +279,7 @@ const copy = {
         solution: {
             eyebrow: "AI-native context layer",
             title: "Genos turns team work into context AI can understand.",
-            body: "In Genos, Chat, Task, and Note are not just three features placed side by side. They become connected records of how work actually happens. AI agents can search across discussions, task status, and documentation to answer questions, summarize history, and suggest next actions.",
+            body: "In Genos, Chat, Task, and Note are not just three features placed side by side. They become connected records of how work actually happens. Genos AI can search across discussions, task status, and documentation to answer questions, summarize history, and suggest next actions.",
         },
         features: [
             {
@@ -308,10 +322,10 @@ const copy = {
         context: {
             eyebrow: "Context operating system",
             title: "AI does not just need data. It needs the relationships between work.",
-            body: "To be useful, AI agents need more than isolated messages, tickets, or docs. They need to understand how discussions led to decisions, how decisions became tasks, and how tasks changed the product. Genos stores everyday teamwork as a connected project memory.",
+            body: "To be useful, Genos AI needs more than isolated messages, tickets, or docs. It needs to understand how discussions led to decisions, how decisions became tasks, and how tasks changed the product. Genos stores everyday teamwork as a connected project memory.",
             points: [
                 "Search across chats, tasks, and notes",
-                "Let AI agents reference project history and current status",
+                "Let Genos AI reference project history and current status",
                 "Capture decisions, tradeoffs, and open tasks as connected context",
                 "Help new teammates understand why work happened, not just what happened",
             ],
@@ -335,10 +349,24 @@ const copy = {
             ],
         },
         ai: {
-            eyebrow: "AI Agent beta",
-            title: "Genos is building the context layer AI agents need to work with team knowledge.",
-            body: "Genos includes AI agent features powered by the OpenAI API, currently in MVP/beta. We are improving the experience of searching, summarizing, and answering questions across related Chats, Tasks, and Notes. The goal is not to claim a perfect autonomous agent today, but to build the structure that makes team context usable by AI.",
-            items: ["Context search", "Q&A", "Summaries", "Next actions"],
+            eyebrow: "Genos AI",
+            title: "Ask Genos anything about your team’s work.",
+            body: "Genos reads across your team’s chats, tasks, and notes — so you can ask a question in plain words and get a real answer, with links to exactly where it came from. Long thread? Dense spec? Genos sums it up in seconds, so nobody has to scroll back through weeks of history.",
+            agentTagline: "Ask. Summarize. Catch up.",
+            capabilities: [
+                {
+                    title: "Ask anything",
+                    desc: "Ask in plain words and get an answer drawn from across your chats, tasks, and notes — every answer links back to its source.",
+                },
+                {
+                    title: "Catch up on a thread",
+                    desc: "Open any long discussion and get the gist in seconds, then ask follow-up questions right there.",
+                },
+                {
+                    title: "Summarize any note",
+                    desc: "Turn a long spec or doc into a clear summary — and ask it anything you need to know.",
+                },
+            ],
         },
         comparison: {
             eyebrow: "Why Genos",
@@ -368,8 +396,8 @@ const copy = {
             headers: ["Theme", "Common fragmentation", "Genos"],
         },
         cta: {
-            title: "Help us test the context layer AI agents should have.",
-            body: "Genos is currently available as an MVP. The AI Agent is still in progress, but the core idea is clear: connect Chats, Tasks, and Notes so team context becomes usable by AI. We are looking for initial users from software and product teams to help shape the product.",
+            title: "Help us test the context layer Genos AI should have.",
+            body: "Genos is currently available as an MVP. Genos AI is still in progress, but the core idea is clear: connect Chats, Tasks, and Notes so team context becomes usable by AI. We are looking for initial users from software and product teams to help shape the product.",
             primary: "Try the demo",
             secondary: "Send feedback",
         },
@@ -391,11 +419,11 @@ const copy = {
                 },
                 {
                     q: "How is it different from Slack, Jira, and Notion?",
-                    a: "Genos does not simply place chat, tasks, and notes in the same UI. It connects them as context that AI agents can search, summarize, and reason over. The goal is to make team work understandable to AI.",
+                    a: "Genos does not simply place chat, tasks, and notes in the same UI. It connects them as context that Genos AI can search, summarize, and reason over. The goal is to make team work understandable to AI.",
                 },
                 {
-                    q: "How advanced is the AI Agent today?",
-                    a: "The AI Agent is currently available as an MVP/beta feature. We are testing search, summarization, and Q&A across related Chats, Tasks, and Notes. The long-term goal is to help AI understand team context more deeply and support next-action suggestions and knowledge workflows.",
+                    q: "What can Genos AI do?",
+                    a: "Ask a question in plain language and Genos answers from across your team’s chats, tasks, and notes — with links to the source. You can also summarize any long thread or note in a click and ask follow-up questions about it. We keep improving it as teams use it every day.",
                 },
             ],
         },
@@ -1088,20 +1116,25 @@ export default function GenosLandingPage() {
                                 <div className="flex items-center gap-3 rounded-2xl bg-white p-4 text-slate-950 shadow-xl">
                                     <Bot className="h-6 w-6 text-violet-600" />
                                     <div>
-                                        <div className="text-sm font-black">Genos AI Agent</div>
+                                        <div className="text-sm font-black">Genos AI</div>
                                         <div className="text-xs text-slate-500">
-                                            OpenAI API powered
+                                            {t.ai.agentTagline}
                                         </div>
                                     </div>
                                 </div>
-                                <div className="mt-4 grid grid-cols-2 gap-3">
-                                    {t.ai.items.map((item) => (
+                                <div className="mt-4 grid gap-3">
+                                    {t.ai.capabilities.map((cap) => (
                                         <div
-                                            key={item}
-                                            className="rounded-2xl bg-white/15 p-4 text-sm font-black"
+                                            key={cap.title}
+                                            className="rounded-2xl bg-white/15 p-4"
                                         >
-                                            <Sparkles className="mb-3 h-5 w-5 text-violet-100" />
-                                            {item}
+                                            <div className="flex items-center gap-2 text-sm font-black">
+                                                <Sparkles className="h-5 w-5 shrink-0 text-violet-100" />
+                                                {cap.title}
+                                            </div>
+                                            <p className="mt-1.5 text-xs font-semibold leading-5 text-violet-50/80">
+                                                {cap.desc}
+                                            </p>
                                         </div>
                                     ))}
                                 </div>
