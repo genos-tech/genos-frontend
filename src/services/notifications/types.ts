@@ -114,5 +114,9 @@ export type NotificationDispatch =
     | "ignored-duplicate"
     | "ignored-active-surface"
     | "ignored-permission"
+    // Hidden tab, but Web Push is active — the service worker owns the OS
+    // notification (driven by a server push), so the page suppresses its
+    // own to avoid double-notifying.
+    | "ignored-push-owned"
     | "toast"
     | "browser";

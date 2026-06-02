@@ -36,6 +36,29 @@ const isNotificationsApiSupported = (): boolean =>
 const isPageHidden = (): boolean =>
     typeof document !== "undefined" && document.visibilityState === "hidden";
 
+// Categories the server actually delivers via Web Push (see the backend
+// `webpush_dispatch`). Currently chat + thread mentions (the MENTION
+// activities created on the message-create path). For these, a hidden-tab
+// page notification would DUPLICATE the push, so we suppress it. Keep this
+// IN LOCKSTEP with the server: a category listed here that the server does
+// NOT push would get no hidden-tab notification at all; a pushed category
+// missing here would double-notify.
+const PUSH_COVERED_CATEGORIES: ReadonlySet<NotificationCategory> = new Set([
+    "mention_chat",
+    "mention_thread",
+]);
+
+// Synchronous "can this browser receive Web Push?" check — i.e. will the
+// service worker deliver a covered category, so the page shouldn't also
+// show one. Deliberately not the async "subscribed" flag (which can lag /
+// fail to set); permission-granted + push support is a reliable proxy.
+const isPushCapable = (): boolean =>
+    isNotificationsApiSupported() &&
+    typeof navigator !== "undefined" &&
+    "serviceWorker" in navigator &&
+    typeof PushManager !== "undefined" &&
+    Notification.permission === "granted";
+
 const matchesActiveSurface = (
     intent: NotificationIntent,
     active: ActiveSurface | null
@@ -105,6 +128,11 @@ export class NotificationManager {
     private readonly toastListeners = new Set<ToastListener>();
     private onPreferencesChange?: (patch: Partial<NotificationPreference>) => void;
     private onOpenIntent?: (intent: NotificationIntent) => void;
+    // True once a Web Push subscription is active. When set, the service
+    // worker owns OS notifications for hidden/closed tabs (driven by server
+    // pushes), so the page-context `new Notification()` fallback below is
+    // suppressed to avoid double-notifying.
+    private pushActive = false;
 
     constructor(opts: ManagerOptions) {
         this.currentUserId = opts.currentUserId;
@@ -124,6 +152,13 @@ export class NotificationManager {
 
     setOnOpenIntent(cb: ((intent: NotificationIntent) => void) | undefined) {
         this.onOpenIntent = cb;
+    }
+
+    /** Toggle whether a Web Push subscription is active. When true, the
+     *  hidden-tab `new Notification()` fallback is suppressed (the SW shows
+     *  the OS notification from a server push instead). */
+    setPushActive(value: boolean) {
+        this.pushActive = value;
     }
 
     // Replace the full prefs blob (e.g. after the initial backend GET).
@@ -359,6 +394,18 @@ export class NotificationManager {
         }
 
         if (hidden) {
+            // Web Push (service worker) delivers the categories the server
+            // pushes (PUSH_COVERED_CATEGORIES) whenever the browser can
+            // receive push — so for those, suppress the page-context
+            // notification to avoid duplicating the push. Other categories
+            // (and push-incapable browsers) still fall through to
+            // `new Notification()`, so they keep getting a hidden-tab alert.
+            if (
+                PUSH_COVERED_CATEGORIES.has(intent.category) &&
+                (this.pushActive || isPushCapable())
+            ) {
+                return "ignored-push-owned";
+            }
             if (!isNotificationsApiSupported() || Notification.permission !== "granted") {
                 return "ignored-permission";
             }

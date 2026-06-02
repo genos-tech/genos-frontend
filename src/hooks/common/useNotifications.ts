@@ -3,9 +3,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CoarseGroup, NotificationCategory } from "../../services/notifications/categories";
 import {
     getNotificationPreferences,
+    sendPresenceHeartbeat,
     updateNotificationPreferences,
 } from "../../services/notifications/notificationApi";
 import { NotificationManager } from "../../services/notifications/notificationManager";
+import {
+    ensurePushSubscription,
+    initPushClickNavigation,
+} from "../../services/notifications/pushSubscription";
 import {
     ActiveSurface,
     MutedTargetRef,
@@ -33,6 +38,9 @@ export interface NotificationsState {
     manager: NotificationManager;
     preferences: NotificationPreference;
     permission: WebNotificationPermission;
+    /** True when a Web Push subscription is active (OS notifications work
+     *  while the app tab is hidden or closed). */
+    pushActive: boolean;
     requestPermission: () => Promise<WebNotificationPermission>;
     setMasterEnabled: (value: boolean) => void;
     /** Toggle a coarse group master (e.g. all mentions). */
@@ -118,6 +126,7 @@ export const useNotifications = (
     const [permission, setPermission] = useState<WebNotificationPermission>(() =>
         readPermission()
     );
+    const [pushActive, setPushActive] = useState(false);
 
     // Mirror manager prefs into React state so consumers re-render. Clone
     // the mutable collections so a later in-place manager update can't
@@ -147,6 +156,52 @@ export const useNotifications = (
             cancelled = true;
         };
     }, [manager, accessToken, myself.userId]);
+
+    // Subscribe to Web Push once permission is granted, and tell the
+    // manager so it stops firing the page-context hidden-tab notification
+    // (the service worker owns OS notifications from server pushes). No-ops
+    // when unsupported / VITE_VAPID_PUBLIC_KEY unset.
+    useEffect(() => {
+        if (!accessToken || !myself.userId || permission !== "granted") return;
+        let cancelled = false;
+        (async () => {
+            const active = await ensurePushSubscription(accessTokenRef.current);
+            if (cancelled) return;
+            setPushActive(active);
+            manager.setPushActive(active);
+        })();
+        return () => {
+            cancelled = true;
+        };
+    }, [manager, accessToken, myself.userId, permission]);
+
+    // Route a push click (while a tab is open) to the deep-link target.
+    useEffect(() => {
+        initPushClickNavigation();
+    }, []);
+
+    // "I have a visible tab" heartbeat — drives server-side push
+    // suppression so an open, focused tab gets the in-app toast rather than
+    // a duplicate push. Sent only while visible; the server key TTLs out
+    // when the tab is hidden/closed, after which push resumes.
+    useEffect(() => {
+        if (!accessToken || !myself.userId) return;
+        const beat = () => {
+            if (document.visibilityState === "visible") {
+                void sendPresenceHeartbeat(accessTokenRef.current);
+            }
+        };
+        beat();
+        const interval = setInterval(beat, 45_000);
+        const onVisible = () => {
+            if (document.visibilityState === "visible") beat();
+        };
+        document.addEventListener("visibilitychange", onVisible);
+        return () => {
+            clearInterval(interval);
+            document.removeEventListener("visibilitychange", onVisible);
+        };
+    }, [accessToken, myself.userId]);
 
     // Refresh permission state on tab focus in case the user changed it via
     // browser settings without a prompt.
@@ -230,6 +285,7 @@ export const useNotifications = (
         manager,
         preferences,
         permission,
+        pushActive,
         requestPermission,
         setMasterEnabled,
         setGroupEnabled,
