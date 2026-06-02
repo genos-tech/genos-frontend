@@ -309,4 +309,14 @@ export const purpleTheme = extendTheme({
             },
         },
     },
+    // Tooltips portal to <body> at the Joy `tooltip` z-index token (default
+    // 1550). Several app surfaces use much higher hardcoded z-indexes —
+    // ServiceSwitcherOverlay (13000), the Spotlight overlay (13100) and the
+    // citation-preview UrlLinkModal (13200) — so a tooltip opened from inside
+    // any of them rendered BEHIND the overlay. Lift the token above all of
+    // them so tooltips stay topmost everywhere. (Relative order vs Joy's
+    // menus/modals/snackbars is unchanged — the token was already above those.)
+    zIndex: {
+        tooltip: 13300,
+    },
 });
