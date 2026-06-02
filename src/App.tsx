@@ -252,6 +252,7 @@ export const App = () => {
             ],
             chats: useCM.allChats.filter((c) => c.chatType === 2),
             projects: usePM.teamProjects,
+            myself,
         }),
         [
             useTM.allTasks,
@@ -261,6 +262,7 @@ export const App = () => {
             useNM.sharedNoteMeta,
             useCM.allChats,
             usePM.teamProjects,
+            myself,
         ]
     );
 
