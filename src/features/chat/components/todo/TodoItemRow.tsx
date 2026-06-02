@@ -11,6 +11,7 @@ import { Socket } from "socket.io-client";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { useUrlLinkModal } from "../../../../hooks/common/UrlLinkModalContext";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
@@ -86,7 +87,14 @@ const LINK_RE = /\[([^\]]+)\]\(([^)\s]+)\)|(https?:\/\/[^\s]+)/g;
 // plain text — building <Link> elements here then carries no injection risk.
 const isSafeHref = (url: string): boolean => /^https?:\/\//i.test(url);
 
-const renderTitleWithLinks = (text: string): ReactNode => {
+const renderTitleWithLinks = (
+    text: string,
+    // Provided when the row renders inside the app's UrlLinkModalProvider
+    // (null on e.g. signin surfaces). When present, internal links open in
+    // the preview modal / react-router instead of a new tab; null falls back
+    // to the plain target="_blank" anchor below.
+    urlLinkModal: ReturnType<typeof useUrlLinkModal>
+): ReactNode => {
     const out: ReactNode[] = [];
     let lastIndex = 0;
     for (const match of text.matchAll(LINK_RE)) {
@@ -112,8 +120,13 @@ const renderTitleWithLinks = (text: string): ReactNode => {
 
         if (start > lastIndex) out.push(text.slice(lastIndex, start));
         out.push(
-            // onClick stopPropagation: opening the link must not also flip
-            // the row into edit mode.
+            // stopPropagation: opening the link must not also flip the row
+            // into edit mode. When the modal provider is present, route the
+            // click through openModalByHref — it self-terminates (opens the
+            // preview modal for internal entities, navigates internal routes,
+            // window.opens externals), so preventDefault cancels the native
+            // anchor and lets it own the click. With no provider, fall
+            // through to the plain target="_blank" anchor.
             <Link
                 key={start}
                 href={href}
@@ -121,7 +134,13 @@ const renderTitleWithLinks = (text: string): ReactNode => {
                 sx={{ fontSize: "inherit", color: "primary.500" }}
                 target="_blank"
                 underline="always"
-                onClick={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    if (urlLinkModal) {
+                        e.preventDefault();
+                        urlLinkModal.openModalByHref(href);
+                    }
+                }}
             >
                 {label}
             </Link>
@@ -156,6 +175,10 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
 
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
+
+    // null outside the app's UrlLinkModalProvider; passed to
+    // renderTitleWithLinks so internal title links open as a preview modal.
+    const urlLinkModal = useUrlLinkModal();
 
     const [title, setTitle] = useState(item.title);
     // Read mode renders the title with clickable links; clicking the text
@@ -310,7 +333,7 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
                         }}
                         onClick={() => setIsEditingTitle(true)}
                     >
-                        {title ? renderTitleWithLinks(title) : "Untitled todo"}
+                        {title ? renderTitleWithLinks(title, urlLinkModal) : "Untitled todo"}
                     </Box>
                 )}
                 <AppTooltip title={notesExpanded ? "Collapse notes" : "Expand notes"}>

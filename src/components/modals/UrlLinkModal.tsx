@@ -11,6 +11,7 @@ import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../types/admin";
 import { ModalTarget } from "../../utils/parseInternalUrl";
 import { ModalChatView } from "./views/ModalChatView";
+import { ModalMilestoneView } from "./views/ModalMilestoneView";
 import { ModalNoteView } from "./views/ModalNoteView";
 import { ModalTaskView } from "./views/ModalTaskView";
 
@@ -50,6 +51,9 @@ export const UrlLinkModal = (props: UrlLinkModalProps) => {
         }
         if (target.kind === "task") {
             return <ModalTaskView target={target} onClose={onClose} {...rest} />;
+        }
+        if (target.kind === "milestone") {
+            return <ModalMilestoneView target={target} onClose={onClose} {...rest} />;
         }
         if (
             target.kind === "myNote" ||

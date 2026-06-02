@@ -148,11 +148,26 @@ describe("parseInternalUrl - external / route fallback", () => {
 });
 
 describe("parseInternalUrl - chat targets", () => {
-    it("parses a chatMain target", () => {
+    // Post the v3 migration chatId / threadId are UUIDs carried verbatim in
+    // the (legacy `number`-typed) slots. The parser preserves them as
+    // strings; the old integer coercion dropped every UUID link to a route.
+    const CHAT_UUID = "873e9667-065d-44d9-94ad-c6c2c4d3706e";
+    const THREAD_UUID = "2fa7e71d-ac74-44b5-b22b-d6e11082b594";
+
+    it("parses a chatMain target (legacy numeric id, kept as a string)", () => {
         expect(parseInternalUrl(`${ORIGIN}/workspace/chat/dm/5`)).toEqual({
             kind: "chatMain",
             chatType: 1,
-            chatId: 5,
+            chatId: "5",
+            messageId: undefined,
+        });
+    });
+
+    it("parses a chatMain target with a v3 UUID chatId", () => {
+        expect(parseInternalUrl(`${ORIGIN}/workspace/chat/dm/${CHAT_UUID}`)).toEqual({
+            kind: "chatMain",
+            chatType: 1,
+            chatId: CHAT_UUID,
             messageId: undefined,
         });
     });
@@ -167,7 +182,7 @@ describe("parseInternalUrl - chat targets", () => {
         expect(parseInternalUrl(`${ORIGIN}/workspace/chat/dm/5/message/99`)).toEqual({
             kind: "chatMain",
             chatType: 1,
-            chatId: 5,
+            chatId: "5",
             messageId: 99,
         });
     });
@@ -176,9 +191,22 @@ describe("parseInternalUrl - chat targets", () => {
         expect(parseInternalUrl(`${ORIGIN}/workspace/chat/dm/5/thread/7/message/99`)).toEqual({
             kind: "chatThread",
             chatType: 1,
-            chatId: 5,
-            threadId: 7,
+            chatId: "5",
+            threadId: "7",
             messageId: 99,
+            commentId: undefined,
+        });
+    });
+
+    it("parses a chatThread target with v3 UUID chatId + threadId", () => {
+        expect(
+            parseInternalUrl(`${ORIGIN}/workspace/chat/dm/${CHAT_UUID}/thread/${THREAD_UUID}`)
+        ).toEqual({
+            kind: "chatThread",
+            chatType: 1,
+            chatId: CHAT_UUID,
+            threadId: THREAD_UUID,
+            messageId: undefined,
             commentId: undefined,
         });
     });
@@ -187,10 +215,19 @@ describe("parseInternalUrl - chat targets", () => {
         expect(parseInternalUrl(`${ORIGIN}/workspace/chat/gm/3/thread/7/comment/12`)).toEqual({
             kind: "chatThread",
             chatType: 2,
-            chatId: 3,
-            threadId: 7,
+            chatId: "3",
+            threadId: "7",
             messageId: undefined,
             commentId: 12,
+        });
+    });
+
+    it("treats a `/thread/0` sentinel as the parent chat, not a thread", () => {
+        // `toV3Id` rejects the `0` thread sentinel, so deeper-wins does not
+        // fire and the link resolves to the parent chat (old numeric behaviour).
+        expect(parseInternalUrl(`${ORIGIN}/workspace/chat/dm/5/thread/0`)).toMatchObject({
+            kind: "chatMain",
+            chatId: "5",
         });
     });
 
@@ -198,11 +235,11 @@ describe("parseInternalUrl - chat targets", () => {
         expect(parseInternalUrl(`${ORIGIN}/workspace/chat/xx/5`)).toMatchObject({ kind: "route" });
     });
 
-    it("falls back to a route when the chatId is missing or non-positive", () => {
+    it("falls back to a route when the chatId is missing or invalid", () => {
         expect(parseInternalUrl(`${ORIGIN}/workspace/chat/dm`)).toMatchObject({ kind: "route" });
-        // chatId 0 is rejected by toInt (requires > 0)
+        // chatId 0 is rejected by toV3Id (legacy numeric must be > 0)
         expect(parseInternalUrl(`${ORIGIN}/workspace/chat/dm/0`)).toMatchObject({ kind: "route" });
-        // non-numeric chatId
+        // neither a UUID nor a numeric id
         expect(parseInternalUrl(`${ORIGIN}/workspace/chat/dm/abc`)).toMatchObject({
             kind: "route",
         });
@@ -239,6 +276,20 @@ describe("parseInternalUrl - task targets", () => {
             kind: "route",
         });
     });
+
+    it("parses a milestone target", () => {
+        expect(parseInternalUrl(`${ORIGIN}/workspace/tasks/project/1/milestone/47`)).toEqual({
+            kind: "milestone",
+            projectId: 1,
+            milestoneId: 47,
+        });
+    });
+
+    it("falls back to a route when projectId or milestoneId is missing", () => {
+        expect(parseInternalUrl(`${ORIGIN}/workspace/tasks/project/1/milestone`)).toMatchObject({
+            kind: "route",
+        });
+    });
 });
 
 describe("parseInternalUrl - note targets", () => {
@@ -267,13 +318,29 @@ describe("parseInternalUrl - note targets", () => {
         });
     });
 
-    it("parses a chatNote target", () => {
+    it("parses a chatNote target (legacy numeric ids, kept as strings)", () => {
         expect(parseInternalUrl(`${ORIGIN}/workspace/notes/chat/dm/5/thread/7/note/30`)).toEqual({
             kind: "chatNote",
             chatType: 1,
-            chatId: 5,
-            threadId: 7,
+            chatId: "5",
+            threadId: "7",
             noteId: 30,
+        });
+    });
+
+    it("parses a chatNote target with v3 UUID chatId + threadId", () => {
+        const chatUuid = "873e9667-065d-44d9-94ad-c6c2c4d3706e";
+        const threadUuid = "2fa7e71d-ac74-44b5-b22b-d6e11082b594";
+        expect(
+            parseInternalUrl(
+                `${ORIGIN}/workspace/notes/chat/dm/${chatUuid}/thread/${threadUuid}/note/107`
+            )
+        ).toEqual({
+            kind: "chatNote",
+            chatType: 1,
+            chatId: chatUuid,
+            threadId: threadUuid,
+            noteId: 107,
         });
     });
 
@@ -281,8 +348,8 @@ describe("parseInternalUrl - note targets", () => {
         expect(parseInternalUrl(`${ORIGIN}/workspace/notes/chat/dm/5/thread/0/note/30`)).toEqual({
             kind: "chatNote",
             chatType: 1,
-            chatId: 5,
-            threadId: 0,
+            chatId: "5",
+            threadId: "0",
             noteId: 30,
         });
     });
