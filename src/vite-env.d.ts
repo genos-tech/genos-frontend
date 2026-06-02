@@ -19,6 +19,12 @@ interface ImportMetaEnv {
      * Production stays off until the v3 rewrite is fully wired.
      */
     readonly VITE_USE_V3_CHAT?: string;
+    /**
+     * VAPID public key (base64url) for Web Push. Same value as the
+     * backend's `WEBPUSH_VAPID_PUBLIC_KEY`. When unset, the push subscribe
+     * flow no-ops (in-app notifications are unaffected).
+     */
+    readonly VITE_VAPID_PUBLIC_KEY?: string;
 }
 
 interface ImportMeta {

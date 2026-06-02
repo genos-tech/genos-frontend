@@ -116,3 +116,60 @@ export const updateNotificationPreferences = async (
         return null;
     }
 };
+
+// ----- Web Push subscriptions -----------------------------------------
+//
+// The browser `PushSubscription` is flattened to the backend's wire shape
+// (`{endpoint, p256dh, auth, user_agent?}`) before POSTing. The server
+// keys off `endpoint`, so re-registering the same browser upserts.
+
+export interface PushSubscriptionWire {
+    endpoint: string;
+    p256dh: string;
+    auth: string;
+    user_agent?: string;
+}
+
+export const registerPushSubscription = async (
+    accessToken: string | null | undefined,
+    sub: PushSubscriptionWire
+): Promise<boolean> => {
+    const api = authApi(accessToken);
+    if (!api) return false;
+    try {
+        await api.post("/user/push-subscriptions/", sub);
+        return true;
+    } catch (err) {
+        console.warn("[notifications] registerPushSubscription failed", err);
+        return false;
+    }
+};
+
+export const deletePushSubscription = async (
+    accessToken: string | null | undefined,
+    endpoint: string
+): Promise<void> => {
+    const api = authApi(accessToken);
+    if (!api) return;
+    try {
+        await api.delete("/user/push-subscriptions/", { data: { endpoint } });
+    } catch (err) {
+        console.warn("[notifications] deletePushSubscription failed", err);
+    }
+};
+
+// Best-effort "I have a visible tab" heartbeat. The server records it with
+// a short TTL so the push dispatcher skips users actively in the app
+// (they get the in-app toast instead). Sent only while the tab is visible.
+export const sendPresenceHeartbeat = async (
+    accessToken: string | null | undefined
+): Promise<void> => {
+    const api = authApi(accessToken);
+    if (!api) return;
+    try {
+        await api.post("/user/presence/heartbeat/", {});
+    } catch {
+        // Presence is a hint; a missed beat just means a push that could
+        // have been suppressed might fire. No user-visible damage.
+    }
+};
