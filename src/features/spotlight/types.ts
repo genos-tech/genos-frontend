@@ -9,7 +9,11 @@ export type NoteTypeLabel = "personal" | "task" | "chat";
 // "project" only appears in agent-emitted citation chips (the search
 // backend never returns project rows). It links to the project's
 // task-list view; no project-preview modal exists.
-export type EntityType = "chat" | "task" | "note" | "project" | "todo";
+// "spotlight_answer" is a collected past Spotlight answer (the team-shared
+// answer-reuse lane). It surfaces in typeahead and carries `answer_text` +
+// `answer_sources` so the UI can render the past answer with clickable
+// source chips. See backend `chunkers/spotlight_answer_chunker.py`.
+export type EntityType = "chat" | "task" | "note" | "project" | "todo" | "spotlight_answer";
 
 export interface SpotlightResult {
     entity_type: EntityType;
@@ -51,6 +55,13 @@ export interface SpotlightResult {
     // Cross-cutting
     project_id: string | null;
     related_entity_ids: string[];
+
+    // spotlight_answer lane only (a collected past answer). `answer_text` is
+    // the stored answer body with inline `[type:id]` citation tokens;
+    // `answer_sources` are the SpotlightResult-shaped sources the answer cited.
+    // Both absent on every other entity type.
+    answer_text?: string | null;
+    answer_sources?: SpotlightResult[];
 }
 
 export interface SearchResponse {

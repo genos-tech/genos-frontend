@@ -94,6 +94,9 @@ export interface UseSpotlightReturn {
     onReject: () => void;
     onCancel: () => void;
     onNewConversation: () => void;
+    // Render a collected past answer (a "spotlight_answer" search result)
+    // inline in the overlay, reusing the live-answer renderer. No network call.
+    showStoredAnswer: (result: SpotlightResult) => void;
     ask: AskState;
     turns: CompletedTurn[];
     dailyUsage: AgentUsage | null;
@@ -805,6 +808,28 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
         }
     }, [teamId]);
 
+    // ---- View a collected past answer (entity_type "spotlight_answer")
+    // inline, reusing the live-answer renderer (TurnView). No network call —
+    // the answer body + its sources already came back on the search result,
+    // so we just inject them as a completed (non-streaming) turn. Reset like
+    // "New conversation" first so the past answer stands alone rather than
+    // appending to an unrelated live conversation. ----
+    const showStoredAnswer = useCallback((result: SpotlightResult) => {
+        askAbortRef.current?.abort();
+        askAbortRef.current = null;
+        promotedTurnIdsRef.current.clear();
+        setTurns([]);
+        setHistoryMode("closed");
+        setHistoryDetail(null);
+        setAsk((prev) => ({
+            ...EMPTY_ASK_STATE,
+            turnId: prev.turnId + 1,
+            askedQuery: result.title || "",
+            answer: result.answer_text || "",
+            answerSources: result.answer_sources || [],
+        }));
+    }, []);
+
     return {
         isOpen,
         open,
@@ -819,6 +844,7 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
         onReject,
         onCancel,
         onNewConversation,
+        showStoredAnswer,
         ask,
         turns,
         dailyUsage,

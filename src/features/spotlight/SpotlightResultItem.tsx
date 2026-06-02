@@ -5,6 +5,7 @@
 
 import { memo } from "react";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
+import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
 import NoteAltRoundedIcon from "@mui/icons-material/NoteAltRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
@@ -31,6 +32,8 @@ const ENTITY_ICON = {
     note: NoteAltRoundedIcon,
     project: FolderRoundedIcon,
     todo: TaskAltRoundedIcon,
+    // A collected past Spotlight answer — sparkle signals "AI answer".
+    spotlight_answer: AutoAwesomeRoundedIcon,
 };
 
 const ENTITY_ICON_GRADIENT: Record<string, string> = {
@@ -39,6 +42,9 @@ const ENTITY_ICON_GRADIENT: Record<string, string> = {
     note: "linear-gradient(135deg, #818cf8 0%, #6366f1 100%)",
     project: "linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%)",
     todo: "linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%)",
+    // Distinct violet→pink so a "Previous answer" row reads differently
+    // from the live workspace entities above.
+    spotlight_answer: "linear-gradient(135deg, #c084fc 0%, #db2777 100%)",
 };
 
 // Dark-mode text colors tuned for the translucent purple sheet behind
@@ -71,6 +77,9 @@ export const entitySubtitle = (r: SpotlightResult, ts: SpotlightMessages): strin
     }
     if (r.entity_type === "task") return ts.entitySubtitle.task;
     if (r.entity_type === "project") return ts.entitySubtitle.project;
+    // Plain string (like the todo branch) so we don't have to thread a new
+    // key through every locale's message bundle.
+    if (r.entity_type === "spotlight_answer") return "Previous answer";
     if (r.entity_type === "todo") {
         // Pull the local_date out of `entity_id` for a date-flavored
         // subtitle ("Todo · 2026-05-28"). Falls back to plain "Todo".
