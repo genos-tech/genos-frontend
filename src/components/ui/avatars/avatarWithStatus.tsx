@@ -24,6 +24,14 @@ type AvatarWithStatusProps = {
     showNameAndEmail?: boolean;
     useUISM: UIStateManagementState;
     showPulseDot?: boolean;
+    /**
+     * Forwarded to `<UserAvatar>`. Defaults to `true` there (clicking the
+     * avatar opens the user-profile modal). Pass `false` when the avatar
+     * sits inside an already-clickable row (e.g. the members list inside
+     * a Team/Project/GM profile modal) whose own handler opens the
+     * profile — otherwise both fire and the modal stacks twice.
+     */
+    clickable?: boolean;
 };
 
 // Resolve a fallback initial for the rare callsites where the avatar
@@ -69,6 +77,7 @@ export const AvatarWithStatus = (props: AvatarWithStatusProps) => {
         thread,
         showNameAndEmail,
         showPulseDot,
+        clickable,
     } = props;
 
     // `isYou === true` callers always mean "the signed-in user". Falling
@@ -79,6 +88,7 @@ export const AvatarWithStatus = (props: AvatarWithStatusProps) => {
 
     return (
         <UserAvatar
+            clickable={clickable}
             fallbackInitial={fallbackInitial}
             showNameAndEmail={showNameAndEmail}
             showPulseDot={showPulseDot}
