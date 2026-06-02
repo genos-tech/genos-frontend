@@ -902,6 +902,7 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                                 >
                                                                     <AvatarWithStatus
                                                                         avatarUser={member}
+                                                                        clickable={false}
                                                                         isYou={false}
                                                                         myself={myself}
                                                                         setMyself={setMyself}

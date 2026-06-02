@@ -922,6 +922,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                             >
                                                                 <AvatarWithStatus
                                                                     avatarUser={member}
+                                                                    clickable={false}
                                                                     isYou={false}
                                                                     myself={myself}
                                                                     setMyself={setMyself}

@@ -934,6 +934,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                             >
                                                                 <AvatarWithStatus
                                                                     avatarUser={member}
+                                                                    clickable={false}
                                                                     useCM={useCM}
                                                                     isYou={false}
                                                                     myself={myself}
