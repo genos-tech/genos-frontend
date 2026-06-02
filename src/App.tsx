@@ -505,6 +505,15 @@ export const App = () => {
     // a separate backend change.
     const handleSpotlightSelect = useCallback(
         (r: SpotlightResult) => {
+            // A collected past answer has no entity to navigate to — render it
+            // inline in the overlay (reusing the live-answer renderer) instead
+            // of closing Spotlight. Its own source chips still route normally
+            // (they carry chat/task/note/project entity types, not this one).
+            if (r.entity_type === "spotlight_answer") {
+                spotlight.showStoredAnswer(r);
+                return;
+            }
+
             spotlight.close();
 
             if (r.entity_type === "task" && r.task_id && r.project_id) {
