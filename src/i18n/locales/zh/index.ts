@@ -102,6 +102,9 @@ export const zh: DeepPartial<Messages> = {
             noteUnavailable: "此笔记不可用。",
             noteLoadFailed: "加载此笔记失败。",
             loadingNote: "加载中…",
+            milestoneUnavailable: "此里程碑不可用。",
+            milestoneLoadFailed: "加载此里程碑失败。",
+            loadingMilestone: "加载中…",
         },
         editor: {
             send: "发送",

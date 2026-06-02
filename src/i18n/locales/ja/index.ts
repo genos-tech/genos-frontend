@@ -103,6 +103,9 @@ export const ja: DeepPartial<Messages> = {
             noteUnavailable: "このノートは利用できません。",
             noteLoadFailed: "このノートの読み込みに失敗しました。",
             loadingNote: "読み込み中…",
+            milestoneUnavailable: "このマイルストーンは利用できません。",
+            milestoneLoadFailed: "このマイルストーンの読み込みに失敗しました。",
+            loadingMilestone: "読み込み中…",
         },
         editor: {
             send: "送信",

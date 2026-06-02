@@ -135,6 +135,9 @@ export const common = {
         noteUnavailable: "This note isn't available.",
         noteLoadFailed: "Failed to load this note.",
         loadingNote: "Loading…",
+        milestoneUnavailable: "This milestone isn't available.",
+        milestoneLoadFailed: "Failed to load this milestone.",
+        loadingMilestone: "Loading…",
     },
     editor: {
         send: "Send",

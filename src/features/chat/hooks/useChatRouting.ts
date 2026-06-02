@@ -10,6 +10,7 @@ import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
 import { loadV3SpecificMessages } from "../services/loadV3SpecificMessages";
 import { loadV3SpecificThreadMessages } from "../services/loadV3SpecificThreadMessages";
 import { resolveV3MessageUuid, resolveV3ThreadRootUuid } from "../utils/channelIdResolvers";
+import { parseChatRoute } from "../utils/parseChatRoute";
 
 // Chat type constants matching the existing codebase.
 // Keys sorted alphabetically per `sort-keys` (the integer values are
@@ -68,29 +69,6 @@ type UseChatRoutingProps = {
     myself: UserProps;
 };
 
-type ParsedRoute = {
-    chatType: string | undefined;
-    // `chatId` is the URL chunk verbatim post-v3 flip — `ChatProps.chatId`
-    // is `string` (UUID), and `Number()`-coercing a UUID would NaN. The
-    // parser now stores the raw chunk; callers that still need a numeric
-    // legacy chat id cast at the call boundary.
-    chatId: string | undefined;
-    threadId: number | undefined;
-    messageId: number | undefined;
-    // PM thread "Comments" tab deep-link target (task comment id).
-    // Mutually exclusive with `messageId` at the URL level — the path
-    // contains either `…/message/:id` or `…/comment/:id`, never both.
-    commentId: number | undefined;
-};
-
-const EMPTY_ROUTE: ParsedRoute = {
-    chatId: undefined,
-    chatType: undefined,
-    commentId: undefined,
-    messageId: undefined,
-    threadId: undefined,
-};
-
 export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) => {
     const { accessToken } = useAuth();
     const navigate = useNavigate();
@@ -104,43 +82,9 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
     // Ref to track pathname changes vs allChats.length changes in the URL sync effect
     const prevPathnameRef = useRef("");
 
-    // Memoized parsed route - only recalculates when pathname changes
-    const parsedRoute = useMemo((): ParsedRoute => {
-        const pathParts = pathname.split("/").filter(Boolean);
-        // Expected formats:
-        //   /workspace/chat/:chatType/:chatId?/thread/:threadId?/message/:messageId?
-        //   /workspace/chat/:chatType/:chatId?/thread/:threadId?/comment/:commentId?
-        //
-        // The `comment/...` shape is the PM thread "Comments" tab deep
-        // link added alongside the existing `message/...` shape.
-
-        const chatIndex = pathParts.indexOf("chat");
-        if (chatIndex === -1) return EMPTY_ROUTE;
-
-        const chatType = pathParts[chatIndex + 1];
-        const chatIdStr = pathParts[chatIndex + 2];
-        const threadIndex = pathParts.indexOf("thread");
-        const messageIndex = pathParts.indexOf("message");
-        const commentIndex = pathParts.indexOf("comment");
-
-        // Keys sorted alphabetically per `sort-keys`.
-        return {
-            chatId: chatIdStr || undefined,
-            chatType,
-            commentId:
-                commentIndex !== -1 && pathParts[commentIndex + 1]
-                    ? Number(pathParts[commentIndex + 1])
-                    : undefined,
-            messageId:
-                messageIndex !== -1 && pathParts[messageIndex + 1]
-                    ? Number(pathParts[messageIndex + 1])
-                    : undefined,
-            threadId:
-                threadIndex !== -1 && pathParts[threadIndex + 1]
-                    ? Number(pathParts[threadIndex + 1])
-                    : undefined,
-        };
-    }, [pathname]);
+    // Memoized parsed route - only recalculates when pathname changes.
+    // The parsing itself lives in the pure, unit-tested `parseChatRoute`.
+    const parsedRoute = useMemo(() => parseChatRoute(pathname), [pathname]);
 
     // Stable callback that returns the memoized parsed route
     const parseCurrentRoute = useCallback(() => parsedRoute, [parsedRoute]);
@@ -427,12 +371,14 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
                 useCM.currentThreadChat?.threadId !== threadId);
 
         if (shouldLoadThread) {
-            // v3 path: resolve the URL `threadId` (parent's per-channel
-            // seq for DM/GM/MDM, task_id for PM) to the parent message's
+            // v3 path: resolve the URL `threadId` to the parent message's
             // v3 UUID, then load thread replies for that UUID via
-            // channelService. The legacy `processThreadMessages` slot
-            // still types things as `number` — carry the UUID via
-            // `as unknown as number` like the rest of the migration.
+            // channelService. Post-v3 the segment is already the thread-
+            // root UUID for DM/GM/MDM (passed straight through) or the
+            // numeric task_id for PM (resolved via the snapshot). The
+            // legacy `processThreadMessages` slot still types things as
+            // `number` — carry the UUID via `as unknown as number` like
+            // the rest of the migration.
             const isPm = paneType === 3;
             const threadRootUuid = resolveV3ThreadRootUuid(chatId, threadId, isPm);
             if (threadRootUuid) {

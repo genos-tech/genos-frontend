@@ -93,7 +93,7 @@ export const ModalMilestoneView = (props: ModalMilestoneViewProps) => {
         setErrorMessage(null);
 
         if (!useSM) {
-            setErrorMessage(t.common.modalView.taskUnavailable);
+            setErrorMessage(t.common.modalView.milestoneUnavailable);
             setIsLoading(false);
             return;
         }
@@ -103,7 +103,7 @@ export const ModalMilestoneView = (props: ModalMilestoneViewProps) => {
                 const milestone = await useSM.refreshMilestone(target.milestoneId);
                 if (cancelled) return;
                 if (!milestone) {
-                    setErrorMessage(t.common.modalView.taskUnavailable);
+                    setErrorMessage(t.common.modalView.milestoneUnavailable);
                     setIsLoading(false);
                     return;
                 }
@@ -111,7 +111,7 @@ export const ModalMilestoneView = (props: ModalMilestoneViewProps) => {
             } catch (e) {
                 if (!cancelled) {
                     console.error("ModalMilestoneView load failed:", e);
-                    setErrorMessage(t.common.modalView.taskLoadFailed);
+                    setErrorMessage(t.common.modalView.milestoneLoadFailed);
                     setIsLoading(false);
                 }
             }
@@ -128,7 +128,7 @@ export const ModalMilestoneView = (props: ModalMilestoneViewProps) => {
 
     if (errorMessage) return <CenteredMessage>{errorMessage}</CenteredMessage>;
     if (isLoading || !useSM)
-        return <CenteredMessage>{t.common.modalView.loadingTask}</CenteredMessage>;
+        return <CenteredMessage>{t.common.modalView.loadingMilestone}</CenteredMessage>;
 
     // Point `currentProject` at the milestone's project so
     // MilestonePreviewInner's `projectMilestones[currentProject.projectId]`
