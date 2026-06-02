@@ -7,6 +7,8 @@
 // useNoteRouting) so the URL shapes stay consistent — only modify these
 // patterns when the routing hooks change.
 
+import { isLegacyNumericId, isV3Uuid } from "./legacyId";
+
 type ChatType = 1 | 2 | 3 | 4;
 
 const CHAT_TYPE_MAP: Record<string, ChatType> = {
@@ -39,6 +41,12 @@ export type TaskTarget = {
     commentId?: number;
 };
 
+export type MilestoneTarget = {
+    kind: "milestone";
+    projectId: number;
+    milestoneId: number;
+};
+
 export type ChatNoteTarget = {
     kind: "chatNote";
     chatType: ChatType;
@@ -68,6 +76,7 @@ export type ModalTarget =
     | ChatMainTarget
     | ChatThreadTarget
     | TaskTarget
+    | MilestoneTarget
     | ChatNoteTarget
     | TaskNoteTarget
     | MyNoteTarget
@@ -84,13 +93,28 @@ const toInt = (s: string | undefined): number | undefined => {
     return Number.isFinite(n) && n > 0 ? n : undefined;
 };
 
-// Like `toInt` but accepts 0. Chat-note URLs use `/thread/0/` as a
-// sentinel for "not in a thread" (the note lives on the parent chat,
-// not on a thread within it), so we can't reject zero outright.
-const toIntAllowZero = (s: string | undefined): number | undefined => {
-    if (s === undefined || s === null || s === "") return undefined;
-    const n = Number(s);
-    return Number.isFinite(n) && n >= 0 ? n : undefined;
+// Post the v3 migration, chat & thread ids in URLs are UUIDs, not the
+// integers `toInt` expects (e.g. /workspace/chat/dm/<uuid>/thread/<uuid>).
+// Accept either a v3 UUID or a legacy *positive* numeric id, preserving
+// the raw value verbatim. The string rides in the `number`-typed
+// chatId/threadId slots and is read back as a string by ModalChatView —
+// the same legacy-slot convention the v3 adapters use throughout — hence
+// the `as unknown as number` casts at the call sites below. Returning the
+// integer-coerced value (the old behaviour) silently dropped every UUID
+// chat link to a route navigation instead of opening the preview modal.
+const toV3Id = (s: string | undefined): string | undefined => {
+    if (s === undefined) return undefined;
+    if (isV3Uuid(s)) return s;
+    return isLegacyNumericId(s) && Number(s) > 0 ? s : undefined;
+};
+
+// Like `toV3Id` but accepts the `0` sentinel chat-note URLs use for "not
+// in a thread" (`/thread/0/` — the note lives on the parent chat, not a
+// thread within it). UUIDs and any non-negative legacy numeric pass.
+const toV3IdAllowZero = (s: string | undefined): string | undefined => {
+    if (s === undefined || s === "") return undefined;
+    if (isV3Uuid(s)) return s;
+    return isLegacyNumericId(s) ? s : undefined;
 };
 
 const segmentAfter = (parts: string[], key: string): string | undefined => {
@@ -122,37 +146,49 @@ export const parseInternalUrl = (href: string): UrlClassification => {
     if (parts[0] !== "workspace") return route;
 
     // /workspace/chat/{dm|gm|pm|mdm}/:chatId[/thread/:threadId][/message/:id | /comment/:id]
+    //
+    // chatId / threadId are v3 UUIDs post-migration (see `toV3Id`); they
+    // ride in the `number`-typed slots via the legacy-slot cast below.
     if (parts[1] === "chat") {
         const chatType = CHAT_TYPE_MAP[parts[2] ?? ""];
-        const chatId = toInt(parts[3]);
+        const chatId = toV3Id(parts[3]);
         if (!chatType || !chatId) return route;
 
-        const threadId = toInt(segmentAfter(parts, "thread"));
+        const threadId = toV3Id(segmentAfter(parts, "thread"));
         const messageId = toInt(segmentAfter(parts, "message"));
         const commentId = toInt(segmentAfter(parts, "comment"));
 
         // Deeper wins: if a thread segment is present, the link author
-        // meant the thread, not just the parent chat.
+        // meant the thread, not just the parent chat. (`toV3Id` returns
+        // undefined for a `0` thread sentinel, so that falls through to
+        // the parent chat, preserving the old numeric behaviour.)
         if (threadId) {
             return {
-                chatId,
+                chatId: chatId as unknown as number,
                 chatType,
                 commentId,
                 kind: "chatThread",
                 messageId,
-                threadId,
+                threadId: threadId as unknown as number,
             };
         }
-        return { chatId, chatType, kind: "chatMain", messageId };
+        return { chatId: chatId as unknown as number, chatType, kind: "chatMain", messageId };
     }
 
     // /workspace/tasks/project/:projectId/task/:taskId[/comment/:commentId]   (Phase 2)
+    // /workspace/tasks/project/:projectId/milestone/:milestoneId
     if (parts[1] === "tasks" && parts[2] === "project") {
         const projectId = toInt(parts[3]);
         const taskId = toInt(segmentAfter(parts, "task"));
+        const milestoneId = toInt(segmentAfter(parts, "milestone"));
         const commentId = toInt(segmentAfter(parts, "comment"));
         if (projectId && taskId) {
             return { commentId, kind: "task", projectId, taskId };
+        }
+        // A project URL carries either a /task/ or a /milestone/ segment,
+        // never both, so the order of these two checks is immaterial.
+        if (projectId && milestoneId) {
+            return { kind: "milestone", milestoneId, projectId };
         }
         return route;
     }
@@ -190,17 +226,27 @@ export const parseInternalUrl = (href: string): UrlClassification => {
         }
         // /workspace/notes/chat/{dm|gm|pm|mdm}/:chatId/thread/:threadId/note/:noteId
         //
-        // `threadId === 0` is a valid sentinel for "not in a thread" —
-        // chat notes can live directly on a chat without a thread.
-        // `toIntAllowZero` accepts that; `toInt` would have rejected it
-        // and dropped the target back to a route navigation.
+        // chatId / threadId are v3 UUIDs post-migration (`toV3Id*`); they
+        // ride in the `number`-typed slots via the legacy-slot cast. Only
+        // `noteId` is used to load the note (ModalNoteView fetches by id),
+        // so even though these chat/thread ids aren't consumed downstream,
+        // they must still parse for the target to classify as a chatNote
+        // rather than dropping to a route navigation. `threadId === 0` is a
+        // valid sentinel for "not in a thread" (`toV3IdAllowZero` accepts
+        // it; `toV3Id` would reject zero).
         if (parts[2] === "chat" && parts[5] === "thread" && parts[7] === "note") {
             const chatType = CHAT_TYPE_MAP[parts[3] ?? ""];
-            const chatId = toInt(parts[4]);
-            const threadId = toIntAllowZero(parts[6]);
+            const chatId = toV3Id(parts[4]);
+            const threadId = toV3IdAllowZero(parts[6]);
             const noteId = toInt(parts[8]);
             if (chatType && chatId && threadId !== undefined && noteId) {
-                return { chatId, chatType, kind: "chatNote", noteId, threadId };
+                return {
+                    chatId: chatId as unknown as number,
+                    chatType,
+                    kind: "chatNote",
+                    noteId,
+                    threadId: threadId as unknown as number,
+                };
             }
         }
         return route;

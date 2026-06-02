@@ -103,6 +103,9 @@ export const fr: DeepPartial<Messages> = {
             noteUnavailable: "Cette note n'est pas disponible.",
             noteLoadFailed: "Impossible de charger cette note.",
             loadingNote: "Chargement…",
+            milestoneUnavailable: "Ce jalon n'est pas disponible.",
+            milestoneLoadFailed: "Impossible de charger ce jalon.",
+            loadingMilestone: "Chargement…",
         },
         editor: {
             send: "Envoyer",

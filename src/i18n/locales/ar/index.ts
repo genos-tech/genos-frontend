@@ -104,6 +104,9 @@ export const ar: DeepPartial<Messages> = {
             noteUnavailable: "هذه الملاحظة غير متاحة.",
             noteLoadFailed: "تعذّر تحميل هذه الملاحظة.",
             loadingNote: "جارٍ التحميل…",
+            milestoneUnavailable: "هذا المَعلَم غير متاح.",
+            milestoneLoadFailed: "تعذّر تحميل هذا المَعلَم.",
+            loadingMilestone: "جارٍ التحميل…",
         },
         editor: {
             send: "إرسال",

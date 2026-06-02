@@ -12,6 +12,7 @@ const SUPPORTED_KINDS: ReadonlySet<ModalTarget["kind"]> = new Set([
     "chatMain",
     "chatNote",
     "chatThread",
+    "milestone",
     "myNote",
     "sharedNote",
     "task",

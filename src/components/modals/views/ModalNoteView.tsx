@@ -3,15 +3,19 @@ import { Box, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
+import { ChatNoteEditorPanel } from "../../../features/notes/chat-notes/components/ChatNoteEditorPanel";
 import { ChatNoteMain } from "../../../features/notes/chat-notes/components/ChatNoteMain";
 import { loadSpecificNote } from "../../../features/notes/common/services/loadSpecificNote";
+import { MyNoteEditorPanel } from "../../../features/notes/my-notes/components/MyNoteEditorPanel";
 import { MyNoteMain } from "../../../features/notes/my-notes/components/MyNoteMain";
+import { TaskNoteEditorPanel } from "../../../features/notes/task-notes/components/TaskNoteEditorPanel";
 import { TaskNoteMain } from "../../../features/notes/task-notes/components/TaskNoteMain";
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../hooks/notes/useNoteManagement";
+import { noteToTab, type NoteTab } from "../../../hooks/notes/useNoteTabs";
 import { TaskManagementState } from "../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../i18n";
 import { UserProps } from "../../../types/admin";
@@ -200,17 +204,48 @@ export const ModalNoteView = (props: ModalNoteViewProps) => {
             },
             tabItems: [synthTab],
         };
+        // The editor BODY lives in MyNoteEditorPanel; MyNoteMain renders
+        // only the header + tab strip. On notes-home the body comes from
+        // the LRU pool, on the task page from MyNoteMain's inline
+        // `isInTaskPage` path — neither runs in the modal, so we mount the
+        // panel ourselves. The canonical `my-${noteId}` tab (forced
+        // noteType 1: a shared note is a personal-table note styled as
+        // shared) shares the page's useNoteData cache, so the panel
+        // self-fetches and renders the body.
+        const bodyTab = myself.teamId
+            ? (noteToTab(
+                  { noteId: note.noteId, noteType: 1, title: note.title },
+                  myself.teamId
+              ) as NoteTab & { kind: "my" })
+            : null;
         return wrapper(
-            <MyNoteMain
-                isInTaskPage={false}
-                myself={myself}
-                setMyself={setMyself}
-                socket={socket}
-                useCM={useCM}
-                useNM={useNMOverride}
-                useTEM={useTEM}
-                useUISM={useUISM}
-            />
+            <>
+                <MyNoteMain
+                    isInTaskPage={false}
+                    myself={myself}
+                    setMyself={setMyself}
+                    socket={socket}
+                    useCM={useCM}
+                    useNM={useNMOverride}
+                    useTEM={useTEM}
+                    useUISM={useUISM}
+                />
+                {bodyTab && (
+                    <MyNoteEditorPanel
+                        key={bodyTab.id}
+                        accessToken={accessToken}
+                        myself={myself}
+                        setMyself={setMyself}
+                        socket={socket}
+                        tab={bodyTab}
+                        useCM={useCM}
+                        useNM={useNMOverride}
+                        useTEM={useTEM}
+                        useUISM={useUISM}
+                        isActive
+                    />
+                )}
+            </>
         );
     }
 
@@ -252,18 +287,48 @@ export const ModalNoteView = (props: ModalNoteViewProps) => {
             tabItems: [synthTab],
             taskNoteMeta: useNM.taskNoteMeta.length > 0 ? useNM.taskNoteMeta : [synthMeta],
         };
+        // Mount the editor body ourselves (see the my-note branch note).
+        const bodyTab = myself.teamId
+            ? (noteToTab(
+                  {
+                      noteId: note.noteId,
+                      noteType: 2,
+                      projectId: note.projectId,
+                      taskId: note.taskId,
+                      title: note.title,
+                  },
+                  myself.teamId
+              ) as NoteTab & { kind: "task" })
+            : null;
         return wrapper(
-            <TaskNoteMain
-                isInTaskPage={false}
-                myself={myself}
-                setMyself={setMyself}
-                socket={socket}
-                useCM={useCM}
-                useNM={useNMOverride}
-                useTEM={useTEM}
-                useTM={useTM}
-                useUISM={useUISM}
-            />
+            <>
+                <TaskNoteMain
+                    isInTaskPage={false}
+                    myself={myself}
+                    setMyself={setMyself}
+                    socket={socket}
+                    useCM={useCM}
+                    useNM={useNMOverride}
+                    useTEM={useTEM}
+                    useTM={useTM}
+                    useUISM={useUISM}
+                />
+                {bodyTab && (
+                    <TaskNoteEditorPanel
+                        key={bodyTab.id}
+                        accessToken={accessToken}
+                        myself={myself}
+                        setMyself={setMyself}
+                        socket={socket}
+                        tab={bodyTab}
+                        useCM={useCM}
+                        useNM={useNMOverride}
+                        useTEM={useTEM}
+                        useUISM={useUISM}
+                        isActive
+                    />
+                )}
+            </>
         );
     }
 
@@ -302,19 +367,51 @@ export const ModalNoteView = (props: ModalNoteViewProps) => {
         },
         tabItems: [synthTab],
     };
+    // Mount the editor body ourselves (see the my-note branch note).
+    const bodyTab = myself.teamId
+        ? (noteToTab(
+              {
+                  chatId: note.chatId,
+                  chatType: note.chatType,
+                  isThread: note.isThread,
+                  noteId: note.noteId,
+                  noteType: 3,
+                  threadId: note.threadId,
+                  title: note.title,
+              },
+              myself.teamId
+          ) as NoteTab & { kind: "chat" })
+        : null;
     return wrapper(
-        <ChatNoteMain
-            isInChatPage={false}
-            isInTaskPage={false}
-            myself={myself}
-            setMyself={setMyself}
-            socket={socket}
-            useCM={useCM}
-            useNM={useNMOverride}
-            usePM={usePM}
-            useTEM={useTEM}
-            useTM={useTM}
-            useUISM={useUISM}
-        />
+        <>
+            <ChatNoteMain
+                isInChatPage={false}
+                isInTaskPage={false}
+                myself={myself}
+                setMyself={setMyself}
+                socket={socket}
+                useCM={useCM}
+                useNM={useNMOverride}
+                usePM={usePM}
+                useTEM={useTEM}
+                useTM={useTM}
+                useUISM={useUISM}
+            />
+            {bodyTab && (
+                <ChatNoteEditorPanel
+                    key={bodyTab.id}
+                    accessToken={accessToken}
+                    myself={myself}
+                    setMyself={setMyself}
+                    socket={socket}
+                    tab={bodyTab}
+                    useCM={useCM}
+                    useNM={useNMOverride}
+                    useTEM={useTEM}
+                    useUISM={useUISM}
+                    isActive
+                />
+            )}
+        </>
     );
 };

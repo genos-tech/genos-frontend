@@ -104,6 +104,9 @@ export const hi: DeepPartial<Messages> = {
             noteUnavailable: "यह नोट उपलब्ध नहीं है।",
             noteLoadFailed: "यह नोट लोड नहीं हो सका।",
             loadingNote: "लोड हो रहा है…",
+            milestoneUnavailable: "यह माइलस्टोन उपलब्ध नहीं है।",
+            milestoneLoadFailed: "यह माइलस्टोन लोड नहीं हो सका।",
+            loadingMilestone: "लोड हो रहा है…",
         },
         editor: {
             send: "भेजें",
