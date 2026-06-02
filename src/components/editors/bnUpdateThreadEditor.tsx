@@ -46,6 +46,7 @@ import { useTranslation } from "../../i18n";
 import { channelService } from "../../services/channel/channelService";
 import { UserProps } from "../../types/admin";
 import { ChatProps, ThreadMessageProps, ThreadProps } from "../../types/chat";
+import { filterAndRankSuggestionItems } from "../../utils/suggestionRanking";
 import { EmojiPicker } from "../ui/emoji/EmojiPicker";
 import { FileSizeRejectionSnackbar } from "../ui/feedback/FileSizeRejectionSnackbar";
 import { FileUploadStatusBadge } from "../ui/feedback/FileUploadProgress";
@@ -53,6 +54,13 @@ import { useFileSizeGuard } from "../ui/feedback/useFileSizeGuard";
 import { useUploadCounter } from "../ui/feedback/useUploadCounter";
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
+import {
+    CreateHashChatSpec,
+    CreateHashNoteSpec,
+    CreateHashProjectSpec,
+    CreateHashTaskSpec,
+    HashSuggestionMenuController,
+} from "./HashMention";
 import {
     CreateMentionGroupSpec,
     CreateMentionSpec,
@@ -128,6 +136,10 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
                 useCM
             ),
             mentionGroup: CreateMentionGroupSpec(),
+            hashTask: CreateHashTaskSpec(),
+            hashNote: CreateHashNoteSpec(),
+            hashChat: CreateHashChatSpec(),
+            hashProject: CreateHashProjectSpec(),
         },
         blockSpecs: {
             // remainingBlockSpecs contains all the other blocks
@@ -381,13 +393,15 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
                         </FormattingToolbar>
                     </Box>
 
+                    {/* "#" mentions: tasks / notes / GM chats / projects */}
+                    <HashSuggestionMenuController editor={editor} />
                     {/* Adds a mentions menu which opens with the "@" key */}
                     <SuggestionMenuController
                         suggestionMenuComponent={MentionSuggestionMenu}
                         triggerCharacter={"@"}
                         getItems={async (query) =>
                             // Gets the mentions menu items
-                            filterSuggestionItems(
+                            filterAndRankSuggestionItems(
                                 MentionMenuItems(
                                     useTEM.teamMemberProfiles,
                                     editor,

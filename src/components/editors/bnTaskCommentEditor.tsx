@@ -43,9 +43,17 @@ import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../types/admin";
 import { TaskCommentProps, TaskProps } from "../../types/tasks";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
+import { filterAndRankSuggestionItems } from "../../utils/suggestionRanking";
 import { EmojiPicker } from "../ui/emoji/EmojiPicker";
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
+import {
+    CreateHashChatSpec,
+    CreateHashNoteSpec,
+    CreateHashProjectSpec,
+    CreateHashTaskSpec,
+    HashSuggestionMenuController,
+} from "./HashMention";
 import {
     CreateMentionGroupSpec,
     CreateMentionSpec,
@@ -129,6 +137,10 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                 useCM
             ),
             mentionGroup: CreateMentionGroupSpec(),
+            hashTask: CreateHashTaskSpec(),
+            hashNote: CreateHashNoteSpec(),
+            hashChat: CreateHashChatSpec(),
+            hashProject: CreateHashProjectSpec(),
         },
         blockSpecs: {
             // remainingBlockSpecs contains all the other blocks
@@ -466,13 +478,15 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                         </FormattingToolbar>
                     </Box>
 
+                    {/* "#" mentions: tasks / notes / GM chats / projects */}
+                    <HashSuggestionMenuController editor={editor} />
                     {/* Adds a mentions menu which opens with the "@" key */}
                     <SuggestionMenuController
                         suggestionMenuComponent={MentionSuggestionMenu}
                         triggerCharacter={"@"}
                         getItems={async (query) =>
                             // Gets the mentions menu items
-                            filterSuggestionItems(
+                            filterAndRankSuggestionItems(
                                 MentionMenuItems(
                                     useTEM.teamMemberProfiles,
                                     editor,
