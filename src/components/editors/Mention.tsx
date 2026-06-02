@@ -23,9 +23,13 @@ import { UserAvatar } from "../ui/avatars/UserAvatar";
 // the two kinds of mention read as siblings instead of unrelated
 // styles. To change the look of a mention, change `mentionChipSx`
 // here and both chips update together.
-type MentionPalette = { bg: string; bgHover: string; text: string };
+//
+// Exported so the `#` mention chips (HashMention.tsx) render as siblings
+// of the `@` chips — same pill shape / padding / hover, only the palette
+// differs per entity type.
+export type MentionPalette = { bg: string; bgHover: string; text: string };
 
-const mentionChipSx = (palette: MentionPalette) =>
+export const mentionChipSx = (palette: MentionPalette) =>
     ({
         display: "inline-flex",
         alignItems: "center",
@@ -475,7 +479,13 @@ export const MentionSuggestionMenu = <T extends DefaultReactSuggestionItem>(
         <Components.SuggestionMenu.Root className="bn-suggestion-menu" id="bn-suggestion-menu">
             {items.map((item, i) => (
                 <Box
-                    key={item.title || i}
+                    // Index-based key: suggestion titles aren't unique (e.g.
+                    // several GMs named "test", or repeated note titles), so a
+                    // title key collides and breaks React's list reconciliation
+                    // — which can leave the menu showing stale rows after the
+                    // query changes. The list is rebuilt per query, so index is
+                    // a stable, unique key here.
+                    key={i}
                     aria-selected={i === selectedIndex || undefined}
                     role="option"
                     // BlockNote's default item uses `mousedown.preventDefault`

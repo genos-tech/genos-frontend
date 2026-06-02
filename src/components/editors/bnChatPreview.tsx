@@ -29,6 +29,12 @@ import { useTranslation } from "../../i18n";
 import { UserProps } from "../../types/admin";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { downloadFile } from "../../utils/downloadUtils";
+import {
+    CreateHashChatSpec,
+    CreateHashNoteSpec,
+    CreateHashProjectSpec,
+    CreateHashTaskSpec,
+} from "./HashMention";
 import { CreateMentionGroupSpec, CreateMentionSpec } from "./Mention";
 
 // Cap the number of inline PR previews per message body. Anyone pasting
@@ -80,6 +86,10 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
                 useCM
             ),
             mentionGroup: CreateMentionGroupSpec(),
+            hashTask: CreateHashTaskSpec(),
+            hashNote: CreateHashNoteSpec(),
+            hashChat: CreateHashChatSpec(),
+            hashProject: CreateHashProjectSpec(),
         },
         blockSpecs: {
             // remainingBlockSpecs contains all the other blocks

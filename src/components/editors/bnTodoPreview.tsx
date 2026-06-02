@@ -32,7 +32,15 @@ import { useAnchorClickIntercept } from "../../hooks/common/useAnchorClickInterc
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
+import { filterAndRankSuggestionItems } from "../../utils/suggestionRanking";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
+import {
+    CreateHashChatSpec,
+    CreateHashNoteSpec,
+    CreateHashProjectSpec,
+    CreateHashTaskSpec,
+    HashSuggestionMenuController,
+} from "./HashMention";
 import {
     CreateMentionGroupSpec,
     CreateMentionSpec,
@@ -101,6 +109,10 @@ export const BnTodoPreview = (props: BnTodoPreviewProps) => {
                 useCM
             ),
             mentionGroup: CreateMentionGroupSpec(),
+            hashTask: CreateHashTaskSpec(),
+            hashNote: CreateHashNoteSpec(),
+            hashChat: CreateHashChatSpec(),
+            hashProject: CreateHashProjectSpec(),
         },
         blockSpecs: {
             // remainingBlockSpecs contains all the other blocks
@@ -187,13 +199,15 @@ export const BnTodoPreview = (props: BnTodoPreviewProps) => {
                     )}
                 />
 
+                {/* "#" mentions: tasks / notes / GM chats / projects */}
+                <HashSuggestionMenuController editor={editor} />
                 {/* Adds a mentions menu which opens with the "@" key */}
                 <SuggestionMenuController
                     suggestionMenuComponent={MentionSuggestionMenu}
                     triggerCharacter={"@"}
                     getItems={async (query) =>
                         // Gets the mentions menu items
-                        filterSuggestionItems(
+                        filterAndRankSuggestionItems(
                             MentionMenuItems(
                                 useTEM.teamMemberProfiles,
                                 editor,

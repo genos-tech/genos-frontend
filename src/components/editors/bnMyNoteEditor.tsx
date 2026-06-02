@@ -70,12 +70,20 @@ import { MyNoteProps, NoteRoleMember } from "../../types/notes";
 import { getUserColor } from "../../utils/collabUtils";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { downloadFile } from "../../utils/downloadUtils";
+import { filterAndRankSuggestionItems } from "../../utils/suggestionRanking";
 import { AppTooltip } from "../ui/AppTooltip";
 import { FileSizeRejectionSnackbar } from "../ui/feedback/FileSizeRejectionSnackbar";
 import { FileUploadStatusBadge } from "../ui/feedback/FileUploadProgress";
 import { useFileSizeGuard } from "../ui/feedback/useFileSizeGuard";
 import { useUploadCounter } from "../ui/feedback/useUploadCounter";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
+import {
+    CreateHashChatSpec,
+    CreateHashNoteSpec,
+    CreateHashProjectSpec,
+    CreateHashTaskSpec,
+    HashSuggestionMenuController,
+} from "./HashMention";
 import {
     CreateMentionGroupSpec,
     CreateMentionSpec,
@@ -208,6 +216,10 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
                 useCM
             ),
             mentionGroup: CreateMentionGroupSpec(),
+            hashTask: CreateHashTaskSpec(),
+            hashNote: CreateHashNoteSpec(),
+            hashChat: CreateHashChatSpec(),
+            hashProject: CreateHashProjectSpec(),
         },
         blockSpecs: {
             ...remainingBlockSpecs,
@@ -623,7 +635,7 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
                                         suggestionMenuComponent={MentionSuggestionMenu}
                                         triggerCharacter={"@"}
                                         getItems={async (query) =>
-                                            filterSuggestionItems(
+                                            filterAndRankSuggestionItems(
                                                 MentionMenuItems(
                                                     useTEM.teamMemberProfiles,
                                                     editor,
@@ -636,6 +648,7 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
                                         }
                                     />
                                 )}
+                                {isEditable && <HashSuggestionMenuController editor={editor} />}
                                 {isEditable && (
                                     <SuggestionMenuController
                                         triggerCharacter={"/"}

@@ -41,12 +41,7 @@ import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 
 import { useCallback, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import {
-    BlockNoteSchema,
-    defaultBlockSpecs,
-    defaultInlineContentSpecs,
-    filterSuggestionItems,
-} from "@blocknote/core";
+import { BlockNoteSchema, defaultBlockSpecs, defaultInlineContentSpecs } from "@blocknote/core";
 import { BlockNoteView } from "@blocknote/mantine";
 import {
     DefaultReactSuggestionItem,
@@ -54,8 +49,16 @@ import {
     useCreateBlockNote,
 } from "@blocknote/react";
 
+import {
+    CreateHashChatSpec,
+    CreateHashNoteSpec,
+    CreateHashProjectSpec,
+    CreateHashTaskSpec,
+    HashSuggestionMenuController,
+} from "../../../components/editors/HashMention";
 import { useEditorDraft } from "../../../hooks/common/useEditorDraft";
 import { channelService, ChannelServiceError } from "../../../services/channel/channelService";
+import { filterAndRankSuggestionItems } from "../../../utils/suggestionRanking";
 import { useAttachmentDraft } from "../hooks/useAttachmentDraft";
 import { createMentionGroupSpecV3, createMentionSpecV3 } from "./MentionV3";
 import { PendingAttachmentStrip } from "./PendingAttachmentStrip";
@@ -167,6 +170,10 @@ export function MessageComposerV3({
                 ...defaultInlineContentSpecs,
                 mention: createMentionSpecV3(currentUserId),
                 mentionGroup: createMentionGroupSpecV3(),
+                hashTask: CreateHashTaskSpec(),
+                hashNote: CreateHashNoteSpec(),
+                hashChat: CreateHashChatSpec(),
+                hashProject: CreateHashProjectSpec(),
             },
             blockSpecs: remaining,
         });
@@ -256,7 +263,7 @@ export function MessageComposerV3({
                     },
                 };
             });
-            return filterSuggestionItems(items, query);
+            return filterAndRankSuggestionItems(items, query);
         },
         [editor, members]
     );
@@ -328,6 +335,7 @@ export function MessageComposerV3({
                         slashMenu={true}
                         onChange={() => saveDraft(editor.document)}
                     >
+                        <HashSuggestionMenuController editor={editor} />
                         <SuggestionMenuController
                             getItems={getMentionItems}
                             triggerCharacter="@"
