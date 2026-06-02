@@ -1,4 +1,4 @@
-import { ReactElement, ReactNode } from "react";
+import { ReactElement } from "react";
 import {
     createReactInlineContentSpec,
     DefaultReactSuggestionItem,
@@ -8,19 +8,20 @@ import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
 import ForumRoundedIcon from "@mui/icons-material/ForumRounded";
 import StickyNote2RoundedIcon from "@mui/icons-material/StickyNote2Rounded";
 import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
-import { Box, Typography } from "@mui/joy";
+import { Box, Tooltip, Typography } from "@mui/joy";
 
 import {
     HashMentionData,
     HashNoteEntry,
     useHashMentionData,
 } from "../../context/HashMentionDataContext";
+import { TaskMentionHoverCard } from "../../features/tasks/components/TaskMentionHoverCard";
 import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
 import { AllChatProps } from "../../types/chat";
 import { ProjectProps, TaskTableProps } from "../../types/tasks";
 import { chatTypeCodeToSlug, entityRefToHref, HashEntityRef } from "../../utils/entityHref";
 import { filterAndRankSuggestionItems } from "../../utils/suggestionRanking";
-import { mentionChipSx, MentionPalette, MentionSuggestionMenu } from "./Mention";
+import { MentionPalette, MentionSuggestionMenu } from "./Mention";
 
 // Sibling palettes to the `@` user/group chips (see `mentionChipSx`). One
 // per entity type so a `#` reference reads at a glance as task vs note vs
@@ -46,19 +47,40 @@ const PROJECT_PALETTE: MentionPalette = {
     text: "#d97706",
 };
 
-// Shared chip body for all four `#` mention types. Clicking hands the
-// rebuilt href to the URL-link modal (opens a preview for tasks / notes /
-// GM chats; routes to the page for projects). `useUrlLinkModal` returns
-// null outside the provider (pre-auth surfaces), so the click no-ops
-// gracefully — same defensive pattern as the `@group` chip.
+// `#` mentions render as styled inline TEXT — NOT a chip/pill — so they read
+// as a distinct affordance from the `@` user/group mention chips (which keep
+// their colored pills). Per-entity color is the type cue (task=blue,
+// note=violet, chat=teal, project=amber); a faded underline (stronger on
+// hover) marks it as clickable. Clicking hands the rebuilt href to the
+// URL-link modal; `useUrlLinkModal` is null outside the provider (pre-auth)
+// so the click no-ops gracefully.
+//
+// NOTE: where a Tooltip wraps the chip (the task mention), anchor it on a
+// plain <span>, not on this component directly — Joy's Tooltip clones its
+// child and injects props (incl. a stray `component`) that clobber the
+// styled Box.
+const hashMentionTextSx = (palette: MentionPalette) =>
+    ({
+        display: "inline",
+        color: palette.text,
+        fontWeight: 600,
+        cursor: "pointer",
+        // A subtle, faded underline marks it as a distinct interactive token
+        // (vs plain text) without the weight of a chip/pill; it strengthens
+        // on hover.
+        textDecoration: "underline",
+        textDecorationColor: palette.bgHover,
+        textUnderlineOffset: "2px",
+        transition: "text-decoration-color 0.15s ease",
+        "&:hover": { textDecorationColor: palette.text },
+    }) as const;
+
 const HashChip = ({
     href,
-    icon,
     label,
     palette,
 }: {
     href: string;
-    icon: ReactNode;
     label: string;
     palette: MentionPalette;
 }) => {
@@ -69,28 +91,11 @@ const HashChip = ({
         urlLinkModal?.openModalByHref(href);
     };
     return (
-        <Box sx={mentionChipSx(palette)} onClick={handleClick}>
-            {icon}
-            <Typography
-                fontWeight={"bold"}
-                level="body-sm"
-                sx={{
-                    color: palette.text,
-                    whiteSpace: "nowrap",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    maxWidth: 260,
-                }}
-            >
-                #{label}
-            </Typography>
+        <Box sx={hashMentionTextSx(palette)} onClick={handleClick}>
+            #{label}
         </Box>
     );
 };
-
-const chipIcon = (Icon: typeof TaskAltRoundedIcon, palette: MentionPalette) => (
-    <Icon sx={{ fontSize: 14, color: palette.text, mr: 0.25 }} />
-);
 
 // ── Inline content specs ────────────────────────────────────────────────
 // Each is a no-arg factory (props store everything the render needs) so an
@@ -119,12 +124,37 @@ export const CreateHashTaskSpec = () =>
                 const label = title ? `${idText} · ${title}` : idText;
                 const href = entityRefToHref({ entityType: "task", projectId, taskId });
                 return (
-                    <HashChip
-                        href={href}
-                        icon={chipIcon(TaskAltRoundedIcon, TASK_PALETTE)}
-                        label={label}
-                        palette={TASK_PALETTE}
-                    />
+                    <Tooltip
+                        enterDelay={250}
+                        placement="top-start"
+                        sx={{
+                            bgcolor: "transparent",
+                            border: "none",
+                            boxShadow: "none",
+                            p: 0,
+                            maxWidth: "none",
+                        }}
+                        variant="plain"
+                        // The hover card paints its own surface; keep the
+                        // tooltip wrapper transparent so two panels don't stack.
+                        title={
+                            <TaskMentionHoverCard
+                                displayId={idText}
+                                projectId={projectId}
+                                taskId={taskId}
+                                title={title}
+                            />
+                        }
+                    >
+                        {/* Plain <span> anchor: Joy's Tooltip clones its child
+                            and injects props (ref, hover handlers, a stray
+                            `component`) — landing them on the styled chip
+                            dropped its styling, so anchor on a bare span and
+                            keep the HashChip inside untouched. */}
+                        <span>
+                            <HashChip href={href} label={label} palette={TASK_PALETTE} />
+                        </span>
+                    </Tooltip>
                 );
             },
         }
@@ -171,7 +201,6 @@ export const CreateHashNoteSpec = () =>
                 return (
                     <HashChip
                         href={entityRefToHref(ref)}
-                        icon={chipIcon(StickyNote2RoundedIcon, NOTE_PALETTE)}
                         label={title || "note"}
                         palette={NOTE_PALETTE}
                     />
@@ -195,14 +224,7 @@ export const CreateHashChatSpec = () =>
             render: (props) => {
                 const { chatId, chatName } = props.inlineContent.props;
                 const href = entityRefToHref({ entityType: "chat", chatType: "gm", chatId });
-                return (
-                    <HashChip
-                        href={href}
-                        icon={chipIcon(ForumRoundedIcon, CHAT_PALETTE)}
-                        label={chatName || "chat"}
-                        palette={CHAT_PALETTE}
-                    />
-                );
+                return <HashChip href={href} label={chatName || "chat"} palette={CHAT_PALETTE} />;
             },
         }
     );
@@ -225,7 +247,6 @@ export const CreateHashProjectSpec = () =>
                 return (
                     <HashChip
                         href={href}
-                        icon={chipIcon(FolderRoundedIcon, PROJECT_PALETTE)}
                         label={projectName || "project"}
                         palette={PROJECT_PALETTE}
                     />

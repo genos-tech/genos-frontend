@@ -1,5 +1,6 @@
 import { createContext, ReactNode, useContext } from "react";
 
+import { UserProps } from "../types/admin";
 import { AllChatProps } from "../types/chat";
 import {
     ChatNoteMetaProps,
@@ -31,9 +32,13 @@ export type HashMentionData = {
     // Already filtered to GM (chatType === 2) by the provider.
     chats: AllChatProps[];
     projects: ProjectProps[];
+    // Current user — used by the task-mention hover card to fetch a task's
+    // live status (`loadSpecificTask` needs `myself.teamId`). Null outside
+    // the provider; the hover card degrades to a static label.
+    myself: UserProps | null;
 };
 
-const EMPTY: HashMentionData = { tasks: [], notes: [], chats: [], projects: [] };
+const EMPTY: HashMentionData = { tasks: [], notes: [], chats: [], projects: [], myself: null };
 
 const HashMentionDataContext = createContext<HashMentionData | null>(null);
 
