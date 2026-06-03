@@ -46,6 +46,7 @@ import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { fmt, useTranslation } from "../../../../i18n";
+import { channelService } from "../../../../services/channel/channelService";
 import { loadProjectProfile } from "../../../../services/loadProjectProfile";
 import { purplePalette } from "../../../../theme/purplePalette";
 import { ProjectProfileProps, UserProps } from "../../../../types/admin";
@@ -105,6 +106,18 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
     const pmChatIdLegacy = resolveLegacyChatId(pmChat.chatId) ?? -1;
 
     const [projectProfile, setProjectProfile] = useState<ProjectProfileProps | null>(null);
+
+    // Pull the live chat row from `useCM.allChats` so the avatar reflects
+    // the freshest `profileImagePath` after a profile-image upload calls
+    // `syncChannel` + `funcSetAllChats` below. The `pmChat` prop is
+    // captured by the parent at modal-open time and otherwise goes stale —
+    // mirrors the `liveChat` pattern in ModalGMProfile.
+    const liveChat = useMemo(() => {
+        const found = useCM.allChats.find(
+            (c) => c.chatId === pmChat.chatId && c.chatType === pmChat.chatType
+        );
+        return found ?? pmChat;
+    }, [useCM.allChats, pmChat]);
 
     // Member search state
     const [memberSearchQuery, setMemberSearchQuery] = useState("");
@@ -320,11 +333,16 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
             if (!uploadProfileImageResponse.ok) {
                 throw new Error(t.admin.projectProfile.uploadFailed);
             }
-            // v3 source. The PM channel mirrors the ProjectMaster row;
-            // the v3 backend's project-update flow broadcasts
-            // `channel.updated` to all members, which `channelService`
-            // applies to `snapshot.channels`. `funcSetAllChats` re-derives
-            // from the snapshot — no legacy IDB write needed.
+            // v3 source. The PM channel mirrors the ProjectMaster row:
+            // the `_ensure_pm_channel_for_project` signal copies the new
+            // `profile_image_file_name` onto `Channel.profile_image_url`
+            // when the upload saves the project. But the legacy image
+            // endpoint does NOT fan out a `channel.updated` broadcast, so
+            // our own snapshot is stale — pull the channel fresh via
+            // `syncChannel` first, THEN re-derive `allChats` so `liveChat`
+            // (and the sidebar `ProjectAvatar`) pick up the new image.
+            // Mirrors the GM upload flow.
+            await channelService.syncChannel(pmChat.chatId);
             await useCM.funcSetAllChats();
         }
     };
@@ -484,7 +502,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                         }}
                                     >
                                         <Avatar
-                                            src={`${media_url}/${pmChat.profileImagePath}`}
+                                            src={`${media_url}/${liveChat.profileImagePath}`}
                                             sx={{
                                                 width: 180,
                                                 height: 180,
