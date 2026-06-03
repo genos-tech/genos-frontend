@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { downloadFile } from "../utils/downloadUtils";
+import { downloadFile, upgradeInsecureUrl } from "../utils/downloadUtils";
 
 describe("downloadFile", () => {
     let createElementSpy: ReturnType<typeof vi.spyOn>;
@@ -55,5 +55,46 @@ describe("downloadFile", () => {
         await downloadFile("https://example.com/file.txt", "fallback.txt");
 
         expect(createElementSpy).toHaveBeenCalledWith("a");
+    });
+
+    it("upgrades an http:// media URL to https:// on an HTTPS page", async () => {
+        vi.stubGlobal("location", { protocol: "https:" });
+        const fetchMock = vi.fn().mockResolvedValue({
+            ok: true,
+            blob: () => Promise.resolve(new Blob(["content"], { type: "image/png" })),
+        });
+        global.fetch = fetchMock;
+
+        await downloadFile("http://api.genosai.dev/media/chats/x/shot.png", "shot.png");
+
+        expect(fetchMock).toHaveBeenCalledWith("https://api.genosai.dev/media/chats/x/shot.png");
+        vi.unstubAllGlobals();
+    });
+});
+
+describe("upgradeInsecureUrl", () => {
+    afterEach(() => {
+        vi.unstubAllGlobals();
+    });
+
+    it("upgrades http:// to https:// when the page is HTTPS", () => {
+        vi.stubGlobal("location", { protocol: "https:" });
+        expect(upgradeInsecureUrl("http://api.genosai.dev/media/a.png")).toBe(
+            "https://api.genosai.dev/media/a.png"
+        );
+    });
+
+    it("leaves http:// untouched on a plain-HTTP page (e.g. local dev)", () => {
+        vi.stubGlobal("location", { protocol: "http:" });
+        expect(upgradeInsecureUrl("http://localhost:8000/media/a.png")).toBe(
+            "http://localhost:8000/media/a.png"
+        );
+    });
+
+    it("leaves https:// URLs unchanged", () => {
+        vi.stubGlobal("location", { protocol: "https:" });
+        expect(upgradeInsecureUrl("https://api.genosai.dev/media/a.png")).toBe(
+            "https://api.genosai.dev/media/a.png"
+        );
     });
 });
