@@ -1320,17 +1320,21 @@ export class ChannelService {
     /** Forward-only on the server side. Calling with a lower seq than
      *  the existing cursor is a server-side no-op.
      *
-     *  Best-effort, unlike `send`: read.advance is idempotent and
-     *  forward-only, so a dropped emit is self-healing — the next
-     *  scroll tick, inbound message, or chat re-open re-sends the
-     *  cursor. So when the socket is down (cold-load before the
-     *  handshake completes, or a transient reconnect — network blip,
-     *  laptop sleep, mobile background) we short-circuit to a resolved
-     *  no-op instead of rejecting with `DISCONNECTED`. Rejecting here
-     *  produced a noisy `console.error` on every chat open that raced
-     *  the socket handshake, for a failure that needs no recovery and
-     *  no offline queue (cf. the send queue, which exists only because
-     *  sends are non-idempotent and losing one is data loss). */
+     *  Fully best-effort, unlike `send`: read.advance is idempotent and
+     *  forward-only, so a failed advance is self-healing — the next
+     *  scroll tick, inbound message, or chat re-open re-sends the cursor.
+     *  So markRead NEVER rejects, in either failure mode:
+     *    - socket down (cold-load before the handshake, or a transient
+     *      reconnect — network blip, laptop sleep, mobile background):
+     *      short-circuit to a resolved no-op;
+     *    - emit rejects (ack timeout, or the socket server can't reach
+     *      Django and returns a backend error): swallow to undefined.
+     *  markRead fires on every cursor advance — constantly while the user
+     *  scrolls — so letting it reject flooded the console with errors on a
+     *  degraded backend, for a failure that needs no recovery and no
+     *  offline queue (cf. the send queue, which exists only because sends
+     *  are non-idempotent and losing one is data loss). Returns undefined
+     *  on any failure; callers ignore the value. */
     markRead(
         channelId: string,
         lastReadMessageId: string,
@@ -1343,7 +1347,7 @@ export class ChannelService {
             channel_id: channelId,
             last_read_message_id: lastReadMessageId,
             thread_root_id: threadRootId ?? null,
-        });
+        }).catch(() => undefined);
     }
 
     subscribeChannel(

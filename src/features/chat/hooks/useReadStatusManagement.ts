@@ -88,9 +88,13 @@ export const useReadStatusManagement = ({
                       | undefined
               )?.messageIdWithChatIdAndThreadId
             : undefined;
-        void channelService.markRead(channelUuidRaw, messageUuid, threadRootId).catch((err) => {
-            console.error("[useReadStatusManagement] markRead failed", err);
-        });
+        // markRead is fully best-effort and never rejects now (see
+        // channelService.markRead) — a failed cursor advance self-heals on
+        // the next scroll / chat re-open and is not worth surfacing. The
+        // `.catch` is defensive only and intentionally silent; logging here
+        // flooded the console once the backend started timing out, since
+        // this fires on every scroll tick.
+        void channelService.markRead(channelUuidRaw, messageUuid, threadRootId).catch(() => {});
     };
 
     const handleReadStatusUpdate = (targetIndex: number) => {

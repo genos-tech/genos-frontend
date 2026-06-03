@@ -144,6 +144,7 @@ export const fr: DeepPartial<Messages> = {
             permissionDenied: "Vous n'avez pas la permission de faire cela.",
             requestFailed: "Impossible de traiter la requête. Veuillez réessayer.",
             actionFailed: "Impossible d'effectuer cette action. Veuillez réessayer.",
+            messageSendFailed: "Impossible d'envoyer votre message. Veuillez réessayer.",
         },
     },
     sidebar: {

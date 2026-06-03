@@ -145,6 +145,7 @@ export const hi: DeepPartial<Messages> = {
             permissionDenied: "आपके पास ऐसा करने की अनुमति नहीं है।",
             requestFailed: "अनुरोध पूरा नहीं हो सका। कृपया पुनः प्रयास करें।",
             actionFailed: "कार्य पूरा नहीं हो सका। कृपया पुनः प्रयास करें।",
+            messageSendFailed: "आपका संदेश नहीं भेजा जा सका। कृपया पुनः प्रयास करें।",
         },
     },
     sidebar: {

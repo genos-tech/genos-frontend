@@ -144,6 +144,7 @@ export const ja: DeepPartial<Messages> = {
             permissionDenied: "この操作を行う権限がありません。",
             requestFailed: "リクエストを完了できませんでした。もう一度お試しください。",
             actionFailed: "操作を完了できませんでした。もう一度お試しください。",
+            messageSendFailed: "メッセージを送信できませんでした。もう一度お試しください。",
         },
     },
     sidebar: {
