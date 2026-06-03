@@ -44,6 +44,7 @@ import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { useTranslation } from "../../i18n";
 import { channelService } from "../../services/channel/channelService";
+import { notifyActionError } from "../../services/requestErrorNotifier";
 import { UserProps } from "../../types/admin";
 import { ChatProps, ThreadMessageProps, ThreadProps } from "../../types/chat";
 import { filterAndRankSuggestionItems } from "../../utils/suggestionRanking";
@@ -266,6 +267,7 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
             );
         } catch (e) {
             console.error("[bnUpdateThreadEditor] channelService.edit failed:", e);
+            notifyActionError(e);
         }
     };
 

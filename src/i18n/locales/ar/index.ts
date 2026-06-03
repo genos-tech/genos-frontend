@@ -141,6 +141,10 @@ export const ar: DeepPartial<Messages> = {
         snackbar: {
             wsLost: "انقطع الاتصال في الوقت الفعلي. جارٍ محاولة إعادة الاتصال...",
             apiDown: "خادم API غير قابل للوصول.",
+            serverError: "خطأ في الخادم. يرجى المحاولة مرة أخرى بعد قليل.",
+            permissionDenied: "ليس لديك إذن للقيام بذلك.",
+            requestFailed: "تعذّر إكمال الطلب. يرجى المحاولة مرة أخرى.",
+            actionFailed: "تعذّر إكمال الإجراء. يرجى المحاولة مرة أخرى.",
         },
     },
     sidebar: {

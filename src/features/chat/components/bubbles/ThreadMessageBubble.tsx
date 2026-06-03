@@ -15,6 +15,7 @@ import { useDoubleClickTodoPreference } from "../../../../hooks/common/useDouble
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { channelService } from "../../../../services/channel/channelService";
+import { notifyActionError } from "../../../../services/requestErrorNotifier";
 import { UserProps } from "../../../../types/admin";
 import { ChannelKind } from "../../../../types/channel";
 import { MessageProps, ThreadMessageProps, ThreadProps } from "../../../../types/chat";
@@ -221,7 +222,10 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
             setReactions(reactions.filter((_, idx) => idx !== existingIndex));
             void channelService
                 .unreact(v3MessageId, v3ChannelId, channelKind, selectedEmoji)
-                .catch((e) => console.error("[ThreadMessageBubble] unreact failed:", e));
+                .catch((e) => {
+                    console.error("[ThreadMessageBubble] unreact failed:", e);
+                    notifyActionError(e);
+                });
         } else {
             setReactions([
                 ...reactions,
@@ -234,7 +238,10 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
             ]);
             void channelService
                 .react(v3MessageId, v3ChannelId, channelKind, selectedEmoji)
-                .catch((e) => console.error("[ThreadMessageBubble] react failed:", e));
+                .catch((e) => {
+                    console.error("[ThreadMessageBubble] react failed:", e);
+                    notifyActionError(e);
+                });
         }
         setSelectedEmoji(null);
     }, [selectedEmoji]);
