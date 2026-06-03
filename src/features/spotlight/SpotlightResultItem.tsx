@@ -6,6 +6,7 @@
 import { memo } from "react";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
+import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
 import NoteAltRoundedIcon from "@mui/icons-material/NoteAltRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
@@ -29,6 +30,7 @@ interface Props {
 const ENTITY_ICON = {
     chat: QuestionAnswerRoundedIcon,
     task: AssignmentRoundedIcon,
+    milestone: FlagRoundedIcon,
     note: NoteAltRoundedIcon,
     project: FolderRoundedIcon,
     todo: TaskAltRoundedIcon,
@@ -39,6 +41,9 @@ const ENTITY_ICON = {
 const ENTITY_ICON_GRADIENT: Record<string, string> = {
     chat: "linear-gradient(135deg, #fb923c 0%, #f59e0b 100%)",
     task: "linear-gradient(135deg, #22c55e 0%, #10b981 100%)",
+    // Orange — matches the milestone identity color used elsewhere (e.g.
+    // the task diagram's milestone node border).
+    milestone: "linear-gradient(135deg, #f59e0b 0%, #ea580c 100%)",
     note: "linear-gradient(135deg, #818cf8 0%, #6366f1 100%)",
     project: "linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%)",
     todo: "linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%)",
@@ -76,6 +81,9 @@ export const entitySubtitle = (r: SpotlightResult, ts: SpotlightMessages): strin
         }
     }
     if (r.entity_type === "task") return ts.entitySubtitle.task;
+    // Plain string (like the todo / spotlight_answer branches) so we don't
+    // have to thread a new key through every locale's message bundle.
+    if (r.entity_type === "milestone") return "Milestone";
     if (r.entity_type === "project") return ts.entitySubtitle.project;
     // Plain string (like the todo branch) so we don't have to thread a new
     // key through every locale's message bundle.

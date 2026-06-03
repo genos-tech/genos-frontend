@@ -28,6 +28,7 @@ import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineR
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
+import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import ReplayRoundedIcon from "@mui/icons-material/ReplayRounded";
@@ -1559,6 +1560,10 @@ function _chipLabel(s: SpotlightResult, ts: SpotlightMessages): string {
         const id = s.task_display_id || s.task_id;
         return fmt(template, { subtitle, id, sep });
     }
+    // Plain string (no new i18n key) — mirrors the todo branch below.
+    if (s.entity_type === "milestone") {
+        return title ? `Milestone${sep}${title}` : "Milestone";
+    }
     if (s.entity_type === "chat" && s.chat_id) {
         const template = badge === "thread" ? ts.chip.chatThread : ts.chip.chatPlain;
         return fmt(template, { subtitle, sep });
@@ -1583,6 +1588,7 @@ function _chipLabel(s: SpotlightResult, ts: SpotlightMessages): string {
 
 function _sourceIcon(entityType: string) {
     if (entityType === "task") return <AssignmentRoundedIcon sx={{ fontSize: 13 }} />;
+    if (entityType === "milestone") return <FlagRoundedIcon sx={{ fontSize: 13 }} />;
     if (entityType === "chat") return <ChatBubbleOutlineRoundedIcon sx={{ fontSize: 13 }} />;
     if (entityType === "note") return <StickyNote2RoundedIcon sx={{ fontSize: 13 }} />;
     if (entityType === "project") return <FolderRoundedIcon sx={{ fontSize: 13 }} />;
