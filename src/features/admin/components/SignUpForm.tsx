@@ -24,9 +24,10 @@ import {
     Typography,
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { SignUpFormStyles } from "../../../components/ui/styles/commonStyle";
+import { clearUserScopedLocalStorage, useAuth } from "../../../context/AuthContext";
 import { fmt, useTranslation } from "../../../i18n";
 import { purplePalette } from "../../../theme/purplePalette";
 import { OAUTH_INTEGRATIONS_ENABLED } from "../../integrations/featureFlags";
@@ -55,7 +56,20 @@ interface SignUpFormElement extends HTMLFormElement {
 
 export const SignUpForm = () => {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const { setAccessToken } = useAuth();
     const { t } = useTranslation();
+
+    // Invite context — keyed strictly off the `invite_email` query param
+    // that AcceptInviteHandler always sets when routing here. We do NOT
+    // fall back to localStorage for the email: a stale pendingInviteEmail
+    // from an abandoned invite would otherwise lock a normal /signup
+    // visit's email field. The token is only used when we're actually in
+    // the invite flow (query param present), so it can't leak into a
+    // plain signup either.
+    const invitedEmail = searchParams.get("invite_email") ?? "";
+    const inviteToken = invitedEmail ? (localStorage.getItem("pendingInviteToken") ?? "") : "";
+
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
@@ -100,7 +114,33 @@ export const SignUpForm = () => {
     ];
 
     const _signup = async (username: string, email: string, password: string) => {
-        const signUpRes = await signUp(username, email, password, false, setErrorMessage);
+        const signUpRes = await signUp(
+            username,
+            email,
+            password,
+            false,
+            setErrorMessage,
+            inviteToken || undefined
+        );
+        if (signUpRes && "access" in signUpRes) {
+            // Invite signup: the backend auto-verified the email and issued
+            // a JWT. Mirror SignInForm's localStorage dance, then route to
+            // /jointeam — its consume funnel redeems the (still-pending)
+            // invite and enters the workspace, exactly like the
+            // existing-account path. clearUserScopedLocalStorage preserves
+            // pendingInviteToken (see TRANSIENT_HANDOFF_LOCAL_STORAGE_KEYS).
+            const previousUserId = localStorage.getItem("userId");
+            if (previousUserId !== signUpRes.user.id) {
+                clearUserScopedLocalStorage();
+            }
+            setAccessToken(signUpRes.access);
+            localStorage.setItem("isSigningIn", "yes");
+            localStorage.setItem("userName", signUpRes.user.username || "");
+            localStorage.setItem("userId", signUpRes.user.id || "");
+            localStorage.setItem("userEmail", signUpRes.user.email || "");
+            navigate("/jointeam");
+            return;
+        }
         if (signUpRes && signUpRes.message === "verification_email_sent" && "email" in signUpRes) {
             setVerificationSentTo(signUpRes.email);
             setErrorMessage(null);
@@ -372,8 +412,10 @@ export const SignUpForm = () => {
                                         {t.admin.auth.signUp.emailLabel}
                                     </FormLabel>
                                     <Input
+                                        defaultValue={invitedEmail}
                                         name="email"
                                         placeholder={t.admin.auth.signUp.emailPlaceholder}
+                                        readOnly={!!invitedEmail}
                                         sx={inputStyle}
                                         type="email"
                                         startDecorator={
@@ -385,6 +427,14 @@ export const SignUpForm = () => {
                                             />
                                         }
                                     />
+                                    {invitedEmail && (
+                                        <Typography
+                                            level="body-xs"
+                                            sx={{ color: styles.subtitleColor, mt: 0.5 }}
+                                        >
+                                            {t.admin.auth.signUp.invitedEmailHint}
+                                        </Typography>
+                                    )}
                                 </FormControl>
 
                                 <FormControl required>

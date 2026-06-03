@@ -9,17 +9,23 @@ export const signUp = async (
     email: string,
     password: string,
     isSystemUser: boolean,
-    setErrorMessage?: (value: string) => void
+    setErrorMessage?: (value: string) => void,
+    inviteToken?: string
 ): Promise<SignUpResponse | SignUpVerificationResponse | undefined> => {
     const is_system_user: boolean = isSystemUser;
     try {
         const api = nonAuthApi();
-        const res = await api.post("/user/signup/", {
+        const body: Record<string, unknown> = {
             username,
             email,
             password,
             is_system_user,
-        });
+        };
+        // When present, the backend validates the token + email match,
+        // auto-verifies, auto-joins the team, and returns a SignUpResponse
+        // (with `access`) instead of the verification-email response.
+        if (inviteToken) body.invite_token = inviteToken;
+        const res = await api.post("/user/signup/", body);
         return res.data as SignUpResponse | SignUpVerificationResponse;
     } catch (error: unknown) {
         const m = getMessages().admin.auth.errors;
