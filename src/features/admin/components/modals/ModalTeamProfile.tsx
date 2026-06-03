@@ -4,6 +4,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import EditIcon from "@mui/icons-material/Edit";
 import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
+import PersonAddAltRoundedIcon from "@mui/icons-material/PersonAddAltRounded";
 import SearchIcon from "@mui/icons-material/Search";
 import SwapHorizRoundedIcon from "@mui/icons-material/SwapHorizRounded";
 import {
@@ -42,6 +43,7 @@ import { TeamProfileProps, UserProps } from "../../../../types/admin";
 import { extractYYYYMMDD } from "../../../../utils/dateUtils";
 import { leaveTeam } from "../../services/leaveTeam";
 import { updateTeamProfile } from "../../services/updateTeamProfile";
+import { ModalInviteMembers } from "./ModalInviteMembers";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
@@ -104,6 +106,10 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
     const [nameError, setNameError] = useState<string | null>(null);
     const [nameSaving, setNameSaving] = useState(false);
     const [openTransfer, setOpenTransfer] = useState(false);
+
+    // Invite-by-email flow (owner-only). The button + sub-modal are gated
+    // by isTeamOwner; the backend re-checks ownership on /team/invite/.
+    const [openInvite, setOpenInvite] = useState(false);
 
     const handleNameSave = async () => {
         const next = nameDraft.trim();
@@ -748,10 +754,34 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                         sx={{
                                                             display: "flex",
                                                             justifyContent: "flex-end",
+                                                            flexWrap: "wrap",
+                                                            gap: 1,
                                                             mt: 1,
                                                             mb: 1.5,
                                                         }}
                                                     >
+                                                        <Button
+                                                            size="sm"
+                                                            variant="solid"
+                                                            startDecorator={
+                                                                <PersonAddAltRoundedIcon
+                                                                    sx={{ fontSize: 16 }}
+                                                                />
+                                                            }
+                                                            sx={{
+                                                                borderRadius: "8px",
+                                                                fontWeight: 600,
+                                                                background:
+                                                                    "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)",
+                                                                "&:hover": {
+                                                                    background:
+                                                                        "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)",
+                                                                },
+                                                            }}
+                                                            onClick={() => setOpenInvite(true)}
+                                                        >
+                                                            {t.admin.inviteMembers.openButton}
+                                                        </Button>
                                                         <Button
                                                             color="neutral"
                                                             size="sm"
@@ -1029,6 +1059,11 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                 title={t.common.profileEdit.transferTitle}
                 onCancel={() => setOpenTransfer(false)}
                 onConfirm={handleTransferConfirm}
+            />
+            <ModalInviteMembers
+                open={openInvite}
+                teamId={teamProfile.teamId}
+                onClose={() => setOpenInvite(false)}
             />
         </>
     );

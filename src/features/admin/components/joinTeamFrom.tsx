@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
@@ -34,6 +34,7 @@ import { createTeam } from "../services/createTeam";
 import { findTeam } from "../services/findTeam";
 import { joinTeam } from "../services/joinTeam";
 import { loadMyTeams } from "../services/loadMyTeams";
+import { acceptInvite } from "../services/teamInvite";
 
 interface FindTeamFormElements extends HTMLFormControlsCollection {
     teamId: HTMLInputElement;
@@ -169,6 +170,55 @@ export const JoinTeam = () => {
                 setJoinedTeams(loadedTeams);
             })();
         }
+    }, [accessToken]);
+
+    // Consume a pending email invite once we're authenticated. This is the
+    // single funnel for ALL invite paths once a user has a token: a person
+    // who signed in (password OR OAuth) or just signed up via an invite
+    // link lands here, the stashed invite is redeemed, and they're routed
+    // into the team. `inviteConsumedRef` guards against a double-accept if
+    // the effect re-runs (re-render / StrictMode) before the async clear.
+    const inviteConsumedRef = useRef(false);
+    useEffect(() => {
+        if (inviteConsumedRef.current) return;
+        const token = localStorage.getItem("pendingInviteToken");
+        if (!token || !accessToken) return;
+
+        // If the stashed invite is for a different email than the
+        // signed-in user — e.g. a previous user on a shared device
+        // abandoned an invite — it isn't ours to redeem. Clear it silently:
+        // don't hit the server or show a mismatch error to someone who
+        // never requested an invite. (acceptInvite also enforces the match
+        // server-side, so this can't wrongly add anyone either way.)
+        const pendingEmail = (localStorage.getItem("pendingInviteEmail") || "").toLowerCase();
+        const myEmail = (localStorage.getItem("userEmail") || "").toLowerCase();
+        if (pendingEmail && myEmail && pendingEmail !== myEmail) {
+            localStorage.removeItem("pendingInviteToken");
+            localStorage.removeItem("pendingInviteEmail");
+            return;
+        }
+
+        inviteConsumedRef.current = true;
+        let cancelled = false;
+        (async () => {
+            const r = await acceptInvite(accessToken, token);
+            if (cancelled) return;
+            // Clear on every terminal outcome so a stale token can't leak
+            // into a later, unrelated sign-in on this device.
+            localStorage.removeItem("pendingInviteToken");
+            localStorage.removeItem("pendingInviteEmail");
+            if (r.ok && r.team_id) {
+                localStorage.setItem("teamId", r.team_id);
+                localStorage.setItem("teamName", r.team_name ?? "");
+                navigate("/workspace");
+            } else if (r.error === "email_mismatch") {
+                setMoveToTeamErrorMessage(t.admin.acceptInvite.mismatchShort);
+            }
+            // else: silently fall through to the normal team picker.
+        })();
+        return () => {
+            cancelled = true;
+        };
     }, [accessToken]);
 
     useEffect(() => {

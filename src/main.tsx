@@ -6,6 +6,7 @@ import { Outlet, Route, BrowserRouter as Router, Routes } from "react-router-dom
 import { AuthProvider } from "./context/AuthContext";
 import { PageNotFound } from "./components/layout/pageNotFound";
 import { AuthGuard, GuestGuard } from "./features/admin/authGuard";
+import { AcceptInviteHandler } from "./features/admin/components/AcceptInviteHandler";
 import { AuthShell } from "./features/admin/components/AuthShell";
 import { JoinTeam } from "./features/admin/components/joinTeamFrom";
 import { OAuthSuccessHandler } from "./features/admin/components/OAuthSuccessHandler";
@@ -84,6 +85,13 @@ createRoot(document.getElementById("root")!).render(
                         is not signed in yet. After verifying they're sent
                         to /signin to authenticate. */}
                     <Route element={<VerifyEmailHandler />} path="/verify-email" />
+
+                    {/* Invite acceptance — outside BOTH guards because the
+                        visitor may be logged in OR not. The signup/signin
+                        branch happens inside the handler based on the
+                        preview response, never a blind redirect (GuestGuard
+                        would bounce a logged-in visitor). */}
+                    <Route element={<AcceptInviteHandler />} path="/accept-invite" />
 
                     {/* JoinTeam is auth-guarded but shares the same chrome
                         as the sign-in cluster, so it lives under AuthShell. */}

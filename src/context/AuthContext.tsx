@@ -69,6 +69,14 @@ export const DEVICE_PREFERENCE_LOCAL_STORAGE_KEYS = [
     "weikiy.taskTable.sortTiers.v2",
 ];
 
+// Transient cross-auth handoff state that must survive the user-change
+// wipe. A pending team invite is captured BEFORE the user authenticates,
+// so it isn't "the previous user's data" — it's intent for the action the
+// current sign-in/sign-up is completing. Without preserving it, the
+// `localStorage.clear()` in clearUserScopedLocalStorage drops the token
+// before the post-auth consume funnel (JoinTeam) can redeem it.
+export const TRANSIENT_HANDOFF_LOCAL_STORAGE_KEYS = ["pendingInviteToken", "pendingInviteEmail"];
+
 /**
  * Wipe localStorage of the previously signed-in user's data while keeping
  * device-level UI preferences intact. Called from the sign-in flow when a
@@ -83,7 +91,10 @@ export const DEVICE_PREFERENCE_LOCAL_STORAGE_KEYS = [
  */
 export const clearUserScopedLocalStorage = (): void => {
     const preserved = new Map<string, string>();
-    for (const key of DEVICE_PREFERENCE_LOCAL_STORAGE_KEYS) {
+    for (const key of [
+        ...DEVICE_PREFERENCE_LOCAL_STORAGE_KEYS,
+        ...TRANSIENT_HANDOFF_LOCAL_STORAGE_KEYS,
+    ]) {
         const val = localStorage.getItem(key);
         if (val !== null) preserved.set(key, val);
     }
@@ -201,11 +212,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         const attemptRefresh = async () => {
             // Return if the user is on the signin or signup page.
+            //
+            // /accept-invite is included because it's a public-but-
+            // AuthProvider page that manages its own auth routing: a
+            // logged-out invitee must be sent to /signup or /signin based
+            // on the invite preview, not force-redirected to /signin (which
+            // would drop the invite context). It never needs an access
+            // token itself — the actual accept happens on /jointeam (where
+            // refresh runs normally) or via the signup endpoint.
             if (
                 window.location.pathname === "/signin" ||
                 window.location.pathname === "/signup" ||
                 window.location.pathname === "/reset-password" ||
                 window.location.pathname === "/oauth/success" ||
+                window.location.pathname === "/accept-invite" ||
                 window.location.pathname === "/home"
             ) {
                 return;
