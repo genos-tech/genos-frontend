@@ -214,7 +214,6 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
         // `flaggedMessages` list automatically.
         const v3MessageId = message.messageIdWithChatIdAndThreadId;
         if (!v3MessageId) {
-            console.warn("[BubbleThreadMoreMenu] missing v3 messageUuid — flag not persisted");
             closeMenu();
             return;
         }

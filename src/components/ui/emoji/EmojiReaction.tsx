@@ -135,8 +135,6 @@ export const EmojiReaction = (props: EmojiReactionProps) => {
             }
             return;
         }
-        console.warn("[EmojiReaction] missing v3 messageUuid — cannot react");
-        return;
     };
 
     return (

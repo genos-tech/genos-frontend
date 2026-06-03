@@ -57,10 +57,8 @@ export async function handleV3Activity(payload: unknown): Promise<void> {
             getMyself()
         );
 
-        console.log("[handleV3Activity] adapted legacy row", legacy);
         await addActivityMessage(legacy);
 
-        console.log("[handleV3Activity] IDB write done, dispatching window event");
         // `detail.activity` carries the adapted row so listeners that
         // need the data (web-notification router, future bridges)
         // don't have to re-fetch from IDB. The useChatManagement

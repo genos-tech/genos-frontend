@@ -209,7 +209,6 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
         // set by `v3ThreadMessageToLegacy`.
         const v3MessageId = message.messageIdWithChatIdAndThreadId;
         if (!v3MessageId) {
-            console.warn("[ThreadMessageBubble] missing v3 messageUuid — cannot react");
             setSelectedEmoji(null);
             return;
         }

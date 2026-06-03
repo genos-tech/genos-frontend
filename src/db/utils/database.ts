@@ -97,7 +97,6 @@ export class DatabaseUtils {
                 deleteReq.onsuccess = () => resolve();
                 deleteReq.onerror = () => reject(deleteReq.error);
             });
-            console.log(`IndexedDB "${DB_NAME}" deleted. Recreating...`);
             return true;
         } catch {
             return false;

@@ -245,7 +245,6 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
         try {
             const v3ChannelUuid = String(activity.chatId);
             if (!v3ChannelUuid) {
-                console.warn("[chatListItemForActivity] empty activity.chatId");
                 return;
             }
             const messages = await loadV3SpecificMessages(v3ChannelUuid, chatType);
@@ -304,7 +303,6 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                 // v3-native: activity.chatId IS the PM channel UUID.
                 const v3ChannelUuid = String(activity.chatId);
                 if (!v3ChannelUuid) {
-                    console.warn("[chatListItemForActivity] empty PM activity.chatId");
                     return;
                 }
                 const messages = await loadV3SpecificMessages(v3ChannelUuid, 3);
@@ -513,7 +511,6 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
         const noteId = activity.chatId;
         const fetched = await loadSpecificNote(myself, noteTypeForActivity, noteId, accessToken);
         if (!fetched) {
-            console.warn("Note mention activity: could not load note", noteId);
             return;
         }
         if (noteTypeForActivity === 1) {

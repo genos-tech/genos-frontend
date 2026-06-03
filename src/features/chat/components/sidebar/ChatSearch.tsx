@@ -135,7 +135,6 @@ export const ChatSearch = (props: ChatSearchProps) => {
             }
         }
         if (!channel) {
-            console.warn("[ChatSearch] no v3 channel found for search result", value);
             return;
         }
 

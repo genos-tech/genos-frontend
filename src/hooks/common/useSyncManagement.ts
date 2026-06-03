@@ -22,7 +22,6 @@ export const webSocketSync = (props: WebSocketSyncProps) => {
 
     useEffect(() => {
         if (socket === null) {
-            console.warn("socket is null");
             return;
         }
 

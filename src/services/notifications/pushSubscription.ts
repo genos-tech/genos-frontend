@@ -71,7 +71,6 @@ export const ensurePushSubscription = async (
     if (!isPushSupported()) return false;
     if (Notification.permission !== "granted") return false;
     if (!VAPID_PUBLIC_KEY) {
-        console.warn("[push] VITE_VAPID_PUBLIC_KEY is not set; skipping push subscribe");
         return false;
     }
     const reg = await registerServiceWorker();

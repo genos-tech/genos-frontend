@@ -65,7 +65,6 @@ export const useWebSocket = (
     // Initialize WebSocket connection
     useEffect(() => {
         if (accessToken) {
-            console.log("[WS] Start establishing WS connection");
             const _socket = createSocket(accessToken);
             setSocketInstance((prev) => {
                 if (prev) {
@@ -73,9 +72,6 @@ export const useWebSocket = (
                 }
                 return _socket;
             });
-            console.log("[WS] WS connection established");
-        } else {
-            console.warn("[WS] No valid access token found");
         }
     }, [myself, accessToken, currentTeamId]);
 
@@ -143,22 +139,12 @@ export const wsJoinTeamHook = (props: wsJoinTeamHookProps) => {
             return;
         }
 
-        socket.on("connect", () => {
-            console.log("WS connected");
-        });
-
         socket.on("auth_error", (data) => {
             console.error("Authentication Error:", data.message);
             // alert(`Error: ${data.message}`);
         });
 
-        socket.on("message", async (message) => {
-            console.log("message:", message);
-        });
-
         return () => {
-            socket.off("message");
-            socket.off("connect");
             socket.off("auth_error");
         };
     }, [accessToken]);

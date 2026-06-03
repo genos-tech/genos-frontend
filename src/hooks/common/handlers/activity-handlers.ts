@@ -31,7 +31,6 @@ export const handleActivityMessage = async (
                 tmpNewActivityMessage.mentionedUserIds &&
                 isInArray(myself.userId, tmpNewActivityMessage.mentionedUserIds)
             ) {
-                // console.log("Me mentioned");
                 // Align the live activityId with what `get_mention_activities`
                 // returns on REST refresh ("3-<chat_type>-..."). The DB always
                 // stores the row with the "1-" prefix and the GET endpoint
@@ -51,28 +50,22 @@ export const handleActivityMessage = async (
                 };
                 doUpdateActivityMessage = true;
             } else if (tmpNewActivityMessage.isThread === true) {
-                // console.log("thread replay from others");
                 newActivityMessage = tmpNewActivityMessage;
                 doUpdateActivityMessage = true;
             } else if (tmpNewActivityMessage.chatType === 2) {
-                // console.log("GM message from others");
                 newActivityMessage = tmpNewActivityMessage;
                 doUpdateActivityMessage = true;
             } else if (tmpNewActivityMessage.chatType === 4) {
-                // console.log("task comment from others");
                 newActivityMessage = tmpNewActivityMessage;
                 doUpdateActivityMessage = true;
             } else {
                 newActivityMessage = undefined;
-                // console.log("[IGNORE] Common message or mention but not to me");
             }
 
             if (doUpdateActivityMessage && newActivityMessage) {
                 await addActivityMessage(newActivityMessage);
                 useCM.funcSetActivityMessages();
             }
-        } else {
-            // console.log("[IGNORE] Thread, task comment or mention from myself");
         }
     } else {
         // If it's a reaction activity, add the activity
@@ -81,14 +74,11 @@ export const handleActivityMessage = async (
             tmpNewActivityMessage.senderId === myself.userId &&
             tmpNewActivityMessage.latestReaction.sender.userId !== myself.userId
         ) {
-            // console.log("Got reaction to me");
             newActivityMessage = tmpNewActivityMessage;
             if (newActivityMessage) {
                 await addActivityMessage(newActivityMessage);
                 useCM.funcSetActivityMessages();
             }
-        } else {
-            // console.log("[IGNORE] Reaction to others message or reacted by myself");
         }
     }
 };

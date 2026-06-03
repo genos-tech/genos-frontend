@@ -28,7 +28,6 @@ export const deleteThreadMessage = async (
     setErrorMessage?: (value: string) => void
 ): Promise<void> => {
     if (!messageUuid) {
-        console.warn("[deleteThreadMessage] missing v3 messageUuid — no-op");
         setErrorMessage?.("Could not delete: message id unavailable.");
         return;
     }

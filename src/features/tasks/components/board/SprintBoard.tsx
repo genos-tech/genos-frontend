@@ -312,9 +312,6 @@ export const SprintBoard = (props: SprintBoardProps) => {
         });
 
         if (!newStatus || !accessToken) {
-            console.warn(
-                `[SprintBoard] Cannot persist status: newStatus=${newStatus}, accessToken=${!!accessToken}`
-            );
             return;
         }
 

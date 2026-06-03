@@ -235,7 +235,6 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
         // path; the message's `metadata` JSON already carries them.
         const v3MessageId = message.messageIdWithChatId;
         if (!v3MessageId) {
-            console.warn("[bnUpdateEditor] missing v3 messageUuid — cannot edit");
             return;
         }
         try {

@@ -133,7 +133,6 @@ export const loadInitialData = (
         const lastChatType =
             tmpLastChatType && tmpLastChatType !== "" ? Number(tmpLastChatType) : -1;
         if (lastChatType === -1) {
-            console.warn("lastChatType is not set");
             setIsInitialChatLoaded(true);
             return;
         }
@@ -158,10 +157,6 @@ export const loadInitialData = (
         // useChatManagement.localStorage writer will then update
         // with the UUID).
         if (storedId && !isV3Uuid(storedId)) {
-            console.warn(
-                `[loadInitialData] stale legacy chatId in ${storageKey} (${storedId}); ` +
-                    "clearing and skipping restore."
-            );
             if (storageKey) localStorage.removeItem(storageKey);
             setCurrentMainChat(defaultChat);
             setIsInitialChatLoaded(true);
@@ -170,7 +165,6 @@ export const loadInitialData = (
 
         const lastChatId = storedId && storedId !== "" ? storedId : null;
         if (lastChatId === null) {
-            console.warn("Failed due to lastChatId is null or undefined, using default chat");
             setCurrentMainChat(defaultChat);
             setIsInitialChatLoaded(true);
             return;
@@ -197,9 +191,6 @@ export const loadInitialData = (
                     // store yet (REST refresh in flight, or membership
                     // changed). Land on default — they can reopen from
                     // the v3 sidebar once it renders.
-                    console.warn(
-                        `[loadInitialData] last channel ${lastChatId} not yet in v3 store; default.`
-                    );
                     setCurrentMainChat(defaultChat);
                     setIsInitialChatLoaded(true);
                     return;

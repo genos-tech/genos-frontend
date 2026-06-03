@@ -135,7 +135,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // failures (401/403) from transient errors so the caller can
     // decide whether to keep retrying.
     const refreshAccessToken = async (): Promise<RefreshOutcome> => {
-        console.log("[AUTH] Refreshing token");
         try {
             const response = await fetch(`${base_url}/user/signin/refresh/`, {
                 method: "GET",
@@ -145,12 +144,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             if (response.ok) {
                 const data = await response.json();
                 setAccessToken(data.access);
-                console.log("[AUTH] Token refreshed successfully");
                 return "ok";
             }
 
             if (response.status === 401 || response.status === 403) {
-                console.warn("[AUTH] Refresh rejected by server (no/invalid refresh token)");
                 return "unauthenticated";
             }
 
@@ -208,7 +205,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         setIsRefreshing(true);
         refreshAttemptCountRef.current = 0;
-        console.log("[AUTH] Starting token refresh retry cycle");
 
         const attemptRefresh = async () => {
             // Return if the user is on the signin or signup page.
@@ -235,12 +231,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
             if (outcome === "ok") {
                 clearRefreshTimer();
-                console.log("[AUTH] Token refresh retry cycle completed successfully");
                 return;
             }
 
             if (outcome === "unauthenticated") {
-                console.log("[AUTH] No valid refresh token — sending user to /signin");
                 forceSignOut();
                 return;
             }
@@ -248,10 +242,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             // Transient: schedule the next attempt with backoff.
             const delay = nextBackoffDelayMs(refreshAttemptCountRef.current);
             refreshAttemptCountRef.current += 1;
-            console.log(
-                `[AUTH] Token refresh failed transiently, retrying in ${delay / 1000}s ` +
-                    `(attempt #${refreshAttemptCountRef.current})`
-            );
             refreshTimeoutRef.current = setTimeout(attemptRefresh, delay);
         };
 
@@ -271,7 +261,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (accessToken === null) {
             startTokenRefreshRetry();
         } else if (accessToken) {
-            console.log("[AUTH] Token is valid");
             clearRefreshTimer(); // Cancel any pending retries
         }
     }, [accessToken]);
@@ -327,15 +316,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                         .map((n) => Number((n as { noteId?: number }).noteId))
                         .filter(Number.isFinite)
                 );
-                const deleted = await DatabaseUtils.sweepOrphanYjsDatabases({
+                await DatabaseUtils.sweepOrphanYjsDatabases({
                     taskIds,
                     myNoteIds,
                     chatNoteIds,
                     taskNoteIds,
                 });
-                if (deleted > 0) {
-                    console.log(`[IDB] Swept ${deleted} orphan Yjs database(s).`);
-                }
             } catch (err) {
                 console.error("[IDB] Yjs orphan sweep failed:", err);
             }

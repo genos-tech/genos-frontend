@@ -51,7 +51,6 @@ export const nonAuthApi = () => {
 
 export const authApi = (accessToken: string | null | undefined) => {
     if (!accessToken || accessToken === "") {
-        console.warn("[API] No access token provided. HTTP request will not be sent.");
         return null;
     }
     return attachInterceptors(

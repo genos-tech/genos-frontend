@@ -32,18 +32,8 @@ export const setupWebSocketHandlers = (
     useTEM: TeamManagementState,
     notificationManager?: NotificationManager
 ) => {
-    socket.on("connect", () => {
-        console.log("WS connected");
-    });
-
-    socket.on("disconnect", (reason, details) => {
-        console.warn("WS disconnected");
-        console.log(reason);
-    });
-
     socket.on("connect_error", (err) => {
-        console.error("WS connection error");
-        console.log(err.message);
+        console.error("WS connection error", err.message);
     });
 
     socket.on("auth_error", (data) => {
@@ -143,8 +133,6 @@ export const setupWebSocketHandlers = (
             // state and only surfaces toasts / push notifications.
             return;
         } else if (message.wsType === "task") {
-            // console.log("Got a task comment");
-            // console.log("task_message:", message);
             if (setIsTaskCommentUpdated) {
                 setIsTaskCommentUpdated({ isUpdate: true, scrollToBottom: false });
             }
@@ -228,16 +216,11 @@ export const setupWebSocketHandlers = (
                 );
             }
         } else if (message.wsType === "activity") {
-            // console.log("Got an activity message");
-            // console.log("activity_message:", message);
             await handleActivityMessage(message, myself, useCM);
         } else if (message.wsType === "userStatus") {
             const user: UserProps = message.user;
             await addUser(user);
         } else if (message.wsType === "inbox") {
-            // console.log("Got an inbox message");
-            // console.log("inbox_message:", message);
-
             const inboxItem: InboxItemProps = message.data;
             if (message.alreadyExist === false) {
                 await addInboxItem(inboxItem);

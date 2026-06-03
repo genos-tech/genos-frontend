@@ -435,11 +435,6 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
                         );
                     }
                 );
-            } else {
-                console.warn(
-                    `[useChatRouting] no v3 parent for thread ` +
-                        `channel=${chatId} threadId=${threadId} isPm=${isPm}`
-                );
             }
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
