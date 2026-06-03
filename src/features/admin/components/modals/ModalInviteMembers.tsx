@@ -286,9 +286,16 @@ export const ModalInviteMembers = ({ open, teamId, onClose }: Props) => {
                             }}
                             sx={{
                                 "--Input-radius": "10px",
+                                // The modal background is a fixed dark gradient in
+                                // both themes, so force light text/placeholder —
+                                // otherwise light-mode renders near-black text on
+                                // the dark field.
+                                "--Input-placeholderColor": "rgba(255,255,255,0.5)",
+                                color: "rgba(255,255,255,0.92)",
                                 background: "rgba(0,0,0,0.3)",
                                 border: "1px solid rgba(124,58,237,0.25)",
                                 fontSize: "14px",
+                                "& input": { color: "rgba(255,255,255,0.92)" },
                             }}
                             onBlur={() => addChip(draft)}
                             onChange={(e) => {
