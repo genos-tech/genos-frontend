@@ -974,6 +974,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                     <TabPanel sx={{ p: 0 }} value={3}>
                         <TaskActivityFeed
                             activities={taskActivities}
+                            allTasks={useTM.allTasks}
                             isLoading={isLoadingTaskActivities}
                             myself={myself}
                             setMyself={setMyself}

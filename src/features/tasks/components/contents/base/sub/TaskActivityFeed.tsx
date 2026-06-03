@@ -22,7 +22,8 @@ import { ChatManagementState } from "../../../../../../hooks/chats/useChatManage
 import { TeamManagementState } from "../../../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../../../types/admin";
-import { TaskActivityProps } from "../../../../../../types/tasks";
+import { TaskActivityProps, TaskTableProps } from "../../../../../../types/tasks";
+import { formatTaskDisplayId } from "../../../../utils/taskDisplayId";
 import { effortLevels, priorities, statuses } from "../../../../utils/taskMeta";
 
 type TaskActivityFeedProps = {
@@ -35,6 +36,13 @@ type TaskActivityFeedProps = {
      *  intermediate spinner because the typical fetch is sub-100ms and
      *  a flicker would itself read as a "refresh". */
     isLoading: boolean;
+    /** Loaded tasks for the current project (the lightweight table
+     *  shape — `id` + `displayId` are all this feed needs). Used as a
+     *  best-effort fallback to render a parent-task reference with its
+     *  display id ("PRF-123") on activity rows recorded before the
+     *  backend started snapshotting `oldDisplayId` / `newDisplayId` into
+     *  metadata. */
+    allTasks: TaskTableProps[];
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     socket: Socket | null;
@@ -290,6 +298,115 @@ const PrCommentActivityRow = ({
     );
 };
 
+// Render branch for a status change that was an automatic PR-merge
+// close (`metadata.closedByPrMerge`). The GitHub webhook is
+// unauthenticated, so the underlying row has a null actor and would
+// otherwise read as an anonymous "Someone changed status from Open to
+// Closed". Here we attribute it to the merged PR instead, linking the
+// PR ref when `metadata.prUrl` is present, and still show the
+// Open → Closed status chips for continuity with the other rows.
+const PrMergeCloseActivityRow = ({
+    activity,
+    isDark,
+}: {
+    activity: TaskActivityProps;
+    isDark: boolean;
+}) => {
+    const metadata = activity.metadata ?? {};
+    const prUrl = typeof metadata.prUrl === "string" ? (metadata.prUrl as string) : undefined;
+    const prRef = formatPrRefFromUrl(prUrl);
+    const oldStatus = typeof activity.oldValue === "string" ? activity.oldValue : null;
+    const newStatus = typeof activity.newValue === "string" ? activity.newValue : null;
+    const mutedColor = isDark ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.65)";
+
+    return (
+        <Stack
+            alignItems="center"
+            direction="row"
+            spacing={1.25}
+            sx={{
+                py: 1,
+                px: 1,
+                borderRadius: "8px",
+                "&:hover": {
+                    background: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)",
+                },
+            }}
+        >
+            <Avatar size="sm" sx={{ width: 30, height: 30 }}>
+                <GitHubIcon sx={{ fontSize: 18 }} />
+            </Avatar>
+            <Box
+                sx={{
+                    flex: 1,
+                    display: "flex",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 0.75,
+                    flexWrap: "wrap",
+                }}
+            >
+                <Box
+                    sx={{
+                        color: isDark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.5)",
+                        display: "flex",
+                        alignItems: "center",
+                    }}
+                >
+                    <CheckCircleOutlineRoundedIcon sx={{ fontSize: 18 }} />
+                </Box>
+                <Typography level="body-sm" sx={{ color: mutedColor }}>
+                    Auto-closed when
+                </Typography>
+                {prRef ? (
+                    <Typography
+                        component={prUrl ? "a" : "span"}
+                        href={prUrl}
+                        level="body-sm"
+                        rel={prUrl ? "noopener noreferrer" : undefined}
+                        target={prUrl ? "_blank" : undefined}
+                        sx={{
+                            fontFamily: "monospace",
+                            fontSize: "0.8rem",
+                            textDecoration: "none",
+                            color: isDark ? "rgba(255,255,255,0.85)" : "rgba(0,0,0,0.75)",
+                        }}
+                    >
+                        {prRef}
+                    </Typography>
+                ) : (
+                    <Typography level="body-sm" sx={{ fontWeight: 600 }}>
+                        a pull request
+                    </Typography>
+                )}
+                <Typography level="body-sm" sx={{ color: mutedColor }}>
+                    was merged
+                </Typography>
+                {oldStatus && <ValueChip fieldName="status" isDark={isDark} label={oldStatus} />}
+                {oldStatus && newStatus && (
+                    <Typography
+                        level="body-sm"
+                        sx={{ color: isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.45)" }}
+                    >
+                        →
+                    </Typography>
+                )}
+                {newStatus && <ValueChip fieldName="status" isDark={isDark} label={newStatus} />}
+                <Box sx={{ flexGrow: 1 }} />
+                <Typography
+                    level="body-xs"
+                    sx={{
+                        color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)",
+                        whiteSpace: "nowrap",
+                    }}
+                >
+                    {formatRelative(activity.tsCreatedAt)}
+                </Typography>
+            </Box>
+        </Stack>
+    );
+};
+
 // Smaller-than-Intl.RelativeTimeFormat formatter so we don't pull in a
 // new dep. Returns "just now" / "5 minutes ago" / "2 hours ago" /
 // "May 1, 2026".
@@ -325,7 +442,8 @@ const formatValue = (
     fieldName: string | null,
     teamMemberProfiles: Record<string, any>,
     metadata: Record<string, unknown> | null | undefined,
-    side: "old" | "new"
+    side: "old" | "new",
+    resolveTaskDisplayId: (id: unknown) => string | null
 ): { label: string; isUser: boolean } => {
     if (value == null || value === "") return { label: "None", isUser: false };
     const looksLikeUserId =
@@ -341,11 +459,36 @@ const formatValue = (
     if (fieldName && RELATION_ID_FIELDS.has(fieldName)) {
         const labelKey = side === "old" ? "oldLabel" : "newLabel";
         const titleLabel = metadata?.[labelKey];
-        const idText = `#${value}`;
-        if (typeof titleLabel === "string" && titleLabel.trim() !== "") {
-            return { label: `${titleLabel} (${idText})`, isUser: false };
+        const hasTitle = typeof titleLabel === "string" && titleLabel.trim() !== "";
+
+        // Task references (parent task) render with the ticket-style
+        // display id ("TP-38"): "Title (TP-38)". Prefer the id the backend
+        // snapshotted into metadata; fall back to resolving against loaded
+        // tasks so rows recorded before that metadata existed still upgrade.
+        if (fieldName === "parent_task_id") {
+            let idText = `#${value}`;
+            const metaKey = side === "old" ? "oldDisplayId" : "newDisplayId";
+            const metaDisplayId = metadata?.[metaKey];
+            if (typeof metaDisplayId === "string" && metaDisplayId.trim() !== "") {
+                idText = metaDisplayId;
+            } else {
+                const resolved = resolveTaskDisplayId(value);
+                if (resolved) idText = resolved;
+            }
+            return {
+                label: hasTitle ? `${titleLabel} (${idText})` : idText,
+                isUser: false,
+            };
         }
-        return { label: idText, isUser: false };
+
+        // Milestones / sprints have no ticket-style id, and their raw
+        // primary key is meaningless to a human skimming the feed — show
+        // the name alone, falling back to "#<id>" only when the name is
+        // unavailable (e.g. the relation was deleted).
+        return {
+            label: hasTitle ? (titleLabel as string) : `#${value}`,
+            isUser: false,
+        };
     }
     if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
         return { label: String(value), isUser: false };
@@ -481,6 +624,7 @@ const ValueChip = ({
 export const TaskActivityFeed = ({
     activities,
     isLoading,
+    allTasks,
     myself,
     setMyself,
     socket,
@@ -494,6 +638,25 @@ export const TaskActivityFeed = ({
     const teamMemberProfiles = useTEM.teamMemberProfiles ?? {};
 
     const empty = useMemo(() => activities.length === 0, [activities]);
+
+    // Best-effort raw-task-id → display-id ("PRF-123") map for parent
+    // references on rows recorded before the backend snapshotted the
+    // display id into metadata. Same-project only (that's what's
+    // loaded); cross-project parents fall back to "#id".
+    const taskDisplayIdById = useMemo(() => {
+        const map = new Map<number, string>();
+        for (const t of allTasks) {
+            if (t.id == null) continue;
+            const id = Number(t.id);
+            if (Number.isFinite(id)) map.set(id, formatTaskDisplayId(t));
+        }
+        return map;
+    }, [allTasks]);
+    const resolveTaskDisplayId = (id: unknown): string | null => {
+        const numeric = Number(id);
+        if (!Number.isFinite(numeric)) return null;
+        return taskDisplayIdById.get(numeric) ?? null;
+    };
 
     return (
         <Stack spacing={0.5} sx={{ p: 1 }}>
@@ -552,20 +715,37 @@ export const TaskActivityFeed = ({
                         />
                     );
                 }
+                // A status change tagged as an automatic PR-merge close
+                // gets its own attribution row (the underlying actor is
+                // null because the webhook is unauthenticated).
+                if (
+                    row.actionType === "status_changed" &&
+                    row.metadata?.closedByPrMerge === true
+                ) {
+                    return (
+                        <PrMergeCloseActivityRow
+                            key={row.activityId}
+                            activity={row}
+                            isDark={isDark}
+                        />
+                    );
+                }
                 const actorName = row.actor?.userName ?? "Someone";
                 const oldFmt = formatValue(
                     row.oldValue,
                     row.fieldName,
                     teamMemberProfiles,
                     row.metadata,
-                    "old"
+                    "old",
+                    resolveTaskDisplayId
                 );
                 const newFmt = formatValue(
                     row.newValue,
                     row.fieldName,
                     teamMemberProfiles,
                     row.metadata,
-                    "new"
+                    "new",
+                    resolveTaskDisplayId
                 );
                 // Diff-style verbs ("changed X from … →") always need
                 // both sides so the sentence stays coherent even when
