@@ -6,6 +6,15 @@ export const app = {
     snackbar: {
         wsLost: "Real-time connection lost. Attempting to reconnect...",
         apiDown: "API server is unreachable.",
+        // Transient per-request failures (RequestErrorSnackbar). Distinct
+        // from the two banners above, which mean the server / socket is
+        // unreachable; these fire for a single failed request while the app
+        // is otherwise online. Classified by HTTP status in the api.ts
+        // interceptor; `actionFailed` covers rejected v3 socket actions.
+        serverError: "Server error. Please try again shortly.",
+        permissionDenied: "You don't have permission to do that.",
+        requestFailed: "That request couldn't be completed. Please try again.",
+        actionFailed: "Couldn't complete that action. Please try again.",
     },
     // Global "generate Meet link → clipboard" feature, triggered by
     // Ctrl+⌘+M / Ctrl+Alt+M. Distinct from the chat-header Quick Meet:

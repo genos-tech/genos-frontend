@@ -140,6 +140,10 @@ export const fr: DeepPartial<Messages> = {
         snackbar: {
             wsLost: "Connexion temps réel perdue. Tentative de reconnexion…",
             apiDown: "Le serveur API est injoignable.",
+            serverError: "Erreur du serveur. Veuillez réessayer dans un instant.",
+            permissionDenied: "Vous n'avez pas la permission de faire cela.",
+            requestFailed: "Impossible de traiter la requête. Veuillez réessayer.",
+            actionFailed: "Impossible d'effectuer cette action. Veuillez réessayer.",
         },
     },
     sidebar: {

@@ -141,6 +141,10 @@ export const es: DeepPartial<Messages> = {
         snackbar: {
             wsLost: "Se perdió la conexión en tiempo real. Intentando reconectar…",
             apiDown: "No se puede acceder al servidor de la API.",
+            serverError: "Error del servidor. Vuelve a intentarlo en unos momentos.",
+            permissionDenied: "No tienes permiso para hacer eso.",
+            requestFailed: "No se pudo completar la solicitud. Inténtalo de nuevo.",
+            actionFailed: "No se pudo completar la acción. Inténtalo de nuevo.",
         },
     },
     sidebar: {

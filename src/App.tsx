@@ -26,6 +26,7 @@ import {
     QuickMeetClipboardHandle,
     QuickMeetClipboardHost,
 } from "./components/layout/QuickMeetClipboardHost";
+import { RequestErrorSnackbar } from "./components/layout/RequestErrorSnackbar";
 import { ServiceSwitcherOverlay } from "./components/layout/ServiceSwitcherOverlay";
 import { Sidebar } from "./components/layout/sidebar";
 import { UrlLinkModal } from "./components/modals/UrlLinkModal";
@@ -824,6 +825,7 @@ export const App = () => {
                                                 showApiDown={showApiDown}
                                                 showWsDisconnected={showWsDisconnected}
                                             />
+                                            <RequestErrorSnackbar />
                                             <QuickMeetClipboardHost
                                                 ref={meetClipboardRef}
                                                 accessToken={accessToken}

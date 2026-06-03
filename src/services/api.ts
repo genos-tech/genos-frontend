@@ -1,5 +1,17 @@
 import axios, { AxiosInstance } from "axios";
 
+import { emitRequestError } from "./requestErrorNotifier";
+
+// Per-request opt-out for the global error toast. Callers that render their
+// own error UI from the failure (inline form validation off a 400 body, a
+// deliberate 404 probe) set this in the request config; the response
+// interceptor reads it off `error.config` and stays silent.
+declare module "axios" {
+    export interface AxiosRequestConfig {
+        suppressErrorToast?: boolean;
+    }
+}
+
 type ApiHealthListener = (isDown: boolean) => void;
 
 let _onApiHealthChange: ApiHealthListener | null = null;
@@ -29,7 +41,27 @@ const attachInterceptors = (instance: AxiosInstance): AxiosInstance => {
                 return Promise.reject(error);
             }
             if (!error.response) {
+                // Network / server-unreachable: owned by the persistent
+                // "API down" banner. No transient toast — a failure either
+                // has a response or it doesn't, so the banner and the toast
+                // below are mutually exclusive and never double-fire.
                 _onApiHealthChange?.(true);
+                return Promise.reject(error);
+            }
+            // HTTP error response while the server is reachable → transient
+            // toast, classified by status. Skipped when the caller opted out
+            // (`suppressErrorToast`), or on 401 — that's the auth-refresh path
+            // (AuthContext retries / signs out), so toasting it would fire on
+            // every normal token expiry.
+            const status = error.response.status;
+            if (!error.config?.suppressErrorToast && status !== 401) {
+                if (status >= 500) {
+                    emitRequestError("serverError");
+                } else if (status === 403) {
+                    emitRequestError("permissionDenied");
+                } else {
+                    emitRequestError("requestFailed");
+                }
             }
             return Promise.reject(error);
         }

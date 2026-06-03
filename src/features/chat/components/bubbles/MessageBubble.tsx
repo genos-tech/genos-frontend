@@ -21,6 +21,7 @@ import { UIStateManagementState } from "../../../../hooks/common/useUIStateManag
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { fmt, useTranslation } from "../../../../i18n";
 import { channelService } from "../../../../services/channel/channelService";
+import { notifyActionError } from "../../../../services/requestErrorNotifier";
 import { UserProps } from "../../../../types/admin";
 import { ChannelKind } from "../../../../types/channel";
 import { ChatProps, MessageProps, ThreadMessageProps, ThreadProps } from "../../../../types/chat";
@@ -414,7 +415,10 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
             setReactions(reactions.filter((_, idx) => idx !== existingIndex));
             void channelService
                 .unreact(v3MessageId, v3ChannelId, channelKind, selectedEmoji)
-                .catch((e) => console.error("[MessageBubble] unreact failed:", e));
+                .catch((e) => {
+                    console.error("[MessageBubble] unreact failed:", e);
+                    notifyActionError(e);
+                });
         } else {
             // Optimistic add. The fabricated `id: -1` is a transient
             // placeholder until the server-broadcast row replaces it.
@@ -429,7 +433,10 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
             ]);
             void channelService
                 .react(v3MessageId, v3ChannelId, channelKind, selectedEmoji)
-                .catch((e) => console.error("[MessageBubble] react failed:", e));
+                .catch((e) => {
+                    console.error("[MessageBubble] react failed:", e);
+                    notifyActionError(e);
+                });
         }
         setSelectedEmoji(null);
     }, [selectedEmoji]);

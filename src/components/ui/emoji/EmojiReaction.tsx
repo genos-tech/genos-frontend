@@ -5,6 +5,7 @@ import { Socket } from "socket.io-client";
 
 import { useTranslation } from "../../../i18n";
 import { channelService } from "../../../services/channel/channelService";
+import { notifyActionError } from "../../../services/requestErrorNotifier";
 import { UserProps } from "../../../types/admin";
 import { ChannelKind } from "../../../types/channel";
 import { MessageProps, ThreadMessageProps } from "../../../types/chat";
@@ -131,7 +132,10 @@ export const EmojiReaction = (props: EmojiReactionProps) => {
                 ]);
                 void channelService
                     .react(v3MessageId, v3ChannelId, channelKind, selectedEmoji)
-                    .catch((e) => console.error("[EmojiReaction] react failed:", e));
+                    .catch((e) => {
+                        console.error("[EmojiReaction] react failed:", e);
+                        notifyActionError(e);
+                    });
             }
             return;
         }
