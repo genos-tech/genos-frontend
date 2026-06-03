@@ -38,6 +38,33 @@ import { v3MessagesToLegacy } from "../adapters/v3ToLegacy";
  * silent-failure contract). The caller's chat-open flow handles
  * empty arrays by rendering an empty pane.
  */
+/**
+ * Synchronously read a channel's messages from the in-memory snapshot
+ * and adapt them to the legacy `MessageProps[]` shape — WITHOUT any
+ * network round-trip.
+ *
+ * This is the hot path for chat switching: a channel previously synced
+ * this session (or hydrated from IDB on boot) already has its messages
+ * in `messagesByChannel`, so the caller can paint the chat instantly and
+ * kick off a background `channelService.syncChannel()` to revalidate.
+ * The `useChatManagement` live-update subscription patches the fresh
+ * slice into the open chat once that sync resolves — so callers should
+ * NOT await before setting the current chat.
+ *
+ * Returns `[]` for a channel that's never been cached (first-ever open);
+ * the background sync then populates it via the subscription.
+ */
+export function readV3CachedMessages(channelId: string, chatType: number): MessageProps[] {
+    const snapshot = channelService.getSnapshot();
+    const messages: readonly Message[] = snapshot.messagesByChannel.get(channelId) ?? [];
+    return v3MessagesToLegacy({
+        channelId,
+        chatType,
+        flaggedMessageIds: snapshot.flagByMessageId,
+        messages,
+    });
+}
+
 export async function loadV3SpecificMessages(
     channelId: string,
     chatType: number
@@ -56,12 +83,5 @@ export async function loadV3SpecificMessages(
         // already has cached (typically a prior boot's IDB hydration
         // or a partial sync from this session).
     }
-    const snapshot = channelService.getSnapshot();
-    const messages: readonly Message[] = snapshot.messagesByChannel.get(channelId) ?? [];
-    return v3MessagesToLegacy({
-        channelId,
-        chatType,
-        flaggedMessageIds: snapshot.flagByMessageId,
-        messages,
-    });
+    return readV3CachedMessages(channelId, chatType);
 }
