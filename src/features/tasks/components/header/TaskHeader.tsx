@@ -104,15 +104,17 @@ export const TaskHeader = ({
     }, [loading, currentProjectId]);
     // =======================================================================
 
-    // PUNCH LIST (v3 chatId migration): `AllChatProps.chatId` is `string`
-    // post-flip; `projectId` is still `number`. Legacy PM chats used the
-    // numeric project id as their chatId, so stringifying preserves the
-    // intended match.
+    // Find the PM chat that mirrors the focused project so its avatar can
+    // render in the header. Post v3-migration `chat.chatId` is the Channel
+    // UUID (not the numeric project id), so the old `chatId ===
+    // String(projectId)` match never hit and the icon disappeared. Match
+    // on the project id the adapter carries in `chat.project.projectId`,
+    // mirroring the canonical lookup in `HistoryModal` / `notificationRouter`.
     const pmChat = useCM.allChats.find(
         (chat) =>
             chat.chatType === 3 &&
-            usePM.currentProject &&
-            chat.chatId === String(usePM.currentProject.projectId)
+            usePM.currentProject != null &&
+            chat.project?.projectId === usePM.currentProject.projectId
     );
 
     return (
