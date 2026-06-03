@@ -105,7 +105,10 @@ const API_DOWN_THRESHOLD = 3;
 // yet (project) or the source is missing the ids needed to deep-link.
 // Mirrors the URL shapes encoded in `handleSpotlightSelect` below.
 const canonicalSpotlightHref = (r: SpotlightResult): string | null => {
-    if (r.entity_type === "task" && r.task_id && r.project_id) {
+    // A milestone is backed by a TaskMaster row; it opens via the same
+    // task deep-link the rest of the app uses, so route it like a task
+    // (the milestone result carries its backing task_id + project_id).
+    if ((r.entity_type === "task" || r.entity_type === "milestone") && r.task_id && r.project_id) {
         return `/workspace/tasks/project/${r.project_id}/task/${r.task_id}`;
     }
     if (r.entity_type === "chat" && r.chat_type && r.chat_id) {
@@ -516,7 +519,13 @@ export const App = () => {
 
             spotlight.close();
 
-            if (r.entity_type === "task" && r.task_id && r.project_id) {
+            // Milestones open via their backing task (same as the task
+            // diagram), so route them through the task deep-link.
+            if (
+                (r.entity_type === "task" || r.entity_type === "milestone") &&
+                r.task_id &&
+                r.project_id
+            ) {
                 navigate(`/workspace/tasks/project/${r.project_id}/task/${r.task_id}`);
                 return;
             }

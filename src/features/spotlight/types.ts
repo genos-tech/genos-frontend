@@ -13,7 +13,16 @@ export type NoteTypeLabel = "personal" | "task" | "chat";
 // answer-reuse lane). It surfaces in typeahead and carries `answer_text` +
 // `answer_sources` so the UI can render the past answer with clickable
 // source chips. See backend `chunkers/spotlight_answer_chunker.py`.
-export type EntityType = "chat" | "task" | "note" | "project" | "todo" | "spotlight_answer";
+// "milestone" carries the backing task's `task_id` + `project_id`, so it
+// deep-links through the same task view the app uses to open milestones.
+export type EntityType =
+    | "chat"
+    | "task"
+    | "milestone"
+    | "note"
+    | "project"
+    | "todo"
+    | "spotlight_answer";
 
 export interface SpotlightResult {
     entity_type: EntityType;
