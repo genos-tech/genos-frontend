@@ -3,6 +3,7 @@ import AddCircleOutlineRoundedIcon from "@mui/icons-material/AddCircleOutlineRou
 import AssignmentIndRoundedIcon from "@mui/icons-material/AssignmentIndRounded";
 import AttachFileRoundedIcon from "@mui/icons-material/AttachFileRounded";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
+import CallSplitRoundedIcon from "@mui/icons-material/CallSplitRounded";
 import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
 import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
@@ -135,6 +136,8 @@ const actionIcon = (action: string) => {
             return <ChatBubbleOutlineRoundedIcon sx={{ fontSize: 18 }} />;
         case "pr_comment_added":
             return <GitHubIcon sx={{ fontSize: 18 }} />;
+        case "pr_linked":
+            return <CallSplitRoundedIcon sx={{ fontSize: 18 }} />;
         default:
             return <HistoryRoundedIcon sx={{ fontSize: 18 }} />;
     }
@@ -392,6 +395,109 @@ const PrMergeCloseActivityRow = ({
                     </Typography>
                 )}
                 {newStatus && <ValueChip fieldName="status" isDark={isDark} label={newStatus} />}
+                <Box sx={{ flexGrow: 1 }} />
+                <Typography
+                    level="body-xs"
+                    sx={{
+                        color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)",
+                        whiteSpace: "nowrap",
+                    }}
+                >
+                    {formatRelative(activity.tsCreatedAt)}
+                </Typography>
+            </Box>
+        </Stack>
+    );
+};
+
+// Render branch for a GitHub PR auto-linked to this task (`pr_linked`).
+// The link is established when a PR is opened on a branch whose name
+// carries the task's display id. Like the other GitHub rows the actor is
+// null, so we anchor on a GitHub avatar and surface the PR ref (linked to
+// the PR) plus the head branch chip that established the link.
+const PrLinkActivityRow = ({
+    activity,
+    isDark,
+}: {
+    activity: TaskActivityProps;
+    isDark: boolean;
+}) => {
+    const metadata = activity.metadata ?? {};
+    const prUrl = typeof metadata.pr_url === "string" ? (metadata.pr_url as string) : undefined;
+    const prRef = formatPrRefFromUrl(prUrl);
+    const branch = typeof metadata.branch === "string" ? (metadata.branch as string) : null;
+    const mutedColor = isDark ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.65)";
+
+    return (
+        <Stack
+            alignItems="center"
+            direction="row"
+            spacing={1.25}
+            sx={{
+                py: 1,
+                px: 1,
+                borderRadius: "8px",
+                "&:hover": {
+                    background: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)",
+                },
+            }}
+        >
+            <Avatar size="sm" sx={{ width: 30, height: 30 }}>
+                <GitHubIcon sx={{ fontSize: 18 }} />
+            </Avatar>
+            <Box
+                sx={{
+                    flex: 1,
+                    display: "flex",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 0.75,
+                    flexWrap: "wrap",
+                }}
+            >
+                <Box
+                    sx={{
+                        color: isDark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.5)",
+                        display: "flex",
+                        alignItems: "center",
+                    }}
+                >
+                    <CallSplitRoundedIcon sx={{ fontSize: 18 }} />
+                </Box>
+                <Typography level="body-sm" sx={{ color: mutedColor }}>
+                    Linked pull request
+                </Typography>
+                {prRef ? (
+                    <Typography
+                        component={prUrl ? "a" : "span"}
+                        href={prUrl}
+                        level="body-sm"
+                        rel={prUrl ? "noopener noreferrer" : undefined}
+                        target={prUrl ? "_blank" : undefined}
+                        sx={{
+                            fontFamily: "monospace",
+                            fontSize: "0.8rem",
+                            textDecoration: "none",
+                            color: isDark ? "rgba(255,255,255,0.85)" : "rgba(0,0,0,0.75)",
+                        }}
+                    >
+                        {prRef}
+                    </Typography>
+                ) : (
+                    <Typography level="body-sm" sx={{ fontWeight: 600 }}>
+                        a pull request
+                    </Typography>
+                )}
+                {branch && (
+                    <Chip
+                        size="sm"
+                        startDecorator={<CallSplitRoundedIcon sx={{ fontSize: 13 }} />}
+                        sx={{ fontFamily: "monospace", fontSize: "0.72rem" }}
+                        variant="outlined"
+                    >
+                        {branch}
+                    </Chip>
+                )}
                 <Box sx={{ flexGrow: 1 }} />
                 <Typography
                     level="body-xs"
@@ -713,6 +819,13 @@ export const TaskActivityFeed = ({
                             activity={row}
                             isDark={isDark}
                         />
+                    );
+                }
+                // A PR auto-linked to this task (branch name carries the
+                // task's display id) gets a GitHub-styled link row.
+                if (row.actionType === "pr_linked") {
+                    return (
+                        <PrLinkActivityRow key={row.activityId} activity={row} isDark={isDark} />
                     );
                 }
                 // A status change tagged as an automatic PR-merge close
