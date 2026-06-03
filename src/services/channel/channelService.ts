@@ -1318,12 +1318,27 @@ export class ChannelService {
     }
 
     /** Forward-only on the server side. Calling with a lower seq than
-     *  the existing cursor is a server-side no-op. */
+     *  the existing cursor is a server-side no-op.
+     *
+     *  Best-effort, unlike `send`: read.advance is idempotent and
+     *  forward-only, so a dropped emit is self-healing — the next
+     *  scroll tick, inbound message, or chat re-open re-sends the
+     *  cursor. So when the socket is down (cold-load before the
+     *  handshake completes, or a transient reconnect — network blip,
+     *  laptop sleep, mobile background) we short-circuit to a resolved
+     *  no-op instead of rejecting with `DISCONNECTED`. Rejecting here
+     *  produced a noisy `console.error` on every chat open that raced
+     *  the socket handshake, for a failure that needs no recovery and
+     *  no offline queue (cf. the send queue, which exists only because
+     *  sends are non-idempotent and losing one is data loss). */
     markRead(
         channelId: string,
         lastReadMessageId: string,
         threadRootId?: string
     ): Promise<ReadCursor | undefined> {
+        if (!this.socket?.connected) {
+            return Promise.resolve(undefined);
+        }
         return this.socketEmitOrThrow<ReadCursor>("read.advance", {
             channel_id: channelId,
             last_read_message_id: lastReadMessageId,

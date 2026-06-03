@@ -330,4 +330,43 @@ describe("channelService reactive store", () => {
         // log as unhandled.
         promise.catch(() => undefined);
     });
+
+    it("markRead() resolves to a no-op instead of rejecting when the socket is not connected", async () => {
+        // Regression: read.advance is best-effort + forward-only, so a
+        // disconnected emit must NOT reject. Previously it threw
+        // DISCONNECTED ("Socket not connected; cannot emit read.advance"),
+        // which surfaced as a noisy console.error on every chat open that
+        // raced the socket handshake. No socket is set in this suite, so
+        // this exercises the disconnected branch directly.
+        await expect(svc.markRead("ch-1", "m-1")).resolves.toBeUndefined();
+    });
+
+    it("markRead() emits read.advance when the socket is connected", async () => {
+        const emit = vi.fn(
+            (_event: string, _payload: Record<string, unknown>, ack: (a: unknown) => void) => {
+                ack({
+                    ok: true,
+                    data: {
+                        id: "cur-1",
+                        channelId: "ch-1",
+                        threadRootId: null,
+                        lastReadMessageId: "m-1",
+                        lastReadAt: "2026-01-01T00:00:05Z",
+                    } satisfies ReadCursor,
+                });
+            }
+        );
+        svc.setSocket({ connected: true, emit } as unknown as Parameters<typeof svc.setSocket>[0]);
+
+        const cursor = await svc.markRead("ch-1", "m-1");
+
+        expect(emit).toHaveBeenCalledTimes(1);
+        expect(emit.mock.calls[0]?.[0]).toBe("read.advance");
+        expect(emit.mock.calls[0]?.[1]).toMatchObject({
+            channel_id: "ch-1",
+            last_read_message_id: "m-1",
+            thread_root_id: null,
+        });
+        expect(cursor?.lastReadMessageId).toBe("m-1");
+    });
 });
