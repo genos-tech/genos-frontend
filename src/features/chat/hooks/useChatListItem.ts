@@ -6,7 +6,7 @@ import { channelService } from "../../../services/channel/channelService";
 import { UserProps } from "../../../types/admin";
 import { AllChatProps, ChatProps, MessageProps } from "../../../types/chat";
 import { toggleMessagesPane } from "../../../utils/sidebarUtils";
-import { loadV3SpecificMessages } from "../services/loadV3SpecificMessages";
+import { readV3CachedMessages } from "../services/loadV3SpecificMessages";
 
 interface UseChatListItemProps {
     chat: AllChatProps;
@@ -68,25 +68,35 @@ export const useChatListItem = ({
                 `${chat.chatType}-${chat.chatId}-${chat.chatName}`
         ) {
             toggleMessagesPane();
-            // v3 cutover: was `popSpecificMessages(chatIdLegacy, chatType)`
-            // (legacy worker IDB pop with `chat.chatId as unknown as number`,
-            // which NaN'd for UUIDs and returned `[]` — leaving the open
-            // chat empty). The legacy MDM `/history/` fallback for empty
-            // results is also gone; `loadV3SpecificMessages` handles every
-            // kind uniformly through channelService.
-            loadV3SpecificMessages(v3ChannelId, chat.chatType)
-                .then(async (messages) => {
-                    const finalMessages = messages;
+            // Switch INSTANTLY from the in-memory snapshot — no network
+            // wait. Previously this awaited `loadV3SpecificMessages`
+            // (which awaits `syncChannel`) before calling
+            // `setCurrentMainChat`, so the pane sat blank for the full
+            // REST round-trip (~1s) on every switch. Now we paint the
+            // cached messages immediately and revalidate in the
+            // background: the `useChatManagement` live-update
+            // subscription (keyed on the open chat id) patches the fresh
+            // slice into `currentMainChat.messages` once the sync below
+            // resolves, and drops a late sync for a chat we've left.
+            const newChat: ChatProps = defineNewChat(
+                readV3CachedMessages(v3ChannelId, chat.chatType)
+            );
+            useCM.setCurrentMainChat(newChat);
+            useCM.setIsMainChatVisible(true);
 
-                    const newChat: ChatProps = defineNewChat(finalMessages);
-                    useCM.setCurrentMainChat(newChat);
-                    useCM.setIsMainChatVisible(true);
+            if (useTM.isCreatingTask.flag === true || useTM.isTaskPreviewVisible) {
+                useCM.setIsThreadVisible(false);
+            }
 
-                    if (useTM.isCreatingTask.flag === true || useTM.isTaskPreviewVisible) {
-                        useCM.setIsThreadVisible(false);
-                    }
-                })
-                .catch((error) => console.error(error));
+            // Background revalidate. `syncChannel` is idempotent and
+            // per-channel mutexed; the subscription above applies the
+            // result. First-ever open of a never-cached channel paints
+            // empty here, then fills in when this resolves.
+            void channelService
+                .syncChannel(v3ChannelId)
+                .catch((error) =>
+                    console.error("[useChatListItem] background syncChannel failed:", error)
+                );
 
             if (isPinnedChat) {
                 localStorage.setItem("lastChatType", "4");
@@ -102,16 +112,22 @@ export const useChatListItem = ({
             `${chat.chatType}-${chat.chatId}-${chat.chatName}`
         ) {
             toggleMessagesPane();
-            loadV3SpecificMessages(v3ChannelId, chat.chatType)
-                .then((messages) => {
-                    useCM.setCurrentSubChat(defineNewChat(messages));
-                    useCM.setIsMainChatVisible(true);
-                    if (useTM.isCreatingTask.flag === true || useTM.isTaskPreviewVisible) {
-                        useCM.setIsThreadVisible(false);
-                    }
-                })
-                .catch((error) => console.error(error));
+            // Instant switch from cache (mirrors `onClickHandler`); the
+            // sub-pane live-update subscription in `useChatManagement`
+            // patches the fresh slice once the background sync resolves.
+            useCM.setCurrentSubChat(
+                defineNewChat(readV3CachedMessages(v3ChannelId, chat.chatType))
+            );
+            useCM.setIsMainChatVisible(true);
+            if (useTM.isCreatingTask.flag === true || useTM.isTaskPreviewVisible) {
+                useCM.setIsThreadVisible(false);
+            }
             useCM.setIsSubChatVisible(true);
+            void channelService
+                .syncChannel(v3ChannelId)
+                .catch((error) =>
+                    console.error("[useChatListItem] background syncChannel failed:", error)
+                );
         }
     };
 

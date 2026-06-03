@@ -7,7 +7,7 @@ import { TaskManagementState } from "../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../types/admin";
 import { ChatProps, MessageProps, ThreadMessageProps, ThreadProps } from "../../../types/chat";
 import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
-import { loadV3SpecificMessages } from "../services/loadV3SpecificMessages";
+import { loadV3SpecificMessages, readV3CachedMessages } from "../services/loadV3SpecificMessages";
 import { loadV3SpecificThreadMessages } from "../services/loadV3SpecificThreadMessages";
 import { resolveV3MessageUuid, resolveV3ThreadRootUuid } from "../utils/channelIdResolvers";
 import { parseChatRoute } from "../utils/parseChatRoute";
@@ -306,6 +306,38 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
             if (!isPathnameChange && currentMainChatId !== undefined) return;
 
             isNavigatingFromUrl.current = true;
+
+            // Paint the chat INSTANTLY from the in-memory snapshot so the
+            // pane doesn't sit blank for the ~1s `syncChannel` round-trip
+            // that `loadV3SpecificMessages` awaits below (back/forward,
+            // deep links, refresh-to-chat all hit this path). This is
+            // additive: the `.then` still runs the network sync and
+            // refines `moveToSpecificIndex` for deep-link-to-message, and
+            // the `useChatManagement` live-update subscription keeps
+            // messages fresh. This effect's deps are
+            // `[pathname, allChats.length]` (NOT currentMainChat), so the
+            // optimistic set can't re-trigger it.
+            const cachedMessages = readV3CachedMessages(chatId, existingChat.chatType);
+            if (cachedMessages.length > 0) {
+                const lastCached = cachedMessages[cachedMessages.length - 1];
+                useCM.setCurrentMainChat({
+                    chatId: existingChat.chatId,
+                    chatName: existingChat.chatName,
+                    chatType: existingChat.chatType,
+                    dmPartnerUser: existingChat.dmPartnerUser,
+                    isPrivate: existingChat.isPrivate,
+                    lastReadMessageId: String(lastCached.messageId),
+                    latestMessage: existingChat.latestMessage,
+                    latestMessageText: existingChat.latestMessageText,
+                    messages: cachedMessages,
+                    moveToSpecificIndex: undefined,
+                    profileImagePath: existingChat.profileImagePath,
+                    project: existingChat.project,
+                    systemUserId: existingChat.systemUserId,
+                    TSLastMessage: existingChat.TSLastMessage,
+                });
+                useCM.setIsMainChatVisible(true);
+            }
 
             // v3 unified path: `loadV3SpecificMessages` handles every
             // chat kind (DM/GM/PM/MDM) uniformly through channelService,
