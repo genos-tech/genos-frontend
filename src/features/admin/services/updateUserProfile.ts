@@ -6,6 +6,7 @@ import { authApi } from "../../../services/api";
 type updateUserProfileProps = {
     accessToken: string | null;
     userId: string;
+    userName?: string;
     customStatus?: string;
     isOfflineForced?: string;
     role?: string;
@@ -16,6 +17,7 @@ export const updateUserProfile = async (props: updateUserProfileProps) => {
     const {
         accessToken,
         userId,
+        userName,
         customStatus,
         isOfflineForced,
         role,
@@ -26,17 +28,22 @@ export const updateUserProfile = async (props: updateUserProfileProps) => {
     try {
         const api = authApi(accessToken);
         if (api) {
-            const res = await api.put("/user/profile/", {
-                user_id: userId,
-                custom_status: customStatus,
-                is_offline_forced: isOfflineForced
-                    ? isOfflineForced === "true"
-                        ? true
-                        : false
-                    : false,
-                role: role,
-                base_country: baseCountry,
-            });
+            // Build the payload from only the fields the caller actually
+            // supplied. Previously every key was sent on every call, so a
+            // status / role / country edit also pushed `is_offline_forced:
+            // false` and silently cleared the user's "appear offline" flag.
+            // Each editor passes exactly one field, so an `undefined` check
+            // is enough to scope the write to that field.
+            const payload: Record<string, unknown> = { user_id: userId };
+            if (userName !== undefined) payload.username = userName;
+            if (customStatus !== undefined) payload.custom_status = customStatus;
+            if (isOfflineForced !== undefined) {
+                payload.is_offline_forced = isOfflineForced === "true";
+            }
+            if (role !== undefined) payload.role = role;
+            if (baseCountry !== undefined) payload.base_country = baseCountry;
+
+            const res = await api.put("/user/profile/", payload);
             return res.data;
         } else {
             console.error("Unauthorized. Auth toke is not found.");

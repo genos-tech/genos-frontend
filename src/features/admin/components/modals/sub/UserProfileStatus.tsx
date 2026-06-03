@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import ArrowDropDown from "@mui/icons-material/ArrowDropDown";
+import EditIcon from "@mui/icons-material/Edit";
 import SentimentSatisfiedAltIcon from "@mui/icons-material/SentimentSatisfiedAlt";
 import {
     Box,
@@ -12,6 +13,7 @@ import {
     MenuButton,
     MenuItem,
     Stack,
+    Tooltip,
     Typography,
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
@@ -86,6 +88,46 @@ export const UserProfileStatus = ({
     const [openEditor, setOpenEditor] = useState(false);
     const [newStatus, setNewStatus] = useState("");
 
+    // Inline display-name rename — self only. The user edits the name
+    // shown as the hero heading here. Unlike the sibling status / role /
+    // country editors (fire-and-forget), this awaits the PUT and only
+    // commits the local `myself` + localStorage write on success, so a
+    // rejected save (too long, network) doesn't leave a name on screen
+    // that didn't persist. Owner-gated team / project / GM renames live
+    // in their own modals; this is the per-user equivalent.
+    const [nameEditMode, setNameEditMode] = useState(false);
+    const [nameDraft, setNameDraft] = useState("");
+    const [nameError, setNameError] = useState<string | null>(null);
+    const [nameSaving, setNameSaving] = useState(false);
+
+    const handleNameSave = async () => {
+        const next = nameDraft.trim();
+        if (!next) {
+            setNameError(t.common.profileEdit.nameEmpty);
+            return;
+        }
+        if (next === (myself.userName ?? "")) {
+            setNameEditMode(false);
+            setNameError(null);
+            return;
+        }
+        setNameSaving(true);
+        setNameError(null);
+        const result = await updateUserProfile({
+            accessToken: accessToken,
+            userId: myself.userId,
+            userName: next,
+        });
+        setNameSaving(false);
+        if (result) {
+            setMyself({ ...myself, userName: next });
+            localStorage.setItem("userName", next);
+            setNameEditMode(false);
+        } else {
+            setNameError(t.common.profileEdit.renameError);
+        }
+    };
+
     // The emoji picker lives in the parent modal; it pushes a selected
     // emoji back through `selectedEmoji`. Functional setState here avoids
     // clobbering edits the user made between opening the picker and
@@ -149,7 +191,14 @@ export const UserProfileStatus = ({
                     <Stack
                         direction="row"
                         spacing={0.5}
-                        sx={{ flexWrap: "wrap", gap: 0.5, minWidth: 0 }}
+                        // Hide the presence / status chips while the name is
+                        // being edited so they don't crowd the rename input.
+                        sx={{
+                            display: nameEditMode ? "none" : "flex",
+                            flexWrap: "wrap",
+                            gap: 0.5,
+                            minWidth: 0,
+                        }}
                     >
                         {/* Presence chip — dropdown for self, static for others */}
                         <Dropdown>
@@ -263,8 +312,117 @@ export const UserProfileStatus = ({
                     },
                 }}
             >
-                {profileUser?.userName}
+                {!isSelfView ? (
+                    profileUser?.userName
+                ) : nameEditMode ? (
+                    <Stack
+                        alignItems="center"
+                        component="span"
+                        direction="row"
+                        spacing={0.5}
+                        sx={{ flexWrap: "wrap", gap: 0.5, minWidth: 0 }}
+                    >
+                        <Input
+                            size="sm"
+                            value={nameDraft}
+                            slotProps={{
+                                input: {
+                                    maxLength: 50,
+                                    onKeyDown: (e) => {
+                                        if (e.key === "Enter") {
+                                            e.preventDefault();
+                                            void handleNameSave();
+                                        }
+                                        if (e.key === "Escape") {
+                                            setNameEditMode(false);
+                                            setNameError(null);
+                                        }
+                                    },
+                                },
+                            }}
+                            // Pin keydown to the inner <input> via slotProps so
+                            // Enter / Escape land on the typing target, and force
+                            // a normal font/size so the field doesn't inherit the
+                            // 28px bold heading style of the surrounding heading.
+                            sx={{
+                                flexGrow: 1,
+                                minWidth: 140,
+                                maxWidth: 320,
+                                fontSize: "16px",
+                                fontWeight: 400,
+                                "--Input-radius": "8px",
+                            }}
+                            autoFocus
+                            onChange={(e) => setNameDraft(e.target.value)}
+                        />
+                        <Button
+                            loading={nameSaving}
+                            size="sm"
+                            variant="solid"
+                            onClick={handleNameSave}
+                        >
+                            {t.common.profileEdit.save}
+                        </Button>
+                        <Button
+                            color="neutral"
+                            size="sm"
+                            variant="plain"
+                            onClick={() => {
+                                setNameEditMode(false);
+                                setNameError(null);
+                            }}
+                        >
+                            {t.common.profileEdit.cancel}
+                        </Button>
+                    </Stack>
+                ) : (
+                    <Stack
+                        alignItems="center"
+                        component="span"
+                        direction="row"
+                        spacing={0.5}
+                        sx={{ minWidth: 0 }}
+                    >
+                        <Box
+                            component="span"
+                            sx={{
+                                minWidth: 0,
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: { xs: "normal", md: "nowrap" },
+                                wordBreak: "break-word",
+                            }}
+                        >
+                            {/* `isSelfView` guarantees this is me, so read the
+                                live `myself.userName` rather than `profileUser`
+                                — which can be a stale team-map copy when the
+                                modal was opened by clicking your own row in a
+                                member list. Keeps the hero name in sync right
+                                after a successful rename. */}
+                            {myself.userName}
+                        </Box>
+                        <Tooltip size="sm" title={t.common.profileEdit.rename} variant="outlined">
+                            <IconButton
+                                size="sm"
+                                sx={{ flexShrink: 0 }}
+                                variant="plain"
+                                onClick={() => {
+                                    setNameDraft(myself.userName ?? "");
+                                    setNameError(null);
+                                    setNameEditMode(true);
+                                }}
+                            >
+                                <EditIcon sx={{ fontSize: 18 }} />
+                            </IconButton>
+                        </Tooltip>
+                    </Stack>
+                )}
             </Typography>
+            {isSelfView && nameError && (
+                <Typography level="body-xs" sx={{ color: "rgba(232,121,195,0.9)", mt: 0.5 }}>
+                    {nameError}
+                </Typography>
+            )}
 
             {openEditor && (
                 <Stack direction="row" justifyContent="center" spacing={0.5}>
