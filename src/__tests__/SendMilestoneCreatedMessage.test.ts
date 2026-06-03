@@ -10,6 +10,7 @@
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { sendMilestoneCreatedMessage } from "../features/tasks/sprint-milestone/services/sendMilestoneCreatedMessage";
 import { channelService } from "../services/channel/channelService";
 import { ChannelKind } from "../types/channel";
 
@@ -19,12 +20,16 @@ vi.mock("../features/tasks/utils/TaskMessageTemplate", () => ({
     milestoneCreatedThreadMessageTemplate: () => [{ type: "paragraph", content: "thread" }],
 }));
 
-import { sendMilestoneCreatedMessage } from "../features/tasks/sprint-milestone/services/sendMilestoneCreatedMessage";
-
 const PM = { id: "pm-uuid", kind: ChannelKind.PM, projectId: 7 };
 
 const makeProject = (over = {}) =>
-    ({ projectId: 7, projectName: "Proj", systemUserId: "sys-1", projectTags: [], ...over }) as any;
+    ({
+        projectId: 7,
+        projectName: "Proj",
+        systemUserId: "sys-1",
+        projectTags: [],
+        ...over,
+    }) as any;
 const makeMilestone = (over = {}) =>
     ({ taskId: 42, status: "Open", title: "M1", milestoneId: 1, ...over }) as any;
 const USER = { userId: "u1", userName: "Me", teamId: "t1", teamName: "T" } as any;
