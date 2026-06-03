@@ -523,8 +523,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                                 : undefined
                         )
                         .filter((u): u is UserProps => !!u);
-                    sendMilestoneCreatedMessage({
-                        socket,
+                    await sendMilestoneCreatedMessage({
                         myself,
                         project: taskContent.project,
                         milestone: created,

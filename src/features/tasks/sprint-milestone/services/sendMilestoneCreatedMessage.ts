@@ -1,8 +1,8 @@
-import { Socket } from "socket.io-client";
-
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { channelService } from "../../../../services/channel/channelService";
 import { UserProps } from "../../../../types/admin";
 import { ProjectProps } from "../../../../types/tasks";
+import { findPmChannelForProject } from "../../services/findPmChannel";
 import {
     milestoneCreatedThreadMessageTemplate,
     milestoneMessageTemplate,
@@ -10,7 +10,6 @@ import {
 import { Milestone } from "../types";
 
 type SendMilestoneCreatedMessageInput = {
-    socket: Socket | null;
     myself: UserProps;
     project: ProjectProps;
     milestone: Milestone;
@@ -21,21 +20,22 @@ type SendMilestoneCreatedMessageInput = {
 };
 
 /**
- * Mirrors the socket fan-out at the tail of `uploadNewTask` for the
- * milestone path: joins the project's PM chat group, posts a "milestone
- * created" message bubble keyed off the milestone's backing taskId
- * (so the bubble's "Open Task" chip routes to MilestonePreviewInner
- * via the existing `fromNoteMilestoneId` reroute in TaskPreview), then
- * follows up with a system "A new milestone has been created by ..."
- * thread message — and finally also rebroadcasts into the currently
- * visible thread chat when the user happens to have one open.
+ * Post the "milestone created" chat bubble into the project's PM channel,
+ * mirroring the task-created fan-out in `uploadNewTask`.
  *
- * Failures are logged but never thrown, matching the spirit of
- * `uploadNewTask` so chat hiccups don't block the milestone preview
- * from opening.
+ * History: this used to emit the legacy `join` / `message` /
+ * `thread_message` socket events on the default namespace — handlers that
+ * were DELETED in the v3 chat cutover, so nothing persisted: no message,
+ * no activity-feed row, and no notification. It now routes through
+ * `channelService.send` (the v3 `message.send` path) exactly like
+ * `uploadNewTask`. The message template @-mentions the reporter/assignees,
+ * so the v3 message path produces the MENTION activities + web pushes for
+ * free — no separate notification plumbing here.
+ *
+ * Failures are logged, never thrown, so a chat hiccup can't block the
+ * milestone preview from opening.
  */
-export const sendMilestoneCreatedMessage = ({
-    socket,
+export const sendMilestoneCreatedMessage = async ({
     myself,
     project,
     milestone,
@@ -43,11 +43,7 @@ export const sendMilestoneCreatedMessage = ({
     reporter,
     assignees,
     useCM,
-}: SendMilestoneCreatedMessageInput): void => {
-    if (!socket) {
-        console.error("[sendMilestoneCreatedMessage] socket not found");
-        return;
-    }
+}: SendMilestoneCreatedMessageInput): Promise<void> => {
     if (!project.systemUserId) {
         console.error(
             "[sendMilestoneCreatedMessage] project.systemUserId missing; cannot route milestone message"
@@ -68,111 +64,96 @@ export const sendMilestoneCreatedMessage = ({
         reporter,
         assignees
     );
+    if (!createMilestoneMessage) return;
 
-    // 1. Join the project's PM chat group (chatType === 3 is the PM
-    //    channel; the backend uses systemUserId as the sender so the
-    //    bubble shows up authored by the project bot).
-    socket.emit(
-        "join",
-        {
-            joiningCGId: project.projectId,
-            joiningCGName: project.projectName,
-            chatType: 3,
-            dmPartnerUserId: null,
-        },
-        () => {
-            // 2. Post the rich "milestone created" bubble into PM.
-            socket.emit(
-                "message",
+    const projectId = project.projectId;
+
+    // Resolve the project's PM channel from the channelService snapshot,
+    // falling back to a one-shot REST refresh (mirrors uploadNewTask) — the
+    // refresh covers a PM channel the user only just gained membership of
+    // and that the boot-time snapshot therefore missed.
+    let pmChannel = findPmChannelForProject(
+        channelService.getSnapshot().channels.values(),
+        projectId
+    );
+    if (!pmChannel) {
+        try {
+            const fresh = await channelService.listChannels();
+            const freshPm = findPmChannelForProject(fresh, projectId);
+            if (freshPm) {
+                channelService.handleChannelCreated(freshPm);
+                pmChannel = freshPm;
+            }
+        } catch (e) {
+            console.error(
+                "[sendMilestoneCreatedMessage] failed to refresh channels for PM lookup",
+                e
+            );
+        }
+    }
+    if (!pmChannel) {
+        console.error("[sendMilestoneCreatedMessage] PM channel not found for project", {
+            projectId,
+        });
+        return;
+    }
+
+    // `taskId` is the milestone's backing task, so the bubble's "Open Task"
+    // chip reroutes to MilestonePreview (via TaskPreview's milestone
+    // detection) just like the legacy path did.
+    const metadata = {
+        taskId: milestone.taskId,
+        taskStatus: milestone.status,
+        systemUserId: project.systemUserId,
+    };
+
+    // 1. Top-level "milestone created" bubble in PM, then 2. a system
+    //    thread follow-up under it.
+    try {
+        const sent = await channelService.send(pmChannel.id, createMilestoneMessage, {
+            bodyText: milestone.title,
+            metadata,
+        });
+        const threadFollowup = milestoneCreatedThreadMessageTemplate(myself);
+        if (threadFollowup && sent?.id) {
+            await channelService.send(pmChannel.id, threadFollowup, {
+                bodyText: milestone.title,
+                parentId: sent.id,
+                metadata,
+            });
+        }
+    } catch (e) {
+        console.error("[sendMilestoneCreatedMessage] failed to post PM milestone message", e);
+    }
+
+    // 3. If the user created the milestone from inside an open DM/GM/MDM
+    //    thread, surface the bubble there too — same parity uploadNewTask
+    //    keeps for tasks.
+    if (
+        useCM.isThreadVisible === true &&
+        useCM.currentMainChat &&
+        useCM.currentThreadChat &&
+        (useCM.currentMainChat.chatType === 1 ||
+            useCM.currentMainChat.chatType === 2 ||
+            useCM.currentMainChat.chatType === 4) &&
+        useCM.currentThreadChat.threadId !== null &&
+        useCM.currentThreadChat.threadId !== 0
+    ) {
+        try {
+            await channelService.send(
+                String(useCM.currentMainChat.chatId),
+                createMilestoneMessage,
                 {
-                    methodType: "POST",
-                    message: createMilestoneMessage,
-                    destCGName: project.projectName,
-                    destCGId: project.projectId,
-                    chatType: 3,
-                    dmPartnerUserId: null,
-                    taskId: milestone.taskId,
-                    taskStatus: milestone.status,
-                    systemUserId: project.systemUserId,
-                    messageIdForPut: null,
-                },
-                () => {
-                    // 3. Follow-up system thread message ("A new
-                    //    milestone has been created by @me") attached
-                    //    to that bubble's thread.
-                    const threadMessage = milestoneCreatedThreadMessageTemplate(myself);
-                    socket.emit("thread_message", {
-                        methodType: "POST",
-                        isInit: false,
-                        rootMessageTSSent: "",
-                        rootMessageSenderId: null,
-                        rootMessageReceiverId: null,
-                        threadId: null,
-                        threadMessage,
-                        chatType: 3,
-                        dmPartnerUserId: null,
-                        senderId: project.systemUserId,
-                        senderName: project.projectName,
-                        destCGName: project.projectName,
-                        destCGId: project.projectId,
-                        taskId: milestone.taskId,
-                        systemUserId: project.systemUserId,
-                        messageIdForPut: null,
-                    });
+                    bodyText: milestone.title,
+                    parentId: String(useCM.currentThreadChat.threadId),
+                    metadata,
                 }
             );
-
-            // 4. If the user happened to be inside a thread chat
-            //    when they hit "Create Milestone", surface the bubble
-            //    in that thread too — same shape as the task path so
-            //    the milestone is discoverable from where the user
-            //    actually is. Milestones are normally created from
-            //    the sidebar, but mirroring the task behaviour keeps
-            //    semantics consistent.
-            if (
-                useCM.isThreadVisible === true &&
-                useCM.currentMainChat &&
-                useCM.currentThreadChat &&
-                (useCM.currentMainChat.chatType === 1 ||
-                    useCM.currentMainChat.chatType === 2 ||
-                    useCM.currentMainChat.chatType === 4) &&
-                useCM.currentThreadChat.threadId !== null &&
-                useCM.currentThreadChat.threadId !== 0
-            ) {
-                socket.emit("message", {
-                    methodType: "PUT",
-                    message: null,
-                    destCGName: useCM.currentMainChat.chatName,
-                    destCGId: useCM.currentMainChat.chatId,
-                    chatType: useCM.currentMainChat.chatType,
-                    dmPartnerUserId: useCM.currentMainChat.dmPartnerUser.userId,
-                    taskId: milestone.taskId,
-                    taskStatus: milestone.status,
-                    systemUserId: project.systemUserId,
-                    messageIdForPut: useCM.currentThreadChat.threadId,
-                    isPrivate: useCM.currentMainChat.isPrivate,
-                });
-
-                socket.emit("thread_message", {
-                    methodType: "POST",
-                    isInit: false,
-                    rootMessageTSSent: "",
-                    rootMessageSenderId: null,
-                    rootMessageReceiverId: null,
-                    threadId: useCM.currentThreadChat.threadId,
-                    threadMessage: createMilestoneMessage,
-                    chatType: useCM.currentThreadChat.chatType,
-                    dmPartnerUserId: useCM.currentThreadChat.dmPartnerUser.userId,
-                    senderId: project.systemUserId,
-                    senderName: project.projectName,
-                    destCGName: useCM.currentThreadChat.chatName,
-                    destCGId: useCM.currentThreadChat.chatId,
-                    taskId: milestone.taskId,
-                    taskStatus: milestone.status,
-                    systemUserId: project.systemUserId,
-                    messageIdForPut: null,
-                });
-            }
+        } catch (e) {
+            console.error(
+                "[sendMilestoneCreatedMessage] failed to post milestone into open thread",
+                e
+            );
         }
-    );
+    }
 };
