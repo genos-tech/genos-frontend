@@ -45,6 +45,7 @@ import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { useTranslation } from "../../i18n";
 import { channelService } from "../../services/channel/channelService";
+import { emitRequestError } from "../../services/requestErrorNotifier";
 import { UserProps } from "../../types/admin";
 import { ChatProps, ThreadProps } from "../../types/chat";
 import { filterAndRankSuggestionItems } from "../../utils/suggestionRanking";
@@ -318,6 +319,14 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
         const bodyText: string = getFirstLine(content[0]);
         const channelUuid = String(thread.chatId);
         const threadRootUuid = String(thread.threadId);
+        // Clear the composer immediately — don't freeze it on the server
+        // round-trip (same fix as bnChatEditor; the previous code awaited
+        // the send before clearing, holding the editor full for the full
+        // ack latency, up to the backend's 10s Django timeout). The send
+        // runs in the background.
+        editor.replaceBlocks(editor.document, []);
+        clearDraft();
+        let sent = true;
         try {
             await channelService.send(channelUuid, content, {
                 parentId: threadRootUuid,
@@ -325,9 +334,19 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
             });
         } catch (e) {
             console.error("[bnThreadEditor] channelService.send failed:", e);
+            emitRequestError("messageSendFailed");
+            sent = false;
         }
-        editor.replaceBlocks(editor.document, []);
-        clearDraft();
+        // On failure (toast already surfaced), restore the text so it isn't
+        // lost — but only if the user hasn't started a new message. Re-insert
+        // a JSON deep-clone, matching how useEditorDraft restores a draft.
+        if (!sent && editor.document.length <= 1) {
+            try {
+                editor.replaceBlocks(editor.document, JSON.parse(JSON.stringify(content)));
+            } catch {
+                /* stale block shape — nothing else we can do */
+            }
+        }
     };
 
     const countLines = (nodes: any[]): number => {

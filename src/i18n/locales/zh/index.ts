@@ -143,6 +143,7 @@ export const zh: DeepPartial<Messages> = {
             permissionDenied: "您没有执行此操作的权限。",
             requestFailed: "请求无法完成，请重试。",
             actionFailed: "操作无法完成，请重试。",
+            messageSendFailed: "消息发送失败，请重试。",
         },
     },
     sidebar: {

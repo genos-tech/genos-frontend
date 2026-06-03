@@ -313,16 +313,36 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
 
     const sendingMessage = async () => {
         if (editor.document.length > 1 && socket !== null) {
-            await sendChatMessage({
+            // Capture the message, then clear the composer IMMEDIATELY —
+            // don't freeze it on the server round-trip. The previous
+            // `await sendChatMessage(...)` BEFORE clearing held the editor
+            // full for the entire ack latency (up to the backend's 10s
+            // Django read-timeout); the send now runs in the background.
+            const content = editor.document;
+            editor.replaceBlocks(editor.document, []);
+            clearDraft();
+            const sent = await sendChatMessage({
                 socket,
                 chat,
-                content: editor.document,
+                content,
                 myself,
                 useCM,
                 setCurrentChat,
             });
-            editor.replaceBlocks(editor.document, []);
-            clearDraft();
+            // On failure (sendChatMessage has already surfaced a toast),
+            // put the text back so it isn't lost — but only if the user
+            // hasn't started a new message meanwhile. Re-insert a JSON
+            // deep-clone, NOT the live block objects we just removed: that
+            // mirrors exactly how useEditorDraft restores a draft from
+            // storage (deserialized blocks), the path BlockNote re-hydrates
+            // cleanly on every chat switch, so there's no id-reuse rejection.
+            if (!sent && editor.document.length <= 1) {
+                try {
+                    editor.replaceBlocks(editor.document, JSON.parse(JSON.stringify(content)));
+                } catch {
+                    /* stale block shape — nothing else we can do */
+                }
+            }
         }
     };
 

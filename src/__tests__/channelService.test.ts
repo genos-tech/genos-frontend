@@ -369,4 +369,21 @@ describe("channelService reactive store", () => {
         });
         expect(cursor?.lastReadMessageId).toBe("m-1");
     });
+
+    it("markRead() resolves to undefined (does not reject) when the server rejects the emit", async () => {
+        // Backend degraded: the socket is connected but the ack returns
+        // ok=false (e.g. the socket server can't reach Django and times
+        // out). markRead is best-effort + forward-only, so it must swallow
+        // this rather than reject — otherwise every scroll tick floods the
+        // console with markRead errors while the backend is down.
+        const emit = vi.fn(
+            (_event: string, _payload: Record<string, unknown>, ack: (a: unknown) => void) => {
+                ack({ ok: false, code: "BACKEND_ERROR", message: "Read timed out" });
+            }
+        );
+        svc.setSocket({ connected: true, emit } as unknown as Parameters<typeof svc.setSocket>[0]);
+
+        await expect(svc.markRead("ch-1", "m-1")).resolves.toBeUndefined();
+        expect(emit).toHaveBeenCalledTimes(1);
+    });
 });

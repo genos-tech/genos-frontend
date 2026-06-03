@@ -2,6 +2,7 @@ import { Socket } from "socket.io-client";
 
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { channelService } from "../../../services/channel/channelService";
+import { emitRequestError } from "../../../services/requestErrorNotifier";
 import { UserProps } from "../../../types/admin";
 import { ChatProps } from "../../../types/chat";
 import { isV3Uuid } from "../../../utils/legacyId";
@@ -48,7 +49,7 @@ export const sendChatMessage = async ({
     myself: UserProps;
     useCM: ChatManagementState;
     setCurrentChat: (chat: ChatProps) => void;
-}): Promise<void> => {
+}): Promise<boolean> => {
     const bodyText = getFirstLine(content[0]);
     // Fail fast on stale legacy-integer chatIds. A non-UUID chatId
     // would land at `/api/v3/channels/{int}/messages/` which Django's
@@ -62,21 +63,25 @@ export const sendChatMessage = async ({
                 "This usually means the chat was loaded from a legacy path with no v3 Channel " +
                 "mirror. Run the backfill (`backfill_v3_channels`) or wipe legacy data + reload."
         );
-        return;
+        emitRequestError("messageSendFailed");
+        return false;
     }
     try {
         await channelService.send(chat.chatId, content, { bodyText });
     } catch (e) {
-        // channelService already records the failure on the pending
-        // entry; the dev panel can surface it. Re-throwing here would
-        // bubble into the BlockNote editor's `await`, which has no
-        // user-facing recovery path, so swallow it here (mirrors the
-        // legacy code's silent-on-error contract for editor sends).
+        // The send failed — server rejected it, the ack timed out, or the
+        // socket server couldn't reach Django. channelService keeps the
+        // message on its pending queue (retried on reconnect), but this
+        // pane doesn't render that queue, so we surface a toast and report
+        // failure to the caller — bnChatEditor restores the text to the
+        // composer so it isn't lost.
         console.error("[sendChatMessage] channelService.send failed:", e);
-        return;
+        emitRequestError("messageSendFailed");
+        return false;
     }
     // Refresh the chat-list so the just-active channel re-sorts to
     // top. The live-update subscription keeps the open pane in sync;
     // this only catches the sidebar.
     await useCM.funcSetAllChats();
+    return true;
 };

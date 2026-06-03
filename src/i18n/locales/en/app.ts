@@ -15,6 +15,7 @@ export const app = {
         permissionDenied: "You don't have permission to do that.",
         requestFailed: "That request couldn't be completed. Please try again.",
         actionFailed: "Couldn't complete that action. Please try again.",
+        messageSendFailed: "Couldn't send your message. Please try again.",
     },
     // Global "generate Meet link → clipboard" feature, triggered by
     // Ctrl+⌘+M / Ctrl+Alt+M. Distinct from the chat-header Quick Meet:

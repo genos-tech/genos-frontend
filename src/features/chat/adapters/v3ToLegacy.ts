@@ -315,7 +315,19 @@ export function channelToLegacyChat(args: {
     // exact per-message read position isn't needed by the sidebar; only
     // the boolean "is there anything new" matters.
     const latestSeq = channel.latestMessage?.seq ?? 0;
-    const lastReadForLegacy = channel.unreadCount === 0 ? String(latestSeq) : "0";
+    // A channel whose latest top-level message is the current user's own is
+    // necessarily read — you can't have an unread message you just sent. So
+    // treat it as read regardless of the server's `unreadCount`, which lags
+    // until markRead is processed (and markRead is best-effort, so on a
+    // degraded backend it may never land — leaving a self-sent message stuck
+    // "unread" in the sidebar). This does NOT reintroduce the cross-tab unread
+    // race guarded in `handleReadAdvanced`: that race is about ANOTHER user's
+    // in-flight message; the instant an incoming message arrives the latest is
+    // no longer self-sent and the clamp stops applying.
+    const latestIsSelfSent =
+        !!currentUserId && channel.latestMessage?.sender?.userId === currentUserId;
+    const lastReadForLegacy =
+        channel.unreadCount === 0 || latestIsSelfSent ? String(latestSeq) : "0";
     return {
         chatType: KIND_TO_CHAT_TYPE[channel.kind] ?? 0,
         chatId: channel.id,
