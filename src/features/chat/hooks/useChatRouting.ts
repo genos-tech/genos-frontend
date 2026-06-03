@@ -231,6 +231,15 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
         const isPathnameChange = prevPathnameRef.current !== pathname;
         prevPathnameRef.current = pathname;
 
+        // Keep the state→URL effects' dedup ref aligned with the real URL
+        // after a browser Back/Forward, so re-selecting a previously
+        // visited chat/thread isn't silently skipped (see the matching
+        // note in useTaskRouting). Only on a genuine URL change — an
+        // allChats.length re-run must not clobber a freshly-pushed path.
+        if (isPathnameChange) {
+            lastNavigatedPath.current = pathname;
+        }
+
         // If no chat type in URL, redirect to default (dm)
         if (!chatType) {
             const lastChatType = localStorage.getItem("lastChatType");
@@ -451,7 +460,9 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
         // Only update if path is different
         if (newPath !== pathname && newPath !== lastNavigatedPath.current) {
             lastNavigatedPath.current = newPath;
-            navigate(newPath, { replace: true });
+            // Push (not replace) so each opened chat is its own history
+            // entry — browser Back/Forward steps between chats.
+            navigate(newPath);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [useCM.currentMainChat?.chatId, useCM.currentMainChat?.chatType]);
@@ -503,9 +514,26 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
             commentId
         );
 
-        navigate(newPath, { replace: true });
+        // This effect has no `isNavigatingFromUrl` guard, so a Back-driven
+        // thread load (Effect 1 → setCurrentThreadChat → this effect) would
+        // re-push the URL we just landed on. Bail when the target already
+        // matches the live URL — mirrors the main-chat effect's guard — so
+        // push semantics can't corrupt the history stack. `window.location`
+        // (not the closure `pathname`) is read because the closure can lag
+        // the real URL by a render.
+        if (newPath === window.location.pathname) return;
+        // Push (not replace) so each opened thread is its own history
+        // entry — browser Back/Forward steps between threads. `threadId`
+        // is in the deps so switching threads within one chat re-fires
+        // this effect (the old `chatId`-only deps tracked the main chat,
+        // not the thread, so thread→thread never updated the URL).
+        navigate(newPath);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [useCM.isThreadVisible, useCM.currentThreadChat?.chatId]);
+    }, [
+        useCM.isThreadVisible,
+        useCM.currentThreadChat?.chatId,
+        useCM.currentThreadChat?.threadId,
+    ]);
 
     // Keys sorted alphabetically (case-insensitive) per `sort-keys`.
     return {

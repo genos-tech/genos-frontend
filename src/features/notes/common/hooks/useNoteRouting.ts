@@ -186,6 +186,12 @@ export const useNoteRouting = ({ useNM }: UseNoteRoutingProps) => {
     useEffect(() => {
         const routeInfo = parseCurrentRoute();
 
+        // Keep the state→URL effect's dedup ref aligned with the real URL
+        // so re-opening a previously-visited note after a browser
+        // Back/Forward isn't silently skipped (see the matching note in
+        // useTaskRouting).
+        lastNavigatedPath.current = location.pathname;
+
         // If no note type in URL, don't do anything (user can browse)
         if (!routeInfo.noteType) {
             hasHandledInitialUrl.current = true;
@@ -281,7 +287,9 @@ export const useNoteRouting = ({ useNM }: UseNoteRoutingProps) => {
 
         if (newPath && newPath !== location.pathname && newPath !== lastNavigatedPath.current) {
             lastNavigatedPath.current = newPath;
-            navigate(newPath, { replace: true });
+            // Push (not replace) so each opened note is its own history
+            // entry — browser Back/Forward steps between notes.
+            navigate(newPath);
         }
     }, [
         useNM.currentNoteType,

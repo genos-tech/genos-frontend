@@ -114,6 +114,14 @@ export const useTaskRouting = ({ usePM, useTM }: UseTaskRoutingProps) => {
     useEffect(() => {
         const { projectId, taskId, milestoneId } = parseCurrentRoute();
 
+        // Keep the state→URL effects' dedup ref in sync with the actual
+        // URL. After a browser Back/Forward this effect drives state from
+        // the new URL but never updated `lastNavigatedPath`; without this
+        // line, re-selecting a previously-visited item would compare equal
+        // to the stale `lastNavigatedPath` and silently skip the navigate,
+        // leaving the URL out of sync with the visible task.
+        lastNavigatedPath.current = location.pathname;
+
         if (projectId) {
             targetUrlProjectId.current = projectId;
         }
@@ -195,7 +203,9 @@ export const useTaskRouting = ({ usePM, useTM }: UseTaskRoutingProps) => {
             if (newPath !== location.pathname && newPath !== lastNavigatedPath.current) {
                 targetUrlProjectId.current = projectId;
                 lastNavigatedPath.current = newPath;
-                navigate(newPath, { replace: true });
+                // Push (not replace) so each opened milestone is its own
+                // history entry — browser Back/Forward steps between items.
+                navigate(newPath);
             }
             return;
         }
@@ -221,7 +231,9 @@ export const useTaskRouting = ({ usePM, useTM }: UseTaskRoutingProps) => {
             if (newPath !== location.pathname && newPath !== lastNavigatedPath.current) {
                 targetUrlProjectId.current = projectId;
                 lastNavigatedPath.current = newPath;
-                navigate(newPath, { replace: true });
+                // Push (not replace) so each opened task is its own history
+                // entry — browser Back/Forward steps between tasks.
+                navigate(newPath);
             }
         } else if (!useTM.isTaskPreviewVisible && usePM.currentProject) {
             // Preview closed, scrub any task / milestone segment from
