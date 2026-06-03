@@ -731,15 +731,17 @@ export const TaskHomeContent = ({
             ? Math.min(100, Math.round((sprintStats.closed / sprintStats.total) * 100))
             : 0;
 
-    // PUNCH LIST (v3 chatId migration): `AllChatProps.chatId` is `string`
-    // post-flip; `projectId` is still `number`. Legacy PM chats used the
-    // numeric project id as their chatId, so stringifying preserves the
-    // intended match.
+    // Find the PM chat mirroring the focused project so its avatar renders
+    // (else the generic WorkRoundedIcon fallback below shows). Post
+    // v3-migration `chat.chatId` is the Channel UUID, not the numeric
+    // project id, so the old `chatId === String(projectId)` match never hit.
+    // Match on `chat.project.projectId` like `HistoryModal` /
+    // `notificationRouter` / the task header.
     const pmChat = useCM.allChats.find(
         (chat) =>
             chat.chatType === 3 &&
-            usePM.currentProject &&
-            chat.chatId === String(usePM.currentProject.projectId)
+            usePM.currentProject != null &&
+            chat.project?.projectId === usePM.currentProject.projectId
     );
 
     return (
