@@ -359,10 +359,12 @@ describe("loadInitialData", () => {
         await waitFor(() => expect(setIsLoading).toHaveBeenCalledWith(false));
     });
 
-    it("warns and lands on the default chat when lastChatType is unset but channels hydrated", async () => {
+    it("lands on the default chat when lastChatType is unset but channels hydrated", async () => {
         snapshotState.hydrated = true;
-        const { setCurrentMainChat } = render();
-        await waitFor(() => expect(console.warn).toHaveBeenCalledWith("lastChatType is not set"));
+        const { setCurrentMainChat, setIsLoading } = render();
+        // No saved chat type -> the restore path is skipped entirely. Sync on
+        // the boot gate closing (setIsLoading(false)) instead of a log line.
+        await waitFor(() => expect(setIsLoading).toHaveBeenCalledWith(false));
         // No chat restore attempted.
         expect(loadV3Mock).not.toHaveBeenCalled();
         expect(setCurrentMainChat).not.toHaveBeenCalled();
@@ -383,18 +385,15 @@ describe("loadInitialData", () => {
         expect(loadV3Mock).not.toHaveBeenCalled();
     });
 
-    it("warns and uses the default chat when a valid chat type has no stored chat id", async () => {
+    it("uses the default chat when a valid chat type has no stored chat id", async () => {
         snapshotState.hydrated = true;
         localStorage.setItem("lastChatType", "1"); // valid type, but no lastDMChatId stored
         const { setCurrentMainChat } = render();
 
         await waitFor(() =>
-            expect(console.warn).toHaveBeenCalledWith(
-                "Failed due to lastChatId is null or undefined, using default chat"
+            expect(setCurrentMainChat).toHaveBeenCalledWith(
+                expect.objectContaining({ chatId: "", chatType: -1 })
             )
-        );
-        expect(setCurrentMainChat).toHaveBeenCalledWith(
-            expect.objectContaining({ chatId: "", chatType: -1 })
         );
         expect(loadV3Mock).not.toHaveBeenCalled();
     });

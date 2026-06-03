@@ -60,10 +60,6 @@ export const useScrollToBottomOnChatChange = (
                             setErrorMessage("The message has been deleted.");
                             setErrorOpen(true);
                         }
-                    } else {
-                        console.warn("moveToSpecificIndex not found in indexMap");
-                        // console.warn("indexMap:", indexMap);
-                        // console.warn("moveToSpecificIndex:", moveToSpecificIndex);
                     }
                 } else {
                     virtuoso.scrollToIndex({

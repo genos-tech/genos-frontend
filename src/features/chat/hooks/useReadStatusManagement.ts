@@ -77,11 +77,6 @@ export const useReadStatusManagement = ({
                 ? currentChat.chatId
                 : String(currentChat.chatId);
         if (!messageUuid || !channelUuidRaw) {
-            console.warn(
-                "[useReadStatusManagement] skipped: missing v3 ids " +
-                    `(channelUuid=${JSON.stringify(channelUuidRaw)}, ` +
-                    `messageUuid=${JSON.stringify(messageUuid)})`
-            );
             return;
         }
         // Thread cursor: derive the root UUID from `messages[0]`, which

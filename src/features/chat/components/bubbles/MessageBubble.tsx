@@ -231,7 +231,6 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
         // by the v3 → legacy adapter). That's the thread root.
         const threadRootUuid = message.messageIdWithChatId;
         if (!threadRootUuid) {
-            console.warn("[MessageBubble.replayHandler] missing v3 parent UUID");
             return;
         }
         const v3ChannelId = chat.chatId;
@@ -401,7 +400,6 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
         // needed.
         const v3MessageId = message.messageIdWithChatId;
         if (!v3MessageId) {
-            console.warn("[MessageBubble] missing v3 messageUuid — cannot react");
             setSelectedEmoji(null);
             return;
         }

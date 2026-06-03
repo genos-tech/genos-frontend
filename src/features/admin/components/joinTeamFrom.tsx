@@ -224,7 +224,6 @@ export const JoinTeam = () => {
     useEffect(() => {
         if (accessToken) {
             setSocketInstance(socket(accessToken));
-            console.log("WS connected");
         }
     }, [accessToken]);
 

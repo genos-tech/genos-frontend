@@ -140,10 +140,6 @@ export function registerSocketRouter(socket: Socket): () => void {
     // a refresh. Fire-and-forget — failures are non-fatal (the next
     // `loadActivityHistory` call reconciles).
     on<Record<string, unknown>>("activity.created", (a) => {
-        // Diagnostic log retained while the activity pipeline beds in.
-        // Drop once the live-update flow is verified end-to-end.
-
-        console.log("[v3 socketRouter] activity.created received", a);
         void handleV3Activity(a);
     });
 

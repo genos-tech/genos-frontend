@@ -35,7 +35,6 @@ export const deleteMessage = async (
         // Defensive: a missing v3 UUID means the caller is still
         // sourcing legacy MessageProps without `messageIdWithChatId`.
         // Surface to the user rather than silently swallowing.
-        console.warn("[deleteMessage] missing v3 messageUuid — no-op");
         setErrorMessage?.("Could not delete: message id unavailable.");
         return;
     }

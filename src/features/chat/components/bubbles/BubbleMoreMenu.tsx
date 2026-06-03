@@ -98,7 +98,6 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
         // needed here.
         const v3MessageId = message.messageIdWithChatId;
         if (!v3MessageId) {
-            console.warn("[BubbleMoreMenu] missing v3 messageUuid — flag not persisted");
             return;
         }
         if (!isFlagged) {

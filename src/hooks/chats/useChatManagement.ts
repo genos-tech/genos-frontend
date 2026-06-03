@@ -289,10 +289,6 @@ export const useChatManagement = (
         const isPm = chat.chatType === 3;
         const threadRootUuid = resolveV3ThreadRootUuid(chat.chatId, threadId, isPm);
         if (!threadRootUuid) {
-            console.warn(
-                `[moveToSpecificThreadChat] no v3 parent for ` +
-                    `channel=${chat.chatId} threadId=${threadId} isPm=${isPm}`
-            );
             return null;
         }
         const threadMessages: ThreadMessageProps[] = await loadV3SpecificThreadMessages(
@@ -569,7 +565,6 @@ export const useChatManagement = (
     // the one that fires.
     useEffect(() => {
         const onActivity = () => {
-            console.log("[useChatManagement] v3:activity:created → funcSetActivityMessages");
             void funcSetActivityMessages();
         };
         window.addEventListener("v3:activity:created", onActivity);

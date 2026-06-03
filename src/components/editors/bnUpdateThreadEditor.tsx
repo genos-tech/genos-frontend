@@ -256,7 +256,6 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
         const v3MessageId = (message as { messageIdWithChatIdAndThreadId?: string })
             .messageIdWithChatIdAndThreadId;
         if (!v3MessageId) {
-            console.warn("[bnUpdateThreadEditor] missing v3 messageUuid — cannot edit");
             return;
         }
         try {
