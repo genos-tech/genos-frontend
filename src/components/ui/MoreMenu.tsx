@@ -32,6 +32,8 @@ export type MoreMenuProps = {
     ariaLabel?: string;
     /** Trigger icon font size. Default: 18. */
     iconFontSize?: number;
+    /** Notified when the menu opens (`true`) or closes (`false`). */
+    onOpenChange?: (open: boolean) => void;
 };
 
 // Single purple accent for all non-danger items.
@@ -59,6 +61,7 @@ export const MoreMenu = ({
     menuMinWidth = 200,
     ariaLabel,
     iconFontSize = 18,
+    onOpenChange,
 }: MoreMenuProps) => {
     const { mode } = useColorScheme();
     const { t } = useTranslation();
@@ -101,11 +104,13 @@ export const MoreMenu = ({
         updateMenuPosition();
         setIsOpen(true);
         setFocusedIndex(0);
+        onOpenChange?.(true);
     };
 
     const closeMenu = () => {
         setIsOpen(false);
         setFocusedIndex(-1);
+        onOpenChange?.(false);
     };
 
     useEffect(() => {
