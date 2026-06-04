@@ -289,7 +289,13 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
     const isMobile = useIsMobile();
     const [showUnderBarHovered, setShowUnderBarOption] = useState(false);
     const [mobileToolbarOpen, setMobileToolbarOpen] = useState(false);
-    const showUnderBarOption = isMobile ? mobileToolbarOpen : showUnderBarHovered;
+    // While the More menu is open we (a) keep the toolbar mounted even
+    // after the cursor leaves the bubble — otherwise `showUnderBarOption`
+    // flips false and unmounts the menu out from under the user — and
+    // (b) force the bubble tooltip closed so it can't overlap the menu.
+    const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
+    const showUnderBarOption =
+        (isMobile ? mobileToolbarOpen : showUnderBarHovered) || isMoreMenuOpen;
     const longPress = useLongPress(() => setMobileToolbarOpen(true), { threshold: 500 });
     const [reactions, setReactions] = useState<ReactionProps[]>([]);
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
@@ -524,6 +530,7 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
                 useCM={useCM}
                 usePM={usePM}
                 useTM={useTM}
+                onMenuOpenChange={setIsMoreMenuOpen}
             />
         </Stack>
     );
@@ -539,6 +546,7 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
         const messageBody = message.content && message.content.length > 0 && (
             <AppTooltip
                 enterDelay={1000}
+                open={isMoreMenuOpen ? false : undefined}
                 placement="right"
                 title={
                     <>
@@ -637,7 +645,7 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
                         onClick={(e) => e.stopPropagation()}
                         onDoubleClick={(e) => e.stopPropagation()}
                     >
-                        <BubbleActions />
+                        {BubbleActions()}
                     </Box>
                 )}
 
@@ -745,6 +753,7 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
                     )}
                     <AppTooltip
                         enterDelay={1000}
+                        open={isMoreMenuOpen ? false : undefined}
                         placement="right"
                         title={
                             <>
@@ -847,7 +856,7 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
                                             tsUpdated={message.tsUpdated}
                                             userName={message.sender.userName}
                                         />
-                                        <BubbleActions />
+                                        {BubbleActions()}
                                     </Stack>
                                 )}
 
@@ -880,7 +889,7 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
                                                     tsUpdated={message.tsUpdated}
                                                     userName={message.sender.userName}
                                                 />
-                                                {showUnderBarOption === true && <BubbleActions />}
+                                                {showUnderBarOption === true && BubbleActions()}
                                             </Stack>
                                         </Box>
                                     </Stack>

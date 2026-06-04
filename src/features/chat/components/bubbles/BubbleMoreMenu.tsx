@@ -47,6 +47,8 @@ type BubbleMoreMenuProps = {
     setUnwrapAll: (value: boolean) => void;
     unwrapCode: boolean;
     setUnwrapCode: (value: boolean) => void;
+    /** Notified when the embedded More menu opens/closes. */
+    onMenuOpenChange?: (open: boolean) => void;
 };
 
 // Chat type to URL path mapping
@@ -76,6 +78,7 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
         isSent,
         unwrapAll,
         setUnwrapAll,
+        onMenuOpenChange,
         // `unwrapCode` / `setUnwrapCode` are still on the prop shape
         // (the wrap-code toggle menu item is commented out pending UX
         // review). They are intentionally not destructured here.
@@ -221,7 +224,11 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
 
     return (
         <Box sx={{ position: "relative" }}>
-            <MoreMenu items={items} placement={isSent ? "bottom-end" : "bottom-start"} />
+            <MoreMenu
+                items={items}
+                placement={isSent ? "bottom-end" : "bottom-start"}
+                onOpenChange={onMenuOpenChange}
+            />
 
             <ModalDeleteMessage
                 accessToken={accessToken}

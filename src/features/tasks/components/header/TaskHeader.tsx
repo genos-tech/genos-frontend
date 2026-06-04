@@ -226,8 +226,7 @@ export const TaskHeader = ({
                             <Typography
                                 level="body-xs"
                                 sx={{
-                                    fontFamily: "monospace",
-                                    opacity: 0.7,
+                                    fontFamily: "inherit",
                                     color: "inherit",
                                     whiteSpace: "nowrap",
                                 }}
