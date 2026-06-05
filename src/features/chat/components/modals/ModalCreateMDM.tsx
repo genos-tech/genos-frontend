@@ -17,6 +17,7 @@ import {
     Stack,
     Typography,
 } from "@mui/joy";
+import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
@@ -55,6 +56,26 @@ export const ModalCreateMDM: React.FC<Props> = ({
     setMyself,
 }) => {
     const { t } = useTranslation();
+    const { mode, systemMode } = useColorScheme();
+    // The modal surface is a fixed dark gradient in BOTH color schemes, so
+    // Joy's default light-mode input text (a near-black) renders dark-on-dark
+    // and is unreadable. Force a light text + caret + placeholder color when
+    // the effective scheme is light; dark mode already uses light text, so
+    // we leave it untouched.
+    const isLightMode = (mode === "system" ? systemMode : mode) === "light";
+    const lightInputTextSx = isLightMode
+        ? {
+              color: "rgba(255, 255, 255, 0.9)",
+              "& input": {
+                  color: "rgba(255, 255, 255, 0.9)",
+                  caretColor: "rgba(255, 255, 255, 0.9)",
+              },
+              "& input::placeholder": {
+                  color: "rgba(255, 255, 255, 0.5)",
+                  opacity: 1,
+              },
+          }
+        : {};
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedMembers, setSelectedMembers] = useState<UserProps[]>([]);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -250,6 +271,7 @@ export const ModalCreateMDM: React.FC<Props> = ({
                         "&:hover": {
                             borderColor: "rgba(124,58,237,0.3)",
                         },
+                        ...lightInputTextSx,
                     }}
                     onChange={(e) => setSearchQuery(e.target.value)}
                 />

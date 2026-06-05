@@ -1434,6 +1434,39 @@ export class ChannelService {
         });
     }
 
+    /**
+     * Self-join a PUBLIC GM — the chat-search "click an open group you're
+     * not in yet" path. Emits `channel.join`; the backend adds the current
+     * user as a member and fans out `channel.created` (to our user room) +
+     * `channel.member_added` (to the channel room).
+     *
+     * We also apply the returned channel/member to the store eagerly so the
+     * caller can open the channel immediately, without racing the broadcast
+     * round-trip. Both `handleChannelCreated` and `handleChannelMemberAdded`
+     * are idempotent (upsert by id), so the subsequent broadcast can't
+     * duplicate anything.
+     *
+     * Private GMs are NOT self-joinable: the backend returns 403 and this
+     * rejects — callers should route those through the owner-approval
+     * request flow (`ModalJoinGM`) instead of calling this.
+     */
+    async joinChannel(channelId: string): Promise<Channel | undefined> {
+        const data = await this.socketEmitOrThrow<{ channel: Channel; member: ChannelMember }>(
+            "channel.join",
+            { channel_id: channelId }
+        );
+        if (!data?.channel) return undefined;
+        this.handleChannelCreated(data.channel);
+        if (data.member) {
+            this.handleChannelMemberAdded({
+                channelId: data.channel.id,
+                channelKind: data.channel.kind,
+                member: data.member,
+            });
+        }
+        return data.channel;
+    }
+
     removeMember(channelId: string, channelKind: ChannelKind, userId: string): Promise<void> {
         return this.socketEmitOrThrow<void>("channel.member.remove", {
             channel_id: channelId,
