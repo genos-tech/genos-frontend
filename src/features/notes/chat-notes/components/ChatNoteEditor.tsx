@@ -5,6 +5,7 @@ import { Socket } from "socket.io-client";
 
 import { BnChatNoteEditor } from "../../../../components/editors/bnChatNoteEditor";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { useIsMobile } from "../../../../hooks/common/useIsMobile";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { useTranslation } from "../../../../i18n";
@@ -55,6 +56,7 @@ export const ChatNoteEditor = ({
     resyncSignal,
 }: ChatNoteEditorProps) => {
     const { t } = useTranslation();
+    const isMobile = useIsMobile();
     return (
         <>
             <FormControl
@@ -64,7 +66,7 @@ export const ChatNoteEditor = ({
                     justifyContent: "center",
                     position: "absolute",
                     zIndex: 100,
-                    width: "400px",
+                    width: isMobile ? "50%" : "30%",
                 }}
                 required
             >
