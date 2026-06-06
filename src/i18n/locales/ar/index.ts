@@ -358,6 +358,7 @@ export const ar: DeepPartial<Messages> = {
             allCaughtUp: "أنجزت كل شيء",
             newGroupMessageMenu: "رسالة مجموعة جديدة",
             newDmWithFriendsMenu: "رسالة مباشرة جديدة مع الأصدقاء",
+            markFilteredActivitiesReadMenu: "تحديد المُصفّاة كمقروءة",
             dividerPinned: "الرسائل المثبتة",
             dividerGroupMessages: "رسائل المجموعات",
             dividerDirectMessages: "الرسائل المباشرة",

@@ -360,6 +360,7 @@ export const hi: DeepPartial<Messages> = {
             allCaughtUp: "सब कुछ पूरा",
             newGroupMessageMenu: "नया ग्रुप मेसेज",
             newDmWithFriendsMenu: "दोस्तों के साथ नया DM",
+            markFilteredActivitiesReadMenu: "फ़िल्टर किए गए को पढ़ा हुआ चिह्नित करें",
             dividerPinned: "पिन किए गए मेसेज",
             dividerGroupMessages: "ग्रुप मेसेज",
             dividerDirectMessages: "डायरेक्ट मेसेज",

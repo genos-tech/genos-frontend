@@ -357,6 +357,7 @@ export const ja: DeepPartial<Messages> = {
             allCaughtUp: "すべて確認済み",
             newGroupMessageMenu: "新しいグループメッセージ",
             newDmWithFriendsMenu: "友達と新規DM",
+            markFilteredActivitiesReadMenu: "絞り込み中をすべて既読にする",
             dividerPinned: "ピン留めしたメッセージ",
             dividerGroupMessages: "グループメッセージ",
             dividerDirectMessages: "ダイレクトメッセージ",
