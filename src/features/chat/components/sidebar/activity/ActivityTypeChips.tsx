@@ -204,14 +204,14 @@ export const ActivityTypeChips: React.FC<ActivityTypeChipsProps> = ({
                         (set to the note title, not the project name) so
                         this gracefully falls back to just the task ID
                         chip. */}
-                    {!!projectChipName && projectChipName !== "?" && !isTaskNote && (
+                    {/* {!!projectChipName && projectChipName !== "?" && !isTaskNote && (
                         <ModernChip
                             colorScheme={CHIP_COLORS.project}
                             isDark={isDark}
                             label={projectChipName}
                             variant="filled"
                         />
-                    )}
+                    )} */}
                     {!!activity.taskId && (
                         <ModernChip
                             colorScheme={CHIP_COLORS.task}
