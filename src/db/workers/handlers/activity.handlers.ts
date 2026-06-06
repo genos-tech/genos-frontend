@@ -31,22 +31,25 @@ export const activityHandlers: HandlerMap<ActivityRequests> = {
 
     loadActivityHistory: async ({ myself, accessToken }) => {
         await syncWithCheckpoint({
-            // Bumped to "activity-v3" so existing clients re-fetch
-            // every activity row and pick up the new
-            // `mentionedViaGroups` field that drives the "By group"
-            // filter. Pre-v3 rows have no field at all (it's `undefined`
-            // instead of `{}`), which the predicate treats the same as
-            // an empty map — so the bump is mostly a UX nicety: without
-            // it, recently-cached mention activities couldn't be
-            // filtered until they aged out of the 30-day window.
+            // Bumped to "activity-v5": chat-note (surface 8) activity meta
+            // (chatType/chatId/threadId) was being DROPPED on the backend —
+            // the Flask note_mention handler int()-parsed the thread-root
+            // UUID, threw, and nulled chat_type in the same except, so
+            // `_build_meta` skipped the parent-chat block. Every existing
+            // chat-note row therefore lacked the parent-chat ids the
+            // `ActivityAvatar` chatType=8 lookup needs and fell back to the
+            // tinted icon. The handler is fixed and those rows are now
+            // backfilled in the DB. `Activity` has no `ts_updated_at`, so an
+            // incremental sync never re-fetches old (backfilled) rows — only
+            // a full reload does. Bumping the key invalidates every client's
+            // checkpoint (including "activity-v4", set during the broken
+            // retest) and forces that full reload.
             //
-            // Previous bump (activity-v2): mention rows used to be
-            // stored under live-push "1-<chat_type>-..." activityIds
-            // while REST refreshes returned "3-<chat_type>-...", so
-            // users carried a shadow "1-..." row alongside every
-            // refreshed "3-..." entry. A full reload wipes the stale
-            // half cleanly.
-            key: "activity-v3",
+            // Previous bump (activity-v4): chat-note parent-chat fields —
+            //   insufficient alone, the meta was never stored to re-adapt.
+            // Previous bump (activity-v3): picked up `mentionedViaGroups`.
+            // Previous bump (activity-v2): de-duped live-push vs REST ids.
+            key: "activity-v5",
             fetcher: async (since) => {
                 const response = await loadActivityHistory(myself, accessToken, since);
                 if (!response) {

@@ -151,13 +151,14 @@ export const ActivityTypeChips: React.FC<ActivityTypeChipsProps> = ({
     const { t } = useTranslation();
     const isDark = mode === "dark";
 
-    // chat_type=4 is dual-purpose: task-comment activities carry a `taskId`
-    // (and a project name in `chatName`); multi-user DMs never do. We use
-    // `taskId` as the discriminator so MDM activities don't render "#NULL"
-    // or get labeled "Task". Multi-user DMs ("MDM" internally) self-label
-    // as "DM" — the lookup at chatTypeLookup[4] already returns "DM" since
-    // that's the end-user term.
-    const isTaskComment = activity.chatType === 4 && !!activity.taskId;
+    // Task comment = the v3 PM-thread mirror (`isTaskComment` flag, from
+    // `message.metadata.taskCommentId`) OR a legacy chat_type=4 row carrying
+    // a `taskId`. v3 task comments arrive as chat_type=3 (PM) + isThread, so
+    // the legacy chat_type===4 test alone missed them — they rendered a "PM"
+    // + "Thread" chip instead of "Task Comment". A chat_type=4 row WITHOUT a
+    // taskId is a multi-user DM (MDM), which self-labels as "DM".
+    const isTaskComment =
+        activity.isTaskComment === true || (activity.chatType === 4 && !!activity.taskId);
     const isTaskBody = activity.chatType === 5;
     const isTaskNote = activity.chatType === 7;
     const isNote = activity.chatType >= 6 && activity.chatType <= 8;
@@ -228,14 +229,18 @@ export const ActivityTypeChips: React.FC<ActivityTypeChipsProps> = ({
                 user DMs (which already self-label as "DM"), and not the
                 task-body / note surfaces (chat_type 5-8) which have
                 their own surface chip and no notion of "replying". */}
-            {activity.activityType === 1 && activity.chatType !== 4 && !isTaskBody && !isNote && (
-                <ModernChip
-                    colorScheme={CHIP_COLORS.reply}
-                    isDark={isDark}
-                    label={t.chat.activity.chipReply}
-                    variant="filled"
-                />
-            )}
+            {activity.activityType === 1 &&
+                activity.chatType !== 4 &&
+                !isTaskComment &&
+                !isTaskBody &&
+                !isNote && (
+                    <ModernChip
+                        colorScheme={CHIP_COLORS.reply}
+                        isDark={isDark}
+                        label={t.chat.activity.chipReply}
+                        variant="filled"
+                    />
+                )}
 
             {activity.activityType === 2 && (
                 <ModernChip
@@ -262,7 +267,10 @@ export const ActivityTypeChips: React.FC<ActivityTypeChipsProps> = ({
                 variant={surfaceChipVariant}
             />
 
-            {activity.isThread === true && (
+            {/* Task comments are structurally thread replies (isThread=true)
+                but self-label as "Task Comment" — don't also tag them
+                "Thread". Genuine DM/GM/MDM thread replies still get it. */}
+            {activity.isThread === true && !isTaskComment && (
                 <ModernChip
                     colorScheme={CHIP_COLORS.thread}
                     isDark={isDark}

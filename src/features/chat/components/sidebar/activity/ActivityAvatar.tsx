@@ -55,6 +55,18 @@ export const ActivityAvatar: React.FC<ActivityAvatarProps> = ({
         (chat) => chat.chatType === lookupChatType && chat.chatId === String(activity.chatId)
     );
 
+    // Task-body (5) and task-note (7) surface activities have no chat row of
+    // their own — their `chatId` is the project/note id, not a PM channel id —
+    // so the `chat` lookup above can't find them. Resolve the project's PM
+    // chat by `projectId` instead so these task surfaces render the PROJECT's
+    // profile image (a project task / task note belongs to a project), not a
+    // generic icon. `projectId` is always set for task body and is set for
+    // task notes whose producer forwarded it (task notes without a project
+    // gracefully keep the icon fallback below).
+    const projectChat = useCM.allChats.find(
+        (c) => c.chatType === 3 && c.project?.projectId === activity.projectId
+    );
+
     // DM Avatar (chatType === 1).
     // `activity.dmPartnerUserId` is sender-centric (it's the sender's
     // userId, set on the backend at the moment the message is emitted),
@@ -179,7 +191,21 @@ export const ActivityAvatar: React.FC<ActivityAvatarProps> = ({
     // the user can tell at a glance which surface produced the notification.
     // Colors mirror SURFACE_CHIP_COLOR in ActivityTypeChips.
     if (activity.chatType === 5) {
-        // Task body mention
+        // Task body mention — the task lives in a project, so show the
+        // project's profile image when resolvable; tinted icon otherwise.
+        if (projectChat) {
+            return (
+                <ProjectAvatar
+                    myself={myself}
+                    pmChat={projectChat}
+                    setMyself={setMyself}
+                    socket={socket}
+                    useCM={useCM}
+                    useTEM={useTEM}
+                    useUISM={useUISM}
+                />
+            );
+        }
         return (
             <Avatar size="sm" sx={{ background: "rgba(234, 88, 12, 0.15)", color: "#ea580c" }}>
                 <AssignmentRoundedIcon />
@@ -195,7 +221,22 @@ export const ActivityAvatar: React.FC<ActivityAvatarProps> = ({
         );
     }
     if (activity.chatType === 7) {
-        // Task note mention
+        // Task note mention — a task note belongs to a project's task, so
+        // show the project's profile image when resolvable; tinted icon
+        // otherwise (task notes emitted without a projectId fall back here).
+        if (projectChat) {
+            return (
+                <ProjectAvatar
+                    myself={myself}
+                    pmChat={projectChat}
+                    setMyself={setMyself}
+                    socket={socket}
+                    useCM={useCM}
+                    useTEM={useTEM}
+                    useUISM={useUISM}
+                />
+            );
+        }
         return (
             <Avatar size="sm" sx={{ background: "rgba(16, 185, 129, 0.15)", color: "#10b981" }}>
                 <NoteAltRoundedIcon />
@@ -203,7 +244,80 @@ export const ActivityAvatar: React.FC<ActivityAvatarProps> = ({
         );
     }
     if (activity.chatType === 8) {
-        // Chat note mention
+        // Chat note mention — the note belongs to a DM/GM/MDM/PM chat.
+        // Use the parent chat's avatar (the same as its corresponding DM,
+        // GM, or MDM activity) by looking up via noteChatType + noteChatId.
+        const parentChatType = activity.noteChatType;
+        const parentChatId = activity.noteChatId != null ? String(activity.noteChatId) : undefined;
+        const parentChat =
+            parentChatType != null && parentChatId
+                ? useCM.allChats.find(
+                      (c) => c.chatType === parentChatType && c.chatId === parentChatId
+                  )
+                : undefined;
+
+        if (parentChatType === 1 || parentChatType === 4) {
+            // DM or MDM — use the same avatar logic as the DM/MDM branches above.
+            if (parentChatType === 1) {
+                const partnerUserId = parentChat?.dmPartnerUser?.userId ?? "";
+                if (partnerUserId) {
+                    return (
+                        <AvatarWithStatus
+                            avatarUser={useTEM.teamMemberProfiles[partnerUserId]}
+                            isYou={isYou}
+                            myself={myself}
+                            setMyself={setMyself}
+                            socket={socket}
+                            useCM={useCM}
+                            useUISM={useUISM}
+                        />
+                    );
+                }
+            } else {
+                // MDM
+                if (parentChat) {
+                    return (
+                        <MDMAvatar
+                            members={parentChat.mdmMembers}
+                            teamMemberProfiles={useTEM.teamMemberProfiles}
+                        />
+                    );
+                }
+            }
+        } else if (parentChatType === 2) {
+            // GM
+            if (parentChat) {
+                return (
+                    <GMAvatar
+                        gmChat={parentChat}
+                        isYou={isYou}
+                        myself={myself}
+                        setMyself={setMyself}
+                        socket={socket}
+                        useCM={useCM}
+                        useTEM={useTEM}
+                        useUISM={useUISM}
+                    />
+                );
+            }
+        } else if (parentChatType === 3) {
+            // PM
+            if (parentChat) {
+                return (
+                    <ProjectAvatar
+                        myself={myself}
+                        pmChat={parentChat}
+                        setMyself={setMyself}
+                        socket={socket}
+                        useCM={useCM}
+                        useTEM={useTEM}
+                        useUISM={useUISM}
+                    />
+                );
+            }
+        }
+
+        // Fallback: tinted icon when chat data isn't loaded yet.
         return (
             <Avatar size="sm" sx={{ background: "rgba(2, 132, 199, 0.15)", color: "#0284c7" }}>
                 <DescriptionRoundedIcon />

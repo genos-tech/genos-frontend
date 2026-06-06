@@ -151,7 +151,10 @@ export type ActivityMessageProps = {
     // Opaque: the parent chat id may be a numeric legacy id or a v3 UUID
     // string — carried as-is and stringified at the navigation boundary.
     noteChatId?: string | number;
-    noteThreadId?: number;
+    // Opaque too: a thread-root id is a v3 UUID string (legacy numeric on
+    // old data). Coercing to a number drops the UUID, breaking thread
+    // deep-links — carry it as-is, same as `noteChatId`.
+    noteThreadId?: number | string;
 };
 
 export type MessageProps = {

@@ -1,4 +1,5 @@
 import { useCallback, useState } from "react";
+import { Socket } from "socket.io-client";
 
 import { invalidateCachedFullTask } from "../../db/services/task-full.service";
 import { addTask } from "../../features/tasks/services/addTask";
@@ -25,6 +26,7 @@ import {
     UpdateSprintInput,
     upsertSprintConfig,
 } from "../../features/tasks/sprint-milestone/services";
+import type { MilestoneMentionContext } from "../../features/tasks/sprint-milestone/services/updateMilestone";
 import { Milestone, Sprint, SprintConfig } from "../../features/tasks/sprint-milestone/types";
 
 // Every milestone mutation goes through `_sync_backing_task` on the
@@ -136,7 +138,9 @@ export interface SprintMilestoneManagementState {
     createNewMilestone: (input: CreateMilestoneInput) => Promise<Milestone | null>;
     updateExistingMilestone: (
         input: UpdateMilestoneInput,
-        projectId: number
+        projectId: number,
+        socket?: Socket | null,
+        mentionMeta?: Omit<MilestoneMentionContext, "socket" | "tsUpdatedAt">
     ) => Promise<Milestone | null>;
     moveMilestone: (
         milestoneId: number,
@@ -363,8 +367,19 @@ export const useSprintMilestoneManagement = (
     );
 
     const updateExistingMilestone = useCallback(
-        async (input: UpdateMilestoneInput, _projectId: number): Promise<Milestone | null> => {
-            const res = await updateMilestone(input, accessToken);
+        async (
+            input: UpdateMilestoneInput,
+            _projectId: number,
+            socket?: Socket | null,
+            mentionMeta?: Omit<MilestoneMentionContext, "socket" | "tsUpdatedAt">
+        ): Promise<Milestone | null> => {
+            let mentionCtx: MilestoneMentionContext | undefined;
+            if (socket && mentionMeta) {
+                // `tsUpdatedAt` comes from the server response; use a
+                // placeholder so the socket event can stamp itself.
+                mentionCtx = { socket, tsUpdatedAt: new Date().toISOString(), ...mentionMeta };
+            }
+            const res = await updateMilestone(input, accessToken, mentionCtx);
             if (res?.milestone) {
                 setProjectMilestonesState((prev) => upsertMilestoneInList(prev, res.milestone));
                 if (currentMilestone?.milestoneId === res.milestone.milestoneId) {

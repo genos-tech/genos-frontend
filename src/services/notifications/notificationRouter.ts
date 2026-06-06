@@ -9,17 +9,28 @@ import { CATEGORY_BY_KEY, NotificationCategory } from "./categories";
 import { NotificationIntent } from "./types";
 
 /**
+ * A task comment is either a v3 PM-thread mirror (the `isTaskComment` flag,
+ * set from `message.metadata.taskCommentId`) OR a legacy chat_type=4 row that
+ * carries a `taskId`. A chat_type=4 row WITHOUT a taskId is a multi-user DM
+ * (MDM), NOT a task comment — the two share chat_type=4 and must be kept
+ * apart, otherwise an MDM message gets mislabeled "commented on a task".
+ * This is the single discriminator reused by the chips + avatar code.
+ */
+const isTaskCommentActivity = (activity: ActivityMessageProps): boolean =>
+    activity.isTaskComment === true || (activity.chatType === 4 && !!activity.taskId);
+
+/**
  * Map a mention activity to its fine sub-category from the surface encoded
  * in `chatType` (the v3→legacy adapter packs surface_type here):
- *   4 = task comment, 5 = task body, 6/7/8 = my/task/chat note,
- *   else a thread reply -> mention_thread, else (1/2/3) -> mention_chat.
- * Surface / special chatTypes are checked BEFORE `isThread` because task
- * comments are stored as thread replies and must stay in their own bucket.
+ *   task comment, 5 = task body, 6/7/8 = my/task/chat note,
+ *   else a thread reply -> mention_thread, else (1/2/3/MDM) -> mention_chat.
+ * Task comment is checked BEFORE `isThread`/chat type because task comments
+ * are stored as thread replies and must stay in their own bucket; a plain
+ * MDM (chat_type=4, no taskId) correctly falls through to mention_chat/thread.
  */
 const classifyMention = (activity: ActivityMessageProps): NotificationCategory => {
+    if (isTaskCommentActivity(activity)) return "mention_task_comment";
     switch (activity.chatType) {
-        case 4:
-            return "mention_task_comment";
         case 5:
             return "mention_task_body";
         case 6:
@@ -296,7 +307,9 @@ export const buildActivityIntent = (
     // the v3 mirror tags them with `message.metadata.taskCommentId`,
     // surfaced here as `isTaskComment`. They must NOT be treated as bot
     // lifecycle bubbles (or they'd be suppressed below and never notify).
-    const isTaskComment = activity.isTaskComment === true;
+    // Use the shared discriminator so a legacy chat_type=4+taskId comment is
+    // covered too, while a plain MDM (chat_type=4, no taskId) is NOT.
+    const isTaskComment = isTaskCommentActivity(activity);
 
     // PM activities are unconditionally sent as the project's system
     // user — `message_handlers.py` overrides `sender_user_id` to
@@ -326,12 +339,15 @@ export const buildActivityIntent = (
 
     let category: NotificationCategory | null = null;
     if (mentionsMe) {
-        // A mention inside a task comment is a task-comment mention,
-        // regardless of the PM channel surface it physically lives in.
-        category = isTaskComment ? "mention_task_comment" : classifyMention(activity);
-    } else if (activity.chatType === 4 || isTaskComment) {
-        // chatType 4 = legacy task-comment routing; `isTaskComment` = v3
-        // task-comment mirror. Either way: a plain (non-mention) comment.
+        // classifyMention already routes a task comment (v3 flag OR legacy
+        // chat_type=4+taskId) to mention_task_comment, and a plain MDM to
+        // mention_chat / mention_thread.
+        category = classifyMention(activity);
+    } else if (isTaskComment) {
+        // A plain (non-mention) task comment — v3 mirror or legacy
+        // chat_type=4+taskId. A plain MDM message (chat_type=4, no taskId)
+        // is intentionally NOT routed here (it produces no activity-feed
+        // notification; its in-app toast comes from the chat-message path).
         category = "task_comments";
     }
     if (!category) return null;

@@ -117,7 +117,13 @@ export function v3ActivityToLegacy(a: V3ActivityWire, myself: UserProps): Activi
             typeof meta.chatId === "string" || typeof meta.chatId === "number"
                 ? meta.chatId
                 : undefined;
-        const noteThreadId = num(meta.threadId);
+        // Opaque like `chatId`: a thread-root id is a v3 UUID string (or a
+        // legacy number). `num()` would drop the UUID and break thread
+        // deep-linking, so read it as-is.
+        const noteThreadId =
+            typeof meta.threadId === "string" || typeof meta.threadId === "number"
+                ? meta.threadId
+                : undefined;
         // Notes route by `chatId === noteId`; task body routes by
         // projectId + taskId (its chatId slot mirrors the legacy
         // project-id packing).
