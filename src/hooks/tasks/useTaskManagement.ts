@@ -259,15 +259,6 @@ export const useTaskManagement = (
     // Current task state
     const [currentPreviewTaskId, _setCurrentPreviewTaskId] = useState<number>(-1);
     const [currentPreviewTask, setCurrentPreviewTask] = useState<TaskProps | undefined>(undefined);
-    // Monotonic epoch for preview-task loads. Every `loadTask` /
-    // `loadUpdatedTask` call bumps this before awaiting; after the await it
-    // only writes `currentPreviewTask` if no NEWER load started meanwhile.
-    // Fixes the rapid-switch race where an older, slower `loadSpecificTask`
-    // resolved after a newer selection and clobbered the preview (the user
-    // clicks A→B→C fast and the pane lands on A or B instead of C). Both
-    // loaders share the ref so any newer load — switch or socket refresh —
-    // supersedes an in-flight older one.
-    const previewLoadEpochRef = useRef(0);
     const [currentPreviewKind, setCurrentPreviewKind] = useState<"task" | "milestone">("task");
     const [currentPreviewMilestoneId, _setCurrentPreviewMilestoneId] = useState<number>(-1);
     const [tableMilestoneFilterId, setTableMilestoneFilterId] = useState<number | null>(null);
@@ -429,7 +420,6 @@ export const useTaskManagement = (
 
     // Load specific task
     const loadTask = async (projectId: number, taskId: number) => {
-        const epoch = ++previewLoadEpochRef.current;
         try {
             const loadedTask: TaskProps[] = await loadSpecificTask(
                 myself,
@@ -439,9 +429,6 @@ export const useTaskManagement = (
                 { expectedMinUpdatedAt: expectedUpdatedAtFromList(taskId) }
             );
 
-            // A newer preview load started while we were awaiting — drop this
-            // stale result so it can't clobber the user's current selection.
-            if (epoch !== previewLoadEpochRef.current) return;
             if (loadedTask.length > 0) {
                 setCurrentPreviewTask(loadedTask[0]);
             }
@@ -452,7 +439,6 @@ export const useTaskManagement = (
 
     const loadUpdatedTask = async (projectId: number) => {
         if (projectId && currentPreviewTaskId !== -1) {
-            const epoch = ++previewLoadEpochRef.current;
             const loadedTask: TaskProps[] = await loadSpecificTask(
                 myself,
                 projectId,
@@ -461,16 +447,8 @@ export const useTaskManagement = (
                 { expectedMinUpdatedAt: expectedUpdatedAtFromList(currentPreviewTaskId) }
             );
 
-            // Stale-resolution guard (see `loadTask`): a newer switch/refresh
-            // superseded this one mid-flight — don't write the OLD task back
-            // into the preview. The `allTasks` upsert below is id-targeted and
-            // idempotent, so it stays unconditional (a superseded "task
-            // created / updated by someone" refresh must still land in the
-            // table even though it no longer owns the preview pane).
-            const isLatestPreviewLoad = epoch === previewLoadEpochRef.current;
-
             // No need to update the current preview task when a new tag is created.
-            if (isLatestPreviewLoad && isNewTagCreated === false && loadedTask.length > 0) {
+            if (isNewTagCreated === false && loadedTask.length > 0) {
                 setCurrentPreviewTask(loadedTask[0]);
             }
 
