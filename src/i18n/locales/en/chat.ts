@@ -53,6 +53,7 @@ export const chat = {
         allCaughtUp: "All caught up",
         newGroupMessageMenu: "New Group Message",
         newDmWithFriendsMenu: "New DM with friends",
+        markFilteredActivitiesReadMenu: "Mark filtered as read",
         dividerPinned: "Pinned Messages",
         dividerGroupMessages: "Group Messages",
         dividerDirectMessages: "Direct Messages",

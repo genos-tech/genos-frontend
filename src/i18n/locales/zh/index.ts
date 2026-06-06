@@ -348,6 +348,7 @@ export const zh: DeepPartial<Messages> = {
             allCaughtUp: "全部已读",
             newGroupMessageMenu: "新建群消息",
             newDmWithFriendsMenu: "与好友新建私信",
+            markFilteredActivitiesReadMenu: "将筛选项标记为已读",
             dividerPinned: "已置顶消息",
             dividerGroupMessages: "群消息",
             dividerDirectMessages: "私信",

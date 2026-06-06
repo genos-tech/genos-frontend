@@ -24,12 +24,7 @@ import { ActivityMessageProps, AllChatProps, FlaggedMessageProps } from "../../.
 import { isMac } from "../../../../utils/platform";
 import { useScrollToBottomOnNewActivity } from "../../hooks/messageBubbleHooks";
 import { useChatRouting } from "../../hooks/useChatRouting";
-import {
-    ChipId,
-    makeChipFilter,
-    makeInstanceFilter,
-    makeMentionGroupFilter,
-} from "../../utils/activityChipFilters";
+import { ChipId, selectVisibleActivityMessages } from "../../utils/activityChipFilters";
 import { ChatListItemForActivity } from "./activity/chatListItemForActivity";
 import { ChatListItem } from "./chatListItem";
 import { ChatListItemForFlagMessages } from "./chatListItemForFlagMessages";
@@ -42,22 +37,6 @@ const CHAT_TYPES = {
     PINNED: 4,
     ACTIVITY: 5,
     FLAGGED: 6,
-} as const;
-
-const ACTIVITY_TYPES = {
-    ALL: 0,
-    THREAD: 1,
-    TASK: 2,
-    MENTION: 3,
-    REACTION: 4,
-} as const;
-
-const ACTIVITY_FILTERS = {
-    [ACTIVITY_TYPES.ALL]: () => true,
-    [ACTIVITY_TYPES.THREAD]: (item: ActivityMessageProps) => item.isThread === true,
-    [ACTIVITY_TYPES.TASK]: (item: ActivityMessageProps) => item.chatType > 2,
-    [ACTIVITY_TYPES.MENTION]: (item: ActivityMessageProps) => item.activityType === 3,
-    [ACTIVITY_TYPES.REACTION]: (item: ActivityMessageProps) => item.activityType === 2,
 } as const;
 
 // Empty state configuration. Labels resolved at render time via i18n keys.
@@ -208,35 +187,19 @@ const useFilteredActivityMessages = (
     );
 
     useEffect(() => {
-        const filteredMessages = activityMessages.filter(
-            (item) => !(item.isThread === true && item.messageId === 1)
-        );
-
-        if (filteredMessages) {
-            // AND-compose primary single-select + chip refinement +
-            // instance-name refinement + mention-group refinement.
-            // Each predicate short-circuits to true on empty input so
-            // the unfiltered baseline matches pre-filter behavior.
-            const primaryFn =
-                ACTIVITY_FILTERS[currentActivityMessageType as keyof typeof ACTIVITY_FILTERS] ??
-                (() => true);
-            const chipFn = makeChipFilter(selectedActivityChipIds);
-            const instanceFn = makeInstanceFilter(selectedActivityInstanceIds);
-            const mentionGroupFn = makeMentionGroupFilter(
+        // Shared selector — keeps the rendered set identical to the set
+        // the "mark all filtered as read" action in `ChatSidebar` targets.
+        setTmpActivityMessages(
+            selectVisibleActivityMessages(
+                activityMessages,
+                currentActivityMessageType,
+                selectedActivityChipIds,
+                selectedActivityInstanceIds,
                 selectedActivityMentionGroupIds,
-                myUserId
-            );
-            const filtered = filteredMessages.filter(
-                (item) =>
-                    primaryFn(item) && chipFn(item) && instanceFn(item) && mentionGroupFn(item)
-            );
-
-            if (showOnlyUnreadItems) {
-                setTmpActivityMessages(filtered.filter((item) => item.isRead === false));
-            } else {
-                setTmpActivityMessages(filtered);
-            }
-        }
+                myUserId,
+                showOnlyUnreadItems
+            )
+        );
     }, [
         activityMessages,
         currentActivityMessageType,

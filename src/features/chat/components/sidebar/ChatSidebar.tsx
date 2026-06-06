@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import AccountTreeRoundedIcon from "@mui/icons-material/AccountTreeRounded";
+import DoneAllRoundedIcon from "@mui/icons-material/DoneAllRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import GroupsIcon from "@mui/icons-material/Groups";
 import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
@@ -35,6 +36,7 @@ import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { isMac } from "../../../../utils/platform";
 import { useChatRouting } from "../../hooks/useChatRouting";
+import { useMarkFilteredActivityRead } from "../../hooks/useMarkFilteredActivityRead";
 import {
     ChipId,
     EMPTY_CHIP_SET,
@@ -42,6 +44,7 @@ import {
     EMPTY_INSTANCE_SET,
     hasGatingChip,
     hasMentionGatingChip,
+    selectVisibleActivityMessages,
 } from "../../utils/activityChipFilters";
 import { ModalCreateGM } from "../modals/ModalCreateGM";
 import { ModalCreateMDM } from "../modals/ModalCreateMDM";
@@ -186,6 +189,25 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
             setSelectedActivityMentionGroupIds(EMPTY_GROUP_ID_SET);
         }
     }, [selectedActivityChipIds, selectedActivityMentionGroupIds.size]);
+
+    const { markFilteredAsRead } = useMarkFilteredActivityRead({ useCM });
+
+    // Mark every activity currently visible in the feed as read. Recomputes
+    // the visible set at click time from the live filter state so it always
+    // matches exactly what `ChatList` is rendering — change a filter and the
+    // target set changes with it.
+    const handleMarkFilteredActivityRead = () => {
+        const visible = selectVisibleActivityMessages(
+            useCM.activityMessages,
+            currentActivityMessageType,
+            selectedActivityChipIds,
+            selectedActivityInstanceIds,
+            selectedActivityMentionGroupIds,
+            myself.userId,
+            showOnlyUnreadItems
+        );
+        markFilteredAsRead(visible);
+    };
 
     // Get unread count for a specific chat type
     const getUnreadCount = (chatType: number): number => {
@@ -553,6 +575,34 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                         />
                                         {t.chat.sidebar.newDmWithFriendsMenu}
                                     </MenuItem>
+                                    {/* Mark all currently-filtered activities
+                                        as read. Only meaningful on the
+                                        Activity tab — the visible feed is what
+                                        gets cleared. Rendered as two separate
+                                        direct children (not a Fragment) so Joy's
+                                        Menu registers the MenuItem for roving
+                                        keyboard focus. */}
+                                    {useCM.currentChatPaneType === CHAT_PANE_TYPES.ACTIVITY && (
+                                        <Divider sx={{ my: 0.5 }} />
+                                    )}
+                                    {useCM.currentChatPaneType === CHAT_PANE_TYPES.ACTIVITY && (
+                                        <MenuItem
+                                            sx={{
+                                                borderRadius: "8px",
+                                                gap: 1.5,
+                                                fontSize: "0.85rem",
+                                            }}
+                                            onClick={handleMarkFilteredActivityRead}
+                                        >
+                                            <DoneAllRoundedIcon
+                                                sx={{
+                                                    fontSize: 18,
+                                                    color: isDark ? "#a78bfa" : "#7c3aed",
+                                                }}
+                                            />
+                                            {t.chat.sidebar.markFilteredActivitiesReadMenu}
+                                        </MenuItem>
+                                    )}
                                 </Menu>
                             </Dropdown>
                         </Stack>

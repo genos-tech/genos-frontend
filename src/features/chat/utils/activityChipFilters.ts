@@ -53,6 +53,21 @@ export const CHIP_PREDICATES: Record<ChipId, Predicate> = {
     thread: (a) => a.isThread === true,
 };
 
+// Primary single-select activity filter (the chip row's mutually-
+// exclusive "All / Threads / Tasks / Mentions / Reactions" buttons).
+// Keyed by the integer `currentActivityMessageType`:
+//   0 = All, 1 = Thread, 2 = Task, 3 = Mention, 4 = Reaction.
+// Extracted here (was inline in `ChatList`) so `selectVisibleActivityMessages`
+// and the in-list filter share one definition. NOTE: type 2 ("Task") is
+// `chatType > 2`, not `>= 2` — keep it that way.
+export const ACTIVITY_PRIMARY_FILTERS: Record<number, Predicate> = {
+    0: () => true,
+    1: (a) => a.isThread === true,
+    2: (a) => a.chatType > 2,
+    3: (a) => a.activityType === 3,
+    4: (a) => a.activityType === 2,
+};
+
 // AND-logic composer. An activity must satisfy EVERY selected chip
 // predicate to pass. Empty selection short-circuits to true so
 // "no chips active" reads as the unfiltered baseline.
@@ -228,3 +243,38 @@ export const hasMentionGatingChip = (selected: ReadonlySet<ChipId>): boolean =>
     selected.has("mention");
 
 export const EMPTY_GROUP_ID_SET: ReadonlySet<number> = new Set<number>();
+
+// ---------------------------------------------------------------------
+// Visible-set selector
+// ---------------------------------------------------------------------
+// Single source of truth for "which activities are currently visible in
+// the sidebar feed". Composes, in order:
+//   1. drops the synthetic thread-root placeholder (isThread + messageId 1),
+//   2. the primary single-select filter (`ACTIVITY_PRIMARY_FILTERS`),
+//   3. chip / instance-name / mention-group refinements (AND),
+//   4. the "show only unread" toggle.
+// Used both by `ChatList.useFilteredActivityMessages` (what the user sees)
+// and by the "mark all filtered as read" action so the marked set is
+// exactly the rendered set. Pure — safe to call inside an effect or a
+// click handler.
+export const selectVisibleActivityMessages = (
+    activityMessages: ActivityMessageProps[],
+    currentActivityMessageType: number,
+    selectedChipIds: ReadonlySet<ChipId>,
+    selectedInstanceIds: ReadonlySet<string>,
+    selectedMentionGroupIds: ReadonlySet<number>,
+    myUserId: string,
+    showOnlyUnreadItems: boolean
+): ActivityMessageProps[] => {
+    const base = activityMessages.filter(
+        (item) => !(item.isThread === true && item.messageId === 1)
+    );
+    const primaryFn = ACTIVITY_PRIMARY_FILTERS[currentActivityMessageType] ?? (() => true);
+    const chipFn = makeChipFilter(selectedChipIds);
+    const instanceFn = makeInstanceFilter(selectedInstanceIds);
+    const mentionGroupFn = makeMentionGroupFilter(selectedMentionGroupIds, myUserId);
+    const filtered = base.filter(
+        (item) => primaryFn(item) && chipFn(item) && instanceFn(item) && mentionGroupFn(item)
+    );
+    return showOnlyUnreadItems ? filtered.filter((item) => item.isRead === false) : filtered;
+};

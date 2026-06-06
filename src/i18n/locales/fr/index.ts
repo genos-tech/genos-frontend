@@ -359,6 +359,7 @@ export const fr: DeepPartial<Messages> = {
             allCaughtUp: "Tout est à jour",
             newGroupMessageMenu: "Nouveau message de groupe",
             newDmWithFriendsMenu: "Nouveau DM avec des amis",
+            markFilteredActivitiesReadMenu: "Marquer les filtrés comme lus",
             dividerPinned: "Messages épinglés",
             dividerGroupMessages: "Messages de groupe",
             dividerDirectMessages: "Messages directs",
