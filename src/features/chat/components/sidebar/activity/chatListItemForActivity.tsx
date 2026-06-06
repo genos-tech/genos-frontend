@@ -20,6 +20,7 @@ import { UIStateManagementState } from "../../../../../hooks/common/useUIStateMa
 import { NoteManagementState } from "../../../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../../i18n";
+import { channelService } from "../../../../../services/channel/channelService";
 import { UserProps } from "../../../../../types/admin";
 import {
     ActivityMessageProps,
@@ -36,8 +37,14 @@ import { toggleMessagesPane } from "../../../../../utils/sidebarUtils";
 import { loadSpecificNote } from "../../../../notes/common/services/loadSpecificNote";
 import { loadSpecificTask } from "../../../../tasks/services/loadSpecificTask";
 import { useActivityStatus } from "../../../hooks/useActivityStatus";
-import { loadV3SpecificMessages } from "../../../services/loadV3SpecificMessages";
-import { loadV3SpecificThreadMessages } from "../../../services/loadV3SpecificThreadMessages";
+import {
+    loadV3SpecificMessages,
+    readV3CachedMessages,
+} from "../../../services/loadV3SpecificMessages";
+import {
+    loadV3SpecificThreadMessages,
+    readV3CachedThreadMessages,
+} from "../../../services/loadV3SpecificThreadMessages";
 import { resolveV3ThreadRootUuid } from "../../../utils/channelIdResolvers";
 import { ActivityContent } from "./ActivityContent";
 import { ActivityHeader } from "./ActivityHeader";
@@ -187,6 +194,14 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
         const nextLastRead = Number.isFinite(previousLastRead)
             ? Math.max(previousLastRead, activity.messageId)
             : activity.messageId;
+        // Cold-cache guard: `readV3CachedMessages` returns `[]` for a
+        // channel that's never been synced this session, so the old
+        // `messages[messages.length - 1].contentText` would throw on the
+        // instant-paint path. Fall back to the sidebar chat's last-message
+        // fields (mirrors `useChatListItem.defineNewChat`); both panes
+        // render a neutral blank for empty `messages` and the background
+        // sync fills them in via the live-update subscription.
+        const lastMsg = messages.length > 0 ? messages[messages.length - 1] : undefined;
         const newChat: ChatProps = {
             chatId: activityChatIdStr,
             chatName: currentChat?.chatName ?? activity.chatName,
@@ -203,8 +218,8 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
             },
             lastReadMessageId: String(nextLastRead),
             messages: messages,
-            latestMessage: messages[messages.length - 1],
-            latestMessageText: messages[messages.length - 1].contentText,
+            latestMessage: lastMsg ?? currentChat?.latestMessage,
+            latestMessageText: lastMsg?.contentText ?? currentChat?.latestMessageText,
             TSLastMessage: activity.tsSent,
             moveToSpecificIndex: moveToSpecificIndex,
             isPrivate: currentChat?.isPrivate,
@@ -213,8 +228,18 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
         return newChat;
     };
 
-    // Helper function to handle common chat navigation logic
-    const handleChatNavigation = async (
+    // Helper function to handle common chat navigation logic.
+    //
+    // Hot path: paint the pane INSTANTLY from the in-memory snapshot
+    // (`readV3CachedMessages`) rather than awaiting `loadV3SpecificMessages`
+    // — which awaits a ~1s `syncChannel` REST round-trip — before the chat
+    // is ever shown. That await was the bulk of the "click an activity, stare
+    // at a frozen pane for 1-2s" lag. We now paint cached messages
+    // immediately and revalidate in the background; the `useChatManagement`
+    // live-update subscription patches the fresh slice into the open main/sub
+    // pane once the sync resolves. Mirrors `useChatListItem.onClickHandler`,
+    // the pattern the normal chat-list click already uses.
+    const handleChatNavigation = (
         chatType: number,
         isThread: boolean,
         messageUniqueKey: string
@@ -229,49 +254,54 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
             `${useCM.currentSubChat?.chatId}-${useCM.currentSubChat?.chatName}` ===
                 `${activity.chatId}-${activity.chatName}`;
 
-        const handleMessages = (messages: MessageProps[], v3ChannelUuid: string) => {
-            if (shouldUseMainChat) {
-                useCM.setCurrentMainChat(defineNewChat(messages, messageUniqueKey, v3ChannelUuid));
-            } else if (shouldUseSubChat) {
-                useCM.setCurrentSubChat(defineNewChat(messages, messageUniqueKey, v3ChannelUuid));
-            }
-            useCM.setIsMainChatVisible(true);
-            if (useTM.isCreatingTask.flag === true || useTM.isTaskPreviewVisible) {
-                useCM.setIsThreadVisible(false);
-            }
-        };
-
-        toggleMessagesPane();
-
         // Post v3 activity rebuild: `activity.chatId` is already the
         // v3 Channel UUID (the adapter casts it through the legacy
         // `number` slot). No legacy-int → UUID resolution needed.
-        try {
-            const v3ChannelUuid = String(activity.chatId);
-            if (!v3ChannelUuid) {
-                return;
-            }
-            const messages = await loadV3SpecificMessages(v3ChannelUuid, chatType);
-            handleMessages(messages, v3ChannelUuid);
-
-            // Sync the URL so `useChatRouting` picks the focus target up
-            // through `resolveV3MessageUuid` — that path is what the
-            // legacy chat-list click already used and what the bubble
-            // renderer's `focusKey` ultimately reads. Without this nav,
-            // an activity click in a chat that's already open updates
-            // `moveToSpecificIndex` via the local `setCurrentMainChat`
-            // but a later URL-driven sync can clobber it; for PM the
-            // URL `messageId` segment is the task id (matches
-            // `MessageBubble.handleMessageClick`).
-            const typePath = CHAT_TYPE_PATH[chatType];
-            const idForUrl =
-                chatType === 3 && activity.taskId ? activity.taskId : activity.messageId;
-            if (typePath && idForUrl && !isThread) {
-                navigate(`/workspace/chat/${typePath}/${v3ChannelUuid}/message/${idForUrl}`);
-            }
-        } catch (error) {
-            console.error(error);
+        const v3ChannelUuid = String(activity.chatId);
+        if (!v3ChannelUuid) {
+            return;
         }
+
+        toggleMessagesPane();
+
+        // Instant paint from cache — no network wait. `[]` on a cold cache
+        // is benign: both panes render a neutral blank and the background
+        // sync below fills them in.
+        const messages = readV3CachedMessages(v3ChannelUuid, chatType);
+        if (shouldUseMainChat) {
+            useCM.setCurrentMainChat(defineNewChat(messages, messageUniqueKey, v3ChannelUuid));
+        } else if (shouldUseSubChat) {
+            useCM.setCurrentSubChat(defineNewChat(messages, messageUniqueKey, v3ChannelUuid));
+        }
+        useCM.setIsMainChatVisible(true);
+        if (useTM.isCreatingTask.flag === true || useTM.isTaskPreviewVisible) {
+            useCM.setIsThreadVisible(false);
+        }
+
+        // Sync the URL so `useChatRouting` picks the focus target up
+        // through `resolveV3MessageUuid` — that path is what the
+        // legacy chat-list click already used and what the bubble
+        // renderer's `focusKey` ultimately reads. Without this nav,
+        // an activity click in a chat that's already open updates
+        // `moveToSpecificIndex` via the local `setCurrentMainChat`
+        // but a later URL-driven sync can clobber it; for PM the
+        // URL `messageId` segment is the task id (matches
+        // `MessageBubble.handleMessageClick`).
+        const typePath = CHAT_TYPE_PATH[chatType];
+        const idForUrl = chatType === 3 && activity.taskId ? activity.taskId : activity.messageId;
+        if (typePath && idForUrl && !isThread) {
+            navigate(`/workspace/chat/${typePath}/${v3ChannelUuid}/message/${idForUrl}`);
+        }
+
+        // Background revalidate. `syncChannel` pulls top-level AND thread
+        // replies, is idempotent + per-channel mutexed, and the subscription
+        // applies the result to whichever pane(s) are open — so a thread
+        // caller doesn't need a second sync of its own.
+        void channelService
+            .syncChannel(v3ChannelUuid)
+            .catch((error) =>
+                console.error("[chatListItemForActivity] background syncChannel failed:", error)
+            );
     };
 
     // Load the thread task if exists
@@ -389,8 +419,17 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
         }
     };
 
-    // Handle thread message activity
-    const handleThreadMessageActivity = async () => {
+    // Handle thread message activity. Hot path mirrors `handleChatNavigation`:
+    // paint the thread pane from the in-memory snapshot
+    // (`readV3CachedThreadMessages`) instead of awaiting a `syncChannel`
+    // round-trip, then let `handleChatNavigation` issue the SINGLE background
+    // revalidate (which pulls top-level AND thread replies). Previously this
+    // awaited a thread sync AND then `handleChatNavigation` awaited a second
+    // sync of the same channel — two sequential ~1s round-trips before
+    // anything showed. The `useChatManagement` thread subscription patches
+    // fresh replies into `currentThreadChat.messages` once that one sync
+    // resolves.
+    const handleThreadMessageActivity = () => {
         try {
             // v3-native: activity.chatId is the v3 Channel UUID, and
             // activity.threadId is the v3 parent-message UUID (set by
@@ -406,73 +445,72 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                     : String(activity.threadId) || null;
             const threadMessages: ThreadMessageProps[] =
                 v3ChannelUuid && v3ThreadRootUuid
-                    ? await loadV3SpecificThreadMessages(
+                    ? readV3CachedThreadMessages(
                           v3ChannelUuid,
                           v3ThreadRootUuid,
                           activity.chatType
                       )
                     : [];
 
-            if (threadMessages && threadMessages.length > 0) {
-                // Same sender-centric issue as in `defineNewChat`: for DM
-                // threads the activity payload's chatName + dmPartnerUser*
-                // are wrong from the receiver's POV. Prefer the server-
-                // resolved per-user fields from `useCM.allChats`.
-                // Same v3 chatId boundary as above — see note in
-                // `defineNewChat`.
-                const currentChat: AllChatProps | undefined = useCM.allChats.find(
-                    (chat) =>
-                        chat.chatType === activity.chatType &&
-                        chat.chatId === String(activity.chatId)
-                );
-                const newThread: ThreadProps = {
-                    chatId: activity.chatId,
-                    chatName: currentChat?.chatName ?? activity.chatName,
-                    threadId: activity.threadId,
-                    chatType: activity.chatType,
-                    dmPartnerUser: currentChat?.dmPartnerUser ?? {
-                        teamId: myself.teamId,
-                        teamName: myself.teamName,
-                        userId: activity.dmPartnerUserId,
-                        userName: activity.dmPartnerUserName,
-                        userEmail: activity.dmPartnerUserEmail,
-                        avatarImgPath: "",
-                        tsLastSeen: "",
-                        tsJoined: "",
-                    },
-                    taskId: activity.taskId,
-                    messages: threadMessages,
-                    project: {
-                        projectId: activity.projectId || -1,
-                        projectName: activity.projectName || "",
-                        projectTags: [],
-                    },
-                    TSLastMessage: getLocalCurrentTimestamp(),
-                    taskExist: threadMessages[0].taskExist,
-                    moveToSpecificIndex: activity.threadMessageUniqueKey,
-                };
+            // Same sender-centric issue as in `defineNewChat`: for DM
+            // threads the activity payload's chatName + dmPartnerUser*
+            // are wrong from the receiver's POV. Prefer the server-
+            // resolved per-user fields from `useCM.allChats`.
+            // Same v3 chatId boundary as above — see note in
+            // `defineNewChat`.
+            const currentChat: AllChatProps | undefined = useCM.allChats.find(
+                (chat) =>
+                    chat.chatType === activity.chatType && chat.chatId === String(activity.chatId)
+            );
+            // Build + set the shell UNCONDITIONALLY (tolerating an empty
+            // cold-cache slice via the `?.` guards below) so the thread
+            // subscription can patch in the replies once the background sync
+            // resolves — matching the old await-then-show behavior without
+            // the wait. The legacy thread pane renders a neutral blank for
+            // an empty `messages` array.
+            const newThread: ThreadProps = {
+                chatId: activity.chatId,
+                chatName: currentChat?.chatName ?? activity.chatName,
+                threadId: activity.threadId,
+                chatType: activity.chatType,
+                dmPartnerUser: currentChat?.dmPartnerUser ?? {
+                    teamId: myself.teamId,
+                    teamName: myself.teamName,
+                    userId: activity.dmPartnerUserId,
+                    userName: activity.dmPartnerUserName,
+                    userEmail: activity.dmPartnerUserEmail,
+                    avatarImgPath: "",
+                    tsLastSeen: "",
+                    tsJoined: "",
+                },
+                taskId: activity.taskId,
+                messages: threadMessages,
+                project: {
+                    projectId: activity.projectId || -1,
+                    projectName: activity.projectName || "",
+                    projectTags: [],
+                },
+                TSLastMessage: getLocalCurrentTimestamp(),
+                taskExist: threadMessages[0]?.taskExist ?? false,
+                moveToSpecificIndex: activity.threadMessageUniqueKey,
+            };
 
-                if (activity.projectId) {
-                    setCurrentProject({
-                        projectId: activity.projectId,
-                        projectName: activity.projectName || "",
-                        projectTags: [],
-                    });
-                }
-
-                if (newThread) {
-                    useCM.setCurrentThreadChat(newThread);
-                    if (newThread.taskExist === true && threadMessages[0].taskId) {
-                        useTM.setCurrentPreviewTaskId(threadMessages[0].taskId);
-                    }
-                }
-
-                await handleChatNavigation(
-                    activity.chatType,
-                    activity.isThread,
-                    activity.messageUniqueKey
-                );
+            if (activity.projectId) {
+                setCurrentProject({
+                    projectId: activity.projectId,
+                    projectName: activity.projectName || "",
+                    projectTags: [],
+                });
             }
+
+            useCM.setCurrentThreadChat(newThread);
+            if (newThread.taskExist === true && threadMessages[0]?.taskId) {
+                useTM.setCurrentPreviewTaskId(threadMessages[0].taskId);
+            }
+
+            // Paint the main pane instantly + issue the one background sync
+            // that also revalidates this thread's replies.
+            handleChatNavigation(activity.chatType, activity.isThread, activity.messageUniqueKey);
 
             useCM.setIsThreadVisible(true);
         } catch (error) {
@@ -574,16 +612,18 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                 // Handling a message activity in DM, GM, PM, or MDM
                 // (MDM = chat_type=4 without taskId — same nav flow as
                 // regular chats, just the chat lives under chat_type=4 in
-                // allChats).
-                await handleChatNavigation(
+                // allChats). Synchronous now — paints from cache + background
+                // sync, so `updateActivityReadStatus()` below fires right
+                // after the instant paint rather than after a network wait.
+                handleChatNavigation(
                     activity.chatType,
                     activity.isThread,
                     activity.messageUniqueKey
                 );
             }
         } else {
-            // Handling a thread message
-            await handleThreadMessageActivity();
+            // Handling a thread message (synchronous instant paint).
+            handleThreadMessageActivity();
         }
 
         if (activity.isRead === false) {
