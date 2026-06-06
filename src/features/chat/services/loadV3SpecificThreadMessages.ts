@@ -20,6 +20,41 @@ import type { ThreadMessageProps } from "../../../types/chat";
 import { v3ThreadMessagesToLegacy } from "../adapters/v3ToLegacy";
 
 /**
+ * Synchronously read a thread's replies from the in-memory snapshot and
+ * adapt them to the legacy `ThreadMessageProps[]` shape — WITHOUT any
+ * network round-trip. The thread sibling of `readV3CachedMessages`.
+ *
+ * This is the hot path for opening a thread (e.g. from an activity click):
+ * a channel previously synced this session (or hydrated from IDB on boot)
+ * already has its thread replies in `messagesByChannel`, so the caller can
+ * paint the thread pane instantly and kick off a background
+ * `channelService.syncChannel()` to revalidate. The `useChatManagement`
+ * thread live-update subscription (keyed on the open thread's channel +
+ * root) patches the fresh slice into `currentThreadChat.messages` once that
+ * sync resolves — so callers should NOT await before setting the thread.
+ *
+ * Returns `[]` for a channel/thread that's never been cached (first-ever
+ * open); the background sync then populates it via the subscription. The
+ * legacy thread pane renders a neutral blank for `[]`, so the empty paint
+ * is benign.
+ */
+export function readV3CachedThreadMessages(
+    channelUuid: string,
+    threadRootUuid: string,
+    chatType: number
+): ThreadMessageProps[] {
+    const snapshot = channelService.getSnapshot();
+    const messages: readonly Message[] = snapshot.messagesByChannel.get(channelUuid) ?? [];
+    return v3ThreadMessagesToLegacy({
+        channelId: channelUuid,
+        chatType,
+        flaggedMessageIds: snapshot.flagByMessageId,
+        messages,
+        threadRootUuid,
+    });
+}
+
+/**
  * Fetch the thread reply list for one `(channelUuid, threadRootUuid)`
  * pair via v3, adapt to legacy `ThreadMessageProps[]`.
  *
