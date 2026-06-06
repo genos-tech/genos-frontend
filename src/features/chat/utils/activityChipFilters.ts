@@ -20,6 +20,18 @@ export type ChipId =
 
 type Predicate = (a: ActivityMessageProps) => boolean;
 
+// Task-comment detection — MUST mirror `ActivityTypeChips.isTaskComment`
+// (keep the two in sync). v3 task comments arrive as PM (chatType 3)
+// thread replies carrying the `isTaskComment` flag (set on the v3 mirror
+// from `message.metadata.taskCommentId`); the `chatType === 4 && taskId`
+// shape is the pre-v3 legacy fallback. The old `chatType === 4` test alone
+// matched NO v3 task comment, so they leaked into the `thread` / `reply`
+// filters (which should exclude them) and the `taskComment` filter showed
+// nothing. A task comment belongs to exactly the "Task Comment" + "Task"
+// categories — see `ActivityTypeChips` for the visual chips it mirrors.
+export const isTaskCommentActivity = (a: ActivityMessageProps): boolean =>
+    a.isTaskComment === true || (a.chatType === 4 && !!a.taskId);
+
 // Predicates mirror the chip render conditions in `ActivityTypeChips`
 // so the filter UI matches what the user sees on each activity row.
 // Keep this in sync with that file when chip rules change. Keys are
@@ -36,7 +48,11 @@ export const CHIP_PREDICATES: Record<ChipId, Predicate> = {
     noteChat: (a) => a.chatType === 8,
     noteMy: (a) => a.chatType === 6,
     noteTask: (a) => a.chatType === 7,
-    pm: (a) => a.chatType === 3,
+    // A task comment's surface chip in `ActivityTypeChips` is "Task
+    // Comment", NOT "PM" — even though it lives in a PM (chatType 3)
+    // channel. Exclude it here so the "PM" filter matches what the chip
+    // shows; the dedicated `taskComment` chip covers task comments.
+    pm: (a) => a.chatType === 3 && !isTaskCommentActivity(a),
     project: (a) =>
         !!a.projectName &&
         (a.chatType === 3 ||
@@ -44,13 +60,24 @@ export const CHIP_PREDICATES: Record<ChipId, Predicate> = {
             a.chatType === 5 ||
             a.chatType === 7),
     reaction: (a) => a.activityType === 2,
-    // Reply chip in `ActivityTypeChips` excludes chatType 4 (task
-    // comment / MDM self-labels) and the chat_type 5-8 surfaces that
-    // self-label as their own surface. Mirror that exclusion here.
-    reply: (a) => a.activityType === 1 && a.chatType !== 4 && a.chatType !== 5 && a.chatType < 6,
+    // Reply chip in `ActivityTypeChips` excludes task comments (which
+    // self-label as "Task Comment"), chatType 4 (MDM self-labels), and the
+    // chat_type 5-8 surfaces that self-label as their own surface. Mirror
+    // those exclusions here — `!isTaskCommentActivity` is the one the old
+    // `chatType !== 4` test missed, since v3 task comments are chatType 3.
+    reply: (a) =>
+        a.activityType === 1 &&
+        a.chatType !== 4 &&
+        a.chatType !== 5 &&
+        a.chatType < 6 &&
+        !isTaskCommentActivity(a),
     task: (a) => !!a.taskId,
-    taskComment: (a) => a.chatType === 4 && !!a.taskId,
-    thread: (a) => a.isThread === true,
+    taskComment: (a) => isTaskCommentActivity(a),
+    // Genuine DM/GM/MDM thread replies only. Task comments are
+    // structurally thread replies (isThread=true) but self-label as "Task
+    // Comment", so `ActivityTypeChips` doesn't tag them "Thread" — neither
+    // does this filter.
+    thread: (a) => a.isThread === true && !isTaskCommentActivity(a),
 };
 
 // Primary single-select activity filter (the chip row's mutually-
@@ -60,9 +87,14 @@ export const CHIP_PREDICATES: Record<ChipId, Predicate> = {
 // Extracted here (was inline in `ChatList`) so `selectVisibleActivityMessages`
 // and the in-list filter share one definition. NOTE: type 2 ("Task") is
 // `chatType > 2`, not `>= 2` — keep it that way.
+//
+// "Threads" excludes task comments for the same reason `CHIP_PREDICATES.thread`
+// does: task comments are structurally thread replies (isThread=true) but
+// self-label as "Task Comment", so they belong to the Task Comment / Task
+// categories, not Threads. Keep these two thread definitions in sync.
 export const ACTIVITY_PRIMARY_FILTERS: Record<number, Predicate> = {
     0: () => true,
-    1: (a) => a.isThread === true,
+    1: (a) => a.isThread === true && !isTaskCommentActivity(a),
     2: (a) => a.chatType > 2,
     3: (a) => a.activityType === 3,
     4: (a) => a.activityType === 2,
