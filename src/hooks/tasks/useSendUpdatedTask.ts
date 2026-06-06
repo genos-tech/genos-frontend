@@ -50,14 +50,7 @@ export interface UseSendUpdatedTaskParams {
  * @returns sendUpdatedTask - Async function that sends the updated task
  */
 export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
-    const {
-        socket,
-        myself,
-        accessToken,
-        currentPreviewTask,
-        setCurrentPreviewTask,
-        taskEditState,
-    } = params;
+    const { socket, myself, accessToken, setCurrentPreviewTask, taskEditState } = params;
 
     // Support both individual parameters and consolidated taskEditState
     const tmpCurrentTaskContent =
@@ -70,8 +63,6 @@ export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
     const setUploadedFiles = taskEditState?.setUploadedFiles ?? params.setUploadedFiles!;
     const setTmpCurrentTaskContent =
         taskEditState?.setTmpCurrentTaskContent ?? params.setTmpCurrentTaskContent!;
-    const setCurrentTaskId = taskEditState?.setCurrentTaskId ?? params.setCurrentTaskId!;
-    const setBody = taskEditState?.setBody ?? params.setBody!;
     const setTaskUpdated = taskEditState?.setTaskUpdated ?? params.setTaskUpdated!;
     const setTaskBodySaved = taskEditState?.setTaskBodySaved ?? params.setTaskBodySaved!;
     const setTaskStatusUpdated =
@@ -141,18 +132,22 @@ export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
                 ],
             });
 
-            if (taskSwitched && currentPreviewTask) {
-                // Initialize the following variable when user switches the previewing task
-                setTmpCurrentTaskContent(currentPreviewTask);
-                setCurrentPreviewTask(currentPreviewTask);
-                setCurrentTaskId(currentPreviewTask.id);
-                setBody(currentPreviewTask.body || []);
-            } else {
-                // Update only the tmpCurrentTaskContent when user
-                // updated the task content (not switched). Use a
-                // functional updater so files the user added during
-                // the upload round-trip aren't clobbered by our
-                // stale closure on `tmpCurrentTaskContent`.
+            // On a SWITCH (taskSwitched=true, fired by TaskPreview's switch
+            // effect to persist the OUTGOING task) we intentionally do NOT
+            // touch preview / working state here. The switch effect already
+            // initialized the INCOMING task's working state synchronously;
+            // re-asserting it from this stale post-PUT closure — the `await`
+            // above means the user may have switched again by now — was the
+            // fuel for the a→b→a→b preview oscillation (and a stray PUT loop):
+            // a late save would write a no-longer-selected task back into
+            // currentPreviewTask / tmpCurrentTaskContent, re-arming the switch
+            // + mirror effects. So on a switch we only persist (the PUT above)
+            // and reset the flags below. The merge-attachments writeback runs
+            // ONLY on the save-CURRENT path (the user edited the open task).
+            if (!taskSwitched) {
+                // Use a functional updater so files the user added during
+                // the upload round-trip aren't clobbered by our stale
+                // closure on `tmpCurrentTaskContent`.
                 setTmpCurrentTaskContent((prev) =>
                     mergeAttachments({
                         ...prev,
@@ -186,12 +181,9 @@ export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
             body,
             taskBodyEdited,
             taskStatusUpdated,
-            currentPreviewTask,
             setUploadedFiles,
             setTmpCurrentTaskContent,
             setCurrentPreviewTask,
-            setCurrentTaskId,
-            setBody,
             setTaskUpdated,
             setTaskBodySaved,
             setTaskStatusUpdated,

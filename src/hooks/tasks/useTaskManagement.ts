@@ -263,11 +263,24 @@ export const useTaskManagement = (
     const [currentPreviewMilestoneId, _setCurrentPreviewMilestoneId] = useState<number>(-1);
     const [tableMilestoneFilterId, setTableMilestoneFilterId] = useState<number | null>(null);
 
+    // Synchronous mirror of the LATEST selected preview task id. The async
+    // loaders (`loadTask` / `loadUpdatedTask`) read this AFTER their await
+    // to decide whether their result is still the task the user has
+    // selected. Updated synchronously inside the setters below (NOT via an
+    // effect) so a load resolving after a rapid switch sees the final
+    // selection. This is the identity invariant: the preview is written
+    // only with the task currently selected — so a stale-id load (e.g.
+    // `loadUpdatedTask` firing from an older render closure) can't clobber
+    // the final selection, and a same-id refresh can't orphan the switch's
+    // own write. `-1` is the "nothing selected" sentinel.
+    const currentPreviewTaskIdRef = useRef<number>(-1);
+
     // The preview pane shows either a task or a milestone, never both.
     // Picking one resets the other so old state can't bleed through and
     // freeze the pane on a stale entity (was the root cause of the
     // "stuck on milestone, can't open another task" bug).
     const setCurrentPreviewTaskId = (id: number) => {
+        currentPreviewTaskIdRef.current = id;
         _setCurrentPreviewTaskId(id);
         if (id !== -1) {
             setCurrentPreviewKind("task");
@@ -277,6 +290,7 @@ export const useTaskManagement = (
     const setCurrentPreviewMilestoneId = (id: number) => {
         _setCurrentPreviewMilestoneId(id);
         if (id !== -1) {
+            currentPreviewTaskIdRef.current = -1;
             setCurrentPreviewKind("milestone");
             _setCurrentPreviewTaskId(-1);
             setCurrentPreviewTask(undefined);
@@ -284,6 +298,7 @@ export const useTaskManagement = (
     };
 
     const closeTaskPreview = () => {
+        currentPreviewTaskIdRef.current = -1;
         _setCurrentPreviewTaskId(-1);
         _setCurrentPreviewMilestoneId(-1);
         setCurrentPreviewKind("task");
@@ -429,7 +444,15 @@ export const useTaskManagement = (
                 { expectedMinUpdatedAt: expectedUpdatedAtFromList(taskId) }
             );
 
-            if (loadedTask.length > 0) {
+            // Identity guard: only write the preview if the task we loaded is
+            // STILL the one the user has selected. Without this, a load that
+            // resolves after a rapid switch (or a stale-closure loadUpdatedTask)
+            // overwrites the final selection with the wrong task. The ref holds
+            // the latest selected id, updated synchronously on every switch.
+            if (
+                loadedTask.length > 0 &&
+                String(loadedTask[0].id) === String(currentPreviewTaskIdRef.current)
+            ) {
                 setCurrentPreviewTask(loadedTask[0]);
             }
         } catch (error) {
@@ -447,8 +470,16 @@ export const useTaskManagement = (
                 { expectedMinUpdatedAt: expectedUpdatedAtFromList(currentPreviewTaskId) }
             );
 
-            // No need to update the current preview task when a new tag is created.
-            if (isNewTagCreated === false && loadedTask.length > 0) {
+            // No need to update the current preview task when a new tag is
+            // created. Same identity guard as `loadTask`: only write the
+            // preview when the loaded task is still the selected one (the
+            // `allTasks` upsert below stays unconditional — a superseded
+            // refresh must still land in the table).
+            if (
+                isNewTagCreated === false &&
+                loadedTask.length > 0 &&
+                String(loadedTask[0].id) === String(currentPreviewTaskIdRef.current)
+            ) {
                 setCurrentPreviewTask(loadedTask[0]);
             }
 
