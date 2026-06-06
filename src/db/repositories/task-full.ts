@@ -25,20 +25,12 @@ export class TaskFullRepository extends BaseRepository<CachedTaskRow> {
     // keeps recently-read entries. The `accessedAt` field is stripped
     // from the returned value to keep the cache layer invisible to
     // callers.
-    //
-    // The LRU touch is FIRE-AND-FORGET: it is a `readwrite` transaction
-    // that we deliberately don't await, so a cache read resolves on the
-    // `get` alone. This read sits on the task-preview switch hot path
-    // (loadSpecificTask), where awaiting the write turned every cached
-    // open into a read+write round-trip — the dominant per-read cost.
-    // LRU recency is best-effort, so a rarely-dropped touch is harmless;
-    // `put` swallows its own errors (returns a Result, never rejects).
     async getById(taskId: number): Promise<TaskProps | null> {
         const result = await this.get(taskId);
         if (!result.success || !result.data) return null;
 
         const touched: CachedTaskRow = { ...result.data, accessedAt: Date.now() };
-        void this.put(touched);
+        await this.put(touched);
 
         return stripAccessedAt(touched);
     }
