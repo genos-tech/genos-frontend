@@ -80,12 +80,20 @@ export const useProjectTaskManagement = ({
         })();
     }, [usePM.isNewProjectCreated]);
 
-    // Load updated task when preview changes
+    // Refresh the OPEN task when something EXTERNAL changes it — a brand-new
+    // task arriving (`isNewTaskCreated`) or a teammate's socket-pushed edit
+    // (`isTaskUpdatedBySomeone`). Deliberately NOT keyed on
+    // `currentPreviewTaskId`: a plain preview switch is already loaded by the
+    // dedicated `loadTask` effect below, so firing here too just issued a
+    // redundant second `loadSpecificTask` for the same id on every switch.
+    // `loadUpdatedTask` reads the latest `currentPreviewTaskId` from its own
+    // closure, so dropping it from the deps doesn't stale the refresh target.
     useEffect(() => {
         if (usePM.currentProject) {
             useTM.loadUpdatedTask(usePM.currentProject.projectId);
         }
-    }, [useTM.currentPreviewTaskId, useTM.isNewTaskCreated, useTM.isTaskUpdatedBySomeone]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [useTM.isNewTaskCreated, useTM.isTaskUpdatedBySomeone]);
 
     // Freshness strategy. Two pieces working together:
     //
@@ -120,6 +128,16 @@ export const useProjectTaskManagement = ({
     // that puts fresh `updatedAt`s in the table.
     useEffect(() => {
         if (!usePM.currentProject || useTM.currentPreviewTaskId === -1) return;
+        // Only run the staleness comparison once the preview has actually
+        // caught up to the selected id. On a fresh switch `currentPreviewTask`
+        // still holds the PREVIOUS task, so comparing its `updatedAt` against
+        // the newly-selected row's would fall through and fire a redundant
+        // `loadUpdatedTask` — duplicating the load the dedicated `loadTask`
+        // switch effect already kicked off. The switch effect owns the
+        // initial load; this effect only handles post-load staleness.
+        if (String(useTM.currentPreviewTask?.id ?? "") !== String(useTM.currentPreviewTaskId)) {
+            return;
+        }
         const row = useTM.allTasks.find(
             (t) => t.id != null && String(t.id) === String(useTM.currentPreviewTaskId)
         );
