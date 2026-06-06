@@ -65,12 +65,28 @@ export const ChatSearch = (props: ChatSearchProps) => {
         const isGroup = value.type === "Group";
         const _chatType = isGroup ? 2 : 1;
 
-        // If the user tries to join a private GM, show the modal to get
-        // approval from the GM owner. v3 GMs have no legacy id, so the join
-        // flow keys on the v3 channel UUID (`channelId`).
-        if (_chatType === 2 && value.isPrivate === true && value.isJoined === false) {
-            setOpenJoinGM({ flag: true, chatId: value.channelId ?? "", chatName: value.name });
-            return;
+        // Clicking a GM the user isn't a member of yet. v3 GMs have no
+        // legacy id, so both join flows key on the v3 channel UUID
+        // (`channelId`).
+        if (_chatType === 2 && value.isJoined === false) {
+            // Private GM: can't self-join — open the modal to request
+            // approval from the GM owner.
+            if (value.isPrivate === true) {
+                setOpenJoinGM({ flag: true, chatId: value.channelId ?? "", chatName: value.name });
+                return;
+            }
+            // Public GM: open membership. Self-join, then fall through to
+            // the channel-resolution below — `joinChannel` seeds the
+            // snapshot with the freshly-joined channel, so `snapshot.
+            // channels.get(channelId)` finds it without a list refresh.
+            if (value.channelId) {
+                try {
+                    await channelService.joinChannel(value.channelId);
+                } catch (e) {
+                    console.error("[ChatSearch] public GM self-join failed:", e);
+                    return;
+                }
+            }
         }
 
         // v3 resolution — the search endpoint now returns v3 ids directly:

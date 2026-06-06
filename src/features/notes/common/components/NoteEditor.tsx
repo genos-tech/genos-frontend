@@ -5,6 +5,7 @@ import { Socket } from "socket.io-client";
 
 import { BnMyNoteEditor } from "../../../../components/editors/bnMyNoteEditor";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { useIsMobile } from "../../../../hooks/common/useIsMobile";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
@@ -62,6 +63,7 @@ export const NoteEditor = ({
     myself,
 }: NoteEditorProps) => {
     const { t } = useTranslation();
+    const isMobile = useIsMobile();
     return (
         <>
             <FormControl
@@ -71,7 +73,7 @@ export const NoteEditor = ({
                     justifyContent: "center",
                     position: "absolute",
                     zIndex: 100,
-                    width: "400px",
+                    width: isMobile ? "50%" : "30%",
                 }}
                 required
             >

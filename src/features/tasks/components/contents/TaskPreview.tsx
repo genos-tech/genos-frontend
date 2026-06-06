@@ -1586,7 +1586,16 @@ const MilestonePreviewInner = ({
                     milestoneId: milestone.milestoneId,
                     description: bodyDraft,
                 },
-                milestone.projectId
+                milestone.projectId,
+                socket,
+                milestone.taskId != null
+                    ? {
+                          taskId: milestone.taskId,
+                          projectId: milestone.projectId,
+                          projectName: usePM.currentProject?.projectName ?? "",
+                          displayId: milestone.displayId ?? null,
+                      }
+                    : undefined
             );
             // Body changes don't show in the table, but we still want
             // tsUpdatedAt to bump there so any "Updated" column / sort

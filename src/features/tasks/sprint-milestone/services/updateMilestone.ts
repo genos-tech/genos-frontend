@@ -1,4 +1,5 @@
 import axios from "axios";
+import { Socket } from "socket.io-client";
 
 import { authApi } from "../../../../services/api";
 import { MilestoneResponse } from "../types";
@@ -25,9 +26,19 @@ export type UpdateMilestoneInput = {
     reporterId?: number | string | null;
 };
 
+export type MilestoneMentionContext = {
+    socket: Socket;
+    taskId: number;
+    projectId: number;
+    projectName: string;
+    displayId?: string | null;
+    tsUpdatedAt: string;
+};
+
 export const updateMilestone = async (
     input: UpdateMilestoneInput,
-    accessToken: string | null
+    accessToken: string | null,
+    mentionCtx?: MilestoneMentionContext
 ): Promise<MilestoneResponse | undefined> => {
     try {
         const api = authApi(accessToken);
@@ -53,6 +64,30 @@ export const updateMilestone = async (
             if (input.assigneeIds !== undefined) body.assignee_ids = input.assigneeIds;
             if ("reporterId" in input) body.reporter_id = input.reporterId;
             const res = await api.patch(`/milestone/${input.milestoneId}/`, body);
+
+            // If the description changed and the backend returned mention
+            // deltas, fan them out via the Flask task_body_mention socket path
+            // (same mechanism as sendUpdatedSpecificTask).
+            if (mentionCtx && res.data) {
+                const newlyMentioned: string[] = res.data.newly_mentioned_user_ids ?? [];
+                const allMentioned: string[] = res.data.all_mentioned_user_ids ?? newlyMentioned;
+                const removedMentioned: string[] = res.data.removed_user_ids ?? [];
+                if (newlyMentioned.length > 0 || removedMentioned.length > 0) {
+                    mentionCtx.socket.emit("task_body_mention", {
+                        task_id: mentionCtx.taskId,
+                        task_title: res.data.milestone?.title ?? "",
+                        project_id: mentionCtx.projectId,
+                        project_name: mentionCtx.projectName,
+                        display_id: mentionCtx.displayId ?? null,
+                        // Use the real server timestamp from the response.
+                        ts_mentioned_at: res.data.milestone?.tsUpdatedAt ?? mentionCtx.tsUpdatedAt,
+                        newly_mentioned_user_ids: newlyMentioned,
+                        all_mentioned_user_ids: allMentioned,
+                        removed_user_ids: removedMentioned,
+                    });
+                }
+            }
+
             return res.data;
         }
         console.error("Unauthorized. Auth token is not found.");

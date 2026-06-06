@@ -18,6 +18,7 @@ import {
     Stack,
     Typography,
 } from "@mui/joy";
+import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
@@ -26,6 +27,7 @@ import { TeamManagementState } from "../../../../hooks/common/useTeamManagement"
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
+import { popTeamMembers } from "../../../admin/services/popTeamMembers";
 import { createChatGroup } from "../../services/createChatGroup";
 
 const fadeIn = keyframes`
@@ -55,12 +57,52 @@ export const ModalCreateGM: React.FC<Props> = ({
     setMyself,
 }) => {
     const { t } = useTranslation();
+    const { mode, systemMode } = useColorScheme();
+    // The modal surface is a fixed dark gradient in BOTH color schemes, so
+    // Joy's default light-mode input text (a near-black) renders dark-on-dark
+    // and is unreadable. Force a light text + caret + placeholder color when
+    // the effective scheme is light; dark mode already uses light text, so
+    // we leave it untouched.
+    const isLightMode = (mode === "system" ? systemMode : mode) === "light";
+    const lightInputTextSx = isLightMode
+        ? {
+              color: "rgba(255, 255, 255, 0.9)",
+              "& input": {
+                  color: "rgba(255, 255, 255, 0.9)",
+                  caretColor: "rgba(255, 255, 255, 0.9)",
+              },
+              "& input::placeholder": {
+                  color: "rgba(255, 255, 255, 0.5)",
+                  opacity: 1,
+              },
+          }
+        : {};
 
     const [isPrivate, setIsPrivate] = useState(false);
     const [CreateCGErrorMessage, setCreateCGErrorMessage] = useState<string | null>(null);
     const [chatName, setGroupName] = useState("");
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedMembers, setSelectedMembers] = useState<UserProps[]>([]);
+    const [teamMembers, setTeamMembers] = useState<UserProps[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
+
+    // Load team members when the modal opens. Mirrors ModalCreateMDM: use
+    // the live `useTEM.teamMembers` when it's populated, otherwise fall
+    // back to a direct `popTeamMembers` fetch. Without this fallback the
+    // selectable list is empty whenever `useTEM.teamMembers` hasn't loaded
+    // yet — so the GM would be created with NO members (the invited users
+    // never get auto-joined), the exact bug this fixes.
+    useEffect(() => {
+        if (open && myself.userId) {
+            if (useTEM.teamMembers.length > 0) {
+                setTeamMembers(useTEM.teamMembers.filter((m) => m.userId !== myself.userId));
+            } else {
+                popTeamMembers(myself).then((members) => {
+                    setTeamMembers(members.filter((m) => m.userId !== myself.userId));
+                });
+            }
+        }
+    }, [open, myself, useTEM.teamMembers]);
 
     useEffect(() => {
         if (!open) {
@@ -70,19 +112,15 @@ export const ModalCreateGM: React.FC<Props> = ({
         }
     }, [open]);
 
-    const availableMembers = useMemo(() => {
-        return useTEM.teamMembers.filter((m) => m.userId !== myself.userId);
-    }, [useTEM.teamMembers, myself.userId]);
-
     const filteredMembers = useMemo(() => {
-        if (!searchQuery.trim()) return availableMembers;
+        if (!searchQuery.trim()) return teamMembers;
         const query = searchQuery.toLowerCase();
-        return availableMembers.filter(
+        return teamMembers.filter(
             (m) =>
                 m.userName.toLowerCase().includes(query) ||
                 m.userEmail.toLowerCase().includes(query)
         );
-    }, [availableMembers, searchQuery]);
+    }, [teamMembers, searchQuery]);
 
     const handleToggleMember = (member: UserProps) => {
         setSelectedMembers((prev) => {
@@ -95,10 +133,13 @@ export const ModalCreateGM: React.FC<Props> = ({
         setSelectedMembers((prev) => prev.filter((m) => m.userId !== memberId));
     };
 
-    const handleCreateGroup = () => {
-        if (chatName.trim()) {
+    const handleCreateGroup = async () => {
+        if (!chatName.trim() || isLoading) return;
+        setIsLoading(true);
+        setCreateCGErrorMessage(null);
+        try {
             const memberIds = selectedMembers.map((m) => m.userId);
-            createChatGroup(
+            await createChatGroup(
                 myself,
                 chatName,
                 useCM,
@@ -108,6 +149,8 @@ export const ModalCreateGM: React.FC<Props> = ({
                 isPrivate,
                 memberIds
             );
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -183,6 +226,7 @@ export const ModalCreateGM: React.FC<Props> = ({
                         "&:hover": {
                             borderColor: "rgba(124,58,237,0.3)",
                         },
+                        ...lightInputTextSx,
                     }}
                     onChange={(e) => setGroupName(e.target.value)}
                     onKeyDown={(e) => {
@@ -293,6 +337,7 @@ export const ModalCreateGM: React.FC<Props> = ({
                         "&:hover": {
                             borderColor: "rgba(124,58,237,0.3)",
                         },
+                        ...lightInputTextSx,
                     }}
                     onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -447,7 +492,8 @@ export const ModalCreateGM: React.FC<Props> = ({
                         {t.chat.modals.createGM.cancel}
                     </Button>
                     <Button
-                        disabled={!chatName.trim()}
+                        disabled={!chatName.trim() || isLoading}
+                        loading={isLoading}
                         sx={{
                             background: "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)",
                             borderRadius: "10px",

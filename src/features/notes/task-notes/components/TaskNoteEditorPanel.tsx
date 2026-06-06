@@ -5,6 +5,7 @@ import { Socket } from "socket.io-client";
 
 import { BnTaskNoteEditor } from "../../../../components/editors/bnTaskNoteEditor";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { useIsMobile } from "../../../../hooks/common/useIsMobile";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { upsertNoteCache, useNoteData } from "../../../../hooks/notes/useNoteData";
@@ -45,8 +46,8 @@ export const TaskNoteEditorPanel = ({
     useNM,
 }: TaskNoteEditorPanelProps) => {
     const { t } = useTranslation();
+    const isMobile = useIsMobile();
     const titleInputRef = useRef<HTMLInputElement | null>(null);
-
     const { note } = useNoteData<TaskNoteProps>(tab, { myself, accessToken });
 
     const {
@@ -117,7 +118,7 @@ export const TaskNoteEditorPanel = ({
                     justifyContent: "center",
                     position: "absolute",
                     zIndex: 100,
-                    width: "400px",
+                    width: isMobile ? "50%" : "30%",
                 }}
                 required
             >

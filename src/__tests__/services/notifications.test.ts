@@ -1122,8 +1122,12 @@ describe("notificationRouter", () => {
                 );
             // isThread on a channel mention -> thread mention.
             expect(mk({ chatType: 2, isThread: true })!.category).toBe("mention_thread");
-            // Surface / special chatTypes win (task comment is a thread reply).
-            expect(mk({ chatType: 4, isThread: true })!.category).toBe("mention_task_comment");
+            // Surface / special chatTypes win: a task comment (chatType 4 +
+            // taskId) beats the thread-reply classification. chatType 4 WITHOUT
+            // a taskId is an MDM, not a task comment.
+            expect(mk({ chatType: 4, isThread: true, taskId: 9 })!.category).toBe(
+                "mention_task_comment"
+            );
             expect(mk({ chatType: 5 })!.category).toBe("mention_task_body");
             expect(mk({ chatType: 6 })!.category).toBe("mention_note_my");
             expect(mk({ chatType: 7 })!.category).toBe("mention_note_task");
@@ -1163,7 +1167,7 @@ describe("notificationRouter", () => {
         });
 
         it("builds a task_comments intent for chatType 4 activity when not mentioned", () => {
-            const tc = { ...baseActivity, chatType: 4 };
+            const tc = { ...baseActivity, chatType: 4, taskId: 9 };
             const result = buildIntentFromMessage(tc, myself, useTEM, useCM);
             expect(result).not.toBeNull();
             expect(result!.category).toBe("task_comments");

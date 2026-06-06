@@ -117,6 +117,10 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                 return ACTIVITY_COLOR_SCHEMES.reaction;
             case 3:
                 return ACTIVITY_COLOR_SCHEMES.mention;
+            // activityType 5 = plain message (ActivityType.MESSAGE) — same
+            // green "message/reply" family as a thread reply (type 1).
+            case 5:
+                return ACTIVITY_COLOR_SCHEMES.reply;
             default:
                 return ACTIVITY_COLOR_SCHEMES.default;
         }

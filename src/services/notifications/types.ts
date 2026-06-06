@@ -74,7 +74,10 @@ export const DEFAULT_NOTIFICATION_PREFERENCE: NotificationPreference = {
 export interface ActiveSurface {
     chatType?: number;
     chatId?: string;
-    threadId?: number;
+    // Opaque, like `chatId`: a v3 thread-root id is a UUID string (legacy
+    // numeric on old data). Consumers compare it with `===` / `String()`,
+    // so both forms work; coercing to a number would drop the UUID.
+    threadId?: number | string;
     taskId?: number;
     /** Project the source belongs to. Required to build the
      *  `/workspace/tasks/project/:projectId/task/:taskId` deep URL when the user
