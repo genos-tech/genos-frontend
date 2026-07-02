@@ -1,0 +1,82 @@
+name: CI
+
+# Single-service repo: no path filters (every push/PR builds this repo).
+# Rollout: `frontend-test` is the check to mark *required* first.
+# `frontend-build` and `frontend-quality` stay report-only (non-required)
+# until the in-flight refactor's production-source type errors and the
+# ~14k eslint findings are separately remediated. Report-only is achieved
+# by leaving the check out of branch protection's required list — NOT by
+# `continue-on-error` (which would mask a red baseline).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: frontend-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frontend-test:
+    name: frontend-test (required-first)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - run: npm ci
+      - name: Vitest + coverage
+        run: npx vitest run --coverage
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: frontend-coverage
+          path: coverage/
+          if-no-files-found: ignore
+
+  frontend-build:
+    name: frontend-build (report-only)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - run: npm ci
+      # Mirrors Railway's build (`tsc -b && vite build`). CI=true so the
+      # rollup-plugin-visualizer does not try to open a browser (see
+      # vite.config.ts). Confirm Railway's Nixpacks Node major == 22 or
+      # this green build does not guarantee a green Railway build.
+      - name: Build (tsc -b && vite build)
+        run: npm run build
+        env:
+          CI: "true"
+          # Node's default old-space heap (~2GB) OOMs during vite's
+          # chunk-rendering on this large app; GitHub runners have ~7GB.
+          NODE_OPTIONS: --max-old-space-size=4096
+
+  frontend-quality:
+    name: frontend-quality (report-only)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - run: npm ci
+      # Errors fail the gate; the relaxed/stylistic rules are warnings (so no
+      # `--max-warnings 0`). Tighten back toward zero warnings as the cleanup
+      # pass burns them down.
+      - name: ESLint (errors only)
+        run: npx eslint .
+      - name: Prettier
+        if: always() # report both, even if eslint failed
+        run: npx prettier --check .

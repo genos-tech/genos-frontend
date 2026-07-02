@@ -20,7 +20,7 @@ export interface SpotlightPreferences {
     webSearch: boolean;
 }
 
-const STORAGE_KEY = "weikiy-spotlight-preferences:v1";
+const STORAGE_KEY = "genos-spotlight-preferences:v1";
 const DEFAULTS: SpotlightPreferences = {
     aiAnswers: true,
     webSearch: false,

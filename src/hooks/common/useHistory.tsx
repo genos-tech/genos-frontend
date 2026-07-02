@@ -109,7 +109,7 @@ export type HistoryEntry =
 // is applied to each kind independently before merging, so a heavy
 // thread-user doesn't drown out their plain chats and vice versa).
 const MAX_PER_KIND = 20;
-const STORAGE_KEY_PREFIX = "weikiy.history.v1.";
+const STORAGE_KEY_PREFIX = "genos.history.v1.";
 
 const keyForEntry = (e: HistoryEntry): string => {
     switch (e.kind) {

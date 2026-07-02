@@ -59,14 +59,14 @@ export const AUTH_LOCAL_STORAGE_KEYS = [
 // key here too — otherwise it'll get wiped the next time a different user
 // signs in on the same device.
 export const DEVICE_PREFERENCE_LOCAL_STORAGE_KEYS = [
-    "weikiy-theme-preference",
-    "weikiy-bubble-style-preference",
-    "weikiy-locale",
-    "weikiy-spotlight-preferences:v1",
-    "weikiy-analytics-preferences:v1",
-    "weikiy-double-click-todo-preference:v1",
-    "weikiy.sprintBoard.sortTiers.v2",
-    "weikiy.taskTable.sortTiers.v2",
+    "genos-theme-preference",
+    "genos-bubble-style-preference",
+    "genos-locale",
+    "genos-spotlight-preferences:v1",
+    "genos-analytics-preferences:v1",
+    "genos-double-click-todo-preference:v1",
+    "genos.sprintBoard.sortTiers.v2",
+    "genos.taskTable.sortTiers.v2",
 ];
 
 // Transient cross-auth handoff state that must survive the user-change
@@ -86,7 +86,7 @@ export const TRANSIENT_HANDOFF_LOCAL_STORAGE_KEYS = ["pendingInviteToken", "pend
  *
  * Implemented as an allowlist sweep rather than a hardcoded removal list
  * so it transparently handles team-scoped and prefix-keyed storage
- * (`weikiy-editor-draft:v1:*`, `spotlight:session:v1:<teamId>`,
+ * (`genos-editor-draft:v1:*`, `spotlight:session:v1:<teamId>`,
  * `noteTabs:<teamId>`) without needing to enumerate every variant.
  */
 export const clearUserScopedLocalStorage = (): void => {

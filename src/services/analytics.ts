@@ -15,7 +15,7 @@ import posthog from "posthog-js";
  * later mirrors any in-app changes back into the wrapper via setEnabled.
  */
 
-const PREFERENCES_STORAGE_KEY = "weikiy-analytics-preferences:v1";
+const PREFERENCES_STORAGE_KEY = "genos-analytics-preferences:v1";
 
 type IdentityTraits = {
     teamId?: string;

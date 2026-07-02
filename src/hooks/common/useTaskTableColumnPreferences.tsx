@@ -40,7 +40,7 @@ export interface TaskTableColumnPreferences {
     visibilityOverrides: Record<string, boolean>;
 }
 
-const STORAGE_KEY = "weikiy.taskTable.columnPrefs.v1";
+const STORAGE_KEY = "genos.taskTable.columnPrefs.v1";
 
 interface SerializedPrefs {
     fields: string[];

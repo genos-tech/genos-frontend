@@ -11,7 +11,7 @@ import { CalendarView } from "../../features/calendar/utils/monthGrid";
 // the other one-shot preferences in this folder (theme, bubble
 // style, etc.).
 
-const STORAGE_KEY = "weikiy-calendar-view-preference";
+const STORAGE_KEY = "genos-calendar-view-preference";
 const VALID_VIEWS: readonly CalendarView[] = ["month", "week", "3day", "day"] as const;
 
 const readPreference = (): CalendarView => {

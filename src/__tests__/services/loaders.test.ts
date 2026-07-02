@@ -515,7 +515,7 @@ describe("loadInitialData", () => {
 // live mock instances. env is stubbed per-test.
 // ===========================================================================
 describe("analytics", () => {
-    const PREF_KEY = "weikiy-analytics-preferences:v1";
+    const PREF_KEY = "genos-analytics-preferences:v1";
 
     const loadAnalytics = async () => {
         vi.resetModules();

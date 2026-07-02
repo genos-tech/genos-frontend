@@ -7,7 +7,7 @@
  * swept on the next logout.
  */
 
-const PREFIX = "weikiy-editor-draft:v1:";
+const PREFIX = "genos-editor-draft:v1:";
 
 const buildKey = (cacheKey: string): string => `${PREFIX}${cacheKey}`;
 

@@ -24,7 +24,7 @@ import { useColorScheme } from "@mui/joy/styles";
 
 export type ThemePreference = "light" | "dark" | "system";
 
-const STORAGE_KEY = "weikiy-theme-preference";
+const STORAGE_KEY = "genos-theme-preference";
 
 const readPreference = (): ThemePreference => {
     if (typeof window === "undefined") return "system";

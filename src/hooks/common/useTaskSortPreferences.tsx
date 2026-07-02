@@ -29,8 +29,8 @@ import { isSortDirection, isSortField, SortTier } from "../../features/tasks/uti
 
 export type { SortTier };
 
-const SPRINT_BOARD_STORAGE_KEY = "weikiy.sprintBoard.sortTiers.v2";
-const TABLE_STORAGE_KEY = "weikiy.taskTable.sortTiers.v2";
+const SPRINT_BOARD_STORAGE_KEY = "genos.sprintBoard.sortTiers.v2";
+const TABLE_STORAGE_KEY = "genos.taskTable.sortTiers.v2";
 
 // Defaults preserve the previous behaviour exactly:
 //   - Sprint board: "default" → no sort → []

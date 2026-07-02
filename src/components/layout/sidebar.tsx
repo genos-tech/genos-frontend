@@ -183,14 +183,14 @@ export const Sidebar = (props: SidebarProps) => {
                 ];
                 keysToRemove.forEach((key) => localStorage.setItem(key, ""));
                 localStorage.setItem("isOfflineForced", "false");
-                // Wipe per-team history buckets ("weikiy.history.v1.<teamId>").
+                // Wipe per-team history buckets ("genos.history.v1.<teamId>").
                 // The user may belong to several teams; logout should clear
                 // every team's history on this device, not just the active one.
                 try {
                     const historyKeys: string[] = [];
                     for (let i = 0; i < localStorage.length; i++) {
                         const k = localStorage.key(i);
-                        if (k && k.startsWith("weikiy.history.v1.")) historyKeys.push(k);
+                        if (k && k.startsWith("genos.history.v1.")) historyKeys.push(k);
                     }
                     historyKeys.forEach((k) => localStorage.removeItem(k));
                 } catch {

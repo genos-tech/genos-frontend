@@ -7,7 +7,7 @@ import { ja } from "./locales/ja";
 import { zh } from "./locales/zh";
 import { deepMerge, Locale, Messages } from "./types";
 
-const STORAGE_KEY = "weikiy-locale";
+const STORAGE_KEY = "genos-locale";
 
 const readStoredLocale = (): Locale => {
     if (typeof window === "undefined") return "en";

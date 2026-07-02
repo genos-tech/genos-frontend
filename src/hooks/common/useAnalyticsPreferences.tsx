@@ -18,7 +18,7 @@ export interface AnalyticsPreferences {
     enabled: boolean;
 }
 
-const STORAGE_KEY = "weikiy-analytics-preferences:v1";
+const STORAGE_KEY = "genos-analytics-preferences:v1";
 const DEFAULTS: AnalyticsPreferences = {
     enabled: true,
 };

@@ -35,7 +35,7 @@ import { deepMerge, DeepPartial, Locale, Messages, RTL_LOCALES } from "./types";
  * incrementally without breaking the build.
  */
 
-const STORAGE_KEY = "weikiy-locale";
+const STORAGE_KEY = "genos-locale";
 
 const NON_EN_DICTIONARIES: Record<Exclude<Locale, "en">, DeepPartial<Messages>> = {
     ja,

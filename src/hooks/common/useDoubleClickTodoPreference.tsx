@@ -13,7 +13,7 @@ export interface DoubleClickTodoPreference {
     enabled: boolean;
 }
 
-const STORAGE_KEY = "weikiy-double-click-todo-preference:v1";
+const STORAGE_KEY = "genos-double-click-todo-preference:v1";
 const DEFAULTS: DoubleClickTodoPreference = {
     enabled: true,
 };

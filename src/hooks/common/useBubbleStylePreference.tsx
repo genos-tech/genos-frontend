@@ -13,7 +13,7 @@ import { createContext, ReactNode, useCallback, useContext, useEffect, useState 
 
 export type BubbleStyle = "bubble" | "compact";
 
-const STORAGE_KEY = "weikiy-bubble-style-preference";
+const STORAGE_KEY = "genos-bubble-style-preference";
 
 const readPreference = (): BubbleStyle => {
     if (typeof window === "undefined") return "bubble";
