@@ -40,6 +40,13 @@ export const ChatListItemTitle: React.FC<ChatListItemTitleProps> = ({
           ? useTEM.teamMemberProfiles[chat.dmPartnerUser.userId].customStatus
           : null;
 
+    // MDM (chatType 4) chats have no server-side `chatName`; their title is the
+    // comma-separated member names — the same source the chat header and the
+    // sidebar MDM avatar use. Without deriving it here the sidebar item renders
+    // a blank name for MDM chats.
+    const mdmName = chat.mdmMembers?.map((m) => m.userName).join(", ");
+    const displayName = chat.chatType === 4 ? mdmName || chat.chatName : chat.chatName;
+
     return (
         <Box sx={{ minWidth: 0 }}>
             <Stack direction="column" spacing={0.25} sx={{ minWidth: 0 }}>
@@ -65,7 +72,7 @@ export const ChatListItemTitle: React.FC<ChatListItemTitleProps> = ({
                         }}
                         noWrap
                     >
-                        {isYou ? `${chat.chatName} (you)` : chat.chatName}
+                        {isYou ? `${displayName} (you)` : displayName}
                     </Typography>
                 </Stack>
 
