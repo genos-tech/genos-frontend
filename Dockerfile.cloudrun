@@ -1,8 +1,13 @@
-# Production image for genos-frontend (React 19 + Vite).
+# Production image for genos-frontend (React 19 + Vite) — GCP / Cloud Run ONLY.
 #
-# Railway builds this via Nixpacks (railway.toml), so there was no Dockerfile;
-# Cloud Run needs an image. Mirrors Railway's flow (npm install -> build ->
-# `serve -s dist`), with two deliberate choices:
+# NAMED `Dockerfile.cloudrun` on purpose: Railway auto-detects a file named
+# exactly `Dockerfile` and switches its build off Nixpacks, which breaks this
+# service in prod (serve startCommand fails; VITE_* wouldn't get baked either).
+# Keep this NON-standard name so Railway ignores it. Build for GCP with:
+#   docker build -f Dockerfile.cloudrun --build-arg VITE_...=... .
+#
+# Cloud Run needs an image; this mirrors Railway's Nixpacks flow (npm install ->
+# build -> `serve -s dist`), with two deliberate choices:
 #
 #  * VITE_* is baked at BUILD time -> pass the production backend URLs as
 #    --build-arg (see genos-frontend/src/vite-env.d.ts for the authoritative
