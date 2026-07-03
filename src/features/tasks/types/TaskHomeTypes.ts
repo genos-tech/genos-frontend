@@ -23,6 +23,9 @@ export interface TaskHomeProps {
     usePM: ProjectManagementState;
     useTM: TaskManagementState;
     useSM: SprintMilestoneManagementState;
+    // False while this Home is kept mounted but hidden (keep-alive). Threaded
+    // into useTaskRouting so a backgrounded Tasks Home doesn't hijack the URL.
+    isActiveRoute: boolean;
 }
 
 export interface TaskHomeState {

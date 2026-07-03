@@ -35,6 +35,10 @@ const CHAT_TYPE_REVERSE_MAP: Record<number, string> = {
 
 type UseNoteRoutingProps = {
     useNM: NoteManagementState;
+    // False while the Notes Home is kept mounted but hidden (keep-alive).
+    // Suppresses this hook's navigations so a backgrounded Notes Home can't
+    // hijack the URL from the active service. See the `navigate` wrapper.
+    isActiveRoute: boolean;
 };
 
 type NoteRouteInfo = {
@@ -49,8 +53,18 @@ type NoteRouteInfo = {
     threadId: number | undefined;
 };
 
-export const useNoteRouting = ({ useNM }: UseNoteRoutingProps) => {
-    const navigate = useNavigate();
+export const useNoteRouting = ({ useNM, isActiveRoute }: UseNoteRoutingProps) => {
+    const rawNavigate = useNavigate();
+    // Keep-alive gate — suppress navigations while this Home is hidden so it
+    // can't hijack the active service's URL. Transparent pass-through when
+    // active (behaviour unchanged). See useChatRouting for the full rationale.
+    const navigate = useCallback(
+        (...args: unknown[]) => {
+            if (!isActiveRoute) return;
+            return (rawNavigate as (...a: unknown[]) => void)(...args);
+        },
+        [isActiveRoute, rawNavigate]
+    ) as unknown as typeof rawNavigate;
     const location = useLocation();
 
     // Ref to track if we're currently navigating from URL (to avoid circular updates)

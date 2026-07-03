@@ -7,7 +7,7 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } fro
 import { Box } from "@mui/joy";
 import CssBaseline from "@mui/joy/CssBaseline";
 import { CssVarsProvider } from "@mui/joy/styles";
-import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 
 import { CalendarModalProvider, useCalendarModalState } from "./context/CalendarModalContext";
 import { HashMentionDataProvider } from "./context/HashMentionDataContext";
@@ -147,6 +147,7 @@ export const App = () => {
     // commented out (see history) so the return value isn't read.
     useWindowSize();
     const navigate = useNavigate();
+    const location = useLocation();
 
     // Initialize app with authentication and basic setup
     const { accessToken, myself, setMyself, useUISM, useTEM, useMGM } = useAppInitialization();
@@ -805,6 +806,72 @@ export const App = () => {
         useTEM: useTEM,
     });
 
+    // ---- Keep-alive navigation -------------------------------------------
+    // chat/tasks/notes Homes mount on first visit and stay mounted (hidden)
+    // thereafter, so switching between them no longer tears down and rebuilds
+    // their heavy subtrees (Notes' BlockNote/Yjs editors, the Tasks table, the
+    // chat panels) — that rebuild was the multi-second navigation freeze.
+    // Inbox stays route-driven (it is light and uses nested <Routes>/useParams).
+    const activeService = useMemo<"chat" | "tasks" | "notes" | "inbox" | null>(() => {
+        const p = location.pathname;
+        if (p.includes("/workspace/chat")) return "chat";
+        if (p.includes("/workspace/tasks")) return "tasks";
+        if (p.includes("/workspace/notes")) return "notes";
+        if (p.includes("/workspace/inbox")) return "inbox";
+        return null;
+    }, [location.pathname]);
+
+    const [mountedHomes, setMountedHomes] = useState<ReadonlySet<string>>(() => new Set());
+    // Include the active heavy service synchronously so its first visit paints
+    // immediately, without one blank frame before the effect below commits.
+    const homesToRender = useMemo<ReadonlySet<string>>(() => {
+        if (activeService && activeService !== "inbox" && !mountedHomes.has(activeService)) {
+            return new Set(mountedHomes).add(activeService);
+        }
+        return mountedHomes;
+    }, [mountedHomes, activeService]);
+    useEffect(() => {
+        if (activeService && activeService !== "inbox" && !mountedHomes.has(activeService)) {
+            setMountedHomes((prev) => new Set(prev).add(activeService));
+        }
+    }, [activeService, mountedHomes]);
+
+    // Prewarm the lazy route chunks once the shell is up and the browser is
+    // idle, so the first visit to a section doesn't pay the chunk download.
+    // React.lazy dedupes, so this only pre-warms.
+    useEffect(() => {
+        if (useUISM.isLoading) return;
+        const w = window as unknown as {
+            requestIdleCallback?: (cb: () => void) => number;
+            cancelIdleCallback?: (h: number) => void;
+        };
+        const ric: (cb: () => void) => number =
+            w.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 200));
+        const cic: (h: number) => void = w.cancelIdleCallback ?? window.clearTimeout;
+        const handle = ric(() => {
+            void import("./features/chat/chatHome");
+            void import("./features/tasks/taskHome");
+            void import("./features/notes/NoteHome");
+            void import("./features/inbox/inboxHome");
+        });
+        return () => cic(handle);
+    }, [useUISM.isLoading]);
+
+    // Shared manager bag for the three keep-alive Homes (identical prop set).
+    const homeManagers = {
+        myself,
+        setMyself,
+        socket: socketInstance,
+        useCM,
+        useIM,
+        useNM,
+        usePM,
+        useSM,
+        useTEM,
+        useTM,
+        useUISM,
+    };
+
     // if (isTooSmall) {
     //     return (
     //         <CssVarsProvider theme={purpleTheme} disableTransitionOnChange>
@@ -1125,150 +1192,6 @@ export const App = () => {
                                                                                                 </Suspense>
                                                                                             }
                                                                                         />
-                                                                                        <Route
-                                                                                            path="chat/*"
-                                                                                            element={
-                                                                                                <FeatureErrorBoundary feature="Chat">
-                                                                                                    <Suspense
-                                                                                                        fallback={
-                                                                                                            <RouteLoadingFallback />
-                                                                                                        }
-                                                                                                    >
-                                                                                                        <ChatHome
-                                                                                                            myself={
-                                                                                                                myself
-                                                                                                            }
-                                                                                                            setMyself={
-                                                                                                                setMyself
-                                                                                                            }
-                                                                                                            socket={
-                                                                                                                socketInstance
-                                                                                                            }
-                                                                                                            useCM={
-                                                                                                                useCM
-                                                                                                            }
-                                                                                                            useIM={
-                                                                                                                useIM
-                                                                                                            }
-                                                                                                            useNM={
-                                                                                                                useNM
-                                                                                                            }
-                                                                                                            usePM={
-                                                                                                                usePM
-                                                                                                            }
-                                                                                                            useSM={
-                                                                                                                useSM
-                                                                                                            }
-                                                                                                            useTEM={
-                                                                                                                useTEM
-                                                                                                            }
-                                                                                                            useTM={
-                                                                                                                useTM
-                                                                                                            }
-                                                                                                            useUISM={
-                                                                                                                useUISM
-                                                                                                            }
-                                                                                                        />
-                                                                                                    </Suspense>
-                                                                                                </FeatureErrorBoundary>
-                                                                                            }
-                                                                                        />
-                                                                                        <Route
-                                                                                            path="tasks/*"
-                                                                                            element={
-                                                                                                <FeatureErrorBoundary feature="Tasks">
-                                                                                                    <Suspense
-                                                                                                        fallback={
-                                                                                                            <RouteLoadingFallback />
-                                                                                                        }
-                                                                                                    >
-                                                                                                        <TaskHome
-                                                                                                            myself={
-                                                                                                                myself
-                                                                                                            }
-                                                                                                            setMyself={
-                                                                                                                setMyself
-                                                                                                            }
-                                                                                                            socket={
-                                                                                                                socketInstance
-                                                                                                            }
-                                                                                                            useCM={
-                                                                                                                useCM
-                                                                                                            }
-                                                                                                            useIM={
-                                                                                                                useIM
-                                                                                                            }
-                                                                                                            useNM={
-                                                                                                                useNM
-                                                                                                            }
-                                                                                                            usePM={
-                                                                                                                usePM
-                                                                                                            }
-                                                                                                            useSM={
-                                                                                                                useSM
-                                                                                                            }
-                                                                                                            useTEM={
-                                                                                                                useTEM
-                                                                                                            }
-                                                                                                            useTM={
-                                                                                                                useTM
-                                                                                                            }
-                                                                                                            useUISM={
-                                                                                                                useUISM
-                                                                                                            }
-                                                                                                        />
-                                                                                                    </Suspense>
-                                                                                                </FeatureErrorBoundary>
-                                                                                            }
-                                                                                        />
-                                                                                        <Route
-                                                                                            path="notes/*"
-                                                                                            element={
-                                                                                                <FeatureErrorBoundary feature="Notes">
-                                                                                                    <Suspense
-                                                                                                        fallback={
-                                                                                                            <RouteLoadingFallback />
-                                                                                                        }
-                                                                                                    >
-                                                                                                        <NoteHome
-                                                                                                            myself={
-                                                                                                                myself
-                                                                                                            }
-                                                                                                            setMyself={
-                                                                                                                setMyself
-                                                                                                            }
-                                                                                                            socket={
-                                                                                                                socketInstance
-                                                                                                            }
-                                                                                                            useCM={
-                                                                                                                useCM
-                                                                                                            }
-                                                                                                            useIM={
-                                                                                                                useIM
-                                                                                                            }
-                                                                                                            useNM={
-                                                                                                                useNM
-                                                                                                            }
-                                                                                                            usePM={
-                                                                                                                usePM
-                                                                                                            }
-                                                                                                            useSM={
-                                                                                                                useSM
-                                                                                                            }
-                                                                                                            useTEM={
-                                                                                                                useTEM
-                                                                                                            }
-                                                                                                            useTM={
-                                                                                                                useTM
-                                                                                                            }
-                                                                                                            useUISM={
-                                                                                                                useUISM
-                                                                                                            }
-                                                                                                        />
-                                                                                                    </Suspense>
-                                                                                                </FeatureErrorBoundary>
-                                                                                            }
-                                                                                        />
                                                                                         {OAUTH_INTEGRATIONS_ENABLED && (
                                                                                             <Route
                                                                                                 path="integrations"
@@ -1323,7 +1246,102 @@ export const App = () => {
                                                                                                 />
                                                                                             }
                                                                                         />
+                                                                                        {/* chat/tasks/notes render as keep-alive panes below, not routes;
+    swallow their paths so the router doesn't warn about no match. */}
+                                                                                        <Route
+                                                                                            path="*"
+                                                                                            element={
+                                                                                                null
+                                                                                            }
+                                                                                        />
                                                                                     </Routes>
+                                                                                    {homesToRender.has(
+                                                                                        "chat"
+                                                                                    ) && (
+                                                                                        <div
+                                                                                            style={{
+                                                                                                display:
+                                                                                                    activeService ===
+                                                                                                    "chat"
+                                                                                                        ? "contents"
+                                                                                                        : "none",
+                                                                                            }}
+                                                                                        >
+                                                                                            <FeatureErrorBoundary feature="Chat">
+                                                                                                <Suspense
+                                                                                                    fallback={
+                                                                                                        <RouteLoadingFallback />
+                                                                                                    }
+                                                                                                >
+                                                                                                    <ChatHome
+                                                                                                        {...homeManagers}
+                                                                                                        isActiveRoute={
+                                                                                                            activeService ===
+                                                                                                            "chat"
+                                                                                                        }
+                                                                                                    />
+                                                                                                </Suspense>
+                                                                                            </FeatureErrorBoundary>
+                                                                                        </div>
+                                                                                    )}
+                                                                                    {homesToRender.has(
+                                                                                        "tasks"
+                                                                                    ) && (
+                                                                                        <div
+                                                                                            style={{
+                                                                                                display:
+                                                                                                    activeService ===
+                                                                                                    "tasks"
+                                                                                                        ? "contents"
+                                                                                                        : "none",
+                                                                                            }}
+                                                                                        >
+                                                                                            <FeatureErrorBoundary feature="Tasks">
+                                                                                                <Suspense
+                                                                                                    fallback={
+                                                                                                        <RouteLoadingFallback />
+                                                                                                    }
+                                                                                                >
+                                                                                                    <TaskHome
+                                                                                                        {...homeManagers}
+                                                                                                        isActiveRoute={
+                                                                                                            activeService ===
+                                                                                                            "tasks"
+                                                                                                        }
+                                                                                                    />
+                                                                                                </Suspense>
+                                                                                            </FeatureErrorBoundary>
+                                                                                        </div>
+                                                                                    )}
+                                                                                    {homesToRender.has(
+                                                                                        "notes"
+                                                                                    ) && (
+                                                                                        <div
+                                                                                            style={{
+                                                                                                display:
+                                                                                                    activeService ===
+                                                                                                    "notes"
+                                                                                                        ? "contents"
+                                                                                                        : "none",
+                                                                                            }}
+                                                                                        >
+                                                                                            <FeatureErrorBoundary feature="Notes">
+                                                                                                <Suspense
+                                                                                                    fallback={
+                                                                                                        <RouteLoadingFallback />
+                                                                                                    }
+                                                                                                >
+                                                                                                    <NoteHome
+                                                                                                        {...homeManagers}
+                                                                                                        isActiveRoute={
+                                                                                                            activeService ===
+                                                                                                            "notes"
+                                                                                                        }
+                                                                                                    />
+                                                                                                </Suspense>
+                                                                                            </FeatureErrorBoundary>
+                                                                                        </div>
+                                                                                    )}
                                                                                     <BottomTabBar
                                                                                         useCM={
                                                                                             useCM

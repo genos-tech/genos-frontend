@@ -36,13 +36,27 @@ type NoteHomeProps = {
     useCM: ChatManagementState;
     useTM: TaskManagementState;
     useSM: SprintMilestoneManagementState;
+    // False while this Home is kept mounted but hidden (keep-alive). Threaded
+    // into useNoteRouting so a backgrounded Notes Home doesn't hijack the URL.
+    isActiveRoute: boolean;
 };
 export const NoteHome = (props: NoteHomeProps) => {
-    const { useTEM, socket, myself, setMyself, useUISM, useNM, useCM, usePM, useTM, useSM } =
-        props;
+    const {
+        useTEM,
+        socket,
+        myself,
+        setMyself,
+        useUISM,
+        useNM,
+        useCM,
+        usePM,
+        useTM,
+        useSM,
+        isActiveRoute,
+    } = props;
 
     // URL-based routing for notes
-    useNoteRouting({ useNM });
+    useNoteRouting({ useNM, isActiveRoute });
 
     const { accessToken } = useAuth();
     // Unread @mention state for notes (per-note dots + the "Unread"
