@@ -61,13 +61,18 @@ export const useProjectTaskManagement = ({
     useEffect(() => {
         if (!usePM.currentProject || !usePM.currentProject.projectId) return;
         const projectId = usePM.currentProject.projectId;
-        (async () => {
-            await useSM.loadConfigForProject(projectId);
-            await useSM.loadSprintsForProject(projectId);
-            await useSM.loadMilestonesForProject(projectId, {
+        // These three loaders are independent — each hits a different endpoint
+        // and replaces only its own per-project state slice — so fire them in
+        // parallel instead of a serial await chain, which was 3x the latency
+        // in series on a slow backend. `allSettled` so one failure doesn't stop
+        // the others (the old serial chain aborted the rest on the first throw).
+        void Promise.allSettled([
+            useSM.loadConfigForProject(projectId),
+            useSM.loadSprintsForProject(projectId),
+            useSM.loadMilestonesForProject(projectId, {
                 statuses: ["Open", "WIP", "Pending", "Closed"],
-            });
-        })();
+            }),
+        ]);
     }, [usePM.currentProject?.projectId]);
 
     // Handle new project creation
