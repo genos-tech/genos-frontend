@@ -596,13 +596,29 @@ export class ChannelService {
 
     // ---- REST reads --------------------------------------------------------
 
+    // Coalesces a burst of concurrent `listChannels` callers into a single
+    // GET. On boot `funcSetAllChats` fires from several effects (mount,
+    // userId-settle, the post-load re-pull) plus the background refresh, each
+    // hitting `/api/v3/channels/` with identical results. In-flight-only (no
+    // time cache) so a team switch can never serve a stale channel list.
+    // Mirrors the per-channel `_inflightSyncByChannel` dedup used by syncChannel.
+    private _listChannelsInflight: Promise<Channel[]> | null = null;
+
     async listChannels(): Promise<Channel[]> {
-        try {
-            const res = await this.api().get<{ channels: Channel[] }>("/api/v3/channels/");
-            return res.data.channels ?? [];
-        } catch (e) {
-            throw unwrapAxiosError(e);
+        if (this._listChannelsInflight) {
+            return this._listChannelsInflight;
         }
+        this._listChannelsInflight = (async () => {
+            try {
+                const res = await this.api().get<{ channels: Channel[] }>("/api/v3/channels/");
+                return res.data.channels ?? [];
+            } catch (e) {
+                throw unwrapAxiosError(e);
+            } finally {
+                this._listChannelsInflight = null;
+            }
+        })();
+        return this._listChannelsInflight;
     }
 
     async fetchMessagesDelta(

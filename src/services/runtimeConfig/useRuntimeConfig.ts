@@ -51,9 +51,15 @@ export function useRuntimeConfigBootstrap(
     useEffect(() => {
         runtimeConfigService.setAccessToken(accessToken);
         runtimeConfigService.setUserId(userId);
-        if (!accessToken) {
-            // Not signed in — leave the service idle. Any previous
-            // timer is cleaned up by the cleanup of the prior effect.
+        // Wait for BOTH credentials. `accessToken` and `userId` settle a beat
+        // apart on boot (token from the refresh call, userId from localStorage
+        // ~50ms later); starting on the token alone fired one poll with a null
+        // userId and then the effect cleanup `stop()` cleared the in-flight
+        // guard, so the userId-settle re-run fired a second, redundant poll.
+        // The config is per-user, so there's nothing useful to fetch without it.
+        if (!accessToken || !userId) {
+            // Not ready — leave the service idle. Any previous timer is cleaned
+            // up by the cleanup of the prior effect.
             return undefined;
         }
         runtimeConfigService.start();

@@ -36,7 +36,10 @@ export const useAppInitialization = () => {
     // doubled the per-minute reference flips on the same map and added
     // no signal. Removed.
     useEffect(() => {
-        useTEM.initCurrentTeam();
+        // `initCurrentTeam()` (the `/team/exist/` findTeam call) is already
+        // fired by `useTeamManagement`'s own `[myself]` effect — calling it
+        // here too fired findTeam twice on boot. This effect only owns the
+        // team-switch IDB wipe + isLoading toggle below.
         if (myself.teamId !== useTEM.currentTeamId) {
             const previousTeamId = lastInitializedTeamIdRef.current;
             const isTeamSwitch = previousTeamId !== "" && previousTeamId !== myself.teamId;
