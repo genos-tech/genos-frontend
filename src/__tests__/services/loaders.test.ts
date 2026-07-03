@@ -7,7 +7,10 @@ import {
     tasksChannel,
     usersChannel,
 } from "../../db/workers/channels";
-import { loadV3SpecificMessages } from "../../features/chat/services/loadV3SpecificMessages";
+import {
+    loadV3SpecificMessages,
+    readV3CachedMessages,
+} from "../../features/chat/services/loadV3SpecificMessages";
 import { channelService } from "../../services/channel/channelService";
 import { loadInitialData } from "../../services/loadInitialData";
 import { refreshAllData } from "../../services/refreshAllData";
@@ -57,6 +60,8 @@ vi.mock("../../services/channel/channelService", () => {
 
 vi.mock("../../features/chat/services/loadV3SpecificMessages", () => ({
     loadV3SpecificMessages: vi.fn().mockResolvedValue([]),
+    // Synchronous snapshot read used by the cache-first boot restore.
+    readV3CachedMessages: vi.fn(() => []),
 }));
 
 // Typed accessors for the mocked channel `request` fns.
@@ -66,6 +71,7 @@ const usersReq = usersChannel.request as ReturnType<typeof vi.fn>;
 const tasksReq = tasksChannel.request as ReturnType<typeof vi.fn>;
 const syncChannelMock = channelService.syncChannel as ReturnType<typeof vi.fn>;
 const loadV3Mock = loadV3SpecificMessages as ReturnType<typeof vi.fn>;
+const readV3Mock = readV3CachedMessages as ReturnType<typeof vi.fn>;
 // Live, mutable snapshot object the hook reads through getSnapshot(). We
 // mutate its fields in place so the same reference stays wired to the mock.
 type BaseSnapshot = {
@@ -109,6 +115,7 @@ beforeEach(() => {
     tasksReq.mockResolvedValue(undefined);
     syncChannelMock.mockResolvedValue(undefined);
     loadV3Mock.mockResolvedValue([]);
+    readV3Mock.mockReturnValue([]);
     vi.spyOn(console, "error").mockImplementation(() => {});
     vi.spyOn(console, "warn").mockImplementation(() => {});
 });
@@ -282,6 +289,7 @@ describe("loadInitialData", () => {
         opts: {
             accessToken?: string | null;
             user?: UserProps;
+            firstRefreshDone?: boolean;
         } = {}
     ) => {
         const setIsLoading = vi.fn();
@@ -291,7 +299,10 @@ describe("loadInitialData", () => {
                 opts.user ?? myself,
                 opts.accessToken === undefined ? "tok" : opts.accessToken,
                 setIsLoading,
-                setCurrentMainChat
+                setCurrentMainChat,
+                // Default true (as if App's first background refresh already
+                // landed) so the boot gate can close; cold-start tests pass false.
+                opts.firstRefreshDone ?? true
             )
         );
         return { setIsLoading, setCurrentMainChat, ...result };
@@ -304,16 +315,18 @@ describe("loadInitialData", () => {
         expect(usersReq).not.toHaveBeenCalled();
     });
 
-    it("fires inbox, activity, and team-member loaders on a ready boot", async () => {
+    it("fires cache reads (pop*) — not the network loaders — on a ready boot", async () => {
         render();
         await waitFor(() => {
-            expect(inboxReq).toHaveBeenCalledWith("loadInbox", { myself, accessToken: "tok" });
+            expect(inboxReq).toHaveBeenCalledWith("popInboxItems", {});
         });
-        expect(activityReq).toHaveBeenCalledWith("loadActivityHistory", {
-            myself,
-            accessToken: "tok",
-        });
-        expect(usersReq).toHaveBeenCalledWith("loadTeamMembers", { myself, accessToken: "tok" });
+        expect(activityReq).toHaveBeenCalledWith("popActivityMessages", { myself });
+        expect(usersReq).toHaveBeenCalledWith("popTeamMembers", { myself });
+        // The network hydration moved out of the boot gate — App owns it now
+        // (refreshAllData). The gate must NOT fire the network loaders itself.
+        expect(inboxReq).not.toHaveBeenCalledWith("loadInbox", expect.anything());
+        expect(activityReq).not.toHaveBeenCalledWith("loadActivityHistory", expect.anything());
+        expect(usersReq).not.toHaveBeenCalledWith("loadTeamMembers", expect.anything());
     });
 
     it("skips project tasks (and marks them loaded) when no lastProjectId is stored", async () => {
@@ -322,14 +335,13 @@ describe("loadInitialData", () => {
         expect(tasksReq).not.toHaveBeenCalled();
     });
 
-    it("loads project tasks with the numeric lastProjectId from localStorage", async () => {
+    it("reads cached project tasks with the numeric lastProjectId from localStorage", async () => {
         localStorage.setItem("lastProjectId", "77");
         render();
         await waitFor(() => {
-            expect(tasksReq).toHaveBeenCalledWith("loadProjectTasks", {
-                myself,
+            expect(tasksReq).toHaveBeenCalledWith("popSpecificProjectTasks", {
                 projectId: 77,
-                accessToken: "tok",
+                targetStatuses: expect.any(Array),
             });
         });
     });
@@ -345,7 +357,7 @@ describe("loadInitialData", () => {
 
         await waitFor(() =>
             expect(console.error).toHaveBeenCalledWith(
-                "Failed initial project tasks loading",
+                "Failed initial project tasks cache read",
                 expect.any(Error)
             )
         );
@@ -366,7 +378,7 @@ describe("loadInitialData", () => {
         // the boot gate closing (setIsLoading(false)) instead of a log line.
         await waitFor(() => expect(setIsLoading).toHaveBeenCalledWith(false));
         // No chat restore attempted.
-        expect(loadV3Mock).not.toHaveBeenCalled();
+        expect(readV3Mock).not.toHaveBeenCalled();
         expect(setCurrentMainChat).not.toHaveBeenCalled();
     });
 
@@ -382,7 +394,7 @@ describe("loadInitialData", () => {
             expect.objectContaining({ chatId: "", chatType: -1 })
         );
         // Restore is short-circuited before any v3 message fetch.
-        expect(loadV3Mock).not.toHaveBeenCalled();
+        expect(readV3Mock).not.toHaveBeenCalled();
     });
 
     it("uses the default chat when a valid chat type has no stored chat id", async () => {
@@ -395,7 +407,7 @@ describe("loadInitialData", () => {
                 expect.objectContaining({ chatId: "", chatType: -1 })
             )
         );
-        expect(loadV3Mock).not.toHaveBeenCalled();
+        expect(readV3Mock).not.toHaveBeenCalled();
     });
 
     it("falls back to default chat when the UUID chat is not yet in the v3 store", async () => {
@@ -410,7 +422,7 @@ describe("loadInitialData", () => {
         expect(setCurrentMainChat).toHaveBeenCalledWith(
             expect.objectContaining({ chatId: "", chatType: -1 })
         );
-        expect(loadV3Mock).not.toHaveBeenCalled();
+        expect(readV3Mock).not.toHaveBeenCalled();
     });
 
     it("hydrates the last chat from the v3 snapshot when the UUID channel exists", async () => {
@@ -437,7 +449,7 @@ describe("loadInitialData", () => {
                 ],
             ],
         ]);
-        loadV3Mock.mockResolvedValue([
+        readV3Mock.mockReturnValue([
             { messageId: 99, contentText: "hello", tsSent: "2026-02-02T01:00:00Z" },
         ]);
 
@@ -445,7 +457,9 @@ describe("loadInitialData", () => {
         localStorage.setItem("lastGMChatId", uuid);
         const { setCurrentMainChat } = render();
 
-        await waitFor(() => expect(loadV3Mock).toHaveBeenCalledWith(uuid, 2));
+        // Cache read is synchronous; the network sync fires in the background.
+        await waitFor(() => expect(readV3Mock).toHaveBeenCalledWith(uuid, 2));
+        expect(syncChannelMock).toHaveBeenCalledWith(uuid);
         await waitFor(() => expect(setCurrentMainChat).toHaveBeenCalled());
 
         const chat = setCurrentMainChat.mock.calls[0][0];
@@ -465,11 +479,13 @@ describe("loadInitialData", () => {
         expect(chat.messages).toHaveLength(1);
     });
 
-    it("falls back to default chat when loadV3SpecificMessages throws during restore", async () => {
+    it("falls back to default chat when the cached-message read throws during restore", async () => {
         const uuid = "33333333-3333-3333-3333-333333333333";
         snapshotState.hydrated = true;
         snapshotState.channels = new Map([[uuid, { id: uuid, title: "X", isPrivate: false }]]);
-        loadV3Mock.mockRejectedValue(new Error("net down"));
+        readV3Mock.mockImplementation(() => {
+            throw new Error("cache boom");
+        });
 
         localStorage.setItem("lastChatType", "3");
         localStorage.setItem("lastPMChatId", uuid);
@@ -486,23 +502,41 @@ describe("loadInitialData", () => {
         );
     });
 
-    it("logs an error when team-member loading resolves falsy", async () => {
-        usersReq.mockResolvedValue(undefined);
-        render();
-        await waitFor(() =>
-            expect(console.error).toHaveBeenCalledWith("Failed initial team member loading")
-        );
+    it("still reveals the shell when the team-member cache read is empty", async () => {
+        snapshotState.hydrated = true;
+        usersReq.mockResolvedValue([]);
+        const { setIsLoading } = render();
+        await waitFor(() => expect(setIsLoading).toHaveBeenCalledWith(false));
     });
 
-    it("logs an error when the inbox loader rejects", async () => {
+    it("logs and fails open when the inbox cache read rejects", async () => {
         inboxReq.mockRejectedValue(new Error("inbox fail"));
         render();
         await waitFor(() =>
             expect(console.error).toHaveBeenCalledWith(
-                "Failed initial inbox data loading",
+                "Failed initial inbox cache read",
                 expect.any(Error)
             )
         );
+    });
+
+    // --- cache-first gate: cold vs warm --------------------------------------
+
+    it("holds the shell on a cold cache until the first refresh completes", async () => {
+        snapshotState.hydrated = true;
+        // No hydrated marker (cold) + firstRefreshDone=false → gate stays open.
+        const { setIsLoading } = render({ firstRefreshDone: false });
+        await waitFor(() => expect(inboxReq).toHaveBeenCalled());
+        expect(setIsLoading).not.toHaveBeenCalledWith(false);
+    });
+
+    it("reveals a warm cache immediately, without waiting for a refresh", async () => {
+        snapshotState.hydrated = true;
+        // Hydrated marker matches the team → warm → reveal even if the first
+        // refresh hasn't landed yet.
+        localStorage.setItem("genos.hydrated.v1", myself.teamId);
+        const { setIsLoading } = render({ firstRefreshDone: false });
+        await waitFor(() => expect(setIsLoading).toHaveBeenCalledWith(false));
     });
 });
 

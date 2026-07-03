@@ -119,6 +119,13 @@ type RefreshOutcome = "ok" | "unauthenticated" | "transient";
 // matters; the last value is also the steady-state cap.
 const REFRESH_BACKOFF_SCHEDULE_MS = [2_000, 5_000, 10_000, 20_000, 60_000];
 
+// Abort a refresh that hasn't responded in this window. A hung request (dead
+// backend, stalled connection) would otherwise never resolve, and since every
+// data loader waits on `accessToken` — which this call sets — it would block
+// the entire app boot indefinitely. Aborting turns it into a retryable
+// `transient` failure that the backoff schedule above re-arms.
+const REFRESH_TIMEOUT_MS = 10_000;
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [accessToken, setAccessToken] = useState<string | null>(null);
     const [isRefreshing, setIsRefreshing] = useState(false);
@@ -135,10 +142,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // failures (401/403) from transient errors so the caller can
     // decide whether to keep retrying.
     const refreshAccessToken = async (): Promise<RefreshOutcome> => {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), REFRESH_TIMEOUT_MS);
         try {
             const response = await fetch(`${base_url}/user/signin/refresh/`, {
                 method: "GET",
                 credentials: "include",
+                signal: controller.signal,
             });
 
             if (response.ok) {
@@ -154,10 +164,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             console.error(`[AUTH] Token refresh failed with status ${response.status}`);
             return "transient";
         } catch (error) {
-            // Network/CORS failure — treat as transient and keep retrying.
-            console.error("[AUTH] Token refresh failed (network)");
+            // Network/CORS failure OR the abort timeout — treat as transient
+            // and keep retrying per the backoff schedule.
+            console.error("[AUTH] Token refresh failed (network or timeout)");
             console.error(error);
             return "transient";
+        } finally {
+            clearTimeout(timeoutId);
         }
     };
 

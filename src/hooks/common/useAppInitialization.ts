@@ -3,6 +3,7 @@ import { useEffect, useRef } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { initDB } from "../../db/config/schema";
 import { DatabaseUtils } from "../../db/utils/database";
+import { clearTeamHydrated } from "../../services/hydrationState";
 import { useMyself } from "./useAuth";
 import { useMentionGroups } from "./useMentionGroups";
 import { useTeamManagement } from "./useTeamManagement";
@@ -47,6 +48,11 @@ export const useAppInitialization = () => {
                 // notes/tasks from the previous team leak into the new team.
                 (async () => {
                     await DatabaseUtils.clearTeamScopedStores();
+                    // The new team's IDB is now empty — drop the hydrated
+                    // marker so `loadInitialData` treats it as a cold start
+                    // (waits for the first refresh) instead of flashing an
+                    // empty shell from the wiped cache.
+                    clearTeamHydrated();
                     useTEM.setCurrentTeamId(myself.teamId);
                     useUISM.setIsLoading(true);
                     lastInitializedTeamIdRef.current = myself.teamId;
