@@ -1,4 +1,5 @@
-import { activityChannel, inboxChannel, tasksChannel, usersChannel } from "../db/workers/channels";
+import { activityChannel, inboxChannel, usersChannel } from "../db/workers/channels";
+import { loadProjectTasks } from "../features/tasks/services/loadProjectTasks";
 import { UserProps } from "../types/admin";
 
 // Re-runs the same set of API→IndexedDB loaders that `loadInitialData`
@@ -74,13 +75,13 @@ export const refreshAllData = async ({
         ),
     ];
     if (currentProjectId != null && currentProjectId > 0) {
+        // Go through the `loadProjectTasks` wrapper (not `tasksChannel`
+        // directly) so this shares the wrapper's in-flight dedup keyed on
+        // `teamId:projectId` — on boot `useProjectManagement` fetches the same
+        // project's tasks, and overlapping calls now collapse to one request.
         tasks.push(
             withTimeout(
-                tasksChannel.request("loadProjectTasks", {
-                    myself,
-                    projectId: currentProjectId,
-                    accessToken,
-                }),
+                loadProjectTasks(myself, currentProjectId, accessToken),
                 "loadProjectTasks"
             )
         );
