@@ -1,4 +1,8 @@
 [build]
+# Pin Nixpacks explicitly: a Dockerfile now exists (for Cloud Run/GCP), and
+# without this Railway auto-detects it and switches off Nixpacks — which breaks
+# this service's `serve` startCommand. Railway must keep using Nixpacks here.
+builder = "NIXPACKS"
 buildCommand = "npm install --no-audit --no-fund && npm run build"
 
 [deploy]
