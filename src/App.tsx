@@ -270,6 +270,58 @@ export const App = () => {
         ]
     );
 
+    // Push freshly-cached IDB data into React state after a background
+    // network refresh writes it. Shared by the cache-first boot refresh and
+    // the wake refresh — both refresh IDB, then call this to repaint.
+    const onIDBRefreshed = useCallback(async () => {
+        await Promise.allSettled([
+            useCM.funcSetAllChats(),
+            useCM.funcSetFlaggedMessages(),
+            useCM.funcSetActivityMessages(),
+            useTEM.funcSetTeamMembers(),
+            usePM.currentProject?.projectId
+                ? usePM.refreshProjectTasks(usePM.currentProject.projectId)
+                : Promise.resolve(),
+        ]);
+    }, [useCM, useTEM, usePM]);
+    // Held in a ref so the once-per-team boot effect below doesn't re-run (and
+    // re-fire the refresh) every time these manager objects get a new identity.
+    const onIDBRefreshedRef = useRef(onIDBRefreshed);
+    onIDBRefreshedRef.current = onIDBRefreshed;
+
+    // Cache-first boot: `loadInitialData` renders the shell from IDB, while
+    // THIS fires the network hydration in the background — once per team.
+    // Living in `App` (not the short-lived `<InitialLoad>`, which unmounts the
+    // moment the spinner clears) is what lets the `onIDBRefreshed` re-pull
+    // actually run after the fresh data lands. `firstRefreshDone` unblocks the
+    // cold-start path in `loadInitialData` (empty cache → wait for this).
+    const [firstRefreshDone, setFirstRefreshDone] = useState(false);
+    const bootRefreshedTeamRef = useRef<string | null>(null);
+    useEffect(() => {
+        if (!accessToken || !myself.userId || !useTEM.currentTeamId) return;
+        if (bootRefreshedTeamRef.current === useTEM.currentTeamId) return;
+        bootRefreshedTeamRef.current = useTEM.currentTeamId;
+        setFirstRefreshDone(false);
+        let cancelled = false;
+        // currentProject is usually not loaded yet at boot; fall back to the
+        // last-open project so tasks refresh too.
+        const lastProjectId = Number(localStorage.getItem("lastProjectId")) || null;
+        void refreshAllData({
+            accessToken,
+            currentProjectId: usePM.currentProject?.projectId ?? lastProjectId,
+            myself,
+            onIDBRefreshed: () => onIDBRefreshedRef.current(),
+        }).finally(() => {
+            if (!cancelled) setFirstRefreshDone(true);
+        });
+        return () => {
+            cancelled = true;
+        };
+        // `usePM.currentProject` is read only for the initial project id; the
+        // team ref guards against re-firing when it (or the token) later change.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [accessToken, myself.userId, useTEM.currentTeamId]);
+
     // When the user returns from a long idle (closed laptop overnight,
     // backgrounded tab for hours) or after the browser regains network,
     // re-run the boot-time loaders so stale IDB is repopulated from the
@@ -281,17 +333,7 @@ export const App = () => {
             accessToken: accessToken || null,
             currentProjectId: usePM.currentProject?.projectId ?? null,
             myself,
-            onIDBRefreshed: async () => {
-                await Promise.allSettled([
-                    useCM.funcSetAllChats(),
-                    useCM.funcSetFlaggedMessages(),
-                    useCM.funcSetActivityMessages(),
-                    useTEM.funcSetTeamMembers(),
-                    usePM.currentProject?.projectId
-                        ? usePM.refreshProjectTasks(usePM.currentProject.projectId)
-                        : Promise.resolve(),
-                ]);
-            },
+            onIDBRefreshed,
         });
     });
 
@@ -835,6 +877,7 @@ export const App = () => {
                                                     myself={myself}
                                                     setCurrentMainChat={useCM.setCurrentMainChat}
                                                     setIsLoading={useUISM.setIsLoading}
+                                                    firstRefreshDone={firstRefreshDone}
                                                 />
                                             ) : (
                                                 <div className="main-container">

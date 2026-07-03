@@ -13,6 +13,10 @@ type InitialLoadProps = {
     myself: UserProps;
     setIsLoading: (value: boolean) => void;
     setCurrentMainChat: (value: ChatProps) => void;
+    // True once App's first background refresh (`refreshAllData`) has landed.
+    // On a cold cache the boot gate waits for this before revealing the shell
+    // so the first paint isn't empty; on a warm cache it's ignored.
+    firstRefreshDone: boolean;
 };
 
 // Keyframe animations
@@ -42,7 +46,7 @@ const dotPulse = keyframes`
 `;
 
 export const InitialLoad = (props: InitialLoadProps) => {
-    const { myself, setIsLoading, setCurrentMainChat } = props;
+    const { myself, setIsLoading, setCurrentMainChat, firstRefreshDone } = props;
     const { accessToken } = useAuth();
     const { t } = useTranslation();
     const navigate = useNavigate();
@@ -56,7 +60,7 @@ export const InitialLoad = (props: InitialLoadProps) => {
         return () => clearTimeout(timer);
     }, []);
 
-    loadInitialData(myself, accessToken, setIsLoading, setCurrentMainChat);
+    loadInitialData(myself, accessToken, setIsLoading, setCurrentMainChat, firstRefreshDone);
 
     return (
         <Box
