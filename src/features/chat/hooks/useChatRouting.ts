@@ -67,11 +67,30 @@ type UseChatRoutingProps = {
     useCM: ChatManagementState;
     useTM: TaskManagementState;
     myself: UserProps;
+    // False while the Chat Home is kept mounted but hidden (keep-alive). When
+    // false, this hook's navigations are suppressed so a backgrounded Chat
+    // Home can't hijack the URL from the active service. See the `navigate`
+    // wrapper below.
+    isActiveRoute: boolean;
 };
 
-export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) => {
+export const useChatRouting = ({ useCM, useTM, myself, isActiveRoute }: UseChatRoutingProps) => {
     const { accessToken } = useAuth();
-    const navigate = useNavigate();
+    const rawNavigate = useNavigate();
+    // Keep-alive gate. chat/tasks/notes Homes now stay mounted while hidden so
+    // their heavy editors/tables survive a service switch (no rebuild → no
+    // freeze). A hidden Home's routing effects still fire on foreign
+    // pathnames, so we suppress its navigations at this single choke point —
+    // otherwise e.g. Effect 1's "no chatType → redirect to /dm" would yank the
+    // URL away from whatever service is actually active. When active this is a
+    // transparent pass-through, so behaviour is byte-for-byte unchanged.
+    const navigate = useCallback(
+        (...args: unknown[]) => {
+            if (!isActiveRoute) return;
+            return (rawNavigate as (...a: unknown[]) => void)(...args);
+        },
+        [isActiveRoute, rawNavigate]
+    ) as unknown as typeof rawNavigate;
     const location = useLocation();
     const pathname = location.pathname;
 

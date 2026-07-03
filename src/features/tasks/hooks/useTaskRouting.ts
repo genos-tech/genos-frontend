@@ -7,6 +7,10 @@ import { TaskManagementState } from "../../../hooks/tasks/useTaskManagement";
 type UseTaskRoutingProps = {
     usePM: ProjectManagementState;
     useTM: TaskManagementState;
+    // False while the Tasks Home is kept mounted but hidden (keep-alive).
+    // Suppresses this hook's navigations so a backgrounded Tasks Home can't
+    // hijack the URL from the active service. See the `navigate` wrapper.
+    isActiveRoute: boolean;
 };
 
 type TaskRouteInfo = {
@@ -23,8 +27,18 @@ type TaskRouteInfo = {
     commentId: number | undefined;
 };
 
-export const useTaskRouting = ({ usePM, useTM }: UseTaskRoutingProps) => {
-    const navigate = useNavigate();
+export const useTaskRouting = ({ usePM, useTM, isActiveRoute }: UseTaskRoutingProps) => {
+    const rawNavigate = useNavigate();
+    // Keep-alive gate — suppress navigations while this Home is hidden so it
+    // can't hijack the active service's URL. Transparent pass-through when
+    // active (behaviour unchanged). See useChatRouting for the full rationale.
+    const navigate = useCallback(
+        (...args: unknown[]) => {
+            if (!isActiveRoute) return;
+            return (rawNavigate as (...a: unknown[]) => void)(...args);
+        },
+        [isActiveRoute, rawNavigate]
+    ) as unknown as typeof rawNavigate;
     const location = useLocation();
 
     // Ref to track if we're currently navigating from URL (to avoid circular updates)

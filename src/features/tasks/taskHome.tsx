@@ -12,11 +12,22 @@ import { useIsMobile } from "../../hooks/common/useIsMobile";
 import { MobileTaskHome } from "./MobileTaskHome";
 
 export const TaskHome = (props: TaskHomeProps) => {
-    const { useTEM, socket, myself, setMyself, useUISM, useCM, useNM, usePM, useTM, useSM } =
-        props;
+    const {
+        useTEM,
+        socket,
+        myself,
+        setMyself,
+        useUISM,
+        useCM,
+        useNM,
+        usePM,
+        useTM,
+        useSM,
+        isActiveRoute,
+    } = props;
 
     // URL-based routing for tasks
-    useTaskRouting({ usePM, useTM });
+    useTaskRouting({ usePM, useTM, isActiveRoute });
 
     // Task Related State
     const [openJoinProject, setOpenJoinProject] = useState({

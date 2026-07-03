@@ -59,11 +59,25 @@ type ChatHomeProps = {
     // row (e.g. the thread chat header's "Open Task" button on a
     // milestone-tied thread).
     useSM: SprintMilestoneManagementState;
+    // False while this Home is kept mounted but hidden (keep-alive). Threaded
+    // into useChatRouting so a backgrounded Chat Home doesn't hijack the URL.
+    isActiveRoute: boolean;
 };
 
 export const ChatHome = (props: ChatHomeProps) => {
-    const { useTEM, socket, myself, setMyself, useUISM, useCM, useNM, usePM, useTM, useSM } =
-        props;
+    const {
+        useTEM,
+        socket,
+        myself,
+        setMyself,
+        useUISM,
+        useCM,
+        useNM,
+        usePM,
+        useTM,
+        useSM,
+        isActiveRoute,
+    } = props;
 
     // Common
     const { mode } = useColorScheme();
@@ -89,7 +103,7 @@ export const ChatHome = (props: ChatHomeProps) => {
     const { incompleteCount } = useTG;
 
     // URL-based routing
-    const chatRouting = useChatRouting({ myself, useCM, useTM });
+    const chatRouting = useChatRouting({ myself, useCM, useTM, isActiveRoute });
 
     const [todoFromMessageBubble, setTodoFromMessageBubble] = useState<
         MessageProps | ThreadMessageProps | TaskCommentProps | null
