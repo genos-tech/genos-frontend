@@ -51,6 +51,7 @@ import { useGlobalServiceShortcut } from "./hooks/common/useGlobalServiceShortcu
 import { HistoryProvider } from "./hooks/common/useHistory";
 import { useNotifications } from "./hooks/common/useNotifications";
 import { useProjectTaskManagement } from "./hooks/common/useProjectTaskManagement";
+import { useReconcileMyselfAvatar } from "./hooks/common/useReconcileMyselfAvatar";
 import { useServiceInitialization } from "./hooks/common/useServiceInitialization";
 import { SpotlightPreferencesProvider } from "./hooks/common/useSpotlightPreferences";
 import { webSocketSync } from "./hooks/common/useSyncManagement";
@@ -157,6 +158,11 @@ export const App = () => {
     // (`useEffect`-only) and silently no-op when PostHog isn't configured.
     useAnalyticsIdentity(myself);
     useAnalyticsPageviews();
+
+    // Keep the logged-in user's own avatar in sync with the authoritative
+    // team-members store, so a second session (or a post-change reload) doesn't
+    // render a stale/blank self-avatar from localStorage. See the hook for why.
+    useReconcileMyselfAvatar(myself, setMyself, useTEM.teamMemberProfiles);
 
     // WebSocket management
     const { socketInstance, showDisconnected: showWsDisconnected } = useWebSocket(
