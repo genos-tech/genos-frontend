@@ -1274,6 +1274,8 @@ export const ar: DeepPartial<Messages> = {
             approve: "موافقة",
             reject: "رفض",
             copyAnswer: "نسخ الإجابة",
+            feedbackUp: "إجابة جيدة",
+            feedbackDown: "بحاجة إلى تحسين",
             retry: "اسأل مرة أخرى",
             showLess: "عرض أقل",
             moreCount: "+{count} المزيد",

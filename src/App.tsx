@@ -930,6 +930,7 @@ export const App = () => {
                                                 onAsk={spotlight.onAsk}
                                                 onCancel={spotlight.onCancel}
                                                 onClose={spotlight.close}
+                                                onFeedback={spotlight.submitFeedback}
                                                 onNewConversation={spotlight.onNewConversation}
                                                 onPreview={handleSpotlightPreview}
                                                 onQueryChange={spotlight.setQuery}

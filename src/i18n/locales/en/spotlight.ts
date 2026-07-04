@@ -11,6 +11,8 @@ export const spotlight = {
         approve: "Approve",
         reject: "Reject",
         copyAnswer: "Copy answer",
+        feedbackUp: "Good answer",
+        feedbackDown: "Needs work",
         retry: "Ask again",
         showLess: "Show less",
         moreCount: "+{count} more",

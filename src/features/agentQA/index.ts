@@ -14,6 +14,7 @@ export {
     sourcesNotInline,
     sourceToUrl,
 } from "./citationUtils";
+export { FeedbackThumbs } from "./FeedbackThumbs";
 export { DARK_TEXT_STRONG, markdownAnswerSx } from "./markdownAnswerSx";
 export { markdownToBlocks } from "./markdownToBlocks";
 export { SourceChips } from "./SourceChips";

@@ -1279,6 +1279,8 @@ export const hi: DeepPartial<Messages> = {
             approve: "स्वीकार करें",
             reject: "अस्वीकार करें",
             copyAnswer: "जवाब कॉपी करें",
+            feedbackUp: "अच्छा जवाब",
+            feedbackDown: "सुधार चाहिए",
             retry: "फिर से पूछें",
             showLess: "कम दिखाएँ",
             moreCount: "+{count} और",

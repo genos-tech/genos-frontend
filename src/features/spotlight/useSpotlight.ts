@@ -39,6 +39,7 @@ import {
     fetchAgentSessionDetail,
     fetchAgentSessions,
     fetchAgentUsage,
+    submitAgentFeedback,
     type AgentSessionDetail,
     type AgentSessionSummary,
     type AgentUsage,
@@ -113,6 +114,8 @@ export interface UseSpotlightReturn {
     viewHistorySession: (sessionId: string) => void;
     backToHistoryList: () => void;
     closeHistory: () => void;
+    // F1 — persist a 👍/👎 rating for a finished turn (keyed by run_id).
+    submitFeedback: (runId: string, rating: number) => void;
 }
 
 const EMPTY_ASK_STATE: AskState = {
@@ -390,6 +393,7 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
                     answerSources: prev.answerSources,
                     toolEvents: prev.toolEvents,
                     askError: prev.askError,
+                    runId: prev.runId ?? null,
                 };
                 setTurns((prevTurns) => {
                     const next = [...prevTurns, snapshot];
@@ -429,13 +433,16 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
                         stillCurrent(prev) ? { ...prev, answer: prev.answer + text } : prev
                     );
                 },
-                onDone: (sessionId?: string) => {
+                onDone: (sessionId?: string, runId?: string) => {
                     setAsk((prev) =>
                         stillCurrent(prev)
                             ? {
                                   ...prev,
                                   isStreaming: false,
                                   ...(sessionId !== undefined ? { sessionId } : {}),
+                                  // run_id keys the 👍/👎 feedback POST (F1);
+                                  // without it the thumbs stay hidden.
+                                  ...(runId ? { runId } : {}),
                               }
                             : prev
                     );
@@ -718,6 +725,7 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
                         answerSources: prev.answerSources,
                         toolEvents: prev.toolEvents,
                         askError: prev.askError,
+                        runId: prev.runId ?? null,
                     };
                     setTurns((prevTurns) => {
                         const next = [...prevTurns, snapshot];
@@ -830,6 +838,20 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
         }));
     }, []);
 
+    // ---- Record 👍/👎 on a finished turn (F1). ----
+    // Fire-and-forget: the answer is already shown, so a feedback POST
+    // failing must never surface to the user. The FeedbackThumbs
+    // component owns the optimistic button state; this just persists
+    // the signal. Mirrors useAgentQA.submitFeedback so both agent
+    // surfaces feed the same AgentRunFeedback signal.
+    const submitFeedback = useCallback(
+        (runId: string, rating: number) => {
+            if (!runId || !accessToken) return;
+            void submitAgentFeedback({ runId, rating, accessToken });
+        },
+        [accessToken]
+    );
+
     return {
         isOpen,
         open,
@@ -857,5 +879,6 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
         viewHistorySession,
         backToHistoryList,
         closeHistory,
+        submitFeedback,
     };
 };
