@@ -9,10 +9,15 @@
 
 import { SpotlightResult } from "../spotlight/types";
 
-// Matches `[type:id...]` tokens emitted by the LLM. Anchored to one of
-// the four known entity prefixes so a free-form sentence with literal
-// brackets ("[reminder: ship by Friday]") doesn't trip the pattern.
-export const CITATION_PATTERN = /\[((?:chat|task|note|project):[^\]\s]+)\]/g;
+// Matches `[type:id...]` tokens emitted by the LLM. Anchored to the
+// known entity prefixes so a free-form sentence with literal brackets
+// ("[reminder: ship by Friday]") doesn't trip the pattern. This set
+// must cover every entity type the agent can inline-cite AND the
+// SourceChips row can render (see `_sourceIcon` in SpotlightOverlay):
+// chat / task / note / project / todo / milestone. A type missing here
+// renders its raw `[todo:...]` token in the prose instead of being
+// stripped into a chip — the exact bug this list guards against.
+export const CITATION_PATTERN = /\[((?:chat|task|note|project|todo|milestone):[^\]\s]+)\]/g;
 
 // Sentinel href scheme. ReactMarkdown's anchor override recognises this
 // prefix and renders a button that opens the entity instead of a
@@ -54,7 +59,7 @@ const titleAppearsBefore = (answer: string, offset: number, title: string): bool
 // or " ." artifact. Newlines are NOT consumed — they have markdown
 // significance (blank line = paragraph break) and we mustn't merge
 // paragraphs accidentally.
-const _CITATION_STRIP_PATTERN = /[ \t]?\[(?:chat|task|note|project):[^\]\s]+\]/g;
+const _CITATION_STRIP_PATTERN = /[ \t]?\[(?:chat|task|note|project|todo|milestone):[^\]\s]+\]/g;
 
 // Strip every inline `[type:id]` citation token from the answer.
 //
