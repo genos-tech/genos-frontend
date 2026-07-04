@@ -19,6 +19,16 @@ import { SpotlightResult } from "../spotlight/types";
 // stripped into a chip — the exact bug this list guards against.
 export const CITATION_PATTERN = /\[((?:chat|task|note|project|todo|milestone):[^\]\s]+)\]/g;
 
+// Natural-prose citation form (§4.6 D5): `[descriptive prose](type:id)`.
+// The model is taught to emit this so the visible link TEXT is a
+// grammatical part of the sentence (unlike the old title-injection form,
+// which read awkwardly). Group 1 = the prose label; group 2 = the
+// `type:id` token. Real markdown links (`[title](https://…)`) don't match
+// because the URL must start with a known entity prefix — they pass
+// through untouched and render as normal external links.
+export const CITATION_LINK_PATTERN =
+    /\[([^\]]+?)\]\(((?:chat|task|note|project|todo|milestone):[^)\s]+)\)/g;
+
 // Sentinel href scheme. ReactMarkdown's anchor override recognises this
 // prefix and renders a button that opens the entity instead of a
 // standard <a href>. Shared with SpotlightOverlay so a single anchor
@@ -40,108 +50,95 @@ export const buildSourcesById = (sources: SpotlightResult[]): Map<string, Spotli
     return m;
 };
 
-// Detect whether a source's title is already present in the answer
-// prose right before a citation token. Kept exported in case future
-// inline-citation rendering wants to suppress dupes — currently
-// unused since `rewriteCitations` strips all tokens unconditionally.
-//
-// Min-length guard avoids matching very short titles like "Bug"
-// which could coincidentally appear unrelated in the prose.
-const titleAppearsBefore = (answer: string, offset: number, title: string): boolean => {
-    if (title.length < 6) return false;
-    const window = answer.slice(Math.max(0, offset - 200), offset);
-    const norm = (s: string) => s.toLowerCase().replace(/[*_`]/g, "").replace(/\s+/g, " ").trim();
-    return norm(window).includes(norm(title));
-};
-
-// Token-with-preceding-space pattern. We consume one optional space
-// or tab before the bracket so stripping doesn't leave a double-space
-// or " ." artifact. Newlines are NOT consumed — they have markdown
-// significance (blank line = paragraph break) and we mustn't merge
-// paragraphs accidentally.
+// Token-with-preceding-space pattern for the BARE `[type:id]` form. We
+// consume one optional space or tab before the bracket so stripping
+// doesn't leave a double-space or " ." artifact. Newlines are NOT
+// consumed — they have markdown significance (blank line = paragraph
+// break) and we mustn't merge paragraphs accidentally.
 const _CITATION_STRIP_PATTERN = /[ \t]?\[(?:chat|task|note|project|todo|milestone):[^\]\s]+\]/g;
 
-// Strip every inline `[type:id]` citation token from the answer.
+// Rewrite the model's citations for rendering (§4.6 D5).
 //
-// History: an earlier version of this helper replaced each token with
-// a markdown link whose visible label was the cited entity's TITLE.
-// That gave the user a clickable affordance, but it read awkwardly:
-// the LLM tended to write `... per the perf-budget decision [task:42]`,
-// which then rendered as `... per the perf-budget decision Lighthouse
-// >= 95 task` — the title isn't a grammatical continuation of the
-// sentence, so the rendered prose felt broken.
+// Two forms coexist:
+//   1. Natural-prose link `[prose](type:id)` — the preferred form. We
+//      rewrite its URL to the `spotlight-citation:` sentinel so the
+//      ReactMarkdown `a` override (CitationAnchor / CitationLink) renders
+//      a click-to-preview citation whose visible text is the model's
+//      grammatical prose. Resolve-guard: only when `type:id` is a source
+//      we actually retrieved (`sourcesById`). An unresolved link degrades
+//      to its plain prose — no dead link, sentence stays readable. This
+//      is the MVP guard against a hallucinated link to a bogus id.
+//   2. Bare `[type:id]` token — the fallback the model emits when it
+//      can't phrase a grammatical link. We strip it; the source surfaces
+//      in the `SourceChips` row below the answer instead.
 //
-// New rule: strip the tokens. Every source that the model cited
-// surfaces in the `SourceChips` row below the answer instead, which
-// is now the single discovery surface. `sourcesNotInline` (below) is
-// updated to match — it returns every source rather than filtering
-// out the ones the model would have inline-linked.
-//
-// `sourcesById` is kept in the signature even though it's no longer
-// consulted, because every call site already passes it. Removing the
-// parameter would be a no-op rename — leave it for now in case the
-// inline path ever returns (e.g. footnote-style superscript links).
+// History: an earlier inline form injected the entity TITLE as the link
+// text, which read awkwardly ("… per the perf-budget decision Lighthouse
+// >= 95 task"). Letting the MODEL choose the prose (form 1) is what makes
+// inline attribution readable.
 export const rewriteCitations = (
     answer: string,
     sourcesById: Map<string, SpotlightResult>
 ): string => {
     if (!answer) return answer;
-    void sourcesById; // intentionally unused under the new chips-only rule
-    return answer.replace(_CITATION_STRIP_PATTERN, "");
+    // Pass 1: natural-prose links → sentinel links (resolved) or plain prose.
+    const withLinks = answer.replace(
+        new RegExp(CITATION_LINK_PATTERN.source, "g"),
+        (_full, label: string, token: string) =>
+            sourcesById.has(token) ? `[${label}](${CITATION_HREF_PREFIX}${token})` : label
+    );
+    // Pass 2: strip any remaining bare `[type:id]` tokens (chips fallback).
+    // The sentinel links from pass 1 aren't touched — their bracket text is
+    // prose, not a `type:` prefix, and the id lives in parens.
+    return withLinks.replace(_CITATION_STRIP_PATTERN, "");
 };
 
-// Extract the set of citation-token entity ids that appear inline in
-// the answer text — used to decide whether a given `SpotlightResult`
-// is already represented as a hyperlink (in which case it shouldn't
-// also render as a chip below) or "free-floating" (chip-worthy).
+// Extract the set of entity ids the answer renders INLINE as a
+// natural-prose hyperlink — i.e. those in the `[prose](type:id)` link
+// form (`CITATION_LINK_PATTERN`). These are already clickable in the
+// prose, so `sourcesNotInline` drops them from the chip row to avoid
+// duplication. Bare `[type:id]` tokens are intentionally NOT counted:
+// `rewriteCitations` strips them, so their source SHOULD surface as a
+// chip.
 //
-// Tokens are normalised to the "<type>:<rest>" form CITATION_PATTERN
-// captures: chat entity_ids that don't carry the leading "chat:"
-// prefix in the index still match here because the model emits the
-// prefixed token form.
-//
-// `sourcesById` is optional but should match what `rewriteCitations`
-// receives: when present, tokens that `rewriteCitations` would strip
-// (because the title duplicates nearby prose) are NOT counted here
-// either. That way the source flows to the chip row instead of being
-// orphaned — the user still has one clickable affordance.
+// `sourcesById`, when provided, applies the same resolve-guard as
+// `rewriteCitations`: an unresolved link degrades to plain prose (no
+// inline link), so its id must not be treated as inline here either.
 export const extractInlineCitedIds = (
     answer: string,
     sourcesById?: Map<string, SpotlightResult>
 ): Set<string> => {
     const ids = new Set<string>();
     if (!answer) return ids;
-    const re = new RegExp(CITATION_PATTERN.source, "g");
+    const re = new RegExp(CITATION_LINK_PATTERN.source, "g");
     let m: RegExpExecArray | null;
     while ((m = re.exec(answer)) !== null) {
-        const entityId = m[1];
-        if (sourcesById) {
-            const source = sourcesById.get(entityId);
-            const rawLabel = (source?.title || "").trim();
-            if (rawLabel && titleAppearsBefore(answer, m.index, rawLabel)) {
-                // Treated as "not inline" so the chip row picks it up.
-                continue;
-            }
+        const token = m[2];
+        if (!sourcesById || sourcesById.has(token)) {
+            ids.add(token);
         }
-        ids.add(entityId);
     }
     return ids;
 };
 
-// Returns the sources to render as chips beneath the answer.
-//
-// Under the chips-only rule (see `rewriteCitations`) every cited
-// source flows here — no inline-link filtering. The function name is
-// retained because every call site already imports it, and the answer
-// argument is kept so the signature is stable if a future revision
-// wants to apply different filtering. For now the body is just
-// "return all sources".
+// Returns the sources to render as chips beneath the answer: every
+// source EXCEPT those already linked inline in the prose (§4.6 —
+// inline links for cited claims, chips as the complement/fallback for
+// uncited or bare-token sources). Reuses `buildSourcesById`'s
+// normalisation so a chat source whose `entity_id` lacks the "chat:"
+// prefix still matches the prefixed token form the model emits.
 export const sourcesNotInline = (
     answer: string,
     sources: SpotlightResult[]
 ): SpotlightResult[] => {
-    void answer; // unused under the chips-only rule
-    return sources;
+    const inline = extractInlineCitedIds(answer, buildSourcesById(sources));
+    if (inline.size === 0) return sources;
+    return sources.filter((s) => {
+        const tokenKey = s.entity_id.startsWith(`${s.entity_type}:`)
+            ? s.entity_id
+            : `${s.entity_type}:${s.entity_id}`;
+        return !inline.has(tokenKey);
+    });
 };
 
 // Build a URL that opens the entity. Used by the saved-note serialiser
