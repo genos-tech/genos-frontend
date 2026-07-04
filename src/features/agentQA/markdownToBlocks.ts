@@ -19,7 +19,7 @@
 import { PartialBlock } from "@blocknote/core";
 
 import { SpotlightResult } from "../spotlight/types";
-import { CITATION_PATTERN, sourceToUrl } from "./citationUtils";
+import { CITATION_LINK_PATTERN, CITATION_PATTERN, sourceToUrl } from "./citationUtils";
 
 const HEADING_PROPS = {
     textColor: "default",
@@ -52,28 +52,47 @@ type InlineNode = ({ kind: "text" } & TextRun) | LinkRun;
 // nodes. Recognises:
 //   - `**bold**`  /  `__bold__`
 //   - `*italic*`  /  `_italic_`
-//   - `[type:...]` citation tokens (resolved via sourcesById → link)
+//   - `[prose](type:id)` natural-prose citation links (§4.6) → link whose
+//     text is the model's prose, href resolved via `sourceToUrl`
+//   - bare `[type:id]` citation tokens (fallback) → link whose text is the
+//     source title
 const tokenizeInline = (text: string, sourcesById: Map<string, SpotlightResult>): InlineNode[] => {
     if (!text) return [];
 
     // Pass 1: extract citation tokens, replacing them with link nodes.
     // Pass 2 (recursive) handles bold/italic inside non-citation text.
+    // Matches BOTH citation forms in one sweep. Link form groups:
+    // 1=prose, 2=token; bare form group: 3=token.
     const out: InlineNode[] = [];
     let cursor = 0;
-    const re = new RegExp(CITATION_PATTERN.source, "g");
+    const re = new RegExp(`${CITATION_LINK_PATTERN.source}|${CITATION_PATTERN.source}`, "g");
     let m: RegExpExecArray | null;
     while ((m = re.exec(text)) !== null) {
         if (m.index > cursor) {
             out.push(...tokenizeFormatting(text.slice(cursor, m.index)));
         }
-        const entityId = m[1];
+        const isLinkForm = m[2] !== undefined;
+        const entityId = isLinkForm ? m[2] : m[3];
         const source = sourcesById.get(entityId);
-        if (source) {
+        if (isLinkForm) {
+            // Natural-prose link: the visible text is the model's grammatical
+            // prose (m[1]). Resolve to a real deep-link; if unresolved, keep
+            // the prose as plain text (no dead link) — matches the render-side
+            // resolve-guard in `rewriteCitations`.
+            if (source) {
+                out.push({
+                    kind: "link",
+                    text: m[1],
+                    href: sourceToUrl(source) || `#${entityId}`,
+                });
+            } else {
+                out.push(...tokenizeFormatting(m[1]));
+            }
+        } else if (source) {
             const label = (source.title || "").trim() || entityId;
-            const href = sourceToUrl(source) || `#${entityId}`;
-            out.push({ kind: "link", text: label, href });
+            out.push({ kind: "link", text: label, href: sourceToUrl(source) || `#${entityId}` });
         } else {
-            // Unresolved citation — keep the raw token as plain text so
+            // Unresolved bare token — keep the raw token as plain text so
             // the user sees what the model intended.
             out.push(...tokenizeFormatting(m[0]));
         }

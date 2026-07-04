@@ -65,6 +65,7 @@ import {
     DARK_TEXT_STRONG,
     markdownAnswerSx,
     rewriteCitations,
+    sourcesNotInline,
     ToolProgressList,
     type AskState,
     type CompletedTurn,
@@ -1200,6 +1201,15 @@ const TurnViewInner = ({
         [answer, sourcesById]
     );
 
+    // Chips complement the inline links: show only sources the answer
+    // didn't already link inline in prose (§4.6). `sourcesById` above is
+    // still built from ALL sources so inline links resolve; only the chip
+    // row is filtered.
+    const chipSources = useMemo(
+        () => sourcesNotInline(answer, answerSources),
+        [answer, answerSources]
+    );
+
     const handleCopy = useCallback(() => {
         if (!answer) return;
         navigator.clipboard
@@ -1344,7 +1354,7 @@ const TurnViewInner = ({
                         <Box
                             sx={{
                                 ...markdownAnswerSx(isDark),
-                                mb: answerSources.length > 0 ? 0.75 : 0,
+                                mb: chipSources.length > 0 ? 0.75 : 0,
                             }}
                         >
                             <ReactMarkdown
@@ -1393,12 +1403,12 @@ const TurnViewInner = ({
                         </Typography>
                     )}
 
-                    {answerSources.length > 0 &&
+                    {chipSources.length > 0 &&
                         (() => {
                             const visible = showAllSources
-                                ? answerSources
-                                : answerSources.slice(0, CHIPS_INITIAL);
-                            const hiddenCount = answerSources.length - CHIPS_INITIAL;
+                                ? chipSources
+                                : chipSources.slice(0, CHIPS_INITIAL);
+                            const hiddenCount = chipSources.length - CHIPS_INITIAL;
                             return (
                                 <Box
                                     sx={{
@@ -1455,7 +1465,7 @@ const TurnViewInner = ({
                                             {fmt(ts.actions.moreCount, { count: hiddenCount })}
                                         </Button>
                                     )}
-                                    {showAllSources && answerSources.length > CHIPS_INITIAL && (
+                                    {showAllSources && chipSources.length > CHIPS_INITIAL && (
                                         <Button
                                             color="neutral"
                                             size="sm"
