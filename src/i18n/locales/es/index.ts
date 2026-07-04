@@ -1276,6 +1276,8 @@ export const es: DeepPartial<Messages> = {
             approve: "Aprobar",
             reject: "Rechazar",
             copyAnswer: "Copiar respuesta",
+            feedbackUp: "Buena respuesta",
+            feedbackDown: "Necesita mejorar",
             retry: "Volver a preguntar",
             showLess: "Mostrar menos",
             moreCount: "+{count} más",

@@ -1256,6 +1256,8 @@ export const zh: DeepPartial<Messages> = {
             approve: "通过",
             reject: "拒绝",
             copyAnswer: "复制答案",
+            feedbackUp: "回答很好",
+            feedbackDown: "有待改进",
             retry: "再问一次",
             showLess: "收起",
             moreCount: "+{count} 个",

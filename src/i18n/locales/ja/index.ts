@@ -1279,6 +1279,8 @@ export const ja: DeepPartial<Messages> = {
             approve: "承認",
             reject: "却下",
             copyAnswer: "回答をコピー",
+            feedbackUp: "良い回答",
+            feedbackDown: "要改善",
             retry: "もう一度質問",
             showLess: "折りたたむ",
             moreCount: "他 {count} 件",

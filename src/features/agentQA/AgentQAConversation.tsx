@@ -11,8 +11,6 @@ import { useMemo, useState } from "react";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import ReplayRoundedIcon from "@mui/icons-material/ReplayRounded";
-import ThumbDownAltRoundedIcon from "@mui/icons-material/ThumbDownAltRounded";
-import ThumbUpAltRoundedIcon from "@mui/icons-material/ThumbUpAltRounded";
 import { Box, IconButton, Stack, Typography } from "@mui/joy";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -21,6 +19,7 @@ import { SpotlightResult } from "../spotlight/types";
 import { ApprovalCard } from "./ApprovalCard";
 import { agentQAUrlTransform, CitationAnchor } from "./CitationAnchor";
 import { buildSourcesById, rewriteCitations, sourcesNotInline } from "./citationUtils";
+import { FeedbackThumbs } from "./FeedbackThumbs";
 import { markdownAnswerSx } from "./markdownAnswerSx";
 import { SourceChips } from "./SourceChips";
 import { ToolProgressList } from "./ToolProgressList";
@@ -124,15 +123,6 @@ const TurnRow = ({
     onFeedback?: (runId: string, rating: number) => void;
 }) => {
     const [copied, setCopied] = useState(false);
-    // Optimistic local vote (0 = none, 1 = 👍, -1 = 👎). Re-clicking the
-    // active thumb clears it (rating 0). The POST is fire-and-forget.
-    const [rating, setRating] = useState(0);
-    const handleFeedback = (next: number) => {
-        if (!turn.runId || !onFeedback) return;
-        const applied = rating === next ? 0 : next;
-        setRating(applied);
-        onFeedback(turn.runId, applied);
-    };
     const showFeedback = Boolean(turn.runId) && Boolean(onFeedback) && !turn.askError;
     const handleCopy = () => {
         if (!turn.answer) return;
@@ -219,28 +209,14 @@ const TurnRow = ({
                     }}
                 >
                     {showFeedback && (
-                        <>
-                            <IconButton
-                                color={rating === 1 ? "success" : "neutral"}
-                                size="sm"
-                                sx={{ minWidth: 0, p: "3px" }}
-                                title={labels.actions.feedbackUp ?? "Good answer"}
-                                variant={rating === 1 ? "soft" : "plain"}
-                                onClick={() => handleFeedback(1)}
-                            >
-                                <ThumbUpAltRoundedIcon sx={{ fontSize: 14 }} />
-                            </IconButton>
-                            <IconButton
-                                color={rating === -1 ? "danger" : "neutral"}
-                                size="sm"
-                                sx={{ minWidth: 0, p: "3px" }}
-                                title={labels.actions.feedbackDown ?? "Needs work"}
-                                variant={rating === -1 ? "soft" : "plain"}
-                                onClick={() => handleFeedback(-1)}
-                            >
-                                <ThumbDownAltRoundedIcon sx={{ fontSize: 14 }} />
-                            </IconButton>
-                        </>
+                        <FeedbackThumbs
+                            labels={{
+                                up: labels.actions.feedbackUp,
+                                down: labels.actions.feedbackDown,
+                            }}
+                            runId={turn.runId}
+                            onFeedback={onFeedback}
+                        />
                     )}
                     {showCopy && (
                         <IconButton

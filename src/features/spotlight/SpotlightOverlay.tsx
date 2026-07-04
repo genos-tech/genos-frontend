@@ -63,6 +63,7 @@ import {
     ApprovalCard,
     CITATION_HREF_PREFIX,
     DARK_TEXT_STRONG,
+    FeedbackThumbs,
     markdownAnswerSx,
     rewriteCitations,
     sourcesNotInline,
@@ -100,6 +101,10 @@ interface Props {
     onReject: () => void;
     onCancel: () => void;
     onNewConversation: () => void;
+    // F1 — persist a 👍/👎 rating for a finished turn (keyed by the
+    // run_id captured from the `done` stream event). Optional so the
+    // overlay renders fine for callers that don't wire feedback.
+    onFeedback?: (runId: string, rating: number) => void;
     ask: AskState;
     turns: CompletedTurn[];
     dailyUsage: AgentUsage | null;
@@ -147,6 +152,7 @@ export const SpotlightOverlay = ({
     onReject,
     onCancel,
     onNewConversation,
+    onFeedback,
     ask,
     turns,
     dailyUsage,
@@ -606,6 +612,7 @@ export const SpotlightOverlay = ({
                     onAsk={onAsk}
                     onBackToHistoryList={backToHistoryList}
                     onCloseHistory={closeHistory}
+                    onFeedback={onFeedback}
                     onNewConversation={onNewConversation}
                     onPreview={onPreview}
                     onReject={onReject}
@@ -729,6 +736,7 @@ interface ConversationPanelProps {
     onReject: () => void;
     onNewConversation: () => void;
     onAsk: (overrideQuery?: string) => void;
+    onFeedback?: (runId: string, rating: number) => void;
     askDisabled: boolean;
     ts: SpotlightMessages;
     // History panel — when historyMode !== "closed" the panel renders
@@ -768,6 +776,7 @@ const ConversationPanel = memo(
         onReject,
         onNewConversation,
         onAsk,
+        onFeedback,
         askDisabled,
         ts,
         historyMode,
@@ -988,6 +997,7 @@ const ConversationPanel = memo(
                         isDark={isDark}
                         isLoading={historyIsLoading}
                         ts={ts}
+                        onFeedback={onFeedback}
                         onPreview={onPreview}
                     />
                 )}
@@ -1004,9 +1014,11 @@ const ConversationPanel = memo(
                                 askError={turn.askError}
                                 isCurrent={false}
                                 isDark={isDark}
+                                runId={turn.runId}
                                 toolEvents={turn.toolEvents}
                                 ts={ts}
                                 onAsk={onAsk}
+                                onFeedback={onFeedback}
                                 onPreview={onPreview}
                                 onSelect={onSelect}
                             />
@@ -1022,11 +1034,13 @@ const ConversationPanel = memo(
                                 isDark={isDark}
                                 isStreaming={ask.isStreaming}
                                 pendingApproval={ask.pendingApproval}
+                                runId={ask.runId}
                                 toolEvents={ask.toolEvents}
                                 ts={ts}
                                 isCurrent
                                 onApprove={onApprove}
                                 onAsk={onAsk}
+                                onFeedback={onFeedback}
                                 onPreview={onPreview}
                                 onReject={onReject}
                                 onSelect={onSelect}
@@ -1069,6 +1083,12 @@ interface TurnViewProps {
     // streams in a new `answer_delta`.
     onAsk?: (overrideQuery?: string) => void;
     askDisabled?: boolean;
+    // F1 — the turn's AgentRun id (from the `done` event) + the
+    // feedback submitter. Both optional: error/cancelled turns and
+    // turns persisted before run_id capture have no id, and the
+    // thumbs simply don't render.
+    runId?: string | null;
+    onFeedback?: (runId: string, rating: number) => void;
     ts: SpotlightMessages;
 }
 
@@ -1164,6 +1184,8 @@ const TurnViewInner = ({
     onReject,
     onAsk,
     askDisabled,
+    runId,
+    onFeedback,
     ts,
 }: TurnViewProps) => {
     const [copied, setCopied] = useState(false);
@@ -1228,7 +1250,10 @@ const TurnViewInner = ({
     // Show retry for past turns (always) and current turn when there's an error.
     const showCopy = Boolean(answer);
     const showRetry = Boolean(askedQuery) && (!isCurrent || Boolean(askError));
-    const showActions = showCopy || showRetry;
+    // Thumbs (F1) need a run_id to key the POST, and only make sense on
+    // a finished, non-error answer.
+    const showFeedback = Boolean(runId) && Boolean(onFeedback) && !askError && !isStreaming;
+    const showActions = showCopy || showRetry || showFeedback;
 
     return (
         <Box
@@ -1488,12 +1513,22 @@ const TurnViewInner = ({
                 </Box>
             </Box>
 
-            {/* Per-turn action bar: Copy + Retry — fades in on hover */}
+            {/* Per-turn action bar: 👍/👎 + Copy + Retry — fades in on hover */}
             {showActions && (
                 <Box
                     className="turn-actions"
                     sx={{ display: "flex", justifyContent: "flex-end", gap: 0.25, mt: 0.25 }}
                 >
+                    {showFeedback && (
+                        <FeedbackThumbs
+                            runId={runId}
+                            labels={{
+                                up: ts.actions.feedbackUp,
+                                down: ts.actions.feedbackDown,
+                            }}
+                            onFeedback={onFeedback}
+                        />
+                    )}
                     {showCopy && (
                         <IconButton
                             color={copied ? "success" : "neutral"}
@@ -1746,6 +1781,9 @@ interface HistorySessionDetailViewProps {
     // user can deep-link from history into the actual entity. Click
     // semantics match `CitationLink` → `onPreview(source)`.
     onPreview: (s: SpotlightResult) => void;
+    // F1 — archived turns carry `run_id` from the server, so past
+    // answers are rateable too (the upsert makes re-votes harmless).
+    onFeedback?: (runId: string, rating: number) => void;
 }
 
 const HistorySessionDetailView = ({
@@ -1754,6 +1792,7 @@ const HistorySessionDetailView = ({
     isDark,
     ts,
     onPreview,
+    onFeedback,
 }: HistorySessionDetailViewProps) => {
     if (isLoading || detail === null) {
         if (isLoading) {
@@ -1806,6 +1845,7 @@ const HistorySessionDetailView = ({
                     isDark={isDark}
                     ts={ts}
                     turn={turn}
+                    onFeedback={onFeedback}
                     onPreview={onPreview}
                 />
             ))}
@@ -1822,9 +1862,16 @@ interface HistoryArchiveTurnProps {
     isDark: boolean;
     ts: SpotlightMessages;
     onPreview: (s: SpotlightResult) => void;
+    onFeedback?: (runId: string, rating: number) => void;
 }
 
-const HistoryArchiveTurn = ({ turn, isDark, ts, onPreview }: HistoryArchiveTurnProps) => {
+const HistoryArchiveTurn = ({
+    turn,
+    isDark,
+    ts,
+    onPreview,
+    onFeedback,
+}: HistoryArchiveTurnProps) => {
     // Same lookup-table shape as TurnView's `sourcesById` so citation
     // tokens like `[chat:dm:9:thread:4]` (whose entity_id ships
     // without the `chat:` prefix from the chunker) resolve.
@@ -1936,6 +1983,23 @@ const HistoryArchiveTurn = ({ turn, isDark, ts, onPreview }: HistoryArchiveTurnP
                     )}
                 </Box>
             </Box>
+            {/* F1 — rate an archived answer. The archive doesn't know a
+                prior vote (the payload has no rating field yet), so the
+                thumbs start unrated; the backend upsert makes a re-vote
+                harmless. Hidden for error turns, which have no answer
+                worth rating. */}
+            {!turn.error && Boolean(onFeedback) && (
+                <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 0.25 }}>
+                    <FeedbackThumbs
+                        runId={turn.run_id}
+                        labels={{
+                            up: ts.actions.feedbackUp,
+                            down: ts.actions.feedbackDown,
+                        }}
+                        onFeedback={onFeedback}
+                    />
+                </Box>
+            )}
         </Box>
     );
 };
