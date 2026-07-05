@@ -80,3 +80,57 @@ jobs:
             - name: Prettier
               if: always() # report both, even if eslint failed
               run: npx prettier --check .
+
+    # Build + deploy to GCP Cloud Run on merge to main. Gated on frontend-test
+    # (the required check) so a red test never ships. GCP has no other CD for
+    # this service, so without this a merged fix stays invisible on GCP until a
+    # manual rebuild (this is the drift that hid the findTeam fix). Railway is
+    # unaffected — it auto-deploys from its own git integration. Keyless via WIF
+    # (needs repo secrets GCP_WIF_PROVIDER + GCP_DEPLOY_SA, same as genos-api).
+    #
+    # COST SWITCH: deploys only when the repo/org variable DEPLOY_TO_GCP is
+    # "true". Unset (the default) = OFF, so merges are Railway-only and never
+    # touch GCP. NOTE: this only stops CI from shipping new revisions — it does
+    # NOT reduce the GCP bill (Cloud SQL / OpenSearch VM / Redis / warm Cloud Run
+    # keep billing regardless). To actually cut cost, pause or tear down the infra
+    # (see genos-docs operations/ENVIRONMENTS.md "Going Railway-only (cost)").
+    deploy:
+        name: deploy to Cloud Run
+        needs: [frontend-test]
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push' && vars.DEPLOY_TO_GCP == 'true'
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+            id-token: write # mint the WIF OIDC token
+        env:
+            GCP_PROJECT: amplified-album-496413-t2
+            GCP_REGION: asia-northeast1
+            AR: asia-northeast1-docker.pkg.dev/amplified-album-496413-t2/genos
+        steps:
+            - uses: actions/checkout@v4
+            - name: Authenticate to Google Cloud (keyless WIF)
+              uses: google-github-actions/auth@v2
+              with:
+                  workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+                  service_account: ${{ secrets.GCP_DEPLOY_SA }}
+            - uses: google-github-actions/setup-gcloud@v2
+            # VITE_* is baked into the bundle at BUILD time (src/vite-env.d.ts);
+            # these are the GCP prod URLs. If the GCP domains change, edit here.
+            # (No VAPID key: web push isn't configured on the GCP api.)
+            - name: Build + push frontend image (amd64 — Cloud Run requires it)
+              run: |
+                  gcloud auth configure-docker "$GCP_REGION-docker.pkg.dev" --quiet
+                  docker build --platform linux/amd64 -f Dockerfile.cloudrun \
+                      --build-arg VITE_API_BASE_URL=https://api.gcp.genosai.dev/api/v2 \
+                      --build-arg VITE_DJANGO_URL=https://api.gcp.genosai.dev \
+                      --build-arg VITE_MEDIA_ROOT_DJANGO=https://api.gcp.genosai.dev/media \
+                      --build-arg VITE_WS_BASE_URL=https://ws.gcp.genosai.dev \
+                      --build-arg VITE_COLLAB_URL=wss://collab.gcp.genosai.dev \
+                      -t "$AR/frontend:${GITHUB_SHA}" -t "$AR/frontend:latest" .
+                  docker push "$AR/frontend:${GITHUB_SHA}"
+                  docker push "$AR/frontend:latest"
+            - name: Deploy to Cloud Run
+              run: |
+                  gcloud run deploy genos-frontend \
+                      --project "$GCP_PROJECT" --region "$GCP_REGION" \
+                      --image "$AR/frontend:${GITHUB_SHA}"
