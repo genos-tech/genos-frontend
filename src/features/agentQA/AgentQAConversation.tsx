@@ -143,12 +143,12 @@ const TurnRow = ({
         () => rewriteCitations(turn.answer || "(no answer)", sourcesById),
         [turn.answer, sourcesById]
     );
-    // Chip row = STRICTLY the sources this answer cited via a bare
-    // `[type:id]` token. Inline-linked citations live in the prose; uncited
-    // retrieved sources are dropped as noise. Computed against the turn's
-    // own sources rather than the cross-turn `sourcesById` because chips
-    // should reflect "what this answer referenced", not the running
-    // session total.
+    // Chip row = the sources this answer cited, in either form (inline
+    // link or bare token); uncited retrieved sources are dropped as noise.
+    // An inline-cited source appears both in the prose and here. Computed
+    // against the turn's own sources rather than the cross-turn
+    // `sourcesById` because chips should reflect "what this answer
+    // referenced", not the running session total.
     const chipSources = useMemo(
         () => citedChipSources(turn.answer || "", turn.answerSources || []),
         [turn.answer, turn.answerSources]

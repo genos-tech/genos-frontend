@@ -92,9 +92,11 @@ interface Props {
     isLoading: boolean;
     error: string | null;
     onSelect: (r: SpotlightResult) => void;
-    // Inline citations in the agent answer open a quick-look preview
-    // (existing UrlLinkModal) on top of Spotlight rather than navigating
-    // away. Source chips and result rows keep using `onSelect`.
+    // Inline citations AND source chips in the agent answer open a
+    // quick-look preview (existing UrlLinkModal) on top of Spotlight
+    // rather than navigating away — the user keeps their conversation.
+    // (`handleSpotlightPreview` falls back to `onSelect` navigation for
+    // kinds with no preview modal.) Search result rows keep `onSelect`.
     onPreview: (r: SpotlightResult) => void;
     onAsk: (overrideQuery?: string) => void;
     onApprove: () => void;
@@ -616,7 +618,6 @@ export const SpotlightOverlay = ({
                     onNewConversation={onNewConversation}
                     onPreview={onPreview}
                     onReject={onReject}
-                    onSelect={onSelect}
                     onViewHistorySession={viewHistorySession}
                 />
 
@@ -730,7 +731,6 @@ interface ConversationPanelProps {
     ask: AskState;
     turns: CompletedTurn[];
     isDark: boolean;
-    onSelect: (r: SpotlightResult) => void;
     onPreview: (r: SpotlightResult) => void;
     onApprove: () => void;
     onReject: () => void;
@@ -770,7 +770,6 @@ const ConversationPanel = memo(
         ask,
         turns,
         isDark,
-        onSelect,
         onPreview,
         onApprove,
         onReject,
@@ -1020,7 +1019,6 @@ const ConversationPanel = memo(
                                 onAsk={onAsk}
                                 onFeedback={onFeedback}
                                 onPreview={onPreview}
-                                onSelect={onSelect}
                             />
                         ))}
 
@@ -1043,7 +1041,6 @@ const ConversationPanel = memo(
                                 onFeedback={onFeedback}
                                 onPreview={onPreview}
                                 onReject={onReject}
-                                onSelect={onSelect}
                             />
                         )}
                     </>
@@ -1072,7 +1069,8 @@ interface TurnViewProps {
     isStreaming?: boolean;
     pendingApproval?: PendingApprovalPayload | null;
     isDark: boolean;
-    onSelect: (r: SpotlightResult) => void;
+    // Chips and inline citations share the preview handler — quick-look
+    // modal on top of Spotlight, navigate fallback (see Props.onPreview).
     onPreview: (r: SpotlightResult) => void;
     onApprove?: () => void;
     onReject?: () => void;
@@ -1178,7 +1176,6 @@ const TurnViewInner = ({
     isStreaming,
     pendingApproval,
     isDark,
-    onSelect,
     onPreview,
     onApprove,
     onReject,
@@ -1223,11 +1220,11 @@ const TurnViewInner = ({
         [answer, sourcesById]
     );
 
-    // Chip row = STRICTLY the sources the answer cited via a bare
-    // `[type:id]` token (§4.6). Inline-linked sources render in the prose;
-    // uncited retrieved sources are dropped as noise. `sourcesById` above
-    // is still built from ALL sources so inline links still resolve — only
-    // the chip row is narrowed to cited-only.
+    // Chip row = the sources the answer cited, in either form (inline
+    // `[prose](type:id)` link or bare `[type:id]` token); uncited retrieved
+    // sources are dropped as noise (§4.6). An inline-cited source appears
+    // both in the prose and here. `sourcesById` above is still built from
+    // ALL sources so inline links still resolve.
     const chipSources = useMemo(
         () => citedChipSources(answer, answerSources),
         [answer, answerSources]
@@ -1466,7 +1463,7 @@ const TurnViewInner = ({
                                                     transform: "translateY(-1px)",
                                                 },
                                             }}
-                                            onClick={() => onSelect(s)}
+                                            onClick={() => onPreview(s)}
                                         >
                                             <HighlightedText
                                                 extraTerms={s.matched_terms}
