@@ -55,7 +55,65 @@ export const buildSourcesById = (sources: SpotlightResult[]): Map<string, Spotli
 // doesn't leave a double-space or " ." artifact. Newlines are NOT
 // consumed — they have markdown significance (blank line = paragraph
 // break) and we mustn't merge paragraphs accidentally.
-const _CITATION_STRIP_PATTERN = /[ \t]?\[(?:chat|task|note|project|todo|milestone):[^\]\s]+\]/g;
+//
+// The `(?!\()` lookahead keeps this from matching the LABEL of a link
+// whose label is itself a raw token — weak models emit `[token](token)`,
+// which pass 1 rewrites to `[token](spotlight-citation:token)`; stripping
+// the `[token]` label out of that would shatter the link and leak the
+// naked `(spotlight-citation:…)` URL as visible text (the exact bug seen
+// with gemini-flash).
+const _CITATION_STRIP_PATTERN =
+    /[ \t]?\[(?:chat|task|note|project|todo|milestone):[^\]\s]+\](?!\()/g;
+
+// A link LABEL that is itself a raw citation token (`[task:42](task:42)`)
+// — the tell of a model that ignored the natural-prose instruction. Such
+// labels are swapped for the source title (resolved) or dropped
+// (unresolved) instead of showing the user a raw id/UUID.
+const _RAW_TOKEN_LABEL = /^(?:chat|task|note|project|todo|milestone):\S+$/;
+
+// Resolve a citation token to a retrieved source.
+//
+// Exact match for every entity type — the strict resolve-guard against
+// hallucinated ids stays intact (a `task:99` we never retrieved must NOT
+// fuzzy-match `task:9`).
+//
+// CHAT tokens additionally get structural recovery, because their ids
+// nest (`chat:<label>:<chat_id>[:thread:<id>]`) and weak models mangle
+// the tail — gemini-flash emits `chat:dm:<id>:msg:<uuid>` (a per-message
+// id copied from tool results, not part of the citation vocabulary).
+// Working from the longest base down to `chat:<label>:<chat_id>` (never
+// shorter), try the exact key, then a retrieved key that EXTENDS the
+// base (`chat:dm:X` recovers to the retrieved `chat:dm:X:thread:T`; if
+// several threads of the same chat were retrieved, the first in source
+// order — the backend's ranked order — wins). Both directions stay
+// inside the same real chat container, so the worst miss is opening a
+// sibling thread — strictly better than dropping the citation.
+//
+// Returns the canonical map key alongside the source so callers rewrite
+// hrefs/chip filters in the form the anchor components look up.
+export const resolveCitationToken = (
+    token: string,
+    sourcesById: Map<string, SpotlightResult>
+): { key: string; source: SpotlightResult } | null => {
+    const exact = sourcesById.get(token);
+    if (exact) return { key: token, source: exact };
+    if (!token.startsWith("chat:")) return null;
+    const parts = token.split(":");
+    // Need at least `chat:<label>:<chat_id>` to anchor recovery.
+    if (parts.length < 3) return null;
+    for (let n = parts.length; n >= 3; n--) {
+        const base = parts.slice(0, n).join(":");
+        if (n < parts.length) {
+            const hit = sourcesById.get(base);
+            if (hit) return { key: base, source: hit };
+        }
+        const prefix = `${base}:`;
+        for (const [k, s] of sourcesById) {
+            if (k.startsWith(prefix)) return { key: k, source: s };
+        }
+    }
+    return null;
+};
 
 // Rewrite the model's citations for rendering (§4.6 D5).
 //
@@ -65,17 +123,28 @@ const _CITATION_STRIP_PATTERN = /[ \t]?\[(?:chat|task|note|project|todo|mileston
 //      ReactMarkdown `a` override (CitationAnchor / CitationLink) renders
 //      a click-to-preview citation whose visible text is the model's
 //      grammatical prose. Resolve-guard: only when `type:id` is a source
-//      we actually retrieved (`sourcesById`). An unresolved link degrades
-//      to its plain prose — no dead link, sentence stays readable. This
-//      is the MVP guard against a hallucinated link to a bogus id.
+//      we actually retrieved (`sourcesById`, with `resolveCitationToken`'s
+//      trim-fallback for model-invented suffixes like `:msg:<uuid>`). An
+//      unresolved link degrades to its plain prose — no dead link, the
+//      sentence stays readable. This is the MVP guard against a
+//      hallucinated link to a bogus id.
 //   2. Bare `[type:id]` token — the fallback the model emits when it
 //      can't phrase a grammatical link. We strip it; the source surfaces
 //      in the `SourceChips` row below the answer instead.
 //
+// Weak-model hardening (seen with gemini-flash; cheap models ignore the
+// natural-prose instruction): a link whose LABEL is itself a raw token
+// (`[task:42](task:42)`) renders with the source's title instead of the
+// id — and if the token resolves to nothing, the whole link is dropped
+// rather than leaking an id/UUID into the prose. Whatever the model
+// emits, the reader never sees a raw token.
+//
 // History: an earlier inline form injected the entity TITLE as the link
-// text, which read awkwardly ("… per the perf-budget decision Lighthouse
-// >= 95 task"). Letting the MODEL choose the prose (form 1) is what makes
-// inline attribution readable.
+// text unconditionally, which read awkwardly ("… per the perf-budget
+// decision Lighthouse >= 95 task"). Letting the MODEL choose the prose
+// (form 1) is what makes inline attribution readable — the title swap
+// above applies ONLY when the model's label is a raw token, where the
+// title is strictly better than the id.
 export const rewriteCitations = (
     answer: string,
     sourcesById: Map<string, SpotlightResult>
@@ -84,12 +153,28 @@ export const rewriteCitations = (
     // Pass 1: natural-prose links → sentinel links (resolved) or plain prose.
     const withLinks = answer.replace(
         new RegExp(CITATION_LINK_PATTERN.source, "g"),
-        (_full, label: string, token: string) =>
-            sourcesById.has(token) ? `[${label}](${CITATION_HREF_PREFIX}${token})` : label
+        (_full, label: string, token: string) => {
+            const hit = resolveCitationToken(token, sourcesById);
+            const rawTokenLabel = _RAW_TOKEN_LABEL.test(label.trim());
+            if (!hit) {
+                // Unresolved: prose labels survive as prose; raw-token
+                // labels are dropped entirely.
+                return rawTokenLabel ? "" : label;
+            }
+            const displayLabel = rawTokenLabel
+                ? // Strip brackets from injected titles so they can't
+                  // break the markdown link we're building.
+                  (hit.source.title || "").replace(/[[\]]/g, "").trim() ||
+                  entitySubtitle(hit.source)
+                : label;
+            // Canonical key in the href so the anchor components'
+            // exact-match lookup resolves suffix-trimmed tokens too.
+            return `[${displayLabel}](${CITATION_HREF_PREFIX}${hit.key})`;
+        }
     );
     // Pass 2: strip any remaining bare `[type:id]` tokens (chips fallback).
-    // The sentinel links from pass 1 aren't touched — their bracket text is
-    // prose, not a `type:` prefix, and the id lives in parens.
+    // The sentinel links from pass 1 aren't touched — their id lives in
+    // parens, and the `(?!\()` lookahead protects raw-token labels.
     return withLinks.replace(_CITATION_STRIP_PATTERN, "");
 };
 
@@ -100,8 +185,10 @@ export const rewriteCitations = (
 // cited inline appears both in the prose and in the chip row.
 //
 // `sourcesById`, when provided, applies the same resolve-guard as
-// `rewriteCitations`: an unresolved link degrades to plain prose (no
-// inline link), so its id must not be treated as inline here either.
+// `rewriteCitations` (including the suffix-trim fallback): an unresolved
+// link degrades to plain prose (no inline link), so its id must not be
+// treated as inline here either. Resolved ids are returned in canonical
+// key form (what `buildSourcesById` maps), not the raw emitted token.
 export const extractInlineCitedIds = (
     answer: string,
     sourcesById?: Map<string, SpotlightResult>
@@ -112,9 +199,12 @@ export const extractInlineCitedIds = (
     let m: RegExpExecArray | null;
     while ((m = re.exec(answer)) !== null) {
         const token = m[2];
-        if (!sourcesById || sourcesById.has(token)) {
+        if (!sourcesById) {
             ids.add(token);
+            continue;
         }
+        const hit = resolveCitationToken(token, sourcesById);
+        if (hit) ids.add(hit.key);
     }
     return ids;
 };
@@ -164,18 +254,25 @@ export const citedChipSources = (
     answer: string,
     sources: SpotlightResult[]
 ): SpotlightResult[] => {
-    // Union of both citation forms. `extractInlineCitedIds` is called
-    // without a resolve-guard: we then keep only sources that are actually
-    // in `sources`, so an inline link to an id we didn't retrieve matches
-    // nothing anyway.
-    const inline = extractInlineCitedIds(answer);
-    const bare = extractBareCitedIds(answer);
-    if (inline.size === 0 && bare.size === 0) return [];
+    // Union of both citation forms, resolved to canonical source keys so
+    // suffix-mangled tokens (`…:msg:<uuid>`) still chip their retrieved
+    // parent. Unresolvable citations match nothing and drop out.
+    const byId = buildSourcesById(sources);
+    const cited = new Set<string>();
+    for (const token of extractInlineCitedIds(answer)) {
+        const hit = resolveCitationToken(token, byId);
+        if (hit) cited.add(hit.key);
+    }
+    for (const token of extractBareCitedIds(answer)) {
+        const hit = resolveCitationToken(token, byId);
+        if (hit) cited.add(hit.key);
+    }
+    if (cited.size === 0) return [];
     return sources.filter((s) => {
         const tokenKey = s.entity_id.startsWith(`${s.entity_type}:`)
             ? s.entity_id
             : `${s.entity_type}:${s.entity_id}`;
-        return inline.has(tokenKey) || bare.has(tokenKey);
+        return cited.has(tokenKey);
     });
 };
 
@@ -215,10 +312,12 @@ export const sourceToUrl = (s: SpotlightResult): string | null => {
     return null;
 };
 
-// Fallback label when a source has no title — match SpotlightOverlay's
-// `entitySubtitle` for visual consistency. The spotlight version is more
-// elaborate (i18n + per-type subtitles); here we just produce a sensible
-// generic label since the modal renders few citations at a time.
+// Fallback label when a raw-token link label must be replaced but the
+// source has no title (see `rewriteCitations`' weak-model hardening) —
+// matches SpotlightOverlay's `entitySubtitle` vocabulary for visual
+// consistency. The spotlight version is more elaborate (i18n + per-type
+// subtitles); here a sensible generic label suffices since it only shows
+// for title-less sources.
 const entitySubtitle = (s: SpotlightResult): string => {
     if (s.entity_type === "task") return s.task_display_id || "Task";
     if (s.entity_type === "project") return "Project";

@@ -86,6 +86,102 @@ describe("rewriteCitations — natural-prose links (§4.6 D5)", () => {
     });
 });
 
+// Weak-model hardening — every input below is a VERBATIM malformation
+// gemini-flash produced in a real run (AgentRun cabd15b1, 2026-07-05):
+// links whose label is the raw token itself, and tokens with an invented
+// `:msg:<uuid>` suffix that isn't in the citation vocabulary. The
+// contract: whatever the model emits, the reader never sees a raw
+// token, a UUID, or a leaked `spotlight-citation:` sentinel.
+describe("rewriteCitations — weak-model malformed citations", () => {
+    it("[token](token): swaps the raw-token label for the source title, keeps the link", () => {
+        const sources = buildSourcesById([src("task", "task:1905", "CSS prototype spike")]);
+        const out = rewriteCitations("…constraints ([task:1905](task:1905)).", sources);
+        // The old strip pattern ate the `[task:1905]` LABEL out of the
+        // rewritten link, leaving `…constraints ((spotlight-citation:task:1905)).`
+        // — a naked sentinel as visible text. The exact match below proves
+        // the label survived and the sentinel stays inside the link URL.
+        expect(out).toBe(
+            `…constraints ([CSS prototype spike](${CITATION_HREF_PREFIX}task:1905)).`
+        );
+    });
+
+    it("falls back to a generic type label when the source has no title", () => {
+        const sources = buildSourcesById([src("task", "task:1905")]);
+        const out = rewriteCitations("Excluded ([task:1905](task:1905)).", sources);
+        expect(out).toBe(`Excluded ([Task](${CITATION_HREF_PREFIX}task:1905)).`);
+    });
+
+    it("resolves an invented :msg: suffix to the retrieved THREAD source (real run shape)", () => {
+        // The malformed run retrieved ONLY the thread source; flash cited a
+        // per-message id copied from a tool result. Recovery trims the fake
+        // `:msg:` tail to the chat base, then extends to the retrieved
+        // thread key — the href carries the CANONICAL key so the anchor's
+        // exact lookup works.
+        const sources = buildSourcesById([
+            src("chat", "dm:0738dbef:thread:8995bd1d", "Bob Martinez"),
+        ]);
+        const out = rewriteCitations(
+            "…significant ([chat:dm:0738dbef:msg:58ed60f3](chat:dm:0738dbef:msg:58ed60f3)).",
+            sources
+        );
+        expect(out).toBe(
+            `…significant ([Bob Martinez](${CITATION_HREF_PREFIX}chat:dm:0738dbef:thread:8995bd1d)).`
+        );
+    });
+
+    it("resolves an invented :msg: suffix to a retrieved base-chat source too", () => {
+        const sources = buildSourcesById([src("chat", "dm:0738dbef", "DM with Bob")]);
+        const out = rewriteCitations(
+            "…significant ([chat:dm:0738dbef:msg:58ed60f3](chat:dm:0738dbef:msg:58ed60f3)).",
+            sources
+        );
+        expect(out).toBe(`…significant ([DM with Bob](${CITATION_HREF_PREFIX}chat:dm:0738dbef)).`);
+    });
+
+    it("never fuzzy-matches non-chat ids (hallucinated note id stays unresolved)", () => {
+        // Structural recovery is chat-only: note:personal:9999 must NOT
+        // "recover" to the different note:personal:9.
+        const sources = buildSourcesById([src("note", "note:personal:9", "perf budget")]);
+        expect(rewriteCitations("Per the [budget note](note:personal:9999).", sources)).toBe(
+            "Per the budget note."
+        );
+    });
+
+    it("drops an unresolvable raw-token-label link entirely (no UUID soup)", () => {
+        const sources = buildSourcesById([src("task", "task:42")]);
+        const out = rewriteCitations(
+            "…redesign ([chat:dm:0738dbef:msg:63b3b58c](chat:dm:0738dbef:msg:63b3b58c)).",
+            sources
+        );
+        expect(out).toBe("…redesign ().");
+    });
+
+    it("keeps a PROSE label when its token is unresolvable (existing degrade)", () => {
+        const sources = buildSourcesById([src("task", "task:42")]);
+        expect(rewriteCitations("See the [mystery spike](task:99).", sources)).toBe(
+            "See the mystery spike."
+        );
+    });
+
+    it("still strips a bare token that is not a link label", () => {
+        const sources = buildSourcesById([src("task", "task:42", "spike")]);
+        // `[task:42]` followed by ` (` (space) is a bare token, not a label.
+        expect(rewriteCitations("Per [task:42] (the spike).", sources)).toBe("Per (the spike).");
+    });
+});
+
+describe("citedChipSources — msg-suffixed citations chip the parent source", () => {
+    it("resolves the :msg: token to the retrieved thread and shows its chip", () => {
+        const thread = src("chat", "dm:0738dbef:thread:8995bd1d", "Bob Martinez");
+        const uncited = src("task", "task:42");
+        const chips = citedChipSources(
+            "Agreed ([chat:dm:0738dbef:msg:58ed60f3](chat:dm:0738dbef:msg:58ed60f3)).",
+            [thread, uncited]
+        );
+        expect(chips.map((s) => s.entity_id)).toEqual(["dm:0738dbef:thread:8995bd1d"]);
+    });
+});
+
 describe("extractInlineCitedIds — link form only", () => {
     it("captures resolved link-form ids and ignores bare tokens", () => {
         const sources = buildSourcesById([
