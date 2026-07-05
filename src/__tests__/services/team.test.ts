@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTeam } from "../../features/admin/services/createTeam";
+import { findTeam } from "../../features/admin/services/findTeam";
 import { loadMyTeams } from "../../features/admin/services/loadMyTeams";
 import { loadTeamMembers } from "../../features/admin/services/loadTeamMembers";
 import { authApi } from "../../services/api";
@@ -127,5 +128,52 @@ describe("createTeam", () => {
         await createTeam("token123", "Dup Team", "user1", setError);
 
         expect(setError).toHaveBeenCalledWith("Please try with different team name.");
+    });
+});
+
+describe("findTeam", () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
+
+    it("short-circuits to { exist: false } for an empty teamId without hitting the API", async () => {
+        // The boot-time initCurrentTeam calls findTeam with myself.teamId,
+        // which is "" right after login before a team is chosen. Guard against
+        // the meaningless GET /team/exist/?team_id= (a 400 that would trip the
+        // global request-error toast on an otherwise clean login).
+        const mockGet = vi.fn();
+        (authApi as ReturnType<typeof vi.fn>).mockReturnValue({ get: mockGet });
+
+        const result = await findTeam("token123", "");
+
+        expect(mockGet).not.toHaveBeenCalled();
+        expect(result).toEqual({ exist: false });
+    });
+
+    it("probes GET /team/exist/ and suppresses the global toast when given an inline reporter", async () => {
+        const mockData = { exist: true, teamDetails: { teamId: "team1" } };
+        const mockGet = vi.fn().mockResolvedValue({ data: mockData });
+        (authApi as ReturnType<typeof vi.fn>).mockReturnValue({ get: mockGet });
+
+        const setError = vi.fn();
+        const result = await findTeam("token123", "team1", setError);
+
+        expect(mockGet).toHaveBeenCalledWith("/team/exist/?team_id=team1", {
+            suppressErrorToast: true,
+        });
+        expect(result).toEqual(mockData);
+    });
+
+    it("keeps the global toast (suppress false) when no inline reporter is supplied", async () => {
+        const mockData = { exist: true, teamDetails: { teamId: "team1" } };
+        const mockGet = vi.fn().mockResolvedValue({ data: mockData });
+        (authApi as ReturnType<typeof vi.fn>).mockReturnValue({ get: mockGet });
+
+        const result = await findTeam("token123", "team1");
+
+        expect(mockGet).toHaveBeenCalledWith("/team/exist/?team_id=team1", {
+            suppressErrorToast: false,
+        });
+        expect(result).toEqual(mockData);
     });
 });
