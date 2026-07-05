@@ -1,3 +1,4 @@
+import "@fontsource-variable/noto-sans-jp";
 import "./index.css";
 
 import { createRoot } from "react-dom/client";
