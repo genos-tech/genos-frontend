@@ -1223,11 +1223,11 @@ const TurnViewInner = ({
         [answer, sourcesById]
     );
 
-    // Chip row = STRICTLY the sources the answer cited via a bare
-    // `[type:id]` token (§4.6). Inline-linked sources render in the prose;
-    // uncited retrieved sources are dropped as noise. `sourcesById` above
-    // is still built from ALL sources so inline links still resolve — only
-    // the chip row is narrowed to cited-only.
+    // Chip row = the sources the answer cited, in either form (inline
+    // `[prose](type:id)` link or bare `[type:id]` token); uncited retrieved
+    // sources are dropped as noise (§4.6). An inline-cited source appears
+    // both in the prose and here. `sourcesById` above is still built from
+    // ALL sources so inline links still resolve.
     const chipSources = useMemo(
         () => citedChipSources(answer, answerSources),
         [answer, answerSources]

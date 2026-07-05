@@ -123,14 +123,22 @@ describe("extractBareCitedIds — bare token form only", () => {
     });
 });
 
-describe("citedChipSources — strict cited-only chips", () => {
-    it("keeps only bare-cited sources: inline-linked and uncited are excluded", () => {
-        const linked = src("task", "task:42", "spike"); // inline link → prose, not chip
+describe("citedChipSources — cited sources (inline + bare), uncited dropped", () => {
+    it("keeps every cited source — inline link OR bare token — and drops uncited", () => {
+        const linked = src("task", "task:42", "spike"); // inline link → chip (and prose)
         const bareCited = src("note", "note:personal:9", "methodology"); // bare token → chip
         const uncited = src("project", "project:7", "roadmap"); // retrieved, never cited → dropped
         const answer = "The [spike](task:42) explains it — see [note:personal:9].";
         const chips = citedChipSources(answer, [linked, bareCited, uncited]);
-        expect(chips.map((s) => s.entity_id)).toEqual(["note:personal:9"]);
+        expect(chips.map((s) => s.entity_id)).toEqual(["task:42", "note:personal:9"]);
+    });
+
+    it("keeps a source cited ONLY as an inline link (the empty-chip-row regression)", () => {
+        const linked = src("task", "task:42", "spike");
+        const uncited = src("note", "note:personal:9");
+        // Only an inline link, no bare token — must still produce a chip.
+        const chips = citedChipSources("The [spike](task:42) settled it.", [linked, uncited]);
+        expect(chips.map((s) => s.entity_id)).toEqual(["task:42"]);
     });
 
     it("drops uncited retrieved sources (RAG noise)", () => {
@@ -147,7 +155,7 @@ describe("citedChipSources — strict cited-only chips", () => {
         expect(citedChipSources("You have 2 tasks due this week.", [a, b])).toEqual([]);
     });
 
-    it("keeps every bare-cited source, incl. a chat entity_id without the chat: prefix", () => {
+    it("keeps every cited source, incl. a chat entity_id without the chat: prefix", () => {
         const a = src("task", "task:42");
         const b = src("chat", "dm:9:thread:4"); // normalises to chat:dm:9:thread:4 for matching
         const chips = citedChipSources("Both [task:42] and [chat:dm:9:thread:4].", [a, b]);
