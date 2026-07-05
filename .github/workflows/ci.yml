@@ -87,10 +87,17 @@ jobs:
     # manual rebuild (this is the drift that hid the findTeam fix). Railway is
     # unaffected — it auto-deploys from its own git integration. Keyless via WIF
     # (needs repo secrets GCP_WIF_PROVIDER + GCP_DEPLOY_SA, same as genos-api).
+    #
+    # COST SWITCH: deploys only when the repo/org variable DEPLOY_TO_GCP is
+    # "true". Unset (the default) = OFF, so merges are Railway-only and never
+    # touch GCP. NOTE: this only stops CI from shipping new revisions — it does
+    # NOT reduce the GCP bill (Cloud SQL / OpenSearch VM / Redis / warm Cloud Run
+    # keep billing regardless). To actually cut cost, pause or tear down the infra
+    # (see genos-docs operations/ENVIRONMENTS.md "Going Railway-only (cost)").
     deploy:
         name: deploy to Cloud Run
         needs: [frontend-test]
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push' && vars.DEPLOY_TO_GCP == 'true'
         runs-on: ubuntu-latest
         permissions:
             contents: read
