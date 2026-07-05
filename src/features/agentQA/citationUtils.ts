@@ -96,10 +96,9 @@ export const rewriteCitations = (
 // Extract the set of entity ids the answer renders INLINE as a
 // natural-prose hyperlink — i.e. those in the `[prose](type:id)` link
 // form (`CITATION_LINK_PATTERN`). These are already clickable in the
-// prose, so `sourcesNotInline` drops them from the chip row to avoid
-// duplication. Bare `[type:id]` tokens are intentionally NOT counted:
-// `rewriteCitations` strips them, so their source SHOULD surface as a
-// chip.
+// prose, so they render as links there rather than as chips. Bare
+// `[type:id]` tokens are intentionally NOT counted here: chip selection
+// (`citedChipSources`) matches bare tokens via `extractBareCitedIds`.
 //
 // `sourcesById`, when provided, applies the same resolve-guard as
 // `rewriteCitations`: an unresolved link degrades to plain prose (no
@@ -121,23 +120,58 @@ export const extractInlineCitedIds = (
     return ids;
 };
 
-// Returns the sources to render as chips beneath the answer: every
-// source EXCEPT those already linked inline in the prose (§4.6 —
-// inline links for cited claims, chips as the complement/fallback for
-// uncited or bare-token sources). Reuses `buildSourcesById`'s
-// normalisation so a chat source whose `entity_id` lacks the "chat:"
-// prefix still matches the prefixed token form the model emits.
-export const sourcesNotInline = (
+// Extract the set of entity ids the answer cites as a BARE `[type:id]`
+// token (`CITATION_PATTERN`). These are the citations the model couldn't
+// phrase as a grammatical inline prose link, so `rewriteCitations` strips
+// them from the prose and they surface in the chip row instead. Inline
+// `[prose](type:id)` links are NOT matched here (their id lives in
+// parens) — they render as links in the prose and are excluded from the
+// chip row by design (a chip would duplicate them).
+export const extractBareCitedIds = (answer: string): Set<string> => {
+    const ids = new Set<string>();
+    if (!answer) return ids;
+    // Fresh RegExp so the shared global pattern's `lastIndex` isn't
+    // carried between calls.
+    const re = new RegExp(CITATION_PATTERN.source, "g");
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(answer)) !== null) {
+        ids.add(m[1]);
+    }
+    return ids;
+};
+
+// Returns the sources to render as chips beneath the answer: STRICTLY
+// the sources the answer actually cited via a bare `[type:id]` token.
+// Two groups are deliberately excluded:
+//   1. Sources cited as inline `[prose](type:id)` links — already
+//      clickable in the prose, so a chip would duplicate them.
+//   2. Sources RETRIEVED by a tool but never cited in the answer —
+//      dropped as chip-row noise. The agent prompt enforces citation
+//      discipline (cite every entity-level claim you use; a revise pass
+//      re-checks it), so an uncited retrieved source is one the answer
+//      did not rely on. This makes the chip row "what the answer used",
+//      not "what RAG returned" (SPOTLIGHT_QUALITY_ARCHITECTURE.md §4.6 —
+//      chips as the fallback surface for bare-token citations).
+//
+// Deliberate consequence (strict mode, chosen over a keep-all fallback):
+// an answer that cites nothing — e.g. an aggregate/summary reply ("you
+// have 12 tasks due"), which the prompt exempts from per-item citations —
+// shows an EMPTY chip row.
+//
+// Token normalisation matches `buildSourcesById` so a chat source whose
+// `entity_id` lacks the "chat:" prefix still matches the prefixed token
+// form the model emits.
+export const citedChipSources = (
     answer: string,
     sources: SpotlightResult[]
 ): SpotlightResult[] => {
-    const inline = extractInlineCitedIds(answer, buildSourcesById(sources));
-    if (inline.size === 0) return sources;
+    const cited = extractBareCitedIds(answer);
+    if (cited.size === 0) return [];
     return sources.filter((s) => {
         const tokenKey = s.entity_id.startsWith(`${s.entity_type}:`)
             ? s.entity_id
             : `${s.entity_type}:${s.entity_id}`;
-        return !inline.has(tokenKey);
+        return cited.has(tokenKey);
     });
 };
 

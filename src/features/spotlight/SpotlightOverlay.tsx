@@ -62,11 +62,11 @@ import { purplePalette } from "../../theme/purplePalette";
 import {
     ApprovalCard,
     CITATION_HREF_PREFIX,
+    citedChipSources,
     DARK_TEXT_STRONG,
     FeedbackThumbs,
     markdownAnswerSx,
     rewriteCitations,
-    sourcesNotInline,
     ToolProgressList,
     type AskState,
     type CompletedTurn,
@@ -1223,12 +1223,13 @@ const TurnViewInner = ({
         [answer, sourcesById]
     );
 
-    // Chips complement the inline links: show only sources the answer
-    // didn't already link inline in prose (§4.6). `sourcesById` above is
-    // still built from ALL sources so inline links resolve; only the chip
-    // row is filtered.
+    // Chip row = STRICTLY the sources the answer cited via a bare
+    // `[type:id]` token (§4.6). Inline-linked sources render in the prose;
+    // uncited retrieved sources are dropped as noise. `sourcesById` above
+    // is still built from ALL sources so inline links still resolve — only
+    // the chip row is narrowed to cited-only.
     const chipSources = useMemo(
-        () => sourcesNotInline(answer, answerSources),
+        () => citedChipSources(answer, answerSources),
         [answer, answerSources]
     );
 

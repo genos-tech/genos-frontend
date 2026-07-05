@@ -3,9 +3,10 @@ import { describe, expect, it } from "vitest";
 import {
     buildSourcesById,
     CITATION_HREF_PREFIX,
+    citedChipSources,
+    extractBareCitedIds,
     extractInlineCitedIds,
     rewriteCitations,
-    sourcesNotInline,
 } from "../features/agentQA/citationUtils";
 import type { SpotlightResult } from "../features/spotlight/types";
 
@@ -107,20 +108,49 @@ describe("extractInlineCitedIds — link form only", () => {
     });
 });
 
-describe("sourcesNotInline — chips exclude inline-cited", () => {
-    it("drops sources already linked inline, keeps the rest", () => {
-        const linked = src("task", "task:42", "spike");
-        const uncited = src("note", "note:personal:9", "methodology note");
-        const answer = "The [spike](task:42) explains it.";
-        const chips = sourcesNotInline(answer, [linked, uncited]);
+describe("extractBareCitedIds — bare token form only", () => {
+    it("captures bare [type:id] tokens and ignores inline links", () => {
+        const answer = "A [spike](task:42) link, a [note:personal:9] chip, [milestone:7] too.";
+        const ids = extractBareCitedIds(answer);
+        // Inline-link id lives in parens → not a bare token.
+        expect(ids.has("task:42")).toBe(false);
+        expect(ids.has("note:personal:9")).toBe(true);
+        expect(ids.has("milestone:7")).toBe(true);
+    });
+
+    it("returns an empty set for an answer with no citations", () => {
+        expect(extractBareCitedIds("Just prose, no tokens.").size).toBe(0);
+    });
+});
+
+describe("citedChipSources — strict cited-only chips", () => {
+    it("keeps only bare-cited sources: inline-linked and uncited are excluded", () => {
+        const linked = src("task", "task:42", "spike"); // inline link → prose, not chip
+        const bareCited = src("note", "note:personal:9", "methodology"); // bare token → chip
+        const uncited = src("project", "project:7", "roadmap"); // retrieved, never cited → dropped
+        const answer = "The [spike](task:42) explains it — see [note:personal:9].";
+        const chips = citedChipSources(answer, [linked, bareCited, uncited]);
         expect(chips.map((s) => s.entity_id)).toEqual(["note:personal:9"]);
     });
 
-    it("returns all sources when nothing is linked inline (bare tokens only)", () => {
+    it("drops uncited retrieved sources (RAG noise)", () => {
+        const cited = src("task", "task:42");
+        const uncited = src("note", "note:personal:9");
+        const chips = citedChipSources("Only [task:42] matters here.", [cited, uncited]);
+        expect(chips.map((s) => s.entity_id)).toEqual(["task:42"]);
+    });
+
+    it("returns an empty chip row when the answer cites nothing (aggregate/summary)", () => {
         const a = src("task", "task:42");
         const b = src("note", "note:personal:9");
-        // Bare tokens are chips, not inline — both survive.
-        const chips = sourcesNotInline("Both [task:42] and [note:personal:9].", [a, b]);
+        // e.g. "You have 2 tasks due this week." — prompt exempts aggregate stats from citation.
+        expect(citedChipSources("You have 2 tasks due this week.", [a, b])).toEqual([]);
+    });
+
+    it("keeps every bare-cited source, incl. a chat entity_id without the chat: prefix", () => {
+        const a = src("task", "task:42");
+        const b = src("chat", "dm:9:thread:4"); // normalises to chat:dm:9:thread:4 for matching
+        const chips = citedChipSources("Both [task:42] and [chat:dm:9:thread:4].", [a, b]);
         expect(chips).toHaveLength(2);
     });
 });
