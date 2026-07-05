@@ -1,13 +1,17 @@
-// Chip row rendered below an agent answer for sources the answer
-// references but doesn't embed inline. The two-style rule:
-//   - sources cited inline (`[chat:dm:5:thread:4]` tokens in the
-//     answer text) → already rendered as title hyperlinks via
-//     `rewriteCitations` + `CitationAnchor`
-//   - everything else in `answerSources` → shown here as a chip
+// Chip row rendered below an agent answer — the "sources used" list:
+// every source the answer cited (inline `[prose](type:id)` link or bare
+// `[type:id]` token; see `citedChipSources`). A source cited inline
+// appears both as a prose hyperlink and as a chip here.
+//
+// Click behaviour mirrors `CitationAnchor`: try the UrlLinkModal
+// preview first (quick-look without losing the conversation), fall
+// back to the caller's `onSelectSource` navigate handler when there's
+// no preview — outside a UrlLinkModalProvider, no deep-link URL for
+// the source, or the entity kind isn't modal-able (projects).
 //
 // Visual style mirrors Spotlight's chip row but with `variant="soft"`
 // for a calmer second-class affordance — the inline hyperlinks are the
-// primary signal, these chips are "you may also want to look at…".
+// primary signal, these chips are the roll-up beneath the answer.
 
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
@@ -15,7 +19,9 @@ import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
 import StickyNote2RoundedIcon from "@mui/icons-material/StickyNote2Rounded";
 import { Box, Chip } from "@mui/joy";
 
+import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
 import { SpotlightResult } from "../spotlight/types";
+import { sourceToUrl } from "./citationUtils";
 
 const sourceIcon = (entityType: string) => {
     if (entityType === "task") return <AssignmentRoundedIcon sx={{ fontSize: 13 }} />;
@@ -40,7 +46,18 @@ interface SourceChipsProps {
 }
 
 export const SourceChips = ({ sources, onSelectSource }: SourceChipsProps) => {
+    const urlLinkModal = useUrlLinkModal();
     if (sources.length === 0) return null;
+    // Same preview-first/navigate-fallback contract as CitationAnchor's
+    // handleClick, so a chip and its inline-link twin behave identically.
+    const handleChipClick = (s: SpotlightResult) => {
+        const previewHref = sourceToUrl(s);
+        if (previewHref && urlLinkModal) {
+            const outcome = urlLinkModal.openModalByHref(previewHref);
+            if (outcome === "opened") return;
+        }
+        onSelectSource?.(s);
+    };
     return (
         <Box
             sx={{
@@ -71,7 +88,7 @@ export const SourceChips = ({ sources, onSelectSource }: SourceChipsProps) => {
                             transform: "translateY(-1px)",
                         },
                     }}
-                    onClick={() => onSelectSource?.(s)}
+                    onClick={() => handleChipClick(s)}
                 >
                     {chipLabel(s)}
                 </Chip>
