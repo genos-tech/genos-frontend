@@ -18,7 +18,7 @@ import remarkGfm from "remark-gfm";
 import { SpotlightResult } from "../spotlight/types";
 import { ApprovalCard } from "./ApprovalCard";
 import { agentQAUrlTransform, CitationAnchor } from "./CitationAnchor";
-import { buildSourcesById, rewriteCitations, sourcesNotInline } from "./citationUtils";
+import { buildSourcesById, citedChipSources, rewriteCitations } from "./citationUtils";
 import { FeedbackThumbs } from "./FeedbackThumbs";
 import { markdownAnswerSx } from "./markdownAnswerSx";
 import { SourceChips } from "./SourceChips";
@@ -143,14 +143,14 @@ const TurnRow = ({
         () => rewriteCitations(turn.answer || "(no answer)", sourcesById),
         [turn.answer, sourcesById]
     );
-    // Sources that the answer doesn't already reference inline as a
-    // hyperlink. Inline-cited ones live in the prose itself; these
-    // become a chip row underneath. Computed against the turn's own
-    // sources rather than the cross-turn `sourcesById` because chips
+    // Chip row = STRICTLY the sources this answer cited via a bare
+    // `[type:id]` token. Inline-linked citations live in the prose; uncited
+    // retrieved sources are dropped as noise. Computed against the turn's
+    // own sources rather than the cross-turn `sourcesById` because chips
     // should reflect "what this answer referenced", not the running
     // session total.
     const chipSources = useMemo(
-        () => sourcesNotInline(turn.answer || "", turn.answerSources || []),
+        () => citedChipSources(turn.answer || "", turn.answerSources || []),
         [turn.answer, turn.answerSources]
     );
     return (
@@ -282,7 +282,7 @@ const InFlightTurn = ({
         [ask.answer, sourcesById]
     );
     const chipSources = useMemo(
-        () => sourcesNotInline(ask.answer || "", ask.answerSources || []),
+        () => citedChipSources(ask.answer || "", ask.answerSources || []),
         [ask.answer, ask.answerSources]
     );
     return (

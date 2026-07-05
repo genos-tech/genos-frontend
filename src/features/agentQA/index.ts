@@ -9,9 +9,10 @@ export {
     buildSourcesById,
     CITATION_HREF_PREFIX,
     CITATION_PATTERN,
+    citedChipSources,
+    extractBareCitedIds,
     extractInlineCitedIds,
     rewriteCitations,
-    sourcesNotInline,
     sourceToUrl,
 } from "./citationUtils";
 export { FeedbackThumbs } from "./FeedbackThumbs";
