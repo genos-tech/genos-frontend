@@ -25,6 +25,16 @@ interface ImportMetaEnv {
      * flow no-ops (in-app notifications are unaffected).
      */
     readonly VITE_VAPID_PUBLIC_KEY?: string;
+    /**
+     * PostHog product analytics (see `services/analytics.ts`). Both are
+     * PUBLIC client-side values — the project API key ships in the served
+     * bundle by design. When either is unset, every analytics call
+     * silently no-ops (local dev default). Same key on every deploy
+     * domain → one PostHog project; events are distinguished by their
+     * URL/host properties.
+     */
+    readonly VITE_POSTHOG_KEY?: string;
+    readonly VITE_POSTHOG_HOST?: string;
 }
 
 interface ImportMeta {

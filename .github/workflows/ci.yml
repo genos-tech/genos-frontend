@@ -119,6 +119,11 @@ jobs:
             # VITE_VAPID_PUBLIC_KEY enables browser push — it MUST equal the api's
             # WEBPUSH_VAPID_PRIVATE_KEY pair (var.webpush_vapid_public_key in the
             # genos-platform tfvars). Same keypair as Railway.
+            # VITE_POSTHOG_* enables product analytics (services/analytics.ts
+            # no-ops without them). Same PostHog project + values as Railway's
+            # frontend service — the key is a PUBLIC client-side value (it ships
+            # in the served bundle), so plaintext here is fine, same as the
+            # VAPID public key.
             - name: Build + push frontend image (amd64 — Cloud Run requires it)
               run: |
                   gcloud auth configure-docker "$GCP_REGION-docker.pkg.dev" --quiet
@@ -129,6 +134,8 @@ jobs:
                       --build-arg VITE_WS_BASE_URL=https://ws.gcp.genosai.dev \
                       --build-arg VITE_COLLAB_URL=wss://collab.gcp.genosai.dev \
                       --build-arg VITE_VAPID_PUBLIC_KEY=BFfrZoXdO5uF3bau2e5k0ltJb8UF07RgFBDrlI6_kg323Z7OXO_DxjH_fiSmH_4XLOPPlgqOP9KvbFs4mgE4vrg \
+                      --build-arg VITE_POSTHOG_KEY=phc_D7PN7v2vhj4ijkcHdpzjCfuk788b9GNQwCjcssN7k7SC \
+                      --build-arg VITE_POSTHOG_HOST=https://us.i.posthog.com \
                       -t "$AR/frontend:${GITHUB_SHA}" -t "$AR/frontend:latest" .
                   docker push "$AR/frontend:${GITHUB_SHA}"
                   docker push "$AR/frontend:latest"
