@@ -3,6 +3,7 @@ import { PartialBlock } from "@blocknote/core";
 import { Socket } from "socket.io-client";
 
 import { sendUpdatedSpecificTask } from "../../features/tasks/services/sendUpdatedSpecificTask";
+import { emitTaskTouched } from "../../features/tasks/services/taskEvents";
 import { UserProps } from "../../types/admin";
 import { TaskEditStateManagement } from "../../types/taskEditState";
 import { AttachmentFileProps, TaskProps } from "../../types/tasks";
@@ -97,6 +98,12 @@ export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
                 taskStatusUpdated,
                 accessToken
             );
+
+            // The PUT wrote new activity rows (field/description edits) —
+            // tell the open preview to refresh its Activity feed. Scoped
+            // by task id, so a save fired while switching away doesn't
+            // refetch anything for the newly-opened task.
+            emitTaskTouched(Number(baseTaskContent.id), "update");
 
             const persistedAttachments: AttachmentFileProps[] =
                 uploadAttachments && uploadAttachments.length > 0

@@ -31,6 +31,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { useMentionGroupsContext } from "../../context/MentionGroupsContext";
+import { emitTaskTouched } from "../../features/tasks/services/taskEvents";
 import { taskThreadMessageForCommentAddedTemplate } from "../../features/tasks/utils/TaskMessageTemplate";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
@@ -297,6 +298,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                 // so the optimistic row is replaced with the canonical
                 // server payload (correct commentId, ts, mentions…).
                 useTM.setIsTaskCommentUpdated({ isUpdate: true, scrollToBottom: true });
+                emitTaskTouched(Number(task.id), "comment");
 
                 // IMPORTANT: emit the thread_message AFTER the task_comment
                 // ack. The backend processes socket events in concurrent
