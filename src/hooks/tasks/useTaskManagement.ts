@@ -15,7 +15,10 @@ import {
 } from "../../features/tasks/services/createTaskDependency";
 import { deleteTaskDependency } from "../../features/tasks/services/deleteTaskDependency";
 import { loadSpecificTask } from "../../features/tasks/services/loadSpecificTask";
-import { loadTaskDependencies } from "../../features/tasks/services/loadTaskDependencies";
+import {
+    loadTaskDependencies,
+    loadTaskDependenciesForTasks,
+} from "../../features/tasks/services/loadTaskDependencies";
 import { popSpecificProjectTasks } from "../../features/tasks/services/popSpecificProjectTasks";
 import { buildTaskTree } from "../../features/tasks/utils/buildTaskTree";
 import { UserProps } from "../../types/admin";
@@ -588,23 +591,21 @@ export const useTaskManagement = (
                 accessToken
             );
             if (result.ok) {
-                // Refresh both endpoints if cached, plus the explicit
-                // focused id (covers the rare case where the focused id
-                // is neither — shouldn't happen but cheap to be safe).
-                await loadTaskDependenciesFor(args.focusedTaskId);
-                if (args.blockerTaskId !== args.focusedTaskId) {
-                    await loadTaskDependenciesFor(args.blockerTaskId);
-                }
-                if (
-                    args.blockedTaskId !== args.focusedTaskId &&
-                    args.blockedTaskId !== args.blockerTaskId
-                ) {
-                    await loadTaskDependenciesFor(args.blockedTaskId);
+                // Refresh both endpoints plus the explicit focused id
+                // (covers the rare case where the focused id is neither
+                // — shouldn't happen but cheap to be safe). One batched
+                // request instead of three sequential round-trips.
+                const refreshed = await loadTaskDependenciesForTasks(
+                    [args.focusedTaskId, args.blockerTaskId, args.blockedTaskId],
+                    accessToken
+                );
+                if (refreshed) {
+                    setTaskDependencies((prev) => ({ ...prev, ...refreshed }));
                 }
             }
             return result;
         },
-        [accessToken, loadTaskDependenciesFor]
+        [accessToken]
     );
 
     const removeTaskDependency = useCallback(

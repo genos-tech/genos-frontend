@@ -1,7 +1,7 @@
 import { UserProps } from "../../../../types/admin";
 import { TaskDependencyRef, TaskTableProps } from "../../../../types/tasks";
 import { loadProjectTasksFromApi } from "../../services/loadProjectTasksFromApi";
-import { loadTaskDependencies } from "../../services/loadTaskDependencies";
+import { loadTaskDependenciesForTasks } from "../../services/loadTaskDependencies";
 import { TaskGraph } from "../types";
 
 const MAX_DEPTH = 10; // mirrors backend `_cascade_milestone_to_subtasks`
@@ -122,11 +122,11 @@ export const loadTaskGraph = async (
 
     const visibleIds = new Set(visibleTasks.map((t) => Number(t.id)));
 
-    const responses = await Promise.all(
-        visibleTasks
-            .filter((t) => t.id != null)
-            .map((t) => loadTaskDependencies(Number(t.id), accessToken))
-    );
+    // One batched request for the whole visible set (chunked at the
+    // backend's cap) — per-node GETs meant N requests + N CORS
+    // preflights for a single diagram open.
+    const visibleTaskIds = visibleTasks.filter((t) => t.id != null).map((t) => Number(t.id));
+    const depsByTask = await loadTaskDependenciesForTasks(visibleTaskIds, accessToken);
 
     const seen = new Set<number>();
     const dependencyEdges: TaskGraph["dependencyEdges"] = [];
@@ -134,9 +134,9 @@ export const loadTaskGraph = async (
     // multiple visible tasks reference the same outside endpoint.
     const externalById = new Map<number, TaskTableProps>();
 
-    responses.forEach((res, idx) => {
+    visibleTaskIds.forEach((ownerTaskId) => {
+        const res = depsByTask?.[ownerTaskId];
         if (!res) return;
-        const ownerTaskId = Number(visibleTasks[idx].id);
 
         // Owner's "blocking" list: owner blocks otherTask.
         for (const d of res.blocking) {
