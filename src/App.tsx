@@ -34,7 +34,7 @@ import { AvatarContextProvider } from "./components/ui/avatars/AvatarContext";
 import { InitialLoad } from "./components/ui/misc/InitialLoad";
 import { RouteLoadingFallback } from "./components/ui/misc/RouteLoadingFallback";
 import { CalendarModal } from "./features/calendar/components/CalendarModal";
-import { useIsV3ChatEnabled, V3ChatShell } from "./features/channel/V3ChatShell";
+import { useIsV3ChatEnabled } from "./features/channel/chatRolloutFlags";
 import { OAUTH_INTEGRATIONS_ENABLED } from "./features/integrations/featureFlags";
 import { SpotlightOverlay } from "./features/spotlight/SpotlightOverlay";
 import { CHAT_TYPE_CODE, SpotlightResult } from "./features/spotlight/types";
@@ -96,6 +96,14 @@ const IntegrationsHome = lazy(() =>
     import("./features/integrations/IntegrationsHome").then((m) => ({
         default: m.IntegrationsHome,
     }))
+);
+// The v3 chat shell's import graph reaches the message composer and
+// the whole BlockNote editor stack (the ~900 kB gzipped vendor-editor
+// chunk). Loading it lazily keeps that out of the initial entry — the
+// rollout flag it used to be co-located with lives in
+// `chatRolloutFlags.ts` precisely so this import can be deferred.
+const V3ChatShell = lazy(() =>
+    import("./features/channel/V3ChatShell").then((m) => ({ default: m.V3ChatShell }))
 );
 
 const API_DOWN_THRESHOLD = 3;
@@ -1226,19 +1234,37 @@ export const App = () => {
                                                                                                 <Route
                                                                                                     path="v3"
                                                                                                     element={
-                                                                                                        <V3ChatShell />
+                                                                                                        <Suspense
+                                                                                                            fallback={
+                                                                                                                <RouteLoadingFallback />
+                                                                                                            }
+                                                                                                        >
+                                                                                                            <V3ChatShell />
+                                                                                                        </Suspense>
                                                                                                     }
                                                                                                 />
                                                                                                 <Route
                                                                                                     path="v3/:channelId"
                                                                                                     element={
-                                                                                                        <V3ChatShell />
+                                                                                                        <Suspense
+                                                                                                            fallback={
+                                                                                                                <RouteLoadingFallback />
+                                                                                                            }
+                                                                                                        >
+                                                                                                            <V3ChatShell />
+                                                                                                        </Suspense>
                                                                                                     }
                                                                                                 />
                                                                                                 <Route
                                                                                                     path="v3/:channelId/t/:rootMessageId"
                                                                                                     element={
-                                                                                                        <V3ChatShell />
+                                                                                                        <Suspense
+                                                                                                            fallback={
+                                                                                                                <RouteLoadingFallback />
+                                                                                                            }
+                                                                                                        >
+                                                                                                            <V3ChatShell />
+                                                                                                        </Suspense>
                                                                                                     }
                                                                                                 />
                                                                                             </>
