@@ -447,12 +447,13 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         let cancelled = false;
         (async () => {
             if (useTM.currentPreviewTask?.project) {
-                const loadedTaskNotes: TaskNoteProps[] = await loadTaskNotes(
-                    myself,
-                    Number(useTM.currentPreviewTask.project.projectId),
-                    Number(useTM.currentPreviewTask.id),
-                    accessToken
-                );
+                const loadedTaskNotes: TaskNoteProps[] =
+                    (await loadTaskNotes(
+                        myself,
+                        Number(useTM.currentPreviewTask.project.projectId),
+                        Number(useTM.currentPreviewTask.id),
+                        accessToken
+                    )) ?? [];
                 if (cancelled) return;
                 const notes = loadedTaskNotes ?? [];
                 setTaskNotes(notes);
@@ -520,11 +521,8 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         // the freshly-selected task's data when clicks outrun fetches.
         let cancelled = false;
         (async () => {
-            const loadedTaskComments: TaskCommentProps[] = await loadTaskComments(
-                myself,
-                previewTaskId,
-                accessToken
-            );
+            const loadedTaskComments: TaskCommentProps[] =
+                (await loadTaskComments(myself, previewTaskId, accessToken)) ?? [];
             if (cancelled) return;
             const comments = loadedTaskComments ?? [];
             setTaskComments(comments);
