@@ -44,12 +44,13 @@ export const ACTaskNotes = (props: ACTaskNotesProps) => {
         }
 
         (async () => {
-            const loadedUsers: TaskNoteProps[] = await loadTaskNotes(
-                myself,
-                useNM.currentTaskNote?.projectId as number,
-                useNM.currentTaskNote?.taskId as number,
-                accessToken
-            );
+            const loadedUsers: TaskNoteProps[] =
+                (await loadTaskNotes(
+                    myself,
+                    useNM.currentTaskNote?.projectId as number,
+                    useNM.currentTaskNote?.taskId as number,
+                    accessToken
+                )) ?? [];
 
             if (active) {
                 setOptions([...loadedUsers]);
