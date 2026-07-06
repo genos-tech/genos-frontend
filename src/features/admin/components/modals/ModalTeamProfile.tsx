@@ -40,13 +40,13 @@ import { TeamManagementState } from "../../../../hooks/common/useTeamManagement"
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { fmt, useTranslation } from "../../../../i18n";
 import { TeamProfileProps, UserProps } from "../../../../types/admin";
+import { buildAvatarSrc } from "../../../../utils/avatarSrc";
 import { extractYYYYMMDD } from "../../../../utils/dateUtils";
 import { leaveTeam } from "../../services/leaveTeam";
 import { updateTeamProfile } from "../../services/updateTeamProfile";
 import { ModalInviteMembers } from "./ModalInviteMembers";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
-const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
 type ModalTeamProfileProps = {
     socket: Socket | null;
@@ -386,7 +386,7 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                         }}
                                     >
                                         <Avatar
-                                            src={`${media_url}/${teamProfile.teamImgPath}`}
+                                            src={buildAvatarSrc(teamProfile.teamImgPath)}
                                             sx={{
                                                 width: 180,
                                                 height: 180,

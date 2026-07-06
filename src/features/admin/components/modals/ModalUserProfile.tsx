@@ -36,13 +36,13 @@ import { channelService } from "../../../../services/channel/channelService";
 import { UserProps } from "../../../../types/admin";
 import { ChannelKind, type Channel } from "../../../../types/channel";
 import type { ChatProps } from "../../../../types/chat";
+import { buildAvatarSrc } from "../../../../utils/avatarSrc";
 import { extractYYYYMMDD } from "../../../../utils/dateUtils";
 import { UserProfileBaseCountry } from "./sub/UserProfileBaseCountry";
 import { UserProfileRole } from "./sub/UserProfileRole";
 import { UserProfileStatus } from "./sub/UserProfileStatus";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
-const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
 type UserProfileProps = {
     socket: Socket | null;
@@ -347,7 +347,7 @@ export const UserProfile = (props: UserProfileProps) => {
                                         }}
                                     >
                                         <Avatar
-                                            src={`${media_url}/${profileUser?.avatarImgPath}`}
+                                            src={buildAvatarSrc(profileUser?.avatarImgPath)}
                                             sx={{
                                                 width: { xs: 100, md: 150 },
                                                 height: { xs: 100, md: 150 },
