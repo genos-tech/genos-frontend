@@ -28,6 +28,7 @@ import { UserProps } from "../../../../../types/admin";
 import { TaskProps } from "../../../../../types/tasks";
 import { createQuickTask } from "../../../services/createQuickTask";
 import { loadSpecificChildTasks } from "../../../services/loadSpecificChildTasks";
+import { emitTaskTouched, onTaskTouched } from "../../../services/taskEvents";
 import { formatTaskDisplayId } from "../../../utils/taskDisplayId";
 
 type TaskSubTasksBlockProps = {
@@ -86,6 +87,20 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
     const [isSubmittingQuick, setIsSubmittingQuick] = useState(false);
     const [quickError, setQuickError] = useState<string | null>(null);
 
+    // External refresh signal: another client added/moved a subtask.
+    // Scoped by task id via the `genos:task-touched` bus; the local
+    // quick-add path refetches directly and doesn't need this.
+    const [childRefreshNonce, setChildRefreshNonce] = useState(0);
+    useEffect(() => {
+        const parentTaskId = currentTaskContent.id;
+        if (parentTaskId == null) return;
+        return onTaskTouched(({ taskId, kind }) => {
+            if (kind === "children" && taskId === parentTaskId) {
+                setChildRefreshNonce((n) => n + 1);
+            }
+        });
+    }, [currentTaskContent.id]);
+
     useEffect(() => {
         // Cancelled-flag guard: slow child-task responses for an old
         // taskId must not overwrite the freshly-selected task's
@@ -114,7 +129,17 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
         return () => {
             cancelled = true;
         };
-    }, [currentTaskContent, forceLoad]);
+        // Depend on the task/project ids, not the `currentTaskContent`
+        // object: regular mode passes `tmpCurrentTaskContent`, whose
+        // identity changes on every keystroke, and milestone mode
+        // rebuilds `taskContentLike` on team-roster polls — both caused
+        // a /task/childTasks/ refetch storm for an unchanged task.
+    }, [
+        currentTaskContent.id,
+        currentTaskContent.project?.projectId,
+        forceLoad,
+        childRefreshNonce,
+    ]);
 
     // Reset the quick-add UI when the user navigates between preview
     // cards. Without this, an open input on task A would survive a click
@@ -154,16 +179,12 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                 rootTaskId: currentTaskContent.rootTaskId,
                 milestoneId: inheritedMilestoneId,
             });
-            // Refetch from the same endpoint the load-effect uses so the
-            // appended row carries every server-derived field (displayId,
-            // project_task_number, etc.) without a manual snake→camel map.
-            const loaded: TaskProps[] = await loadSpecificChildTasks(
-                myself,
-                currentTaskContent.project.projectId,
-                currentTaskContent.id,
-                accessToken
-            );
-            setChildTasks(loaded?.length ? loaded : []);
+            // Refetch through the load effect (children event → nonce
+            // bump) so the appended row carries every server-derived
+            // field (displayId, project_task_number, etc.) without a
+            // manual snake→camel map — and any other mounted sub-task
+            // block for the same parent refreshes too.
+            emitTaskTouched(currentTaskContent.id, "children");
             // Trigger the project-wide refresh so an open table/board picks
             // up the new row too. Now cheap thanks to the Redis-cached
             // GetProjectTasksView + signal-driven invalidation.

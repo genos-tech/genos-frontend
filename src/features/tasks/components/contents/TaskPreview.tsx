@@ -1218,6 +1218,20 @@ const MilestonePreviewInner = ({
     // not driven by a free-text input, so re-running here is safe and
     // is in fact required so external changes propagate into the
     // preview.
+    //
+    // Roster changes are keyed on the fields this sync actually reads
+    // (membership, name, avatar) rather than the `teamMembers` array
+    // identity: the 60s team poll and socket presence updates replace
+    // the array every time, and each re-run built a fresh
+    // `taskContentLike` object — re-rendering the whole preview
+    // subtree and re-firing every effect keyed on it.
+    const teamMembersSyncKey = useMemo(
+        () =>
+            useTEM.teamMembers
+                .map((u) => `${u.userId}:${u.userName}:${u.avatarImgPath}`)
+                .join("|"),
+        [useTEM.teamMembers]
+    );
     useEffect(() => {
         if (!milestone) return;
         const firstAssignee =
@@ -1243,7 +1257,7 @@ const MilestonePreviewInner = ({
     }, [
         milestone?.milestoneId,
         milestone?.tsUpdatedAt,
-        useTEM.teamMembers,
+        teamMembersSyncKey,
         backingTask?.id,
         backingTask?.attachments,
     ]);
