@@ -328,6 +328,38 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
         const timer = window.setTimeout(async () => {
             setIsLoading(true);
             setError(null);
+
+            // Progressive render: two passes race on the same signal.
+            // The keyword-only pass (use_vector: false) skips the
+            // server's query-embedding step entirely — the dominant
+            // cost of a hybrid search, and uncacheable for typeahead
+            // since every keystroke prefix is new text — so it lands
+            // in a few hundred ms and paints first. The full hybrid
+            // pass replaces it when ready. `hybridLanded` guards
+            // ordering: a slow keyword response must never clobber
+            // already-rendered hybrid results.
+            let hybridLanded = false;
+            let keywordLanded = false;
+
+            void searchSpotlight({
+                query: trimmed,
+                team_id: teamId,
+                limit: RESULT_LIMIT,
+                use_vector: false,
+                accessToken,
+                signal: controller.signal,
+            })
+                .then((data) => {
+                    if (controller.signal.aborted || hybridLanded) return;
+                    keywordLanded = true;
+                    setResults(data.results || []);
+                    setIsLoading(false);
+                })
+                .catch(() => {
+                    // Fast lane is best-effort — the hybrid pass below
+                    // is authoritative and owns error surfacing.
+                });
+
             try {
                 const data = await searchSpotlight({
                     query: trimmed,
@@ -341,12 +373,16 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
                 // started (defensive — abort *should* fire first, but
                 // the timing window exists).
                 if (controller.signal.aborted) return;
+                hybridLanded = true;
                 setResults(data.results || []);
             } catch (err) {
                 if (err instanceof CanceledError) return;
                 if (axios.isCancel(err)) return;
                 console.error("[Spotlight] search failed", err);
-                setError(t.spotlight.errors.searchFailed);
+                // Keyword results already on screen beat an error
+                // banner — keep them and log; surface the error only
+                // when the user would otherwise stare at nothing.
+                if (!keywordLanded) setError(t.spotlight.errors.searchFailed);
             } finally {
                 if (!controller.signal.aborted) setIsLoading(false);
             }
