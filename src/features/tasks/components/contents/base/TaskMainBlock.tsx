@@ -192,6 +192,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
     const showStartDate = !!taskContent.startDate || explicitlyShowStartDate;
     const [linkedBranches, setLinkedBranches] = useState<LinkedBranch[]>([]);
     useEffect(() => {
+        let cancelled = false;
         (async () => {
             if (taskContent.project && taskContent.parentTaskId != null) {
                 const parentTaskResult: TaskProps[] = await loadSpecificTask(
@@ -200,6 +201,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                     taskContent.parentTaskId,
                     accessToken
                 );
+                if (cancelled) return;
                 if (parentTaskResult.length === 1) {
                     setParentTask(parentTaskResult[0]);
                 } else {
@@ -209,7 +211,16 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                 setParentTask(undefined);
             }
         })();
-    }, [taskContent]);
+        return () => {
+            cancelled = true;
+        };
+        // Depend on the ids the lookup actually uses, not the
+        // `taskContent` object: regular mode passes
+        // `tmpCurrentTaskContent`, whose identity changes on every
+        // edit/autosave cycle — each change re-fired this effect and,
+        // whenever the IDB entry had just been invalidated by a save,
+        // sent another /task/getTask/ for an unchanged parent.
+    }, [taskContent.id, taskContent.parentTaskId, taskContent.project?.projectId]);
 
     // Auto-discover branches whose name contains this task's display ID
     // (e.g. "feature/GEN-42-foo" for task GEN-42). Only meaningful once
