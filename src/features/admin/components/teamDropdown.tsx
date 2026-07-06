@@ -26,12 +26,11 @@ import { TeamManagementState } from "../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../hooks/common/useUIStateManagement";
 import { fmt, useTranslation } from "../../../i18n";
 import { Team, TeamProfileProps, UserProps } from "../../../types/admin";
+import { buildAvatarSrc } from "../../../utils/avatarSrc";
 import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
 import { joinTeam } from "../services/joinTeam";
 import { loadMyTeams } from "../services/loadMyTeams";
 import { ModalTeamProfile } from "./modals/ModalTeamProfile";
-
-const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
 type TeamDropdownProps = {
     useTEM: TeamManagementState;
@@ -197,7 +196,7 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
                             }}
                         >
                             <Avatar
-                                src={`${media_url}/${useTEM.currentTeam.teamImgPath}`}
+                                src={buildAvatarSrc(useTEM.currentTeam.teamImgPath)}
                                 variant="outlined"
                                 sx={{
                                     borderRadius: "10px",
