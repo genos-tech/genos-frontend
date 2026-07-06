@@ -16,7 +16,10 @@
 // no hook for citation rewriting. Hand-rolling here gives us the
 // citation pass for free and keeps the dependency surface small.
 
-import { PartialBlock } from "@blocknote/core";
+// Type-only on purpose: a value import of @blocknote/core would pull
+// the whole editor runtime into every consumer of the agentQA barrel
+// (SpotlightOverlay is in the initial entry chunk).
+import type { PartialBlock } from "@blocknote/core";
 
 import { SpotlightResult } from "../spotlight/types";
 import { CITATION_LINK_PATTERN, CITATION_PATTERN, sourceToUrl } from "./citationUtils";

@@ -1,4 +1,5 @@
-import { Modal, ModalClose, ModalDialog } from "@mui/joy";
+import { lazy, Suspense } from "react";
+import { CircularProgress, Modal, ModalClose, ModalDialog, Stack } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
@@ -10,10 +11,31 @@ import { SprintMilestoneManagementState } from "../../hooks/tasks/useSprintMiles
 import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../types/admin";
 import { ModalTarget } from "../../utils/parseInternalUrl";
-import { ModalChatView } from "./views/ModalChatView";
-import { ModalMilestoneView } from "./views/ModalMilestoneView";
-import { ModalNoteView } from "./views/ModalNoteView";
-import { ModalTaskView } from "./views/ModalTaskView";
+
+// Lazy on purpose: these views transitively import the chat panes,
+// task preview and note editor — the whole BlockNote stack (~900 kB
+// gzipped vendor-editor chunk). UrlLinkModal itself is imported
+// eagerly by App, so static view imports would pin all of that into
+// the initial entry chunk even though a view only ever renders after
+// the user clicks an internal link.
+const ModalChatView = lazy(() =>
+    import("./views/ModalChatView").then((m) => ({ default: m.ModalChatView }))
+);
+const ModalMilestoneView = lazy(() =>
+    import("./views/ModalMilestoneView").then((m) => ({ default: m.ModalMilestoneView }))
+);
+const ModalNoteView = lazy(() =>
+    import("./views/ModalNoteView").then((m) => ({ default: m.ModalNoteView }))
+);
+const ModalTaskView = lazy(() =>
+    import("./views/ModalTaskView").then((m) => ({ default: m.ModalTaskView }))
+);
+
+const ViewLoadingFallback = () => (
+    <Stack sx={{ alignItems: "center", flex: 1, justifyContent: "center" }}>
+        <CircularProgress size="md" />
+    </Stack>
+);
 
 type UrlLinkModalProps = {
     target: ModalTarget | null;
@@ -130,7 +152,7 @@ export const UrlLinkModal = (props: UrlLinkModalProps) => {
                         };
                     }}
                 />
-                {renderBody()}
+                <Suspense fallback={<ViewLoadingFallback />}>{renderBody()}</Suspense>
             </ModalDialog>
         </Modal>
     );

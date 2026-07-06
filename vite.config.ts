@@ -23,7 +23,52 @@ export default defineConfig({
                 // list if you add a new heavy dep — the rule is "any
                 // single dep tree >50 kB minified is worth pinning".
                 manualChunks: (id) => {
+                    // Vite's virtual runtime helpers (the dynamic-import
+                    // preload helper, modulepreload polyfill) are imported
+                    // by every chunk that lazy-loads anything. If Rollup
+                    // co-locates them inside a big vendor chunk — it chose
+                    // vendor-editor — every other chunk (including the
+                    // entry) statically depends on that chunk just to
+                    // reach a 1 kB helper. Pin them to a micro-chunk.
+                    if (id.startsWith("\0vite/") || id.includes("vite/preload-helper")) {
+                        return "vite-runtime";
+                    }
                     if (!id.includes("node_modules")) return undefined;
+                    // Pin the React runtime to its own chunk. Without
+                    // this, Rollup is free to co-locate react-dom +
+                    // scheduler inside whichever vendor chunk it
+                    // groups first — it chose vendor-editor, which
+                    // made EVERY chunk (including the entry) statically
+                    // depend on the ~900 kB gzipped editor chunk just
+                    // to reach ReactDOM. That single edge kept the
+                    // editor stack in the critical path of the signin
+                    // page. Match on "node_modules/react/" (with both
+                    // slashes) so react-router / @floating-ui/react /
+                    // react-icons don't get dragged in.
+                    if (
+                        id.includes("node_modules/react/") ||
+                        id.includes("node_modules/react-dom/") ||
+                        id.includes("node_modules/scheduler/") ||
+                        id.includes("node_modules/use-sync-external-store/")
+                    ) {
+                        return "vendor-react";
+                    }
+                    // The unified/remark/micromark markdown constellation
+                    // is shared by react-markdown (Spotlight answers —
+                    // eager) and BlockNote's markdown import/export (lazy
+                    // editor chunk). Left unpinned, Rollup co-locates it
+                    // inside vendor-editor, which makes the ENTRY chunk
+                    // statically depend on the editor chunk to reach the
+                    // shared modules — putting ~900 kB gzipped of editor
+                    // code back into the signin critical path.
+                    if (
+                        /node_modules\/(react-markdown|micromark[^/]*|mdast-util-[^/]*|remark-[^/]*|rehype-[^/]*|hast-util-[^/]*|hastscript|unified|unist-util-[^/]*|vfile[^/]*|parse5|property-information|space-separated-tokens|comma-separated-tokens|character-entities[^/]*|decode-named-character-reference|stringify-entities|zwitch|bail|trough|devlop|longest-streak|markdown-table|ccount|escape-string-regexp|trim-lines|trim-trailing-lines|web-namespaces|html-void-elements|is-plain-obj|extend|entities|style-to-object|inline-style-parser|estree-util-is-identifier-name|html-url-attributes)\//.test(
+                            id
+                        ) ||
+                        id.includes("@ungap/structured-clone")
+                    ) {
+                        return "vendor-markdown";
+                    }
                     // BlockNote, Yjs, Hocuspocus, and Shiki all interlock —
                     // Shiki is used by BlockNote's code block, Hocuspocus is
                     // the collab provider for Yjs. Splitting them into

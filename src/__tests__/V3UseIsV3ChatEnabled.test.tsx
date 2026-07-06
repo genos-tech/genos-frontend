@@ -10,7 +10,7 @@
 import { renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { useIsV3ChatEnabled, useV3ChatEnabledForKind } from "../features/channel/V3ChatShell";
+import { useIsV3ChatEnabled, useV3ChatEnabledForKind } from "../features/channel/chatRolloutFlags";
 import { authApi } from "../services/api";
 import { runtimeConfigService } from "../services/runtimeConfig/runtimeConfigService";
 import { ChannelKind } from "../types/channel";
