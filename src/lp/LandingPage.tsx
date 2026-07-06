@@ -20,6 +20,7 @@ import {
     Users,
     Workflow,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 
 import { GitHubIcon } from "../assets/GithubIcon";
 import GenosAIHubSection from "./GenosAIHubSection";
@@ -692,12 +693,12 @@ export default function GenosLandingPage() {
                         </a>
 
                         <nav className="hidden items-center gap-7 text-sm font-semibold text-slate-600 dark:text-slate-300 md:flex">
-                            <a
+                            <Link
                                 className="transition hover:text-violet-700 dark:hover:text-white"
-                                href="#features"
+                                to="/features-guide"
                             >
                                 {t.nav.features}
-                            </a>
+                            </Link>
                             <a
                                 className="transition hover:text-violet-700 dark:hover:text-white"
                                 href="#value"

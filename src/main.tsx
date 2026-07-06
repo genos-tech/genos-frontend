@@ -20,6 +20,7 @@ import { analytics } from "./services/analytics";
 import { startLongTaskObserver } from "./services/perfObserver";
 
 import { App } from "./App";
+import GenosFeaturesPage from "./lp/FeaturesPage";
 import GenosLandingPage from "./lp/LandingPage";
 
 // Initialize PostHog once, before React mounts. No-ops when
@@ -52,6 +53,11 @@ createRoot(document.getElementById("root")!).render(
             {/* Public company / marketing page. Fully isolated from the auth
                 stack: no AuthProvider, no guards, no redirects. */}
             <Route element={<GenosLandingPage />} path="/home" />
+
+            {/* Public product guide (features, how-to, shortcuts). Linked from
+                the landing page and, like /home, fully isolated from the auth
+                stack: it renders its own I18nProvider internally. */}
+            <Route element={<GenosFeaturesPage />} path="/features-guide" />
 
             {/* All routes that need authentication context. */}
             <Route element={<AuthLayout />}>

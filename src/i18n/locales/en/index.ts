@@ -3,6 +3,7 @@ import { app } from "./app";
 import { calendar } from "./calendar";
 import { chat } from "./chat";
 import { common } from "./common";
+import { featuresPage } from "./featuresPage";
 import { history } from "./history";
 import { inbox } from "./inbox";
 import { layout } from "./layout";
@@ -32,4 +33,5 @@ export const en = {
     admin,
     calendar,
     history,
+    featuresPage,
 } as const;
