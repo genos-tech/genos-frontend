@@ -10,8 +10,7 @@ import { TeamManagementState } from "../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../types/admin";
 import { AllChatProps } from "../../../types/chat";
-
-const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
+import { buildAvatarSrc } from "../../../utils/avatarSrc";
 
 type ProjectAvatarProps = {
     socket: Socket | null;
@@ -39,7 +38,7 @@ export const ProjectAvatar = (props: ProjectAvatarProps) => {
             >
                 <Avatar
                     size="sm"
-                    src={`${media_url}/${pmChat.profileImagePath}`}
+                    src={buildAvatarSrc(pmChat.profileImagePath)}
                     sx={{ width: _avatarSize, height: _avatarSize }}
                 >
                     <AssignmentIcon sx={{ fontSize: 26 }} />

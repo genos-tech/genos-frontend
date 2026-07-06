@@ -51,13 +51,13 @@ import { loadProjectProfile } from "../../../../services/loadProjectProfile";
 import { purplePalette } from "../../../../theme/purplePalette";
 import { ProjectProfileProps, UserProps } from "../../../../types/admin";
 import { AllChatProps } from "../../../../types/chat";
+import { buildAvatarSrc } from "../../../../utils/avatarSrc";
 import { extractYYYYMMDD } from "../../../../utils/dateUtils";
 import { resolveLegacyChatId } from "../../../chat/utils/channelIdResolvers";
 import { leaveProject } from "../../services/leaveProject";
 import { updateProjectProfile } from "../../services/updateProjectProfile";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
-const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
 type ModalProjectProfileProps = {
     socket: Socket | null;
@@ -502,7 +502,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                         }}
                                     >
                                         <Avatar
-                                            src={`${media_url}/${liveChat.profileImagePath}`}
+                                            src={buildAvatarSrc(liveChat.profileImagePath)}
                                             sx={{
                                                 width: 180,
                                                 height: 180,
