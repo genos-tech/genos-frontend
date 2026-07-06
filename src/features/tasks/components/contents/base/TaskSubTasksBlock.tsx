@@ -117,12 +117,13 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                 currentTaskContent.id != null &&
                 (forceLoad || useTM.currentPreviewTaskId === currentTaskContent.id);
             if (!shouldLoad) return;
-            const loaded: TaskProps[] = await loadSpecificChildTasks(
-                myself,
-                currentTaskContent.project!.projectId,
-                currentTaskContent.id!,
-                accessToken
-            );
+            const loaded: TaskProps[] =
+                (await loadSpecificChildTasks(
+                    myself,
+                    currentTaskContent.project!.projectId,
+                    currentTaskContent.id!,
+                    accessToken
+                )) ?? [];
             if (cancelled) return;
             setChildTasks(loaded?.length ? loaded : []);
         })();
