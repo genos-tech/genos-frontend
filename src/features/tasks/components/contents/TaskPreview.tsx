@@ -49,6 +49,7 @@ import { ModalTaskDiagram } from "../../diagram/components/ModalTaskDiagram";
 import { loadSpecificTask } from "../../services/loadSpecificTask";
 import { loadTaskActivities } from "../../services/loadTaskActivities";
 import { loadTaskComments } from "../../services/loadTaskComments";
+import { onTaskTouched } from "../../services/taskEvents";
 import {
     updateProjectOptions,
     updateTagOptions,
@@ -482,6 +483,30 @@ export const TaskPreview = (props: TaskPreviewProps) => {
     // through which a regular task's comments get refreshed — when
     // the chat thread is open standalone (no preview pane), the
     // ThreadCommentsView component runs its own load.
+    //
+    // Refetches are keyed off `genos:task-touched` events scoped to
+    // the OPEN task (see taskEvents.ts) rather than the global
+    // `isTaskUpdated` / `isTaskCommentUpdated` flags. The flags flip
+    // for any task event in the team and on every mirror-loop cycle,
+    // which re-fired these effects for unrelated tasks — the
+    // `/task/activity/` + `/task/comment/` request storm.
+    const [commentRefreshNonce, setCommentRefreshNonce] = useState(0);
+    const [activityRefreshNonce, setActivityRefreshNonce] = useState(0);
+    useEffect(() => {
+        const openTaskId = Number(useTM.currentPreviewTask?.id);
+        if (!Number.isFinite(openTaskId) || openTaskId <= 0) return;
+        return onTaskTouched(({ taskId, kind }) => {
+            if (taskId !== openTaskId) return;
+            if (kind === "comment") {
+                // A comment also writes an activity row (comment_added),
+                // so the Activity feed refreshes alongside the list.
+                setCommentRefreshNonce((n) => n + 1);
+                setActivityRefreshNonce((n) => n + 1);
+            } else if (kind === "update") {
+                setActivityRefreshNonce((n) => n + 1);
+            }
+        });
+    }, [taskEditState.currentTaskId, useTM.currentPreviewTask?.id]);
     const taskComments = useTM.taskComments;
     const setTaskComments = useTM.setTaskComments;
     useEffect(() => {
@@ -508,7 +533,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         return () => {
             cancelled = true;
         };
-    }, [useTM.isTaskCommentUpdated, taskEditState.currentTaskId]);
+    }, [commentRefreshNonce, taskEditState.currentTaskId]);
 
     // Get Task Activities. The fetch lives here (rather than inside
     // `TaskActivityFeed`) so the data survives Activity tab unmounts.
@@ -519,15 +544,12 @@ export const TaskPreview = (props: TaskPreviewProps) => {
     // `taskComments` / `taskNotes` and makes Activity tab switching
     // feel as snappy as the others.
     //
-    // Refetch triggers mirror the previous in-component logic:
+    // Refetch triggers:
     //   - currentTaskId changes (different task selected)
-    //   - isTaskUpdated / isTaskCommentUpdated / isTaskUpdatedBySomeone
-    //     flip (something elsewhere in the preview reported a change)
+    //   - activityRefreshNonce bumps (a `genos:task-touched` event
+    //     matched the open task — comment posted or task saved)
     const [taskActivities, setTaskActivities] = useState<TaskActivityProps[]>([]);
     const [isLoadingTaskActivities, setIsLoadingTaskActivities] = useState(false);
-    const taskActivitiesRefetchKey = `${useTM.isTaskUpdated ? "u" : ""}${
-        useTM.isTaskCommentUpdated.isUpdate ? "c" : ""
-    }${useTM.isTaskUpdatedBySomeone ? "s" : ""}`;
     useEffect(() => {
         const previewTaskId = Number(useTM.currentPreviewTask?.id);
         if (!Number.isFinite(previewTaskId) || previewTaskId <= 0) {
@@ -545,7 +567,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         return () => {
             cancelled = true;
         };
-    }, [taskEditState.currentTaskId, taskActivitiesRefetchKey]);
+    }, [taskEditState.currentTaskId, activityRefreshNonce]);
 
     // Get team members
     const [isOpenTeamMembersList, setIsOpenTeamMembersList] = useState(false);
@@ -1231,6 +1253,25 @@ const MilestonePreviewInner = ({
     // thread's Comments tab) but the load effect lives below — the
     // milestone preview keys off `milestone.taskId` directly because
     // `currentPreviewTask` is undefined in milestone mode.
+    //
+    // Refetches key off `genos:task-touched` events scoped to the
+    // backing task — same rationale as the regular-mode subscription
+    // (see the sibling comment in `TaskPreview`).
+    const [commentRefreshNonce, setCommentRefreshNonce] = useState(0);
+    const [activityRefreshNonce, setActivityRefreshNonce] = useState(0);
+    useEffect(() => {
+        const backingTaskId = milestone?.taskId;
+        if (backingTaskId == null) return;
+        return onTaskTouched(({ taskId, kind }) => {
+            if (taskId !== backingTaskId) return;
+            if (kind === "comment") {
+                setCommentRefreshNonce((n) => n + 1);
+                setActivityRefreshNonce((n) => n + 1);
+            } else if (kind === "update") {
+                setActivityRefreshNonce((n) => n + 1);
+            }
+        });
+    }, [milestone?.taskId]);
     const taskComments = useTM.taskComments;
     const setTaskComments = useTM.setTaskComments;
     const [taskNotes, setTaskNotes] = useState<TaskNoteProps[]>([]);
@@ -1252,7 +1293,7 @@ const MilestonePreviewInner = ({
             setTaskComments(comments);
             markCommentsLoaded(comments.length);
         })();
-    }, [milestone?.taskId, useTM.isTaskCommentUpdated]);
+    }, [milestone?.taskId, commentRefreshNonce]);
 
     useEffect(() => {
         const taskId = milestone?.taskId;
@@ -1279,9 +1320,6 @@ const MilestonePreviewInner = ({
     // sibling effect in `TaskPreview`).
     const [taskActivities, setTaskActivities] = useState<TaskActivityProps[]>([]);
     const [isLoadingTaskActivities, setIsLoadingTaskActivities] = useState(false);
-    const milestoneActivitiesRefetchKey = `${useTM.isTaskUpdated ? "u" : ""}${
-        useTM.isTaskCommentUpdated.isUpdate ? "c" : ""
-    }${useTM.isTaskUpdatedBySomeone ? "s" : ""}`;
     useEffect(() => {
         const taskId = milestone?.taskId;
         if (taskId == null) {
@@ -1299,7 +1337,7 @@ const MilestonePreviewInner = ({
         return () => {
             cancelled = true;
         };
-    }, [milestone?.taskId, milestoneActivitiesRefetchKey]);
+    }, [milestone?.taskId, activityRefreshNonce]);
 
     // Single-callback replacement for the older two-flag deletion
     // pattern (`isAttachmentDeleted` / `deletedAttachmentId`). Both the

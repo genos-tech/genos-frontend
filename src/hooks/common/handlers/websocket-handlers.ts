@@ -6,6 +6,7 @@ import {
     v3MessageToLegacyChatPayload,
     v3MessageToLegacyThreadPayload,
 } from "../../../features/chat/adapters/v3MessageToNotification";
+import { emitTaskTouched } from "../../../features/tasks/services/taskEvents";
 import { NotificationManager } from "../../../services/notifications/notificationManager";
 import {
     buildActivityIntent,
@@ -136,6 +137,13 @@ export const setupWebSocketHandlers = (
             if (setIsTaskCommentUpdated) {
                 setIsTaskCommentUpdated({ isUpdate: true, scrollToBottom: false });
             }
+
+            // Scoped refresh signal: carries the task id so TaskPreview
+            // only refetches comments/activities when the touched task
+            // is the one it's showing. The global flag above stays for
+            // its other consumers (chip bump reset in the edit editor);
+            // the preview no longer keys off it.
+            emitTaskTouched(Number(message.taskId), "comment");
 
             // Live-bump the PM bubble's `taskCommentCount` chip. Without
             // this, the chip stays stale until the user refreshes the

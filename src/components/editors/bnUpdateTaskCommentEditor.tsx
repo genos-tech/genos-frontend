@@ -31,6 +31,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { useMentionGroupsContext } from "../../context/MentionGroupsContext";
+import { emitTaskTouched } from "../../features/tasks/services/taskEvents";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
 import { useAnchorClickIntercept } from "../../hooks/common/useAnchorClickIntercept";
@@ -280,6 +281,7 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
                     },
                     (ack: any) => {
                         useTM.setIsTaskCommentUpdated({ isUpdate: true, scrollToBottom: true });
+                        emitTaskTouched(Number(taskId), "comment");
                     }
                 );
             }
