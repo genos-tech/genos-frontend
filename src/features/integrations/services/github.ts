@@ -1,6 +1,7 @@
 import axios from "axios";
 
 import { authApi } from "../../../services/api";
+import { createRequestCache } from "../../../services/requestCache";
 
 export interface GithubPullSummary {
     title: string;
@@ -145,5 +146,95 @@ export const loadLinkedPulls = async (
         return res.data.pulls ?? [];
     } catch {
         return [];
+    }
+};
+
+// ── Batched pulls-for-task collector ──────────────────────────────
+//
+// `PrStatusCell` renders once per table row, so per-row
+// `loadLinkedPulls` meant N requests per table paint. Calls arriving
+// within one flush window coalesce into a single
+// `GET /github/pulls/for-tasks/?task_ids=…` and the response fans
+// back out per task. The 50ms window comfortably collects one grid
+// paint of rows (they mount within a frame or two) while staying
+// invisible next to the network round-trip; a microtask-only window
+// would miss virtualised late mounts.
+//
+// A 60s TTL memo per task (mirroring the server's Redis TTL) rides
+// on `createRequestCache`, which also dedups concurrent calls for the
+// same task into one waiter. On any batch failure — including a 404
+// from a backend that doesn't have the endpoint yet — each waiter
+// falls back to the per-task endpoint, so deploy order is safe.
+
+interface LinkedPullsBatchResponse {
+    pulls_by_task: Record<string, LinkedPull[]>;
+}
+
+const BATCH_WINDOW_MS = 50;
+const BATCH_MAX_IDS = 200; // mirrors the backend cap
+
+type PullsBatchWaiter = {
+    taskId: string;
+    accessToken: string | null;
+    resolve: (pulls: LinkedPull[]) => void;
+};
+
+const pullsBatchCache = createRequestCache<LinkedPull[]>({ ttlMs: 60_000 });
+let pendingPullsWaiters: PullsBatchWaiter[] = [];
+let pullsFlushTimer: ReturnType<typeof setTimeout> | null = null;
+
+const flushPullsBatch = async (): Promise<void> => {
+    const waiters = pendingPullsWaiters;
+    pendingPullsWaiters = [];
+    pullsFlushTimer = null;
+    if (waiters.length === 0) return;
+
+    const fallback = (chunk: PullsBatchWaiter[]) => {
+        for (const w of chunk) {
+            void loadLinkedPulls(w.accessToken, w.taskId).then(w.resolve);
+        }
+    };
+
+    for (let i = 0; i < waiters.length; i += BATCH_MAX_IDS) {
+        const chunk = waiters.slice(i, i + BATCH_MAX_IDS);
+        const api = authApi(chunk[0].accessToken);
+        if (!api) {
+            for (const w of chunk) w.resolve([]);
+            continue;
+        }
+        try {
+            const ids = [...new Set(chunk.map((w) => w.taskId))];
+            const res = await api.get<LinkedPullsBatchResponse>("/github/pulls/for-tasks/", {
+                params: { task_ids: ids.join(",") },
+            });
+            const byTask = res.data.pulls_by_task ?? {};
+            for (const w of chunk) w.resolve(byTask[w.taskId] ?? []);
+        } catch {
+            fallback(chunk);
+        }
+    }
+};
+
+export const loadLinkedPullsBatched = (
+    accessToken: string | null,
+    taskId: number | string
+): Promise<LinkedPull[]> =>
+    pullsBatchCache.get(`ghpulls:${taskId}`, () => {
+        return new Promise<LinkedPull[]>((resolve) => {
+            pendingPullsWaiters.push({ taskId: String(taskId), accessToken, resolve });
+            if (pullsFlushTimer == null) {
+                pullsFlushTimer = setTimeout(() => void flushPullsBatch(), BATCH_WINDOW_MS);
+            }
+        });
+    });
+
+// Test affordance: reset the memo + any pending flush state so one
+// test's batch can't leak into the next.
+export const _resetLinkedPullsBatchingForTests = (): void => {
+    pullsBatchCache.clear();
+    pendingPullsWaiters = [];
+    if (pullsFlushTimer != null) {
+        clearTimeout(pullsFlushTimer);
+        pullsFlushTimer = null;
     }
 };
