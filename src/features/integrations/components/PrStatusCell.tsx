@@ -3,7 +3,7 @@ import { Box, Stack, Tooltip } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { purplePalette } from "../../../theme/purplePalette";
-import { loadLinkedPulls, type LinkedPull } from "../services/github";
+import { loadLinkedPullsBatched, type LinkedPull } from "../services/github";
 import { getCachedOrFetchPrStatus, type PrStatusResult } from "../services/prStatusCache";
 import type { PrDetailResponse } from "../services/prTypes";
 import {
@@ -35,8 +35,10 @@ import { PrHoverDetails } from "./PrHoverDetails";
 // PR URLs in `task.links` are intentionally not surfaced here.
 //
 // Two-layer fetch:
-//   1. `loadLinkedPulls(taskId)` — server-cached list of "auto-linked"
-//      PR URLs for this task.
+//   1. `loadLinkedPullsBatched(taskId)` — all cells mounting within
+//      one paint coalesce into a single `pulls/for-tasks/` request
+//      (a table of 100 rows is one GET, not 100), memoised 60s per
+//      task to match the server's Redis TTL.
 //   2. `getCachedOrFetchPrStatus(url)` — client-cached PR detail used
 //      to derive the state + CI badge. Reuses the same module-scoped
 //      TTL cache as LinkedPrCard so revisits are instant.
@@ -271,7 +273,7 @@ export const PrStatusCell = ({ taskId, accessToken }: Props) => {
         let cancelled = false;
         setPulls(null);
         (async () => {
-            const list = await loadLinkedPulls(accessToken, taskId);
+            const list = await loadLinkedPullsBatched(accessToken, taskId);
             if (!cancelled) setPulls(list);
         })();
         return () => {
