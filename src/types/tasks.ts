@@ -13,6 +13,11 @@ export type AttachmentFileProps = {
     attachment_id: number;
     file: File;
     file_base64?: string;
+    // MEDIA_URL-prefixed path from `getTask?attachments=meta` — the
+    // no-base64 response shape. `file` carries the bare storage path
+    // (a string, not a File) in that mode; previews compose the
+    // absolute media URL from it.
+    file_url?: string;
     name?: string;
     type?: string;
 };

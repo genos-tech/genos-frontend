@@ -47,7 +47,12 @@ export const loadSpecificTask = async (
 
         const api = authApi(accessToken);
         if (api) {
-            const query: string = `team_id=${myself.teamId}&project_id=${projectId}&task_id=${taskId}`;
+            // `attachments=meta` skips the server's base64 inlining —
+            // attachments arrive as `file` (storage path) + `file_url`
+            // and previews lazy-load from /media/ instead of shipping
+            // every attachment byte inside the JSON (and the IDB cache
+            // entry). See useAttachmentPreviews.resolvePreview.
+            const query: string = `team_id=${myself.teamId}&project_id=${projectId}&task_id=${taskId}&attachments=meta`;
             const res = await api.get(`/task/getTask/?${query}`);
             const data = res.data;
             if (Array.isArray(data) && data[0]) {

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef } from "react";
 
 import { AttachmentFileProps } from "../../../types/tasks";
+import { buildAvatarSrc } from "../../../utils/avatarSrc";
 
 export type AttachmentPreview = {
     url: string;
@@ -31,11 +32,22 @@ const resolvePreview = (item: AttachmentFileProps): AttachmentPreview | null => 
     if (item.file instanceof File) {
         return { url: URL.createObjectURL(item.file), kind, ownsUrl: true };
     }
+    const filePath = item.file as unknown;
+    // Meta shape (`getTask?attachments=meta`): no base64 — `file` is
+    // the bare storage path and `file_url` marks the mode. Compose the
+    // absolute Django media URL the same way avatars do (`file_url`
+    // itself starts with `/media/`, and VITE_MEDIA_ROOT_DJANGO already
+    // ends in `/media`, so build from the bare path to avoid doubling
+    // the prefix). The browser lazy-loads the bytes on first render
+    // instead of receiving them inside the getTask JSON.
+    if (item.file_url && typeof filePath === "string" && filePath.length > 0) {
+        const absolute = buildAvatarSrc(filePath);
+        if (absolute) return { url: absolute, kind, ownsUrl: false };
+    }
     // `useSendUpdatedTask` reassigns `file` to a server-side path
     // string after a successful upload (see useSendUpdatedTask.ts:107),
     // so this branch handles the post-save shape that the
     // `AttachmentFileProps` type doesn't currently reflect.
-    const filePath = item.file as unknown;
     if (typeof filePath === "string" && filePath.length > 0) {
         return { url: filePath, kind, ownsUrl: false };
     }
