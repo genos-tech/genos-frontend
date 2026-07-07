@@ -1,11 +1,6 @@
 import { ReactNode } from "react";
+import { DragDropContext, Draggable, Droppable, DropResult } from "@hello-pangea/dnd";
 import { Box } from "@mui/joy";
-import {
-    DragDropContext,
-    Draggable,
-    Droppable,
-    DropResult,
-} from "@hello-pangea/dnd";
 
 // ---------------------------------------------------------------------------
 // Sidebar note drag & drop — shared across the My/Task/Chat note sections.
@@ -214,9 +209,7 @@ export const DraggableNoteRow = ({ kind, noteId, index, children }: DraggableNot
                 sx={{
                     opacity: snapshot.isDragging ? 0.85 : 1,
                     borderRadius: "8px",
-                    boxShadow: snapshot.isDragging
-                        ? "0 4px 16px rgba(124,58,237,0.35)"
-                        : "none",
+                    boxShadow: snapshot.isDragging ? "0 4px 16px rgba(124,58,237,0.35)" : "none",
                 }}
             >
                 {children}
