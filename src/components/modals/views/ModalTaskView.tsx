@@ -153,6 +153,19 @@ export const ModalTaskView = (props: ModalTaskViewProps) => {
         ...useTM,
         currentPreviewTask: modalTask,
         currentPreviewTaskId: target.taskId,
+        // Pin the preview router to task mode. TaskPreview renders
+        // MilestonePreviewInner whenever `currentPreviewKind` is
+        // "milestone" with a real milestone id — and without this
+        // override those come from the HOST page's global state. A task
+        // link opened while a milestone preview is active behind the
+        // modal (e.g. the task diagram launched from a milestone) would
+        // hijack this modal into that unrelated milestone instead of
+        // the clicked task. A target that IS a milestone-backing task
+        // still reroutes to its own milestone via the
+        // `currentPreviewTask.isMilestone` branch, which reads the
+        // modal-local task above — that behavior is correct and kept.
+        currentPreviewKind: "task",
+        currentPreviewMilestoneId: -1,
         setCurrentPreviewTask: (next) => {
             const resolved = typeof next === "function" ? next(modalTask ?? undefined) : next;
             if (resolved) setModalTask(resolved);

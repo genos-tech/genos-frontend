@@ -26,6 +26,7 @@ import {
 
 import { useAuth } from "../../../../context/AuthContext";
 import { invalidateCachedFullTask } from "../../../../db/services/task-full.service";
+import { useUrlLinkModal } from "../../../../hooks/common/UrlLinkModalContext";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
@@ -35,6 +36,7 @@ import { TaskTableProps } from "../../../../types/tasks";
 import { addTask } from "../../services/addTask";
 import { createTaskDependency } from "../../services/createTaskDependency";
 import { deleteTaskDependency } from "../../services/deleteTaskDependency";
+import { onTaskTouched } from "../../services/taskEvents";
 import { Sprint } from "../../sprint-milestone/types";
 import { useDagreLayout } from "../hooks/useDagreLayout";
 import { createDiagramSubtask } from "../services/createDiagramSubtask";
@@ -505,6 +507,12 @@ const CanvasInner = ({
     const P = isDark ? purplePalette.dark : purplePalette.light;
     const { fitView } = useReactFlow();
     const dagreLayout = useDagreLayout();
+    // Global URL-link modal (the same overlay chat links open). Used by
+    // the node cards' "Open task / milestone" buttons so the target
+    // opens ABOVE the diagram instead of tearing the diagram down.
+    // Null outside the provider (signin pages) — falls back to the
+    // legacy close-diagram-and-open-preview path.
+    const urlLinkModal = useUrlLinkModal();
 
     const [nodes, setNodes] = useState<Node[]>([]);
     const [edges, setEdges] = useState<Edge[]>([]);
@@ -710,12 +718,33 @@ const CanvasInner = ({
 
     const handleOpenPreview = useCallback(
         (taskId: number) => {
-            // For ghost (external) nodes the target task lives in a
-            // different project; we need to switch `usePM.currentProject`
-            // first or the preview pane won't be able to hydrate.
-            // Mirrors the cross-project navigation in
-            // TaskDependenciesBlock's chip click handler.
+            // Preferred path: open the task/milestone in the global
+            // URL-link modal (UrlLinkModal, z=10020) which stacks ABOVE
+            // this diagram's Joy modal (z=9999) — the graph stays open
+            // behind the overlay. The modal views hydrate themselves
+            // from the ids in the URL (ModalTaskView / ModalMilestone-
+            // View keep global preview state untouched), so ghost
+            // (external) nodes just carry their own projectId in the
+            // URL — no `usePM.setCurrentProject` switch needed.
+            const internal = graphRef.current?.tasks.find((t) => Number(t.id) === taskId);
             const ghost = graphRef.current?.externalTasks.find((t) => Number(t.id) === taskId);
+            if (urlLinkModal && (internal || ghost)) {
+                const targetProjectId =
+                    ghost && ghost.projectId != null ? ghost.projectId : projectId;
+                // Milestone-backing nodes open the milestone view (the
+                // card's button reads "Open milestone"); everything
+                // else opens the task view.
+                const href =
+                    internal?.isMilestone === true && internal.milestoneId != null
+                        ? `/workspace/tasks/project/${targetProjectId}/milestone/${internal.milestoneId}`
+                        : `/workspace/tasks/project/${targetProjectId}/task/${taskId}`;
+                urlLinkModal.openModalByHref(href);
+                return;
+            }
+
+            // Fallback (no UrlLinkModal provider mounted): legacy
+            // behavior — switch project for ghosts, open the preview
+            // pane, and close the diagram so the pane is visible.
             if (ghost && ghost.projectId != null && ghost.projectId !== projectId) {
                 const projectName = (ghost as { projectName?: string | null }).projectName ?? "";
                 usePM.setCurrentProject({
@@ -727,7 +756,7 @@ const CanvasInner = ({
             useTM.setCurrentPreviewTaskId(taskId);
             onCloseModal();
         },
-        [useTM, usePM, onCloseModal, projectId]
+        [urlLinkModal, useTM, usePM, onCloseModal, projectId]
     );
 
     // Wire handlers into a stable bag so `buildNodesAndEdges` doesn't
@@ -815,6 +844,26 @@ const CanvasInner = ({
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [rootTaskId, projectId]);
+
+    // Keep the graph fresh while the URL-link overlay is open on top of
+    // it: edits made in that modal go through useSendUpdatedTask (emits
+    // "update") and its quick-add path (emits "children"). When the
+    // touched task is part of this graph, re-fetch + re-layout so the
+    // cards behind the overlay don't show stale titles/statuses.
+    // "comment" events don't change anything a card renders — skipped.
+    // Canvas-originated mutations don't emit task-touched, so this
+    // never re-enters off our own writes.
+    useEffect(() => {
+        return onTaskTouched(({ taskId, kind }) => {
+            if (kind === "comment") return;
+            const inGraph = graphRef.current?.tasks.some((t) => Number(t.id) === taskId) ?? false;
+            if (!inGraph) return;
+            void (async () => {
+                const graph = await refresh();
+                if (graph) assembleAndLayout(graph);
+            })();
+        });
+    }, [refresh, assembleAndLayout]);
 
     // React Flow events.
     const onNodesChange = useCallback(
