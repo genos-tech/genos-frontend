@@ -5,6 +5,7 @@ import { DatabaseUtils } from "../../db/utils/database";
 import { createEmptyChatNote } from "../../features/notes/chat-notes/services/createEmptyChatNote";
 import { loadChatNoteMeta } from "../../features/notes/chat-notes/services/loadChatNoteMeta";
 import { loadChatNotesByChatId } from "../../features/notes/chat-notes/services/loadChatNotesByChatId";
+import { moveChatNote as moveChatNoteApi } from "../../features/notes/chat-notes/services/moveChatNote";
 import { addNote } from "../../features/notes/common/services/addNote";
 import { deleteNoteRole } from "../../features/notes/common/services/deleteNoteRole";
 import { loadNoteRoles } from "../../features/notes/common/services/loadNoteRoles";
@@ -33,6 +34,7 @@ import {
 } from "../../features/notes/recent-notes/services";
 import { createEmptyTaskNote } from "../../features/notes/task-notes/services/createEmptyTaskNote";
 import { loadTaskNoteMeta } from "../../features/notes/task-notes/services/loadTaskNoteMeta";
+import { moveTaskNote as moveTaskNoteApi } from "../../features/notes/task-notes/services/moveTaskNote";
 import { UserProps } from "../../types/admin";
 import {
     ChatNoteMetaProps,
@@ -59,6 +61,7 @@ import {
     buildTaskNoteTree,
     collectDescendantFolderIds,
     collectFolderAncestorIds,
+    collectNoteDescendantIds,
 } from "../../utils/note";
 import { initCurrentChatNoteChain, updataChatNoteChain } from "./chatNote";
 import { initCurrentMyNoteChain, updataMyNoteChain } from "./myNote";
@@ -125,6 +128,15 @@ export interface NoteManagementState {
     isFolderExpanded: (folderId: number) => boolean;
     toggleFolderExpanded: (folderId: number) => void;
     expandFolder: (folderId: number) => void;
+
+    // Sidebar DnD re-anchors: move a task/chat note (and its descendant
+    // subtree, cascaded server-side) to a different task / channel.
+    moveTaskNoteToTask: (noteId: number, projectId: number, taskId: number) => Promise<void>;
+    moveChatNoteToChat: (
+        noteId: number,
+        chatType: number,
+        channelId: string | number
+    ) => Promise<void>;
 
     // Favorite notes
     favoriteNotes: FavoriteNotesMetaResponse | null;
@@ -860,6 +872,134 @@ export const useNoteManagement = (
         if (folderId != null) expandFolder(folderId);
     };
 
+    // ------------------------------------------------------------------
+    // Sidebar DnD re-anchors (task/chat notes)
+    // ------------------------------------------------------------------
+
+    const moveTaskNoteToTask = async (noteId: number, projectId: number, taskId: number) => {
+        if (!accessToken) return;
+        // The backend cascades the re-anchor to the whole
+        // parent_note_id subtree — mirror that optimistically so the
+        // sidebar re-groups the entire chain at once.
+        const affected = collectNoteDescendantIds(taskNoteMeta, noteId);
+        setTaskNoteMeta((prev) =>
+            prev.map((n) => (affected.has(n.noteId) ? { ...n, projectId, taskId } : n))
+        );
+        if (currentTaskNote && affected.has(currentTaskNote.noteId)) {
+            setCurrentTaskNote({ ...currentTaskNote, projectId, taskId });
+        }
+        const cached = getCachedNote("task", noteId);
+        if (cached) {
+            upsertNoteCache({ ...(cached as TaskNoteProps), projectId, taskId });
+        }
+        try {
+            const idbNote = await noteService.getTaskNote(noteId);
+            if (idbNote) {
+                await noteService.saveTaskNote({ ...idbNote, projectId, taskId });
+            }
+        } catch {
+            // IDB failure is non-fatal.
+        }
+        const moved = await moveTaskNoteApi(myself, noteId, taskId, accessToken);
+        if (!moved) {
+            await getTaskNoteMeta();
+            return;
+        }
+        // Merge the response's enriched hierarchy labels into every
+        // affected row — they all anchor to the same target task now,
+        // so one label set applies to the whole chain. Saves a full
+        // meta refetch.
+        setTaskNoteMeta((prev) =>
+            prev.map((n) =>
+                affected.has(n.noteId)
+                    ? {
+                          ...n,
+                          projectId,
+                          taskId,
+                          projectName: moved.projectName,
+                          taskTitle: moved.taskTitle,
+                          displayId: moved.displayId,
+                          parentTaskId: moved.parentTaskId,
+                          parentTaskTitle: moved.parentTaskTitle,
+                          parentTaskDisplayId: moved.parentTaskDisplayId,
+                          parentTaskIsMilestone: moved.parentTaskIsMilestone,
+                          isMilestone: moved.isMilestone,
+                          milestoneId: moved.milestoneId,
+                          milestoneTitle: moved.milestoneTitle,
+                      }
+                    : n
+            )
+        );
+    };
+
+    const moveChatNoteToChat = async (
+        noteId: number,
+        chatType: number,
+        channelId: string | number
+    ) => {
+        if (!accessToken) return;
+        const affected = collectNoteDescendantIds(chatNoteMeta, noteId);
+        // PUNCH LIST (v3 chatId migration): ChatNoteMetaProps declares
+        // chatId:number / threadId:number, but post-flip chatId carries
+        // the channel UUID string and a moved note's threadId is null
+        // (thread anchoring is cleared — the old thread root lives in
+        // the old channel). Cast at the patch site like the existing
+        // stringify-at-comparison call sites do.
+        setChatNoteMeta((prev) =>
+            prev.map((n) =>
+                affected.has(n.noteId)
+                    ? {
+                          ...n,
+                          chatType,
+                          chatId: channelId as unknown as number,
+                          isThread: false,
+                          threadId: null as unknown as number,
+                          // Clear the stale label so groupChatNotes
+                          // re-resolves the name from allChats.
+                          chatName: undefined,
+                      }
+                    : n
+            )
+        );
+        if (currentChatNote && affected.has(currentChatNote.noteId)) {
+            setCurrentChatNote({
+                ...currentChatNote,
+                chatType,
+                chatId: channelId as unknown as number,
+                isThread: false,
+                threadId: null as unknown as number,
+            });
+        }
+        const cached = getCachedNote("chat", noteId);
+        if (cached) {
+            upsertNoteCache({
+                ...(cached as ChatNoteProps),
+                chatType,
+                chatId: channelId as unknown as number,
+                isThread: false,
+                threadId: null as unknown as number,
+            });
+        }
+        try {
+            const idbNote = await noteService.getChatNote(noteId);
+            if (idbNote) {
+                await noteService.saveChatNote({
+                    ...idbNote,
+                    chatType,
+                    chatId: channelId as unknown as number,
+                    isThread: false,
+                    threadId: null as unknown as number,
+                });
+            }
+        } catch {
+            // IDB failure is non-fatal.
+        }
+        const moved = await moveChatNoteApi(myself, noteId, chatType, channelId, accessToken);
+        if (!moved) {
+            await getChatNoteMeta();
+        }
+    };
+
     // Favorite notes functions
     const getFavoriteNotesMeta = async () => {
         const loadedFavorites = await loadFavoriteNotesMeta(myself, accessToken);
@@ -1584,6 +1724,8 @@ export const useNoteManagement = (
         isFolderExpanded,
         toggleFolderExpanded,
         expandFolder,
+        moveTaskNoteToTask,
+        moveChatNoteToChat,
 
         // Favorite notes
         favoriteNotes,

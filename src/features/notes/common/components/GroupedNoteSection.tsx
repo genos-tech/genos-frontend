@@ -4,12 +4,21 @@ import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
 import { Box, List, ListItem, ListItemButton, ListItemContent, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { DroppableHeader, SidebarDndKind } from "../dnd/sidebarNoteDnd";
+
 interface GroupedNoteSectionProps {
     groupKey: string;
     groupLabel: string;
     subLabel?: string;
     children: ReactNode;
     defaultExpanded?: boolean;
+    // When set, the header row becomes a sidebar-DnD drop target for
+    // this container (drop a note onto the task/chat folder to
+    // re-anchor it). Only NoteSidebar passes these — the component
+    // renders no Droppable otherwise, so other hosts don't need a
+    // DragDropContext.
+    droppableId?: string;
+    droppableKind?: SidebarDndKind;
 }
 
 function GroupedNoteSectionComponent({
@@ -18,100 +27,118 @@ function GroupedNoteSectionComponent({
     subLabel,
     children,
     defaultExpanded = false,
+    droppableId,
+    droppableKind,
 }: GroupedNoteSectionProps) {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
+    const headerButton = (isDraggingOver: boolean) => (
+        <ListItemButton
+            sx={{
+                borderRadius: "8px",
+                py: 0.5,
+                px: 1,
+                my: 0.25,
+                gap: 0.75,
+                minHeight: 32,
+                transition: "all 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
+                backgroundColor: isDraggingOver
+                    ? isDark
+                        ? "rgba(124,58,237,0.18)"
+                        : "rgba(124,58,237,0.1)"
+                    : isDark
+                      ? "rgba(255,255,255,0.02)"
+                      : "rgba(0,0,0,0.01)",
+                outline: isDraggingOver ? "1px dashed" : "none",
+                outlineColor: isDark ? "rgba(167,139,250,0.7)" : "rgba(124,58,237,0.5)",
+                "&:hover": {
+                    backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
+                },
+            }}
+            onClick={() => setIsExpanded(!isExpanded)}
+        >
+            {/* Chevron */}
+            <Box
+                sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: 16,
+                    height: 16,
+                    borderRadius: "4px",
+                    flexShrink: 0,
+                    transition: "all 0.15s ease",
+                }}
+            >
+                <ChevronRightRoundedIcon
+                    sx={{
+                        fontSize: 13,
+                        color: isDark ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.35)",
+                        transition: "transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                        transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)",
+                    }}
+                />
+            </Box>
+
+            {/* Folder Icon */}
+            <FolderRoundedIcon
+                sx={{
+                    fontSize: 14,
+                    color: isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.4)",
+                    flexShrink: 0,
+                }}
+            />
+
+            <ListItemContent sx={{ minWidth: 0 }}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+                    <Typography
+                        level="body-xs"
+                        sx={{
+                            fontWeight: 600,
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                            color: isDark ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.6)",
+                            fontSize: "0.75rem",
+                            letterSpacing: "-0.01em",
+                        }}
+                    >
+                        {groupLabel}
+                    </Typography>
+                    {subLabel && (
+                        <Typography
+                            level="body-xs"
+                            sx={{
+                                fontWeight: 400,
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                                color: isDark
+                                    ? "rgba(255, 255, 255, 0.71)"
+                                    : "rgba(0, 0, 0, 0.57)",
+                                fontSize: "0.7rem",
+                            }}
+                        >
+                            {subLabel}
+                        </Typography>
+                    )}
+                </Box>
+            </ListItemContent>
+        </ListItemButton>
+    );
+
     return (
         <Box key={groupKey}>
             <ListItem nested>
-                <ListItemButton
-                    sx={{
-                        borderRadius: "8px",
-                        py: 0.5,
-                        px: 1,
-                        my: 0.25,
-                        gap: 0.75,
-                        minHeight: 32,
-                        transition: "all 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
-                        backgroundColor: isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.01)",
-                        "&:hover": {
-                            backgroundColor: isDark
-                                ? "rgba(255,255,255,0.06)"
-                                : "rgba(0,0,0,0.04)",
-                        },
-                    }}
-                    onClick={() => setIsExpanded(!isExpanded)}
-                >
-                    {/* Chevron */}
-                    <Box
-                        sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            width: 16,
-                            height: 16,
-                            borderRadius: "4px",
-                            flexShrink: 0,
-                            transition: "all 0.15s ease",
-                        }}
-                    >
-                        <ChevronRightRoundedIcon
-                            sx={{
-                                fontSize: 13,
-                                color: isDark ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.35)",
-                                transition: "transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                                transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)",
-                            }}
-                        />
-                    </Box>
-
-                    {/* Folder Icon */}
-                    <FolderRoundedIcon
-                        sx={{
-                            fontSize: 14,
-                            color: isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.4)",
-                            flexShrink: 0,
-                        }}
-                    />
-
-                    <ListItemContent sx={{ minWidth: 0 }}>
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
-                            <Typography
-                                level="body-xs"
-                                sx={{
-                                    fontWeight: 600,
-                                    overflow: "hidden",
-                                    textOverflow: "ellipsis",
-                                    whiteSpace: "nowrap",
-                                    color: isDark ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.6)",
-                                    fontSize: "0.75rem",
-                                    letterSpacing: "-0.01em",
-                                }}
-                            >
-                                {groupLabel}
-                            </Typography>
-                            {subLabel && (
-                                <Typography
-                                    level="body-xs"
-                                    sx={{
-                                        fontWeight: 400,
-                                        overflow: "hidden",
-                                        textOverflow: "ellipsis",
-                                        whiteSpace: "nowrap",
-                                        color: isDark
-                                            ? "rgba(255, 255, 255, 0.71)"
-                                            : "rgba(0, 0, 0, 0.57)",
-                                        fontSize: "0.7rem",
-                                    }}
-                                >
-                                    {subLabel}
-                                </Typography>
-                            )}
-                        </Box>
-                    </ListItemContent>
-                </ListItemButton>
+                {droppableId && droppableKind ? (
+                    <DroppableHeader containerId={droppableId} kind={droppableKind}>
+                        {(isDraggingOver) => headerButton(isDraggingOver)}
+                    </DroppableHeader>
+                ) : (
+                    headerButton(false)
+                )}
 
                 {/* Children with smooth animation */}
                 <Box
