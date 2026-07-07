@@ -91,17 +91,15 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
             // logic lives in `ChatNoteEditorPanel.onNoteUpdate`.
             upsertNoteCache(updatedNote);
             useNM.chatPanelApi.setNote(updatedNote);
+            // MERGE into the existing meta row — never rebuild it, so
+            // stale structural fields from this panel's note snapshot
+            // (parentNoteId / chat anchoring) can't clobber a sidebar
+            // move. See ChatNoteEditorPanel for the full rationale.
             useNM.setChatNoteMeta(
                 useNM.chatNoteMeta.map((item) =>
                     item.noteType === updatedNote.noteType && item.noteId === updatedNote.noteId
                         ? {
-                              noteType: updatedNote.noteType,
-                              noteId: updatedNote.noteId,
-                              parentNoteId: updatedNote.parentNoteId,
-                              chatType: updatedNote.chatType,
-                              chatId: updatedNote.chatId,
-                              isThread: updatedNote.isThread,
-                              threadId: updatedNote.threadId,
+                              ...item,
                               title: updatedNote.title,
                               tsUpdated: updatedNote.tsUpdated,
                           }

@@ -54,13 +54,20 @@ export const MyNoteEditorPanel = ({
             // Tab strip title sync (no legacy `tabItems` round-trip).
             useNM.tabsApi.updateTabTitle(updatedNote.noteId, "my", updatedNote.title);
 
+            // MERGE into the existing meta row — never rebuild it.
+            // Autosave only changes title/body, but `updatedNote` is a
+            // spread of this panel's note snapshot, which `useNoteData`
+            // resolved ONCE at mount and never re-reads from the cache.
+            // Rebuilding from it dropped `folderId` (note silently fell
+            // out of its sidebar folder to root on every save) and
+            // resurrected a pre-move `parentNoteId`. Structural fields
+            // stay authoritative from the meta list, which the move
+            // actions patch. (Same pattern as TaskNoteEditorPanel.)
             useNM.setMyNoteMeta(
                 useNM.myNoteMeta.map((item) =>
                     item.noteType === updatedNote.noteType && item.noteId === updatedNote.noteId
                         ? {
-                              noteType: updatedNote.noteType,
-                              noteId: updatedNote.noteId,
-                              parentNoteId: updatedNote.parentNoteId,
+                              ...item,
                               title: updatedNote.title,
                               tsUpdated: updatedNote.tsUpdated,
                           }
