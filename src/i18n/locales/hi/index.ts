@@ -951,6 +951,10 @@ export const hi: DeepPartial<Messages> = {
             dragToReorder: "क्रम बदलने के लिए ड्रैग करें",
             dragToResizeColumn: "कॉलम का साइज़ बदलने के लिए ड्रैग करें",
             dropToNest: "↳ नेस्ट करने के लिए ड्रॉप करें",
+            quickAddTooltip: "सब-टास्क जोड़ें",
+            quickAddTitlePlaceholder: "शीर्षक लिखें, Enter से बनाएँ…",
+            quickAddConfirm: "बनाएँ",
+            quickAddError: "नहीं बन सका — फिर से कोशिश करें",
             columnSettings: {
                 heading: "कॉलम कस्टमाइज़ करें",
                 description:

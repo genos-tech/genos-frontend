@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DragDropContext, Droppable, DropResult } from "@hello-pangea/dnd";
 import AutorenewIcon from "@mui/icons-material/Autorenew";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
@@ -23,11 +23,14 @@ import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TagListProps, TaskTableProps } from "../../../../types/tasks";
 import { popTeamMembers } from "../../../admin/services/popTeamMembers";
+import { createQuickTask } from "../../services/createQuickTask";
+import { emitTaskTouched } from "../../services/taskEvents";
 import { updateTaskFromTable } from "../../services/updateTaskFromTable";
 import { FilterProps } from "../../types/TaskTableTypes";
 import { buildComparator, nullTier, SortTier } from "../../utils/sortTask";
 import { effortLevels, priorities, statuses } from "../../utils/taskMeta";
 import { DraggableTaskRow } from "./DraggableTaskRow";
+import { QuickAddDraft, QuickAddTaskRow } from "./QuickAddTaskRow";
 import { TaskFilterMenu } from "./TaskFilterMenu";
 import { TaskTableColumnSettings } from "./TaskTableColumnSettings";
 
@@ -296,10 +299,15 @@ const getHeaderCellStyles = (
     transition: "background-color 0.15s ease, color 0.15s ease",
 });
 
+// Leading gutter shared by the header placeholder, every task row
+// (28px drag handle + 20px hover quick-add "+") and the QuickAddTaskRow
+// draft row. All three must agree or the cell grid shears sideways.
+export const LEADING_GUTTER_WIDTH = 48;
+
 // Drag handle placeholder in header
 const headerDragHandlePlaceholderStyles: React.CSSProperties = {
-    width: 28,
-    minWidth: 28,
+    width: LEADING_GUTTER_WIDTH,
+    minWidth: LEADING_GUTTER_WIDTH,
 };
 
 // Column resize handle styles
@@ -386,6 +394,39 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
             else next.add(id);
             return next;
         });
+    }, []);
+
+    // Inline quick-add child row. `quickAddParentId` anchors the draft
+    // row beneath a parent row; only one can be open at a time (opening
+    // from another row's "+" replaces the anchor and drops any draft —
+    // explicit user action wins). `quickAddDirtyRef` mirrors whether the
+    // row holds a typed title so drag-start / stale-anchor cleanup can
+    // dismiss a pristine row without ever destroying typed input.
+    const [quickAddParentId, setQuickAddParentId] = useState<string | null>(null);
+    const quickAddDirtyRef = useRef(false);
+
+    // Passed into the memoized DraggableTaskRow and excluded from its
+    // areEqual comparator — MUST stay identity-stable (`useCallback([])`
+    // + functional setState only) or memo-skipped rows would invoke a
+    // stale closure.
+    const openQuickAdd = useCallback((task: TaskTableProps) => {
+        if (task.id == null) return;
+        const id = String(task.id);
+        quickAddDirtyRef.current = false;
+        setQuickAddParentId(id);
+        // Auto-expand the parent so the draft row (and the child it
+        // creates) is visible in the tree.
+        setExpandedRows((prev) => {
+            if (prev.has(id)) return prev;
+            const next = new Set(prev);
+            next.add(id);
+            return next;
+        });
+    }, []);
+
+    const closeQuickAdd = useCallback(() => {
+        quickAddDirtyRef.current = false;
+        setQuickAddParentId(null);
     }, []);
 
     // When the sidebar scopes the table to a single milestone, auto-
@@ -477,6 +518,18 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         }
         return result;
     }, [currentDisplayingTasks, expandedRows, childrenByParent]);
+
+    // Close a pristine quick-add row whose anchor row left the visible
+    // tree (filtered out, ancestor collapsed, project switch). A dirty
+    // row keeps its state — it simply doesn't render until the parent
+    // reappears; typed input is never destroyed behind the user's back.
+    useEffect(() => {
+        if (quickAddParentId == null) return;
+        if (quickAddDirtyRef.current) return;
+        if (!displayRows.some((r) => String(r.id) === quickAddParentId)) {
+            closeQuickAdd();
+        }
+    }, [displayRows, quickAddParentId, closeQuickAdd]);
 
     // Column widths state - initialize from default column widths
     const [columnWidths, setColumnWidths] = useState<Record<string, number>>(() => {
@@ -1002,6 +1055,91 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         }
     };
 
+    // Create a child task from the inline quick-add row. Single POST via
+    // createQuickTask, then an optimistic insert into `allTasks`:
+    // `setIsNewTaskCreated(true)` alone is NOT enough — loadUpdatedTask
+    // only refetches the currently *previewed* task (and only that path
+    // resets the flag), so with no preview pane open the flag sticks
+    // `true` and a second quick-add would never surface until the slow
+    // (~1-2s) full loadProjectsAndTasks reload. The optimistic row makes
+    // the child appear immediately; the background reload reconciles it
+    // with the authoritative server row (displayId etc.).
+    //
+    // Errors are deliberately not caught here — QuickAddTaskRow catches
+    // the rejection and shows its inline error while preserving the
+    // user's draft.
+    const handleQuickAddSubmit = async (parent: TaskTableProps, draft: QuickAddDraft) => {
+        const projectId = usePM.currentProject?.projectId ?? parent.projectId;
+        if (parent.id == null || projectId == null) {
+            throw new Error("Quick add: missing parent id or project id");
+        }
+        const { taskId, displayId } = await createQuickTask({
+            myself,
+            accessToken,
+            projectId: Number(projectId),
+            title: draft.title,
+            parentTaskId: Number(parent.id),
+            // A top-level parent is its own chain root.
+            rootTaskId: parent.rootTaskId ?? Number(parent.id),
+            // Children inherit the parent's milestone context (the
+            // backend also derives this from parent_task_id).
+            milestoneId: parent.milestoneId ?? null,
+            assigneeId: draft.assigneeId,
+            status: draft.status,
+            priority: draft.priority,
+            effortLevel: draft.effortLevel,
+            dueDate: draft.dueDate,
+        });
+
+        if (taskId != null) {
+            const member = teamMembers.find((m) => m.userId === draft.assigneeId);
+            const nowIso = new Date().toISOString();
+            const optimistic: TaskTableProps = {
+                id: String(taskId),
+                // Render the friendly "<code>-<n>" id straight away when the
+                // backend returned it; otherwise formatTaskDisplayId falls
+                // back to "#<id>" until the background reload reconciles.
+                displayId,
+                title: draft.title,
+                priority: draft.priority,
+                effortLevel: draft.effortLevel,
+                createdDate: nowIso,
+                updatedAt: nowIso,
+                dueDate: draft.dueDate,
+                daysLeft: draft.dueDate
+                    ? dayjs(draft.dueDate).startOf("day").diff(dayjs().startOf("day"), "day")
+                    : null,
+                status: draft.status,
+                assigneeId: draft.assigneeId,
+                assigneeEmail: member?.userEmail ?? null,
+                assigneeName: member?.userName ?? null,
+                assigneeImgPath: member?.avatarImgPath ?? null,
+                parentTaskId: String(parent.id),
+                rootTaskId: parent.rootTaskId ?? Number(parent.id),
+                threadId: null,
+                tags: [],
+                concatTags: null,
+                teamId: myself.teamId ?? null,
+                projectId: Number(projectId),
+                isMilestone: false,
+                milestoneId: parent.milestoneId ?? null,
+                sprintId: parent.sprintId ?? null,
+            };
+            // Duplicate-guarded against the race where the background
+            // reload lands before this insert.
+            useTM.setAllTasks((prev) =>
+                prev.some((t) => String(t.id) === String(optimistic.id))
+                    ? prev
+                    : [...prev, optimistic]
+            );
+        }
+
+        // Refresh any open TaskSubTasksBlock for the same parent, and
+        // kick the project-wide reconciliation reload.
+        emitTaskTouched(Number(parent.id), "children");
+        useTM.setIsNewTaskCreated(true);
+    };
+
     // Rapid row-click coalescing. Mirrors SprintBoard.handleTaskClick:
     // each preview switch fans out ~13 TaskPreview fetches, so clicking
     // many rows in quick succession (id-cell single click or row
@@ -1180,10 +1318,10 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         [visibleColumns, columnWidths]
     );
 
-    // Calculate total table width (drag handle + all columns)
-    const dragHandleWidth = 28;
+    // Calculate total table width (leading gutter + all columns)
     const totalTableWidth =
-        dragHandleWidth + visibleColumns.reduce((sum, col) => sum + getColumnWidth(col.field), 0);
+        LEADING_GUTTER_WIDTH +
+        visibleColumns.reduce((sum, col) => sum + getColumnWidth(col.field), 0);
 
     return (
         <ThemeProvider theme={{ [THEME_ID]: materialTheme }}>
@@ -1332,7 +1470,17 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                     </div>
 
                     {/* Draggable Table Body */}
-                    <DragDropContext onDragEnd={handleDragEnd}>
+                    <DragDropContext
+                        onDragEnd={handleDragEnd}
+                        onDragStart={() => {
+                            // A pristine quick-add row is dismissed before dnd
+                            // measures the list (a non-Draggable row between
+                            // Draggables makes the gap animation read wrong);
+                            // a dirty one is preserved — typed input is never
+                            // destroyed by starting a drag.
+                            if (!quickAddDirtyRef.current) closeQuickAdd();
+                        }}
+                    >
                         <Droppable
                             direction="vertical"
                             droppableId="task-table"
@@ -1358,30 +1506,57 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                     }}
                                 >
                                     {displayRows.map((task, index) => (
-                                        <DraggableTaskRow
-                                            key={task.id}
-                                            childrenByParent={childrenByParent}
-                                            columns={columnsWithWidths}
-                                            depth={depthMap.get(String(task.id)) ?? 0}
-                                            expandedRows={expandedRows}
-                                            index={index}
-                                            mode={mode}
-                                            myself={myself}
-                                            pendingMilestoneId={pendingMilestoneId}
-                                            pendingTaskId={pendingTaskId}
-                                            setMyself={setMyself}
-                                            socket={socket}
-                                            sprintNamesById={sprintNamesById}
-                                            task={task}
-                                            teamMembers={teamMembers}
-                                            toggleExpand={toggleExpand}
-                                            useCM={useCM}
-                                            useTEM={useTEM}
-                                            useTM={useTM}
-                                            useUISM={useUISM}
-                                            onRequestPreview={requestPreview}
-                                            onRowUpdate={handleRowUpdate}
-                                        />
+                                        <Fragment key={task.id}>
+                                            <DraggableTaskRow
+                                                childrenByParent={childrenByParent}
+                                                columns={columnsWithWidths}
+                                                depth={depthMap.get(String(task.id)) ?? 0}
+                                                expandedRows={expandedRows}
+                                                index={index}
+                                                mode={mode}
+                                                myself={myself}
+                                                pendingMilestoneId={pendingMilestoneId}
+                                                pendingTaskId={pendingTaskId}
+                                                setMyself={setMyself}
+                                                socket={socket}
+                                                sprintNamesById={sprintNamesById}
+                                                task={task}
+                                                teamMembers={teamMembers}
+                                                toggleExpand={toggleExpand}
+                                                useCM={useCM}
+                                                useTEM={useTEM}
+                                                useTM={useTM}
+                                                useUISM={useUISM}
+                                                onQuickAddChild={openQuickAdd}
+                                                onRequestPreview={requestPreview}
+                                                onRowUpdate={handleRowUpdate}
+                                            />
+                                            {/* Inline quick-add draft row, anchored
+                                                directly beneath its parent row (above
+                                                any existing children). Deliberately
+                                                NOT a Draggable and consumes no dnd
+                                                index — `index` above still comes
+                                                straight from displayRows, so the
+                                                drag-end splice math is untouched. */}
+                                            {quickAddParentId === String(task.id) && (
+                                                <QuickAddTaskRow
+                                                    columns={columnsWithWidths}
+                                                    depth={
+                                                        (depthMap.get(String(task.id)) ?? 0) + 1
+                                                    }
+                                                    mode={mode}
+                                                    parentTask={task}
+                                                    teamMembers={teamMembers}
+                                                    onClose={closeQuickAdd}
+                                                    onDirtyChange={(dirty) => {
+                                                        quickAddDirtyRef.current = dirty;
+                                                    }}
+                                                    onSubmit={(draft) =>
+                                                        handleQuickAddSubmit(task, draft)
+                                                    }
+                                                />
+                                            )}
+                                        </Fragment>
                                     ))}
                                     {provided.placeholder}
                                 </div>

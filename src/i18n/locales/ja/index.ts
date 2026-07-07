@@ -950,6 +950,10 @@ export const ja: DeepPartial<Messages> = {
             dragToReorder: "ドラッグして並び替え",
             dragToResizeColumn: "ドラッグして列幅を変更",
             dropToNest: "↳ ドロップしてネスト",
+            quickAddTooltip: "サブタスクを追加",
+            quickAddTitlePlaceholder: "タイトルを入力して Enter で作成…",
+            quickAddConfirm: "作成",
+            quickAddError: "作成できませんでした。もう一度お試しください",
             columnSettings: {
                 heading: "列のカスタマイズ",
                 description:

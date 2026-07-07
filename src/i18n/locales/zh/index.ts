@@ -934,6 +934,10 @@ export const zh: DeepPartial<Messages> = {
             dragToReorder: "拖动以重新排序",
             dragToResizeColumn: "拖动以调整列宽",
             dropToNest: "↳ 放入以嵌套",
+            quickAddTooltip: "添加子任务",
+            quickAddTitlePlaceholder: "输入标题，按 Enter 创建…",
+            quickAddConfirm: "创建",
+            quickAddError: "创建失败，请重试",
             columnSettings: {
                 heading: "自定义列",
                 description: "切换显示并拖动以重新排序。按设备保存。ID 和展开列始终显示。",
