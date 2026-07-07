@@ -59,11 +59,9 @@ export const TaskCommentEditorBlock = (props: TaskCommentEditorBlockProps) => {
                     setIsInEdit={setIsInEdit}
                     setMyself={setMyself}
                     setTaskCommentLines={setTaskCommentLines}
-                    setTaskComments={setTaskComments}
                     socket={socket}
                     targetComment={editTargetComment}
                     taskCommentLines={taskCommentLines}
-                    taskComments={taskComments}
                     taskDisplayId={task.displayId}
                     taskId={task.id}
                     useCM={useCM}
