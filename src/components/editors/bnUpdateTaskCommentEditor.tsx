@@ -41,7 +41,6 @@ import { UIStateManagementState } from "../../hooks/common/useUIStateManagement"
 import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../types/admin";
 import { TaskCommentProps } from "../../types/tasks";
-import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { filterAndRankSuggestionItems } from "../../utils/suggestionRanking";
 import { EmojiPicker } from "../ui/emoji/EmojiPicker";
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
@@ -79,8 +78,6 @@ type BnUpdateTaskCommentEditorProps = {
     taskDisplayId?: string | null;
     isPrivate?: boolean;
     setTaskUpdated?: (value: boolean) => void;
-    taskComments: TaskCommentProps[];
-    setTaskComments: (value: TaskCommentProps[]) => void;
     targetComment: TaskCommentProps;
     isInEdit: boolean;
     setIsInEdit: (value: boolean) => void;
@@ -103,8 +100,6 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
         taskId,
         taskDisplayId,
         setTaskUpdated,
-        taskComments,
-        setTaskComments,
         targetComment,
         isInEdit,
         setIsInEdit,
@@ -234,27 +229,6 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
             insertEmoji(selectedEmoji);
         }
     }, [selectedEmoji]);
-
-    useEffect(() => {
-        if (useTM.isTaskCommentUpdated && useTM.isTaskCommentUpdated.isUpdate === true && taskId) {
-            setTaskComments([
-                ...taskComments,
-                {
-                    projectId: projectId || null,
-                    taskId: taskId,
-                    senderId: myself.userId,
-                    senderName: myself.userName,
-                    commentId: taskComments.length + 1,
-                    commentBody: editor.document,
-                    tsSent: getLocalCurrentTimestamp(),
-                    tsUpdated: getLocalCurrentTimestamp(),
-                    isEdited: false,
-                },
-            ]);
-            editor.replaceBlocks(editor.document, []);
-            useTM.setIsTaskCommentUpdated({ isUpdate: false, scrollToBottom: false });
-        }
-    }, [useTM.isTaskCommentUpdated, taskComments]);
 
     useEffect(() => {
         if (isInEdit === false) {
