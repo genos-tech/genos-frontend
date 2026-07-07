@@ -14,6 +14,12 @@ import { MoreMenu } from "../../../../components/ui/MoreMenu";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { useTranslation } from "../../../../i18n";
 import { MyNoteFolderTreeNode, MyNoteMetaTreeNode } from "../../../../types/notes";
+import {
+    DraggableNoteRow,
+    DroppableHeader,
+    DroppableNoteList,
+    myFolderContainerId,
+} from "../../common/dnd/sidebarNoteDnd";
 
 // Actions bubbled up to the single modal host in NoteSidebar — one
 // modal instance serves every folder row.
@@ -53,129 +59,141 @@ function MyNoteFolderTreeComponent(props: MyNoteFolderTreeProps) {
 
     const FolderIcon = isExpanded ? FolderOpenRoundedIcon : FolderRoundedIcon;
 
+    const headerRow = (isDraggingOver: boolean) => (
+        <ListItemButton
+            sx={{
+                borderRadius: "8px",
+                py: 0.5,
+                px: 1,
+                my: 0.25,
+                gap: 0.75,
+                minHeight: 32,
+                transition: "all 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
+                backgroundColor: isDraggingOver
+                    ? isDark
+                        ? "rgba(124,58,237,0.18)"
+                        : "rgba(124,58,237,0.1)"
+                    : isDark
+                      ? "rgba(255,255,255,0.02)"
+                      : "rgba(0,0,0,0.01)",
+                outline: isDraggingOver ? "1px dashed" : "none",
+                outlineColor: isDark ? "rgba(167,139,250,0.7)" : "rgba(124,58,237,0.5)",
+                "&:hover": {
+                    backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
+                    "& .folder-menu-btn": {
+                        opacity: 1,
+                    },
+                },
+            }}
+            onClick={() => useNM.toggleFolderExpanded(folder.folderId)}
+        >
+            {/* Chevron */}
+            <Box
+                sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: 16,
+                    height: 16,
+                    borderRadius: "4px",
+                    flexShrink: 0,
+                }}
+            >
+                <ChevronRightRoundedIcon
+                    sx={{
+                        fontSize: 13,
+                        color: isDark ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.35)",
+                        transition: "transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                        transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)",
+                    }}
+                />
+            </Box>
+
+            <FolderIcon
+                sx={{
+                    fontSize: 14,
+                    color: isDark ? "#a78bfa" : "#7c3aed",
+                    flexShrink: 0,
+                }}
+            />
+
+            <ListItemContent sx={{ minWidth: 0 }}>
+                <Typography
+                    level="body-xs"
+                    sx={{
+                        fontWeight: 600,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                        color: isDark ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.6)",
+                        fontSize: "0.75rem",
+                        letterSpacing: "-0.01em",
+                    }}
+                >
+                    {folder.name}
+                </Typography>
+            </ListItemContent>
+
+            {/* Hover-revealed folder actions */}
+            <Box
+                className="folder-menu-btn"
+                sx={{
+                    opacity: menuOpen ? 1 : 0,
+                    transition: "opacity 0.15s ease",
+                }}
+                onClick={(e) => e.stopPropagation()}
+            >
+                <MoreMenu
+                    iconFontSize={14}
+                    placement="bottom-end"
+                    triggerSize={20}
+                    items={[
+                        {
+                            id: "new-note-here",
+                            label: t.notes.folders.newNoteHere,
+                            icon: <NoteAddRoundedIcon sx={{ fontSize: 16 }} />,
+                            onClick: () => actions.onCreateNoteHere(folder.folderId),
+                        },
+                        {
+                            id: "new-subfolder",
+                            label: t.notes.folders.newSubfolder,
+                            icon: <CreateNewFolderRoundedIcon sx={{ fontSize: 16 }} />,
+                            onClick: () => actions.onCreateSubfolder(folder.folderId),
+                        },
+                        {
+                            id: "rename",
+                            label: t.notes.folders.rename,
+                            icon: <DriveFileRenameOutlineRoundedIcon sx={{ fontSize: 16 }} />,
+                            onClick: () => actions.onRenameFolder(folder),
+                        },
+                        {
+                            id: "move",
+                            label: t.notes.folders.moveFolder,
+                            icon: <DriveFileMoveRoundedIcon sx={{ fontSize: 16 }} />,
+                            onClick: () => actions.onMoveFolder(folder),
+                        },
+                        {
+                            id: "delete",
+                            label: t.notes.folders.deleteFolder,
+                            icon: <DeleteOutlineRoundedIcon sx={{ fontSize: 16 }} />,
+                            danger: true,
+                            onClick: () => actions.onDeleteFolder(folder),
+                        },
+                    ]}
+                    onOpenChange={setMenuOpen}
+                />
+            </Box>
+        </ListItemButton>
+    );
+
     return (
         <Box>
             <ListItem nested>
-                <ListItemButton
-                    sx={{
-                        borderRadius: "8px",
-                        py: 0.5,
-                        px: 1,
-                        my: 0.25,
-                        gap: 0.75,
-                        minHeight: 32,
-                        transition: "all 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
-                        backgroundColor: isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.01)",
-                        "&:hover": {
-                            backgroundColor: isDark
-                                ? "rgba(255,255,255,0.06)"
-                                : "rgba(0,0,0,0.04)",
-                            "& .folder-menu-btn": {
-                                opacity: 1,
-                            },
-                        },
-                    }}
-                    onClick={() => useNM.toggleFolderExpanded(folder.folderId)}
-                >
-                    {/* Chevron */}
-                    <Box
-                        sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            width: 16,
-                            height: 16,
-                            borderRadius: "4px",
-                            flexShrink: 0,
-                        }}
-                    >
-                        <ChevronRightRoundedIcon
-                            sx={{
-                                fontSize: 13,
-                                color: isDark ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.35)",
-                                transition: "transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                                transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)",
-                            }}
-                        />
-                    </Box>
-
-                    <FolderIcon
-                        sx={{
-                            fontSize: 14,
-                            color: isDark ? "#a78bfa" : "#7c3aed",
-                            flexShrink: 0,
-                        }}
-                    />
-
-                    <ListItemContent sx={{ minWidth: 0 }}>
-                        <Typography
-                            level="body-xs"
-                            sx={{
-                                fontWeight: 600,
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                                whiteSpace: "nowrap",
-                                color: isDark ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.6)",
-                                fontSize: "0.75rem",
-                                letterSpacing: "-0.01em",
-                            }}
-                        >
-                            {folder.name}
-                        </Typography>
-                    </ListItemContent>
-
-                    {/* Hover-revealed folder actions */}
-                    <Box
-                        className="folder-menu-btn"
-                        sx={{
-                            opacity: menuOpen ? 1 : 0,
-                            transition: "opacity 0.15s ease",
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <MoreMenu
-                            iconFontSize={14}
-                            placement="bottom-end"
-                            triggerSize={20}
-                            items={[
-                                {
-                                    id: "new-note-here",
-                                    label: t.notes.folders.newNoteHere,
-                                    icon: <NoteAddRoundedIcon sx={{ fontSize: 16 }} />,
-                                    onClick: () => actions.onCreateNoteHere(folder.folderId),
-                                },
-                                {
-                                    id: "new-subfolder",
-                                    label: t.notes.folders.newSubfolder,
-                                    icon: <CreateNewFolderRoundedIcon sx={{ fontSize: 16 }} />,
-                                    onClick: () => actions.onCreateSubfolder(folder.folderId),
-                                },
-                                {
-                                    id: "rename",
-                                    label: t.notes.folders.rename,
-                                    icon: (
-                                        <DriveFileRenameOutlineRoundedIcon sx={{ fontSize: 16 }} />
-                                    ),
-                                    onClick: () => actions.onRenameFolder(folder),
-                                },
-                                {
-                                    id: "move",
-                                    label: t.notes.folders.moveFolder,
-                                    icon: <DriveFileMoveRoundedIcon sx={{ fontSize: 16 }} />,
-                                    onClick: () => actions.onMoveFolder(folder),
-                                },
-                                {
-                                    id: "delete",
-                                    label: t.notes.folders.deleteFolder,
-                                    icon: <DeleteOutlineRoundedIcon sx={{ fontSize: 16 }} />,
-                                    danger: true,
-                                    onClick: () => actions.onDeleteFolder(folder),
-                                },
-                            ]}
-                            onOpenChange={setMenuOpen}
-                        />
-                    </Box>
-                </ListItemButton>
+                {/* Folder header — always a drop target so notes can be
+                    filed into a COLLAPSED folder too. */}
+                <DroppableHeader containerId={myFolderContainerId(folder.folderId)} kind={1}>
+                    {(isDraggingOver) => headerRow(isDraggingOver)}
+                </DroppableHeader>
 
                 {/* Contents: rendered only when expanded (collapsed
                     subtrees pay zero render cost — same trade-off as
@@ -197,7 +215,21 @@ function MyNoteFolderTreeComponent(props: MyNoteFolderTreeProps) {
                                 useNM={useNM}
                             />
                         ))}
-                        {folder.notes.map((note) => renderNote(note))}
+                        <DroppableNoteList
+                            containerId={myFolderContainerId(folder.folderId)}
+                            kind={1}
+                        >
+                            {folder.notes.map((note, index) => (
+                                <DraggableNoteRow
+                                    key={`filed-note-${note.noteId}`}
+                                    index={index}
+                                    kind={1}
+                                    noteId={note.noteId}
+                                >
+                                    {renderNote(note)}
+                                </DraggableNoteRow>
+                            ))}
+                        </DroppableNoteList>
                         {isEmpty && (
                             <Typography
                                 level="body-xs"

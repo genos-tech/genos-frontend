@@ -126,6 +126,36 @@ export function collectDescendantFolderIds(
     return out;
 }
 
+// All note ids in `rootId`'s parent_note_id subtree, root included.
+// Used by the task/chat re-anchor actions to optimistically patch every
+// descendant row the backend cascade will touch. Tolerates
+// cycle-corrupt input via the collected set.
+export function collectNoteDescendantIds(
+    items: { noteId: number; parentNoteId: number | null }[],
+    rootId: number
+): Set<number> {
+    const childrenOf = new Map<number, number[]>();
+    items.forEach((n) => {
+        if (n.parentNoteId != null) {
+            const list = childrenOf.get(n.parentNoteId) ?? [];
+            list.push(n.noteId);
+            childrenOf.set(n.parentNoteId, list);
+        }
+    });
+    const out = new Set<number>([rootId]);
+    const frontier = [rootId];
+    while (frontier.length > 0) {
+        const current = frontier.pop()!;
+        for (const child of childrenOf.get(current) ?? []) {
+            if (!out.has(child)) {
+                out.add(child);
+                frontier.push(child);
+            }
+        }
+    }
+    return out;
+}
+
 export function buildTaskNoteTree(items: TaskNoteMetaProps[]): TaskNoteMetaTreeNode[] {
     const map: Record<number, TaskNoteMetaTreeNode> = {};
     const roots: TaskNoteMetaTreeNode[] = [];

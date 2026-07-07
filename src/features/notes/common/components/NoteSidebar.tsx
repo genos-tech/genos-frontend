@@ -34,6 +34,16 @@ import { ModalDeleteFolder } from "../../my-notes/modals/ModalDeleteFolder";
 import { ModalFolderName } from "../../my-notes/modals/ModalFolderName";
 import { ModalMoveToFolder } from "../../my-notes/modals/ModalMoveToFolder";
 import { useNoteUnread } from "../context/NoteUnreadContext";
+import {
+    chatContainerId,
+    DraggableNoteRow,
+    DroppableHeader,
+    DroppableNoteList,
+    myRootContainerId,
+    SidebarDndProvider,
+    SidebarNoteMove,
+    taskContainerId,
+} from "../dnd/sidebarNoteDnd";
 import { useNoteTreeState } from "../hooks/useNoteTreeState";
 import { ChatNoteMetaTreeNode, TaskNoteMetaTreeNode } from "../types/noteTypes";
 import { FavoriteNoteItem } from "./FavoriteNoteItem";
@@ -464,6 +474,18 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         onDeleteFolder: (folder) => setDeleteFolderModal(folder),
     };
 
+    // Sidebar-DnD drop dispatch. `parseDropResult` already filtered
+    // no-ops (same container, cross-kind, outside targets).
+    const handleSidebarMove = (move: SidebarNoteMove) => {
+        if (move.kind === "my") {
+            void useNM.moveMyNoteToFolder(move.noteId, move.folderId);
+        } else if (move.kind === "task") {
+            void useNM.moveTaskNoteToTask(move.noteId, move.projectId, move.taskId);
+        } else {
+            void useNM.moveChatNoteToChat(move.noteId, move.chatType, move.channelId);
+        }
+    };
+
     // Render functions for each note type
     const renderMyNoteTree = (node: any) => (
         <NoteTreeRenderer
@@ -504,30 +526,52 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     // task/chat/shared sections are Box-rooted for the same reason.
     const renderMyNotesSection = () => (
         <Box>
+            {/* "New folder" affordance — doubles as the always-visible
+                "move to root" drop target (folders below may be the only
+                other rows when every note is filed). */}
             <ListItem>
-                <ListItemButton
-                    sx={{
-                        borderRadius: "8px",
-                        py: 0.5,
-                        px: 1,
-                        my: 0.25,
-                        gap: 0.75,
-                        minHeight: 30,
-                        border: "1px dashed",
-                        borderColor: isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.12)",
-                        color: isDark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.5)",
-                        "&:hover": {
-                            borderColor: isDark ? "rgba(167,139,250,0.6)" : "rgba(124,58,237,0.5)",
-                            color: isDark ? "#a78bfa" : "#7c3aed",
-                        },
-                    }}
-                    onClick={() => setFolderNameModal({ mode: "create", parentFolderId: null })}
-                >
-                    <CreateNewFolderRoundedIcon sx={{ fontSize: 15 }} />
-                    <Typography level="body-xs" sx={{ fontWeight: 500, color: "inherit" }}>
-                        {t.notes.folders.newFolder}
-                    </Typography>
-                </ListItemButton>
+                <DroppableHeader containerId={myRootContainerId()} kind={1}>
+                    {(isDraggingOver) => (
+                        <ListItemButton
+                            sx={{
+                                borderRadius: "8px",
+                                py: 0.5,
+                                px: 1,
+                                my: 0.25,
+                                gap: 0.75,
+                                minHeight: 30,
+                                border: "1px dashed",
+                                borderColor: isDraggingOver
+                                    ? isDark
+                                        ? "rgba(167,139,250,0.8)"
+                                        : "rgba(124,58,237,0.7)"
+                                    : isDark
+                                      ? "rgba(255,255,255,0.15)"
+                                      : "rgba(0,0,0,0.12)",
+                                backgroundColor: isDraggingOver
+                                    ? isDark
+                                        ? "rgba(124,58,237,0.15)"
+                                        : "rgba(124,58,237,0.08)"
+                                    : "transparent",
+                                color: isDark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.5)",
+                                "&:hover": {
+                                    borderColor: isDark
+                                        ? "rgba(167,139,250,0.6)"
+                                        : "rgba(124,58,237,0.5)",
+                                    color: isDark ? "#a78bfa" : "#7c3aed",
+                                },
+                            }}
+                            onClick={() =>
+                                setFolderNameModal({ mode: "create", parentFolderId: null })
+                            }
+                        >
+                            <CreateNewFolderRoundedIcon sx={{ fontSize: 15 }} />
+                            <Typography level="body-xs" sx={{ fontWeight: 500, color: "inherit" }}>
+                                {t.notes.folders.newFolder}
+                            </Typography>
+                        </ListItemButton>
+                    )}
+                </DroppableHeader>
             </ListItem>
             {useNM.myNoteFolderForest.rootFolders.map((folder) => (
                 <MyNoteFolderTree
@@ -538,7 +582,18 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                     useNM={useNM}
                 />
             ))}
-            {useNM.myNoteFolderForest.rootNotes.map((root) => renderMyNoteTree(root))}
+            <DroppableNoteList containerId={myRootContainerId()} kind={1}>
+                {useNM.myNoteFolderForest.rootNotes.map((root, index) => (
+                    <DraggableNoteRow
+                        key={`root-note-${root.noteId}`}
+                        index={index}
+                        kind={1}
+                        noteId={root.noteId}
+                    >
+                        {renderMyNoteTree(root)}
+                    </DraggableNoteRow>
+                ))}
+            </DroppableNoteList>
         </Box>
     );
 
@@ -631,11 +686,14 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     const renderTaskGroup = (
         taskGroup: TaskGroup,
         keyPrefix: string,
-        activeNoteId: number | undefined
+        activeNoteId: number | undefined,
+        projectId: number
     ) => (
         <GroupedNoteSection
             key={`${keyPrefix}-task-${taskGroup.taskId}`}
             defaultExpanded={taskGroupContainsNote(taskGroup, activeNoteId)}
+            droppableId={taskContainerId(projectId, taskGroup.taskId)}
+            droppableKind={2}
             groupKey={`${keyPrefix}-task-${taskGroup.taskId}`}
             subLabel={taskGroup.taskTitle}
             groupLabel={formatTaskDisplayId({
@@ -643,11 +701,24 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                 displayId: taskGroup.displayId,
             })}
         >
-            {taskGroup.notes.map((note) => renderTaskNoteTreeItem(note))}
+            <DroppableNoteList containerId={taskContainerId(projectId, taskGroup.taskId)} kind={2}>
+                {taskGroup.notes.map((note, index) => (
+                    <DraggableNoteRow
+                        key={`task-note-${note.noteId}`}
+                        index={index}
+                        kind={2}
+                        noteId={note.noteId}
+                    >
+                        {renderTaskNoteTreeItem(note)}
+                    </DraggableNoteRow>
+                ))}
+            </DroppableNoteList>
             {taskGroup.subtasks.map((subGroup) => (
                 <GroupedNoteSection
                     key={`${keyPrefix}-task-${taskGroup.taskId}-sub-${subGroup.taskId}`}
                     defaultExpanded={subGroup.notes.some((n) => n.noteId === activeNoteId)}
+                    droppableId={taskContainerId(projectId, subGroup.taskId)}
+                    droppableKind={2}
                     groupKey={`${keyPrefix}-task-${taskGroup.taskId}-sub-${subGroup.taskId}`}
                     subLabel={subGroup.taskTitle}
                     groupLabel={formatTaskDisplayId({
@@ -655,7 +726,21 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                         displayId: subGroup.displayId,
                     })}
                 >
-                    {subGroup.notes.map((note) => renderTaskNoteTreeItem(note))}
+                    <DroppableNoteList
+                        containerId={taskContainerId(projectId, subGroup.taskId)}
+                        kind={2}
+                    >
+                        {subGroup.notes.map((note, index) => (
+                            <DraggableNoteRow
+                                key={`task-note-${note.noteId}`}
+                                index={index}
+                                kind={2}
+                                noteId={note.noteId}
+                            >
+                                {renderTaskNoteTreeItem(note)}
+                            </DraggableNoteRow>
+                        ))}
+                    </DroppableNoteList>
                 </GroupedNoteSection>
             ))}
         </GroupedNoteSection>
@@ -685,17 +770,47 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                                     activeNoteId
                                 )}
                             >
-                                {milestoneGroup.directNotes.map((note) =>
-                                    renderTaskNoteTreeItem(note)
+                                {/* Direct milestone notes all anchor to the
+                                    milestone's backing task, so that task is
+                                    their DnD container. */}
+                                {milestoneGroup.directNotes.length > 0 && (
+                                    <DroppableNoteList
+                                        kind={2}
+                                        containerId={taskContainerId(
+                                            projectGroup.projectId,
+                                            milestoneGroup.directNotes[0].taskId
+                                        )}
+                                    >
+                                        {milestoneGroup.directNotes.map((note, index) => (
+                                            <DraggableNoteRow
+                                                key={`task-note-${note.noteId}`}
+                                                index={index}
+                                                kind={2}
+                                                noteId={note.noteId}
+                                            >
+                                                {renderTaskNoteTreeItem(note)}
+                                            </DraggableNoteRow>
+                                        ))}
+                                    </DroppableNoteList>
                                 )}
                                 {milestoneGroup.tasks.map((taskGroup) =>
-                                    renderTaskGroup(taskGroup, milestoneKey, activeNoteId)
+                                    renderTaskGroup(
+                                        taskGroup,
+                                        milestoneKey,
+                                        activeNoteId,
+                                        projectGroup.projectId
+                                    )
                                 )}
                             </GroupedNoteSection>
                         );
                     })}
                     {projectGroup.looseTasks.map((taskGroup) =>
-                        renderTaskGroup(taskGroup, projectKey, activeNoteId)
+                        renderTaskGroup(
+                            taskGroup,
+                            projectKey,
+                            activeNoteId,
+                            projectGroup.projectId
+                        )
                     )}
                 </GroupedNoteSection>
             );
@@ -730,13 +845,29 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                 {chatTypeGroup.chats.map((chatGroup) => (
                     <GroupedNoteSection
                         key={`chat-${chatGroup.chatType}-${chatGroup.chatId}`}
+                        droppableId={chatContainerId(chatGroup.chatType, chatGroup.chatId)}
+                        droppableKind={3}
                         groupKey={`chat-${chatGroup.chatType}-${chatGroup.chatId}`}
                         groupLabel={chatGroup.chatName}
                         defaultExpanded={chatGroup.notes.some(
                             (note) => note.noteId === useNM.currentChatNote?.noteId
                         )}
                     >
-                        {chatGroup.notes.map((note) => renderChatNoteTreeItem(note))}
+                        <DroppableNoteList
+                            containerId={chatContainerId(chatGroup.chatType, chatGroup.chatId)}
+                            kind={3}
+                        >
+                            {chatGroup.notes.map((note, index) => (
+                                <DraggableNoteRow
+                                    key={`chat-note-${note.noteId}`}
+                                    index={index}
+                                    kind={3}
+                                    noteId={note.noteId}
+                                >
+                                    {renderChatNoteTreeItem(note)}
+                                </DraggableNoteRow>
+                            ))}
+                        </DroppableNoteList>
                     </GroupedNoteSection>
                 ))}
             </GroupedNoteSection>
@@ -978,149 +1109,154 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                     py: 1.5,
                 }}
             >
-                <List
-                    size="sm"
-                    sx={{
-                        gap: 0.5,
-                        "--List-nestedInsetStart": "24px",
-                        "--ListItem-radius": "8px",
-                    }}
-                >
-                    {/* Home Item */}
-                    <ListItem>
-                        <ListItemButton
-                            selected={useNM.currentNoteType === 0}
-                            sx={{
-                                borderRadius: "10px",
-                                py: 1,
-                                px: 1.5,
-                                gap: 1.5,
-                                transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                                "&:hover": {
-                                    backgroundColor: isDark
-                                        ? "rgba(255,255,255,0.06)"
-                                        : "rgba(0,0,0,0.04)",
-                                },
-                                "&.Mui-selected": {
-                                    backgroundColor: isDark
-                                        ? "rgba(124,58,237,0.15)"
-                                        : "rgba(124,58,237,0.1)",
+                {/* One DragDropContext covers all three note sections so
+                    the typed droppables ("note-1|2|3") can reject
+                    cross-kind drags for free. */}
+                <SidebarDndProvider onMove={handleSidebarMove}>
+                    <List
+                        size="sm"
+                        sx={{
+                            gap: 0.5,
+                            "--List-nestedInsetStart": "24px",
+                            "--ListItem-radius": "8px",
+                        }}
+                    >
+                        {/* Home Item */}
+                        <ListItem>
+                            <ListItemButton
+                                selected={useNM.currentNoteType === 0}
+                                sx={{
+                                    borderRadius: "10px",
+                                    py: 1,
+                                    px: 1.5,
+                                    gap: 1.5,
+                                    transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                                     "&:hover": {
                                         backgroundColor: isDark
-                                            ? "rgba(124,58,237,0.2)"
-                                            : "rgba(124,58,237,0.15)",
+                                            ? "rgba(255,255,255,0.06)"
+                                            : "rgba(0,0,0,0.04)",
                                     },
-                                },
-                            }}
-                            onClick={() => {
-                                useNM.setCurrentNoteType(0);
-                                localStorage.setItem("lastOpenNoteType", "0");
-                            }}
-                        >
-                            <Box
-                                sx={{
-                                    width: 28,
-                                    height: 28,
-                                    borderRadius: "8px",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    backgroundColor: isDark
-                                        ? "rgba(255,255,255,0.08)"
-                                        : "rgba(0,0,0,0.05)",
-                                    transition: "all 0.2s ease",
+                                    "&.Mui-selected": {
+                                        backgroundColor: isDark
+                                            ? "rgba(124,58,237,0.15)"
+                                            : "rgba(124,58,237,0.1)",
+                                        "&:hover": {
+                                            backgroundColor: isDark
+                                                ? "rgba(124,58,237,0.2)"
+                                                : "rgba(124,58,237,0.15)",
+                                        },
+                                    },
+                                }}
+                                onClick={() => {
+                                    useNM.setCurrentNoteType(0);
+                                    localStorage.setItem("lastOpenNoteType", "0");
                                 }}
                             >
-                                <HomeRoundedIcon
+                                <Box
                                     sx={{
-                                        fontSize: 16,
-                                        color: isDark
-                                            ? "rgba(255,255,255,0.75)"
-                                            : "rgba(0,0,0,0.65)",
-                                    }}
-                                />
-                            </Box>
-                            <ListItemContent>
-                                <Typography
-                                    level="body-sm"
-                                    sx={{
-                                        fontWeight: 500,
-                                        color: isDark
-                                            ? "rgba(255,255,255,0.9)"
-                                            : "rgba(0,0,0,0.8)",
+                                        width: 28,
+                                        height: 28,
+                                        borderRadius: "8px",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        backgroundColor: isDark
+                                            ? "rgba(255,255,255,0.08)"
+                                            : "rgba(0,0,0,0.05)",
+                                        transition: "all 0.2s ease",
                                     }}
                                 >
-                                    {t.notes.sidebar.home}
-                                </Typography>
-                            </ListItemContent>
-                        </ListItemButton>
-                    </ListItem>
+                                    <HomeRoundedIcon
+                                        sx={{
+                                            fontSize: 16,
+                                            color: isDark
+                                                ? "rgba(255,255,255,0.75)"
+                                                : "rgba(0,0,0,0.65)",
+                                        }}
+                                    />
+                                </Box>
+                                <ListItemContent>
+                                    <Typography
+                                        level="body-sm"
+                                        sx={{
+                                            fontWeight: 500,
+                                            color: isDark
+                                                ? "rgba(255,255,255,0.9)"
+                                                : "rgba(0,0,0,0.8)",
+                                        }}
+                                    >
+                                        {t.notes.sidebar.home}
+                                    </Typography>
+                                </ListItemContent>
+                            </ListItemButton>
+                        </ListItem>
 
-                    {/* Favorites Section */}
-                    <NoteTypeSection
-                        icon={<StarRoundedIcon sx={{ fontSize: 18 }} />}
-                        noteType={5} // Use 5 for favorites (distinct from 0-4)
-                        title={t.notes.sidebar.favorites}
-                        useNM={useNM}
-                    >
-                        {renderFavoriteNotes()}
-                    </NoteTypeSection>
-
-                    {/* Recents Section */}
-                    <NoteTypeSection
-                        icon={<HistoryRoundedIcon sx={{ fontSize: 18 }} />}
-                        noteType={6} // Use 6 for recents (distinct from 0-5)
-                        title={t.notes.sidebar.recents}
-                        useNM={useNM}
-                    >
-                        {renderRecentNotes()}
-                    </NoteTypeSection>
-
-                    {/* Unread Section — bottom of the pinned sections (after
-                        Recents), only shown when there are unread @mentions. */}
-                    {unreadNotes.length > 0 && (
+                        {/* Favorites Section */}
                         <NoteTypeSection
-                            icon={<MarkChatUnreadRoundedIcon sx={{ fontSize: 18 }} />}
-                            noteType={7} // 7 = unread (distinct from 0-6)
-                            title={fmt(t.notes.sidebar.unread, { count: unreadNotes.length })}
+                            icon={<StarRoundedIcon sx={{ fontSize: 18 }} />}
+                            noteType={5} // Use 5 for favorites (distinct from 0-4)
+                            title={t.notes.sidebar.favorites}
                             useNM={useNM}
                         >
-                            {renderUnreadNotes()}
+                            {renderFavoriteNotes()}
                         </NoteTypeSection>
-                    )}
 
-                    {/* Section Divider */}
-                    <Box sx={{ pt: 1.5, pb: 0.5, px: 1 }}>
-                        <Typography
-                            level="body-xs"
-                            sx={{
-                                fontWeight: 600,
-                                textTransform: "uppercase",
-                                letterSpacing: "0.08em",
-                                fontSize: 10,
-                                color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)",
-                            }}
-                        >
-                            {t.notes.sidebar.workspaces}
-                        </Typography>
-                    </Box>
-
-                    {/* Note Type Sections */}
-                    {noteTypesConfig.map((config) => (
+                        {/* Recents Section */}
                         <NoteTypeSection
-                            key={config.noteType}
-                            icon={config.icon}
-                            noteType={config.noteType}
-                            title={config.title}
+                            icon={<HistoryRoundedIcon sx={{ fontSize: 18 }} />}
+                            noteType={6} // Use 6 for recents (distinct from 0-5)
+                            title={t.notes.sidebar.recents}
                             useNM={useNM}
                         >
-                            {/* Every section renders through its grouped
+                            {renderRecentNotes()}
+                        </NoteTypeSection>
+
+                        {/* Unread Section — bottom of the pinned sections (after
+                        Recents), only shown when there are unread @mentions. */}
+                        {unreadNotes.length > 0 && (
+                            <NoteTypeSection
+                                icon={<MarkChatUnreadRoundedIcon sx={{ fontSize: 18 }} />}
+                                noteType={7} // 7 = unread (distinct from 0-6)
+                                title={fmt(t.notes.sidebar.unread, { count: unreadNotes.length })}
+                                useNM={useNM}
+                            >
+                                {renderUnreadNotes()}
+                            </NoteTypeSection>
+                        )}
+
+                        {/* Section Divider */}
+                        <Box sx={{ pt: 1.5, pb: 0.5, px: 1 }}>
+                            <Typography
+                                level="body-xs"
+                                sx={{
+                                    fontWeight: 600,
+                                    textTransform: "uppercase",
+                                    letterSpacing: "0.08em",
+                                    fontSize: 10,
+                                    color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)",
+                                }}
+                            >
+                                {t.notes.sidebar.workspaces}
+                            </Typography>
+                        </Box>
+
+                        {/* Note Type Sections */}
+                        {noteTypesConfig.map((config) => (
+                            <NoteTypeSection
+                                key={config.noteType}
+                                icon={config.icon}
+                                noteType={config.noteType}
+                                title={config.title}
+                                useNM={useNM}
+                            >
+                                {/* Every section renders through its grouped
                                 function now — My Notes joined task/chat/
                                 shared when it gained the folder forest. */}
-                            {config.renderGrouped ? config.renderGrouped() : null}
-                        </NoteTypeSection>
-                    ))}
-                </List>
+                                {config.renderGrouped ? config.renderGrouped() : null}
+                            </NoteTypeSection>
+                        ))}
+                    </List>
+                </SidebarDndProvider>
             </Box>
 
             {/* My-note folder dialogs — single instances serving every
