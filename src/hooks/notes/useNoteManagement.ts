@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { NoteService } from "../../db/services/note.service";
 import { DatabaseUtils } from "../../db/utils/database";
 import { createEmptyChatNote } from "../../features/notes/chat-notes/services/createEmptyChatNote";
+import { deleteChatNote } from "../../features/notes/chat-notes/services/deleteChatNote";
 import { loadChatNoteMeta } from "../../features/notes/chat-notes/services/loadChatNoteMeta";
 import { loadChatNotesByChatId } from "../../features/notes/chat-notes/services/loadChatNotesByChatId";
 import { moveChatNote as moveChatNoteApi } from "../../features/notes/chat-notes/services/moveChatNote";
@@ -22,6 +23,7 @@ import {
 } from "../../features/notes/favorite-notes/services";
 import { createEmptyMyNote } from "../../features/notes/my-notes/services/createEmptyMyNote";
 import { createMyNoteFolder as createMyNoteFolderApi } from "../../features/notes/my-notes/services/createMyNoteFolder";
+import { deleteMyNote } from "../../features/notes/my-notes/services/deleteMyNote";
 import { deleteMyNoteFolder as deleteMyNoteFolderApi } from "../../features/notes/my-notes/services/deleteMyNoteFolder";
 import { loadMyNoteFolders } from "../../features/notes/my-notes/services/loadMyNoteFolders";
 import { loadMyNoteMeta } from "../../features/notes/my-notes/services/loadMyNoteMeta";
@@ -33,6 +35,7 @@ import {
     recordNoteOpen as recordNoteOpenApi,
 } from "../../features/notes/recent-notes/services";
 import { createEmptyTaskNote } from "../../features/notes/task-notes/services/createEmptyTaskNote";
+import { deleteTaskNote } from "../../features/notes/task-notes/services/deleteTaskNote";
 import { loadTaskNoteMeta } from "../../features/notes/task-notes/services/loadTaskNoteMeta";
 import { moveTaskNote as moveTaskNoteApi } from "../../features/notes/task-notes/services/moveTaskNote";
 import { UserProps } from "../../types/admin";
@@ -137,6 +140,14 @@ export interface NoteManagementState {
         chatType: number,
         channelId: string | number
     ) => Promise<void>;
+
+    // Sidebar note deletion — delete any note by id (not just the open
+    // one), so the sidebar "⋯" row menu can delete without opening the
+    // note first. Resolves to false when blocked because the note still
+    // has child notes (same guard as the note-header delete flow).
+    deleteMyNoteById: (noteId: number) => Promise<boolean>;
+    deleteTaskNoteById: (noteId: number) => Promise<boolean>;
+    deleteChatNoteById: (noteId: number) => Promise<boolean>;
 
     // Favorite notes
     favoriteNotes: FavoriteNotesMetaResponse | null;
@@ -1000,6 +1011,66 @@ export const useNoteManagement = (
         }
     };
 
+    // ------------------------------------------------------------------
+    // Delete a note by id from the sidebar "⋯" row menu (no need to open
+    // it first). Each mirrors its ModalDelete*Note cleanup exactly —
+    // guard → backend → tab close → IDB → Yjs → meta filter → clear the
+    // open-note slot if it was the one deleted. The child-note guard
+    // matches the header flow (a parent note can't be deleted until its
+    // children are gone); we resolve false so the caller keeps the modal
+    // open with the "child note(s) exist" message.
+    // ------------------------------------------------------------------
+    const deleteMyNoteById = async (noteId: number): Promise<boolean> => {
+        if (!accessToken) return false;
+        if (myNoteMeta.some((n) => n.parentNoteId === noteId)) return false;
+        await deleteMyNote(myself, noteId, accessToken);
+        const tab = tabsApi.tabs.find((t) => t.kind === "my" && t.noteId === noteId);
+        if (tab) tabsApi.closeTab(tab.id);
+        try {
+            await noteService.deletePersonalNote(noteId);
+            await DatabaseUtils.deleteYjsDatabase(`my-note:${noteId}`);
+        } catch {
+            // Local cache cleanup is best-effort.
+        }
+        setMyNoteMeta((prev) => prev.filter((n) => n.noteId !== noteId));
+        if (currentMyNote?.noteId === noteId) setCurrentMyNote(null);
+        return true;
+    };
+
+    const deleteTaskNoteById = async (noteId: number): Promise<boolean> => {
+        if (!accessToken) return false;
+        if (taskNoteMeta.some((n) => n.parentNoteId === noteId)) return false;
+        await deleteTaskNote(myself, noteId, accessToken);
+        const tab = tabsApi.tabs.find((t) => t.kind === "task" && t.noteId === noteId);
+        if (tab) tabsApi.closeTab(tab.id);
+        try {
+            await noteService.deleteTaskNote(noteId);
+            await DatabaseUtils.deleteYjsDatabase(`task-note:${noteId}`);
+        } catch {
+            // Local cache cleanup is best-effort.
+        }
+        setTaskNoteMeta((prev) => prev.filter((n) => n.noteId !== noteId));
+        if (currentTaskNote?.noteId === noteId) setCurrentTaskNote(null);
+        return true;
+    };
+
+    const deleteChatNoteById = async (noteId: number): Promise<boolean> => {
+        if (!accessToken) return false;
+        if (chatNoteMeta.some((n) => n.parentNoteId === noteId)) return false;
+        await deleteChatNote(myself, noteId, accessToken);
+        const tab = tabsApi.tabs.find((t) => t.kind === "chat" && t.noteId === noteId);
+        if (tab) tabsApi.closeTab(tab.id);
+        try {
+            await noteService.deleteChatNote(noteId);
+            await DatabaseUtils.deleteYjsDatabase(`chat-note:${noteId}`);
+        } catch {
+            // Local cache cleanup is best-effort.
+        }
+        setChatNoteMeta((prev) => prev.filter((n) => n.noteId !== noteId));
+        if (currentChatNote?.noteId === noteId) setCurrentChatNote(null);
+        return true;
+    };
+
     // Favorite notes functions
     const getFavoriteNotesMeta = async () => {
         const loadedFavorites = await loadFavoriteNotesMeta(myself, accessToken);
@@ -1726,6 +1797,9 @@ export const useNoteManagement = (
         expandFolder,
         moveTaskNoteToTask,
         moveChatNoteToChat,
+        deleteMyNoteById,
+        deleteTaskNoteById,
+        deleteChatNoteById,
 
         // Favorite notes
         favoriteNotes,
