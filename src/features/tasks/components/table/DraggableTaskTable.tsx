@@ -1073,7 +1073,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         if (parent.id == null || projectId == null) {
             throw new Error("Quick add: missing parent id or project id");
         }
-        const { taskId } = await createQuickTask({
+        const { taskId, displayId } = await createQuickTask({
             myself,
             accessToken,
             projectId: Number(projectId),
@@ -1096,6 +1096,10 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
             const nowIso = new Date().toISOString();
             const optimistic: TaskTableProps = {
                 id: String(taskId),
+                // Render the friendly "<code>-<n>" id straight away when the
+                // backend returned it; otherwise formatTaskDisplayId falls
+                // back to "#<id>" until the background reload reconciles.
+                displayId,
                 title: draft.title,
                 priority: draft.priority,
                 effortLevel: draft.effortLevel,

@@ -63,8 +63,8 @@ const renderRow = (overrides: Partial<Parameters<typeof QuickAddTaskRow>[0]> = {
 };
 
 describe("QuickAddTaskRow", () => {
-    it("submits the full draft on Enter and clears the title while staying open", async () => {
-        const { onSubmit, titleInput, getByPlaceholderText } = renderRow();
+    it("submits the full draft on Enter and closes the row on success", async () => {
+        const { onSubmit, onClose, titleInput } = renderRow();
 
         fireEvent.change(titleInput, { target: { value: "  New child task  " } });
         fireEvent.keyDown(titleInput, { key: "Enter" });
@@ -78,9 +78,8 @@ describe("QuickAddTaskRow", () => {
             effortLevel: null,
             dueDate: null,
         });
-        // Rapid-add pattern: cleared but still mounted for the next entry.
-        await waitFor(() => expect(titleInput.value).toBe(""));
-        expect(getByPlaceholderText(TITLE_PLACEHOLDER)).toBeInTheDocument();
+        // The row disappears once the task is created.
+        await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
     });
 
     it("does not submit an empty or whitespace-only title", async () => {
@@ -101,15 +100,17 @@ describe("QuickAddTaskRow", () => {
                     resolveSubmit = resolve;
                 })
         );
-        const { titleInput } = renderRow({ onSubmit });
+        const { onClose, titleInput } = renderRow({ onSubmit });
 
         fireEvent.change(titleInput, { target: { value: "Task A" } });
         fireEvent.keyDown(titleInput, { key: "Enter" });
         fireEvent.keyDown(titleInput, { key: "Enter" });
 
+        // The second Enter is swallowed by the in-flight guard.
         expect(onSubmit).toHaveBeenCalledTimes(1);
         resolveSubmit();
-        await waitFor(() => expect(titleInput.value).toBe(""));
+        await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
+        expect(onSubmit).toHaveBeenCalledTimes(1);
     });
 
     it("closes on Escape", () => {

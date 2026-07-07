@@ -27,10 +27,15 @@ type CreateQuickTaskProps = {
 
 export type CreateQuickTaskResult = {
     // task_id of the created row, or null if the response body couldn't
-    // be parsed. `display_id` is intentionally NOT surfaced: the
-    // post-save signal claims project_task_number after serialization,
-    // so the POST response may not carry it yet.
+    // be parsed.
     taskId: number | null;
+    // Friendly "<code>-<n>" id computed by the backend. The POST handler
+    // surfaces it (mirroring PUT / getProjectTasks) so a freshly created
+    // row can render it immediately instead of flashing "#<id>". Null
+    // when the backend build predates that change, or when the project
+    // has no code / the number wasn't assigned — callers fall back to
+    // "#<id>" via `formatTaskDisplayId`.
+    displayId: string | null;
 };
 
 // Title-only task create. The full CreateTaskForm flow does POST-empty
@@ -98,5 +103,9 @@ export const createQuickTask = async (
     const json = await res.json().catch(() => null);
     const rawId = json?.task?.task_id;
     const numericId = Number(rawId);
-    return { taskId: Number.isFinite(numericId) && rawId != null ? numericId : null };
+    const rawDisplayId = json?.task?.displayId;
+    return {
+        taskId: Number.isFinite(numericId) && rawId != null ? numericId : null,
+        displayId: typeof rawDisplayId === "string" && rawDisplayId !== "" ? rawDisplayId : null,
+    };
 };

@@ -92,12 +92,17 @@ describe("createQuickTask", () => {
 
     it("returns the created task id from the POST response", async () => {
         const result = await createQuickTask(baseProps);
-        expect(result).toEqual({ taskId: 123 });
+        expect(result).toEqual({ taskId: 123, displayId: null });
     });
 
-    it("returns taskId null when the response body is malformed", async () => {
+    it("surfaces the backend-computed displayId when present", async () => {
+        mockFetch.mockResolvedValue(okResponse({ task: { task_id: 123, displayId: "PRJ-45" } }));
+        expect(await createQuickTask(baseProps)).toEqual({ taskId: 123, displayId: "PRJ-45" });
+    });
+
+    it("returns nulls when the response body is malformed", async () => {
         mockFetch.mockResolvedValue(okResponse({ unexpected: true }));
-        expect(await createQuickTask(baseProps)).toEqual({ taskId: null });
+        expect(await createQuickTask(baseProps)).toEqual({ taskId: null, displayId: null });
 
         mockFetch.mockResolvedValue({
             ok: true,
@@ -106,7 +111,7 @@ describe("createQuickTask", () => {
                 throw new Error("not json");
             },
         });
-        expect(await createQuickTask(baseProps)).toEqual({ taskId: null });
+        expect(await createQuickTask(baseProps)).toEqual({ taskId: null, displayId: null });
     });
 
     it("throws on a non-ok response", async () => {

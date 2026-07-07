@@ -85,7 +85,6 @@ export const QuickAddTaskRow = (props: QuickAddTaskRowProps) => {
     const [error, setError] = useState<string | null>(null);
 
     const rootRef = useRef<HTMLDivElement | null>(null);
-    const titleInputRef = useRef<HTMLInputElement | null>(null);
     // Mirrors of state/props read from the document-level mousedown
     // listener, which is registered exactly once — refs keep it from
     // rebinding per keystroke while still seeing current values.
@@ -138,16 +137,13 @@ export const QuickAddTaskRow = (props: QuickAddTaskRowProps) => {
         setError(null);
         try {
             await onSubmit({ title: trimmed, assigneeId, status, priority, effortLevel, dueDate });
-            // Reset to defaults but keep the row open + focused so the
-            // user can type-Enter-type-Enter through several tasks
-            // (same rapid-add pattern as TaskSubTasksBlock).
-            handleTitleChange("");
-            setAssigneeId(myself.userId);
-            setStatus("Open");
-            setPriority(null);
-            setEffortLevel(null);
-            setDueDate(null);
-            titleInputRef.current?.focus();
+            // Close the row once the task is created — it should disappear
+            // on create rather than persist for rapid consecutive adds
+            // (re-opening is one hover-"+" click away). The finally below
+            // still runs and resets the flags; the setState lands on the
+            // about-to-unmount row and is a harmless no-op.
+            onDirtyChange(false);
+            onClose();
         } catch {
             setError(t.tasks.table.quickAddError);
         } finally {
@@ -272,7 +268,6 @@ export const QuickAddTaskRow = (props: QuickAddTaskRowProps) => {
                         disabled={isSubmitting}
                         error={!!error}
                         helperText={error}
-                        inputRef={titleInputRef}
                         placeholder={t.tasks.table.quickAddTitlePlaceholder}
                         size="small"
                         value={title}
