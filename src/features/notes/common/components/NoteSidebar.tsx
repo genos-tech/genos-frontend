@@ -496,8 +496,14 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     // My Notes section: user folders (nested) + unfiled root notes,
     // headed by a subtle "New folder" affordance. Task/chat sections
     // keep their derived (task/chat-anchored) grouping.
+    //
+    // Box root ON PURPOSE (not a Fragment): NoteTypeSection renders this
+    // inside a Joy <List>, which clones its first child with a
+    // `data-first-child` prop — a Fragment root triggers React's
+    // "Invalid prop supplied to React.Fragment" warning. The grouped
+    // task/chat/shared sections are Box-rooted for the same reason.
     const renderMyNotesSection = () => (
-        <>
+        <Box>
             <ListItem>
                 <ListItemButton
                     sx={{
@@ -533,7 +539,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                 />
             ))}
             {useNM.myNoteFolderForest.rootNotes.map((root) => renderMyNoteTree(root))}
-        </>
+        </Box>
     );
 
     const renderTaskNoteTreeItem = (node: any) => (
