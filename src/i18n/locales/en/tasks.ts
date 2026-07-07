@@ -551,6 +551,10 @@ export const tasks = {
         dragToReorder: "Drag to reorder",
         dragToResizeColumn: "Drag to resize column",
         dropToNest: "↳ Drop to nest",
+        quickAddTooltip: "Add sub-task",
+        quickAddTitlePlaceholder: "Type a title, Enter to create…",
+        quickAddConfirm: "Create",
+        quickAddError: "Couldn't create — try again",
         columnSettings: {
             heading: "Customize columns",
             description:

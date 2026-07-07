@@ -1,5 +1,6 @@
 import { memo, useEffect, useRef, useState } from "react";
 import { Draggable } from "@hello-pangea/dnd";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import KeyboardArrowDownRoundedIcon from "@mui/icons-material/KeyboardArrowDownRounded";
@@ -34,16 +35,19 @@ import { TaskTableProps } from "../../../../types/tasks";
 import { PrStatusCell } from "../../../integrations/components/PrStatusCell";
 import { formatTaskDisplayId } from "../../utils/taskDisplayId";
 import { effortLevels, priorities } from "../../utils/taskMeta";
-import { ColumnDef, statusOptions } from "./DraggableTaskTable";
+import { ColumnDef, LEADING_GUTTER_WIDTH, statusOptions } from "./DraggableTaskTable";
 
-// Depth-based background colors for nested task rows
-const DEPTH_COLORS_DARK = [
+// Depth-based background colors for nested task rows. Exported (along
+// with DEPTH_BORDER_COLORS / getTableCellStyles below) so the
+// QuickAddTaskRow draft row can render the exact same depth/cell chrome
+// as real rows.
+export const DEPTH_COLORS_DARK = [
     "transparent",
     "rgba(56, 189, 248, 0.08)",
     "rgba(45, 212, 191, 0.09)",
     "rgba(251, 191, 36, 0.08)",
 ];
-const DEPTH_COLORS_LIGHT = [
+export const DEPTH_COLORS_LIGHT = [
     "transparent",
     "rgba(14, 165, 233, 0.07)",
     "rgba(20, 184, 166, 0.07)",
@@ -61,7 +65,7 @@ const DEPTH_HOVER_LIGHT = [
     "rgba(20, 184, 166, 0.12)",
     "rgba(245, 158, 11, 0.11)",
 ];
-const DEPTH_BORDER_COLORS = ["transparent", "#38bdf8", "#2dd4bf", "#fbbf24"];
+export const DEPTH_BORDER_COLORS = ["transparent", "#38bdf8", "#2dd4bf", "#fbbf24"];
 
 // Style helpers
 // NOTE: Do NOT apply transform here - react-beautiful-dnd manages transforms for positioning
@@ -125,7 +129,7 @@ const getTableRowStyles = (
     };
 };
 
-const getTableCellStyles = (
+export const getTableCellStyles = (
     width: number,
     align: string | undefined,
     mode: "light" | "dark" | undefined
@@ -205,6 +209,12 @@ type DraggableTaskRowProps = {
     // is in view; the row falls back to "Sprint #<id>" if a row carries
     // a sprintId we haven't loaded yet.
     sprintNamesById?: Map<number, string>;
+    // Opens the inline quick-add child row beneath this row (the hover
+    // "+" button in the leading gutter). Excluded from `areEqual` like
+    // the other callbacks, so the parent MUST pass an identity-stable
+    // function (`useCallback` with `[]` + functional setState) — a
+    // closure over changing state would go stale here.
+    onQuickAddChild: (task: TaskTableProps) => void;
 };
 
 const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
@@ -230,6 +240,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
         childrenByParent,
         depth,
         sprintNamesById,
+        onQuickAddChild,
     } = props;
 
     const { t } = useTranslation();
@@ -1466,6 +1477,9 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                             "&:hover .task-row-drag-handle": {
                                 opacity: snapshot.isDragging ? 1 : 0.8,
                             },
+                            "&:hover .task-row-quick-add": {
+                                opacity: snapshot.isDragging ? 0 : 0.8,
+                            },
                         }}
                         onDoubleClick={() => {
                             // Single debounced path for both task and
@@ -1524,14 +1538,49 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                 {t.tasks.table.dropToNest}
                             </Box>
                         )}
-                        {/* Drag Handle */}
+                        {/* Leading gutter: drag handle + hover "+" quick-add.
+                            Fixed LEADING_GUTTER_WIDTH keeps cells aligned with
+                            the header and the QuickAddTaskRow draft row. */}
                         <div
-                            {...provided.dragHandleProps}
-                            className="task-row-drag-handle"
-                            style={getDragHandleStyles(snapshot.isDragging, mode)}
-                            title={t.tasks.table.dragToReorder}
+                            style={{
+                                display: "flex",
+                                alignItems: "center",
+                                width: LEADING_GUTTER_WIDTH,
+                                minWidth: LEADING_GUTTER_WIDTH,
+                            }}
                         >
-                            <DragIndicatorIcon sx={{ fontSize: 20 }} />
+                            <div
+                                {...provided.dragHandleProps}
+                                className="task-row-drag-handle"
+                                style={getDragHandleStyles(snapshot.isDragging, mode)}
+                                title={t.tasks.table.dragToReorder}
+                            >
+                                <DragIndicatorIcon sx={{ fontSize: 20 }} />
+                            </div>
+                            <IconButton
+                                className="task-row-quick-add"
+                                size="small"
+                                title={t.tasks.table.quickAddTooltip}
+                                sx={{
+                                    width: 20,
+                                    height: 20,
+                                    p: 0,
+                                    borderRadius: "4px",
+                                    // Hidden until the row is hovered — see the
+                                    // `&:hover .task-row-quick-add` rule in the
+                                    // wrapper Box's sx (same zero-re-render CSS
+                                    // pattern as the drag handle).
+                                    opacity: 0,
+                                    color: mode === "dark" ? "#a78bfa" : "#7c3aed",
+                                    transition: "opacity 0.2s ease",
+                                }}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onQuickAddChild(task);
+                                }}
+                            >
+                                <AddRoundedIcon sx={{ fontSize: 16 }} />
+                            </IconButton>
                         </div>
 
                         {/* Table Cells */}
@@ -1569,9 +1618,13 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
 // Memoized export. The comparator covers every prop that affects this
 // row's visible output. State-manager objects (`useTM`, `useTEM`, `useCM`,
 // `useUISM`) and callbacks (`onRowUpdate`, `onRequestPreview`,
-// `toggleExpand`, `setMyself`) are intentionally excluded — they're
-// recreated on every parent render but only their stable setter methods
-// are invoked from this component's handlers, never read at render time.
+// `toggleExpand`, `setMyself`, `onQuickAddChild`) are intentionally
+// excluded — they're recreated on every parent render but only their
+// stable setter methods are invoked from this component's handlers,
+// never read at render time. `onQuickAddChild` in particular must stay
+// identity-stable in the parent (`useCallback([])` + functional
+// setState) since a memo-skipped render would otherwise keep invoking a
+// stale closure.
 //
 // The useTM fields that DO affect rendering — they drive the "this row
 // is selected" highlight — are compared explicitly so the row re-renders
