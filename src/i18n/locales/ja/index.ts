@@ -808,6 +808,7 @@ export const ja: DeepPartial<Messages> = {
             description: "説明",
             milestoneDetails: "マイルストーンの詳細",
             loadingMilestone: "マイルストーンを読み込み中…",
+            loadingTask: "タスクを読み込み中…",
             closeTooltip: "閉じる",
             tasksInThisMilestone: "このマイルストーンのタスク",
             taskButton: "タスク",
@@ -825,6 +826,7 @@ export const ja: DeepPartial<Messages> = {
         },
         createForm: {
             taskDetails: "タスクの詳細",
+            preparing: "準備中…",
             description: "説明",
             attachments: "添付ファイル",
             templates: {

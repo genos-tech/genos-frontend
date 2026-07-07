@@ -321,6 +321,7 @@ export const tasks = {
         description: "Description",
         milestoneDetails: "Milestone Details",
         loadingMilestone: "Loading milestone…",
+        loadingTask: "Loading task…",
         closeTooltip: "Close",
         tasksInThisMilestone: "Tasks in this milestone",
         taskButton: "Task",
@@ -339,6 +340,7 @@ export const tasks = {
     // Create task form.
     createForm: {
         taskDetails: "Task Details",
+        preparing: "Preparing task…",
         description: "Description",
         attachments: "Attachments",
         templates: {
