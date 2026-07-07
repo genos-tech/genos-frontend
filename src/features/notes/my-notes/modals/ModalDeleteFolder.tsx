@@ -11,8 +11,9 @@ type ModalDeleteFolderProps = {
     onConfirm: () => void;
 };
 
-// Confirm dialog for folder deletion. Deleting is non-destructive for
-// contents — the copy states that notes/subfolders move up one level.
+// Confirm dialog for folder deletion. DESTRUCTIVE (product spec): the
+// folder and everything inside — subfolders, filed notes, and their
+// child notes — are permanently deleted; the copy warns accordingly.
 export const ModalDeleteFolder = (props: ModalDeleteFolderProps) => {
     const { open, folderName, onClose, onConfirm } = props;
     const { t } = useTranslation();
@@ -20,11 +21,7 @@ export const ModalDeleteFolder = (props: ModalDeleteFolderProps) => {
     const isDark = mode === "dark";
 
     return (
-        <Modal
-            open={open}
-            sx={{ zIndex: 10010, backdropFilter: "blur(4px)" }}
-            onClose={onClose}
-        >
+        <Modal open={open} sx={{ zIndex: 10010, backdropFilter: "blur(4px)" }} onClose={onClose}>
             <ModalDialog
                 sx={{
                     borderRadius: "16px",
@@ -36,9 +33,7 @@ export const ModalDeleteFolder = (props: ModalDeleteFolderProps) => {
                     <DeleteOutlineRoundedIcon
                         sx={{ fontSize: 20, color: isDark ? "#f87171" : "#dc2626" }}
                     />
-                    <Typography level="title-lg">
-                        {t.notes.folders.deleteFolderTitle}
-                    </Typography>
+                    <Typography level="title-lg">{t.notes.folders.deleteFolderTitle}</Typography>
                 </Stack>
 
                 <Typography level="title-sm" sx={{ mb: 0.5 }} noWrap>

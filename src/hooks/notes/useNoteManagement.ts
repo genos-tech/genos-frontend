@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { NoteService } from "../../db/services/note.service";
+import { DatabaseUtils } from "../../db/utils/database";
 import { createEmptyChatNote } from "../../features/notes/chat-notes/services/createEmptyChatNote";
 import { loadChatNoteMeta } from "../../features/notes/chat-notes/services/loadChatNoteMeta";
 import { loadChatNotesByChatId } from "../../features/notes/chat-notes/services/loadChatNotesByChatId";
@@ -750,24 +751,67 @@ export const useNoteManagement = (
 
     const deleteMyNoteFolderAction = async (folderId: number) => {
         if (!accessToken) return;
-        const folder = myNoteFolders.find((f) => f.folderId === folderId);
-        const newParent = folder?.parentFolderId ?? null;
-        // Optimistic mirror of the backend's contents-move-up: child
-        // folders and filed notes re-parent to the deleted folder's
-        // parent (or root).
-        setMyNoteFolders((prev) =>
-            prev
-                .filter((f) => f.folderId !== folderId)
-                .map((f) =>
-                    f.parentFolderId === folderId ? { ...f, parentFolderId: newParent } : f
-                )
+        // DESTRUCTIVE (product spec): the backend hard-deletes the whole
+        // subtree — descendant folders, notes filed in them, and those
+        // notes' child-note chains. Mirror that locally: compute the
+        // doomed set, drop it from state, close its tabs, purge local
+        // storage. Nothing is re-parented.
+        const folderIds = collectDescendantFolderIds(myNoteFolders, folderId);
+        const noteIds = new Set<number>(
+            myNoteMeta
+                .filter((n) => n.folderId != null && folderIds.has(n.folderId))
+                .map((n) => n.noteId)
         );
-        setMyNoteMeta((prev) =>
-            prev.map((n) => (n.folderId === folderId ? { ...n, folderId: newParent } : n))
-        );
-        const ok = await deleteMyNoteFolderApi(myself, folderId, accessToken);
-        if (!ok) {
+        // Child-note chains hang off parent_note_id with folderId null —
+        // BFS them into the doomed set.
+        let frontier = new Set<number>(noteIds);
+        while (frontier.size > 0) {
+            const next = new Set<number>();
+            for (const n of myNoteMeta) {
+                if (
+                    n.parentNoteId != null &&
+                    frontier.has(n.parentNoteId) &&
+                    !noteIds.has(n.noteId)
+                ) {
+                    noteIds.add(n.noteId);
+                    next.add(n.noteId);
+                }
+            }
+            frontier = next;
+        }
+
+        const purgeLocal = async (ids: Iterable<number>) => {
+            for (const id of ids) {
+                const tab = tabsApi.tabs.find((t) => t.kind === "my" && t.noteId === id);
+                if (tab) tabsApi.closeTab(tab.id);
+                try {
+                    await noteService.deletePersonalNote(id);
+                    await DatabaseUtils.deleteYjsDatabase(`my-note:${id}`);
+                } catch {
+                    // Local cache cleanup is best-effort.
+                }
+            }
+        };
+
+        setMyNoteFolders((prev) => prev.filter((f) => !folderIds.has(f.folderId)));
+        setMyNoteMeta((prev) => prev.filter((n) => !noteIds.has(n.noteId)));
+        if (currentMyNote && noteIds.has(currentMyNote.noteId)) {
+            setCurrentMyNote(null);
+        }
+        await purgeLocal(noteIds);
+
+        const result = await deleteMyNoteFolderApi(myself, folderId, accessToken);
+        if (!result) {
+            // Server refused/failed — restore truth.
             await Promise.all([getMyNoteFolders(), getMyNoteMeta()]);
+            return;
+        }
+        // Server may have destroyed rows this client's meta didn't know
+        // about (stale list) — sweep any extras too.
+        const extras = result.deletedNoteIds.filter((id) => !noteIds.has(id));
+        if (extras.length > 0) {
+            setMyNoteMeta((prev) => prev.filter((n) => !extras.includes(n.noteId)));
+            await purgeLocal(extras);
         }
     };
 

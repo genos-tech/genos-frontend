@@ -25,7 +25,7 @@ export const notes = {
         deleteFolder: "Delete folder",
         deleteFolderTitle: "Delete this folder?",
         deleteFolderWarning:
-            "Notes and subfolders inside will move up one level. Nothing will be deleted.",
+            "All notes and subfolders inside will be permanently deleted. This cannot be undone.",
         folderNamePlaceholder: "Folder name",
         createTitle: "New folder",
         renameTitle: "Rename folder",

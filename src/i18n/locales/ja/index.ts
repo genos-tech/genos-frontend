@@ -1059,7 +1059,7 @@ export const ja: DeepPartial<Messages> = {
             deleteFolder: "フォルダを削除",
             deleteFolderTitle: "このフォルダを削除しますか？",
             deleteFolderWarning:
-                "中のノートとサブフォルダは一つ上の階層に移動します。削除されるものはありません。",
+                "中のノートとサブフォルダはすべて完全に削除されます。この操作は取り消せません。",
             folderNamePlaceholder: "フォルダ名",
             createTitle: "新規フォルダ",
             renameTitle: "フォルダ名を変更",
