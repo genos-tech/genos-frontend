@@ -63,6 +63,7 @@ import { effortLevels, priorities } from "../../utils/taskMeta";
 import { TaskBodyBlock } from "./base/TaskBodyBlock";
 import { TaskCustomBarBlock } from "./base/TaskCustomBarBlock";
 import { TaskMainBlock } from "./base/TaskMainBlock";
+import { TaskPaneLoading } from "./base/TaskPaneLoading";
 import { TaskPreviewLayout } from "./base/TaskPreviewLayout";
 import { TaskSubTasksBlock } from "./base/TaskSubTasksBlock";
 import { TaskTabBlock } from "./base/TaskTabBlock";
@@ -710,7 +711,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
 
     return (
         <>
-            {taskEditState.tmpCurrentTaskContent?.id && (
+            {taskEditState.tmpCurrentTaskContent?.id ? (
                 <TaskPreviewLayout
                     ref={sheetRef}
                     isDark={isDark}
@@ -916,7 +917,9 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                         />
                     }
                 />
-            )}
+            ) : useTM.currentPreviewTaskId != null && useTM.currentPreviewTaskId !== -1 ? (
+                <TaskPaneLoading isDark={isDark} label={t.tasks.preview.loadingTask} />
+            ) : null}
         </>
     );
 };
@@ -1715,11 +1718,7 @@ const MilestonePreviewInner = ({
     }, [milestone]);
 
     if (!milestone) {
-        return (
-            <Box sx={{ p: 3 }}>
-                <Typography level="body-sm">{t.tasks.preview.loadingMilestone}</Typography>
-            </Box>
-        );
+        return <TaskPaneLoading isDark={isDark} label={t.tasks.preview.loadingMilestone} />;
     }
 
     const previewLayout = (

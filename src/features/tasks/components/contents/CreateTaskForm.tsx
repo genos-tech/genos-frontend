@@ -56,6 +56,7 @@ import { TaskCreateAttachmentBlock } from "./base/TaskCreateAttachmentBlock";
 import { TaskCreateBodyBlock } from "./base/TaskCreateBodyBlock";
 import { TaskCreateFooter, type TaskCreateFooterHandle } from "./base/TaskCreateFooter";
 import { TaskMainBlock } from "./base/TaskMainBlock";
+import { TaskPaneLoading } from "./base/TaskPaneLoading";
 import { TaskTitleBlock } from "./base/TaskTitleBlock";
 
 // Section divider component
@@ -675,7 +676,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
 
     return (
         <>
-            {taskContent && taskContent.id && (
+            {taskContent && taskContent.id ? (
                 <Sheet
                     className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                     sx={{
@@ -1071,6 +1072,8 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                         </ModalDialog>
                     </Modal>
                 </Sheet>
+            ) : (
+                <TaskPaneLoading isDark={isDark} label={t.tasks.createForm.preparing} />
             )}
         </>
     );
