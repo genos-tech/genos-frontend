@@ -1,5 +1,7 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
+import CreateNewFolderRoundedIcon from "@mui/icons-material/CreateNewFolderRounded";
+import DriveFileMoveRoundedIcon from "@mui/icons-material/DriveFileMoveRounded";
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import MarkChatUnreadRoundedIcon from "@mui/icons-material/MarkChatUnreadRounded";
@@ -16,12 +18,21 @@ import { fmt, Messages, useTranslation } from "../../../../i18n";
 import { AllChatProps } from "../../../../types/chat";
 import {
     ChatNoteMetaProps,
+    MyNoteFolderTreeNode,
     MyNoteMetaProps,
+    MyNoteMetaTreeNode,
     SharedNoteMetaTreeNode,
     TaskNoteMetaProps,
 } from "../../../../types/notes";
 import { formatTaskDisplayId } from "../../../tasks/utils/taskDisplayId";
 import { ChildNoteCreator } from "../../chat-notes/components/ChildNoteCreator";
+import {
+    FolderActionHandlers,
+    MyNoteFolderTree,
+} from "../../my-notes/components/MyNoteFolderTree";
+import { ModalDeleteFolder } from "../../my-notes/modals/ModalDeleteFolder";
+import { ModalFolderName } from "../../my-notes/modals/ModalFolderName";
+import { ModalMoveToFolder } from "../../my-notes/modals/ModalMoveToFolder";
 import { useNoteUnread } from "../context/NoteUnreadContext";
 import { useNoteTreeState } from "../hooks/useNoteTreeState";
 import { ChatNoteMetaTreeNode, TaskNoteMetaTreeNode } from "../types/noteTypes";
@@ -426,6 +437,33 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         currentNote: useNM.currentMyNote,
     });
 
+    // ------------------------------------------------------------------
+    // My-note folders — modal host. One instance of each dialog serves
+    // every folder row / note row; rows only set this state.
+    // ------------------------------------------------------------------
+    const [folderNameModal, setFolderNameModal] = useState<
+        | { mode: "create"; parentFolderId: number | null }
+        | { mode: "rename"; folder: MyNoteFolderTreeNode }
+        | null
+    >(null);
+    const [moveModal, setMoveModal] = useState<
+        | { kind: "note"; noteId: number; currentFolderId: number | null; isChild: boolean }
+        | { kind: "folder"; folder: MyNoteFolderTreeNode }
+        | null
+    >(null);
+    const [deleteFolderModal, setDeleteFolderModal] = useState<MyNoteFolderTreeNode | null>(null);
+
+    const folderActions: FolderActionHandlers = {
+        onCreateNoteHere: (folderId) => {
+            void useNM.handleCreateNewMyNote(null, folderId);
+        },
+        onCreateSubfolder: (folderId) =>
+            setFolderNameModal({ mode: "create", parentFolderId: folderId }),
+        onRenameFolder: (folder) => setFolderNameModal({ mode: "rename", folder }),
+        onMoveFolder: (folder) => setMoveModal({ kind: "folder", folder }),
+        onDeleteFolder: (folder) => setDeleteFolderModal(folder),
+    };
+
     // Render functions for each note type
     const renderMyNoteTree = (node: any) => (
         <NoteTreeRenderer
@@ -438,7 +476,70 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             createChildNoteList={(node) => (
                 <ChildNoteCreator node={node} timestamp={myNoteState.timestamp} useNM={useNM} />
             )}
+            rowMenuItems={(node: MyNoteMetaTreeNode) => [
+                {
+                    id: "move-to-folder",
+                    label: t.notes.folders.moveToFolder,
+                    icon: <DriveFileMoveRoundedIcon sx={{ fontSize: 16 }} />,
+                    onClick: () =>
+                        setMoveModal({
+                            kind: "note",
+                            noteId: node.noteId,
+                            currentFolderId: node.folderId ?? null,
+                            isChild: node.parentNoteId != null,
+                        }),
+                },
+            ]}
         />
+    );
+
+    // My Notes section: user folders (nested) + unfiled root notes,
+    // headed by a subtle "New folder" affordance. Task/chat sections
+    // keep their derived (task/chat-anchored) grouping.
+    //
+    // Box root ON PURPOSE (not a Fragment): NoteTypeSection renders this
+    // inside a Joy <List>, which clones its first child with a
+    // `data-first-child` prop — a Fragment root triggers React's
+    // "Invalid prop supplied to React.Fragment" warning. The grouped
+    // task/chat/shared sections are Box-rooted for the same reason.
+    const renderMyNotesSection = () => (
+        <Box>
+            <ListItem>
+                <ListItemButton
+                    sx={{
+                        borderRadius: "8px",
+                        py: 0.5,
+                        px: 1,
+                        my: 0.25,
+                        gap: 0.75,
+                        minHeight: 30,
+                        border: "1px dashed",
+                        borderColor: isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.12)",
+                        color: isDark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.5)",
+                        "&:hover": {
+                            borderColor: isDark ? "rgba(167,139,250,0.6)" : "rgba(124,58,237,0.5)",
+                            color: isDark ? "#a78bfa" : "#7c3aed",
+                        },
+                    }}
+                    onClick={() => setFolderNameModal({ mode: "create", parentFolderId: null })}
+                >
+                    <CreateNewFolderRoundedIcon sx={{ fontSize: 15 }} />
+                    <Typography level="body-xs" sx={{ fontWeight: 500, color: "inherit" }}>
+                        {t.notes.folders.newFolder}
+                    </Typography>
+                </ListItemButton>
+            </ListItem>
+            {useNM.myNoteFolderForest.rootFolders.map((folder) => (
+                <MyNoteFolderTree
+                    key={`folder-${folder.folderId}`}
+                    actions={folderActions}
+                    folder={folder}
+                    renderNote={renderMyNoteTree}
+                    useNM={useNM}
+                />
+            ))}
+            {useNM.myNoteFolderForest.rootNotes.map((root) => renderMyNoteTree(root))}
+        </Box>
     );
 
     const renderTaskNoteTreeItem = (node: any) => (
@@ -803,8 +904,10 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             icon: <WindowRoundedIcon sx={{ fontSize: 18 }} />,
             title: t.notes.sidebar.myNotes,
             state: myNoteState,
-            renderTree: renderMyNoteTree,
-            isGrouped: false,
+            renderTree: null,
+            // Folder forest + unfiled roots (was a bare recursive tree).
+            renderGrouped: renderMyNotesSection,
+            isGrouped: true,
         },
         {
             noteType: 2,
@@ -1011,17 +1114,63 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                             title={config.title}
                             useNM={useNM}
                         >
-                            {config.isGrouped && config.renderGrouped
-                                ? config.renderGrouped()
-                                : config.state && config.renderTree
-                                  ? config.state.tmpMetaTree.map((root) =>
-                                        config.renderTree!(root)
-                                    )
-                                  : null}
+                            {/* Every section renders through its grouped
+                                function now — My Notes joined task/chat/
+                                shared when it gained the folder forest. */}
+                            {config.renderGrouped ? config.renderGrouped() : null}
                         </NoteTypeSection>
                     ))}
                 </List>
             </Box>
+
+            {/* My-note folder dialogs — single instances serving every
+                folder/note row (rows only set the host state above). */}
+            <ModalFolderName
+                initialName={folderNameModal?.mode === "rename" ? folderNameModal.folder.name : ""}
+                mode={folderNameModal?.mode ?? "create"}
+                open={folderNameModal !== null}
+                onClose={() => setFolderNameModal(null)}
+                onSubmit={(name) => {
+                    if (!folderNameModal) return;
+                    if (folderNameModal.mode === "create") {
+                        void useNM.createMyNoteFolder(name, folderNameModal.parentFolderId);
+                    } else {
+                        void useNM.renameMyNoteFolder(folderNameModal.folder.folderId, name);
+                    }
+                }}
+            />
+            <ModalMoveToFolder
+                folders={useNM.myNoteFolders}
+                open={moveModal !== null}
+                showDetachHint={moveModal?.kind === "note" && moveModal.isChild}
+                currentFolderId={
+                    moveModal?.kind === "note"
+                        ? moveModal.currentFolderId
+                        : (moveModal?.folder.parentFolderId ?? null)
+                }
+                movingFolderId={
+                    moveModal?.kind === "folder" ? moveModal.folder.folderId : undefined
+                }
+                onClose={() => setMoveModal(null)}
+                onSelect={(folderId) => {
+                    if (!moveModal) return;
+                    if (moveModal.kind === "note") {
+                        void useNM.moveMyNoteToFolder(moveModal.noteId, folderId);
+                    } else {
+                        void useNM.moveMyNoteFolder(moveModal.folder.folderId, folderId);
+                    }
+                }}
+            />
+            <ModalDeleteFolder
+                folderName={deleteFolderModal?.name ?? ""}
+                open={deleteFolderModal !== null}
+                onClose={() => setDeleteFolderModal(null)}
+                onConfirm={() => {
+                    if (deleteFolderModal) {
+                        void useNM.deleteMyNoteFolder(deleteFolderModal.folderId);
+                    }
+                }}
+            />
 
             {/* Footer */}
             <Divider sx={{ opacity: isDark ? 0.08 : 0.12 }} />

@@ -63,17 +63,18 @@ export const ChatNoteEditorPanel = ({
 
             useNM.tabsApi.updateTabTitle(updatedNote.noteId, "chat", updatedNote.title);
 
+            // MERGE into the existing meta row — never rebuild it.
+            // `updatedNote` spreads this panel's note snapshot, which
+            // `useNoteData` resolved once at mount; rebuilding from it
+            // would resurrect stale structural fields (parentNoteId /
+            // chat anchoring) after a sidebar move. Structural fields
+            // stay authoritative from the meta list. (Same pattern as
+            // TaskNoteEditorPanel.)
             useNM.setChatNoteMeta(
                 useNM.chatNoteMeta.map((item) =>
                     item.noteType === updatedNote.noteType && item.noteId === updatedNote.noteId
                         ? {
-                              noteType: updatedNote.noteType,
-                              noteId: updatedNote.noteId,
-                              parentNoteId: updatedNote.parentNoteId,
-                              chatType: updatedNote.chatType,
-                              chatId: updatedNote.chatId,
-                              isThread: updatedNote.isThread,
-                              threadId: updatedNote.threadId,
+                              ...item,
                               title: updatedNote.title,
                               tsUpdated: updatedNote.tsUpdated,
                           }

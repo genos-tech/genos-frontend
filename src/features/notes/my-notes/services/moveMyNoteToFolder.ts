@@ -3,37 +3,24 @@ import axios from "axios";
 import { authApi } from "../../../../services/api";
 import { UserProps } from "../../../../types/admin";
 
-export const createEmptyMyNote = async (
+// Move a personal note into a folder, or to the My Notes root with an
+// explicit `folderId: null`. The backend re-roots the note
+// (parent_note_id → null); its child-note subtree rides along. Returns
+// the meta-shaped row on success, undefined on failure.
+export const moveMyNoteToFolder = async (
     myself: UserProps,
-    parentNoteId: number | null,
-    title: string,
-    accessToken: string | null,
-    // Sidebar folder to file the new note into ("New note here" on a
-    // folder row). Null/omitted = My Notes root.
-    folderId: number | null = null
+    noteId: number,
+    folderId: number | null,
+    accessToken: string | null
 ) => {
-    const initBody = [
-        {
-            type: "paragraph",
-            props: {
-                textColor: "default",
-                textAlignment: "left",
-                backgroundColor: "default",
-            },
-            content: [],
-            children: [],
-        },
-    ];
     try {
         const api = authApi(accessToken);
         if (api) {
-            const res = await api.post("/note/personal/", {
+            const res = await api.put("/note/personal/move/", {
                 team_id: myself.teamId,
                 user_id: myself.userId,
-                parent_note_id: parentNoteId,
+                note_id: noteId,
                 folder_id: folderId,
-                title: title,
-                body: initBody,
             });
             return res.data;
         } else {
@@ -46,4 +33,5 @@ export const createEmptyMyNote = async (
             console.error("Unexpected error:", error);
         }
     }
+    return undefined;
 };

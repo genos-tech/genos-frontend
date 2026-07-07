@@ -17,10 +17,16 @@ export const sendUpdatedMyNote = async (
     try {
         const api = authApi(accessToken);
         if (api) {
+            // Content-only payload ON PURPOSE. This is the autosave
+            // funnel — it fires on every debounce from EVERY session
+            // holding the note open (other devices, share-recipient
+            // editors), so sending `parent_note_id` here would
+            // resurrect a pre-move parent from a stale session.
+            // Structure changes (reparent / folder move) go exclusively
+            // through /note/personal/move/.
             const res = await api.put("/note/personal/", {
                 user_id: myself.userId,
                 note_id: updatedNote.noteId,
-                parent_note_id: updatedNote.parentNoteId,
                 title: updatedNote.title,
                 body: updatedNote.body,
             });

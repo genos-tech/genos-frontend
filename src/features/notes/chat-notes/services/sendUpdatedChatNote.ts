@@ -20,7 +20,11 @@ export const sendUpdatedChatNote = async (
             const res = await api.put("/note/chat/", {
                 user_id: myself.userId,
                 note_id: updatedNote.noteId,
-                parent_note_id: updatedNote.parentNoteId,
+                // parent_note_id intentionally omitted — this autosave
+                // funnel fires from every session holding the note
+                // open, and a stale session's parentNoteId would undo a
+                // sidebar move. Structure changes go through the
+                // dedicated move endpoints.
                 title: updatedNote.title,
                 body: updatedNote.body,
             });
