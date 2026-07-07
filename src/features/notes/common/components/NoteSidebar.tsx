@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import CreateNewFolderRoundedIcon from "@mui/icons-material/CreateNewFolderRounded";
+import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import DriveFileMoveRoundedIcon from "@mui/icons-material/DriveFileMoveRounded";
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
@@ -13,6 +14,7 @@ import { Box, Divider, List, ListItem, ListItemContent, Sheet, Typography } from
 import ListItemButton from "@mui/joy/ListItemButton";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { MoreMenuItem } from "../../../../components/ui/MoreMenu";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { fmt, Messages, useTranslation } from "../../../../i18n";
 import { AllChatProps } from "../../../../types/chat";
@@ -49,6 +51,7 @@ import { ChatNoteMetaTreeNode, TaskNoteMetaTreeNode } from "../types/noteTypes";
 import { FavoriteNoteItem } from "./FavoriteNoteItem";
 import { FavoriteNoteSection } from "./FavoriteNoteSection";
 import { GroupedNoteSection } from "./GroupedNoteSection";
+import { ModalDeleteNote } from "./ModalDeleteNote";
 import { NoteTreeRenderer } from "./NoteTreeRenderer";
 import { NoteTypeSection } from "./NoteTypeSection";
 import { RecentNoteItem } from "./RecentNoteItem";
@@ -462,6 +465,35 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         | null
     >(null);
     const [deleteFolderModal, setDeleteFolderModal] = useState<MyNoteFolderTreeNode | null>(null);
+    // Note deletion straight from a sidebar "⋯" row menu (my / task /
+    // chat) — one confirm dialog serves every row. `hasChildren` is read
+    // off the tree node so the dialog can block deletion of a parent note
+    // up front (same guard as the note-header delete).
+    const [deleteNoteModal, setDeleteNoteModal] = useState<{
+        noteType: number;
+        noteId: number;
+        title: string;
+        hasChildren: boolean;
+    } | null>(null);
+
+    // Builds the shared "Delete" row-menu item for any note row. Kept out
+    // of the per-type render helpers so my / task / chat stay consistent.
+    const buildDeleteMenuItem = (
+        noteType: number,
+        node: { noteId: number; title: string; children: unknown[] }
+    ): MoreMenuItem => ({
+        id: "delete-note",
+        label: t.notes.header.deleteNote,
+        icon: <DeleteOutlineRoundedIcon sx={{ fontSize: 16 }} />,
+        danger: true,
+        onClick: () =>
+            setDeleteNoteModal({
+                noteType,
+                noteId: node.noteId,
+                title: node.title || t.notes.defaults.untitled,
+                hasChildren: node.children.length > 0,
+            }),
+    });
 
     const folderActions: FolderActionHandlers = {
         onCreateNoteHere: (folderId) => {
@@ -511,6 +543,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                             isChild: node.parentNoteId != null,
                         }),
                 },
+                buildDeleteMenuItem(1, node),
             ]}
         />
     );
@@ -603,6 +636,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             currentChain={taskNoteState.tmpCurrentChain}
             node={node}
             noteType={2}
+            rowMenuItems={(node) => [buildDeleteMenuItem(2, node)]}
             timestamp={taskNoteState.timestamp}
             useNM={useNM}
             createChildNoteList={(node) => (
@@ -617,6 +651,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             currentChain={chatNoteState.tmpCurrentChain}
             node={node}
             noteType={3}
+            rowMenuItems={(node) => [buildDeleteMenuItem(3, node)]}
             timestamp={chatNoteState.timestamp}
             useNM={useNM}
             createChildNoteList={(node) => (
@@ -1305,6 +1340,19 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                     if (deleteFolderModal) {
                         void useNM.deleteMyNoteFolder(deleteFolderModal.folderId);
                     }
+                }}
+            />
+            <ModalDeleteNote
+                hasChildren={deleteNoteModal?.hasChildren ?? false}
+                noteTitle={deleteNoteModal?.title ?? ""}
+                open={deleteNoteModal !== null}
+                onClose={() => setDeleteNoteModal(null)}
+                onConfirm={() => {
+                    if (!deleteNoteModal) return;
+                    const { noteType, noteId } = deleteNoteModal;
+                    if (noteType === 1) void useNM.deleteMyNoteById(noteId);
+                    else if (noteType === 2) void useNM.deleteTaskNoteById(noteId);
+                    else if (noteType === 3) void useNM.deleteChatNoteById(noteId);
                 }}
             />
 
