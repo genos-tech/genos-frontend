@@ -411,9 +411,10 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                         />
                     </AppTooltip>
                 ) : (
-                    // Direct "open task" affordance. Clicking jumps to
-                    // the task preview and closes the diagram modal
-                    // (the canvas wires both into `onOpenPreview`).
+                    // Direct "open task" affordance. Clicking opens the
+                    // task as an overlay modal ABOVE the diagram — the
+                    // graph stays open behind it (the canvas wires both
+                    // this and the ghost-card click into `onOpenPreview`).
                     <AppTooltip title={t.tasks.diagram.tooltips.openTask}>
                         <IconButton
                             size="sm"
