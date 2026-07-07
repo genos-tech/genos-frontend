@@ -154,9 +154,7 @@ function MyNoteFolderTreeComponent(props: MyNoteFolderTreeProps) {
                                     id: "rename",
                                     label: t.notes.folders.rename,
                                     icon: (
-                                        <DriveFileRenameOutlineRoundedIcon
-                                            sx={{ fontSize: 16 }}
-                                        />
+                                        <DriveFileRenameOutlineRoundedIcon sx={{ fontSize: 16 }} />
                                     ),
                                     onClick: () => actions.onRenameFolder(folder),
                                 },
@@ -207,9 +205,7 @@ function MyNoteFolderTreeComponent(props: MyNoteFolderTreeProps) {
                                     px: 1.5,
                                     py: 0.5,
                                     fontStyle: "italic",
-                                    color: isDark
-                                        ? "rgba(255,255,255,0.35)"
-                                        : "rgba(0,0,0,0.35)",
+                                    color: isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.35)",
                                 }}
                             >
                                 {t.notes.folders.emptyFolder}

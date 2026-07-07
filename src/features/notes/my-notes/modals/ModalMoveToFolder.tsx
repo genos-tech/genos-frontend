@@ -107,11 +107,7 @@ export const ModalMoveToFolder = (props: ModalMoveToFolderProps) => {
     });
 
     return (
-        <Modal
-            open={open}
-            sx={{ zIndex: 10010, backdropFilter: "blur(4px)" }}
-            onClose={onClose}
-        >
+        <Modal open={open} sx={{ zIndex: 10010, backdropFilter: "blur(4px)" }} onClose={onClose}>
             <ModalDialog
                 sx={{
                     borderRadius: "16px",

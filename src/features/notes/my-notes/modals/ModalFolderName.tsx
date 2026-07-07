@@ -41,11 +41,7 @@ export const ModalFolderName = (props: ModalFolderNameProps) => {
     };
 
     return (
-        <Modal
-            open={open}
-            sx={{ zIndex: 10010, backdropFilter: "blur(4px)" }}
-            onClose={onClose}
-        >
+        <Modal open={open} sx={{ zIndex: 10010, backdropFilter: "blur(4px)" }} onClose={onClose}>
             <ModalDialog
                 sx={{
                     borderRadius: "16px",
@@ -62,9 +58,7 @@ export const ModalFolderName = (props: ModalFolderNameProps) => {
                             width: 34,
                             height: 34,
                             borderRadius: "10px",
-                            background: isDark
-                                ? "rgba(124,58,237,0.2)"
-                                : "rgba(124,58,237,0.1)",
+                            background: isDark ? "rgba(124,58,237,0.2)" : "rgba(124,58,237,0.1)",
                         }}
                     >
                         <FolderRoundedIcon
