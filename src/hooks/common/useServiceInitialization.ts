@@ -132,6 +132,7 @@ export const useServiceInitialization = ({
 
             // Load note metadata
             useNM.getMyNoteMeta();
+            useNM.getMyNoteFolders();
             useNM.getTaskNoteMeta();
             useNM.getChatNoteMeta();
         }

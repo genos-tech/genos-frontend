@@ -1,4 +1,4 @@
-import { memo, ReactNode } from "react";
+import { memo, ReactNode, useState } from "react";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import StarOutlineRoundedIcon from "@mui/icons-material/StarOutlineRounded";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
@@ -13,6 +13,7 @@ import {
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { MoreMenu, MoreMenuItem } from "../../../../components/ui/MoreMenu";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { useTranslation } from "../../../../i18n";
 import { useNoteUnread } from "../context/NoteUnreadContext";
@@ -26,6 +27,10 @@ interface NoteTreeRendererProps<T extends BaseNoteTreeNode> {
     useNM: NoteManagementState;
     createChildNoteList: (node: T) => ReactNode;
     depth?: number;
+    // Optional per-row "⋯" menu (e.g. "Move to folder…" on my notes).
+    // Rendered next to the favorite star with the same hover-reveal.
+    // Passed down recursively so child rows get the menu too.
+    rowMenuItems?: (node: T) => MoreMenuItem[];
 }
 
 function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
@@ -36,6 +41,7 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
     useNM,
     createChildNoteList,
     depth = 0,
+    rowMenuItems,
 }: NoteTreeRendererProps<T>) {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
@@ -85,6 +91,12 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
 
     // Check if this note is favorited
     const isFavorited = useNM.isNoteFavorited(node.noteId, noteType);
+
+    // Keep the row-menu trigger visible while its portal menu is open —
+    // otherwise the hover-reveal hides it the moment the pointer moves
+    // onto the menu itself.
+    const [rowMenuOpen, setRowMenuOpen] = useState(false);
+    const menuItems = rowMenuItems ? rowMenuItems(node) : null;
 
     const handleFavoriteClick = async (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -138,6 +150,9 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
                                 ? "rgba(255,255,255,0.05)"
                                 : "rgba(0,0,0,0.03)",
                             "& .favorite-btn": {
+                                opacity: 1,
+                            },
+                            "& .row-menu-btn": {
                                 opacity: 1,
                             },
                         },
@@ -260,6 +275,27 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
                             />
                         )}
                     </IconButton>
+
+                    {/* Optional per-row "⋯" menu (hover-revealed like the
+                        star; stays visible while its menu is open). */}
+                    {menuItems && menuItems.length > 0 && (
+                        <Box
+                            className="row-menu-btn"
+                            sx={{
+                                opacity: rowMenuOpen ? 1 : 0,
+                                transition: "opacity 0.15s ease",
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <MoreMenu
+                                iconFontSize={14}
+                                items={menuItems}
+                                placement="bottom-end"
+                                triggerSize={20}
+                                onOpenChange={setRowMenuOpen}
+                            />
+                        </Box>
+                    )}
                 </ListItemButton>
 
                 {/* Children: rendered only when expanded so collapsed
@@ -281,6 +317,7 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
                                 depth={depth + 1}
                                 node={child as T}
                                 noteType={noteType}
+                                rowMenuItems={rowMenuItems}
                                 timestamp={timestamp}
                                 useNM={useNM}
                             />

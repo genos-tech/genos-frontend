@@ -5,6 +5,7 @@ import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import CancelIcon from "@mui/icons-material/Cancel";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
+import DriveFileMoveRoundedIcon from "@mui/icons-material/DriveFileMoveRounded";
 import NoteAddRoundedIcon from "@mui/icons-material/NoteAddRounded";
 import NotificationsActiveRoundedIcon from "@mui/icons-material/NotificationsActiveRounded";
 import NotificationsOffRoundedIcon from "@mui/icons-material/NotificationsOffRounded";
@@ -34,6 +35,7 @@ import { isMac } from "../../../../utils/platform";
 import { NoteAskModal, useNoteAsk } from "../../../noteAsk";
 import { SpotlightResult } from "../../../spotlight/types";
 import { formatTaskDisplayId } from "../../../tasks/utils/taskDisplayId";
+import { ModalMoveToFolder } from "../../my-notes/modals/ModalMoveToFolder";
 import { getMyNoteRoleId, NOTE_ROLE_OWNER } from "../utils/noteRoles";
 import { ModalNoteSharing } from "./ModalNoteSharing";
 
@@ -114,6 +116,9 @@ export const NoteHeaderActions = ({
     const overflowCount = Math.max(members.length - MAX_AVATARS_INLINE, 0);
 
     const [shareOpen, setShareOpen] = useState(false);
+    // "Move to folder…" picker for personal notes (keyboard/mobile path
+    // — the sidebar row menu is the pointer path).
+    const [moveToFolderOpen, setMoveToFolderOpen] = useState(false);
     const openShareModal = () => {
         if (activeNoteId != null) setShareOpen(true);
     };
@@ -716,6 +721,15 @@ export const NoteHeaderActions = ({
                         onClick: onCreateNewNote,
                     },
                     {
+                        id: "moveToFolder",
+                        label: t.notes.folders.moveToFolder,
+                        icon: <DriveFileMoveRoundedIcon sx={{ fontSize: 18 }} />,
+                        // Owner-only: the backend rejects folder moves
+                        // by share-recipient editors, so don't offer it.
+                        visible: noteType === 1 && isOwner && activeNoteId != null,
+                        onClick: () => setMoveToFolderOpen(true),
+                    },
+                    {
                         id: "childNote",
                         label: t.notes.header.childNote,
                         icon: <AddIcon sx={{ fontSize: 18 }} />,
@@ -770,6 +784,22 @@ export const NoteHeaderActions = ({
                     />
                 );
             })()}
+
+            {/* Personal-note folder picker (header path). */}
+            {noteType === 1 && (
+                <ModalMoveToFolder
+                    currentFolderId={useNM.currentMyNote?.folderId ?? null}
+                    folders={useNM.myNoteFolders}
+                    open={moveToFolderOpen}
+                    showDetachHint={useNM.currentMyNote?.parentNoteId != null}
+                    onClose={() => setMoveToFolderOpen(false)}
+                    onSelect={(folderId) => {
+                        if (activeNoteId != null) {
+                            void useNM.moveMyNoteToFolder(activeNoteId, folderId);
+                        }
+                    }}
+                />
+            )}
 
             {/* Close Button (only in task page) */}
             {isInTaskPage && (

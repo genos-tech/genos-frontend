@@ -19,7 +19,12 @@ import {
     removeNoteFavorite,
 } from "../../features/notes/favorite-notes/services";
 import { createEmptyMyNote } from "../../features/notes/my-notes/services/createEmptyMyNote";
+import { createMyNoteFolder as createMyNoteFolderApi } from "../../features/notes/my-notes/services/createMyNoteFolder";
+import { deleteMyNoteFolder as deleteMyNoteFolderApi } from "../../features/notes/my-notes/services/deleteMyNoteFolder";
+import { loadMyNoteFolders } from "../../features/notes/my-notes/services/loadMyNoteFolders";
 import { loadMyNoteMeta } from "../../features/notes/my-notes/services/loadMyNoteMeta";
+import { moveMyNoteToFolder as moveMyNoteToFolderApi } from "../../features/notes/my-notes/services/moveMyNoteToFolder";
+import { updateMyNoteFolder as updateMyNoteFolderApi } from "../../features/notes/my-notes/services/updateMyNoteFolder";
 import {
     loadRecentNotesMeta,
     RecentNotesMetaResponse,
@@ -32,6 +37,8 @@ import {
     ChatNoteMetaProps,
     ChatNoteMetaTreeNode,
     ChatNoteProps,
+    MyNoteFolderForest,
+    MyNoteFolderProps,
     MyNoteMetaProps,
     MyNoteMetaTreeNode,
     MyNoteProps,
@@ -45,9 +52,12 @@ import {
 } from "../../types/notes";
 import {
     buildChatNoteTree,
+    buildMyNoteFolderForest,
     buildMyNoteTree,
     buildSharedNoteTree,
     buildTaskNoteTree,
+    collectDescendantFolderIds,
+    collectFolderAncestorIds,
 } from "../../utils/note";
 import { initCurrentChatNoteChain, updataChatNoteChain } from "./chatNote";
 import { initCurrentMyNoteChain, updataMyNoteChain } from "./myNote";
@@ -98,6 +108,22 @@ export interface NoteManagementState {
     currentMyNoteChain: MyNoteMetaTreeNode[] | undefined;
     setCurrentMyNoteChain: (chain: MyNoteMetaTreeNode[]) => void;
     getMyNoteMeta: () => Promise<void>;
+
+    // My-note sidebar folders (user-created organization layer).
+    // Folders never appear in tabs/search/recents — they only shape
+    // the My Notes sidebar section.
+    myNoteFolders: MyNoteFolderProps[];
+    myNoteFolderForest: MyNoteFolderForest;
+    getMyNoteFolders: () => Promise<void>;
+    createMyNoteFolder: (name: string, parentFolderId: number | null) => Promise<void>;
+    renameMyNoteFolder: (folderId: number, name: string) => Promise<void>;
+    // Returns false when the move was rejected (e.g. into own descendant).
+    moveMyNoteFolder: (folderId: number, newParentFolderId: number | null) => Promise<boolean>;
+    deleteMyNoteFolder: (folderId: number) => Promise<void>;
+    moveMyNoteToFolder: (noteId: number, folderId: number | null) => Promise<void>;
+    isFolderExpanded: (folderId: number) => boolean;
+    toggleFolderExpanded: (folderId: number) => void;
+    expandFolder: (folderId: number) => void;
 
     // Favorite notes
     favoriteNotes: FavoriteNotesMetaResponse | null;
@@ -198,7 +224,10 @@ export interface NoteManagementState {
         title?: string
     ) => Promise<void>;
 
-    handleCreateNewMyNote: (parentNoteId: number | null) => Promise<void>;
+    handleCreateNewMyNote: (
+        parentNoteId: number | null,
+        folderId?: number | null
+    ) => Promise<void>;
 
     // Note loading function
     loadNote: (noteType: number, noteId: number, nextTabIndex: number) => Promise<void>;
@@ -262,6 +291,11 @@ export const useNoteManagement = (
     );
     const [newlyCreatedMyNotes, setNewlyCreatedMyNotes] = useState<MyNoteProps[]>([]);
 
+    // My-note sidebar folders. Empty against an older backend (the
+    // loader resolves to []), which degrades the sidebar to the flat
+    // folder-less tree.
+    const [myNoteFolders, setMyNoteFolders] = useState<MyNoteFolderProps[]>([]);
+
     // Favorite notes
     const [favoriteNotes, setFavoriteNotes] = useState<FavoriteNotesMetaResponse | null>(null);
     const [favoriteNoteIds, setFavoriteNoteIds] = useState<Set<string>>(new Set());
@@ -298,6 +332,12 @@ export const useNoteManagement = (
     const myNoteMetaTree = useMemo<MyNoteMetaTreeNode[]>(
         () => buildMyNoteTree(myNoteMeta),
         [myNoteMeta]
+    );
+    // Folder forest for the My Notes sidebar section: nested folders
+    // with their filed root notes, plus the unfiled root notes.
+    const myNoteFolderForest = useMemo<MyNoteFolderForest>(
+        () => buildMyNoteFolderForest(myNoteFolders, myNoteMetaTree),
+        [myNoteFolders, myNoteMetaTree]
     );
     const taskNoteMetaTree = useMemo<TaskNoteMetaTreeNode[]>(
         () => buildTaskNoteTree(taskNoteMeta),
@@ -336,6 +376,35 @@ export const useNoteManagement = (
 
     const expandNode = useCallback((noteType: number, noteId: number) => {
         const key = `${noteType}-${noteId}`;
+        setExpandedNodeIds((prev) => {
+            if (prev.has(key)) return prev;
+            const next = new Set(prev);
+            next.add(key);
+            return next;
+        });
+    }, []);
+
+    // Folder expansion shares `expandedNodeIds` under a `folder-` key
+    // namespace — folder ids can't collide with the `${noteType}-` note
+    // keys, and the sticky auto-expand effect below can add folder keys
+    // the same way it adds note keys.
+    const isFolderExpanded = useCallback(
+        (folderId: number) => expandedNodeIds.has(`folder-${folderId}`),
+        [expandedNodeIds]
+    );
+
+    const toggleFolderExpanded = useCallback((folderId: number) => {
+        const key = `folder-${folderId}`;
+        setExpandedNodeIds((prev) => {
+            const next = new Set(prev);
+            if (next.has(key)) next.delete(key);
+            else next.add(key);
+            return next;
+        });
+    }, []);
+
+    const expandFolder = useCallback((folderId: number) => {
+        const key = `folder-${folderId}`;
         setExpandedNodeIds((prev) => {
             if (prev.has(key)) return prev;
             const next = new Set(prev);
@@ -562,14 +631,23 @@ export const useNoteManagement = (
     });
 
     // My Note related
-    const handleCreateNewMyNote = async (parentNoteId: number | null) => {
+    const handleCreateNewMyNote = async (
+        parentNoteId: number | null,
+        folderId: number | null = null
+    ) => {
         if (!accessToken) return;
 
         try {
             const noteTitle = `${parentNoteId ? "Child" : "New"} My Note (${
                 newlyCreatedMyNotes.length + 1
             })`;
-            const newNote = await createEmptyMyNote(myself, parentNoteId, noteTitle, accessToken);
+            const newNote = await createEmptyMyNote(
+                myself,
+                parentNoteId,
+                noteTitle,
+                accessToken,
+                folderId
+            );
 
             if (newNote) {
                 const myNote: MyNoteProps = { noteType: 1, ...newNote };
@@ -585,11 +663,16 @@ export const useNoteManagement = (
                         noteType: newNote.noteType,
                         noteId: newNote.noteId,
                         parentNoteId: newNote.parentNoteId,
+                        // Server-confirmed placement, falling back to the
+                        // requested folder for older backends that don't
+                        // echo folderId.
+                        folderId: newNote.folderId ?? folderId ?? null,
                         title: newNote.title,
                         tsUpdated: newNote.tsUpdated,
                     },
                     ...prev,
                 ]);
+                if (folderId != null) expandFolder(folderId);
             }
         } catch (error) {
             console.error("Error creating my note:", error);
@@ -601,6 +684,136 @@ export const useNoteManagement = (
         if (loadedNotes.length > 0) {
             setMyNoteMeta(loadedNotes);
         }
+    };
+
+    // ------------------------------------------------------------------
+    // My-note sidebar folders
+    // ------------------------------------------------------------------
+
+    const getMyNoteFolders = async () => {
+        const loaded = await loadMyNoteFolders(myself, accessToken);
+        setMyNoteFolders(loaded);
+    };
+
+    const createMyNoteFolderAction = async (name: string, parentFolderId: number | null) => {
+        if (!accessToken) return;
+        const created = await createMyNoteFolderApi(myself, name, parentFolderId, accessToken);
+        if (created) {
+            setMyNoteFolders((prev) => [...prev, created]);
+            // Reveal the new folder immediately.
+            if (parentFolderId != null) expandFolder(parentFolderId);
+            expandFolder(created.folderId);
+        }
+    };
+
+    const renameMyNoteFolder = async (folderId: number, name: string) => {
+        if (!accessToken) return;
+        // Optimistic rename; refetch restores server truth on failure.
+        setMyNoteFolders((prev) =>
+            prev.map((f) => (f.folderId === folderId ? { ...f, name } : f))
+        );
+        const updated = await updateMyNoteFolderApi(myself, folderId, { name }, accessToken);
+        if (!updated) {
+            await getMyNoteFolders();
+        }
+    };
+
+    const moveMyNoteFolder = async (
+        folderId: number,
+        newParentFolderId: number | null
+    ): Promise<boolean> => {
+        if (!accessToken) return false;
+        // Client-side cycle pre-check (the picker already disables the
+        // subtree; the backend re-validates authoritatively).
+        if (newParentFolderId != null) {
+            const descendants = collectDescendantFolderIds(myNoteFolders, folderId);
+            if (descendants.has(newParentFolderId)) return false;
+        }
+        setMyNoteFolders((prev) =>
+            prev.map((f) =>
+                f.folderId === folderId ? { ...f, parentFolderId: newParentFolderId } : f
+            )
+        );
+        const updated = await updateMyNoteFolderApi(
+            myself,
+            folderId,
+            { parentFolderId: newParentFolderId },
+            accessToken
+        );
+        if (!updated) {
+            await getMyNoteFolders();
+            return false;
+        }
+        if (newParentFolderId != null) expandFolder(newParentFolderId);
+        return true;
+    };
+
+    const deleteMyNoteFolderAction = async (folderId: number) => {
+        if (!accessToken) return;
+        const folder = myNoteFolders.find((f) => f.folderId === folderId);
+        const newParent = folder?.parentFolderId ?? null;
+        // Optimistic mirror of the backend's contents-move-up: child
+        // folders and filed notes re-parent to the deleted folder's
+        // parent (or root).
+        setMyNoteFolders((prev) =>
+            prev
+                .filter((f) => f.folderId !== folderId)
+                .map((f) =>
+                    f.parentFolderId === folderId ? { ...f, parentFolderId: newParent } : f
+                )
+        );
+        setMyNoteMeta((prev) =>
+            prev.map((n) => (n.folderId === folderId ? { ...n, folderId: newParent } : n))
+        );
+        const ok = await deleteMyNoteFolderApi(myself, folderId, accessToken);
+        if (!ok) {
+            await Promise.all([getMyNoteFolders(), getMyNoteMeta()]);
+        }
+    };
+
+    const moveMyNoteToFolderAction = async (noteId: number, folderId: number | null) => {
+        if (!accessToken) return;
+        // Optimistic meta patch. The backend re-roots the note (folders
+        // own ROOT notes), so parentNoteId flips to null too.
+        setMyNoteMeta((prev) =>
+            prev.map((n) =>
+                n.noteId === noteId ? { ...n, folderId: folderId, parentNoteId: null } : n
+            )
+        );
+        // Cache write-through — keeps every consumer of the open note
+        // (and the next autosave snapshot) on post-move truth. Autosave
+        // no longer sends parent_note_id at all, so this is
+        // belt-and-suspenders rather than load-bearing.
+        if (currentMyNote && currentMyNote.noteId === noteId) {
+            setCurrentMyNote({ ...currentMyNote, parentNoteId: null, folderId: folderId });
+        }
+        const cached = getCachedNote("my", noteId);
+        if (cached) {
+            upsertNoteCache({
+                ...(cached as MyNoteProps),
+                parentNoteId: null,
+                folderId: folderId,
+            });
+        }
+        try {
+            const idbNote = await noteService.getPersonalNote(noteId);
+            if (idbNote) {
+                await noteService.savePersonalNote({
+                    ...idbNote,
+                    parentNoteId: null,
+                    folderId: folderId,
+                });
+            }
+        } catch {
+            // IDB failure is non-fatal — server + in-memory cache are
+            // already consistent.
+        }
+        const moved = await moveMyNoteToFolderApi(myself, noteId, folderId, accessToken);
+        if (!moved) {
+            await getMyNoteMeta();
+            return;
+        }
+        if (folderId != null) expandFolder(folderId);
     };
 
     // Favorite notes functions
@@ -910,6 +1123,17 @@ export const useNoteManagement = (
             currentMyNoteChain?.forEach((n) => addKey(`1-${n.noteId}`));
             currentTaskNoteChain?.forEach((n) => addKey(`2-${n.noteId}`));
             currentChatNoteChain?.forEach((n) => addKey(`3-${n.noteId}`));
+            // Deep-link reveal for foldered notes: the note-ancestor
+            // chain alone can't open the CONTAINING sidebar folders, so
+            // a note deep inside collapsed folders would stay hidden.
+            // The chain's first element is the root note, which carries
+            // folderId — expand its whole folder-ancestor chain.
+            const chainRoot = currentMyNoteChain?.[0];
+            if (chainRoot) {
+                collectFolderAncestorIds(myNoteFolders, chainRoot.folderId ?? null).forEach(
+                    (fid) => addKey(`folder-${fid}`)
+                );
+            }
             for (const tabKey in allNoteIdChains) {
                 const dash = tabKey.indexOf("-");
                 if (dash <= 0) continue;
@@ -920,7 +1144,13 @@ export const useNoteManagement = (
             }
             return changed ? next : prev;
         });
-    }, [currentMyNoteChain, currentTaskNoteChain, currentChatNoteChain, allNoteIdChains]);
+    }, [
+        currentMyNoteChain,
+        currentTaskNoteChain,
+        currentChatNoteChain,
+        allNoteIdChains,
+        myNoteFolders,
+    ]);
 
     // Initialize note states
     const initializeNoteStates = () => {
@@ -931,6 +1161,7 @@ export const useNoteManagement = (
         setTaskNoteMeta([]);
         setCurrentMyNote(null);
         setMyNoteMeta([]);
+        setMyNoteFolders([]);
         setTabItems([]);
         setSelectedTabIndex(0);
         setIsTaskNoteVisible(false);
@@ -1298,6 +1529,17 @@ export const useNoteManagement = (
         currentMyNoteChain,
         setCurrentMyNoteChain,
         getMyNoteMeta,
+        myNoteFolders,
+        myNoteFolderForest,
+        getMyNoteFolders,
+        createMyNoteFolder: createMyNoteFolderAction,
+        renameMyNoteFolder,
+        moveMyNoteFolder,
+        deleteMyNoteFolder: deleteMyNoteFolderAction,
+        moveMyNoteToFolder: moveMyNoteToFolderAction,
+        isFolderExpanded,
+        toggleFolderExpanded,
+        expandFolder,
 
         // Favorite notes
         favoriteNotes,

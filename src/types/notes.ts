@@ -4,6 +4,10 @@ export type MyNoteMetaProps = {
     noteType: number;
     noteId: number;
     parentNoteId: number | null;
+    // Sidebar folder membership (PersonalNoteFolder). Only meaningful
+    // on root notes — children follow their root. Optional for
+    // backwards-compatibility with older API responses.
+    folderId?: number | null;
     title: string;
     tsUpdated: string;
     error?: string;
@@ -16,6 +20,7 @@ export type MyNoteProps = {
     roleId: number;
     noteId: number;
     parentNoteId: number | null;
+    folderId?: number | null;
     title: string;
     body: PartialBlock[] | any[];
     tsCreated: string;
@@ -26,6 +31,32 @@ export type MyNoteProps = {
 
 export type MyNoteMetaTreeNode = MyNoteMetaProps & {
     children: MyNoteMetaTreeNode[];
+};
+
+// User-created sidebar folder for personal notes. A pure organization
+// layer — folders never appear in tabs/search/recents/favorites and
+// are never shared. Nested via `parentFolderId`.
+export type MyNoteFolderProps = {
+    folderId: number;
+    parentFolderId: number | null;
+    name: string;
+    tsCreated?: string;
+    tsUpdated?: string;
+};
+
+export type MyNoteFolderTreeNode = MyNoteFolderProps & {
+    childFolders: MyNoteFolderTreeNode[];
+    // Root-level notes filed in this folder (each carries its own
+    // child-note subtree via `children`).
+    notes: MyNoteMetaTreeNode[];
+};
+
+// Result of merging the folder list with the note tree for the My
+// Notes sidebar section: nested folders plus the notes not in any
+// folder.
+export type MyNoteFolderForest = {
+    rootFolders: MyNoteFolderTreeNode[];
+    rootNotes: MyNoteMetaTreeNode[];
 };
 
 export type TaskNoteMetaProps = {
