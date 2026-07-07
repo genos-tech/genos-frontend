@@ -22,6 +22,7 @@ import { alpha } from "@mui/system";
 import dayjs from "dayjs";
 import { Socket } from "socket.io-client";
 
+import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
 import { PulseDot } from "../../../../components/ui/misc/PulseDot";
 import { useAuth } from "../../../../context/AuthContext";
@@ -1557,30 +1558,31 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                             >
                                 <DragIndicatorIcon sx={{ fontSize: 20 }} />
                             </div>
-                            <IconButton
-                                className="task-row-quick-add"
-                                size="small"
-                                title={t.tasks.table.quickAddTooltip}
-                                sx={{
-                                    width: 20,
-                                    height: 20,
-                                    p: 0,
-                                    borderRadius: "4px",
-                                    // Hidden until the row is hovered — see the
-                                    // `&:hover .task-row-quick-add` rule in the
-                                    // wrapper Box's sx (same zero-re-render CSS
-                                    // pattern as the drag handle).
-                                    opacity: 0,
-                                    color: mode === "dark" ? "#a78bfa" : "#7c3aed",
-                                    transition: "opacity 0.2s ease",
-                                }}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onQuickAddChild(task);
-                                }}
-                            >
-                                <AddRoundedIcon sx={{ fontSize: 16 }} />
-                            </IconButton>
+                            <AppTooltip title={t.tasks.table.quickAddTooltip}>
+                                <IconButton
+                                    className="task-row-quick-add"
+                                    size="small"
+                                    sx={{
+                                        width: 20,
+                                        height: 20,
+                                        p: 0,
+                                        borderRadius: "4px",
+                                        // Hidden until the row is hovered — see the
+                                        // `&:hover .task-row-quick-add` rule in the
+                                        // wrapper Box's sx (same zero-re-render CSS
+                                        // pattern as the drag handle).
+                                        opacity: 0,
+                                        color: mode === "dark" ? "#a78bfa" : "#7c3aed",
+                                        transition: "opacity 0.2s ease",
+                                    }}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onQuickAddChild(task);
+                                    }}
+                                >
+                                    <AddRoundedIcon sx={{ fontSize: 16 }} />
+                                </IconButton>
+                            </AppTooltip>
                         </div>
 
                         {/* Table Cells */}
