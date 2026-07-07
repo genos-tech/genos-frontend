@@ -12,11 +12,9 @@ type CreateQuickTaskProps = {
     rootTaskId: number;
     milestoneId: number | null;
     // Optional metadata for callers that expose more than a title input
-    // (the table's quick-add row). Defaults preserve the original
-    // title-only behavior for existing callers (TaskSubTasksBlock):
-    // `assigneeId` undefined = assign to the creator; explicit null =
-    // unassigned (the backend accepts null — createEmptyTask already
-    // sends `assignee: null`).
+    // (the table's quick-add row). New tasks default to unassigned — pass
+    // `assigneeId` to set one. The backend accepts null (createEmptyTask
+    // already sends `assignee: null`).
     assigneeId?: string | null;
     status?: string;
     priority?: string | null;
@@ -61,7 +59,7 @@ export const createQuickTask = async (
     const body: Record<string, unknown> = {
         team: myself.teamId,
         project: projectId,
-        assignee: props.assigneeId === undefined ? myself.userId : props.assigneeId,
+        assignee: props.assigneeId ?? null,
         reporter: myself.userId,
         title,
         priority: props.priority ?? null,

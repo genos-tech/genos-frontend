@@ -45,7 +45,7 @@ describe("createQuickTask", () => {
 
     const sentBody = () => JSON.parse(mockFetch.mock.calls[0][1].body as string);
 
-    it("keeps the title-only defaults (backward compat for TaskSubTasksBlock)", async () => {
+    it("defaults to unassigned with title-only props", async () => {
         await createQuickTask(baseProps);
 
         expect(mockFetch).toHaveBeenCalledWith(
@@ -53,7 +53,8 @@ describe("createQuickTask", () => {
             expect.objectContaining({ method: "POST" })
         );
         const body = sentBody();
-        expect(body.assignee).toBe("user1");
+        // New tasks start unassigned; reporter is still the creator.
+        expect(body.assignee).toBeNull();
         expect(body.reporter).toBe("user1");
         expect(body.status).toBe("Open");
         expect(body.priority).toBeNull();
