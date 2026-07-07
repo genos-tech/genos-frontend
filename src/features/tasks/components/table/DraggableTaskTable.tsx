@@ -1545,7 +1545,6 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                                         (depthMap.get(String(task.id)) ?? 0) + 1
                                                     }
                                                     mode={mode}
-                                                    myself={myself}
                                                     parentTask={task}
                                                     teamMembers={teamMembers}
                                                     onClose={closeQuickAdd}

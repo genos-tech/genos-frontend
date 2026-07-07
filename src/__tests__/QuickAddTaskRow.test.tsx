@@ -47,7 +47,6 @@ const renderRow = (overrides: Partial<Parameters<typeof QuickAddTaskRow>[0]> = {
                     columns={defaultColumns}
                     depth={1}
                     mode="light"
-                    myself={myself}
                     parentTask={parentTask}
                     teamMembers={[myself]}
                     onClose={onClose}
@@ -72,7 +71,8 @@ describe("QuickAddTaskRow", () => {
         await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
         expect(onSubmit).toHaveBeenCalledWith({
             title: "New child task",
-            assigneeId: "user1",
+            // New tasks default to unassigned.
+            assigneeId: null,
             status: "Open",
             priority: null,
             effortLevel: null,

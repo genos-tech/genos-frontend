@@ -50,7 +50,6 @@ type QuickAddTaskRowProps = {
     // draft row's cells line up with the table grid exactly.
     columns: ColumnDef[];
     mode: "light" | "dark" | undefined;
-    myself: UserProps;
     teamMembers: UserProps[];
     // The table owns the actual create call (createQuickTask + optimistic
     // allTasks insert). Rejections surface here as an inline error.
@@ -72,11 +71,13 @@ type QuickAddTaskRowProps = {
 // instance is mounted at a time, and it must not consume a Draggable
 // index (the table's drag-end math is based on displayRows positions).
 export const QuickAddTaskRow = (props: QuickAddTaskRowProps) => {
-    const { depth, columns, mode, myself, teamMembers, onSubmit, onClose, onDirtyChange } = props;
+    const { depth, columns, mode, teamMembers, onSubmit, onClose, onDirtyChange } = props;
     const { t } = useTranslation();
 
     const [title, setTitle] = useState("");
-    const [assigneeId, setAssigneeId] = useState<string | null>(myself.userId);
+    // New tasks start unassigned by design — the user picks an assignee
+    // only if/when they want one (matches CreateTaskForm's default).
+    const [assigneeId, setAssigneeId] = useState<string | null>(null);
     const [status, setStatus] = useState("Open");
     const [priority, setPriority] = useState<string | null>(null);
     const [effortLevel, setEffortLevel] = useState<string | null>(null);
