@@ -1,5 +1,6 @@
 import { memo, ReactNode, useState } from "react";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
+import FolderOpenRoundedIcon from "@mui/icons-material/FolderOpenRounded";
 import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
 import { Box, List, ListItem, ListItemButton, ListItemContent, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
@@ -33,6 +34,8 @@ function GroupedNoteSectionComponent({
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+    // Match MyNoteFolderTree: open-folder icon when expanded, closed when not.
+    const FolderIcon = isExpanded ? FolderOpenRoundedIcon : FolderRoundedIcon;
 
     const headerButton = (isDraggingOver: boolean) => (
         <ListItemButton
@@ -82,10 +85,10 @@ function GroupedNoteSectionComponent({
                 />
             </Box>
 
-            {/* Folder Icon — purple to match the my-note folder tree
-                (MyNoteFolderTree), so task-note and chat-note groups read
-                as the same kind of folder. */}
-            <FolderRoundedIcon
+            {/* Folder Icon — purple, and swaps open/closed on expand, to
+                match the my-note folder tree (MyNoteFolderTree) so task-note
+                and chat-note groups read as the same kind of folder. */}
+            <FolderIcon
                 sx={{
                     fontSize: 14,
                     color: isDark ? "#a78bfa" : "#7c3aed",
