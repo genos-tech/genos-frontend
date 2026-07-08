@@ -5,7 +5,11 @@ export const sidebar = {
         tasks: "Tasks",
         notes: "Notes",
         integrations: "Integrations",
-        search: "Search",
+        // Label for the Spotlight launcher in the sidebar. Spotlight is the
+        // AI-agent entry point that does far more than search, so it carries
+        // the product name rather than "Search". (Key kept as `search` to
+        // avoid a cross-locale rename.)
+        search: "Genos",
     },
     tooltips: {
         settings: "Settings",

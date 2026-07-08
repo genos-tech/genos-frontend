@@ -153,7 +153,7 @@ export const fr: DeepPartial<Messages> = {
             chats: "Conversations",
             tasks: "Tâches",
             notes: "Notes",
-            search: "Recherche",
+            search: "Genos",
         },
         tooltips: {
             settings: "Paramètres",

@@ -1,11 +1,11 @@
 import { useState } from "react";
 import AllInboxRoundedIcon from "@mui/icons-material/AllInboxRounded";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
+import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import NoteAltRoundedIcon from "@mui/icons-material/NoteAltRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
-import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import {
     Badge,
@@ -361,7 +361,11 @@ export const Sidebar = (props: SidebarProps) => {
                                         transition: "all 0.2s ease",
                                     }}
                                 >
-                                    <SearchRoundedIcon
+                                    {/* Spotlight's own brand icon (the AI
+                                        "sparkle") — matches SpotlightOverlay,
+                                        signaling the AI agent rather than plain
+                                        search. */}
+                                    <AutoAwesomeRoundedIcon
                                         sx={{
                                             fontSize: 20,
                                             color: isDark
