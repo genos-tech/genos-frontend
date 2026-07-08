@@ -578,7 +578,7 @@ export const TaskHomeContent = ({
         };
     }, [myTasks]);
 
-    // Top 5 active tasks to look at next. Ranking:
+    // Top 10 active tasks to look at next. Ranking:
     //   1. Overdue first (most overdue first)
     //   2. Then priority order (Critical → Minimal → no priority)
     //   3. Then soonest due date (no due date last)
@@ -617,7 +617,7 @@ export const TaskHomeContent = ({
                 const ub = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
                 return ub - ua;
             })
-            .slice(0, 5);
+            .slice(0, 10);
     }, [myTasks]);
 
     // ── Handlers ──
