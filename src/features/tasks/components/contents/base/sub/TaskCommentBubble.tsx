@@ -8,6 +8,7 @@ import { Socket } from "socket.io-client";
 
 import { BnChatPreview } from "../../../../../../components/editors/bnChatPreview";
 import { AppTooltip } from "../../../../../../components/ui/AppTooltip";
+import { useResolvedUserName } from "../../../../../../components/ui/avatars/AvatarContext";
 import { UserAvatar } from "../../../../../../components/ui/avatars/UserAvatar";
 import { EmojiPicker } from "../../../../../../components/ui/emoji/EmojiPicker";
 import { ReactionTaskCommentEmojiDisplay } from "../../../../../../components/ui/emoji/ReactionTaskCommentEmojiDisplay";
@@ -90,6 +91,9 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
     const isCompact = style === "compact";
     const { enabled: doubleClickTodoEnabled } = useDoubleClickTodoPreference();
     const isSent = comment.senderId === myself.userId;
+    // Live-resolve the commenter's name so a rename shows on existing
+    // comments instead of the `senderName` cached when they were posted.
+    const senderName = useResolvedUserName(comment.senderId, comment.senderName);
 
     // Palette harmonised with MessageBubble: sent → purple, received →
     // neutral, focused → green deep-link tint.
@@ -447,7 +451,7 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                                     letterSpacing: "-0.01em",
                                 }}
                             >
-                                {comment.senderName}
+                                {senderName}
                             </Typography>
                             <Typography
                                 level="body-xs"
@@ -568,7 +572,7 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                                         letterSpacing: "-0.01em",
                                     }}
                                 >
-                                    {comment.senderName}
+                                    {senderName}
                                 </Typography>
                                 <Typography
                                     level="body-xs"
