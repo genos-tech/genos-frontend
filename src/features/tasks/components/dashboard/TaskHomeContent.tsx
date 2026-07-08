@@ -7,6 +7,7 @@ import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlin
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import FolderOpenRoundedIcon from "@mui/icons-material/FolderOpenRounded";
 import KeyboardArrowDownRoundedIcon from "@mui/icons-material/KeyboardArrowDownRounded";
+import LocalOfferRoundedIcon from "@mui/icons-material/LocalOfferRounded";
 import PendingActionsRoundedIcon from "@mui/icons-material/PendingActionsRounded";
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
 import PlayCircleOutlineRoundedIcon from "@mui/icons-material/PlayCircleOutlineRounded";
@@ -30,10 +31,13 @@ import {
     Select,
     Stack,
     Table,
+    TabList,
+    Tabs,
     Typography,
 } from "@mui/joy";
 import Avatar from "@mui/joy/Avatar";
 import { useColorScheme } from "@mui/joy/styles";
+import Tab, { tabClasses } from "@mui/joy/Tab";
 import { Socket } from "socket.io-client";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
@@ -196,6 +200,7 @@ export const TaskHomeContent = ({
     const headerStyles = isDark ? TaskHeaderStyles.dark : TaskHeaderStyles.light;
     const [sprintConfigOpen, setSprintConfigOpen] = useState(false);
     const [sprintManagerOpen, setSprintManagerOpen] = useState(false);
+    const [activeTab, setActiveTab] = useState<"overall" | "sprint" | "mytasks">("overall");
 
     useEffect(() => {
         if (usePM.currentProject?.projectId) {
@@ -389,21 +394,86 @@ export const TaskHomeContent = ({
             .sort((a, b) => b.total - a.total);
     }, [effectiveTasks, sprintStart, now]);
 
-    // ── Recently updated tasks (sprint scoped) ──
-    // effectiveTasks already excludes Deleted and Deleted-branch orphans.
+    // ── Tag insights (project-wide) ──
+    // Aggregates every tagged item by tag name. Milestones are rows inside
+    // `allTasks` (isMilestone === true) that carry their own `tags`, so this
+    // single pass over `effectiveTasks` covers tasks AND milestones with no
+    // double-count — and reconciles with the Status Distribution numbers.
+    // NOTE: an item with N tags is counted once per tag, so summing the
+    // per-tag totals exceeds the item count; `taggedCount` is the honest
+    // "how many items carry ≥1 tag" coverage figure.
+    const tagStats = useMemo(() => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const map = new Map<
+            string,
+            {
+                tagName: string;
+                tagColor: string;
+                tagTextColor: string;
+                open: number;
+                wip: number;
+                pending: number;
+                closed: number;
+                overdue: number;
+                total: number;
+            }
+        >();
+        let taggedCount = 0;
+        for (const tk of effectiveTasks) {
+            const tags = tk.tags ?? [];
+            if (tags.length > 0) taggedCount++;
+            const isClosed = tk.effectiveStatus === "Closed";
+            const isOverdue = !isClosed && !!tk.dueDate && new Date(tk.dueDate) < today;
+            for (const tag of tags) {
+                if (!tag?.tagName) continue;
+                const entry = map.get(tag.tagName) ?? {
+                    tagName: tag.tagName,
+                    tagColor: tag.tagColor || "#94a3b8",
+                    tagTextColor: tag.tagTextColor || "white",
+                    open: 0,
+                    wip: 0,
+                    pending: 0,
+                    closed: 0,
+                    overdue: 0,
+                    total: 0,
+                };
+                entry.total++;
+                if (tk.effectiveStatus === "Open") entry.open++;
+                else if (tk.effectiveStatus === "WIP") entry.wip++;
+                else if (tk.effectiveStatus === "Pending") entry.pending++;
+                else if (isClosed) entry.closed++;
+                if (isOverdue) entry.overdue++;
+                map.set(tag.tagName, entry);
+            }
+        }
+        const rows = Array.from(map.values()).sort((a, b) => b.total - a.total);
+        const coveragePct =
+            effectiveTasks.length > 0
+                ? Math.round((taggedCount / effectiveTasks.length) * 100)
+                : 0;
+        return { rows, taggedCount, total: effectiveTasks.length, coveragePct };
+    }, [effectiveTasks]);
+
+    // ── Recently updated tasks (scoped to the selected sprint) ──
+    // Members of the selected sprint (`task.sprintId` is the app-wide
+    // task→sprint key), most-recently-updated first, capped at 12 — so this
+    // is "recent activity WITHIN this sprint", not "any task touched lately".
+    // Mirrors the `sprintMilestones` filter above: no sprint selected ⇒ the
+    // backlog (tasks with no sprint). effectiveTasks already excludes Deleted
+    // and Deleted-branch orphans.
     const recentTasks = useMemo(() => {
         return effectiveTasks
-            .filter((t) => {
-                const d = t.updatedAt ? new Date(t.updatedAt).getTime() : 0;
-                return d >= sprintStart;
-            })
+            .filter((t) =>
+                selectedSprint ? t.sprintId === selectedSprint.sprintId : t.sprintId == null
+            )
             .sort((a, b) => {
                 const dA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
                 const dB = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
                 return dB - dA;
             })
             .slice(0, 12);
-    }, [effectiveTasks, sprintStart]);
+    }, [effectiveTasks, selectedSprint?.sprintId]);
 
     // ── Priority breakdown (active tasks only) ──
     // "Active" uses effectiveStatus, so sub-tasks of Closed parents are
@@ -508,7 +578,7 @@ export const TaskHomeContent = ({
         };
     }, [myTasks]);
 
-    // Top 5 active tasks to look at next. Ranking:
+    // Top 10 active tasks to look at next. Ranking:
     //   1. Overdue first (most overdue first)
     //   2. Then priority order (Critical → Minimal → no priority)
     //   3. Then soonest due date (no due date last)
@@ -547,7 +617,7 @@ export const TaskHomeContent = ({
                 const ub = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
                 return ub - ua;
             })
-            .slice(0, 5);
+            .slice(0, 10);
     }, [myTasks]);
 
     // ── Handlers ──
@@ -1106,127 +1176,8 @@ export const TaskHomeContent = ({
                                                     <TuneRoundedIcon />
                                                 </IconButton>
                                             </AppTooltip>
-                                            <AppTooltip title={t.tasks.dashboard.burndownTooltip}>
-                                                <Chip
-                                                    size="lg"
-                                                    variant="soft"
-                                                    sx={{
-                                                        backgroundColor: isDark
-                                                            ? "rgba(34,197,94,0.12)"
-                                                            : "rgba(34,197,94,0.1)",
-                                                        color: "#22c55e",
-                                                        fontWeight: 700,
-                                                        fontSize: "0.95rem",
-                                                        px: 2,
-                                                        ml: { xs: "auto", sm: 0 },
-                                                    }}
-                                                >
-                                                    {sprintProgressPct}%
-                                                </Chip>
-                                            </AppTooltip>
                                         </Stack>
                                     </Stack>
-                                </Stack>
-
-                                {/* Sprint progress bar */}
-                                <Box>
-                                    <Stack
-                                        direction="row"
-                                        justifyContent="space-between"
-                                        sx={{ mb: 1 }}
-                                    >
-                                        <Typography
-                                            level="body-sm"
-                                            sx={{ color: textSecondary, fontWeight: 500 }}
-                                        >
-                                            Sprint Progress
-                                        </Typography>
-                                        <Typography
-                                            level="body-sm"
-                                            sx={{ color: textSecondary, fontWeight: 500 }}
-                                        >
-                                            {sprintStats.closed} / {sprintStats.total} closed
-                                        </Typography>
-                                    </Stack>
-                                    <LinearProgress
-                                        color="success"
-                                        value={sprintProgressPct}
-                                        sx={{
-                                            "--LinearProgress-thickness": "8px",
-                                            "--LinearProgress-radius": "4px",
-                                            "--LinearProgress-progressRadius": "4px",
-                                            backgroundColor: isDark
-                                                ? "rgba(255,255,255,0.1)"
-                                                : "rgba(0,0,0,0.08)",
-                                        }}
-                                        determinate
-                                    />
-                                </Box>
-
-                                {/* Sprint roll-up chips — every value is a
-                                    slice of the same milestone aggregate that
-                                    drives the progress bar, so Tasks = Done +
-                                    Remaining and nothing here can contradict
-                                    the cards below. */}
-                                <Stack direction="row" flexWrap="wrap" spacing={1.5} useFlexGap>
-                                    <Chip
-                                        size="md"
-                                        startDecorator={<FlagRoundedIcon sx={{ fontSize: 16 }} />}
-                                        variant="soft"
-                                        sx={{
-                                            backgroundColor: isDark
-                                                ? "rgba(147,51,234,0.12)"
-                                                : "rgba(147,51,234,0.1)",
-                                            color: "#a855f7",
-                                        }}
-                                    >
-                                        {sprintStats.milestones} Milestones
-                                    </Chip>
-                                    <Chip
-                                        size="md"
-                                        variant="soft"
-                                        startDecorator={
-                                            <AssignmentRoundedIcon sx={{ fontSize: 16 }} />
-                                        }
-                                        sx={{
-                                            backgroundColor: isDark
-                                                ? "rgba(59,130,246,0.12)"
-                                                : "rgba(59,130,246,0.1)",
-                                            color: "#3b82f6",
-                                        }}
-                                    >
-                                        {sprintStats.total} Tasks
-                                    </Chip>
-                                    <Chip
-                                        size="md"
-                                        variant="soft"
-                                        startDecorator={
-                                            <CheckCircleOutlineRoundedIcon sx={{ fontSize: 16 }} />
-                                        }
-                                        sx={{
-                                            backgroundColor: isDark
-                                                ? "rgba(34,197,94,0.12)"
-                                                : "rgba(34,197,94,0.1)",
-                                            color: "#22c55e",
-                                        }}
-                                    >
-                                        {sprintStats.closed} Done
-                                    </Chip>
-                                    <Chip
-                                        size="md"
-                                        variant="soft"
-                                        startDecorator={
-                                            <PendingActionsRoundedIcon sx={{ fontSize: 16 }} />
-                                        }
-                                        sx={{
-                                            backgroundColor: isDark
-                                                ? "rgba(251,146,60,0.12)"
-                                                : "rgba(251,146,60,0.1)",
-                                            color: "#fb923c",
-                                        }}
-                                    >
-                                        {sprintStats.remaining} Remaining
-                                    </Chip>
                                 </Stack>
                             </Stack>
                         </Card>
@@ -1279,654 +1230,489 @@ export const TaskHomeContent = ({
                     {/* Only render remaining sections if a project is selected */}
                     {usePM.currentProject && (
                         <>
-                            {/* ════════ Quick Actions (compact) ════════ */}
-                            <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
-                                <Button
-                                    size="sm"
-                                    startDecorator={<AddRoundedIcon />}
-                                    variant="soft"
-                                    sx={{
-                                        flex: 1,
-                                        py: 1,
-                                        background: isDark
-                                            ? "rgba(34,197,94,0.1)"
-                                            : "rgba(34,197,94,0.07)",
-                                        color: "#22c55e",
-                                        "&:hover": {
-                                            background: isDark
-                                                ? "rgba(34,197,94,0.18)"
-                                                : "rgba(34,197,94,0.14)",
-                                        },
-                                    }}
-                                    onClick={handleCreateTask}
-                                >
-                                    New Task
-                                </Button>
-                                <Button
-                                    size="sm"
-                                    startDecorator={<FolderOpenRoundedIcon />}
-                                    variant="soft"
-                                    sx={{
-                                        flex: 1,
-                                        py: 1,
-                                        background: isDark
-                                            ? "rgba(59,130,246,0.1)"
-                                            : "rgba(59,130,246,0.07)",
-                                        color: "#3b82f6",
-                                        "&:hover": {
-                                            background: isDark
-                                                ? "rgba(59,130,246,0.18)"
-                                                : "rgba(59,130,246,0.14)",
-                                        },
-                                    }}
-                                    onClick={handleGoToTable}
-                                >
-                                    Task Table
-                                </Button>
-                                <Button
-                                    size="sm"
-                                    startDecorator={<ViewKanbanRoundedIcon />}
-                                    variant="soft"
-                                    sx={{
-                                        flex: 1,
-                                        py: 1,
-                                        background: isDark
-                                            ? "rgba(147,51,234,0.1)"
-                                            : "rgba(147,51,234,0.07)",
-                                        color: "#a855f7",
-                                        "&:hover": {
-                                            background: isDark
-                                                ? "rgba(147,51,234,0.18)"
-                                                : "rgba(147,51,234,0.14)",
-                                        },
-                                    }}
-                                    onClick={handleGoToBoard}
-                                >
-                                    Sprint Board
-                                </Button>
-                            </Stack>
-
-                            {/* ════════ Sprint Insights banner ════════ */}
-                            {/* Visually groups every sprint-scoped section
-                            (Sprint Milestones + Recently Updated) so the
-                            sprint vs project-wide split is unambiguous. */}
+                            {/* ════════ Section tabs + Quick Actions ════════ */}
+                            {/* One-screen dashboard: the three insight groups
+                            are switched via these tabs (they never route). The
+                            project + sprint selectors stay pinned above because
+                            the Overall tab's "Closed (Sprint)" column depends on
+                            the selected sprint. */}
                             <Stack
-                                alignItems="center"
-                                direction="row"
-                                spacing={1}
-                                sx={{ mt: 1, mb: -0.5 }}
+                                alignItems={{ md: "center" }}
+                                direction={{ xs: "column", md: "row" }}
+                                spacing={1.5}
+                                sx={{ mt: 1 }}
                             >
-                                <CalendarMonthRoundedIcon
-                                    sx={{ fontSize: 18, color: "#7c3aed" }}
-                                />
-                                <Typography
-                                    level="h3"
-                                    sx={{ fontWeight: 700, color: textPrimary }}
-                                >
-                                    Sprint Insights
-                                </Typography>
-                                {selectedSprint && (
-                                    <Chip size="sm" sx={{ ml: 0.5 }} variant="soft">
-                                        {selectedSprint.name}
-                                    </Chip>
-                                )}
-                                <Box
+                                <Tabs
+                                    aria-label="Dashboard sections"
+                                    value={activeTab}
                                     sx={{
                                         flex: 1,
-                                        height: 1,
-                                        background: cardBorder,
-                                        ml: 1,
+                                        minWidth: 0,
+                                        width: { xs: "100%", md: "auto" },
+                                        backgroundColor: "transparent",
                                     }}
-                                />
-                            </Stack>
-
-                            {/* ════════ Section A2: Sprint Milestones ════════ */}
-                            <SprintMilestonesSection
-                                isDark={isDark}
-                                myself={myself}
-                                projectId={usePM.currentProject?.projectId}
-                                selectedSprint={selectedSprint}
-                                setMyself={setMyself}
-                                socket={socket}
-                                textMuted={textMuted}
-                                textPrimary={textPrimary}
-                                textSecondary={textSecondary}
-                                useCM={useCM}
-                                useSM={useSM}
-                                useTEM={useTEM}
-                                useTM={useTM}
-                                useUISM={useUISM}
-                            />
-
-                            {/* ════════ Section D: Recently Updated Tasks (sprint-scoped) ════════ */}
-                            {recentTasks.length > 0 && (
-                                <Box>
-                                    <Typography
-                                        component="div"
-                                        level="title-sm"
+                                    onChange={(_, value) =>
+                                        value &&
+                                        setActiveTab(value as "overall" | "sprint" | "mytasks")
+                                    }
+                                >
+                                    <TabList
                                         sx={{
-                                            fontWeight: 600,
-                                            mb: 2,
-                                            color: sectionHeaderColor,
-                                            display: "flex",
-                                            alignItems: "center",
-                                            gap: 1,
+                                            gap: 0.5,
+                                            flexWrap: "nowrap",
+                                            overflowX: "auto",
+                                            [`&& .${tabClasses.root}`]: {
+                                                flex: "initial",
+                                                bgcolor: "transparent",
+                                                borderRadius: "10px 10px 0 0",
+                                                px: 2,
+                                                py: 1,
+                                                gap: 1,
+                                                fontWeight: 500,
+                                                fontSize: "0.8rem",
+                                                whiteSpace: "nowrap",
+                                                color: isDark
+                                                    ? "rgba(255,255,255,0.5)"
+                                                    : "rgba(0,0,0,0.5)",
+                                                transition: "all 0.2s ease",
+                                                "&:hover": {
+                                                    bgcolor: isDark
+                                                        ? "rgba(255,255,255,0.04)"
+                                                        : "rgba(0,0,0,0.03)",
+                                                    color: isDark
+                                                        ? "rgba(255,255,255,0.8)"
+                                                        : "rgba(0,0,0,0.7)",
+                                                },
+                                                [`&.${tabClasses.selected}`]: {
+                                                    color: isDark ? "#a78bfa" : "#7c3aed",
+                                                    fontWeight: 600,
+                                                    bgcolor: isDark
+                                                        ? "rgba(139,92,246,0.1)"
+                                                        : "rgba(124,58,237,0.08)",
+                                                    "&::after": {
+                                                        height: "2px",
+                                                        borderRadius: "2px 2px 0 0",
+                                                        bgcolor: isDark ? "#a78bfa" : "#7c3aed",
+                                                    },
+                                                },
+                                            },
                                         }}
                                     >
-                                        <AssignmentRoundedIcon sx={{ fontSize: 16 }} />
-                                        Recently Updated
-                                        <Chip size="sm" sx={{ ml: 0.5 }} variant="soft">
-                                            {recentTasks.length}
-                                        </Chip>
-                                    </Typography>
-                                    <Grid spacing={1.5} container>
-                                        {recentTasks.map((task) => {
-                                            const sc =
-                                                STATUS_COLORS[task.effectiveStatus] ||
-                                                STATUS_COLORS.Open;
-                                            return (
-                                                <Grid key={task.id} md={4} sm={6} xs={12}>
-                                                    <Card
-                                                        variant="outlined"
-                                                        sx={{
-                                                            p: 2,
-                                                            cursor: "pointer",
-                                                            background: cardBg,
-                                                            borderColor: cardBorder,
-                                                            transition: "all 0.2s ease",
-                                                            "&:hover": {
-                                                                borderColor: sc.text,
-                                                                background: isDark
-                                                                    ? "rgba(255,255,255,0.04)"
-                                                                    : "rgba(255,255,255,0.9)",
-                                                            },
-                                                        }}
-                                                        onClick={() =>
-                                                            handleTaskClick(Number(task.id))
-                                                        }
-                                                    >
-                                                        <Stack spacing={1}>
-                                                            <Stack
-                                                                alignItems="flex-start"
-                                                                direction="row"
-                                                                justifyContent="space-between"
-                                                            >
-                                                                <Stack
-                                                                    alignItems="center"
-                                                                    direction="row"
-                                                                    spacing={0.5}
-                                                                >
-                                                                    <CopyableTaskIdText
-                                                                        level="body-xs"
-                                                                        task={task}
-                                                                        sx={{
-                                                                            fontWeight: 600,
-                                                                            color: textMuted,
-                                                                        }}
-                                                                    />
-                                                                    {task.isMilestone === true && (
-                                                                        <AppTooltip
-                                                                            title={
-                                                                                t.tasks.dashboard
-                                                                                    .milestoneTooltip
-                                                                            }
-                                                                        >
-                                                                            <FlagRoundedIcon
-                                                                                sx={{
-                                                                                    fontSize: 12,
-                                                                                    color: "#f97316",
-                                                                                }}
-                                                                            />
-                                                                        </AppTooltip>
-                                                                    )}
-                                                                </Stack>
-                                                                <Chip
-                                                                    size="sm"
-                                                                    variant="soft"
-                                                                    startDecorator={getStatusIcon(
-                                                                        task.effectiveStatus
-                                                                    )}
-                                                                    sx={{
-                                                                        fontSize: "0.65rem",
-                                                                        backgroundColor: sc.bg,
-                                                                        color: sc.text,
-                                                                    }}
-                                                                >
-                                                                    {task.effectiveStatus}
-                                                                </Chip>
-                                                            </Stack>
-                                                            <Typography
-                                                                level="title-sm"
-                                                                sx={{
-                                                                    fontWeight: 600,
-                                                                    color: textPrimary,
-                                                                    overflow: "hidden",
-                                                                    textOverflow: "ellipsis",
-                                                                    whiteSpace: "nowrap",
-                                                                }}
-                                                            >
-                                                                {task.title ||
-                                                                    t.tasks.dashboard.untitledTask}
-                                                            </Typography>
-                                                            <Stack
-                                                                alignItems="center"
-                                                                direction="row"
-                                                                justifyContent="space-between"
-                                                            >
-                                                                {task.priority &&
-                                                                    (() => {
-                                                                        const swatch =
-                                                                            PRIORITY_COLORS[
-                                                                                task.priority
-                                                                            ];
-                                                                        const color = swatch
-                                                                            ? isDark
-                                                                                ? swatch.dark
-                                                                                : swatch.light
-                                                                            : textMuted;
-                                                                        return (
-                                                                            <Chip
-                                                                                size="sm"
-                                                                                variant="soft"
-                                                                                sx={{
-                                                                                    fontSize:
-                                                                                        "0.65rem",
-                                                                                    fontWeight: 600,
-                                                                                    // ~12% alpha
-                                                                                    // matches the
-                                                                                    // adjacent
-                                                                                    // status chip.
-                                                                                    backgroundColor: `${color}1F`,
-                                                                                    color,
-                                                                                }}
-                                                                            >
-                                                                                {task.priority}
-                                                                            </Chip>
-                                                                        );
-                                                                    })()}
-                                                                <Typography
-                                                                    level="body-xs"
-                                                                    sx={{
-                                                                        color: textMuted,
-                                                                        ml: "auto",
-                                                                        fontStyle: "italic",
-                                                                    }}
-                                                                >
-                                                                    {formatRelativeTime(
-                                                                        task.updatedAt
-                                                                    )}
-                                                                </Typography>
-                                                            </Stack>
-                                                        </Stack>
-                                                    </Card>
-                                                </Grid>
-                                            );
-                                        })}
-                                    </Grid>
-                                </Box>
-                            )}
-
-                            {/* No tasks empty state */}
-                            {recentTasks.length === 0 && (
-                                <Card
-                                    variant="soft"
-                                    sx={{
-                                        p: 4,
-                                        textAlign: "center",
-                                        background: cardBg,
-                                        border: "2px dashed",
-                                        borderColor: cardBorder,
-                                    }}
+                                        <Tab value="overall" indicatorInset>
+                                            <TrendingUpRoundedIcon sx={{ fontSize: 16 }} />
+                                            Overall Insights
+                                        </Tab>
+                                        <Tab value="sprint" indicatorInset>
+                                            <CalendarMonthRoundedIcon sx={{ fontSize: 16 }} />
+                                            Sprint Insights
+                                        </Tab>
+                                        <Tab value="mytasks" indicatorInset>
+                                            <PersonRoundedIcon sx={{ fontSize: 16 }} />
+                                            My Tasks
+                                            {myStats.totalCount > 0 && (
+                                                <Box
+                                                    component="span"
+                                                    sx={{
+                                                        ml: 0.5,
+                                                        px: 0.8,
+                                                        py: 0.2,
+                                                        fontSize: "0.65rem",
+                                                        fontWeight: 700,
+                                                        borderRadius: "6px",
+                                                        background:
+                                                            activeTab === "mytasks"
+                                                                ? isDark
+                                                                    ? "rgba(139,92,246,0.2)"
+                                                                    : "rgba(124,58,237,0.15)"
+                                                                : isDark
+                                                                  ? "rgba(255,255,255,0.08)"
+                                                                  : "rgba(0,0,0,0.06)",
+                                                        color:
+                                                            activeTab === "mytasks"
+                                                                ? isDark
+                                                                    ? "#a78bfa"
+                                                                    : "#7c3aed"
+                                                                : isDark
+                                                                  ? "rgba(255,255,255,0.5)"
+                                                                  : "rgba(0,0,0,0.5)",
+                                                    }}
+                                                >
+                                                    {myStats.totalCount}
+                                                </Box>
+                                            )}
+                                        </Tab>
+                                    </TabList>
+                                </Tabs>
+                                <Stack
+                                    direction="row"
+                                    spacing={1}
+                                    sx={{ flexShrink: 0, width: { xs: "100%", md: "auto" } }}
                                 >
-                                    <Stack alignItems="center" spacing={2}>
-                                        <Box
-                                            sx={{
-                                                width: 56,
-                                                height: 56,
-                                                borderRadius: "14px",
-                                                display: "flex",
-                                                alignItems: "center",
-                                                justifyContent: "center",
+                                    <Button
+                                        size="sm"
+                                        startDecorator={<AddRoundedIcon />}
+                                        variant="soft"
+                                        sx={{
+                                            flex: { xs: 1, md: "none" },
+                                            background: isDark
+                                                ? "rgba(34,197,94,0.1)"
+                                                : "rgba(34,197,94,0.07)",
+                                            color: "#22c55e",
+                                            "&:hover": {
                                                 background: isDark
-                                                    ? "rgba(59,130,246,0.1)"
-                                                    : "rgba(59,130,246,0.08)",
-                                            }}
-                                        >
-                                            <AssignmentRoundedIcon
-                                                sx={{
-                                                    fontSize: 28,
-                                                    color: isDark ? "#60a5fa" : "#3b82f6",
-                                                }}
-                                            />
-                                        </Box>
-                                        <Typography
-                                            level="title-md"
-                                            sx={{ fontWeight: 600, color: textPrimary }}
-                                        >
-                                            No task activity in this sprint period
-                                        </Typography>
-                                        <Typography level="body-sm" sx={{ color: textMuted }}>
-                                            Try selecting a longer sprint window or create new
-                                            tasks
-                                        </Typography>
-                                    </Stack>
-                                </Card>
-                            )}
-
-                            {/* ════════ My Tasks banner ════════ */}
-                            {/* Personal-lens divider: separates sprint-scoped sections
-                            above from "what's on my plate" below. */}
-                            <Stack
-                                alignItems="center"
-                                direction="row"
-                                spacing={1}
-                                sx={{ mt: 2, mb: -0.5 }}
-                            >
-                                <PersonRoundedIcon sx={{ fontSize: 18, color: "#22c55e" }} />
-                                <Typography
-                                    level="h3"
-                                    sx={{ fontWeight: 700, color: textPrimary }}
-                                >
-                                    My Tasks
-                                </Typography>
-                                <Chip size="sm" sx={{ ml: 0.5 }} variant="soft">
-                                    {myStats.totalCount} assigned
-                                </Chip>
-                                <Box
-                                    sx={{
-                                        flex: 1,
-                                        height: 1,
-                                        background: cardBorder,
-                                        ml: 1,
-                                    }}
-                                />
+                                                    ? "rgba(34,197,94,0.18)"
+                                                    : "rgba(34,197,94,0.14)",
+                                            },
+                                        }}
+                                        onClick={handleCreateTask}
+                                    >
+                                        New Task
+                                    </Button>
+                                    <Button
+                                        size="sm"
+                                        startDecorator={<FolderOpenRoundedIcon />}
+                                        variant="soft"
+                                        sx={{
+                                            flex: { xs: 1, md: "none" },
+                                            background: isDark
+                                                ? "rgba(59,130,246,0.1)"
+                                                : "rgba(59,130,246,0.07)",
+                                            color: "#3b82f6",
+                                            "&:hover": {
+                                                background: isDark
+                                                    ? "rgba(59,130,246,0.18)"
+                                                    : "rgba(59,130,246,0.14)",
+                                            },
+                                        }}
+                                        onClick={handleGoToTable}
+                                    >
+                                        Task Table
+                                    </Button>
+                                    <Button
+                                        size="sm"
+                                        startDecorator={<ViewKanbanRoundedIcon />}
+                                        variant="soft"
+                                        sx={{
+                                            flex: { xs: 1, md: "none" },
+                                            background: isDark
+                                                ? "rgba(147,51,234,0.1)"
+                                                : "rgba(147,51,234,0.07)",
+                                            color: "#a855f7",
+                                            "&:hover": {
+                                                background: isDark
+                                                    ? "rgba(147,51,234,0.18)"
+                                                    : "rgba(147,51,234,0.14)",
+                                            },
+                                        }}
+                                        onClick={handleGoToBoard}
+                                    >
+                                        Sprint Board
+                                    </Button>
+                                </Stack>
                             </Stack>
 
-                            {/* ════════ Section MY: My Tasks ════════ */}
-                            {myStats.totalCount === 0 ? (
-                                <Card
-                                    variant="soft"
-                                    sx={{
-                                        p: 4,
-                                        textAlign: "center",
-                                        background: cardBg,
-                                        border: "2px dashed",
-                                        borderColor: cardBorder,
-                                    }}
-                                >
-                                    <Stack alignItems="center" spacing={2}>
-                                        <Box
-                                            sx={{
-                                                width: 56,
-                                                height: 56,
-                                                borderRadius: "14px",
-                                                display: "flex",
-                                                alignItems: "center",
-                                                justifyContent: "center",
-                                                background: isDark
-                                                    ? "rgba(34,197,94,0.1)"
-                                                    : "rgba(34,197,94,0.08)",
-                                            }}
-                                        >
-                                            <PersonRoundedIcon
-                                                sx={{
-                                                    fontSize: 28,
-                                                    color: isDark ? "#4ade80" : "#22c55e",
-                                                }}
-                                            />
-                                        </Box>
-                                        <Typography
-                                            level="title-md"
-                                            sx={{ fontWeight: 600, color: textPrimary }}
-                                        >
-                                            {t.tasks.dashboard.nothingAssignedTitle}
-                                        </Typography>
-                                        <Typography level="body-sm" sx={{ color: textMuted }}>
-                                            {t.tasks.dashboard.nothingAssignedBody}
-                                        </Typography>
-                                    </Stack>
-                                </Card>
-                            ) : (
-                                <Stack spacing={2}>
-                                    {/* KPI strip */}
-                                    <Grid spacing={1.5} container>
-                                        {(
-                                            [
-                                                {
-                                                    label: t.tasks.dashboard.kpiActive,
-                                                    value: String(myStats.activeCount),
-                                                    color: "#3b82f6",
-                                                    icon: (
-                                                        <PlayCircleOutlineRoundedIcon
-                                                            sx={{ fontSize: 18 }}
-                                                        />
-                                                    ),
-                                                },
-                                                {
-                                                    label: t.tasks.dashboard.kpiClosed,
-                                                    value: String(myStats.closedCount),
-                                                    color: "#22c55e",
-                                                    icon: (
-                                                        <CheckCircleOutlineRoundedIcon
-                                                            sx={{ fontSize: 18 }}
-                                                        />
-                                                    ),
-                                                },
-                                                {
-                                                    label: t.tasks.dashboard.kpiOverdue,
-                                                    value: String(myStats.overdueCount),
-                                                    color: "#ef4444",
-                                                    icon: (
-                                                        <WarningAmberRoundedIcon
-                                                            sx={{ fontSize: 18 }}
-                                                        />
-                                                    ),
-                                                },
-                                                {
-                                                    label: t.tasks.dashboard.kpiDueThisWeek,
-                                                    value: String(myStats.dueThisWeekCount),
-                                                    color: "#f59e0b",
-                                                    icon: (
-                                                        <CalendarMonthRoundedIcon
-                                                            sx={{ fontSize: 18 }}
-                                                        />
-                                                    ),
-                                                },
-                                                {
-                                                    label: t.tasks.dashboard.kpiCompletion,
-                                                    value: `${myStats.completionPct}%`,
-                                                    color: "#a78bfa",
-                                                    icon: (
-                                                        <TrendingUpRoundedIcon
-                                                            sx={{ fontSize: 18 }}
-                                                        />
-                                                    ),
-                                                },
-                                            ] as const
-                                        ).map((tile) => (
-                                            <Grid key={tile.label} md={2.4} sm={4} xs={6}>
-                                                <Card
-                                                    variant="soft"
-                                                    sx={{
-                                                        p: 2,
-                                                        background: isDark
-                                                            ? `${tile.color}1F`
-                                                            : `${tile.color}14`,
-                                                        border: "1px solid",
-                                                        borderColor: cardBorder,
-                                                        transition: "transform 0.2s ease",
-                                                        "&:hover": {
-                                                            transform: "translateY(-2px)",
-                                                        },
-                                                    }}
+                            {/* ════════ TAB: Sprint Insights ════════ */}
+                            {activeTab === "sprint" && (
+                                <>
+                                    {/* Sprint progress summary — moved here out of
+                                    the pinned header so the header stays compact. */}
+                                    <Card
+                                        variant="soft"
+                                        sx={{
+                                            p: 2.5,
+                                            background: isDark
+                                                ? "linear-gradient(135deg, rgba(251,146,60,0.08) 0%, rgba(234,88,12,0.08) 100%)"
+                                                : "linear-gradient(135deg, rgba(251,146,60,0.06) 0%, rgba(234,88,12,0.06) 100%)",
+                                            border: "1px solid",
+                                            borderColor: isDark
+                                                ? "rgba(251,146,60,0.2)"
+                                                : "rgba(251,146,60,0.15)",
+                                        }}
+                                    >
+                                        <Stack spacing={2}>
+                                            <Box>
+                                                <Stack
+                                                    alignItems="center"
+                                                    direction="row"
+                                                    justifyContent="space-between"
+                                                    sx={{ mb: 1 }}
                                                 >
-                                                    <Stack spacing={1}>
-                                                        <Box
+                                                    <Stack
+                                                        alignItems="center"
+                                                        direction="row"
+                                                        spacing={1}
+                                                    >
+                                                        <Typography
+                                                            level="body-sm"
                                                             sx={{
-                                                                width: 32,
-                                                                height: 32,
-                                                                borderRadius: "8px",
-                                                                display: "flex",
-                                                                alignItems: "center",
-                                                                justifyContent: "center",
-                                                                color: tile.color,
-                                                                backgroundColor: isDark
-                                                                    ? "rgba(255,255,255,0.06)"
-                                                                    : "rgba(255,255,255,0.8)",
+                                                                color: textSecondary,
+                                                                fontWeight: 600,
                                                             }}
                                                         >
-                                                            {tile.icon}
-                                                        </Box>
-                                                        <Box>
-                                                            <Typography
-                                                                level="h3"
+                                                            Sprint Progress
+                                                        </Typography>
+                                                        {selectedSprint && (
+                                                            <Chip
+                                                                size="sm"
+                                                                variant="soft"
                                                                 sx={{
-                                                                    fontWeight: 700,
-                                                                    fontSize: "1.4rem",
-                                                                    color: textPrimary,
+                                                                    backgroundColor: isDark
+                                                                        ? "rgba(124,58,237,0.15)"
+                                                                        : "rgba(124,58,237,0.1)",
+                                                                    color: isDark
+                                                                        ? "#a78bfa"
+                                                                        : "#7c3aed",
                                                                 }}
                                                             >
-                                                                {tile.value}
-                                                            </Typography>
-                                                            <Typography
-                                                                level="body-xs"
-                                                                sx={{
-                                                                    color: textSecondary,
-                                                                    fontWeight: 500,
-                                                                }}
-                                                            >
-                                                                {tile.label}
-                                                            </Typography>
-                                                        </Box>
+                                                                {selectedSprint.name}
+                                                            </Chip>
+                                                        )}
                                                     </Stack>
-                                                </Card>
-                                            </Grid>
-                                        ))}
-                                    </Grid>
-
-                                    {/* Up Next list */}
-                                    <Box>
-                                        <Stack
-                                            alignItems="center"
-                                            direction="row"
-                                            spacing={1}
-                                            sx={{ mb: 1 }}
-                                        >
-                                            <Typography
-                                                level="body-sm"
-                                                sx={{ color: textSecondary, fontWeight: 600 }}
-                                            >
-                                                Up Next
-                                            </Typography>
-                                            <Typography level="body-xs" sx={{ color: textMuted }}>
-                                                ranked by overdue → priority → due date
-                                            </Typography>
-                                        </Stack>
-                                        {myUpNext.length === 0 ? (
-                                            <Card
-                                                variant="outlined"
-                                                sx={{
-                                                    p: 2,
-                                                    background: cardBg,
-                                                    borderColor: cardBorder,
-                                                }}
-                                            >
-                                                <Typography
-                                                    level="body-sm"
+                                                    <Stack
+                                                        alignItems="center"
+                                                        direction="row"
+                                                        spacing={1}
+                                                    >
+                                                        <Typography
+                                                            level="body-sm"
+                                                            sx={{
+                                                                color: textSecondary,
+                                                                fontWeight: 500,
+                                                            }}
+                                                        >
+                                                            {sprintStats.closed} /{" "}
+                                                            {sprintStats.total} closed
+                                                        </Typography>
+                                                        <Chip
+                                                            size="sm"
+                                                            variant="soft"
+                                                            sx={{
+                                                                backgroundColor: isDark
+                                                                    ? "rgba(34,197,94,0.12)"
+                                                                    : "rgba(34,197,94,0.1)",
+                                                                color: "#22c55e",
+                                                                fontWeight: 700,
+                                                            }}
+                                                        >
+                                                            {sprintProgressPct}%
+                                                        </Chip>
+                                                    </Stack>
+                                                </Stack>
+                                                <LinearProgress
+                                                    color="success"
+                                                    value={sprintProgressPct}
                                                     sx={{
-                                                        color: textMuted,
-                                                        textAlign: "center",
+                                                        "--LinearProgress-thickness": "8px",
+                                                        "--LinearProgress-radius": "4px",
+                                                        "--LinearProgress-progressRadius": "4px",
+                                                        backgroundColor: isDark
+                                                            ? "rgba(255,255,255,0.1)"
+                                                            : "rgba(0,0,0,0.08)",
+                                                    }}
+                                                    determinate
+                                                />
+                                            </Box>
+                                            <Stack
+                                                direction="row"
+                                                flexWrap="wrap"
+                                                spacing={1.5}
+                                                useFlexGap
+                                            >
+                                                <Chip
+                                                    size="md"
+                                                    variant="soft"
+                                                    startDecorator={
+                                                        <FlagRoundedIcon sx={{ fontSize: 16 }} />
+                                                    }
+                                                    sx={{
+                                                        backgroundColor: isDark
+                                                            ? "rgba(147,51,234,0.12)"
+                                                            : "rgba(147,51,234,0.1)",
+                                                        color: "#a855f7",
                                                     }}
                                                 >
-                                                    All your assigned tasks are closed — nothing to
-                                                    do here.
-                                                </Typography>
-                                            </Card>
-                                        ) : (
-                                            <Stack spacing={0.75}>
-                                                {myUpNext.map((task) => {
+                                                    {sprintStats.milestones} Milestones
+                                                </Chip>
+                                                <Chip
+                                                    size="md"
+                                                    variant="soft"
+                                                    startDecorator={
+                                                        <AssignmentRoundedIcon
+                                                            sx={{ fontSize: 16 }}
+                                                        />
+                                                    }
+                                                    sx={{
+                                                        backgroundColor: isDark
+                                                            ? "rgba(59,130,246,0.12)"
+                                                            : "rgba(59,130,246,0.1)",
+                                                        color: "#3b82f6",
+                                                    }}
+                                                >
+                                                    {sprintStats.total} Tasks
+                                                </Chip>
+                                                <Chip
+                                                    size="md"
+                                                    variant="soft"
+                                                    startDecorator={
+                                                        <CheckCircleOutlineRoundedIcon
+                                                            sx={{ fontSize: 16 }}
+                                                        />
+                                                    }
+                                                    sx={{
+                                                        backgroundColor: isDark
+                                                            ? "rgba(34,197,94,0.12)"
+                                                            : "rgba(34,197,94,0.1)",
+                                                        color: "#22c55e",
+                                                    }}
+                                                >
+                                                    {sprintStats.closed} Done
+                                                </Chip>
+                                                <Chip
+                                                    size="md"
+                                                    variant="soft"
+                                                    startDecorator={
+                                                        <PendingActionsRoundedIcon
+                                                            sx={{ fontSize: 16 }}
+                                                        />
+                                                    }
+                                                    sx={{
+                                                        backgroundColor: isDark
+                                                            ? "rgba(251,146,60,0.12)"
+                                                            : "rgba(251,146,60,0.1)",
+                                                        color: "#fb923c",
+                                                    }}
+                                                >
+                                                    {sprintStats.remaining} Remaining
+                                                </Chip>
+                                            </Stack>
+                                        </Stack>
+                                    </Card>
+
+                                    {/* ════════ Section A2: Sprint Milestones ════════ */}
+                                    <SprintMilestonesSection
+                                        isDark={isDark}
+                                        myself={myself}
+                                        projectId={usePM.currentProject?.projectId}
+                                        selectedSprint={selectedSprint}
+                                        setMyself={setMyself}
+                                        socket={socket}
+                                        textMuted={textMuted}
+                                        textPrimary={textPrimary}
+                                        textSecondary={textSecondary}
+                                        useCM={useCM}
+                                        useSM={useSM}
+                                        useTEM={useTEM}
+                                        useTM={useTM}
+                                        useUISM={useUISM}
+                                    />
+
+                                    {/* ════════ Section D: Recently Updated Tasks (sprint-scoped) ════════ */}
+                                    {recentTasks.length > 0 && (
+                                        <Box>
+                                            <Typography
+                                                component="div"
+                                                level="title-sm"
+                                                sx={{
+                                                    fontWeight: 600,
+                                                    mb: 2,
+                                                    color: sectionHeaderColor,
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    gap: 1,
+                                                }}
+                                            >
+                                                <AssignmentRoundedIcon sx={{ fontSize: 16 }} />
+                                                Recently Updated
+                                                <Chip size="sm" sx={{ ml: 0.5 }} variant="soft">
+                                                    {recentTasks.length}
+                                                </Chip>
+                                            </Typography>
+                                            <Grid spacing={1.5} container>
+                                                {recentTasks.map((task) => {
                                                     const sc =
                                                         STATUS_COLORS[task.effectiveStatus] ||
                                                         STATUS_COLORS.Open;
-                                                    const pSwatch = task.priority
-                                                        ? PRIORITY_COLORS[task.priority]
-                                                        : undefined;
-                                                    const pColor = pSwatch
-                                                        ? isDark
-                                                            ? pSwatch.dark
-                                                            : pSwatch.light
-                                                        : textMuted;
-                                                    const due = formatDueLabel(task.dueDate);
-                                                    const dueColor =
-                                                        due.tone === "overdue"
-                                                            ? "#ef4444"
-                                                            : due.tone === "today" ||
-                                                                due.tone === "soon"
-                                                              ? "#f59e0b"
-                                                              : textMuted;
                                                     return (
-                                                        <Card
-                                                            key={task.id}
-                                                            variant="outlined"
-                                                            sx={{
-                                                                p: 1.25,
-                                                                cursor: "pointer",
-                                                                background: cardBg,
-                                                                borderColor: cardBorder,
-                                                                transition: "all 0.2s ease",
-                                                                "&:hover": {
-                                                                    borderColor: sc.text,
-                                                                    background: isDark
-                                                                        ? "rgba(255,255,255,0.04)"
-                                                                        : "rgba(255,255,255,0.9)",
-                                                                },
-                                                            }}
-                                                            onClick={() =>
-                                                                handleTaskClick(Number(task.id))
-                                                            }
-                                                        >
-                                                            <Stack
-                                                                alignItems="center"
-                                                                direction="row"
-                                                                spacing={1.5}
+                                                        <Grid key={task.id} md={4} sm={6} xs={12}>
+                                                            <Card
+                                                                variant="outlined"
+                                                                sx={{
+                                                                    p: 2,
+                                                                    cursor: "pointer",
+                                                                    background: cardBg,
+                                                                    borderColor: cardBorder,
+                                                                    transition: "all 0.2s ease",
+                                                                    "&:hover": {
+                                                                        borderColor: sc.text,
+                                                                        background: isDark
+                                                                            ? "rgba(255,255,255,0.04)"
+                                                                            : "rgba(255,255,255,0.9)",
+                                                                    },
+                                                                }}
+                                                                onClick={() =>
+                                                                    handleTaskClick(
+                                                                        Number(task.id)
+                                                                    )
+                                                                }
                                                             >
-                                                                <Box
-                                                                    sx={{
-                                                                        width: 8,
-                                                                        height: 8,
-                                                                        borderRadius: "50%",
-                                                                        backgroundColor: pColor,
-                                                                        flexShrink: 0,
-                                                                    }}
-                                                                />
-                                                                <Stack
-                                                                    alignItems="center"
-                                                                    direction="row"
-                                                                    spacing={0.75}
-                                                                    sx={{ flex: 1, minWidth: 0 }}
-                                                                >
-                                                                    <CopyableTaskIdText
-                                                                        level="body-xs"
-                                                                        task={task}
+                                                                <Stack spacing={1}>
+                                                                    <Stack
+                                                                        alignItems="flex-start"
+                                                                        direction="row"
+                                                                        justifyContent="space-between"
+                                                                    >
+                                                                        <Stack
+                                                                            alignItems="center"
+                                                                            direction="row"
+                                                                            spacing={0.5}
+                                                                        >
+                                                                            <CopyableTaskIdText
+                                                                                level="body-xs"
+                                                                                task={task}
+                                                                                sx={{
+                                                                                    fontWeight: 600,
+                                                                                    color: textMuted,
+                                                                                }}
+                                                                            />
+                                                                            {task.isMilestone ===
+                                                                                true && (
+                                                                                <AppTooltip
+                                                                                    title={
+                                                                                        t.tasks
+                                                                                            .dashboard
+                                                                                            .milestoneTooltip
+                                                                                    }
+                                                                                >
+                                                                                    <FlagRoundedIcon
+                                                                                        sx={{
+                                                                                            fontSize: 12,
+                                                                                            color: "#f97316",
+                                                                                        }}
+                                                                                    />
+                                                                                </AppTooltip>
+                                                                            )}
+                                                                        </Stack>
+                                                                        <Chip
+                                                                            size="sm"
+                                                                            variant="soft"
+                                                                            startDecorator={getStatusIcon(
+                                                                                task.effectiveStatus
+                                                                            )}
+                                                                            sx={{
+                                                                                fontSize:
+                                                                                    "0.65rem",
+                                                                                backgroundColor:
+                                                                                    sc.bg,
+                                                                                color: sc.text,
+                                                                            }}
+                                                                        >
+                                                                            {task.effectiveStatus}
+                                                                        </Chip>
+                                                                    </Stack>
+                                                                    <Typography
+                                                                        level="title-sm"
                                                                         sx={{
                                                                             fontWeight: 600,
-                                                                            color: textMuted,
-                                                                            flexShrink: 0,
-                                                                        }}
-                                                                    />
-                                                                    {task.isMilestone === true && (
-                                                                        <FlagRoundedIcon
-                                                                            sx={{
-                                                                                fontSize: 12,
-                                                                                color: "#f97316",
-                                                                                flexShrink: 0,
-                                                                            }}
-                                                                        />
-                                                                    )}
-                                                                    <Typography
-                                                                        level="body-sm"
-                                                                        sx={{
-                                                                            fontWeight: 500,
                                                                             color: textPrimary,
                                                                             overflow: "hidden",
                                                                             textOverflow:
@@ -1938,762 +1724,1683 @@ export const TaskHomeContent = ({
                                                                             t.tasks.dashboard
                                                                                 .untitledTask}
                                                                     </Typography>
+                                                                    <Stack
+                                                                        alignItems="center"
+                                                                        direction="row"
+                                                                        justifyContent="space-between"
+                                                                    >
+                                                                        {task.priority &&
+                                                                            (() => {
+                                                                                const swatch =
+                                                                                    PRIORITY_COLORS[
+                                                                                        task
+                                                                                            .priority
+                                                                                    ];
+                                                                                const color =
+                                                                                    swatch
+                                                                                        ? isDark
+                                                                                            ? swatch.dark
+                                                                                            : swatch.light
+                                                                                        : textMuted;
+                                                                                return (
+                                                                                    <Chip
+                                                                                        size="sm"
+                                                                                        variant="soft"
+                                                                                        sx={{
+                                                                                            fontSize:
+                                                                                                "0.65rem",
+                                                                                            fontWeight: 600,
+                                                                                            // ~12% alpha
+                                                                                            // matches the
+                                                                                            // adjacent
+                                                                                            // status chip.
+                                                                                            backgroundColor: `${color}1F`,
+                                                                                            color,
+                                                                                        }}
+                                                                                    >
+                                                                                        {
+                                                                                            task.priority
+                                                                                        }
+                                                                                    </Chip>
+                                                                                );
+                                                                            })()}
+                                                                        <Typography
+                                                                            level="body-xs"
+                                                                            sx={{
+                                                                                color: textMuted,
+                                                                                ml: "auto",
+                                                                                fontStyle:
+                                                                                    "italic",
+                                                                            }}
+                                                                        >
+                                                                            {formatRelativeTime(
+                                                                                task.updatedAt
+                                                                            )}
+                                                                        </Typography>
+                                                                    </Stack>
                                                                 </Stack>
-                                                                {task.priority && (
-                                                                    <Chip
-                                                                        size="sm"
-                                                                        variant="soft"
+                                                            </Card>
+                                                        </Grid>
+                                                    );
+                                                })}
+                                            </Grid>
+                                        </Box>
+                                    )}
+
+                                    {/* No tasks empty state */}
+                                    {recentTasks.length === 0 && (
+                                        <Card
+                                            variant="soft"
+                                            sx={{
+                                                p: 4,
+                                                textAlign: "center",
+                                                background: cardBg,
+                                                border: "2px dashed",
+                                                borderColor: cardBorder,
+                                            }}
+                                        >
+                                            <Stack alignItems="center" spacing={2}>
+                                                <Box
+                                                    sx={{
+                                                        width: 56,
+                                                        height: 56,
+                                                        borderRadius: "14px",
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        justifyContent: "center",
+                                                        background: isDark
+                                                            ? "rgba(59,130,246,0.1)"
+                                                            : "rgba(59,130,246,0.08)",
+                                                    }}
+                                                >
+                                                    <AssignmentRoundedIcon
+                                                        sx={{
+                                                            fontSize: 28,
+                                                            color: isDark ? "#60a5fa" : "#3b82f6",
+                                                        }}
+                                                    />
+                                                </Box>
+                                                <Typography
+                                                    level="title-md"
+                                                    sx={{ fontWeight: 600, color: textPrimary }}
+                                                >
+                                                    {selectedSprint
+                                                        ? "No tasks in this sprint yet"
+                                                        : "No backlog tasks yet"}
+                                                </Typography>
+                                                <Typography
+                                                    level="body-sm"
+                                                    sx={{ color: textMuted }}
+                                                >
+                                                    {selectedSprint
+                                                        ? "Assign tasks to this sprint or create new ones"
+                                                        : "Tasks not attached to a sprint will show here"}
+                                                </Typography>
+                                            </Stack>
+                                        </Card>
+                                    )}
+                                </>
+                            )}
+
+                            {/* ════════ TAB: My Tasks ════════ */}
+                            {activeTab === "mytasks" && (
+                                <>
+                                    {/* ════════ Section MY: My Tasks ════════ */}
+                                    {myStats.totalCount === 0 ? (
+                                        <Card
+                                            variant="soft"
+                                            sx={{
+                                                p: 4,
+                                                textAlign: "center",
+                                                background: cardBg,
+                                                border: "2px dashed",
+                                                borderColor: cardBorder,
+                                            }}
+                                        >
+                                            <Stack alignItems="center" spacing={2}>
+                                                <Box
+                                                    sx={{
+                                                        width: 56,
+                                                        height: 56,
+                                                        borderRadius: "14px",
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        justifyContent: "center",
+                                                        background: isDark
+                                                            ? "rgba(34,197,94,0.1)"
+                                                            : "rgba(34,197,94,0.08)",
+                                                    }}
+                                                >
+                                                    <PersonRoundedIcon
+                                                        sx={{
+                                                            fontSize: 28,
+                                                            color: isDark ? "#4ade80" : "#22c55e",
+                                                        }}
+                                                    />
+                                                </Box>
+                                                <Typography
+                                                    level="title-md"
+                                                    sx={{ fontWeight: 600, color: textPrimary }}
+                                                >
+                                                    {t.tasks.dashboard.nothingAssignedTitle}
+                                                </Typography>
+                                                <Typography
+                                                    level="body-sm"
+                                                    sx={{ color: textMuted }}
+                                                >
+                                                    {t.tasks.dashboard.nothingAssignedBody}
+                                                </Typography>
+                                            </Stack>
+                                        </Card>
+                                    ) : (
+                                        <Stack spacing={2}>
+                                            {/* KPI strip */}
+                                            <Grid spacing={1.5} container>
+                                                {(
+                                                    [
+                                                        {
+                                                            label: t.tasks.dashboard.kpiActive,
+                                                            value: String(myStats.activeCount),
+                                                            color: "#3b82f6",
+                                                            icon: (
+                                                                <PlayCircleOutlineRoundedIcon
+                                                                    sx={{ fontSize: 18 }}
+                                                                />
+                                                            ),
+                                                        },
+                                                        {
+                                                            label: t.tasks.dashboard.kpiClosed,
+                                                            value: String(myStats.closedCount),
+                                                            color: "#22c55e",
+                                                            icon: (
+                                                                <CheckCircleOutlineRoundedIcon
+                                                                    sx={{ fontSize: 18 }}
+                                                                />
+                                                            ),
+                                                        },
+                                                        {
+                                                            label: t.tasks.dashboard.kpiOverdue,
+                                                            value: String(myStats.overdueCount),
+                                                            color: "#ef4444",
+                                                            icon: (
+                                                                <WarningAmberRoundedIcon
+                                                                    sx={{ fontSize: 18 }}
+                                                                />
+                                                            ),
+                                                        },
+                                                        {
+                                                            label: t.tasks.dashboard
+                                                                .kpiDueThisWeek,
+                                                            value: String(
+                                                                myStats.dueThisWeekCount
+                                                            ),
+                                                            color: "#f59e0b",
+                                                            icon: (
+                                                                <CalendarMonthRoundedIcon
+                                                                    sx={{ fontSize: 18 }}
+                                                                />
+                                                            ),
+                                                        },
+                                                        {
+                                                            label: t.tasks.dashboard.kpiCompletion,
+                                                            value: `${myStats.completionPct}%`,
+                                                            color: "#a78bfa",
+                                                            icon: (
+                                                                <TrendingUpRoundedIcon
+                                                                    sx={{ fontSize: 18 }}
+                                                                />
+                                                            ),
+                                                        },
+                                                    ] as const
+                                                ).map((tile) => (
+                                                    <Grid key={tile.label} md={2.4} sm={4} xs={6}>
+                                                        <Card
+                                                            variant="soft"
+                                                            sx={{
+                                                                p: 2,
+                                                                background: isDark
+                                                                    ? `${tile.color}1F`
+                                                                    : `${tile.color}14`,
+                                                                border: "1px solid",
+                                                                borderColor: cardBorder,
+                                                                transition: "transform 0.2s ease",
+                                                                "&:hover": {
+                                                                    transform: "translateY(-2px)",
+                                                                },
+                                                            }}
+                                                        >
+                                                            <Stack spacing={1}>
+                                                                <Box
+                                                                    sx={{
+                                                                        width: 32,
+                                                                        height: 32,
+                                                                        borderRadius: "8px",
+                                                                        display: "flex",
+                                                                        alignItems: "center",
+                                                                        justifyContent: "center",
+                                                                        color: tile.color,
+                                                                        backgroundColor: isDark
+                                                                            ? "rgba(255,255,255,0.06)"
+                                                                            : "rgba(255,255,255,0.8)",
+                                                                    }}
+                                                                >
+                                                                    {tile.icon}
+                                                                </Box>
+                                                                <Box>
+                                                                    <Typography
+                                                                        level="h3"
                                                                         sx={{
-                                                                            fontSize: "0.65rem",
-                                                                            fontWeight: 600,
-                                                                            backgroundColor: `${pColor}1F`,
-                                                                            color: pColor,
-                                                                            flexShrink: 0,
-                                                                            display: {
-                                                                                xs: "none",
-                                                                                sm: "inline-flex",
-                                                                            },
+                                                                            fontWeight: 700,
+                                                                            fontSize: "1.4rem",
+                                                                            color: textPrimary,
                                                                         }}
                                                                     >
-                                                                        {task.priority}
-                                                                    </Chip>
-                                                                )}
-                                                                <Chip
-                                                                    size="sm"
-                                                                    variant="soft"
-                                                                    startDecorator={getStatusIcon(
+                                                                        {tile.value}
+                                                                    </Typography>
+                                                                    <Typography
+                                                                        level="body-xs"
+                                                                        sx={{
+                                                                            color: textSecondary,
+                                                                            fontWeight: 500,
+                                                                        }}
+                                                                    >
+                                                                        {tile.label}
+                                                                    </Typography>
+                                                                </Box>
+                                                            </Stack>
+                                                        </Card>
+                                                    </Grid>
+                                                ))}
+                                            </Grid>
+
+                                            {/* Up Next list */}
+                                            <Box>
+                                                <Stack
+                                                    alignItems="center"
+                                                    direction="row"
+                                                    spacing={1}
+                                                    sx={{ mb: 1 }}
+                                                >
+                                                    <Typography
+                                                        level="body-sm"
+                                                        sx={{
+                                                            color: textSecondary,
+                                                            fontWeight: 600,
+                                                        }}
+                                                    >
+                                                        Up Next
+                                                    </Typography>
+                                                    <Typography
+                                                        level="body-xs"
+                                                        sx={{ color: textMuted }}
+                                                    >
+                                                        ranked by overdue → priority → due date
+                                                    </Typography>
+                                                </Stack>
+                                                {myUpNext.length === 0 ? (
+                                                    <Card
+                                                        variant="outlined"
+                                                        sx={{
+                                                            p: 2,
+                                                            background: cardBg,
+                                                            borderColor: cardBorder,
+                                                        }}
+                                                    >
+                                                        <Typography
+                                                            level="body-sm"
+                                                            sx={{
+                                                                color: textMuted,
+                                                                textAlign: "center",
+                                                            }}
+                                                        >
+                                                            All your assigned tasks are closed —
+                                                            nothing to do here.
+                                                        </Typography>
+                                                    </Card>
+                                                ) : (
+                                                    <Stack spacing={0.75}>
+                                                        {myUpNext.map((task) => {
+                                                            const sc =
+                                                                STATUS_COLORS[
+                                                                    task.effectiveStatus
+                                                                ] || STATUS_COLORS.Open;
+                                                            const pSwatch = task.priority
+                                                                ? PRIORITY_COLORS[task.priority]
+                                                                : undefined;
+                                                            const pColor = pSwatch
+                                                                ? isDark
+                                                                    ? pSwatch.dark
+                                                                    : pSwatch.light
+                                                                : textMuted;
+                                                            const due = formatDueLabel(
+                                                                task.dueDate
+                                                            );
+                                                            const dueColor =
+                                                                due.tone === "overdue"
+                                                                    ? "#ef4444"
+                                                                    : due.tone === "today" ||
+                                                                        due.tone === "soon"
+                                                                      ? "#f59e0b"
+                                                                      : textMuted;
+                                                            return (
+                                                                <Card
+                                                                    key={task.id}
+                                                                    variant="outlined"
+                                                                    sx={{
+                                                                        p: 1.25,
+                                                                        cursor: "pointer",
+                                                                        background: cardBg,
+                                                                        borderColor: cardBorder,
+                                                                        transition:
+                                                                            "all 0.2s ease",
+                                                                        "&:hover": {
+                                                                            borderColor: sc.text,
+                                                                            background: isDark
+                                                                                ? "rgba(255,255,255,0.04)"
+                                                                                : "rgba(255,255,255,0.9)",
+                                                                        },
+                                                                    }}
+                                                                    onClick={() =>
+                                                                        handleTaskClick(
+                                                                            Number(task.id)
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    <Stack
+                                                                        alignItems="center"
+                                                                        direction="row"
+                                                                        spacing={1.5}
+                                                                    >
+                                                                        <Box
+                                                                            sx={{
+                                                                                width: 8,
+                                                                                height: 8,
+                                                                                borderRadius:
+                                                                                    "50%",
+                                                                                backgroundColor:
+                                                                                    pColor,
+                                                                                flexShrink: 0,
+                                                                            }}
+                                                                        />
+                                                                        <Stack
+                                                                            alignItems="center"
+                                                                            direction="row"
+                                                                            spacing={0.75}
+                                                                            sx={{
+                                                                                flex: 1,
+                                                                                minWidth: 0,
+                                                                            }}
+                                                                        >
+                                                                            <CopyableTaskIdText
+                                                                                level="body-xs"
+                                                                                task={task}
+                                                                                sx={{
+                                                                                    fontWeight: 600,
+                                                                                    color: textMuted,
+                                                                                    flexShrink: 0,
+                                                                                }}
+                                                                            />
+                                                                            {task.isMilestone ===
+                                                                                true && (
+                                                                                <FlagRoundedIcon
+                                                                                    sx={{
+                                                                                        fontSize: 12,
+                                                                                        color: "#f97316",
+                                                                                        flexShrink: 0,
+                                                                                    }}
+                                                                                />
+                                                                            )}
+                                                                            <Typography
+                                                                                level="body-sm"
+                                                                                sx={{
+                                                                                    fontWeight: 500,
+                                                                                    color: textPrimary,
+                                                                                    overflow:
+                                                                                        "hidden",
+                                                                                    textOverflow:
+                                                                                        "ellipsis",
+                                                                                    whiteSpace:
+                                                                                        "nowrap",
+                                                                                }}
+                                                                            >
+                                                                                {task.title ||
+                                                                                    t.tasks
+                                                                                        .dashboard
+                                                                                        .untitledTask}
+                                                                            </Typography>
+                                                                        </Stack>
+                                                                        {task.priority && (
+                                                                            <Chip
+                                                                                size="sm"
+                                                                                variant="soft"
+                                                                                sx={{
+                                                                                    fontSize:
+                                                                                        "0.65rem",
+                                                                                    fontWeight: 600,
+                                                                                    backgroundColor: `${pColor}1F`,
+                                                                                    color: pColor,
+                                                                                    flexShrink: 0,
+                                                                                    display: {
+                                                                                        xs: "none",
+                                                                                        sm: "inline-flex",
+                                                                                    },
+                                                                                }}
+                                                                            >
+                                                                                {task.priority}
+                                                                            </Chip>
+                                                                        )}
+                                                                        <Chip
+                                                                            size="sm"
+                                                                            variant="soft"
+                                                                            startDecorator={getStatusIcon(
+                                                                                task.effectiveStatus,
+                                                                                12
+                                                                            )}
+                                                                            sx={{
+                                                                                fontSize:
+                                                                                    "0.65rem",
+                                                                                backgroundColor:
+                                                                                    sc.bg,
+                                                                                color: sc.text,
+                                                                                flexShrink: 0,
+                                                                            }}
+                                                                        >
+                                                                            {task.effectiveStatus}
+                                                                        </Chip>
+                                                                        <Typography
+                                                                            level="body-xs"
+                                                                            sx={{
+                                                                                color: dueColor,
+                                                                                fontWeight:
+                                                                                    due.tone ===
+                                                                                    "overdue"
+                                                                                        ? 700
+                                                                                        : 500,
+                                                                                flexShrink: 0,
+                                                                                minWidth: 90,
+                                                                                textAlign: "right",
+                                                                            }}
+                                                                        >
+                                                                            {due.text}
+                                                                        </Typography>
+                                                                    </Stack>
+                                                                </Card>
+                                                            );
+                                                        })}
+                                                    </Stack>
+                                                )}
+                                            </Box>
+                                        </Stack>
+                                    )}
+                                </>
+                            )}
+
+                            {/* ════════ TAB: Overall Insights ════════ */}
+                            {activeTab === "overall" && (
+                                <>
+                                    {/* ════════ Section B: Status Distribution ════════ */}
+                                    <Box>
+                                        <Typography
+                                            level="title-sm"
+                                            sx={{
+                                                fontWeight: 600,
+                                                mb: 2,
+                                                color: sectionHeaderColor,
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: 1,
+                                            }}
+                                        >
+                                            <TrendingUpRoundedIcon sx={{ fontSize: 16 }} />
+                                            Status Distribution
+                                        </Typography>
+
+                                        {/* Stacked bar */}
+                                        {stats.totalTasks > 0 && (
+                                            <Box sx={{ mb: 2 }}>
+                                                {renderStackedBar(
+                                                    [
+                                                        {
+                                                            color: STATUS_COLORS.Open.text,
+                                                            value: stats.openCount,
+                                                        },
+                                                        {
+                                                            color: STATUS_COLORS.WIP.text,
+                                                            value: stats.wipCount,
+                                                        },
+                                                        {
+                                                            color: STATUS_COLORS.Pending.text,
+                                                            value: stats.pendingCount,
+                                                        },
+                                                        {
+                                                            color: STATUS_COLORS.Closed.text,
+                                                            value: stats.closedCount,
+                                                        },
+                                                    ],
+                                                    stats.totalTasks
+                                                )}
+                                            </Box>
+                                        )}
+
+                                        {/* Status cards */}
+                                        <Grid spacing={1.5} container>
+                                            {(
+                                                [
+                                                    {
+                                                        key: "Open",
+                                                        count: stats.openCount,
+                                                        icon: <RadioButtonUncheckedRoundedIcon />,
+                                                    },
+                                                    {
+                                                        key: "WIP",
+                                                        count: stats.wipCount,
+                                                        icon: <PlayCircleOutlineRoundedIcon />,
+                                                    },
+                                                    {
+                                                        key: "Pending",
+                                                        count: stats.pendingCount,
+                                                        icon: <PendingActionsRoundedIcon />,
+                                                    },
+                                                    {
+                                                        key: "Closed",
+                                                        count: stats.closedCount,
+                                                        icon: <CheckCircleOutlineRoundedIcon />,
+                                                    },
+                                                ] as const
+                                            ).map((s) => {
+                                                const sc = STATUS_COLORS[s.key];
+                                                const pct =
+                                                    stats.totalTasks > 0
+                                                        ? Math.round(
+                                                              (s.count / stats.totalTasks) * 100
+                                                          )
+                                                        : 0;
+                                                return (
+                                                    <Grid key={s.key} md={3} xs={6}>
+                                                        <Card
+                                                            variant="soft"
+                                                            sx={{
+                                                                p: 2,
+                                                                background: isDark
+                                                                    ? sc.bg
+                                                                    : sc.bg.replace(
+                                                                          "0.12",
+                                                                          "0.08"
+                                                                      ),
+                                                                border: "1px solid",
+                                                                borderColor: cardBorder,
+                                                                transition: "transform 0.2s ease",
+                                                                "&:hover": {
+                                                                    transform: "translateY(-2px)",
+                                                                },
+                                                            }}
+                                                        >
+                                                            <Stack spacing={1}>
+                                                                <Stack
+                                                                    alignItems="center"
+                                                                    direction="row"
+                                                                    justifyContent="space-between"
+                                                                >
+                                                                    <Box
+                                                                        sx={{
+                                                                            width: 32,
+                                                                            height: 32,
+                                                                            borderRadius: "8px",
+                                                                            display: "flex",
+                                                                            alignItems: "center",
+                                                                            justifyContent:
+                                                                                "center",
+                                                                            color: sc.text,
+                                                                            backgroundColor: isDark
+                                                                                ? "rgba(255,255,255,0.06)"
+                                                                                : "rgba(255,255,255,0.8)",
+                                                                        }}
+                                                                    >
+                                                                        {s.icon}
+                                                                    </Box>
+                                                                    <Typography
+                                                                        level="body-xs"
+                                                                        sx={{
+                                                                            color: sc.text,
+                                                                            fontWeight: 600,
+                                                                        }}
+                                                                    >
+                                                                        {pct}%
+                                                                    </Typography>
+                                                                </Stack>
+                                                                <Box>
+                                                                    <Typography
+                                                                        level="h3"
+                                                                        sx={{
+                                                                            fontWeight: 700,
+                                                                            fontSize: "1.4rem",
+                                                                            color: textPrimary,
+                                                                        }}
+                                                                    >
+                                                                        {s.count}
+                                                                    </Typography>
+                                                                    <Typography
+                                                                        level="body-xs"
+                                                                        sx={{
+                                                                            color: textSecondary,
+                                                                            fontWeight: 500,
+                                                                        }}
+                                                                    >
+                                                                        {
+                                                                            t.tasks.dashboard
+                                                                                .statusLabels[
+                                                                                STATUS_LABEL_KEYS[
+                                                                                    s.key
+                                                                                ] ?? "open"
+                                                                            ]
+                                                                        }
+                                                                    </Typography>
+                                                                </Box>
+                                                            </Stack>
+                                                        </Card>
+                                                    </Grid>
+                                                );
+                                            })}
+                                        </Grid>
+                                    </Box>
+
+                                    {/* ════════ Section F: Overdue & Upcoming ════════ */}
+                                    {(overdueAndUpcoming.overdue.length > 0 ||
+                                        overdueAndUpcoming.upcoming.length > 0) && (
+                                        <Stack
+                                            direction={{ xs: "column", md: "row" }}
+                                            spacing={1.5}
+                                        >
+                                            {/* Overdue */}
+                                            <Card
+                                                variant="outlined"
+                                                sx={{
+                                                    flex: 1,
+                                                    p: 2.5,
+                                                    background: isDark
+                                                        ? "rgba(239,68,68,0.04)"
+                                                        : "rgba(239,68,68,0.03)",
+                                                    borderColor: isDark
+                                                        ? "rgba(239,68,68,0.2)"
+                                                        : "rgba(239,68,68,0.15)",
+                                                }}
+                                            >
+                                                <Stack spacing={1.5}>
+                                                    <Stack
+                                                        alignItems="center"
+                                                        direction="row"
+                                                        justifyContent="space-between"
+                                                    >
+                                                        <Stack
+                                                            alignItems="center"
+                                                            direction="row"
+                                                            spacing={1}
+                                                        >
+                                                            <WarningAmberRoundedIcon
+                                                                sx={{
+                                                                    fontSize: 16,
+                                                                    color: "#ef4444",
+                                                                }}
+                                                            />
+                                                            <Typography
+                                                                level="title-sm"
+                                                                sx={{
+                                                                    fontWeight: 600,
+                                                                    color: "#ef4444",
+                                                                }}
+                                                            >
+                                                                Overdue
+                                                            </Typography>
+                                                        </Stack>
+                                                        <Chip
+                                                            size="sm"
+                                                            variant="soft"
+                                                            sx={{
+                                                                backgroundColor:
+                                                                    "rgba(239,68,68,0.12)",
+                                                                color: "#ef4444",
+                                                                fontWeight: 700,
+                                                            }}
+                                                        >
+                                                            {overdueAndUpcoming.overdue.length}
+                                                        </Chip>
+                                                    </Stack>
+                                                    <Stack spacing={0.75}>
+                                                        {overdueAndUpcoming.overdue
+                                                            .slice(0, 5)
+                                                            .map((task) => (
+                                                                <Stack
+                                                                    key={task.id}
+                                                                    alignItems="center"
+                                                                    direction="row"
+                                                                    spacing={1}
+                                                                    sx={{
+                                                                        cursor: "pointer",
+                                                                        borderRadius: "6px",
+                                                                        px: 1,
+                                                                        py: 0.5,
+                                                                        "&:hover": {
+                                                                            backgroundColor: isDark
+                                                                                ? "rgba(239,68,68,0.08)"
+                                                                                : "rgba(239,68,68,0.06)",
+                                                                        },
+                                                                    }}
+                                                                    onClick={() =>
+                                                                        handleTaskClick(
+                                                                            Number(task.id)
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    {getStatusIcon(
                                                                         task.effectiveStatus,
                                                                         12
                                                                     )}
+                                                                    <Typography
+                                                                        level="body-xs"
+                                                                        sx={{
+                                                                            flex: 1,
+                                                                            color: textPrimary,
+                                                                            fontWeight: 500,
+                                                                            overflow: "hidden",
+                                                                            textOverflow:
+                                                                                "ellipsis",
+                                                                            whiteSpace: "nowrap",
+                                                                        }}
+                                                                    >
+                                                                        {task.title ||
+                                                                            t.tasks.dashboard
+                                                                                .untitledTask}
+                                                                    </Typography>
+                                                                    <Typography
+                                                                        level="body-xs"
+                                                                        sx={{
+                                                                            color: "#ef4444",
+                                                                            fontWeight: 600,
+                                                                            whiteSpace: "nowrap",
+                                                                        }}
+                                                                    >
+                                                                        {task.dueDate}
+                                                                    </Typography>
+                                                                </Stack>
+                                                            ))}
+                                                        {overdueAndUpcoming.overdue.length > 5 && (
+                                                            <Typography
+                                                                level="body-xs"
+                                                                sx={{ color: textMuted, pl: 1 }}
+                                                            >
+                                                                +
+                                                                {overdueAndUpcoming.overdue
+                                                                    .length - 5}{" "}
+                                                                more
+                                                            </Typography>
+                                                        )}
+                                                        {overdueAndUpcoming.overdue.length ===
+                                                            0 && (
+                                                            <Typography
+                                                                level="body-xs"
+                                                                sx={{ color: textMuted }}
+                                                            >
+                                                                No overdue tasks
+                                                            </Typography>
+                                                        )}
+                                                    </Stack>
+                                                </Stack>
+                                            </Card>
+
+                                            {/* Upcoming (due this week) */}
+                                            <Card
+                                                variant="outlined"
+                                                sx={{
+                                                    flex: 1,
+                                                    p: 2.5,
+                                                    background: isDark
+                                                        ? "rgba(59,130,246,0.04)"
+                                                        : "rgba(59,130,246,0.03)",
+                                                    borderColor: isDark
+                                                        ? "rgba(59,130,246,0.2)"
+                                                        : "rgba(59,130,246,0.15)",
+                                                }}
+                                            >
+                                                <Stack spacing={1.5}>
+                                                    <Stack
+                                                        alignItems="center"
+                                                        direction="row"
+                                                        justifyContent="space-between"
+                                                    >
+                                                        <Stack
+                                                            alignItems="center"
+                                                            direction="row"
+                                                            spacing={1}
+                                                        >
+                                                            <CalendarMonthRoundedIcon
+                                                                sx={{
+                                                                    fontSize: 16,
+                                                                    color: "#3b82f6",
+                                                                }}
+                                                            />
+                                                            <Typography
+                                                                level="title-sm"
+                                                                sx={{
+                                                                    fontWeight: 600,
+                                                                    color: "#3b82f6",
+                                                                }}
+                                                            >
+                                                                Due This Week
+                                                            </Typography>
+                                                        </Stack>
+                                                        <Chip
+                                                            size="sm"
+                                                            variant="soft"
+                                                            sx={{
+                                                                backgroundColor:
+                                                                    "rgba(59,130,246,0.12)",
+                                                                color: "#3b82f6",
+                                                                fontWeight: 700,
+                                                            }}
+                                                        >
+                                                            {overdueAndUpcoming.upcoming.length}
+                                                        </Chip>
+                                                    </Stack>
+                                                    <Stack spacing={0.75}>
+                                                        {overdueAndUpcoming.upcoming
+                                                            .slice(0, 5)
+                                                            .map((task) => (
+                                                                <Stack
+                                                                    key={task.id}
+                                                                    alignItems="center"
+                                                                    direction="row"
+                                                                    spacing={1}
                                                                     sx={{
-                                                                        fontSize: "0.65rem",
-                                                                        backgroundColor: sc.bg,
-                                                                        color: sc.text,
-                                                                        flexShrink: 0,
+                                                                        cursor: "pointer",
+                                                                        borderRadius: "6px",
+                                                                        px: 1,
+                                                                        py: 0.5,
+                                                                        "&:hover": {
+                                                                            backgroundColor: isDark
+                                                                                ? "rgba(59,130,246,0.08)"
+                                                                                : "rgba(59,130,246,0.06)",
+                                                                        },
                                                                     }}
+                                                                    onClick={() =>
+                                                                        handleTaskClick(
+                                                                            Number(task.id)
+                                                                        )
+                                                                    }
                                                                 >
-                                                                    {task.effectiveStatus}
-                                                                </Chip>
-                                                                <Typography
-                                                                    level="body-xs"
-                                                                    sx={{
-                                                                        color: dueColor,
-                                                                        fontWeight:
-                                                                            due.tone === "overdue"
-                                                                                ? 700
-                                                                                : 500,
-                                                                        flexShrink: 0,
-                                                                        minWidth: 90,
-                                                                        textAlign: "right",
-                                                                    }}
-                                                                >
-                                                                    {due.text}
-                                                                </Typography>
-                                                            </Stack>
-                                                        </Card>
-                                                    );
-                                                })}
-                                            </Stack>
+                                                                    {getStatusIcon(
+                                                                        task.effectiveStatus,
+                                                                        12
+                                                                    )}
+                                                                    <Typography
+                                                                        level="body-xs"
+                                                                        sx={{
+                                                                            flex: 1,
+                                                                            color: textPrimary,
+                                                                            fontWeight: 500,
+                                                                            overflow: "hidden",
+                                                                            textOverflow:
+                                                                                "ellipsis",
+                                                                            whiteSpace: "nowrap",
+                                                                        }}
+                                                                    >
+                                                                        {task.title ||
+                                                                            t.tasks.dashboard
+                                                                                .untitledTask}
+                                                                    </Typography>
+                                                                    <Typography
+                                                                        level="body-xs"
+                                                                        sx={{
+                                                                            color: "#3b82f6",
+                                                                            fontWeight: 600,
+                                                                            whiteSpace: "nowrap",
+                                                                        }}
+                                                                    >
+                                                                        {task.dueDate}
+                                                                    </Typography>
+                                                                </Stack>
+                                                            ))}
+                                                        {overdueAndUpcoming.upcoming.length >
+                                                            5 && (
+                                                            <Typography
+                                                                level="body-xs"
+                                                                sx={{ color: textMuted, pl: 1 }}
+                                                            >
+                                                                +
+                                                                {overdueAndUpcoming.upcoming
+                                                                    .length - 5}{" "}
+                                                                more
+                                                            </Typography>
+                                                        )}
+                                                        {overdueAndUpcoming.upcoming.length ===
+                                                            0 && (
+                                                            <Typography
+                                                                level="body-xs"
+                                                                sx={{ color: textMuted }}
+                                                            >
+                                                                No tasks due this week
+                                                            </Typography>
+                                                        )}
+                                                    </Stack>
+                                                </Stack>
+                                            </Card>
+                                        </Stack>
+                                    )}
+                                    {/* ════════ Section E: Priority & Effort Breakdown ════════ */}
+                                    <Stack direction={{ xs: "column", md: "row" }} spacing={1.5}>
+                                        {renderDistributionCard(
+                                            t.tasks.dashboard.priorityDistribution,
+                                            <WarningAmberRoundedIcon
+                                                sx={{ fontSize: 16, color: "#f97316" }}
+                                            />,
+                                            priorityBreakdown,
+                                            priorityColors
                                         )}
-                                    </Box>
-                                </Stack>
-                            )}
-
-                            {/* ════════ Overall Insights banner ════════ */}
-                            {/* Marks the boundary between sprint-scoped sections
-                            (above) and project-wide stats (below). */}
-                            <Stack
-                                alignItems="center"
-                                direction="row"
-                                spacing={1}
-                                sx={{ mt: 2, mb: -0.5 }}
-                            >
-                                <TrendingUpRoundedIcon sx={{ fontSize: 18, color: "#3b82f6" }} />
-                                <Typography
-                                    level="h3"
-                                    sx={{ fontWeight: 700, color: textPrimary }}
-                                >
-                                    Overall Insights
-                                </Typography>
-                                <Chip size="sm" sx={{ ml: 0.5 }} variant="soft">
-                                    Project-wide
-                                </Chip>
-                                <Box
-                                    sx={{
-                                        flex: 1,
-                                        height: 1,
-                                        background: cardBorder,
-                                        ml: 1,
-                                    }}
-                                />
-                            </Stack>
-
-                            {/* ════════ Section B: Status Distribution ════════ */}
-                            <Box>
-                                <Typography
-                                    level="title-sm"
-                                    sx={{
-                                        fontWeight: 600,
-                                        mb: 2,
-                                        color: sectionHeaderColor,
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: 1,
-                                    }}
-                                >
-                                    <TrendingUpRoundedIcon sx={{ fontSize: 16 }} />
-                                    Status Distribution
-                                </Typography>
-
-                                {/* Stacked bar */}
-                                {stats.totalTasks > 0 && (
-                                    <Box sx={{ mb: 2 }}>
-                                        {renderStackedBar(
-                                            [
-                                                {
-                                                    color: STATUS_COLORS.Open.text,
-                                                    value: stats.openCount,
-                                                },
-                                                {
-                                                    color: STATUS_COLORS.WIP.text,
-                                                    value: stats.wipCount,
-                                                },
-                                                {
-                                                    color: STATUS_COLORS.Pending.text,
-                                                    value: stats.pendingCount,
-                                                },
-                                                {
-                                                    color: STATUS_COLORS.Closed.text,
-                                                    value: stats.closedCount,
-                                                },
-                                            ],
-                                            stats.totalTasks
+                                        {renderDistributionCard(
+                                            t.tasks.dashboard.effortDistribution,
+                                            <TrendingUpRoundedIcon
+                                                sx={{ fontSize: 16, color: "#7c3aed" }}
+                                            />,
+                                            effortBreakdown,
+                                            effortColors
                                         )}
-                                    </Box>
-                                )}
+                                    </Stack>
 
-                                {/* Status cards */}
-                                <Grid spacing={1.5} container>
-                                    {(
-                                        [
-                                            {
-                                                key: "Open",
-                                                count: stats.openCount,
-                                                icon: <RadioButtonUncheckedRoundedIcon />,
-                                            },
-                                            {
-                                                key: "WIP",
-                                                count: stats.wipCount,
-                                                icon: <PlayCircleOutlineRoundedIcon />,
-                                            },
-                                            {
-                                                key: "Pending",
-                                                count: stats.pendingCount,
-                                                icon: <PendingActionsRoundedIcon />,
-                                            },
-                                            {
-                                                key: "Closed",
-                                                count: stats.closedCount,
-                                                icon: <CheckCircleOutlineRoundedIcon />,
-                                            },
-                                        ] as const
-                                    ).map((s) => {
-                                        const sc = STATUS_COLORS[s.key];
-                                        const pct =
-                                            stats.totalTasks > 0
-                                                ? Math.round((s.count / stats.totalTasks) * 100)
-                                                : 0;
-                                        return (
-                                            <Grid key={s.key} md={3} xs={6}>
-                                                <Card
-                                                    variant="soft"
+                                    {/* ════════ Section C: Assignee Workload ════════ */}
+                                    {assigneeWorkload.length > 0 && (
+                                        <Box>
+                                            <Typography
+                                                level="title-sm"
+                                                sx={{
+                                                    fontWeight: 600,
+                                                    mb: 2,
+                                                    color: sectionHeaderColor,
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    gap: 1,
+                                                }}
+                                            >
+                                                <PersonRoundedIcon sx={{ fontSize: 16 }} />
+                                                Assignee Workload
+                                            </Typography>
+                                            <Card
+                                                variant="outlined"
+                                                sx={{
+                                                    background: cardBg,
+                                                    borderColor: cardBorder,
+                                                    overflow: "auto",
+                                                }}
+                                            >
+                                                <Table
+                                                    size="sm"
                                                     sx={{
-                                                        p: 2,
-                                                        background: isDark
-                                                            ? sc.bg
-                                                            : sc.bg.replace("0.12", "0.08"),
-                                                        border: "1px solid",
-                                                        borderColor: cardBorder,
-                                                        transition: "transform 0.2s ease",
-                                                        "&:hover": {
-                                                            transform: "translateY(-2px)",
+                                                        "& thead th": {
+                                                            backgroundColor: "transparent",
+                                                            color: textSecondary,
+                                                            fontWeight: 600,
+                                                            fontSize: "0.7rem",
+                                                            textTransform: "uppercase",
+                                                            letterSpacing: "0.04em",
+                                                            borderBottom: "1px solid",
+                                                            borderColor: cardBorder,
+                                                            py: 1,
+                                                        },
+                                                        "& tbody td": {
+                                                            borderBottom: "1px solid",
+                                                            borderColor: isDark
+                                                                ? "rgba(255,255,255,0.04)"
+                                                                : "rgba(0,0,0,0.04)",
+                                                            py: 1.25,
+                                                        },
+                                                        "& tbody tr:last-child td": {
+                                                            borderBottom: "none",
                                                         },
                                                     }}
                                                 >
-                                                    <Stack spacing={1}>
-                                                        <Stack
-                                                            alignItems="center"
-                                                            direction="row"
-                                                            justifyContent="space-between"
-                                                        >
-                                                            <Box
-                                                                sx={{
-                                                                    width: 32,
-                                                                    height: 32,
-                                                                    borderRadius: "8px",
-                                                                    display: "flex",
-                                                                    alignItems: "center",
-                                                                    justifyContent: "center",
-                                                                    color: sc.text,
-                                                                    backgroundColor: isDark
-                                                                        ? "rgba(255,255,255,0.06)"
-                                                                        : "rgba(255,255,255,0.8)",
-                                                                }}
-                                                            >
-                                                                {s.icon}
-                                                            </Box>
-                                                            <Typography
-                                                                level="body-xs"
-                                                                sx={{
-                                                                    color: sc.text,
-                                                                    fontWeight: 600,
-                                                                }}
-                                                            >
-                                                                {pct}%
-                                                            </Typography>
-                                                        </Stack>
-                                                        <Box>
-                                                            <Typography
-                                                                level="h3"
-                                                                sx={{
-                                                                    fontWeight: 700,
-                                                                    fontSize: "1.4rem",
-                                                                    color: textPrimary,
-                                                                }}
-                                                            >
-                                                                {s.count}
-                                                            </Typography>
-                                                            <Typography
-                                                                level="body-xs"
-                                                                sx={{
-                                                                    color: textSecondary,
-                                                                    fontWeight: 500,
-                                                                }}
-                                                            >
-                                                                {
-                                                                    t.tasks.dashboard.statusLabels[
-                                                                        STATUS_LABEL_KEYS[s.key] ??
-                                                                            "open"
-                                                                    ]
-                                                                }
-                                                            </Typography>
-                                                        </Box>
-                                                    </Stack>
-                                                </Card>
-                                            </Grid>
-                                        );
-                                    })}
-                                </Grid>
-                            </Box>
+                                                    <thead>
+                                                        <tr>
+                                                            <th style={{ width: "30%" }}>
+                                                                {t.tasks.dashboard.member}
+                                                            </th>
+                                                            <th style={{ textAlign: "center" }}>
+                                                                {t.tasks.dashboard.open}
+                                                            </th>
+                                                            <th style={{ textAlign: "center" }}>
+                                                                {t.tasks.dashboard.wip}
+                                                            </th>
+                                                            <th style={{ textAlign: "center" }}>
+                                                                {t.tasks.dashboard.pending}
+                                                            </th>
+                                                            <th style={{ textAlign: "center" }}>
+                                                                {t.tasks.dashboard.closed}
+                                                            </th>
+                                                            <th style={{ textAlign: "center" }}>
+                                                                {t.tasks.dashboard.total}
+                                                            </th>
+                                                            <th style={{ textAlign: "center" }}>
+                                                                {t.tasks.dashboard.closedSprint}
+                                                            </th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {assigneeWorkload.map((a) => (
+                                                            <tr key={a.id}>
+                                                                <td>
+                                                                    <Stack
+                                                                        alignItems="center"
+                                                                        direction="row"
+                                                                        spacing={1}
+                                                                    >
+                                                                        {a.id !==
+                                                                            "__unassigned__" &&
+                                                                        useTEM.teamMemberProfiles[
+                                                                            a.id
+                                                                        ] ? (
+                                                                            <AvatarWithStatus
+                                                                                avatarSize={26}
+                                                                                myself={myself}
+                                                                                socket={socket}
+                                                                                useCM={useCM}
+                                                                                useUISM={useUISM}
+                                                                                avatarUser={
+                                                                                    useTEM
+                                                                                        .teamMemberProfiles[
+                                                                                        a.id
+                                                                                    ]
+                                                                                }
+                                                                                isYou={
+                                                                                    myself.userId ===
+                                                                                    a.id
+                                                                                }
+                                                                                setMyself={
+                                                                                    setMyself
+                                                                                }
+                                                                            />
+                                                                        ) : (
+                                                                            <Avatar
+                                                                                size="sm"
+                                                                                src={
+                                                                                    a.imgPath ||
+                                                                                    undefined
+                                                                                }
+                                                                                sx={{
+                                                                                    width: 26,
+                                                                                    height: 26,
+                                                                                }}
+                                                                            >
+                                                                                {(a.name ||
+                                                                                    "?")[0]?.toUpperCase()}
+                                                                            </Avatar>
+                                                                        )}
+                                                                        <Typography
+                                                                            level="body-sm"
+                                                                            sx={{
+                                                                                fontWeight: 500,
+                                                                                color: textPrimary,
+                                                                                overflow: "hidden",
+                                                                                textOverflow:
+                                                                                    "ellipsis",
+                                                                                whiteSpace:
+                                                                                    "nowrap",
+                                                                                maxWidth: 140,
+                                                                            }}
+                                                                        >
+                                                                            {a.name}
+                                                                        </Typography>
+                                                                    </Stack>
+                                                                </td>
+                                                                {(
+                                                                    [
+                                                                        {
+                                                                            val: a.open,
+                                                                            color: STATUS_COLORS
+                                                                                .Open.text,
+                                                                        },
+                                                                        {
+                                                                            val: a.wip,
+                                                                            color: STATUS_COLORS
+                                                                                .WIP.text,
+                                                                        },
+                                                                        {
+                                                                            val: a.pending,
+                                                                            color: STATUS_COLORS
+                                                                                .Pending.text,
+                                                                        },
+                                                                        {
+                                                                            val: a.closed,
+                                                                            color: STATUS_COLORS
+                                                                                .Closed.text,
+                                                                        },
+                                                                    ] as const
+                                                                ).map((cell, i) => (
+                                                                    <td
+                                                                        key={i}
+                                                                        style={{
+                                                                            textAlign: "center",
+                                                                        }}
+                                                                    >
+                                                                        {cell.val > 0 ? (
+                                                                            <Chip
+                                                                                size="sm"
+                                                                                variant="soft"
+                                                                                sx={{
+                                                                                    minWidth: 28,
+                                                                                    backgroundColor:
+                                                                                        STATUS_COLORS[
+                                                                                            [
+                                                                                                "Open",
+                                                                                                "WIP",
+                                                                                                "Pending",
+                                                                                                "Closed",
+                                                                                            ][i]
+                                                                                        ].bg,
+                                                                                    color: cell.color,
+                                                                                    fontWeight: 600,
+                                                                                }}
+                                                                            >
+                                                                                {cell.val}
+                                                                            </Chip>
+                                                                        ) : (
+                                                                            <Typography
+                                                                                level="body-xs"
+                                                                                sx={{
+                                                                                    color: textMuted,
+                                                                                }}
+                                                                            >
+                                                                                -
+                                                                            </Typography>
+                                                                        )}
+                                                                    </td>
+                                                                ))}
+                                                                <td
+                                                                    style={{ textAlign: "center" }}
+                                                                >
+                                                                    <Typography
+                                                                        level="body-sm"
+                                                                        sx={{
+                                                                            fontWeight: 700,
+                                                                            color: textPrimary,
+                                                                        }}
+                                                                    >
+                                                                        {a.total}
+                                                                    </Typography>
+                                                                </td>
+                                                                <td
+                                                                    style={{ textAlign: "center" }}
+                                                                >
+                                                                    {a.closedInSprint > 0 ? (
+                                                                        <Chip
+                                                                            size="sm"
+                                                                            variant="soft"
+                                                                            sx={{
+                                                                                minWidth: 28,
+                                                                                backgroundColor:
+                                                                                    "rgba(34,197,94,0.12)",
+                                                                                color: "#22c55e",
+                                                                                fontWeight: 600,
+                                                                            }}
+                                                                        >
+                                                                            {a.closedInSprint}
+                                                                        </Chip>
+                                                                    ) : (
+                                                                        <Typography
+                                                                            level="body-xs"
+                                                                            sx={{
+                                                                                color: textMuted,
+                                                                            }}
+                                                                        >
+                                                                            -
+                                                                        </Typography>
+                                                                    )}
+                                                                </td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </Table>
+                                            </Card>
+                                        </Box>
+                                    )}
 
-                            {/* ════════ Section C: Assignee Workload ════════ */}
-                            {assigneeWorkload.length > 0 && (
-                                <Box>
-                                    <Typography
-                                        level="title-sm"
-                                        sx={{
-                                            fontWeight: 600,
-                                            mb: 2,
-                                            color: sectionHeaderColor,
-                                            display: "flex",
-                                            alignItems: "center",
-                                            gap: 1,
-                                        }}
-                                    >
-                                        <PersonRoundedIcon sx={{ fontSize: 16 }} />
-                                        Assignee Workload
-                                    </Typography>
-                                    <Card
-                                        variant="outlined"
-                                        sx={{
-                                            background: cardBg,
-                                            borderColor: cardBorder,
-                                            overflow: "auto",
-                                        }}
-                                    >
-                                        <Table
-                                            size="sm"
+                                    {/* ════════ Tag Insights ════════ */}
+                                    <Box>
+                                        <Typography
+                                            level="title-sm"
                                             sx={{
-                                                "& thead th": {
-                                                    backgroundColor: "transparent",
-                                                    color: textSecondary,
-                                                    fontWeight: 600,
-                                                    fontSize: "0.7rem",
-                                                    textTransform: "uppercase",
-                                                    letterSpacing: "0.04em",
-                                                    borderBottom: "1px solid",
-                                                    borderColor: cardBorder,
-                                                    py: 1,
-                                                },
-                                                "& tbody td": {
-                                                    borderBottom: "1px solid",
-                                                    borderColor: isDark
-                                                        ? "rgba(255,255,255,0.04)"
-                                                        : "rgba(0,0,0,0.04)",
-                                                    py: 1.25,
-                                                },
-                                                "& tbody tr:last-child td": {
-                                                    borderBottom: "none",
-                                                },
+                                                fontWeight: 600,
+                                                mb: 2,
+                                                color: sectionHeaderColor,
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: 1,
                                             }}
                                         >
-                                            <thead>
-                                                <tr>
-                                                    <th style={{ width: "30%" }}>
-                                                        {t.tasks.dashboard.member}
-                                                    </th>
-                                                    <th style={{ textAlign: "center" }}>
-                                                        {t.tasks.dashboard.open}
-                                                    </th>
-                                                    <th style={{ textAlign: "center" }}>
-                                                        {t.tasks.dashboard.wip}
-                                                    </th>
-                                                    <th style={{ textAlign: "center" }}>
-                                                        {t.tasks.dashboard.pending}
-                                                    </th>
-                                                    <th style={{ textAlign: "center" }}>
-                                                        {t.tasks.dashboard.closed}
-                                                    </th>
-                                                    <th style={{ textAlign: "center" }}>
-                                                        {t.tasks.dashboard.total}
-                                                    </th>
-                                                    <th style={{ textAlign: "center" }}>
-                                                        {t.tasks.dashboard.closedSprint}
-                                                    </th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {assigneeWorkload.map((a) => (
-                                                    <tr key={a.id}>
-                                                        <td>
-                                                            <Stack
-                                                                alignItems="center"
-                                                                direction="row"
-                                                                spacing={1}
-                                                            >
-                                                                {a.id !== "__unassigned__" &&
-                                                                useTEM.teamMemberProfiles[a.id] ? (
-                                                                    <AvatarWithStatus
-                                                                        avatarSize={26}
-                                                                        myself={myself}
-                                                                        setMyself={setMyself}
-                                                                        socket={socket}
-                                                                        useCM={useCM}
-                                                                        useUISM={useUISM}
-                                                                        avatarUser={
-                                                                            useTEM
-                                                                                .teamMemberProfiles[
-                                                                                a.id
-                                                                            ]
-                                                                        }
-                                                                        isYou={
-                                                                            myself.userId === a.id
-                                                                        }
+                                            <LocalOfferRoundedIcon sx={{ fontSize: 16 }} />
+                                            Tag Insights
+                                            <Chip size="sm" sx={{ ml: 0.5 }} variant="soft">
+                                                {tagStats.rows.length}
+                                            </Chip>
+                                        </Typography>
+
+                                        {tagStats.rows.length === 0 ? (
+                                            <Card
+                                                variant="soft"
+                                                sx={{
+                                                    p: 4,
+                                                    textAlign: "center",
+                                                    background: cardBg,
+                                                    border: "2px dashed",
+                                                    borderColor: cardBorder,
+                                                }}
+                                            >
+                                                <Stack alignItems="center" spacing={1.5}>
+                                                    <Box
+                                                        sx={{
+                                                            width: 56,
+                                                            height: 56,
+                                                            borderRadius: "14px",
+                                                            display: "flex",
+                                                            alignItems: "center",
+                                                            justifyContent: "center",
+                                                            background: isDark
+                                                                ? "rgba(236,72,153,0.1)"
+                                                                : "rgba(236,72,153,0.08)",
+                                                        }}
+                                                    >
+                                                        <LocalOfferRoundedIcon
+                                                            sx={{
+                                                                fontSize: 28,
+                                                                color: isDark
+                                                                    ? "#f472b6"
+                                                                    : "#ec4899",
+                                                            }}
+                                                        />
+                                                    </Box>
+                                                    <Typography
+                                                        level="title-md"
+                                                        sx={{
+                                                            fontWeight: 600,
+                                                            color: textPrimary,
+                                                        }}
+                                                    >
+                                                        No tags yet
+                                                    </Typography>
+                                                    <Typography
+                                                        level="body-sm"
+                                                        sx={{ color: textMuted }}
+                                                    >
+                                                        Add tags to tasks or milestones to see
+                                                        tag-based insights here.
+                                                    </Typography>
+                                                </Stack>
+                                            </Card>
+                                        ) : (
+                                            <Stack spacing={2}>
+                                                {/* Summary KPI tiles */}
+                                                <Grid spacing={1.5} container>
+                                                    {(
+                                                        [
+                                                            {
+                                                                label: "Tags in use",
+                                                                value: String(
+                                                                    tagStats.rows.length
+                                                                ),
+                                                                color: "#ec4899",
+                                                                icon: (
+                                                                    <LocalOfferRoundedIcon
+                                                                        sx={{ fontSize: 18 }}
                                                                     />
-                                                                ) : (
-                                                                    <Avatar
-                                                                        size="sm"
-                                                                        src={
-                                                                            a.imgPath || undefined
-                                                                        }
+                                                                ),
+                                                            },
+                                                            {
+                                                                label: "Tagged items",
+                                                                value: String(
+                                                                    tagStats.taggedCount
+                                                                ),
+                                                                color: "#3b82f6",
+                                                                icon: (
+                                                                    <AssignmentRoundedIcon
+                                                                        sx={{ fontSize: 18 }}
+                                                                    />
+                                                                ),
+                                                            },
+                                                            {
+                                                                label: "Tag coverage",
+                                                                value: `${tagStats.coveragePct}%`,
+                                                                color: "#22c55e",
+                                                                icon: (
+                                                                    <TrendingUpRoundedIcon
+                                                                        sx={{ fontSize: 18 }}
+                                                                    />
+                                                                ),
+                                                            },
+                                                            {
+                                                                label: "Most used",
+                                                                value:
+                                                                    tagStats.rows[0]?.tagName ??
+                                                                    "—",
+                                                                color:
+                                                                    tagStats.rows[0]?.tagColor ??
+                                                                    "#a78bfa",
+                                                                icon: (
+                                                                    <FlagRoundedIcon
+                                                                        sx={{ fontSize: 18 }}
+                                                                    />
+                                                                ),
+                                                            },
+                                                        ] as const
+                                                    ).map((tile) => (
+                                                        <Grid
+                                                            key={tile.label}
+                                                            md={3}
+                                                            sm={6}
+                                                            xs={6}
+                                                        >
+                                                            <Card
+                                                                variant="soft"
+                                                                sx={{
+                                                                    p: 2,
+                                                                    height: "100%",
+                                                                    background: isDark
+                                                                        ? `${tile.color}1F`
+                                                                        : `${tile.color}14`,
+                                                                    border: "1px solid",
+                                                                    borderColor: cardBorder,
+                                                                    transition:
+                                                                        "transform 0.2s ease",
+                                                                    "&:hover": {
+                                                                        transform:
+                                                                            "translateY(-2px)",
+                                                                    },
+                                                                }}
+                                                            >
+                                                                <Stack spacing={1}>
+                                                                    <Box
                                                                         sx={{
-                                                                            width: 26,
-                                                                            height: 26,
+                                                                            width: 32,
+                                                                            height: 32,
+                                                                            borderRadius: "8px",
+                                                                            display: "flex",
+                                                                            alignItems: "center",
+                                                                            justifyContent:
+                                                                                "center",
+                                                                            color: tile.color,
+                                                                            backgroundColor: isDark
+                                                                                ? "rgba(255,255,255,0.06)"
+                                                                                : "rgba(255,255,255,0.8)",
                                                                         }}
                                                                     >
-                                                                        {(a.name ||
-                                                                            "?")[0]?.toUpperCase()}
-                                                                    </Avatar>
-                                                                )}
-                                                                <Typography
-                                                                    level="body-sm"
-                                                                    sx={{
-                                                                        fontWeight: 500,
-                                                                        color: textPrimary,
-                                                                        overflow: "hidden",
-                                                                        textOverflow: "ellipsis",
-                                                                        whiteSpace: "nowrap",
-                                                                        maxWidth: 140,
-                                                                    }}
-                                                                >
-                                                                    {a.name}
-                                                                </Typography>
-                                                            </Stack>
-                                                        </td>
-                                                        {(
-                                                            [
-                                                                {
-                                                                    val: a.open,
-                                                                    color: STATUS_COLORS.Open.text,
-                                                                },
-                                                                {
-                                                                    val: a.wip,
-                                                                    color: STATUS_COLORS.WIP.text,
-                                                                },
-                                                                {
-                                                                    val: a.pending,
-                                                                    color: STATUS_COLORS.Pending
-                                                                        .text,
-                                                                },
-                                                                {
-                                                                    val: a.closed,
-                                                                    color: STATUS_COLORS.Closed
-                                                                        .text,
-                                                                },
-                                                            ] as const
-                                                        ).map((cell, i) => (
-                                                            <td
-                                                                key={i}
-                                                                style={{ textAlign: "center" }}
-                                                            >
-                                                                {cell.val > 0 ? (
-                                                                    <Chip
-                                                                        size="sm"
-                                                                        variant="soft"
-                                                                        sx={{
-                                                                            minWidth: 28,
-                                                                            backgroundColor:
-                                                                                STATUS_COLORS[
-                                                                                    [
-                                                                                        "Open",
-                                                                                        "WIP",
-                                                                                        "Pending",
-                                                                                        "Closed",
-                                                                                    ][i]
-                                                                                ].bg,
-                                                                            color: cell.color,
-                                                                            fontWeight: 600,
-                                                                        }}
-                                                                    >
-                                                                        {cell.val}
-                                                                    </Chip>
-                                                                ) : (
-                                                                    <Typography
-                                                                        level="body-xs"
-                                                                        sx={{ color: textMuted }}
-                                                                    >
-                                                                        -
-                                                                    </Typography>
-                                                                )}
-                                                            </td>
-                                                        ))}
-                                                        <td style={{ textAlign: "center" }}>
-                                                            <Typography
-                                                                level="body-sm"
-                                                                sx={{
-                                                                    fontWeight: 700,
-                                                                    color: textPrimary,
-                                                                }}
-                                                            >
-                                                                {a.total}
-                                                            </Typography>
-                                                        </td>
-                                                        <td style={{ textAlign: "center" }}>
-                                                            {a.closedInSprint > 0 ? (
-                                                                <Chip
-                                                                    size="sm"
-                                                                    variant="soft"
-                                                                    sx={{
-                                                                        minWidth: 28,
-                                                                        backgroundColor:
-                                                                            "rgba(34,197,94,0.12)",
-                                                                        color: "#22c55e",
-                                                                        fontWeight: 600,
-                                                                    }}
-                                                                >
-                                                                    {a.closedInSprint}
-                                                                </Chip>
-                                                            ) : (
-                                                                <Typography
-                                                                    level="body-xs"
-                                                                    sx={{ color: textMuted }}
-                                                                >
-                                                                    -
-                                                                </Typography>
-                                                            )}
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </Table>
-                                    </Card>
-                                </Box>
-                            )}
+                                                                        {tile.icon}
+                                                                    </Box>
+                                                                    <Box sx={{ minWidth: 0 }}>
+                                                                        <Typography
+                                                                            level="h3"
+                                                                            sx={{
+                                                                                fontWeight: 700,
+                                                                                fontSize: "1.4rem",
+                                                                                color: textPrimary,
+                                                                                overflow: "hidden",
+                                                                                textOverflow:
+                                                                                    "ellipsis",
+                                                                                whiteSpace:
+                                                                                    "nowrap",
+                                                                            }}
+                                                                        >
+                                                                            {tile.value}
+                                                                        </Typography>
+                                                                        <Typography
+                                                                            level="body-xs"
+                                                                            sx={{
+                                                                                color: textSecondary,
+                                                                                fontWeight: 500,
+                                                                            }}
+                                                                        >
+                                                                            {tile.label}
+                                                                        </Typography>
+                                                                    </Box>
+                                                                </Stack>
+                                                            </Card>
+                                                        </Grid>
+                                                    ))}
+                                                </Grid>
 
-                            {/* ════════ Section E: Priority & Effort Breakdown ════════ */}
-                            <Stack direction={{ xs: "column", md: "row" }} spacing={1.5}>
-                                {renderDistributionCard(
-                                    t.tasks.dashboard.priorityDistribution,
-                                    <WarningAmberRoundedIcon
-                                        sx={{ fontSize: 16, color: "#f97316" }}
-                                    />,
-                                    priorityBreakdown,
-                                    priorityColors
-                                )}
-                                {renderDistributionCard(
-                                    t.tasks.dashboard.effortDistribution,
-                                    <TrendingUpRoundedIcon
-                                        sx={{ fontSize: 16, color: "#7c3aed" }}
-                                    />,
-                                    effortBreakdown,
-                                    effortColors
-                                )}
-                            </Stack>
-
-                            {/* ════════ Section F: Overdue & Upcoming ════════ */}
-                            {(overdueAndUpcoming.overdue.length > 0 ||
-                                overdueAndUpcoming.upcoming.length > 0) && (
-                                <Stack direction={{ xs: "column", md: "row" }} spacing={1.5}>
-                                    {/* Overdue */}
-                                    <Card
-                                        variant="outlined"
-                                        sx={{
-                                            flex: 1,
-                                            p: 2.5,
-                                            background: isDark
-                                                ? "rgba(239,68,68,0.04)"
-                                                : "rgba(239,68,68,0.03)",
-                                            borderColor: isDark
-                                                ? "rgba(239,68,68,0.2)"
-                                                : "rgba(239,68,68,0.15)",
-                                        }}
-                                    >
-                                        <Stack spacing={1.5}>
-                                            <Stack
-                                                alignItems="center"
-                                                direction="row"
-                                                justifyContent="space-between"
-                                            >
-                                                <Stack
-                                                    alignItems="center"
-                                                    direction="row"
-                                                    spacing={1}
-                                                >
-                                                    <WarningAmberRoundedIcon
-                                                        sx={{ fontSize: 16, color: "#ef4444" }}
-                                                    />
-                                                    <Typography
-                                                        level="title-sm"
-                                                        sx={{
-                                                            fontWeight: 600,
-                                                            color: "#ef4444",
-                                                        }}
-                                                    >
-                                                        Overdue
-                                                    </Typography>
-                                                </Stack>
-                                                <Chip
-                                                    size="sm"
-                                                    variant="soft"
+                                                {/* Per-tag breakdown table */}
+                                                <Card
+                                                    variant="outlined"
                                                     sx={{
-                                                        backgroundColor: "rgba(239,68,68,0.12)",
-                                                        color: "#ef4444",
-                                                        fontWeight: 700,
+                                                        background: cardBg,
+                                                        borderColor: cardBorder,
+                                                        overflow: "auto",
                                                     }}
                                                 >
-                                                    {overdueAndUpcoming.overdue.length}
-                                                </Chip>
-                                            </Stack>
-                                            <Stack spacing={0.75}>
-                                                {overdueAndUpcoming.overdue
-                                                    .slice(0, 5)
-                                                    .map((task) => (
-                                                        <Stack
-                                                            key={task.id}
-                                                            alignItems="center"
-                                                            direction="row"
-                                                            spacing={1}
-                                                            sx={{
-                                                                cursor: "pointer",
-                                                                borderRadius: "6px",
-                                                                px: 1,
-                                                                py: 0.5,
-                                                                "&:hover": {
-                                                                    backgroundColor: isDark
-                                                                        ? "rgba(239,68,68,0.08)"
-                                                                        : "rgba(239,68,68,0.06)",
-                                                                },
-                                                            }}
-                                                            onClick={() =>
-                                                                handleTaskClick(Number(task.id))
-                                                            }
-                                                        >
-                                                            {getStatusIcon(
-                                                                task.effectiveStatus,
-                                                                12
-                                                            )}
-                                                            <Typography
-                                                                level="body-xs"
-                                                                sx={{
-                                                                    flex: 1,
-                                                                    color: textPrimary,
-                                                                    fontWeight: 500,
-                                                                    overflow: "hidden",
-                                                                    textOverflow: "ellipsis",
-                                                                    whiteSpace: "nowrap",
-                                                                }}
-                                                            >
-                                                                {task.title ||
-                                                                    t.tasks.dashboard.untitledTask}
-                                                            </Typography>
-                                                            <Typography
-                                                                level="body-xs"
-                                                                sx={{
-                                                                    color: "#ef4444",
-                                                                    fontWeight: 600,
-                                                                    whiteSpace: "nowrap",
-                                                                }}
-                                                            >
-                                                                {task.dueDate}
-                                                            </Typography>
-                                                        </Stack>
-                                                    ))}
-                                                {overdueAndUpcoming.overdue.length > 5 && (
-                                                    <Typography
-                                                        level="body-xs"
-                                                        sx={{ color: textMuted, pl: 1 }}
-                                                    >
-                                                        +{overdueAndUpcoming.overdue.length - 5}{" "}
-                                                        more
-                                                    </Typography>
-                                                )}
-                                                {overdueAndUpcoming.overdue.length === 0 && (
-                                                    <Typography
-                                                        level="body-xs"
-                                                        sx={{ color: textMuted }}
-                                                    >
-                                                        No overdue tasks
-                                                    </Typography>
-                                                )}
-                                            </Stack>
-                                        </Stack>
-                                    </Card>
-
-                                    {/* Upcoming (due this week) */}
-                                    <Card
-                                        variant="outlined"
-                                        sx={{
-                                            flex: 1,
-                                            p: 2.5,
-                                            background: isDark
-                                                ? "rgba(59,130,246,0.04)"
-                                                : "rgba(59,130,246,0.03)",
-                                            borderColor: isDark
-                                                ? "rgba(59,130,246,0.2)"
-                                                : "rgba(59,130,246,0.15)",
-                                        }}
-                                    >
-                                        <Stack spacing={1.5}>
-                                            <Stack
-                                                alignItems="center"
-                                                direction="row"
-                                                justifyContent="space-between"
-                                            >
-                                                <Stack
-                                                    alignItems="center"
-                                                    direction="row"
-                                                    spacing={1}
-                                                >
-                                                    <CalendarMonthRoundedIcon
-                                                        sx={{ fontSize: 16, color: "#3b82f6" }}
-                                                    />
-                                                    <Typography
-                                                        level="title-sm"
+                                                    <Table
+                                                        size="sm"
                                                         sx={{
-                                                            fontWeight: 600,
-                                                            color: "#3b82f6",
+                                                            "& thead th": {
+                                                                backgroundColor: "transparent",
+                                                                color: textSecondary,
+                                                                fontWeight: 600,
+                                                                fontSize: "0.7rem",
+                                                                textTransform: "uppercase",
+                                                                letterSpacing: "0.04em",
+                                                                borderBottom: "1px solid",
+                                                                borderColor: cardBorder,
+                                                                py: 1,
+                                                            },
+                                                            "& tbody td": {
+                                                                borderBottom: "1px solid",
+                                                                borderColor: isDark
+                                                                    ? "rgba(255,255,255,0.04)"
+                                                                    : "rgba(0,0,0,0.04)",
+                                                                py: 1.25,
+                                                                verticalAlign: "middle",
+                                                            },
+                                                            "& tbody tr:last-child td": {
+                                                                borderBottom: "none",
+                                                            },
                                                         }}
                                                     >
-                                                        Due This Week
-                                                    </Typography>
-                                                </Stack>
-                                                <Chip
-                                                    size="sm"
-                                                    variant="soft"
-                                                    sx={{
-                                                        backgroundColor: "rgba(59,130,246,0.12)",
-                                                        color: "#3b82f6",
-                                                        fontWeight: 700,
-                                                    }}
-                                                >
-                                                    {overdueAndUpcoming.upcoming.length}
-                                                </Chip>
+                                                        <thead>
+                                                            <tr>
+                                                                <th style={{ width: "26%" }}>
+                                                                    Tag
+                                                                </th>
+                                                                <th
+                                                                    style={{
+                                                                        width: 64,
+                                                                        textAlign: "center",
+                                                                    }}
+                                                                >
+                                                                    Items
+                                                                </th>
+                                                                <th style={{ width: "24%" }}>
+                                                                    Status
+                                                                </th>
+                                                                <th style={{ width: "30%" }}>
+                                                                    Progress
+                                                                </th>
+                                                                <th
+                                                                    style={{
+                                                                        width: 76,
+                                                                        textAlign: "center",
+                                                                    }}
+                                                                >
+                                                                    Overdue
+                                                                </th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {tagStats.rows.map((row) => {
+                                                                const pct =
+                                                                    row.total > 0
+                                                                        ? Math.round(
+                                                                              (row.closed /
+                                                                                  row.total) *
+                                                                                  100
+                                                                          )
+                                                                        : 0;
+                                                                return (
+                                                                    <tr key={row.tagName}>
+                                                                        <td>
+                                                                            <Chip
+                                                                                size="sm"
+                                                                                variant="soft"
+                                                                                startDecorator={
+                                                                                    <Box
+                                                                                        sx={{
+                                                                                            width: 8,
+                                                                                            height: 8,
+                                                                                            borderRadius:
+                                                                                                "50%",
+                                                                                            backgroundColor:
+                                                                                                row.tagColor,
+                                                                                        }}
+                                                                                    />
+                                                                                }
+                                                                                sx={{
+                                                                                    maxWidth:
+                                                                                        "100%",
+                                                                                    fontWeight: 600,
+                                                                                    backgroundColor: `${row.tagColor}1F`,
+                                                                                    color: row.tagColor,
+                                                                                    border: "1px solid",
+                                                                                    borderColor: `${row.tagColor}40`,
+                                                                                }}
+                                                                            >
+                                                                                {row.tagName}
+                                                                            </Chip>
+                                                                        </td>
+                                                                        <td
+                                                                            style={{
+                                                                                textAlign:
+                                                                                    "center",
+                                                                            }}
+                                                                        >
+                                                                            <Typography
+                                                                                level="body-sm"
+                                                                                sx={{
+                                                                                    fontWeight: 700,
+                                                                                    color: textPrimary,
+                                                                                }}
+                                                                            >
+                                                                                {row.total}
+                                                                            </Typography>
+                                                                        </td>
+                                                                        <td>
+                                                                            {renderStackedBar(
+                                                                                [
+                                                                                    {
+                                                                                        color: STATUS_COLORS
+                                                                                            .Open
+                                                                                            .text,
+                                                                                        value: row.open,
+                                                                                    },
+                                                                                    {
+                                                                                        color: STATUS_COLORS
+                                                                                            .WIP
+                                                                                            .text,
+                                                                                        value: row.wip,
+                                                                                    },
+                                                                                    {
+                                                                                        color: STATUS_COLORS
+                                                                                            .Pending
+                                                                                            .text,
+                                                                                        value: row.pending,
+                                                                                    },
+                                                                                    {
+                                                                                        color: STATUS_COLORS
+                                                                                            .Closed
+                                                                                            .text,
+                                                                                        value: row.closed,
+                                                                                    },
+                                                                                ],
+                                                                                row.total
+                                                                            )}
+                                                                        </td>
+                                                                        <td>
+                                                                            <Stack
+                                                                                alignItems="center"
+                                                                                direction="row"
+                                                                                spacing={1}
+                                                                            >
+                                                                                <Box
+                                                                                    sx={{
+                                                                                        flex: 1,
+                                                                                        display:
+                                                                                            "flex",
+                                                                                        height: 8,
+                                                                                        borderRadius: 4,
+                                                                                        overflow:
+                                                                                            "hidden",
+                                                                                        backgroundColor:
+                                                                                            isDark
+                                                                                                ? "rgba(255,255,255,0.08)"
+                                                                                                : "rgba(0,0,0,0.06)",
+                                                                                    }}
+                                                                                >
+                                                                                    <Box
+                                                                                        sx={{
+                                                                                            width: `${pct}%`,
+                                                                                            backgroundColor:
+                                                                                                row.tagColor,
+                                                                                            transition:
+                                                                                                "width 0.3s ease",
+                                                                                        }}
+                                                                                    />
+                                                                                </Box>
+                                                                                <Typography
+                                                                                    level="body-xs"
+                                                                                    sx={{
+                                                                                        minWidth: 32,
+                                                                                        textAlign:
+                                                                                            "right",
+                                                                                        fontWeight: 600,
+                                                                                        color: textSecondary,
+                                                                                    }}
+                                                                                >
+                                                                                    {pct}%
+                                                                                </Typography>
+                                                                            </Stack>
+                                                                        </td>
+                                                                        <td
+                                                                            style={{
+                                                                                textAlign:
+                                                                                    "center",
+                                                                            }}
+                                                                        >
+                                                                            {row.overdue > 0 ? (
+                                                                                <Chip
+                                                                                    size="sm"
+                                                                                    variant="soft"
+                                                                                    sx={{
+                                                                                        minWidth: 28,
+                                                                                        backgroundColor:
+                                                                                            "rgba(239,68,68,0.12)",
+                                                                                        color: "#ef4444",
+                                                                                        fontWeight: 700,
+                                                                                    }}
+                                                                                >
+                                                                                    {row.overdue}
+                                                                                </Chip>
+                                                                            ) : (
+                                                                                <Typography
+                                                                                    level="body-xs"
+                                                                                    sx={{
+                                                                                        color: textMuted,
+                                                                                    }}
+                                                                                >
+                                                                                    -
+                                                                                </Typography>
+                                                                            )}
+                                                                        </td>
+                                                                    </tr>
+                                                                );
+                                                            })}
+                                                        </tbody>
+                                                    </Table>
+                                                </Card>
                                             </Stack>
-                                            <Stack spacing={0.75}>
-                                                {overdueAndUpcoming.upcoming
-                                                    .slice(0, 5)
-                                                    .map((task) => (
-                                                        <Stack
-                                                            key={task.id}
-                                                            alignItems="center"
-                                                            direction="row"
-                                                            spacing={1}
-                                                            sx={{
-                                                                cursor: "pointer",
-                                                                borderRadius: "6px",
-                                                                px: 1,
-                                                                py: 0.5,
-                                                                "&:hover": {
-                                                                    backgroundColor: isDark
-                                                                        ? "rgba(59,130,246,0.08)"
-                                                                        : "rgba(59,130,246,0.06)",
-                                                                },
-                                                            }}
-                                                            onClick={() =>
-                                                                handleTaskClick(Number(task.id))
-                                                            }
-                                                        >
-                                                            {getStatusIcon(
-                                                                task.effectiveStatus,
-                                                                12
-                                                            )}
-                                                            <Typography
-                                                                level="body-xs"
-                                                                sx={{
-                                                                    flex: 1,
-                                                                    color: textPrimary,
-                                                                    fontWeight: 500,
-                                                                    overflow: "hidden",
-                                                                    textOverflow: "ellipsis",
-                                                                    whiteSpace: "nowrap",
-                                                                }}
-                                                            >
-                                                                {task.title ||
-                                                                    t.tasks.dashboard.untitledTask}
-                                                            </Typography>
-                                                            <Typography
-                                                                level="body-xs"
-                                                                sx={{
-                                                                    color: "#3b82f6",
-                                                                    fontWeight: 600,
-                                                                    whiteSpace: "nowrap",
-                                                                }}
-                                                            >
-                                                                {task.dueDate}
-                                                            </Typography>
-                                                        </Stack>
-                                                    ))}
-                                                {overdueAndUpcoming.upcoming.length > 5 && (
-                                                    <Typography
-                                                        level="body-xs"
-                                                        sx={{ color: textMuted, pl: 1 }}
-                                                    >
-                                                        +{overdueAndUpcoming.upcoming.length - 5}{" "}
-                                                        more
-                                                    </Typography>
-                                                )}
-                                                {overdueAndUpcoming.upcoming.length === 0 && (
-                                                    <Typography
-                                                        level="body-xs"
-                                                        sx={{ color: textMuted }}
-                                                    >
-                                                        No tasks due this week
-                                                    </Typography>
-                                                )}
-                                            </Stack>
-                                        </Stack>
-                                    </Card>
-                                </Stack>
+                                        )}
+                                    </Box>
+                                </>
                             )}
                         </>
                     )}
