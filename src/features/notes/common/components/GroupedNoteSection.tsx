@@ -82,11 +82,13 @@ function GroupedNoteSectionComponent({
                 />
             </Box>
 
-            {/* Folder Icon */}
+            {/* Folder Icon — purple to match the my-note folder tree
+                (MyNoteFolderTree), so task-note and chat-note groups read
+                as the same kind of folder. */}
             <FolderRoundedIcon
                 sx={{
                     fontSize: 14,
-                    color: isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.4)",
+                    color: isDark ? "#a78bfa" : "#7c3aed",
                     flexShrink: 0,
                 }}
             />
