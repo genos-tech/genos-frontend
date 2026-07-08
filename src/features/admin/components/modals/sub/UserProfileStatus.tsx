@@ -18,9 +18,11 @@ import {
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { useOptionalAvatarContext } from "../../../../../components/ui/avatars/AvatarContext";
 import { PulseDot } from "../../../../../components/ui/misc/PulseDot";
 import { ProfileModalStyles } from "../../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../../context/AuthContext";
+import { UserRepository } from "../../../../../db/repositories/user";
 import { useTranslation } from "../../../../../i18n";
 import { UserProps } from "../../../../../types/admin";
 import { updateUserProfile } from "../../../services/updateUserProfile";
@@ -66,6 +68,12 @@ export const UserProfileStatus = ({
     const { mode } = useColorScheme();
     const { t } = useTranslation();
     const styles = mode === "dark" ? ProfileModalStyles.dark : ProfileModalStyles.light;
+
+    // Optional: when this modal is rendered inside the AvatarContextProvider
+    // (the authenticated shell), a rename propagates instantly to every other
+    // "you" surface via the team-members map. Absent (older callsites, test
+    // harnesses) it's skipped and the 60s `popTeamUsersWorker` tick catches up.
+    const avatarCtx = useOptionalAvatarContext();
 
     // Derive directly from props. Mirroring this in useState — as the
     // previous version did — produced a stale `profileUser` whenever
@@ -120,9 +128,37 @@ export const UserProfileStatus = ({
         });
         setNameSaving(false);
         if (result) {
-            setMyself({ ...myself, userName: next });
+            const updatedMyself: UserProps = { ...myself, userName: next };
+            setMyself(updatedMyself);
             localStorage.setItem("userName", next);
             setNameEditMode(false);
+
+            // Propagate the rename to every other "you" surface (chat list,
+            // bubbles, mentions, task rows, comments) immediately instead of
+            // waiting up to 60s for the next `popTeamUsersWorker` tick. This
+            // is the name-equivalent of the avatar-upload propagation in
+            // `ModalUserProfile`.
+            avatarCtx?.setTeamMemberProfiles((prev) => {
+                const existing = prev[myself.userId];
+                return {
+                    ...prev,
+                    [myself.userId]: {
+                        ...(existing ?? updatedMyself),
+                        userName: next,
+                    },
+                };
+            });
+
+            // Write through to IndexedDB so the next reload starts consistent
+            // rather than serving the pre-rename cached name until the next
+            // worker pop overwrites it.
+            try {
+                const userRepo = new UserRepository();
+                const cached = avatarCtx?.teamMemberProfiles[myself.userId] ?? updatedMyself;
+                await userRepo.saveUser({ ...cached, userName: next });
+            } catch (err) {
+                console.error("Failed to persist name update to IndexedDB:", err);
+            }
         } else {
             setNameError(t.common.profileEdit.renameError);
         }

@@ -3,6 +3,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { AvatarContextProvider } from "../components/ui/avatars/AvatarContext";
 import { UserProfileStatus } from "../features/admin/components/modals/sub/UserProfileStatus";
 import { updateUserProfile } from "../features/admin/services/updateUserProfile";
 import { UserProps } from "../types/admin";
@@ -18,6 +19,12 @@ vi.mock("../context/AuthContext", () => ({
 // drive the success / failure branches without a real network call.
 vi.mock("../features/admin/services/updateUserProfile", () => ({
     updateUserProfile: vi.fn(),
+}));
+
+// Stub the IndexedDB write-through so the rename tests don't depend on a
+// real IDB; the propagation path still runs, we just don't persist.
+vi.mock("../db/repositories/user", () => ({
+    UserRepository: vi.fn(() => ({ saveUser: vi.fn().mockResolvedValue(true) })),
 }));
 
 const makeUser = (over: Partial<UserProps> = {}): UserProps => ({
@@ -89,6 +96,54 @@ describe("UserProfileStatus — display-name rename (self only)", () => {
             expect.objectContaining({ userId: "user-1", userName: "Alice Smith" })
         );
         expect(localStorage.getItem("userName")).toBe("Alice Smith");
+    });
+
+    it("propagates the rename into teamMemberProfiles when an AvatarContext is present", async () => {
+        const user = userEvent.setup();
+        vi.mocked(updateUserProfile).mockResolvedValue({ id: "user-1", username: "Alice Smith" });
+        const setMyself = vi.fn();
+        const setTeamMemberProfiles = vi.fn();
+        const myself = makeUser();
+
+        render(
+            <CssVarsProvider>
+                <AvatarContextProvider
+                    value={{
+                        myself,
+                        setMyself,
+                        teamMemberProfiles: { "user-1": myself },
+                        setTeamMemberProfiles,
+                        socket: null,
+                        useCM: {} as never,
+                        useUISM: {} as never,
+                    }}
+                >
+                    <UserProfileStatus
+                        myself={myself}
+                        selectedEmoji={null}
+                        setMyself={setMyself}
+                        setSelectedEmoji={vi.fn()}
+                        setShowEmojiPicker={vi.fn()}
+                        isYou
+                    />
+                </AvatarContextProvider>
+            </CssVarsProvider>
+        );
+
+        await user.click(screen.getByTestId("EditIcon"));
+        const input = screen.getByRole("textbox");
+        await user.clear(input);
+        await user.type(input, "Alice Smith");
+        await user.click(screen.getByRole("button", { name: "Save" }));
+
+        await waitFor(() => expect(setTeamMemberProfiles).toHaveBeenCalled());
+        // The functional updater merges the new userName onto the existing
+        // profile so every "you" avatar/name reflects it immediately.
+        const updater = setTeamMemberProfiles.mock.calls[0][0] as (
+            prev: Record<string, UserProps>
+        ) => Record<string, UserProps>;
+        const nextMap = updater({ "user-1": myself });
+        expect(nextMap["user-1"].userName).toBe("Alice Smith");
     });
 
     it("does not render the rename pencil when viewing another user", () => {
