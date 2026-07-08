@@ -153,7 +153,9 @@ export const useTodoGroups = (
         );
     }, []);
 
-    const patchItem = useCallback(
+    // Patch a single item: optimistic local update first, then persist,
+    // reverting that one item on server failure.
+    const patchOneItem = useCallback(
         async (itemId: number, patch: UpdateTodoItemPatch): Promise<TodoItemProps | undefined> => {
             // Optimistic update: apply locally first.
             let prevSnapshot: TodoItemProps | undefined;
@@ -203,6 +205,32 @@ export const useTodoGroups = (
             return fresh;
         },
         [accessToken, upsertItem]
+    );
+
+    // Public patch. Completing a PARENT cascades completion down to its
+    // still-open children, so closing a parent never leaves open subitems
+    // behind — a todo's done-state follows its parent; we don't hold a
+    // parent "open" on account of its children. Only cascades on
+    // completion (`isCompleted === true`); re-opening a parent leaves
+    // children as they are, and every other patch (title / notes /
+    // category) passes straight through. One-level nesting means children
+    // have no children, so there's nothing to recurse into.
+    const patchItem = useCallback(
+        async (itemId: number, patch: UpdateTodoItemPatch): Promise<TodoItemProps | undefined> => {
+            if (patch.isCompleted === true) {
+                const group = groupsRef.current.find((g) =>
+                    g.items.some((i) => i.itemId === itemId)
+                );
+                const openChildren = (group?.items ?? []).filter(
+                    (i) => i.parentItemId === itemId && !i.isCompleted
+                );
+                for (const child of openChildren) {
+                    void patchOneItem(child.itemId, { isCompleted: true });
+                }
+            }
+            return patchOneItem(itemId, patch);
+        },
+        [patchOneItem]
     );
 
     const removeItem = useCallback(
