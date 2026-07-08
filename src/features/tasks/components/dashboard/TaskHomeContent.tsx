@@ -2404,6 +2404,307 @@ export const TaskHomeContent = ({
                                         </Grid>
                                     </Box>
 
+                                    {/* ════════ Section F: Overdue & Upcoming ════════ */}
+                                    {(overdueAndUpcoming.overdue.length > 0 ||
+                                        overdueAndUpcoming.upcoming.length > 0) && (
+                                        <Stack
+                                            direction={{ xs: "column", md: "row" }}
+                                            spacing={1.5}
+                                        >
+                                            {/* Overdue */}
+                                            <Card
+                                                variant="outlined"
+                                                sx={{
+                                                    flex: 1,
+                                                    p: 2.5,
+                                                    background: isDark
+                                                        ? "rgba(239,68,68,0.04)"
+                                                        : "rgba(239,68,68,0.03)",
+                                                    borderColor: isDark
+                                                        ? "rgba(239,68,68,0.2)"
+                                                        : "rgba(239,68,68,0.15)",
+                                                }}
+                                            >
+                                                <Stack spacing={1.5}>
+                                                    <Stack
+                                                        alignItems="center"
+                                                        direction="row"
+                                                        justifyContent="space-between"
+                                                    >
+                                                        <Stack
+                                                            alignItems="center"
+                                                            direction="row"
+                                                            spacing={1}
+                                                        >
+                                                            <WarningAmberRoundedIcon
+                                                                sx={{
+                                                                    fontSize: 16,
+                                                                    color: "#ef4444",
+                                                                }}
+                                                            />
+                                                            <Typography
+                                                                level="title-sm"
+                                                                sx={{
+                                                                    fontWeight: 600,
+                                                                    color: "#ef4444",
+                                                                }}
+                                                            >
+                                                                Overdue
+                                                            </Typography>
+                                                        </Stack>
+                                                        <Chip
+                                                            size="sm"
+                                                            variant="soft"
+                                                            sx={{
+                                                                backgroundColor:
+                                                                    "rgba(239,68,68,0.12)",
+                                                                color: "#ef4444",
+                                                                fontWeight: 700,
+                                                            }}
+                                                        >
+                                                            {overdueAndUpcoming.overdue.length}
+                                                        </Chip>
+                                                    </Stack>
+                                                    <Stack spacing={0.75}>
+                                                        {overdueAndUpcoming.overdue
+                                                            .slice(0, 5)
+                                                            .map((task) => (
+                                                                <Stack
+                                                                    key={task.id}
+                                                                    alignItems="center"
+                                                                    direction="row"
+                                                                    spacing={1}
+                                                                    sx={{
+                                                                        cursor: "pointer",
+                                                                        borderRadius: "6px",
+                                                                        px: 1,
+                                                                        py: 0.5,
+                                                                        "&:hover": {
+                                                                            backgroundColor: isDark
+                                                                                ? "rgba(239,68,68,0.08)"
+                                                                                : "rgba(239,68,68,0.06)",
+                                                                        },
+                                                                    }}
+                                                                    onClick={() =>
+                                                                        handleTaskClick(
+                                                                            Number(task.id)
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    {getStatusIcon(
+                                                                        task.effectiveStatus,
+                                                                        12
+                                                                    )}
+                                                                    <Typography
+                                                                        level="body-xs"
+                                                                        sx={{
+                                                                            flex: 1,
+                                                                            color: textPrimary,
+                                                                            fontWeight: 500,
+                                                                            overflow: "hidden",
+                                                                            textOverflow:
+                                                                                "ellipsis",
+                                                                            whiteSpace: "nowrap",
+                                                                        }}
+                                                                    >
+                                                                        {task.title ||
+                                                                            t.tasks.dashboard
+                                                                                .untitledTask}
+                                                                    </Typography>
+                                                                    <Typography
+                                                                        level="body-xs"
+                                                                        sx={{
+                                                                            color: "#ef4444",
+                                                                            fontWeight: 600,
+                                                                            whiteSpace: "nowrap",
+                                                                        }}
+                                                                    >
+                                                                        {task.dueDate}
+                                                                    </Typography>
+                                                                </Stack>
+                                                            ))}
+                                                        {overdueAndUpcoming.overdue.length > 5 && (
+                                                            <Typography
+                                                                level="body-xs"
+                                                                sx={{ color: textMuted, pl: 1 }}
+                                                            >
+                                                                +
+                                                                {overdueAndUpcoming.overdue
+                                                                    .length - 5}{" "}
+                                                                more
+                                                            </Typography>
+                                                        )}
+                                                        {overdueAndUpcoming.overdue.length ===
+                                                            0 && (
+                                                            <Typography
+                                                                level="body-xs"
+                                                                sx={{ color: textMuted }}
+                                                            >
+                                                                No overdue tasks
+                                                            </Typography>
+                                                        )}
+                                                    </Stack>
+                                                </Stack>
+                                            </Card>
+
+                                            {/* Upcoming (due this week) */}
+                                            <Card
+                                                variant="outlined"
+                                                sx={{
+                                                    flex: 1,
+                                                    p: 2.5,
+                                                    background: isDark
+                                                        ? "rgba(59,130,246,0.04)"
+                                                        : "rgba(59,130,246,0.03)",
+                                                    borderColor: isDark
+                                                        ? "rgba(59,130,246,0.2)"
+                                                        : "rgba(59,130,246,0.15)",
+                                                }}
+                                            >
+                                                <Stack spacing={1.5}>
+                                                    <Stack
+                                                        alignItems="center"
+                                                        direction="row"
+                                                        justifyContent="space-between"
+                                                    >
+                                                        <Stack
+                                                            alignItems="center"
+                                                            direction="row"
+                                                            spacing={1}
+                                                        >
+                                                            <CalendarMonthRoundedIcon
+                                                                sx={{
+                                                                    fontSize: 16,
+                                                                    color: "#3b82f6",
+                                                                }}
+                                                            />
+                                                            <Typography
+                                                                level="title-sm"
+                                                                sx={{
+                                                                    fontWeight: 600,
+                                                                    color: "#3b82f6",
+                                                                }}
+                                                            >
+                                                                Due This Week
+                                                            </Typography>
+                                                        </Stack>
+                                                        <Chip
+                                                            size="sm"
+                                                            variant="soft"
+                                                            sx={{
+                                                                backgroundColor:
+                                                                    "rgba(59,130,246,0.12)",
+                                                                color: "#3b82f6",
+                                                                fontWeight: 700,
+                                                            }}
+                                                        >
+                                                            {overdueAndUpcoming.upcoming.length}
+                                                        </Chip>
+                                                    </Stack>
+                                                    <Stack spacing={0.75}>
+                                                        {overdueAndUpcoming.upcoming
+                                                            .slice(0, 5)
+                                                            .map((task) => (
+                                                                <Stack
+                                                                    key={task.id}
+                                                                    alignItems="center"
+                                                                    direction="row"
+                                                                    spacing={1}
+                                                                    sx={{
+                                                                        cursor: "pointer",
+                                                                        borderRadius: "6px",
+                                                                        px: 1,
+                                                                        py: 0.5,
+                                                                        "&:hover": {
+                                                                            backgroundColor: isDark
+                                                                                ? "rgba(59,130,246,0.08)"
+                                                                                : "rgba(59,130,246,0.06)",
+                                                                        },
+                                                                    }}
+                                                                    onClick={() =>
+                                                                        handleTaskClick(
+                                                                            Number(task.id)
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    {getStatusIcon(
+                                                                        task.effectiveStatus,
+                                                                        12
+                                                                    )}
+                                                                    <Typography
+                                                                        level="body-xs"
+                                                                        sx={{
+                                                                            flex: 1,
+                                                                            color: textPrimary,
+                                                                            fontWeight: 500,
+                                                                            overflow: "hidden",
+                                                                            textOverflow:
+                                                                                "ellipsis",
+                                                                            whiteSpace: "nowrap",
+                                                                        }}
+                                                                    >
+                                                                        {task.title ||
+                                                                            t.tasks.dashboard
+                                                                                .untitledTask}
+                                                                    </Typography>
+                                                                    <Typography
+                                                                        level="body-xs"
+                                                                        sx={{
+                                                                            color: "#3b82f6",
+                                                                            fontWeight: 600,
+                                                                            whiteSpace: "nowrap",
+                                                                        }}
+                                                                    >
+                                                                        {task.dueDate}
+                                                                    </Typography>
+                                                                </Stack>
+                                                            ))}
+                                                        {overdueAndUpcoming.upcoming.length >
+                                                            5 && (
+                                                            <Typography
+                                                                level="body-xs"
+                                                                sx={{ color: textMuted, pl: 1 }}
+                                                            >
+                                                                +
+                                                                {overdueAndUpcoming.upcoming
+                                                                    .length - 5}{" "}
+                                                                more
+                                                            </Typography>
+                                                        )}
+                                                        {overdueAndUpcoming.upcoming.length ===
+                                                            0 && (
+                                                            <Typography
+                                                                level="body-xs"
+                                                                sx={{ color: textMuted }}
+                                                            >
+                                                                No tasks due this week
+                                                            </Typography>
+                                                        )}
+                                                    </Stack>
+                                                </Stack>
+                                            </Card>
+                                        </Stack>
+                                    )}
+                                    {/* ════════ Section E: Priority & Effort Breakdown ════════ */}
+                                    <Stack direction={{ xs: "column", md: "row" }} spacing={1.5}>
+                                        {renderDistributionCard(
+                                            t.tasks.dashboard.priorityDistribution,
+                                            <WarningAmberRoundedIcon
+                                                sx={{ fontSize: 16, color: "#f97316" }}
+                                            />,
+                                            priorityBreakdown,
+                                            priorityColors
+                                        )}
+                                        {renderDistributionCard(
+                                            t.tasks.dashboard.effortDistribution,
+                                            <TrendingUpRoundedIcon
+                                                sx={{ fontSize: 16, color: "#7c3aed" }}
+                                            />,
+                                            effortBreakdown,
+                                            effortColors
+                                        )}
+                                    </Stack>
+
                                     {/* ════════ Section C: Assignee Workload ════════ */}
                                     {assigneeWorkload.length > 0 && (
                                         <Box>
@@ -3099,308 +3400,6 @@ export const TaskHomeContent = ({
                                             </Stack>
                                         )}
                                     </Box>
-
-                                    {/* ════════ Section E: Priority & Effort Breakdown ════════ */}
-                                    <Stack direction={{ xs: "column", md: "row" }} spacing={1.5}>
-                                        {renderDistributionCard(
-                                            t.tasks.dashboard.priorityDistribution,
-                                            <WarningAmberRoundedIcon
-                                                sx={{ fontSize: 16, color: "#f97316" }}
-                                            />,
-                                            priorityBreakdown,
-                                            priorityColors
-                                        )}
-                                        {renderDistributionCard(
-                                            t.tasks.dashboard.effortDistribution,
-                                            <TrendingUpRoundedIcon
-                                                sx={{ fontSize: 16, color: "#7c3aed" }}
-                                            />,
-                                            effortBreakdown,
-                                            effortColors
-                                        )}
-                                    </Stack>
-
-                                    {/* ════════ Section F: Overdue & Upcoming ════════ */}
-                                    {(overdueAndUpcoming.overdue.length > 0 ||
-                                        overdueAndUpcoming.upcoming.length > 0) && (
-                                        <Stack
-                                            direction={{ xs: "column", md: "row" }}
-                                            spacing={1.5}
-                                        >
-                                            {/* Overdue */}
-                                            <Card
-                                                variant="outlined"
-                                                sx={{
-                                                    flex: 1,
-                                                    p: 2.5,
-                                                    background: isDark
-                                                        ? "rgba(239,68,68,0.04)"
-                                                        : "rgba(239,68,68,0.03)",
-                                                    borderColor: isDark
-                                                        ? "rgba(239,68,68,0.2)"
-                                                        : "rgba(239,68,68,0.15)",
-                                                }}
-                                            >
-                                                <Stack spacing={1.5}>
-                                                    <Stack
-                                                        alignItems="center"
-                                                        direction="row"
-                                                        justifyContent="space-between"
-                                                    >
-                                                        <Stack
-                                                            alignItems="center"
-                                                            direction="row"
-                                                            spacing={1}
-                                                        >
-                                                            <WarningAmberRoundedIcon
-                                                                sx={{
-                                                                    fontSize: 16,
-                                                                    color: "#ef4444",
-                                                                }}
-                                                            />
-                                                            <Typography
-                                                                level="title-sm"
-                                                                sx={{
-                                                                    fontWeight: 600,
-                                                                    color: "#ef4444",
-                                                                }}
-                                                            >
-                                                                Overdue
-                                                            </Typography>
-                                                        </Stack>
-                                                        <Chip
-                                                            size="sm"
-                                                            variant="soft"
-                                                            sx={{
-                                                                backgroundColor:
-                                                                    "rgba(239,68,68,0.12)",
-                                                                color: "#ef4444",
-                                                                fontWeight: 700,
-                                                            }}
-                                                        >
-                                                            {overdueAndUpcoming.overdue.length}
-                                                        </Chip>
-                                                    </Stack>
-                                                    <Stack spacing={0.75}>
-                                                        {overdueAndUpcoming.overdue
-                                                            .slice(0, 5)
-                                                            .map((task) => (
-                                                                <Stack
-                                                                    key={task.id}
-                                                                    alignItems="center"
-                                                                    direction="row"
-                                                                    spacing={1}
-                                                                    sx={{
-                                                                        cursor: "pointer",
-                                                                        borderRadius: "6px",
-                                                                        px: 1,
-                                                                        py: 0.5,
-                                                                        "&:hover": {
-                                                                            backgroundColor: isDark
-                                                                                ? "rgba(239,68,68,0.08)"
-                                                                                : "rgba(239,68,68,0.06)",
-                                                                        },
-                                                                    }}
-                                                                    onClick={() =>
-                                                                        handleTaskClick(
-                                                                            Number(task.id)
-                                                                        )
-                                                                    }
-                                                                >
-                                                                    {getStatusIcon(
-                                                                        task.effectiveStatus,
-                                                                        12
-                                                                    )}
-                                                                    <Typography
-                                                                        level="body-xs"
-                                                                        sx={{
-                                                                            flex: 1,
-                                                                            color: textPrimary,
-                                                                            fontWeight: 500,
-                                                                            overflow: "hidden",
-                                                                            textOverflow:
-                                                                                "ellipsis",
-                                                                            whiteSpace: "nowrap",
-                                                                        }}
-                                                                    >
-                                                                        {task.title ||
-                                                                            t.tasks.dashboard
-                                                                                .untitledTask}
-                                                                    </Typography>
-                                                                    <Typography
-                                                                        level="body-xs"
-                                                                        sx={{
-                                                                            color: "#ef4444",
-                                                                            fontWeight: 600,
-                                                                            whiteSpace: "nowrap",
-                                                                        }}
-                                                                    >
-                                                                        {task.dueDate}
-                                                                    </Typography>
-                                                                </Stack>
-                                                            ))}
-                                                        {overdueAndUpcoming.overdue.length > 5 && (
-                                                            <Typography
-                                                                level="body-xs"
-                                                                sx={{ color: textMuted, pl: 1 }}
-                                                            >
-                                                                +
-                                                                {overdueAndUpcoming.overdue
-                                                                    .length - 5}{" "}
-                                                                more
-                                                            </Typography>
-                                                        )}
-                                                        {overdueAndUpcoming.overdue.length ===
-                                                            0 && (
-                                                            <Typography
-                                                                level="body-xs"
-                                                                sx={{ color: textMuted }}
-                                                            >
-                                                                No overdue tasks
-                                                            </Typography>
-                                                        )}
-                                                    </Stack>
-                                                </Stack>
-                                            </Card>
-
-                                            {/* Upcoming (due this week) */}
-                                            <Card
-                                                variant="outlined"
-                                                sx={{
-                                                    flex: 1,
-                                                    p: 2.5,
-                                                    background: isDark
-                                                        ? "rgba(59,130,246,0.04)"
-                                                        : "rgba(59,130,246,0.03)",
-                                                    borderColor: isDark
-                                                        ? "rgba(59,130,246,0.2)"
-                                                        : "rgba(59,130,246,0.15)",
-                                                }}
-                                            >
-                                                <Stack spacing={1.5}>
-                                                    <Stack
-                                                        alignItems="center"
-                                                        direction="row"
-                                                        justifyContent="space-between"
-                                                    >
-                                                        <Stack
-                                                            alignItems="center"
-                                                            direction="row"
-                                                            spacing={1}
-                                                        >
-                                                            <CalendarMonthRoundedIcon
-                                                                sx={{
-                                                                    fontSize: 16,
-                                                                    color: "#3b82f6",
-                                                                }}
-                                                            />
-                                                            <Typography
-                                                                level="title-sm"
-                                                                sx={{
-                                                                    fontWeight: 600,
-                                                                    color: "#3b82f6",
-                                                                }}
-                                                            >
-                                                                Due This Week
-                                                            </Typography>
-                                                        </Stack>
-                                                        <Chip
-                                                            size="sm"
-                                                            variant="soft"
-                                                            sx={{
-                                                                backgroundColor:
-                                                                    "rgba(59,130,246,0.12)",
-                                                                color: "#3b82f6",
-                                                                fontWeight: 700,
-                                                            }}
-                                                        >
-                                                            {overdueAndUpcoming.upcoming.length}
-                                                        </Chip>
-                                                    </Stack>
-                                                    <Stack spacing={0.75}>
-                                                        {overdueAndUpcoming.upcoming
-                                                            .slice(0, 5)
-                                                            .map((task) => (
-                                                                <Stack
-                                                                    key={task.id}
-                                                                    alignItems="center"
-                                                                    direction="row"
-                                                                    spacing={1}
-                                                                    sx={{
-                                                                        cursor: "pointer",
-                                                                        borderRadius: "6px",
-                                                                        px: 1,
-                                                                        py: 0.5,
-                                                                        "&:hover": {
-                                                                            backgroundColor: isDark
-                                                                                ? "rgba(59,130,246,0.08)"
-                                                                                : "rgba(59,130,246,0.06)",
-                                                                        },
-                                                                    }}
-                                                                    onClick={() =>
-                                                                        handleTaskClick(
-                                                                            Number(task.id)
-                                                                        )
-                                                                    }
-                                                                >
-                                                                    {getStatusIcon(
-                                                                        task.effectiveStatus,
-                                                                        12
-                                                                    )}
-                                                                    <Typography
-                                                                        level="body-xs"
-                                                                        sx={{
-                                                                            flex: 1,
-                                                                            color: textPrimary,
-                                                                            fontWeight: 500,
-                                                                            overflow: "hidden",
-                                                                            textOverflow:
-                                                                                "ellipsis",
-                                                                            whiteSpace: "nowrap",
-                                                                        }}
-                                                                    >
-                                                                        {task.title ||
-                                                                            t.tasks.dashboard
-                                                                                .untitledTask}
-                                                                    </Typography>
-                                                                    <Typography
-                                                                        level="body-xs"
-                                                                        sx={{
-                                                                            color: "#3b82f6",
-                                                                            fontWeight: 600,
-                                                                            whiteSpace: "nowrap",
-                                                                        }}
-                                                                    >
-                                                                        {task.dueDate}
-                                                                    </Typography>
-                                                                </Stack>
-                                                            ))}
-                                                        {overdueAndUpcoming.upcoming.length >
-                                                            5 && (
-                                                            <Typography
-                                                                level="body-xs"
-                                                                sx={{ color: textMuted, pl: 1 }}
-                                                            >
-                                                                +
-                                                                {overdueAndUpcoming.upcoming
-                                                                    .length - 5}{" "}
-                                                                more
-                                                            </Typography>
-                                                        )}
-                                                        {overdueAndUpcoming.upcoming.length ===
-                                                            0 && (
-                                                            <Typography
-                                                                level="body-xs"
-                                                                sx={{ color: textMuted }}
-                                                            >
-                                                                No tasks due this week
-                                                            </Typography>
-                                                        )}
-                                                    </Stack>
-                                                </Stack>
-                                            </Card>
-                                        </Stack>
-                                    )}
                                 </>
                             )}
                         </>
