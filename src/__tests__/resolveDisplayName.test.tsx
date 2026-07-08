@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import {
     AvatarContextProvider,
     resolveDisplayName,
+    ResolvedUserName,
     useResolvedUserName,
 } from "../components/ui/avatars/AvatarContext";
 import { UserProps } from "../types/admin";
@@ -74,5 +75,16 @@ describe("useResolvedUserName (hook)", () => {
         );
         expect(screen.getByText("New Me")).toBeInTheDocument();
         expect(screen.queryByText("Old Me")).toBeNull();
+    });
+});
+
+describe("ResolvedUserName (component leaf)", () => {
+    it("renders the live name so memoized parents (task rows) needn't subscribe", () => {
+        render(
+            <AvatarContextProvider value={ctxValue}>
+                <ResolvedUserName fallbackName="Old Me" userId="me" />
+            </AvatarContextProvider>
+        );
+        expect(screen.getByText("New Me")).toBeInTheDocument();
     });
 });

@@ -4,6 +4,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import { resolveDisplayName } from "../../../../components/ui/avatars/AvatarContext";
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
 import { GMAvatar } from "../../../../components/ui/avatars/GMAvatar";
 import { MDMAvatar } from "../../../../components/ui/avatars/MDMAvatar";
@@ -44,10 +45,26 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
     const mdmDisplayName = (() => {
         if (!mdmMembers || mdmMembers.length === 0) return chat?.chatName;
         const MAX_DISPLAY = 3;
-        const names = mdmMembers.map((m) => m.userName);
+        // Resolve each member's CURRENT name so a rename shows in the header.
+        const names = mdmMembers.map((m) =>
+            resolveDisplayName(m.userId, m.userName, myself, useTEM.teamMemberProfiles)
+        );
         if (names.length <= MAX_DISPLAY) return names.join(", ");
         return `${names.slice(0, MAX_DISPLAY).join(", ")} +${names.length - MAX_DISPLAY}`;
     })();
+
+    // For a DM the header title is the partner's name (cached on the chat
+    // row); resolve it live so a rename — including your own in a self-DM —
+    // shows immediately. GM/PM keep their group/project `chatName`.
+    const dmDisplayName =
+        chat?.chatType === 1 && chat.dmPartnerUser?.userId
+            ? resolveDisplayName(
+                  chat.dmPartnerUser.userId,
+                  chat.chatName ?? "",
+                  myself,
+                  useTEM.teamMemberProfiles
+              )
+            : chat?.chatName;
 
     const headerUser: UserProps | undefined = chat
         ? useTEM.teamMemberProfiles[chat.dmPartnerUser.userId]
@@ -157,7 +174,14 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                             title={
                                 useCM.allChats
                                     .find((c) => c.chatId === chat.chatId && c.chatType === 4)
-                                    ?.mdmMembers?.map((m) => m.userName)
+                                    ?.mdmMembers?.map((m) =>
+                                        resolveDisplayName(
+                                            m.userId,
+                                            m.userName,
+                                            myself,
+                                            useTEM.teamMemberProfiles
+                                        )
+                                    )
                                     .join(", ") || chat?.chatName
                             }
                             arrow
@@ -186,7 +210,7 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                             }}
                             noWrap
                         >
-                            {isYou ? `${chat?.chatName} (you)` : chat?.chatName}
+                            {isYou ? `${dmDisplayName} (you)` : dmDisplayName}
                         </Typography>
                     )}
 

@@ -111,3 +111,18 @@ export const useResolvedUserName = (
     const ctx = useOptionalAvatarContext();
     return resolveDisplayName(userId, fallbackName, ctx?.myself, ctx?.teamMemberProfiles);
 };
+
+/**
+ * Component form of `useResolvedUserName`, rendering the live name as text.
+ * Isolates the AvatarContext subscription to this leaf so heavily-memoized
+ * parents (e.g. `DraggableTaskRow`) don't re-render on every
+ * `teamMemberProfiles` change — only this node does, mirroring how
+ * `<UserAvatar>` already scopes its own subscription.
+ */
+export const ResolvedUserName = ({
+    userId,
+    fallbackName,
+}: {
+    userId: string | number | null | undefined;
+    fallbackName: string;
+}) => <>{useResolvedUserName(userId, fallbackName)}</>;
