@@ -4,6 +4,7 @@ import Autocomplete from "@mui/joy/Autocomplete";
 import { Socket } from "socket.io-client";
 
 import { sortMembersMyselfFirst } from "../../../../components/editors/Mention";
+import { resolveDisplayName } from "../../../../components/ui/avatars/AvatarContext";
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
@@ -61,6 +62,26 @@ export const ACTeamUsers = (props: ACTeamUsersProps) => {
         [useTEM.teamMembers, myself.userId]
     );
 
+    // The picker's selected value (`initialUser`) is `taskContent.assignee`/
+    // `.reporter`, whose `userName` was cached when the task was saved.
+    // Resolve it to the CURRENT name so a rename shows in the input; the
+    // dropdown options already come from the live team list.
+    const resolvedValue = useMemo(
+        () =>
+            initialUser
+                ? {
+                      ...initialUser,
+                      userName: resolveDisplayName(
+                          initialUser.userId,
+                          initialUser.userName,
+                          myself,
+                          useTEM.teamMemberProfiles
+                      ),
+                  }
+                : null,
+        [initialUser, myself, useTEM.teamMemberProfiles]
+    );
+
     return (
         <Autocomplete
             key={taskContent.id}
@@ -73,7 +94,7 @@ export const ACTeamUsers = (props: ACTeamUsersProps) => {
             // `myself` that would mislead the user into thinking they
             // were the assignee.
             size="sm"
-            value={initialUser}
+            value={resolvedValue}
             getOptionLabel={(option) =>
                 option.userEmail === myself.userEmail
                     ? `${option.userName} ${youSuffix} - ${option.userEmail}`

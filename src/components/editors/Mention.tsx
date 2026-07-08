@@ -15,6 +15,7 @@ import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { MentionGroup } from "../../services/mentionGroupsApi";
 import { UserProps } from "../../types/admin";
+import { useResolvedUserName } from "../ui/avatars/AvatarContext";
 import { UserAvatar } from "../ui/avatars/UserAvatar";
 
 // Shared visual treatment for every mention chip (user OR group). The
@@ -91,6 +92,9 @@ export const CreateMentionSpec = (
             render: (props) => {
                 const userName = props.inlineContent.props.userName;
                 const userId = props.inlineContent.props.userId;
+                // Resolve the mentioned user's CURRENT name (the name baked
+                // into the mention when it was typed goes stale on rename).
+                const displayName = useResolvedUserName(userId, userName);
 
                 const [openUserProfile, setOpenUserProfile] = useState<boolean>(false);
 
@@ -108,7 +112,7 @@ export const CreateMentionSpec = (
                                 level="body-sm"
                                 sx={{ color: palette.text }}
                             >
-                                @{userName}
+                                @{displayName}
                             </Typography>
                         </Box>
 

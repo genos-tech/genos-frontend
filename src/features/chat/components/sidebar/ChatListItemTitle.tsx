@@ -3,6 +3,7 @@ import LockOutlineRoundedIcon from "@mui/icons-material/LockOutlineRounded";
 import { Box, Chip, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { resolveDisplayName } from "../../../../components/ui/avatars/AvatarContext";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps } from "../../../../types/chat";
@@ -43,9 +44,24 @@ export const ChatListItemTitle: React.FC<ChatListItemTitleProps> = ({
     // MDM (chatType 4) chats have no server-side `chatName`; their title is the
     // comma-separated member names — the same source the chat header and the
     // sidebar MDM avatar use. Without deriving it here the sidebar item renders
-    // a blank name for MDM chats.
-    const mdmName = chat.mdmMembers?.map((m) => m.userName).join(", ");
-    const displayName = chat.chatType === 4 ? mdmName || chat.chatName : chat.chatName;
+    // a blank name for MDM chats. Each member's name is resolved live so a
+    // rename (including your own) shows here instead of the cached member name.
+    const mdmName = chat.mdmMembers
+        ?.map((m) => resolveDisplayName(m.userId, m.userName, myself, useTEM.teamMemberProfiles))
+        .join(", ");
+    // DM (chatType 1) titles are the partner's name — resolve it live too so a
+    // partner's rename shows without waiting for the chat row to re-sync.
+    const displayName =
+        chat.chatType === 4
+            ? mdmName || chat.chatName
+            : chat.chatType === 1 && chat.dmPartnerUser?.userId
+              ? resolveDisplayName(
+                    chat.dmPartnerUser.userId,
+                    chat.chatName,
+                    myself,
+                    useTEM.teamMemberProfiles
+                )
+              : chat.chatName;
 
     return (
         <Box sx={{ minWidth: 0 }}>

@@ -7,6 +7,7 @@ import Box from "@mui/joy/Box";
 import { useColorScheme } from "@mui/joy/styles";
 import Typography from "@mui/joy/Typography";
 
+import { useResolvedUserName } from "../../../../components/ui/avatars/AvatarContext";
 import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
 import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
@@ -97,6 +98,9 @@ const SprintBoardCardImpl = ({
     const mode: "light" | "dark" | undefined =
         colorMode === "light" || colorMode === "dark" ? colorMode : undefined;
     const { t } = useTranslation();
+    // Live-resolve the assignee's name so a rename shows here instead of the
+    // `assigneeName` cached on the task row.
+    const assigneeName = useResolvedUserName(task.assigneeId, task.assigneeName || "");
 
     const [isHovered, setIsHovered] = React.useState(false);
 
@@ -300,7 +304,7 @@ const SprintBoardCardImpl = ({
                                     fontSize: "0.65rem",
                                 }}
                             >
-                                {task.assigneeName || t.tasks.board.unassigned}
+                                {assigneeName || t.tasks.board.unassigned}
                             </Typography>
                         </Box>
 

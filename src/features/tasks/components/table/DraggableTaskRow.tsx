@@ -23,6 +23,7 @@ import dayjs from "dayjs";
 import { Socket } from "socket.io-client";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import { ResolvedUserName } from "../../../../components/ui/avatars/AvatarContext";
 import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
 import { PulseDot } from "../../../../components/ui/misc/PulseDot";
 import { useAuth } from "../../../../context/AuthContext";
@@ -933,9 +934,14 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                           : "rgba(0,0,0,0.5)",
                                 }}
                             >
-                                {task.assigneeId
-                                    ? task.assigneeName
-                                    : t.tasks.messageTemplate.unassigned}
+                                {task.assigneeId ? (
+                                    <ResolvedUserName
+                                        fallbackName={task.assigneeName || ""}
+                                        userId={task.assigneeId}
+                                    />
+                                ) : (
+                                    t.tasks.messageTemplate.unassigned
+                                )}
                             </Typography>
                         </Box>
                     </Box>

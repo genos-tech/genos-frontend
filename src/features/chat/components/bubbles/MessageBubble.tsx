@@ -6,6 +6,7 @@ import { Socket } from "socket.io-client";
 
 import { BnChatPreview } from "../../../../components/editors/bnChatPreview";
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import { useResolvedUserName } from "../../../../components/ui/avatars/AvatarContext";
 import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
 import { EmojiPicker } from "../../../../components/ui/emoji/EmojiPicker";
 import { EmojiReaction } from "../../../../components/ui/emoji/EmojiReaction";
@@ -96,6 +97,11 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
     const isCompact = style === "compact";
     const { enabled: doubleClickTodoEnabled } = useDoubleClickTodoPreference();
     const isSystemUser = message.sender.isSystemUser === true;
+    // Resolve the sender's CURRENT name (self via `myself`, others via the
+    // team map), falling back to the name cached on the message. Without
+    // this a profile rename never shows on already-sent messages, whose
+    // `sender.userName` was frozen at send time.
+    const senderName = useResolvedUserName(message.sender.userId, message.sender.userName);
     // PM bubbles are task cards — they should NEVER show a user
     // avatar regardless of `sender.userId`. The legacy task-creation
     // path stamped `sender_id` to whoever created the task (not the
@@ -667,7 +673,7 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
                                 taskStatus={message.taskStatus}
                                 tsSent={message.tsSent}
                                 tsUpdated={message.tsUpdated}
-                                userName={message.sender.userName}
+                                userName={senderName}
                             />
                         )}
 
@@ -846,7 +852,7 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
                                             taskStatus={message.taskStatus}
                                             tsSent={message.tsSent}
                                             tsUpdated={message.tsUpdated}
-                                            userName={message.sender.userName}
+                                            userName={senderName}
                                         />
                                         {BubbleActions()}
                                     </Stack>
@@ -879,7 +885,7 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
                                                     taskStatus={message.taskStatus}
                                                     tsSent={message.tsSent}
                                                     tsUpdated={message.tsUpdated}
-                                                    userName={message.sender.userName}
+                                                    userName={senderName}
                                                 />
                                                 {showUnderBarOption === true && BubbleActions()}
                                             </Stack>

@@ -72,3 +72,57 @@ export const useUserProfile = (
         return teamMemberProfiles[idStr];
     }, [userId, myself, teamMemberProfiles]);
 };
+
+/**
+ * Live display name for a user id, falling back to a cached name.
+ *
+ * Names are denormalized at write time — `message.sender.userName`,
+ * `chat.mdmMembers[].userName`, mention props, `comment.senderName`, task
+ * `assigneeName`, etc. — so a profile rename never retroactively rewrites
+ * those stored strings. This resolves the *current* name at render instead
+ * (self via `myself`, others via `teamMemberProfiles`), falling back to the
+ * stored name when the user isn't in either source.
+ *
+ * Pure (not a hook) so it can run inside `.map()` callbacks: read `myself` /
+ * `teamMemberProfiles` once at the component top and pass them in.
+ */
+export const resolveDisplayName = (
+    userId: string | number | null | undefined,
+    fallbackName: string,
+    myself: UserProps | undefined,
+    teamMemberProfiles: Record<string, UserProps> | undefined
+): string => {
+    if (userId == null || userId === "") return fallbackName;
+    const idStr = String(userId);
+    if (myself && idStr === String(myself.userId)) return myself.userName || fallbackName;
+    return teamMemberProfiles?.[idStr]?.userName || fallbackName;
+};
+
+/**
+ * Hook variant of `resolveDisplayName` for single-name components. Uses the
+ * optional avatar context, so it safely returns the fallback when rendered
+ * outside `<AvatarContextProvider>` (isolated test harnesses, sign-in shell).
+ */
+// eslint-disable-next-line react-refresh/only-export-components
+export const useResolvedUserName = (
+    userId: string | number | null | undefined,
+    fallbackName: string
+): string => {
+    const ctx = useOptionalAvatarContext();
+    return resolveDisplayName(userId, fallbackName, ctx?.myself, ctx?.teamMemberProfiles);
+};
+
+/**
+ * Component form of `useResolvedUserName`, rendering the live name as text.
+ * Isolates the AvatarContext subscription to this leaf so heavily-memoized
+ * parents (e.g. `DraggableTaskRow`) don't re-render on every
+ * `teamMemberProfiles` change — only this node does, mirroring how
+ * `<UserAvatar>` already scopes its own subscription.
+ */
+export const ResolvedUserName = ({
+    userId,
+    fallbackName,
+}: {
+    userId: string | number | null | undefined;
+    fallbackName: string;
+}) => <>{useResolvedUserName(userId, fallbackName)}</>;
