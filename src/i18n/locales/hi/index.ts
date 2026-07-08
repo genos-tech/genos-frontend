@@ -154,7 +154,7 @@ export const hi: DeepPartial<Messages> = {
             chats: "चैट",
             tasks: "टास्क",
             notes: "नोट",
-            search: "खोजें",
+            search: "Genos",
         },
         tooltips: {
             settings: "सेटिंग्स",

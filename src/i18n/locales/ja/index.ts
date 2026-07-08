@@ -153,7 +153,7 @@ export const ja: DeepPartial<Messages> = {
             chats: "チャット",
             tasks: "タスク",
             notes: "ノート",
-            search: "検索",
+            search: "Genos",
         },
         tooltips: {
             settings: "設定",

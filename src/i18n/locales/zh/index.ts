@@ -152,7 +152,7 @@ export const zh: DeepPartial<Messages> = {
             chats: "聊天",
             tasks: "任务",
             notes: "笔记",
-            search: "搜索",
+            search: "Genos",
         },
         tooltips: {
             settings: "设置",
