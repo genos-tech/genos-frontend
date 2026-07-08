@@ -17,14 +17,12 @@ import { BlockNoteView } from "@blocknote/mantine";
 import {
     AddCommentButton,
     BasicTextStyleButton,
-    BlockColorsItem,
     BlockTypeSelect,
     BlockTypeSelectItem,
     blockTypeSelectItems,
     ColorStyleButton,
     CreateLinkButton,
     DefaultReactSuggestionItem,
-    DragHandleMenu,
     FileCaptionButton,
     FileDeleteButton,
     FileDownloadButton,
@@ -36,7 +34,6 @@ import {
     FormattingToolbar,
     FormattingToolbarController,
     getDefaultReactSlashMenuItems,
-    RemoveBlockItem,
     SideMenu,
     SideMenuController,
     SuggestionMenuController,
@@ -55,6 +52,7 @@ import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
 import { useAnchorClickIntercept } from "../../hooks/common/useAnchorClickIntercept";
 import { useCollaborativeBlockNote } from "../../hooks/common/useCollaborativeBlockNote";
+import { useDebouncedCallback } from "../../hooks/common/useDebouncedCallback";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { useTranslation } from "../../i18n";
@@ -82,11 +80,12 @@ import {
     MentionSuggestionMenu,
 } from "./Mention";
 import { Alert } from "./sub/Alert";
+import { EDITOR_BODY_SYNC_DEBOUNCE_MS } from "./sub/bodySync";
 import {
     codeBlockEnterShortcut,
     getBlockTypeSelectItemsWithCodeBlock,
 } from "./sub/codeBlockExtras";
-import { ResetBlockTypeItem } from "./sub/ResetBlockTypeItem";
+import { CustomDragHandleMenu } from "./sub/CustomDragHandleMenu";
 import { ThreadsSidebarErrorBoundary } from "./sub/ThreadsSidebarErrorBoundary";
 import { WrapToggleButtons } from "./sub/WrapToggleButtons";
 
@@ -142,53 +141,48 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
     const { t } = useTranslation();
     const urlLinkModal = useUrlLinkModal();
 
-    // To avoid rendering issues, it's good practice to define your custom drag
-    // handle menu in a separate component, instead of inline within the `sideMenu`
-    // prop of `SideMenuController`.
-    const CustomDragHandleMenu = () => (
-        <DragHandleMenu>
-            <RemoveBlockItem>{t.common.editor.delete}</RemoveBlockItem>
-            <BlockColorsItem>{t.common.editor.colors}</BlockColorsItem>
-            {/* Item which resets the hovered block's type. */}
-            <ResetBlockTypeItem>{t.common.editor.resetType}</ResetBlockTypeItem>
-        </DragHandleMenu>
-    );
-
-    // Disable the Audio and Image blocks from the built-in schema
-    // This is done by picking out the blocks you want to disable
-    const { audio, video, ...remainingBlockSpecs } = defaultBlockSpecs;
-
     const { mentionGroups } = useMentionGroupsContext();
 
-    const schema = BlockNoteSchema.create({
-        inlineContentSpecs: {
-            // Adds all default inline content.
-            ...defaultInlineContentSpecs,
-            // Adds the mention tag.
-            mention: CreateMentionSpec(
-                useTEM.teamMemberProfiles,
-                socket,
-                myself,
-                setMyself,
-                useUISM,
-                useCM
-            ),
-            mentionGroup: CreateMentionGroupSpec(),
-            hashTask: CreateHashTaskSpec(),
-            hashNote: CreateHashNoteSpec(),
-            hashChat: CreateHashChatSpec(),
-            hashProject: CreateHashProjectSpec(),
-        },
-        blockSpecs: {
-            ...remainingBlockSpecs,
-            // BlockNote 0.49 moved the code-block options out of
-            // `useCreateBlockNote` and into the schema. We override
-            // the default plain-text codeBlock with the syntax-
-            // highlighted one shipped by `@blocknote/code-block`.
-            codeBlock: createCodeBlockSpec(codeBlockOptions),
-            alert: Alert(),
-        },
-    });
+    // Memoized: `BlockNoteSchema.create` + the six spec factories are
+    // non-trivial and the live editor only reads the schema when it is
+    // (re)built — rebuilding the object on every render was pure waste,
+    // and this component re-renders on every parent update. The deps are
+    // exactly the values `CreateMentionSpec` closes over, so a rebuilt
+    // schema is available whenever the editor is next recreated.
+    const schema = useMemo(() => {
+        // Disable the Audio and Video blocks from the built-in schema
+        // This is done by picking out the blocks you want to disable
+        const { audio, video, ...remainingBlockSpecs } = defaultBlockSpecs;
+        return BlockNoteSchema.create({
+            inlineContentSpecs: {
+                // Adds all default inline content.
+                ...defaultInlineContentSpecs,
+                // Adds the mention tag.
+                mention: CreateMentionSpec(
+                    useTEM.teamMemberProfiles,
+                    socket,
+                    myself,
+                    setMyself,
+                    useUISM,
+                    useCM
+                ),
+                mentionGroup: CreateMentionGroupSpec(),
+                hashTask: CreateHashTaskSpec(),
+                hashNote: CreateHashNoteSpec(),
+                hashChat: CreateHashChatSpec(),
+                hashProject: CreateHashProjectSpec(),
+            },
+            blockSpecs: {
+                ...remainingBlockSpecs,
+                // BlockNote 0.49 moved the code-block options out of
+                // `useCreateBlockNote` and into the schema. We override
+                // the default plain-text codeBlock with the syntax-
+                // highlighted one shipped by `@blocknote/code-block`.
+                codeBlock: createCodeBlockSpec(codeBlockOptions),
+                alert: Alert(),
+            },
+        });
+    }, [useTEM.teamMemberProfiles, socket, myself, setMyself, useUISM, useCM]);
 
     // List containing all default Slash Menu Items, as well as our custom one.
     const getCustomSlashMenuItems = (
@@ -326,6 +320,19 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
         setNumEditorLines(countLines(comments));
     }, []);
 
+    // Debounced document→parent sync. `onChange` fires on every keystroke;
+    // serializing the whole document (`editor.document`), walking it for the
+    // line count, and re-rendering the parent tree synchronously in that path
+    // is what made typing lag. The document is read ONCE when the timer
+    // fires, off the keystroke path. Flushed on blur so click-away flows
+    // (e.g. the Create-Task submit button reading `body` state) see the
+    // final content.
+    const syncBodyToParent = useDebouncedCallback(() => {
+        const doc: any[] = editor.document;
+        setNumEditorLines(countLines(doc));
+        setBody(doc);
+    }, EDITOR_BODY_SYNC_DEBOUNCE_MS);
+
     useEffect(() => {
         if (selectedEmoji !== null) {
             insertEmoji(selectedEmoji);
@@ -379,10 +386,13 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                     sideMenu={false}
                     theme={mode === "dark" ? "dark" : "light"}
                     data-changing-font-demo
+                    onBlur={() => syncBodyToParent.flush()}
                     onChange={() => {
-                        const comments: any[] = editor.document;
-                        setNumEditorLines(countLines(comments));
-                        setBody(editor.document);
+                        // Heavy work (serialize + line count + parent
+                        // re-render) is debounced; only the cheap edited/
+                        // saved flags fire synchronously (no-ops after the
+                        // first keystroke), preserving auto-save semantics.
+                        syncBodyToParent.run();
                         if (setTaskBodyEdited) {
                             setTaskBodyEdited(true);
                             if (setTaskBodySaved) {

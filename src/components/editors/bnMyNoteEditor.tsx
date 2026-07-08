@@ -17,7 +17,6 @@ import { BlockNoteView } from "@blocknote/mantine";
 import {
     AddCommentButton,
     BasicTextStyleButton,
-    BlockColorsItem,
     BlockNoteViewEditor,
     BlockTypeSelect,
     BlockTypeSelectItem,
@@ -25,7 +24,6 @@ import {
     ColorStyleButton,
     CreateLinkButton,
     DefaultReactSuggestionItem,
-    DragHandleMenu,
     FileCaptionButton,
     FileDeleteButton,
     FileDownloadButton,
@@ -37,7 +35,6 @@ import {
     FormattingToolbar,
     FormattingToolbarController,
     getDefaultReactSlashMenuItems,
-    RemoveBlockItem,
     SideMenu,
     SideMenuController,
     SuggestionMenuController,
@@ -62,6 +59,7 @@ import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
 import { useAnchorClickIntercept } from "../../hooks/common/useAnchorClickIntercept";
 import { useCollaborativeBlockNote } from "../../hooks/common/useCollaborativeBlockNote";
+import { useDebouncedCallback } from "../../hooks/common/useDebouncedCallback";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { useTranslation } from "../../i18n";
@@ -91,11 +89,12 @@ import {
     MentionSuggestionMenu,
 } from "./Mention";
 import { Alert } from "./sub/Alert";
+import { EDITOR_BODY_SYNC_DEBOUNCE_MS } from "./sub/bodySync";
 import {
     codeBlockEnterShortcut,
     getBlockTypeSelectItemsWithCodeBlock,
 } from "./sub/codeBlockExtras";
-import { ResetBlockTypeItem } from "./sub/ResetBlockTypeItem";
+import { CustomDragHandleMenu } from "./sub/CustomDragHandleMenu";
 import { ThreadsSidebarErrorBoundary } from "./sub/ThreadsSidebarErrorBoundary";
 import { ThreadsSidebarWithPreload } from "./sub/ThreadsSidebarWithPreload";
 import { WrapToggleButtons } from "./sub/WrapToggleButtons";
@@ -184,53 +183,46 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
         .filter(Boolean)
         .join(" ");
 
-    // To avoid rendering issues, it's good practice to define your custom drag
-    // handle menu in a separate component, instead of inline within the `sideMenu`
-    // prop of `SideMenuController`.
-    const CustomDragHandleMenu = () => (
-        <DragHandleMenu>
-            <RemoveBlockItem>{t.common.editor.delete}</RemoveBlockItem>
-            <BlockColorsItem>{t.common.editor.colors}</BlockColorsItem>
-            {/* Item which resets the hovered block's type. */}
-            <ResetBlockTypeItem>{t.common.editor.resetType}</ResetBlockTypeItem>
-        </DragHandleMenu>
-    );
-
-    // Disable the Audio and Image blocks from the built-in schema
-    // This is done by picking out the blocks you want to disable
-    const { audio, video, ...remainingBlockSpecs } = defaultBlockSpecs;
-
     const { mentionGroups } = useMentionGroupsContext();
 
-    const schema = BlockNoteSchema.create({
-        inlineContentSpecs: {
-            // Adds all default inline content.
-            ...defaultInlineContentSpecs,
-            // Adds the mention tag.
-            mention: CreateMentionSpec(
-                useTEM.teamMemberProfiles,
-                socket,
-                myself,
-                setMyself,
-                useUISM,
-                useCM
-            ),
-            mentionGroup: CreateMentionGroupSpec(),
-            hashTask: CreateHashTaskSpec(),
-            hashNote: CreateHashNoteSpec(),
-            hashChat: CreateHashChatSpec(),
-            hashProject: CreateHashProjectSpec(),
-        },
-        blockSpecs: {
-            ...remainingBlockSpecs,
-            // BlockNote 0.49 moved the code-block options out of
-            // `useCreateBlockNote` and into the schema. We override
-            // the default plain-text codeBlock with the syntax-
-            // highlighted one shipped by `@blocknote/code-block`.
-            codeBlock: createCodeBlockSpec(codeBlockOptions),
-            alert: Alert(),
-        },
-    });
+    // Memoized: see `bnTaskPreview` — schema construction is non-trivial,
+    // the live editor only reads it at (re)build time, and this component
+    // re-renders on every parent update. Deps are exactly the values
+    // `CreateMentionSpec` closes over.
+    const schema = useMemo(() => {
+        // Disable the Audio and Video blocks from the built-in schema
+        // This is done by picking out the blocks you want to disable
+        const { audio, video, ...remainingBlockSpecs } = defaultBlockSpecs;
+        return BlockNoteSchema.create({
+            inlineContentSpecs: {
+                // Adds all default inline content.
+                ...defaultInlineContentSpecs,
+                // Adds the mention tag.
+                mention: CreateMentionSpec(
+                    useTEM.teamMemberProfiles,
+                    socket,
+                    myself,
+                    setMyself,
+                    useUISM,
+                    useCM
+                ),
+                mentionGroup: CreateMentionGroupSpec(),
+                hashTask: CreateHashTaskSpec(),
+                hashNote: CreateHashNoteSpec(),
+                hashChat: CreateHashChatSpec(),
+                hashProject: CreateHashProjectSpec(),
+            },
+            blockSpecs: {
+                ...remainingBlockSpecs,
+                // BlockNote 0.49 moved the code-block options out of
+                // `useCreateBlockNote` and into the schema. We override
+                // the default plain-text codeBlock with the syntax-
+                // highlighted one shipped by `@blocknote/code-block`.
+                codeBlock: createCodeBlockSpec(codeBlockOptions),
+                alert: Alert(),
+            },
+        });
+    }, [useTEM.teamMemberProfiles, socket, myself, setMyself, useUISM, useCM]);
 
     // List containing all default Slash Menu Items, as well as our custom one.
     const getCustomSlashMenuItems = (
@@ -362,21 +354,14 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
         }
     }, [resyncSignal, editor]);
 
-    const countLines = (nodes: any[]): number => {
-        let count = 0;
-        for (const node of nodes) {
-            count += 1; // count the current node itself
-            if (node.children?.length) {
-                count += countLines(node.children); // recursive call
-            }
-            if (node.content[0]) {
-                if (node.content[0].text) {
-                    count += node.content[0].text.split("\n").length;
-                }
-            }
-        }
-        return count;
-    };
+    // Debounced document→parent sync. `onChange` fires on every keystroke;
+    // serializing the whole document (`editor.document`) and re-rendering
+    // the parent tree synchronously in that path is what made typing lag.
+    // Flushed on blur so click-away flows read the final content; Yjs is
+    // the authoritative store either way.
+    const syncBodyToParent = useDebouncedCallback(() => {
+        setBody(editor.document);
+    }, EDITOR_BODY_SYNC_DEBOUNCE_MS);
 
     useEffect(() => {
         if (selectedEmoji !== null) {
@@ -484,7 +469,12 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
                     theme={mode === "dark" ? "dark" : "light"}
                     data-changing-font-demo
                     onChange={() => {
-                        setBody(editor.document);
+                        // Heavy work (serialize + parent re-render) is
+                        // debounced off the keystroke path; the cheap
+                        // edited/saved flags stay synchronous (no-ops after
+                        // the first keystroke), preserving auto-save
+                        // semantics.
+                        syncBodyToParent.run();
                         // Only count this as a real edit if the user
                         // has actually typed / pasted / dropped since
                         // opening the note. See `userInteractedRef`
@@ -499,6 +489,7 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
                 >
                     <div
                         className="bn-editor-with-sidebar"
+                        onBlur={() => syncBodyToParent.flush()}
                         onBeforeInput={() => {
                             userInteractedRef.current = true;
                         }}
