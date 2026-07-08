@@ -455,21 +455,25 @@ export const TaskHomeContent = ({
         return { rows, taggedCount, total: effectiveTasks.length, coveragePct };
     }, [effectiveTasks]);
 
-    // ── Recently updated tasks (sprint scoped) ──
-    // effectiveTasks already excludes Deleted and Deleted-branch orphans.
+    // ── Recently updated tasks (scoped to the selected sprint) ──
+    // Members of the selected sprint (`task.sprintId` is the app-wide
+    // task→sprint key), most-recently-updated first, capped at 12 — so this
+    // is "recent activity WITHIN this sprint", not "any task touched lately".
+    // Mirrors the `sprintMilestones` filter above: no sprint selected ⇒ the
+    // backlog (tasks with no sprint). effectiveTasks already excludes Deleted
+    // and Deleted-branch orphans.
     const recentTasks = useMemo(() => {
         return effectiveTasks
-            .filter((t) => {
-                const d = t.updatedAt ? new Date(t.updatedAt).getTime() : 0;
-                return d >= sprintStart;
-            })
+            .filter((t) =>
+                selectedSprint ? t.sprintId === selectedSprint.sprintId : t.sprintId == null
+            )
             .sort((a, b) => {
                 const dA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
                 const dB = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
                 return dB - dA;
             })
             .slice(0, 12);
-    }, [effectiveTasks, sprintStart]);
+    }, [effectiveTasks, selectedSprint?.sprintId]);
 
     // ── Priority breakdown (active tasks only) ──
     // "Active" uses effectiveStatus, so sub-tasks of Closed parents are
@@ -1820,14 +1824,17 @@ export const TaskHomeContent = ({
                                                     level="title-md"
                                                     sx={{ fontWeight: 600, color: textPrimary }}
                                                 >
-                                                    No task activity in this sprint period
+                                                    {selectedSprint
+                                                        ? "No tasks in this sprint yet"
+                                                        : "No backlog tasks yet"}
                                                 </Typography>
                                                 <Typography
                                                     level="body-sm"
                                                     sx={{ color: textMuted }}
                                                 >
-                                                    Try selecting a longer sprint window or create
-                                                    new tasks
+                                                    {selectedSprint
+                                                        ? "Assign tasks to this sprint or create new ones"
+                                                        : "Tasks not attached to a sprint will show here"}
                                                 </Typography>
                                             </Stack>
                                         </Card>
