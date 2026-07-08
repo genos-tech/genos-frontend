@@ -2231,6 +2231,427 @@ export const TaskHomeContent = ({
                             {/* ════════ TAB: Overall Insights ════════ */}
                             {activeTab === "overall" && (
                                 <>
+                                    {/* ════════ Section B: Status Distribution ════════ */}
+                                    <Box>
+                                        <Typography
+                                            level="title-sm"
+                                            sx={{
+                                                fontWeight: 600,
+                                                mb: 2,
+                                                color: sectionHeaderColor,
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: 1,
+                                            }}
+                                        >
+                                            <TrendingUpRoundedIcon sx={{ fontSize: 16 }} />
+                                            Status Distribution
+                                        </Typography>
+
+                                        {/* Stacked bar */}
+                                        {stats.totalTasks > 0 && (
+                                            <Box sx={{ mb: 2 }}>
+                                                {renderStackedBar(
+                                                    [
+                                                        {
+                                                            color: STATUS_COLORS.Open.text,
+                                                            value: stats.openCount,
+                                                        },
+                                                        {
+                                                            color: STATUS_COLORS.WIP.text,
+                                                            value: stats.wipCount,
+                                                        },
+                                                        {
+                                                            color: STATUS_COLORS.Pending.text,
+                                                            value: stats.pendingCount,
+                                                        },
+                                                        {
+                                                            color: STATUS_COLORS.Closed.text,
+                                                            value: stats.closedCount,
+                                                        },
+                                                    ],
+                                                    stats.totalTasks
+                                                )}
+                                            </Box>
+                                        )}
+
+                                        {/* Status cards */}
+                                        <Grid spacing={1.5} container>
+                                            {(
+                                                [
+                                                    {
+                                                        key: "Open",
+                                                        count: stats.openCount,
+                                                        icon: <RadioButtonUncheckedRoundedIcon />,
+                                                    },
+                                                    {
+                                                        key: "WIP",
+                                                        count: stats.wipCount,
+                                                        icon: <PlayCircleOutlineRoundedIcon />,
+                                                    },
+                                                    {
+                                                        key: "Pending",
+                                                        count: stats.pendingCount,
+                                                        icon: <PendingActionsRoundedIcon />,
+                                                    },
+                                                    {
+                                                        key: "Closed",
+                                                        count: stats.closedCount,
+                                                        icon: <CheckCircleOutlineRoundedIcon />,
+                                                    },
+                                                ] as const
+                                            ).map((s) => {
+                                                const sc = STATUS_COLORS[s.key];
+                                                const pct =
+                                                    stats.totalTasks > 0
+                                                        ? Math.round(
+                                                              (s.count / stats.totalTasks) * 100
+                                                          )
+                                                        : 0;
+                                                return (
+                                                    <Grid key={s.key} md={3} xs={6}>
+                                                        <Card
+                                                            variant="soft"
+                                                            sx={{
+                                                                p: 2,
+                                                                background: isDark
+                                                                    ? sc.bg
+                                                                    : sc.bg.replace(
+                                                                          "0.12",
+                                                                          "0.08"
+                                                                      ),
+                                                                border: "1px solid",
+                                                                borderColor: cardBorder,
+                                                                transition: "transform 0.2s ease",
+                                                                "&:hover": {
+                                                                    transform: "translateY(-2px)",
+                                                                },
+                                                            }}
+                                                        >
+                                                            <Stack spacing={1}>
+                                                                <Stack
+                                                                    alignItems="center"
+                                                                    direction="row"
+                                                                    justifyContent="space-between"
+                                                                >
+                                                                    <Box
+                                                                        sx={{
+                                                                            width: 32,
+                                                                            height: 32,
+                                                                            borderRadius: "8px",
+                                                                            display: "flex",
+                                                                            alignItems: "center",
+                                                                            justifyContent:
+                                                                                "center",
+                                                                            color: sc.text,
+                                                                            backgroundColor: isDark
+                                                                                ? "rgba(255,255,255,0.06)"
+                                                                                : "rgba(255,255,255,0.8)",
+                                                                        }}
+                                                                    >
+                                                                        {s.icon}
+                                                                    </Box>
+                                                                    <Typography
+                                                                        level="body-xs"
+                                                                        sx={{
+                                                                            color: sc.text,
+                                                                            fontWeight: 600,
+                                                                        }}
+                                                                    >
+                                                                        {pct}%
+                                                                    </Typography>
+                                                                </Stack>
+                                                                <Box>
+                                                                    <Typography
+                                                                        level="h3"
+                                                                        sx={{
+                                                                            fontWeight: 700,
+                                                                            fontSize: "1.4rem",
+                                                                            color: textPrimary,
+                                                                        }}
+                                                                    >
+                                                                        {s.count}
+                                                                    </Typography>
+                                                                    <Typography
+                                                                        level="body-xs"
+                                                                        sx={{
+                                                                            color: textSecondary,
+                                                                            fontWeight: 500,
+                                                                        }}
+                                                                    >
+                                                                        {
+                                                                            t.tasks.dashboard
+                                                                                .statusLabels[
+                                                                                STATUS_LABEL_KEYS[
+                                                                                    s.key
+                                                                                ] ?? "open"
+                                                                            ]
+                                                                        }
+                                                                    </Typography>
+                                                                </Box>
+                                                            </Stack>
+                                                        </Card>
+                                                    </Grid>
+                                                );
+                                            })}
+                                        </Grid>
+                                    </Box>
+
+                                    {/* ════════ Section C: Assignee Workload ════════ */}
+                                    {assigneeWorkload.length > 0 && (
+                                        <Box>
+                                            <Typography
+                                                level="title-sm"
+                                                sx={{
+                                                    fontWeight: 600,
+                                                    mb: 2,
+                                                    color: sectionHeaderColor,
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    gap: 1,
+                                                }}
+                                            >
+                                                <PersonRoundedIcon sx={{ fontSize: 16 }} />
+                                                Assignee Workload
+                                            </Typography>
+                                            <Card
+                                                variant="outlined"
+                                                sx={{
+                                                    background: cardBg,
+                                                    borderColor: cardBorder,
+                                                    overflow: "auto",
+                                                }}
+                                            >
+                                                <Table
+                                                    size="sm"
+                                                    sx={{
+                                                        "& thead th": {
+                                                            backgroundColor: "transparent",
+                                                            color: textSecondary,
+                                                            fontWeight: 600,
+                                                            fontSize: "0.7rem",
+                                                            textTransform: "uppercase",
+                                                            letterSpacing: "0.04em",
+                                                            borderBottom: "1px solid",
+                                                            borderColor: cardBorder,
+                                                            py: 1,
+                                                        },
+                                                        "& tbody td": {
+                                                            borderBottom: "1px solid",
+                                                            borderColor: isDark
+                                                                ? "rgba(255,255,255,0.04)"
+                                                                : "rgba(0,0,0,0.04)",
+                                                            py: 1.25,
+                                                        },
+                                                        "& tbody tr:last-child td": {
+                                                            borderBottom: "none",
+                                                        },
+                                                    }}
+                                                >
+                                                    <thead>
+                                                        <tr>
+                                                            <th style={{ width: "30%" }}>
+                                                                {t.tasks.dashboard.member}
+                                                            </th>
+                                                            <th style={{ textAlign: "center" }}>
+                                                                {t.tasks.dashboard.open}
+                                                            </th>
+                                                            <th style={{ textAlign: "center" }}>
+                                                                {t.tasks.dashboard.wip}
+                                                            </th>
+                                                            <th style={{ textAlign: "center" }}>
+                                                                {t.tasks.dashboard.pending}
+                                                            </th>
+                                                            <th style={{ textAlign: "center" }}>
+                                                                {t.tasks.dashboard.closed}
+                                                            </th>
+                                                            <th style={{ textAlign: "center" }}>
+                                                                {t.tasks.dashboard.total}
+                                                            </th>
+                                                            <th style={{ textAlign: "center" }}>
+                                                                {t.tasks.dashboard.closedSprint}
+                                                            </th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {assigneeWorkload.map((a) => (
+                                                            <tr key={a.id}>
+                                                                <td>
+                                                                    <Stack
+                                                                        alignItems="center"
+                                                                        direction="row"
+                                                                        spacing={1}
+                                                                    >
+                                                                        {a.id !==
+                                                                            "__unassigned__" &&
+                                                                        useTEM.teamMemberProfiles[
+                                                                            a.id
+                                                                        ] ? (
+                                                                            <AvatarWithStatus
+                                                                                avatarSize={26}
+                                                                                myself={myself}
+                                                                                socket={socket}
+                                                                                useCM={useCM}
+                                                                                useUISM={useUISM}
+                                                                                avatarUser={
+                                                                                    useTEM
+                                                                                        .teamMemberProfiles[
+                                                                                        a.id
+                                                                                    ]
+                                                                                }
+                                                                                isYou={
+                                                                                    myself.userId ===
+                                                                                    a.id
+                                                                                }
+                                                                                setMyself={
+                                                                                    setMyself
+                                                                                }
+                                                                            />
+                                                                        ) : (
+                                                                            <Avatar
+                                                                                size="sm"
+                                                                                src={
+                                                                                    a.imgPath ||
+                                                                                    undefined
+                                                                                }
+                                                                                sx={{
+                                                                                    width: 26,
+                                                                                    height: 26,
+                                                                                }}
+                                                                            >
+                                                                                {(a.name ||
+                                                                                    "?")[0]?.toUpperCase()}
+                                                                            </Avatar>
+                                                                        )}
+                                                                        <Typography
+                                                                            level="body-sm"
+                                                                            sx={{
+                                                                                fontWeight: 500,
+                                                                                color: textPrimary,
+                                                                                overflow: "hidden",
+                                                                                textOverflow:
+                                                                                    "ellipsis",
+                                                                                whiteSpace:
+                                                                                    "nowrap",
+                                                                                maxWidth: 140,
+                                                                            }}
+                                                                        >
+                                                                            {a.name}
+                                                                        </Typography>
+                                                                    </Stack>
+                                                                </td>
+                                                                {(
+                                                                    [
+                                                                        {
+                                                                            val: a.open,
+                                                                            color: STATUS_COLORS
+                                                                                .Open.text,
+                                                                        },
+                                                                        {
+                                                                            val: a.wip,
+                                                                            color: STATUS_COLORS
+                                                                                .WIP.text,
+                                                                        },
+                                                                        {
+                                                                            val: a.pending,
+                                                                            color: STATUS_COLORS
+                                                                                .Pending.text,
+                                                                        },
+                                                                        {
+                                                                            val: a.closed,
+                                                                            color: STATUS_COLORS
+                                                                                .Closed.text,
+                                                                        },
+                                                                    ] as const
+                                                                ).map((cell, i) => (
+                                                                    <td
+                                                                        key={i}
+                                                                        style={{
+                                                                            textAlign: "center",
+                                                                        }}
+                                                                    >
+                                                                        {cell.val > 0 ? (
+                                                                            <Chip
+                                                                                size="sm"
+                                                                                variant="soft"
+                                                                                sx={{
+                                                                                    minWidth: 28,
+                                                                                    backgroundColor:
+                                                                                        STATUS_COLORS[
+                                                                                            [
+                                                                                                "Open",
+                                                                                                "WIP",
+                                                                                                "Pending",
+                                                                                                "Closed",
+                                                                                            ][i]
+                                                                                        ].bg,
+                                                                                    color: cell.color,
+                                                                                    fontWeight: 600,
+                                                                                }}
+                                                                            >
+                                                                                {cell.val}
+                                                                            </Chip>
+                                                                        ) : (
+                                                                            <Typography
+                                                                                level="body-xs"
+                                                                                sx={{
+                                                                                    color: textMuted,
+                                                                                }}
+                                                                            >
+                                                                                -
+                                                                            </Typography>
+                                                                        )}
+                                                                    </td>
+                                                                ))}
+                                                                <td
+                                                                    style={{ textAlign: "center" }}
+                                                                >
+                                                                    <Typography
+                                                                        level="body-sm"
+                                                                        sx={{
+                                                                            fontWeight: 700,
+                                                                            color: textPrimary,
+                                                                        }}
+                                                                    >
+                                                                        {a.total}
+                                                                    </Typography>
+                                                                </td>
+                                                                <td
+                                                                    style={{ textAlign: "center" }}
+                                                                >
+                                                                    {a.closedInSprint > 0 ? (
+                                                                        <Chip
+                                                                            size="sm"
+                                                                            variant="soft"
+                                                                            sx={{
+                                                                                minWidth: 28,
+                                                                                backgroundColor:
+                                                                                    "rgba(34,197,94,0.12)",
+                                                                                color: "#22c55e",
+                                                                                fontWeight: 600,
+                                                                            }}
+                                                                        >
+                                                                            {a.closedInSprint}
+                                                                        </Chip>
+                                                                    ) : (
+                                                                        <Typography
+                                                                            level="body-xs"
+                                                                            sx={{
+                                                                                color: textMuted,
+                                                                            }}
+                                                                        >
+                                                                            -
+                                                                        </Typography>
+                                                                    )}
+                                                                </td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </Table>
+                                            </Card>
+                                        </Box>
+                                    )}
+
                                     {/* ════════ Tag Insights ════════ */}
                                     <Box>
                                         <Typography
@@ -2671,427 +3092,6 @@ export const TaskHomeContent = ({
                                             </Stack>
                                         )}
                                     </Box>
-
-                                    {/* ════════ Section B: Status Distribution ════════ */}
-                                    <Box>
-                                        <Typography
-                                            level="title-sm"
-                                            sx={{
-                                                fontWeight: 600,
-                                                mb: 2,
-                                                color: sectionHeaderColor,
-                                                display: "flex",
-                                                alignItems: "center",
-                                                gap: 1,
-                                            }}
-                                        >
-                                            <TrendingUpRoundedIcon sx={{ fontSize: 16 }} />
-                                            Status Distribution
-                                        </Typography>
-
-                                        {/* Stacked bar */}
-                                        {stats.totalTasks > 0 && (
-                                            <Box sx={{ mb: 2 }}>
-                                                {renderStackedBar(
-                                                    [
-                                                        {
-                                                            color: STATUS_COLORS.Open.text,
-                                                            value: stats.openCount,
-                                                        },
-                                                        {
-                                                            color: STATUS_COLORS.WIP.text,
-                                                            value: stats.wipCount,
-                                                        },
-                                                        {
-                                                            color: STATUS_COLORS.Pending.text,
-                                                            value: stats.pendingCount,
-                                                        },
-                                                        {
-                                                            color: STATUS_COLORS.Closed.text,
-                                                            value: stats.closedCount,
-                                                        },
-                                                    ],
-                                                    stats.totalTasks
-                                                )}
-                                            </Box>
-                                        )}
-
-                                        {/* Status cards */}
-                                        <Grid spacing={1.5} container>
-                                            {(
-                                                [
-                                                    {
-                                                        key: "Open",
-                                                        count: stats.openCount,
-                                                        icon: <RadioButtonUncheckedRoundedIcon />,
-                                                    },
-                                                    {
-                                                        key: "WIP",
-                                                        count: stats.wipCount,
-                                                        icon: <PlayCircleOutlineRoundedIcon />,
-                                                    },
-                                                    {
-                                                        key: "Pending",
-                                                        count: stats.pendingCount,
-                                                        icon: <PendingActionsRoundedIcon />,
-                                                    },
-                                                    {
-                                                        key: "Closed",
-                                                        count: stats.closedCount,
-                                                        icon: <CheckCircleOutlineRoundedIcon />,
-                                                    },
-                                                ] as const
-                                            ).map((s) => {
-                                                const sc = STATUS_COLORS[s.key];
-                                                const pct =
-                                                    stats.totalTasks > 0
-                                                        ? Math.round(
-                                                              (s.count / stats.totalTasks) * 100
-                                                          )
-                                                        : 0;
-                                                return (
-                                                    <Grid key={s.key} md={3} xs={6}>
-                                                        <Card
-                                                            variant="soft"
-                                                            sx={{
-                                                                p: 2,
-                                                                background: isDark
-                                                                    ? sc.bg
-                                                                    : sc.bg.replace(
-                                                                          "0.12",
-                                                                          "0.08"
-                                                                      ),
-                                                                border: "1px solid",
-                                                                borderColor: cardBorder,
-                                                                transition: "transform 0.2s ease",
-                                                                "&:hover": {
-                                                                    transform: "translateY(-2px)",
-                                                                },
-                                                            }}
-                                                        >
-                                                            <Stack spacing={1}>
-                                                                <Stack
-                                                                    alignItems="center"
-                                                                    direction="row"
-                                                                    justifyContent="space-between"
-                                                                >
-                                                                    <Box
-                                                                        sx={{
-                                                                            width: 32,
-                                                                            height: 32,
-                                                                            borderRadius: "8px",
-                                                                            display: "flex",
-                                                                            alignItems: "center",
-                                                                            justifyContent:
-                                                                                "center",
-                                                                            color: sc.text,
-                                                                            backgroundColor: isDark
-                                                                                ? "rgba(255,255,255,0.06)"
-                                                                                : "rgba(255,255,255,0.8)",
-                                                                        }}
-                                                                    >
-                                                                        {s.icon}
-                                                                    </Box>
-                                                                    <Typography
-                                                                        level="body-xs"
-                                                                        sx={{
-                                                                            color: sc.text,
-                                                                            fontWeight: 600,
-                                                                        }}
-                                                                    >
-                                                                        {pct}%
-                                                                    </Typography>
-                                                                </Stack>
-                                                                <Box>
-                                                                    <Typography
-                                                                        level="h3"
-                                                                        sx={{
-                                                                            fontWeight: 700,
-                                                                            fontSize: "1.4rem",
-                                                                            color: textPrimary,
-                                                                        }}
-                                                                    >
-                                                                        {s.count}
-                                                                    </Typography>
-                                                                    <Typography
-                                                                        level="body-xs"
-                                                                        sx={{
-                                                                            color: textSecondary,
-                                                                            fontWeight: 500,
-                                                                        }}
-                                                                    >
-                                                                        {
-                                                                            t.tasks.dashboard
-                                                                                .statusLabels[
-                                                                                STATUS_LABEL_KEYS[
-                                                                                    s.key
-                                                                                ] ?? "open"
-                                                                            ]
-                                                                        }
-                                                                    </Typography>
-                                                                </Box>
-                                                            </Stack>
-                                                        </Card>
-                                                    </Grid>
-                                                );
-                                            })}
-                                        </Grid>
-                                    </Box>
-
-                                    {/* ════════ Section C: Assignee Workload ════════ */}
-                                    {assigneeWorkload.length > 0 && (
-                                        <Box>
-                                            <Typography
-                                                level="title-sm"
-                                                sx={{
-                                                    fontWeight: 600,
-                                                    mb: 2,
-                                                    color: sectionHeaderColor,
-                                                    display: "flex",
-                                                    alignItems: "center",
-                                                    gap: 1,
-                                                }}
-                                            >
-                                                <PersonRoundedIcon sx={{ fontSize: 16 }} />
-                                                Assignee Workload
-                                            </Typography>
-                                            <Card
-                                                variant="outlined"
-                                                sx={{
-                                                    background: cardBg,
-                                                    borderColor: cardBorder,
-                                                    overflow: "auto",
-                                                }}
-                                            >
-                                                <Table
-                                                    size="sm"
-                                                    sx={{
-                                                        "& thead th": {
-                                                            backgroundColor: "transparent",
-                                                            color: textSecondary,
-                                                            fontWeight: 600,
-                                                            fontSize: "0.7rem",
-                                                            textTransform: "uppercase",
-                                                            letterSpacing: "0.04em",
-                                                            borderBottom: "1px solid",
-                                                            borderColor: cardBorder,
-                                                            py: 1,
-                                                        },
-                                                        "& tbody td": {
-                                                            borderBottom: "1px solid",
-                                                            borderColor: isDark
-                                                                ? "rgba(255,255,255,0.04)"
-                                                                : "rgba(0,0,0,0.04)",
-                                                            py: 1.25,
-                                                        },
-                                                        "& tbody tr:last-child td": {
-                                                            borderBottom: "none",
-                                                        },
-                                                    }}
-                                                >
-                                                    <thead>
-                                                        <tr>
-                                                            <th style={{ width: "30%" }}>
-                                                                {t.tasks.dashboard.member}
-                                                            </th>
-                                                            <th style={{ textAlign: "center" }}>
-                                                                {t.tasks.dashboard.open}
-                                                            </th>
-                                                            <th style={{ textAlign: "center" }}>
-                                                                {t.tasks.dashboard.wip}
-                                                            </th>
-                                                            <th style={{ textAlign: "center" }}>
-                                                                {t.tasks.dashboard.pending}
-                                                            </th>
-                                                            <th style={{ textAlign: "center" }}>
-                                                                {t.tasks.dashboard.closed}
-                                                            </th>
-                                                            <th style={{ textAlign: "center" }}>
-                                                                {t.tasks.dashboard.total}
-                                                            </th>
-                                                            <th style={{ textAlign: "center" }}>
-                                                                {t.tasks.dashboard.closedSprint}
-                                                            </th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        {assigneeWorkload.map((a) => (
-                                                            <tr key={a.id}>
-                                                                <td>
-                                                                    <Stack
-                                                                        alignItems="center"
-                                                                        direction="row"
-                                                                        spacing={1}
-                                                                    >
-                                                                        {a.id !==
-                                                                            "__unassigned__" &&
-                                                                        useTEM.teamMemberProfiles[
-                                                                            a.id
-                                                                        ] ? (
-                                                                            <AvatarWithStatus
-                                                                                avatarSize={26}
-                                                                                myself={myself}
-                                                                                socket={socket}
-                                                                                useCM={useCM}
-                                                                                useUISM={useUISM}
-                                                                                avatarUser={
-                                                                                    useTEM
-                                                                                        .teamMemberProfiles[
-                                                                                        a.id
-                                                                                    ]
-                                                                                }
-                                                                                isYou={
-                                                                                    myself.userId ===
-                                                                                    a.id
-                                                                                }
-                                                                                setMyself={
-                                                                                    setMyself
-                                                                                }
-                                                                            />
-                                                                        ) : (
-                                                                            <Avatar
-                                                                                size="sm"
-                                                                                src={
-                                                                                    a.imgPath ||
-                                                                                    undefined
-                                                                                }
-                                                                                sx={{
-                                                                                    width: 26,
-                                                                                    height: 26,
-                                                                                }}
-                                                                            >
-                                                                                {(a.name ||
-                                                                                    "?")[0]?.toUpperCase()}
-                                                                            </Avatar>
-                                                                        )}
-                                                                        <Typography
-                                                                            level="body-sm"
-                                                                            sx={{
-                                                                                fontWeight: 500,
-                                                                                color: textPrimary,
-                                                                                overflow: "hidden",
-                                                                                textOverflow:
-                                                                                    "ellipsis",
-                                                                                whiteSpace:
-                                                                                    "nowrap",
-                                                                                maxWidth: 140,
-                                                                            }}
-                                                                        >
-                                                                            {a.name}
-                                                                        </Typography>
-                                                                    </Stack>
-                                                                </td>
-                                                                {(
-                                                                    [
-                                                                        {
-                                                                            val: a.open,
-                                                                            color: STATUS_COLORS
-                                                                                .Open.text,
-                                                                        },
-                                                                        {
-                                                                            val: a.wip,
-                                                                            color: STATUS_COLORS
-                                                                                .WIP.text,
-                                                                        },
-                                                                        {
-                                                                            val: a.pending,
-                                                                            color: STATUS_COLORS
-                                                                                .Pending.text,
-                                                                        },
-                                                                        {
-                                                                            val: a.closed,
-                                                                            color: STATUS_COLORS
-                                                                                .Closed.text,
-                                                                        },
-                                                                    ] as const
-                                                                ).map((cell, i) => (
-                                                                    <td
-                                                                        key={i}
-                                                                        style={{
-                                                                            textAlign: "center",
-                                                                        }}
-                                                                    >
-                                                                        {cell.val > 0 ? (
-                                                                            <Chip
-                                                                                size="sm"
-                                                                                variant="soft"
-                                                                                sx={{
-                                                                                    minWidth: 28,
-                                                                                    backgroundColor:
-                                                                                        STATUS_COLORS[
-                                                                                            [
-                                                                                                "Open",
-                                                                                                "WIP",
-                                                                                                "Pending",
-                                                                                                "Closed",
-                                                                                            ][i]
-                                                                                        ].bg,
-                                                                                    color: cell.color,
-                                                                                    fontWeight: 600,
-                                                                                }}
-                                                                            >
-                                                                                {cell.val}
-                                                                            </Chip>
-                                                                        ) : (
-                                                                            <Typography
-                                                                                level="body-xs"
-                                                                                sx={{
-                                                                                    color: textMuted,
-                                                                                }}
-                                                                            >
-                                                                                -
-                                                                            </Typography>
-                                                                        )}
-                                                                    </td>
-                                                                ))}
-                                                                <td
-                                                                    style={{ textAlign: "center" }}
-                                                                >
-                                                                    <Typography
-                                                                        level="body-sm"
-                                                                        sx={{
-                                                                            fontWeight: 700,
-                                                                            color: textPrimary,
-                                                                        }}
-                                                                    >
-                                                                        {a.total}
-                                                                    </Typography>
-                                                                </td>
-                                                                <td
-                                                                    style={{ textAlign: "center" }}
-                                                                >
-                                                                    {a.closedInSprint > 0 ? (
-                                                                        <Chip
-                                                                            size="sm"
-                                                                            variant="soft"
-                                                                            sx={{
-                                                                                minWidth: 28,
-                                                                                backgroundColor:
-                                                                                    "rgba(34,197,94,0.12)",
-                                                                                color: "#22c55e",
-                                                                                fontWeight: 600,
-                                                                            }}
-                                                                        >
-                                                                            {a.closedInSprint}
-                                                                        </Chip>
-                                                                    ) : (
-                                                                        <Typography
-                                                                            level="body-xs"
-                                                                            sx={{
-                                                                                color: textMuted,
-                                                                            }}
-                                                                        >
-                                                                            -
-                                                                        </Typography>
-                                                                    )}
-                                                                </td>
-                                                            </tr>
-                                                        ))}
-                                                    </tbody>
-                                                </Table>
-                                            </Card>
-                                        </Box>
-                                    )}
 
                                     {/* ════════ Section E: Priority & Effort Breakdown ════════ */}
                                     <Stack direction={{ xs: "column", md: "row" }} spacing={1.5}>
