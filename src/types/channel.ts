@@ -63,9 +63,10 @@ export interface MessageAttachment {
 
 /**
  * One message row. Same shape for every channel kind — PM-specific
- * fields (`taskId`, `displayId`, `taskStatus`, `taskCommentCount`) live
- * inside `metadata`. The render-time `groupByTask` selector reads
- * `metadata.taskId` to collapse N PM messages into one bubble.
+ * fields (`taskId`, `displayId`, `taskStatus`, `taskCommentCount`) are
+ * top-level, derived server-side off the `task` FK. The render-time
+ * `groupByTask` selector reads `taskId` to collapse N PM messages into
+ * one bubble.
  */
 export interface Message {
     id: string;
@@ -93,6 +94,13 @@ export interface Message {
     /** PM-only task status string ("Open" / "Closed" / etc.). Drives the
      *  colored chip in BubbleUnderBar. Null on DM/GM/MDM. */
     taskStatus: string | null;
+    /** PM-only count of LIVE (non-deleted) task comments — the number the
+     *  bubble's "N comments" chip shows (matches the thread's Comments
+     *  tab). Preferred over `replyCount`, which counts all thread replies.
+     *  Only populated on top-level PM task-header messages; null/absent
+     *  elsewhere and on pre-change rows (the chip falls back to
+     *  `replyCount` then). Optional so pre-change cached rows type-check. */
+    taskCommentCount?: number | null;
     editedAt: string | null;
     deletedAt: string | null;
     tsSent: string;
