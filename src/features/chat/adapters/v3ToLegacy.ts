@@ -506,8 +506,16 @@ export function v3MessageToLegacy(args: {
             : typeof meta.taskStatus === "string"
               ? (meta.taskStatus as string)
               : null;
+    // Prefer the server-computed top-level count (live, non-deleted task
+    // comments — the authoritative chip number). Fall back to
+    // `metadata.taskCommentCount` for any older IDB-cached row, then
+    // undefined so the chip fires its `replyCount` fallback.
     const taskCommentCount =
-        typeof meta.taskCommentCount === "number" ? (meta.taskCommentCount as number) : undefined;
+        typeof m.taskCommentCount === "number"
+            ? m.taskCommentCount
+            : typeof meta.taskCommentCount === "number"
+              ? (meta.taskCommentCount as number)
+              : undefined;
     return {
         chatType,
         // PUNCH LIST: legacy slot is `number`; we carry the v3 UUID

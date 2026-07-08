@@ -451,21 +451,13 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
     // this drives the bubble's `minWidth` calc (so an empty bubble
     // doesn't reserve space for a chip that never renders, and a
     // chip-bearing bubble has enough room for "X comments").
-    // v3 `Message.reply_count` is the literal number of thread replies
-    // across every channel kind. For PM task headers, the legacy
-    // `metadata.taskCommentCount` and the v3 reply_count count the
-    // same thing now (each `TaskComments` row is mirrored as a v3
-    // thread-reply Message via Track-D unified_writer). Prefer
-    // reply_count so this stays accurate even for v3-native PM
-    // comments that don't update metadata; fall back to legacy
-    // taskCommentCount for older PM rows the backfill hasn't reached
-    // yet.
+    // For PM task headers the chip shows the task's LIVE comment count
+    // (`taskCommentCount`), not `reply_count` — `reply_count` counts
+    // every thread reply and so over-/under-counts vs the Comments tab.
+    // Fall back to `numReplies` only for pre-change cached rows.
     let numRepliesWithoutFirstMessage: number;
     if (chat.chatType === 3) {
-        numRepliesWithoutFirstMessage = Math.max(
-            message.numReplies ?? 0,
-            message.taskCommentCount ?? 0
-        );
+        numRepliesWithoutFirstMessage = message.taskCommentCount ?? message.numReplies ?? 0;
     } else {
         numRepliesWithoutFirstMessage = message.numReplies;
     }
