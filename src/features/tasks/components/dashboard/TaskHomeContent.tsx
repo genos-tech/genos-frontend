@@ -3162,6 +3162,61 @@ export const TaskHomeContent = ({
                                                     ))}
                                                 </Grid>
 
+                                                {/* Status legend — the per-row Status bars
+                                                    are unlabeled, so this maps each color to
+                                                    its status. Same STATUS_COLORS the bars use. */}
+                                                <Stack
+                                                    alignItems="center"
+                                                    direction="row"
+                                                    flexWrap="wrap"
+                                                    spacing={1.5}
+                                                    sx={{ px: 0.5 }}
+                                                    useFlexGap
+                                                >
+                                                    <Typography
+                                                        level="body-xs"
+                                                        sx={{ color: textMuted, fontWeight: 600 }}
+                                                    >
+                                                        Status
+                                                    </Typography>
+                                                    {(
+                                                        [
+                                                            "Open",
+                                                            "WIP",
+                                                            "Pending",
+                                                            "Closed",
+                                                        ] as const
+                                                    ).map((s) => (
+                                                        <Stack
+                                                            key={s}
+                                                            alignItems="center"
+                                                            direction="row"
+                                                            spacing={0.5}
+                                                        >
+                                                            <Box
+                                                                sx={{
+                                                                    width: 10,
+                                                                    height: 10,
+                                                                    borderRadius: "3px",
+                                                                    backgroundColor:
+                                                                        STATUS_COLORS[s].text,
+                                                                }}
+                                                            />
+                                                            <Typography
+                                                                level="body-xs"
+                                                                sx={{ color: textSecondary }}
+                                                            >
+                                                                {
+                                                                    t.tasks.dashboard.statusLabels[
+                                                                        STATUS_LABEL_KEYS[s] ??
+                                                                            "open"
+                                                                    ]
+                                                                }
+                                                            </Typography>
+                                                        </Stack>
+                                                    ))}
+                                                </Stack>
+
                                                 {/* Per-tag breakdown table */}
                                                 <Card
                                                     variant="outlined"
@@ -3211,10 +3266,15 @@ export const TaskHomeContent = ({
                                                                 >
                                                                     Items
                                                                 </th>
-                                                                <th style={{ width: "24%" }}>
+                                                                <th style={{ width: "42%" }}>
                                                                     Status
                                                                 </th>
-                                                                <th style={{ width: "30%" }}>
+                                                                <th
+                                                                    style={{
+                                                                        width: 84,
+                                                                        textAlign: "center",
+                                                                    }}
+                                                                >
                                                                     Progress
                                                                 </th>
                                                                 <th
@@ -3315,50 +3375,27 @@ export const TaskHomeContent = ({
                                                                                 row.total
                                                                             )}
                                                                         </td>
-                                                                        <td>
-                                                                            <Stack
-                                                                                alignItems="center"
-                                                                                direction="row"
-                                                                                spacing={1}
+                                                                        <td
+                                                                            style={{
+                                                                                textAlign:
+                                                                                    "center",
+                                                                            }}
+                                                                        >
+                                                                            {/* Completion %
+                                                                                (closed / total).
+                                                                                The bar was dropped
+                                                                                — the Status column's
+                                                                                green segment already
+                                                                                shows progress. */}
+                                                                            <Typography
+                                                                                level="body-sm"
+                                                                                sx={{
+                                                                                    fontWeight: 700,
+                                                                                    color: textPrimary,
+                                                                                }}
                                                                             >
-                                                                                <Box
-                                                                                    sx={{
-                                                                                        flex: 1,
-                                                                                        display:
-                                                                                            "flex",
-                                                                                        height: 8,
-                                                                                        borderRadius: 4,
-                                                                                        overflow:
-                                                                                            "hidden",
-                                                                                        backgroundColor:
-                                                                                            isDark
-                                                                                                ? "rgba(255,255,255,0.08)"
-                                                                                                : "rgba(0,0,0,0.06)",
-                                                                                    }}
-                                                                                >
-                                                                                    <Box
-                                                                                        sx={{
-                                                                                            width: `${pct}%`,
-                                                                                            backgroundColor:
-                                                                                                row.tagColor,
-                                                                                            transition:
-                                                                                                "width 0.3s ease",
-                                                                                        }}
-                                                                                    />
-                                                                                </Box>
-                                                                                <Typography
-                                                                                    level="body-xs"
-                                                                                    sx={{
-                                                                                        minWidth: 32,
-                                                                                        textAlign:
-                                                                                            "right",
-                                                                                        fontWeight: 600,
-                                                                                        color: textSecondary,
-                                                                                    }}
-                                                                                >
-                                                                                    {pct}%
-                                                                                </Typography>
-                                                                            </Stack>
+                                                                                {pct}%
+                                                                            </Typography>
                                                                         </td>
                                                                         <td
                                                                             style={{
