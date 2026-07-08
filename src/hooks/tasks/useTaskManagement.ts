@@ -288,6 +288,17 @@ export const useTaskManagement = (
         if (id !== -1) {
             setCurrentPreviewKind("task");
             _setCurrentPreviewMilestoneId(-1);
+        } else {
+            // Deselecting (e.g. closing the preview) must also drop the
+            // loaded task object. Otherwise a stale `currentPreviewTask`
+            // lingers, and on the NEXT open — which sets the id first and
+            // loads the object a beat later — the URL-sync effect publishes
+            // the OLD task's id to the URL (it navigates off
+            // `currentPreviewTask.id`, not the freshly-set id). The
+            // URL→state effect then reads that stale id back and reverts the
+            // pane to the previously-viewed task. Mirrors
+            // `setCurrentPreviewMilestoneId`, which already clears it.
+            setCurrentPreviewTask(undefined);
         }
     };
     const setCurrentPreviewMilestoneId = (id: number) => {

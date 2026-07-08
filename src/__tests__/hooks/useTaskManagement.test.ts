@@ -135,3 +135,37 @@ describe("useTaskManagement — preview identity guard (rapid switch + stick)", 
         expect(result.current.currentPreviewTask?.id).toBe(7);
     });
 });
+
+// Regression: "closed preview reopens on the OLD task". Closing set the id
+// to -1 but left `currentPreviewTask` pointing at the closed task; on the
+// next open (id set first, object loads a beat later) the URL-sync effect
+// republished the stale task id and the URL→state effect reverted the pane
+// to it. The fix: deselecting clears the object too, so nothing stale can
+// be republished. See useTaskRouting's two navigation effects.
+describe("useTaskManagement — deselect clears the stale preview object", () => {
+    it("setCurrentPreviewTaskId(-1) drops the loaded task", async () => {
+        loadSpecificTaskMock.mockResolvedValue([mkTask(34)]);
+        const { result } = renderHook(() => useTaskManagement(myself, "token"));
+
+        act(() => result.current.setCurrentPreviewTaskId(34));
+        await act(async () => {
+            await result.current.loadTask(10, 34);
+        });
+        expect(result.current.currentPreviewTask?.id).toBe(34);
+
+        act(() => result.current.setCurrentPreviewTaskId(-1));
+        expect(result.current.currentPreviewTask).toBeUndefined();
+    });
+
+    it("switching to another task id keeps the current object until its load lands", () => {
+        const { result } = renderHook(() => useTaskManagement(myself, "token"));
+
+        act(() => result.current.setCurrentPreviewTask(mkTask(34)));
+        expect(result.current.currentPreviewTask?.id).toBe(34);
+
+        // A non-(-1) switch must NOT wipe the shown object (that would flash
+        // the pane blank); it's replaced when the new load resolves.
+        act(() => result.current.setCurrentPreviewTaskId(36));
+        expect(result.current.currentPreviewTask?.id).toBe(34);
+    });
+});
