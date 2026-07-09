@@ -55,6 +55,7 @@ import {
     TaskGraph,
     TaskNodeData,
 } from "../types";
+import { computeHiddenTaskIds } from "../utils/computeHiddenTaskIds";
 import { computeHealth, getMilestoneWindow } from "../utils/scheduleStatus";
 import { sortDiagramTasks } from "../utils/sortDiagramTasks";
 import { DependencyEdge } from "./DependencyEdge";
@@ -360,34 +361,16 @@ const buildNodesAndEdges = (
         };
     };
 
-    // Hidden-task set for the "Hide closed tasks" toggle. The root is
-    // always kept — hiding the focal point would just empty the canvas
-    // and look broken. External (ghost) tasks aren't filtered for the
-    // Closed case: they're outside-tree references; dependency edges
-    // that touch a hidden internal task get dropped further down via
-    // the rendered-id set, so disconnected ghosts simply fall out on
-    // their own.
-    //
-    // Deleted tasks are ALWAYS hidden, regardless of the `hideClosed`
-    // toggle — they're soft-deleted rows the rest of the app doesn't
-    // expose (table, sidebar, search), so showing them only in the
-    // diagram would surface dead data with no way to act on it. Also
-    // applied to ghost dependency refs so a "blocker" pointing at a
-    // deleted task from another project doesn't leak in.
-    const hiddenTaskIds = new Set<number>();
-    for (const t of graph.tasks) {
-        if (t.id == null) continue;
-        const taskId = Number(t.id);
-        if (isDeletedStatus(t.status)) {
-            hiddenTaskIds.add(taskId);
-            continue;
-        }
-        if (hideClosed && taskId !== rootTaskId) {
-            if ((t.status ?? "").toLowerCase() === "closed") {
-                hiddenTaskIds.add(taskId);
-            }
-        }
-    }
+    // Hidden-task set for the "Hide closed tasks" toggle (+ always-hidden
+    // Deleted rows). Closing a parent collapses its WHOLE branch: a Closed
+    // task is hidden together with its entire subtree (open descendants
+    // included), so hiding closed work never detaches an open subtask —
+    // see `computeHiddenTaskIds` for the full rule and its unit tests.
+    // External (ghost) tasks aren't filtered for the Closed case: they're
+    // outside-tree references, and dependency edges touching a hidden
+    // internal task get dropped further down via the rendered-id set, so
+    // disconnected ghosts fall out on their own.
+    const hiddenTaskIds = computeHiddenTaskIds(graph.tasks, rootTaskId, hideClosed);
     const visibleInternalTasks = graph.tasks.filter(
         (t) => t.id != null && !hiddenTaskIds.has(Number(t.id))
     );
@@ -417,9 +400,11 @@ const buildNodesAndEdges = (
     // Structure edges from parent_task_id (visible-tree only —
     // ghosts have no structure edges into the visible set). Iterates
     // the already-filtered list so an edge can't survive when either
-    // endpoint was dropped by `hideClosed`. Children of a hidden
-    // parent become root-level siblings in dagre — acceptable since
-    // their original parent has gone away from the user's view.
+    // endpoint was dropped. A hidden Closed parent takes its whole
+    // subtree with it (see `computeHiddenTaskIds`), so it never has a
+    // visible child; the only way a child's parent is hidden here is the
+    // pre-existing Deleted-mid-path case, where the child falls back to a
+    // root-level sibling in dagre.
     const structureEdges: Edge[] = [];
     const visibleIdSet = new Set(sortedInternalTasks.map((t) => Number(t.id)));
     // Iterate the SORTED list so setEdge call order reflects the
@@ -689,12 +674,71 @@ const CanvasInner = ({
                 setError(res.error);
                 return;
             }
-            const graph = await refresh();
-            if (graph) {
-                assembleAndLayout(graph);
+
+            // Optimistic insert. Previously we awaited a full graph reload
+            // (getProjectTasks + a dependency batch) before the new node
+            // appeared — two extra round-trips that made "add subtask" feel
+            // like a multi-second wait. A brand-new leaf task is fully
+            // deterministic: we already know its id, real display id (from
+            // the create response), title, Open status, owner, parent edge,
+            // and it inherits the parent's milestone/sprint chain (the same
+            // bridge the server applies). So we synthesise its row, drop it
+            // straight into the cached graph, and re-layout WITHOUT
+            // re-fitting the camera (`fit: false`) so the node shows up
+            // instantly right under the parent the user just clicked. No
+            // background graph reload is needed — skipping it also avoids
+            // clobbering an inline rename that races the reload.
+            // `loadUpdatedTask` still syncs the main task table/sidebar so
+            // the row is there when the diagram closes.
+            const current = graphRef.current;
+            if (current && parent) {
+                const now = new Date().toISOString();
+                const optimistic: TaskTableProps = {
+                    id: String(res.taskId),
+                    displayId: res.displayId,
+                    title: defaultTitle,
+                    priority: null,
+                    effortLevel: null,
+                    createdDate: now,
+                    updatedAt: now,
+                    dueDate: null,
+                    startDate: null,
+                    daysLeft: null,
+                    status: "Open",
+                    assigneeId: myself.userId,
+                    assigneeEmail: myself.userEmail ?? null,
+                    assigneeName: myself.userName ?? null,
+                    assigneeImgPath: null,
+                    parentTaskId: String(parentTaskId),
+                    // task.rootTaskId isn't used for rendering (the diagram
+                    // keys "is root" off the rootTaskId prop), but keep it
+                    // sane for any downstream reader.
+                    rootTaskId:
+                        parent.rootTaskId ?? (parent.id != null ? Number(parent.id) : null),
+                    threadId: null,
+                    tags: [],
+                    concatTags: null,
+                    teamId: myself.teamId ?? null,
+                    projectId,
+                    isMilestone: false,
+                    milestoneId: parent.milestoneId ?? null,
+                    sprintId: parent.sprintId ?? null,
+                };
+                const nextGraph: TaskGraph = { ...current, tasks: [...current.tasks, optimistic] };
+                graphRef.current = nextGraph;
+                assembleAndLayout(nextGraph, { fit: false });
+            } else {
+                // Fallback (no cached graph/parent to splice into): reload,
+                // still without re-fitting the camera.
+                const graph = await refresh();
+                if (graph) assembleAndLayout(graph, { fit: false });
             }
             void useTM.loadUpdatedTask(projectId);
         },
+        // `assembleAndLayout` is intentionally omitted: it's declared below
+        // this handler, so listing it here is a use-before-declaration (TDZ)
+        // error. It's called at runtime inside the async body (safe), and
+        // handleDelete follows the same pattern.
         [myself, projectId, accessToken, useTM, refresh] // eslint-disable-line react-hooks/exhaustive-deps
     );
 
@@ -710,7 +754,7 @@ const CanvasInner = ({
                 return;
             }
             const graph = await refresh();
-            if (graph) assembleAndLayout(graph);
+            if (graph) assembleAndLayout(graph, { fit: false });
             void useTM.loadUpdatedTask(projectId);
         },
         [myself, accessToken, useTM, projectId, refresh] // eslint-disable-line react-hooks/exhaustive-deps
@@ -775,7 +819,14 @@ const CanvasInner = ({
     };
 
     const assembleAndLayout = useCallback(
-        (graph: TaskGraph) => {
+        // `fit` re-frames the whole graph (zoom + pan) after layout. It's
+        // wanted on initial load and when the hide-closed toggle flips
+        // (the visible set changes materially), but NOT on in-place
+        // mutations (create / delete / re-parent / dependency edits, and
+        // background task-touched refreshes) — re-fitting there yanks the
+        // camera back to the whole tree and loses the user's zoom/pan,
+        // which reads as the diagram "resetting" on every edit.
+        (graph: TaskGraph, opts?: { fit?: boolean }) => {
             const sprintByTaskId = buildSprintLookup(graph, useSM, projectId);
             const blockerMap = buildOpenBlockerCountByTask(graph);
             // Diagram project name — every internal task in `graph.tasks`
@@ -808,9 +859,11 @@ const CanvasInner = ({
             const positioned = dagreLayout(rawNodes, rawEdges, "TB");
             setNodes(positioned);
             setEdges(rawEdges);
-            requestAnimationFrame(() => {
-                fitView({ padding: 0.15, duration: 300 });
-            });
+            if (opts?.fit !== false) {
+                requestAnimationFrame(() => {
+                    fitView({ padding: 0.15, duration: 300 });
+                });
+            }
         },
         [dagreLayout, fitView, rootTaskId, useSM, projectId, usePM.currentProject, hideClosed]
     );
@@ -860,7 +913,7 @@ const CanvasInner = ({
             if (!inGraph) return;
             void (async () => {
                 const graph = await refresh();
-                if (graph) assembleAndLayout(graph);
+                if (graph) assembleAndLayout(graph, { fit: false });
             })();
         });
     }, [refresh, assembleAndLayout]);
@@ -938,7 +991,7 @@ const CanvasInner = ({
                 }
             }
             const graph = await refresh();
-            if (graph) assembleAndLayout(graph);
+            if (graph) assembleAndLayout(graph, { fit: false });
             void useTM.loadUpdatedTask(projectId);
         },
         [accessToken, refresh, assembleAndLayout, useTM, projectId]
@@ -986,7 +1039,7 @@ const CanvasInner = ({
             // while refresh is in flight.
             setEdges((prev) => reconnectEdge(oldEdge, newConnection, prev));
             const graph = await refresh();
-            if (graph) assembleAndLayout(graph);
+            if (graph) assembleAndLayout(graph, { fit: false });
             void useTM.loadUpdatedTask(projectId);
         },
         [accessToken, refresh, assembleAndLayout, useTM, projectId]
