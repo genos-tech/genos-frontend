@@ -32,8 +32,21 @@ export const SpotlightSettingsModal = ({ open, onClose }: Props) => {
     return (
         <Modal
             open={open}
-            // Above the Spotlight overlay (13100), which remains open behind us.
-            sx={{ zIndex: 13200 }}
+            sx={{
+                // Above the Spotlight overlay (13100), which remains open
+                // behind us.
+                zIndex: 13200,
+                // Joy pins the Select/Autocomplete listbox popup z-index to
+                // `calc(theme.zIndex.modal + 1)` (≈1301) via a
+                // `--unstable_popup-zIndex` CSS var it stamps on the modal
+                // root AND on sibling portaled `[role="listbox"]` nodes — it
+                // does NOT track this `sx` z-index override. Left as-is the
+                // model-picker dropdowns would open at 1301, *behind* this
+                // 13200 dialog and be unclickable. Re-stamp the same var in
+                // both scopes above the dialog so the popups win.
+                "--unstable_popup-zIndex": 13300,
+                '& ~ [role="listbox"]': { "--unstable_popup-zIndex": 13300 },
+            }}
             onClose={onClose}
         >
             <ModalDialog
