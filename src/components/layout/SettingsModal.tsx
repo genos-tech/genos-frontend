@@ -273,7 +273,13 @@ const DoubleClickTodoSection = () => {
     );
 };
 
-const LlmModelSection = () => {
+// Exported so the Spotlight overlay's dedicated settings modal
+// (`features/spotlight/SpotlightSettingsModal`) can reuse the exact same
+// model-picker without threading any props — the section is self-contained
+// (reads `useLlmModelPreference` internally). Keeping one implementation
+// means the Gemini/Claude catalog + usage rows can't drift between the two
+// surfaces.
+export const LlmModelSection = () => {
     const { data, loading, setChoice } = useLlmModelPreference();
     const { t } = useTranslation();
 
@@ -509,7 +515,10 @@ const LlmModelSection = () => {
     );
 };
 
-const SpotlightSection = () => {
+// Exported for reuse by the Spotlight overlay's dedicated settings modal —
+// see the note on `LlmModelSection`. Also self-contained (reads
+// `useSpotlightPreferences` + probes the web-search feature gate itself).
+export const SpotlightSection = () => {
     const { aiAnswers, webSearch, setAiAnswers, setWebSearch } = useSpotlightPreferences();
     const { accessToken } = useAuth();
     const { t } = useTranslation();

@@ -37,6 +37,7 @@ import { CalendarModal } from "./features/calendar/components/CalendarModal";
 import { useIsV3ChatEnabled } from "./features/channel/chatRolloutFlags";
 import { OAUTH_INTEGRATIONS_ENABLED } from "./features/integrations/featureFlags";
 import { SpotlightOverlay } from "./features/spotlight/SpotlightOverlay";
+import { SpotlightSettingsModal } from "./features/spotlight/SpotlightSettingsModal";
 import { CHAT_TYPE_CODE, SpotlightResult } from "./features/spotlight/types";
 import { useSpotlight } from "./features/spotlight/useSpotlight";
 import { ModalTaskDiagram } from "./features/tasks/diagram/components/ModalTaskDiagram";
@@ -549,6 +550,10 @@ export const App = () => {
         accessToken,
         teamId: useTEM.currentTeamId,
     });
+    // Spotlight-scoped settings modal (LLM model picker + AI-answer
+    // toggles), opened from the gear icon on the Spotlight bar. Local
+    // to the App root so the dialog can layer above the overlay.
+    const [spotlightSettingsOpen, setSpotlightSettingsOpen] = useState(false);
 
     // Translate a Spotlight result row into the canonical deep-link URL
     // for its entity type. We set the URL directly (rather than calling
@@ -940,10 +945,17 @@ export const App = () => {
                                                 onClose={spotlight.close}
                                                 onFeedback={spotlight.submitFeedback}
                                                 onNewConversation={spotlight.onNewConversation}
+                                                onOpenSettings={() =>
+                                                    setSpotlightSettingsOpen(true)
+                                                }
                                                 onPreview={handleSpotlightPreview}
                                                 onQueryChange={spotlight.setQuery}
                                                 onReject={spotlight.onReject}
                                                 onSelect={handleSpotlightSelect}
+                                            />
+                                            <SpotlightSettingsModal
+                                                open={spotlightSettingsOpen}
+                                                onClose={() => setSpotlightSettingsOpen(false)}
                                             />
                                             <ConnectionStatusSnackbar
                                                 showApiDown={showApiDown}

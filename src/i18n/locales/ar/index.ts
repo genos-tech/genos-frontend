@@ -1304,6 +1304,10 @@ export const ar: DeepPartial<Messages> = {
             turnLabelQ: "س",
             turnLabelA: "ج",
         },
+        settings: {
+            title: "إعدادات Spotlight",
+            openTooltip: "إعدادات Spotlight — النموذج وإجابات الذكاء الاصطناعي",
+        },
         approval: {
             titleWithTool: "الموافقة مطلوبة: {toolName}",
         },

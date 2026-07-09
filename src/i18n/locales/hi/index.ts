@@ -1313,6 +1313,10 @@ export const hi: DeepPartial<Messages> = {
             turnLabelQ: "स",
             turnLabelA: "ज",
         },
+        settings: {
+            title: "स्पॉटलाइट सेटिंग्स",
+            openTooltip: "स्पॉटलाइट सेटिंग्स — मॉडल और AI उत्तर",
+        },
         approval: {
             titleWithTool: "मंज़ूरी ज़रूरी: {toolName}",
         },
