@@ -189,6 +189,14 @@ export const useAgentQA = ({
                             ),
                         };
                     });
+                    // Cross-feature invalidator: a note written by the
+                    // agent (thread/note Q&A shares the write tools) won't
+                    // show in the note sidebar until a reload. Nudge
+                    // useNoteManagement to refetch its meta. Mirrors the
+                    // Spotlight overlay's handler.
+                    if (tool_name === "create_note" || tool_name === "update_note") {
+                        window.dispatchEvent(new CustomEvent("noteChanged"));
+                    }
                 },
                 onToolError: ({
                     step,

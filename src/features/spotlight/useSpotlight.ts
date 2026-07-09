@@ -574,6 +574,12 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
                     if (tool_name === "create_todo_item" || tool_name === "update_todo_item") {
                         window.dispatchEvent(new CustomEvent("todoChanged"));
                     }
+                    // Same idea for notes: the note sidebar's meta
+                    // (useNoteManagement) won't reflect an agent-written
+                    // note until a manual reload. Nudge it to refetch.
+                    if (tool_name === "create_note" || tool_name === "update_note") {
+                        window.dispatchEvent(new CustomEvent("noteChanged"));
+                    }
                 },
                 onToolError: ({
                     step,
