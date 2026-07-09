@@ -96,7 +96,21 @@ export const UrlLinkModal = (props: UrlLinkModalProps) => {
     return (
         <Modal
             open={target !== null}
-            sx={{ zIndex: effectiveZIndex }}
+            sx={{
+                zIndex: effectiveZIndex,
+                // Joy pins Select/Autocomplete listbox popups to
+                // calc(theme.zIndex.modal + 1) ≈ 1301 and does NOT track the
+                // raised `zIndex` above. Left as-is, the task/milestone
+                // autocompletes rendered inside these views (assignee,
+                // reporter, project, priority, effort, status, sprint…) open
+                // at ~1301 — far *behind* this modal — and appear empty. This
+                // is exactly what a user opening a task from the task diagram
+                // hits: the picker dropdowns show nothing. Re-stamp the var on
+                // the modal root (inline listboxes inherit it) and on sibling
+                // portaled listboxes so the popups render above the dialog.
+                "--unstable_popup-zIndex": effectiveZIndex + 10,
+                '& ~ [role="listbox"]': { "--unstable_popup-zIndex": effectiveZIndex + 10 },
+            }}
             slotProps={{
                 backdrop: {
                     sx: {

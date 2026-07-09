@@ -113,7 +113,33 @@ export const ModalTaskDiagram = ({
         overview != null && (spanLabel != null || overview.total > 0 || overview.sprint != null);
 
     return (
-        <Modal open={open} onClose={onClose}>
+        <Modal
+            open={open}
+            sx={{
+                // The task-preview BlockNote editor's floating side-menu
+                // (the row drag-handle / "+" that appear on row hover) is
+                // pinned to z-index 1400 via `!important` in App.css — above
+                // Joy's default modal z-index (1300). So when this diagram
+                // opens over a task preview, that editor's row-option icons
+                // leak ON TOP of the diagram. Lift the diagram above the
+                // BlockNote floating UI, while staying below the UrlLinkModal
+                // (10020) that opens a task/milestone preview ON TOP of the
+                // diagram (see `handleOpenPreview` in TaskFlowCanvas). 9999
+                // finally makes that comment's assumed stacking real.
+                zIndex: 9999,
+                // Joy pins Select/Autocomplete listbox popups to
+                // calc(theme.zIndex.modal + 1) ≈ 1301 and does NOT track the
+                // sx z-index override above — so any default-z popup rendered
+                // inside the diagram would open behind this 9999 dialog.
+                // Re-stamp the var on the modal root (inline listboxes inherit
+                // it) and on sibling portaled listboxes so popups win. (The
+                // node-card status Menu is role="menu", not caught here, and
+                // is already hard-pinned to 10000 in TaskNodeCard.)
+                "--unstable_popup-zIndex": 10000,
+                '& ~ [role="listbox"]': { "--unstable_popup-zIndex": 10000 },
+            }}
+            onClose={onClose}
+        >
             <ModalDialog
                 size="lg"
                 variant="outlined"
