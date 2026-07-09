@@ -22,7 +22,9 @@ export const createDiagramSubtask = async (
     // the parent is a milestone (the child reads as a task in that
     // milestone, not a sub-task), and "New sub-task" otherwise.
     title: string = "New sub-task"
-): Promise<{ ok: true; taskId: number } | { ok: false; error: string }> => {
+): Promise<
+    { ok: true; taskId: number; displayId: string | null } | { ok: false; error: string }
+> => {
     try {
         const api = authApi(accessToken);
         if (!api) return { ok: false, error: "Unauthorized." };
@@ -52,7 +54,14 @@ export const createDiagramSubtask = async (
         if (typeof id !== "number") {
             return { ok: false, error: "Backend did not return a task id." };
         }
-        return { ok: true, taskId: id };
+        // The POST handler mirrors PUT / getProjectTasks and surfaces the
+        // human-readable "<code>-<n>" id. Return it so the canvas can drop
+        // the new node in with its real display id instead of flashing
+        // "#<id>" while an optimistic node waits for a reload.
+        const rawDisplayId = res.data?.task?.displayId;
+        const displayId =
+            typeof rawDisplayId === "string" && rawDisplayId !== "" ? rawDisplayId : null;
+        return { ok: true, taskId: id, displayId };
     } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
             return {

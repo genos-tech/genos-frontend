@@ -689,13 +689,68 @@ const CanvasInner = ({
                 setError(res.error);
                 return;
             }
-            const graph = await refresh();
-            if (graph) {
-                assembleAndLayout(graph);
+
+            // Optimistic insert. Previously we awaited a full graph reload
+            // (getProjectTasks + a dependency batch) before the new node
+            // appeared — two extra round-trips that made "add subtask" feel
+            // like a multi-second wait. A brand-new leaf task is fully
+            // deterministic: we already know its id, real display id (from
+            // the create response), title, Open status, owner, parent edge,
+            // and it inherits the parent's milestone/sprint chain (the same
+            // bridge the server applies). So we synthesise its row, drop it
+            // straight into the cached graph, and re-layout WITHOUT
+            // re-fitting the camera (`fit: false`) so the node shows up
+            // instantly right under the parent the user just clicked. No
+            // background graph reload is needed — skipping it also avoids
+            // clobbering an inline rename that races the reload.
+            // `loadUpdatedTask` still syncs the main task table/sidebar so
+            // the row is there when the diagram closes.
+            const current = graphRef.current;
+            if (current && parent) {
+                const now = new Date().toISOString();
+                const optimistic: TaskTableProps = {
+                    id: String(res.taskId),
+                    displayId: res.displayId,
+                    title: defaultTitle,
+                    priority: null,
+                    effortLevel: null,
+                    createdDate: now,
+                    updatedAt: now,
+                    dueDate: null,
+                    startDate: null,
+                    daysLeft: null,
+                    status: "Open",
+                    assigneeId: myself.userId,
+                    assigneeEmail: myself.userEmail ?? null,
+                    assigneeName: myself.userName ?? null,
+                    assigneeImgPath: null,
+                    parentTaskId: String(parentTaskId),
+                    // task.rootTaskId isn't used for rendering (the diagram
+                    // keys "is root" off the rootTaskId prop), but keep it
+                    // sane for any downstream reader.
+                    rootTaskId:
+                        parent.rootTaskId ?? (parent.id != null ? Number(parent.id) : null),
+                    threadId: null,
+                    tags: [],
+                    concatTags: null,
+                    teamId: myself.teamId ?? null,
+                    projectId,
+                    isMilestone: false,
+                    milestoneId: parent.milestoneId ?? null,
+                    sprintId: parent.sprintId ?? null,
+                };
+                const nextGraph: TaskGraph = { ...current, tasks: [...current.tasks, optimistic] };
+                graphRef.current = nextGraph;
+                assembleAndLayout(nextGraph, { fit: false });
+            } else {
+                // Fallback (no cached graph/parent to splice into): reload,
+                // still without re-fitting the camera.
+                const graph = await refresh();
+                if (graph) assembleAndLayout(graph, { fit: false });
             }
             void useTM.loadUpdatedTask(projectId);
         },
-        [myself, projectId, accessToken, useTM, refresh] // eslint-disable-line react-hooks/exhaustive-deps
+        [myself, projectId, accessToken, useTM, refresh, assembleAndLayout] // eslint-disable-line react-hooks/exhaustive-deps
     );
 
     const handleDelete = useCallback(
@@ -710,7 +765,7 @@ const CanvasInner = ({
                 return;
             }
             const graph = await refresh();
-            if (graph) assembleAndLayout(graph);
+            if (graph) assembleAndLayout(graph, { fit: false });
             void useTM.loadUpdatedTask(projectId);
         },
         [myself, accessToken, useTM, projectId, refresh] // eslint-disable-line react-hooks/exhaustive-deps
@@ -775,7 +830,14 @@ const CanvasInner = ({
     };
 
     const assembleAndLayout = useCallback(
-        (graph: TaskGraph) => {
+        // `fit` re-frames the whole graph (zoom + pan) after layout. It's
+        // wanted on initial load and when the hide-closed toggle flips
+        // (the visible set changes materially), but NOT on in-place
+        // mutations (create / delete / re-parent / dependency edits, and
+        // background task-touched refreshes) — re-fitting there yanks the
+        // camera back to the whole tree and loses the user's zoom/pan,
+        // which reads as the diagram "resetting" on every edit.
+        (graph: TaskGraph, opts?: { fit?: boolean }) => {
             const sprintByTaskId = buildSprintLookup(graph, useSM, projectId);
             const blockerMap = buildOpenBlockerCountByTask(graph);
             // Diagram project name — every internal task in `graph.tasks`
@@ -808,9 +870,11 @@ const CanvasInner = ({
             const positioned = dagreLayout(rawNodes, rawEdges, "TB");
             setNodes(positioned);
             setEdges(rawEdges);
-            requestAnimationFrame(() => {
-                fitView({ padding: 0.15, duration: 300 });
-            });
+            if (opts?.fit !== false) {
+                requestAnimationFrame(() => {
+                    fitView({ padding: 0.15, duration: 300 });
+                });
+            }
         },
         [dagreLayout, fitView, rootTaskId, useSM, projectId, usePM.currentProject, hideClosed]
     );
@@ -860,7 +924,7 @@ const CanvasInner = ({
             if (!inGraph) return;
             void (async () => {
                 const graph = await refresh();
-                if (graph) assembleAndLayout(graph);
+                if (graph) assembleAndLayout(graph, { fit: false });
             })();
         });
     }, [refresh, assembleAndLayout]);
@@ -938,7 +1002,7 @@ const CanvasInner = ({
                 }
             }
             const graph = await refresh();
-            if (graph) assembleAndLayout(graph);
+            if (graph) assembleAndLayout(graph, { fit: false });
             void useTM.loadUpdatedTask(projectId);
         },
         [accessToken, refresh, assembleAndLayout, useTM, projectId]
@@ -986,7 +1050,7 @@ const CanvasInner = ({
             // while refresh is in flight.
             setEdges((prev) => reconnectEdge(oldEdge, newConnection, prev));
             const graph = await refresh();
-            if (graph) assembleAndLayout(graph);
+            if (graph) assembleAndLayout(graph, { fit: false });
             void useTM.loadUpdatedTask(projectId);
         },
         [accessToken, refresh, assembleAndLayout, useTM, projectId]
