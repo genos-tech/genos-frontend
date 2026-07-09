@@ -33,6 +33,7 @@ import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import ReplayRoundedIcon from "@mui/icons-material/ReplayRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
+import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import StickyNote2RoundedIcon from "@mui/icons-material/StickyNote2Rounded";
 import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
 import { Box, Button, Chip, CircularProgress, IconButton, Sheet, Typography } from "@mui/joy";
@@ -126,6 +127,10 @@ interface Props {
     viewHistorySession: (sessionId: string) => void;
     backToHistoryList: () => void;
     closeHistory: () => void;
+    // Opens the Spotlight-scoped settings modal (LLM model picker + AI
+    // answer toggles) from the gear icon on the bar. Owned by the App
+    // root so the dialog can layer above this overlay.
+    onOpenSettings: () => void;
 }
 
 // Distance from the bottom (px) under which we consider the user
@@ -167,6 +172,7 @@ export const SpotlightOverlay = ({
     viewHistorySession,
     backToHistoryList,
     closeHistory,
+    onOpenSettings,
 }: Props) => {
     const { mode } = useColorScheme();
     const { t } = useTranslation();
@@ -590,6 +596,25 @@ export const SpotlightOverlay = ({
                                 onClick={openHistory}
                             >
                                 <HistoryRoundedIcon sx={{ fontSize: { xs: 18, sm: 20 } }} />
+                            </IconButton>
+                        </AppTooltip>
+                        {/* Spotlight settings — switch LLM model (Gemini /
+                        Claude) + toggle AI answers / web search without
+                        leaving the overlay. Sits right of History; opens a
+                        dedicated modal layered above this overlay. */}
+                        <AppTooltip
+                            placement="bottom"
+                            size="sm"
+                            title={t.spotlight.settings.openTooltip}
+                        >
+                            <IconButton
+                                color="neutral"
+                                size="sm"
+                                sx={{ minWidth: 0, p: "3px", flexShrink: 0 }}
+                                variant="plain"
+                                onClick={onOpenSettings}
+                            >
+                                <SettingsRoundedIcon sx={{ fontSize: { xs: 18, sm: 20 } }} />
                             </IconButton>
                         </AppTooltip>
                     </Box>

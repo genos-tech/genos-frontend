@@ -58,6 +58,10 @@ export const spotlight = {
         relativeDays: "{count, plural, one {# day ago} other {# days ago}}",
         readOnlyHint: "Read-only — start a new conversation to ask a follow-up.",
     },
+    settings: {
+        title: "Spotlight settings",
+        openTooltip: "Spotlight settings — model & AI answers",
+    },
     approval: {
         titleWithTool: "Approval required: {toolName}",
     },

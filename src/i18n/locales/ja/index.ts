@@ -1340,6 +1340,10 @@ export const ja: DeepPartial<Messages> = {
             turnLabelQ: "Q",
             turnLabelA: "A",
         },
+        settings: {
+            title: "スポットライト設定",
+            openTooltip: "スポットライト設定 — モデルとAI回答",
+        },
         approval: {
             titleWithTool: "承認が必要：{toolName}",
         },

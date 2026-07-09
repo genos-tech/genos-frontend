@@ -1306,6 +1306,10 @@ export const es: DeepPartial<Messages> = {
             turnLabelQ: "P",
             turnLabelA: "R",
         },
+        settings: {
+            title: "Ajustes de Spotlight",
+            openTooltip: "Ajustes de Spotlight — modelo y respuestas de IA",
+        },
         approval: {
             titleWithTool: "Aprobación requerida: {toolName}",
         },

@@ -1290,6 +1290,10 @@ export const zh: DeepPartial<Messages> = {
             turnLabelQ: "问",
             turnLabelA: "答",
         },
+        settings: {
+            title: "Spotlight 设置",
+            openTooltip: "Spotlight 设置 — 模型与 AI 回答",
+        },
         approval: {
             titleWithTool: "需要确认：{toolName}",
         },

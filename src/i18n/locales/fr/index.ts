@@ -1321,6 +1321,10 @@ export const fr: DeepPartial<Messages> = {
             turnLabelQ: "Q",
             turnLabelA: "R",
         },
+        settings: {
+            title: "Paramètres de Spotlight",
+            openTooltip: "Paramètres de Spotlight — modèle et réponses IA",
+        },
         approval: {
             titleWithTool: "Approbation requise : {toolName}",
         },
