@@ -759,29 +759,20 @@ describe("agentApi.askAgentStream", () => {
         expect(JSON.parse(fetchMock.mock.calls[0][1].body).session_id).toBe("sess-1");
     });
 
-    it("includes allow_web_search:false only when explicitly false", async () => {
+    it("never sends allow_web_search — gating is server-side", async () => {
+        // Web search is gated by the backend from the persisted
+        // `spotlight_web_search_enabled` preference; the per-request
+        // flag was removed (a stale client could send it wrong and
+        // silently drop the tool).
         const fetchMock = vi.fn().mockResolvedValue(streamResponse(['{"type":"done"}\n']));
         vi.stubGlobal("fetch", fetchMock);
         const h = makeHandlers();
 
-        // false -> present
         await askAgentStream({
             ...h,
             query: "q",
             teamId: "t",
             accessToken: "tok",
-            allowWebSearch: false,
-        });
-        expect(JSON.parse(fetchMock.mock.calls[0][1].body).allow_web_search).toBe(false);
-
-        // true -> omitted
-        fetchMock.mockClear();
-        await askAgentStream({
-            ...h,
-            query: "q",
-            teamId: "t",
-            accessToken: "tok",
-            allowWebSearch: true,
         });
         expect(JSON.parse(fetchMock.mock.calls[0][1].body)).not.toHaveProperty("allow_web_search");
     });

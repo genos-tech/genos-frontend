@@ -128,9 +128,8 @@ export interface UseAgentQAArgs {
     accessToken: string | null;
     teamId: string | null | undefined;
     // Called fresh on each ask to inject per-call payload extras
-    // (`threadContext`, `noteContext`, `allowWebSearch`, etc.). Keeps
-    // the hook policy-free — the caller decides what context the
-    // backend sees.
+    // (`threadContext`, `noteContext`, etc.). Keeps the hook
+    // policy-free — the caller decides what context the backend sees.
     buildAskExtras?: () => Partial<AskAgentArgs>;
 }
 

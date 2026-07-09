@@ -96,10 +96,11 @@ export interface AskAgentArgs extends BaseStreamHandlers {
     accessToken: string | null;
     sessionId?: string;
     entityTypes?: Array<"chat" | "task" | "note" | "todo">;
-    // When false, the backend filters the web-browse tool out of the
-    // agent's tool list so the model can't call it. Defaults to true
-    // (current behavior) if omitted.
-    allowWebSearch?: boolean;
+    // Web-search gating is server-side only: the backend reads the user's
+    // persisted `spotlight_web_search_enabled` preference (the Settings
+    // toggle writes it via PATCH /user/preferences/spotlight-web-search/).
+    // The old per-request `allow_web_search` flag was removed — a stale
+    // client could send it wrong and silently drop the tool.
     // When set, the agent scopes its answer to one specific chat thread:
     // it loads a thread summary into the system prompt, hard-disables
     // every workspace-wide and write tool, and enables only
@@ -446,10 +447,6 @@ export async function askAgentStream(args: AskAgentArgs): Promise<void> {
             team_id: args.teamId,
             entity_types: args.entityTypes,
             ...(args.sessionId ? { session_id: args.sessionId } : {}),
-            // Omit the field entirely when the toggle is at the default
-            // (true) — keeps the wire format unchanged for existing
-            // clients and the backend default.
-            ...(args.allowWebSearch === false ? { allow_web_search: false } : {}),
             ...(args.threadContext
                 ? {
                       thread_context: {
