@@ -83,11 +83,12 @@ export const ModalTaskDiagram = ({
     // Null while the first load is in flight.
     const [overview, setOverview] = useState<ScheduleOverview | null>(null);
 
-    // When on, the canvas drops every Closed task (and any edge that
-    // touches one) from the graph, then re-runs dagre so the remaining
-    // tree fills the canvas. ON by default — a diagram is usually opened
-    // to reason about what's LEFT to do, so completed work is hidden until
-    // the user opts back in via the header toggle. The toggle stays
+    // When on, the canvas collapses every Closed branch — a Closed task
+    // and its WHOLE subtree (open descendants included) drop out, then
+    // dagre re-runs so the remaining tree fills the canvas. ON by default —
+    // a diagram is usually opened to reason about what's LEFT to do, so
+    // finished branches are tucked away until the user opts back in via the
+    // header toggle (which brings every task back). The toggle stays
     // reachable: the canvas computes its schedule overview from the full
     // (unfiltered) graph, so `overview.closed > 0` still gates the button
     // on even while closed tasks are hidden. Not persisted — "by default"

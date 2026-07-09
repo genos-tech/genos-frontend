@@ -6,27 +6,30 @@ const isClosed = (t: TaskTableProps): boolean => statusLower(t) === "closed";
 
 /**
  * Which internal task ids the diagram should hide, given the `hideClosed`
- * toggle. Pure + exported so the tricky "closed parent, open child" case
- * is unit-tested (see `DiagramHiddenTasks.test.ts`).
+ * toggle. Pure + exported so the collapse behavior is unit-tested (see
+ * `DiagramHiddenTasks.test.ts`).
  *
  * Always hidden: Deleted rows — soft-deleted tasks the rest of the app
  * never exposes (table / sidebar / search), regardless of the toggle.
  *
- * When `hideClosed` is on, a Closed task is hidden ONLY if it is not the
- * root AND it has no open work anywhere in its subtree. A Closed task
- * that sits on the path from the root to an open (non-closed, non-deleted)
- * descendant is KEPT as a connector, so that still-open descendant stays
- * attached to the tree instead of floating off as a detached root-level
- * node. Concretely: `keep = root ∪ every live task and all of its
- * ancestors`; Closed tasks outside `keep` are hidden. (This is why hiding
- * closed work by default never makes an open subtask disappear or
- * detach — the exact failure mode a closed-parent/open-child tree would
- * otherwise hit.)
+ * When `hideClosed` is on, closing a parent collapses its WHOLE branch: a
+ * Closed task (other than the root) is hidden together with its entire
+ * subtree — every descendant, INCLUDING still-open ones. This matches how
+ * the toggle is actually used: a parent is often marked Closed while some
+ * children are still open, and "hide closed" is meant to tuck that whole
+ * finished branch out of the way. Turning the toggle off ("show closed
+ * tasks") brings every task back.
  *
- * Known, pre-existing limitation left as-is: a *Deleted* task mid-path
- * still detaches its open descendant, because Deleted is always force-
- * hidden and can't act as a connector. That's outside the hide-closed
- * behavior and unchanged here.
+ * The root (the task the diagram was opened from) is always shown and
+ * never collapses its own subtree — you opened it specifically to look at
+ * its tree, so hiding everything under it would leave a useless near-empty
+ * canvas. Closed branches *below* the root still collapse.
+ *
+ * Because a Closed parent's descendants are hidden along with it, hiding
+ * closed work never leaves an open subtask dangling as a detached node.
+ * (Pre-existing exception, unchanged: a Deleted task mid-path is always
+ * force-hidden and can't collapse its subtree, so its open descendant
+ * falls back to a root-level node.)
  */
 export const computeHiddenTaskIds = (
     tasks: TaskTableProps[],
@@ -41,39 +44,36 @@ export const computeHiddenTaskIds = (
     }
     if (!hideClosed) return hidden;
 
-    const byId = new Map<number, TaskTableProps>();
+    // Adjacency: parent id -> child ids, over ALL tasks so the collapse
+    // walk can reach every descendant of a closed branch.
+    const childrenByParent = new Map<number, number[]>();
     for (const t of tasks) {
-        if (t.id != null) byId.set(Number(t.id), t);
+        if (t.id == null) continue;
+        const parentId = t.parentTaskId == null ? null : Number(t.parentTaskId);
+        if (parentId == null) continue;
+        const bucket = childrenByParent.get(parentId) ?? [];
+        bucket.push(Number(t.id));
+        childrenByParent.set(parentId, bucket);
     }
 
-    // keep = root + every "live" (open, non-deleted) task and its whole
-    // ancestor chain. Walking up keeps closed intermediates that connect
-    // open work back toward the root. `keep.has` doubles as the visited /
-    // cycle guard so a malformed parent loop can't spin.
-    const keep = new Set<number>([rootTaskId]);
-    const markSelfAndAncestors = (startId: number): void => {
-        let cur: number | null = startId;
-        while (cur != null && !keep.has(cur)) {
-            keep.add(cur);
-            // Explicit annotation: without it TS infers `parent`'s type
-            // through the `cur = ...` reassignment below, which loops back
-            // to `cur` (TS7022 circular-initializer).
-            const parent: string | null | undefined = byId.get(cur)?.parentTaskId;
-            cur = parent == null ? null : Number(parent);
-        }
-    };
-    for (const t of tasks) {
-        if (t.id == null || isDeleted(t) || isClosed(t)) continue;
-        markSelfAndAncestors(Number(t.id));
-    }
-
-    // Hide Closed tasks that aren't needed as connectors. The root (focal
-    // point) always stays; Deleted are already hidden above.
+    // Seed with every Closed non-root task, then walk down to collapse its
+    // whole subtree (descendants hidden regardless of their own status).
+    // `collapsed` doubles as the visited guard so a malformed parent cycle
+    // can't spin. The root is never collapsed (guarded in the walk too, in
+    // case it is a child of a collapsed node via a stale parent ref).
+    const collapsed = new Set<number>();
+    const stack: number[] = [];
     for (const t of tasks) {
         if (t.id == null) continue;
         const id = Number(t.id);
-        if (isDeleted(t) || id === rootTaskId) continue;
-        if (isClosed(t) && !keep.has(id)) hidden.add(id);
+        if (id !== rootTaskId && isClosed(t)) stack.push(id);
     }
+    while (stack.length > 0) {
+        const id = stack.pop() as number;
+        if (id === rootTaskId || collapsed.has(id)) continue;
+        collapsed.add(id);
+        for (const childId of childrenByParent.get(id) ?? []) stack.push(childId);
+    }
+    for (const id of collapsed) hidden.add(id);
     return hidden;
 };
