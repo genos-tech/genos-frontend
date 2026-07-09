@@ -86,6 +86,18 @@ export interface SearchRequest {
     date_to?: string;
     limit?: number;
     use_vector?: boolean;
+    // Relevance-threshold overrides (the search view's sanctioned
+    // per-call knobs — see `search_engine/views.py`). The Spotlight
+    // typeahead passes an explicit, much lower absolute floor than the
+    // backend default so the *relative* floor (0.5 × top score) governs
+    // instead. The relative floor adapts per query and returns every
+    // result within ~half the top hit's confidence, whereas the default
+    // absolute floor (calibrated for the agent path) sits above almost
+    // every real typeahead RRF score and collapsed results to a fixed 3.
+    // `min_score_ratio`: relative floor as a fraction of the top score.
+    // `min_score`: absolute RRF floor; 0 disables it.
+    min_score_ratio?: number;
+    min_score?: number;
 }
 
 // Chat-type label (backend) → integer code expected by

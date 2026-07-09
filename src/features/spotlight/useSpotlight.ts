@@ -62,6 +62,23 @@ export type { AskState, CompletedTurn, ToolEvent };
 
 const DEBOUNCE_MS = 250;
 const RESULT_LIMIT = 20;
+// Typeahead relevance thresholds passed explicitly to the search view so
+// the *relative* floor drives result cutoff, not the absolute one.
+//
+// Background: the backend's default absolute floor (min_score ≈ 0.040) was
+// calibrated for the agent/eval path. Real typeahead RRF scores land well
+// below it (freshness decay + typeahead chunk-type demotion push top hits
+// into the ~0.02–0.045 band), so nothing cleared the floor and the
+// backend's "always return at least N" guard collapsed every query to a
+// fixed 3 results. Passing a near-zero absolute floor lets the relative
+// floor (RESULT_MIN_SCORE_RATIO × top score) govern instead: it adapts
+// per query and returns *all* results within ~half the top hit's
+// confidence — the "show every highly-relevant hit" behaviour we want —
+// while still self-suppressing gibberish (no strong top hit → tiny floor
+// → few/no results). A small non-zero absolute floor stays as a backstop
+// against deep single-lane vector noise.
+const RESULT_MIN_SCORE_RATIO = 0.5;
+const RESULT_MIN_SCORE = 0.01;
 // localStorage persistence (Phase 17)
 const STORAGE_KEY = (teamId: string) => `spotlight:session:v1:${teamId}`;
 const STORAGE_TTL_MS = 4 * 60 * 60 * 1000; // 4 hours
@@ -345,6 +362,8 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
                 query: trimmed,
                 team_id: teamId,
                 limit: RESULT_LIMIT,
+                min_score_ratio: RESULT_MIN_SCORE_RATIO,
+                min_score: RESULT_MIN_SCORE,
                 use_vector: false,
                 accessToken,
                 signal: controller.signal,
@@ -365,6 +384,8 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
                     query: trimmed,
                     team_id: teamId,
                     limit: RESULT_LIMIT,
+                    min_score_ratio: RESULT_MIN_SCORE_RATIO,
+                    min_score: RESULT_MIN_SCORE,
                     use_vector: true,
                     accessToken,
                     signal: controller.signal,
