@@ -750,7 +750,11 @@ const CanvasInner = ({
             }
             void useTM.loadUpdatedTask(projectId);
         },
-        [myself, projectId, accessToken, useTM, refresh, assembleAndLayout] // eslint-disable-line react-hooks/exhaustive-deps
+        // `assembleAndLayout` is intentionally omitted: it's declared below
+        // this handler, so listing it here is a use-before-declaration (TDZ)
+        // error. It's called at runtime inside the async body (safe), and
+        // handleDelete follows the same pattern.
+        [myself, projectId, accessToken, useTM, refresh] // eslint-disable-line react-hooks/exhaustive-deps
     );
 
     const handleDelete = useCallback(
