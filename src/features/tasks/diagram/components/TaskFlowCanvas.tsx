@@ -55,6 +55,7 @@ import {
     TaskGraph,
     TaskNodeData,
 } from "../types";
+import { computeHiddenTaskIds } from "../utils/computeHiddenTaskIds";
 import { computeHealth, getMilestoneWindow } from "../utils/scheduleStatus";
 import { sortDiagramTasks } from "../utils/sortDiagramTasks";
 import { DependencyEdge } from "./DependencyEdge";
@@ -360,34 +361,16 @@ const buildNodesAndEdges = (
         };
     };
 
-    // Hidden-task set for the "Hide closed tasks" toggle. The root is
-    // always kept — hiding the focal point would just empty the canvas
-    // and look broken. External (ghost) tasks aren't filtered for the
-    // Closed case: they're outside-tree references; dependency edges
-    // that touch a hidden internal task get dropped further down via
-    // the rendered-id set, so disconnected ghosts simply fall out on
+    // Hidden-task set for the "Hide closed tasks" toggle (+ always-hidden
+    // Deleted rows). Crucially, a Closed task that still has open work in
+    // its subtree is KEPT as a connector so hiding closed work never
+    // detaches an open subtask from the tree — see `computeHiddenTaskIds`
+    // for the full rule and its unit tests. External (ghost) tasks aren't
+    // filtered for the Closed case: they're outside-tree references, and
+    // dependency edges touching a hidden internal task get dropped further
+    // down via the rendered-id set, so disconnected ghosts fall out on
     // their own.
-    //
-    // Deleted tasks are ALWAYS hidden, regardless of the `hideClosed`
-    // toggle — they're soft-deleted rows the rest of the app doesn't
-    // expose (table, sidebar, search), so showing them only in the
-    // diagram would surface dead data with no way to act on it. Also
-    // applied to ghost dependency refs so a "blocker" pointing at a
-    // deleted task from another project doesn't leak in.
-    const hiddenTaskIds = new Set<number>();
-    for (const t of graph.tasks) {
-        if (t.id == null) continue;
-        const taskId = Number(t.id);
-        if (isDeletedStatus(t.status)) {
-            hiddenTaskIds.add(taskId);
-            continue;
-        }
-        if (hideClosed && taskId !== rootTaskId) {
-            if ((t.status ?? "").toLowerCase() === "closed") {
-                hiddenTaskIds.add(taskId);
-            }
-        }
-    }
+    const hiddenTaskIds = computeHiddenTaskIds(graph.tasks, rootTaskId, hideClosed);
     const visibleInternalTasks = graph.tasks.filter(
         (t) => t.id != null && !hiddenTaskIds.has(Number(t.id))
     );
@@ -417,9 +400,12 @@ const buildNodesAndEdges = (
     // Structure edges from parent_task_id (visible-tree only —
     // ghosts have no structure edges into the visible set). Iterates
     // the already-filtered list so an edge can't survive when either
-    // endpoint was dropped by `hideClosed`. Children of a hidden
-    // parent become root-level siblings in dagre — acceptable since
-    // their original parent has gone away from the user's view.
+    // endpoint was dropped. A hidden Closed parent never has a visible
+    // child (it's only hidden when its whole subtree is closed/deleted;
+    // any open descendant keeps it as a connector — see
+    // `computeHiddenTaskIds`), so the only way a child's parent is hidden
+    // here is the pre-existing Deleted-mid-path case, where the child
+    // falls back to a root-level sibling in dagre.
     const structureEdges: Edge[] = [];
     const visibleIdSet = new Set(sortedInternalTasks.map((t) => Number(t.id)));
     // Iterate the SORTED list so setEdge call order reflects the
