@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { NoteService } from "../../db/services/note.service";
 import { DatabaseUtils } from "../../db/utils/database";
@@ -709,6 +709,28 @@ export const useNoteManagement = (
             setMyNoteMeta(loadedNotes);
         }
     };
+
+    // External invalidator: the Spotlight / thread / note agent's
+    // create_note & update_note tools mutate notes outside this hook, so
+    // the sidebar meta wouldn't reflect an agent-written note until a
+    // manual reload. Those tools dispatch a `noteChanged` window event
+    // (mirrors the `todoChanged` pattern in useTodoGroups); we refetch the
+    // personal + task meta on it — the `myNoteMetaTree` /
+    // `taskNoteMetaTree` memos then flow the new note into the sidebar.
+    // Refs keep the listener subscribed once while always calling the
+    // latest fetchers (which are re-created each render).
+    const getMyNoteMetaRef = useRef(getMyNoteMeta);
+    getMyNoteMetaRef.current = getMyNoteMeta;
+    const getTaskNoteMetaRef = useRef(getTaskNoteMeta);
+    getTaskNoteMetaRef.current = getTaskNoteMeta;
+    useEffect(() => {
+        const handler = () => {
+            void getMyNoteMetaRef.current();
+            void getTaskNoteMetaRef.current();
+        };
+        window.addEventListener("noteChanged", handler);
+        return () => window.removeEventListener("noteChanged", handler);
+    }, []);
 
     // ------------------------------------------------------------------
     // My-note sidebar folders
