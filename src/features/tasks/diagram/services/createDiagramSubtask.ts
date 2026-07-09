@@ -2,6 +2,7 @@ import axios from "axios";
 
 import { authApi } from "../../../../services/api";
 import { UserProps } from "../../../../types/admin";
+import { taskContentTemplate } from "../../utils/taskTemplates";
 
 /**
  * Create a real (not init/empty) sub-task from the diagram, parented
@@ -35,7 +36,13 @@ export const createDiagramSubtask = async (
             priority: null,
             effort_level: null,
             status: "Open",
-            content: null,
+            // Ship the same default body scaffold the rich CreateTaskForm and
+            // the quick-add row (`createQuickTask`) start with, instead of an
+            // empty body. A subtask created from the diagram that opens to a
+            // blank BlockNote editor feels unfinished; the default template's
+            // Summary / Motivation / Acceptance / Notes sections prompt the
+            // user to flesh it out.
+            content: taskContentTemplate,
             due_date: null,
             start_date: null,
             links: null,
