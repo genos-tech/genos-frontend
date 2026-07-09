@@ -18,7 +18,6 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { useSpotlightPreferences } from "../../hooks/common/useSpotlightPreferences";
 import {
     fetchNoteSummary,
     type AgentSessionTurn,
@@ -83,11 +82,9 @@ export interface UseNoteAskReturn {
 }
 
 export const useNoteAsk = ({ accessToken, teamId }: UseNoteAskArgs): UseNoteAskReturn => {
-    // Honour the same per-user Spotlight web-search toggle the thread
-    // variant uses. Note Q&A has access to the full Spotlight tool set
-    // (the backend doesn't restrict in the note branch), so the web-
-    // search gate follows the user's Settings preference.
-    const { webSearch } = useSpotlightPreferences();
+    // Web search follows the same per-user Spotlight toggle as the thread
+    // variant, but the gate is server-side (the backend reads the
+    // persisted preference) — no per-request flag to send from here.
     const [isOpen, setIsOpen] = useState(false);
     const [noteContext, setNoteContext] = useState<NoteContext | null>(null);
 
@@ -116,9 +113,8 @@ export const useNoteAsk = ({ accessToken, teamId }: UseNoteAskArgs): UseNoteAskR
         buildAskExtras: useCallback(
             () => ({
                 noteContext: noteContextRef.current ?? undefined,
-                allowWebSearch: webSearch,
             }),
-            [webSearch]
+            []
         ),
     });
 

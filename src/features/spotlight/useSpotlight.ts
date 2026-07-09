@@ -167,11 +167,12 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
     const [historyDetail, setHistoryDetail] = useState<AgentSessionDetail | null>(null);
     const [historyIsLoading, setHistoryIsLoading] = useState(false);
 
-    // User-toggleable gates for the LLM path. `webSearch` is forwarded
-    // to the agent backend; `aiAnswers` is checked at the overlay layer
-    // (the Ask button is disabled when it's off, and `onAsk` short-
-    // circuits as a defense-in-depth guard).
-    const { aiAnswers, webSearch } = useSpotlightPreferences();
+    // User-toggleable gate for the LLM path. `aiAnswers` is checked at
+    // the overlay layer (the Ask button is disabled when it's off, and
+    // `onAsk` short-circuits as a defense-in-depth guard). Web search is
+    // gated server-side from the persisted per-account preference — the
+    // client no longer sends a per-request flag.
+    const { aiAnswers } = useSpotlightPreferences();
 
     // Used to abort in-flight searches when the query changes or the
     // overlay closes.
@@ -679,7 +680,6 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
                 teamId,
                 accessToken,
                 sessionId: ask.sessionId ?? undefined,
-                allowWebSearch: webSearch,
                 signal: controller.signal,
                 ...buildStreamHandlers(askedTurnId),
             });
@@ -704,7 +704,6 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
             ask.turnId,
             ask.sessionId,
             aiAnswers,
-            webSearch,
             t,
         ]
     );

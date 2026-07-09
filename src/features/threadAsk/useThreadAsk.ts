@@ -19,7 +19,6 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { useSpotlightPreferences } from "../../hooks/common/useSpotlightPreferences";
 import {
     fetchThreadSummary,
     type AgentSessionTurn,
@@ -93,12 +92,9 @@ export interface UseThreadAskReturn {
 }
 
 export const useThreadAsk = ({ accessToken, teamId }: UseThreadAskArgs): UseThreadAskReturn => {
-    // Honour the same per-user Spotlight web-search toggle. Thread Q&A
-    // shares the agent tool set with Spotlight (the backend's thread
-    // branch no longer restricts tools), so the web-search gate should
-    // also follow the user's Settings preference rather than being
-    // hard-pinned off.
-    const { webSearch } = useSpotlightPreferences();
+    // Web search follows the same per-user Spotlight toggle as everywhere
+    // else, but the gate is server-side (the backend reads the persisted
+    // preference) — no per-request flag to send from here.
     const [isOpen, setIsOpen] = useState(false);
     const [threadContext, setThreadContext] = useState<ThreadContext | null>(null);
 
@@ -129,9 +125,8 @@ export const useThreadAsk = ({ accessToken, teamId }: UseThreadAskArgs): UseThre
         buildAskExtras: useCallback(
             () => ({
                 threadContext: threadContextRef.current ?? undefined,
-                allowWebSearch: webSearch,
             }),
-            [webSearch]
+            []
         ),
     });
 
