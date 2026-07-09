@@ -331,7 +331,7 @@ export const SpotlightOverlay = ({
                     // fits on the same row as the input + search icon.
                     // Desktop nudged up to 780px so the input still
                     // breathes after adding the History icon next to Ask.
-                    width: { xs: "100%", sm: "min(780px, 92vw)" },
+                    width: { xs: "100%", sm: "min(800px, 93vw)" },
                     // Reserve room for the BottomTabBar so the overlay's
                     // bottom edge doesn't slide under it on mobile.
                     maxHeight: {
@@ -903,6 +903,8 @@ const ConversationPanel = memo(
                             position: "sticky",
                             top: 0,
                             py: 0.25,
+                            px: 0.5,
+                            borderRadius: 10,
                             background: isDark ? "rgba(30,20,46,0.92)" : "rgba(250,248,255,0.96)",
                             zIndex: 1,
                         }}
