@@ -20,6 +20,7 @@ import { analytics } from "./services/analytics";
 import { startLongTaskObserver } from "./services/perfObserver";
 
 import { App } from "./App";
+import GenosDemoPage from "./lp/DemoPage";
 import GenosFeaturesPage from "./lp/FeaturesPage";
 import GenosLandingPage from "./lp/LandingPage";
 
@@ -58,6 +59,12 @@ createRoot(document.getElementById("root")!).render(
                 the landing page and, like /home, fully isolated from the auth
                 stack: it renders its own I18nProvider internally. */}
             <Route element={<GenosFeaturesPage />} path="/features-guide" />
+
+            {/* Public demo walkthrough (how to sign in as a demo user, what
+                the sample workspace contains, and copy-paste Spotlight
+                prompts). Same isolation as /features-guide: renders its own
+                I18nProvider internally, no auth stack. */}
+            <Route element={<GenosDemoPage />} path="/demo-guide" />
 
             {/* All routes that need authentication context. */}
             <Route element={<AuthLayout />}>

@@ -36,6 +36,7 @@ const copy = {
     ja: {
         nav: {
             features: "機能",
+            demoGuide: "デモ",
             value: "価値",
             ai: "AI活用",
             contact: "お問い合わせ",
@@ -237,6 +238,7 @@ const copy = {
     en: {
         nav: {
             features: "Features",
+            demoGuide: "Demo",
             value: "Value",
             ai: "AI",
             contact: "Contact",
@@ -698,6 +700,12 @@ export default function GenosLandingPage() {
                                 to="/features-guide"
                             >
                                 {t.nav.features}
+                            </Link>
+                            <Link
+                                className="transition hover:text-violet-700 dark:hover:text-white"
+                                to="/demo-guide"
+                            >
+                                {t.nav.demoGuide}
                             </Link>
                             <a
                                 className="transition hover:text-violet-700 dark:hover:text-white"
