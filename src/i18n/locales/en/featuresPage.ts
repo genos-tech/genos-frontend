@@ -29,7 +29,7 @@ export const featuresPage = {
             },
             {
                 title: "Capture work and let AI connect it",
-                body: "Discuss in Chat, break work into Tasks, and write specs in Notes. Then press ⌘K to search everything at once or ask Genos AI a question.",
+                body: "Discuss in Chat, break work into Tasks, and write specs in Notes. Then press ⌘K to search everything at once, ask Genos AI a question, or have it plan and organize the work for you.",
             },
         ],
     },
@@ -95,8 +95,18 @@ export const featuresPage = {
                 bullets: [
                     "Instant search across chats, tasks, and notes",
                     "“Ask AI” answers with citations to the source",
-                    "AI actions that pause for your approval",
+                    "Summarize any thread or note, then ask follow-ups",
                     "Multi-turn conversations with history",
+                ],
+            },
+            agent: {
+                title: "AI Work Agent",
+                desc: "Genos AI doesn't just answer — it does the work, and pauses for your approval.",
+                bullets: [
+                    "Turn a chat thread into a milestone with tasks",
+                    "Break work into sub-tasks and reprioritize by dependencies",
+                    "Research, draft, and refine notes for you",
+                    "One-click approval on every change — nothing fires silently",
                 ],
             },
         },
@@ -122,40 +132,6 @@ export const featuresPage = {
             {
                 keys: "↑ / ↓, Enter",
                 label: "In Spotlight: move through results, then open or ask",
-            },
-        ],
-    },
-    tricks: {
-        eyebrow: "Tips & tricks",
-        title: "Get more out of Genos",
-        items: [
-            {
-                title: "Slash commands",
-                desc: "Type “/” in any editor to insert headings, lists, and more without leaving the keyboard.",
-            },
-            {
-                title: "Mentions and mention groups",
-                desc: "Type “@” to notify a person or a whole group; click a mention to open their profile.",
-            },
-            {
-                title: "Hashtags",
-                desc: "Type “#” to tag and organize your writing with quick suggestions.",
-            },
-            {
-                title: "Reactions",
-                desc: "React to any message or task comment with an emoji to acknowledge without a reply.",
-            },
-            {
-                title: "Drag and drop",
-                desc: "Drag cards on the Kanban board, reorder the task table, and rearrange nodes in the task diagram.",
-            },
-            {
-                title: "Ask a thread or note",
-                desc: "Ask Genos AI about a specific chat thread or note, and save the answer straight into your notes.",
-            },
-            {
-                title: "Notifications your way",
-                desc: "Mute specific conversations, tune categories, and enable push so you only hear what matters.",
             },
         ],
     },
