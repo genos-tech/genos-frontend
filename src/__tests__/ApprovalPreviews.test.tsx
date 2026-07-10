@@ -174,6 +174,24 @@ describe("NoteWritePreview (create_note / update_note approvals)", () => {
         expect(screen.getByText("Task: WRD-7")).toBeTruthy();
     });
 
+    it("renders citation-token links as text, real web links as anchors", () => {
+        // Token targets ([prose](task:12)) only become /workspace/...
+        // hrefs when the backend converts the body at save time — as
+        // anchors in the preview they'd navigate the SPA to a bogus
+        // relative URL on click.
+        renderCard("create_note", {
+            note_type: "task",
+            title: "Plan",
+            content_text:
+                "Plan for [WRD-7 Safari perf](task:7), see [MDN](https://developer.mozilla.org).",
+            project_id: "Website Redesign",
+        });
+        const tokenLabel = screen.getByText("WRD-7 Safari perf");
+        expect(tokenLabel.closest("a")).toBeNull();
+        const webLink = screen.getByText("MDN").closest("a");
+        expect(webLink?.getAttribute("href")).toBe("https://developer.mozilla.org");
+    });
+
     it("renders an update with the resolved note title and changed-field chips", () => {
         renderCard("update_note", {
             note_id: 42,
