@@ -4,6 +4,7 @@ import { app } from "./app";
 import { calendar } from "./calendar";
 import { chat } from "./chat";
 import { common } from "./common";
+import { demoPage } from "./demoPage";
 import { featuresPage } from "./featuresPage";
 import { history } from "./history";
 import { inbox } from "./inbox";
@@ -36,4 +37,5 @@ export const en = {
     calendar,
     history,
     featuresPage,
+    demoPage,
 } as const;
