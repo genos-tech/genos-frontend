@@ -1,0 +1,151 @@
+diff --git a/node_modules/y-prosemirror/dist/y-prosemirror.cjs b/node_modules/y-prosemirror/dist/y-prosemirror.cjs
+index de4d1e6..5dddd5b 100644
+--- a/node_modules/y-prosemirror/dist/y-prosemirror.cjs
++++ b/node_modules/y-prosemirror/dist/y-prosemirror.cjs
+@@ -321,35 +321,41 @@ const ySyncPlugin = (yXmlFragment, {
+  * @param {ProsemirrorBinding} binding
+  */
+ const restoreRelativeSelection = (tr, relSel, binding) => {
+-  if (relSel !== null && relSel.anchor !== null && relSel.head !== null) {
+-    if (relSel.type === 'all') {
+-      tr.setSelection(new prosemirrorState.AllSelection(tr.doc));
+-    } else if (relSel.type === 'node') {
+-      const anchor = relativePositionToAbsolutePosition(
+-        binding.doc,
+-        binding.type,
+-        relSel.anchor,
+-        binding.mapping
+-      );
+-      tr.setSelection(prosemirrorState.NodeSelection.create(tr.doc, anchor));
+-    } else {
+-      const anchor = relativePositionToAbsolutePosition(
+-        binding.doc,
+-        binding.type,
+-        relSel.anchor,
+-        binding.mapping
+-      );
+-      const head = relativePositionToAbsolutePosition(
+-        binding.doc,
+-        binding.type,
+-        relSel.head,
+-        binding.mapping
+-      );
+-      if (anchor !== null && head !== null) {
+-        const sel = prosemirrorState.TextSelection.between(tr.doc.resolve(anchor), tr.doc.resolve(head));
+-        tr.setSelection(sel);
++  // PATCH(genos): see src/plugins/sync-plugin.js — selection restore is
++  // cosmetic and must never abort the remote-update dispatch.
++  try {
++    if (relSel !== null && relSel.anchor !== null && relSel.head !== null) {
++      if (relSel.type === 'all') {
++        tr.setSelection(new prosemirrorState.AllSelection(tr.doc));
++      } else if (relSel.type === 'node') {
++        const anchor = relativePositionToAbsolutePosition(
++          binding.doc,
++          binding.type,
++          relSel.anchor,
++          binding.mapping
++        );
++        tr.setSelection(prosemirrorState.NodeSelection.create(tr.doc, anchor));
++      } else {
++        const anchor = relativePositionToAbsolutePosition(
++          binding.doc,
++          binding.type,
++          relSel.anchor,
++          binding.mapping
++        );
++        const head = relativePositionToAbsolutePosition(
++          binding.doc,
++          binding.type,
++          relSel.head,
++          binding.mapping
++        );
++        if (anchor !== null && head !== null) {
++          const sel = prosemirrorState.TextSelection.between(tr.doc.resolve(anchor), tr.doc.resolve(head));
++          tr.setSelection(sel);
++        }
+       }
+     }
++  } catch (e) {
++    console.warn('[y-prosemirror patch] selection restore failed; applying remote update with default selection', e);
+   }
+ };
+ 
+diff --git a/node_modules/y-prosemirror/src/plugins/sync-plugin.js b/node_modules/y-prosemirror/src/plugins/sync-plugin.js
+index dccfb76..a2d9b93 100644
+--- a/node_modules/y-prosemirror/src/plugins/sync-plugin.js
++++ b/node_modules/y-prosemirror/src/plugins/sync-plugin.js
+@@ -247,35 +247,46 @@ export const ySyncPlugin = (yXmlFragment, {
+  * @param {ProsemirrorBinding} binding
+  */
+ const restoreRelativeSelection = (tr, relSel, binding) => {
+-  if (relSel !== null && relSel.anchor !== null && relSel.head !== null) {
+-    if (relSel.type === 'all') {
+-      tr.setSelection(new AllSelection(tr.doc))
+-    } else if (relSel.type === 'node') {
+-      const anchor = relativePositionToAbsolutePosition(
+-        binding.doc,
+-        binding.type,
+-        relSel.anchor,
+-        binding.mapping
+-      )
+-      tr.setSelection(NodeSelection.create(tr.doc, anchor))
+-    } else {
+-      const anchor = relativePositionToAbsolutePosition(
+-        binding.doc,
+-        binding.type,
+-        relSel.anchor,
+-        binding.mapping
+-      )
+-      const head = relativePositionToAbsolutePosition(
+-        binding.doc,
+-        binding.type,
+-        relSel.head,
+-        binding.mapping
+-      )
+-      if (anchor !== null && head !== null) {
+-        const sel = TextSelection.between(tr.doc.resolve(anchor), tr.doc.resolve(head))
+-        tr.setSelection(sel)
++  // PATCH(genos): wrapped in try/catch. The cached position mapping can
++  // yield absolute positions beyond the freshly rebuilt doc's size, making
++  // `tr.doc.resolve(...)` throw "RangeError: Position N out of range".
++  // Uncaught, that aborts _typeChanged BEFORE `prosemirrorView.dispatch(tr)`
++  // — the view silently misses the remote update, and the user's next local
++  // edit diffs a STALE doc against Yjs, reverting the collaborator's change.
++  // Selection restore is cosmetic; never let it abort the doc update.
++  try {
++    if (relSel !== null && relSel.anchor !== null && relSel.head !== null) {
++      if (relSel.type === 'all') {
++        tr.setSelection(new AllSelection(tr.doc))
++      } else if (relSel.type === 'node') {
++        const anchor = relativePositionToAbsolutePosition(
++          binding.doc,
++          binding.type,
++          relSel.anchor,
++          binding.mapping
++        )
++        tr.setSelection(NodeSelection.create(tr.doc, anchor))
++      } else {
++        const anchor = relativePositionToAbsolutePosition(
++          binding.doc,
++          binding.type,
++          relSel.anchor,
++          binding.mapping
++        )
++        const head = relativePositionToAbsolutePosition(
++          binding.doc,
++          binding.type,
++          relSel.head,
++          binding.mapping
++        )
++        if (anchor !== null && head !== null) {
++          const sel = TextSelection.between(tr.doc.resolve(anchor), tr.doc.resolve(head))
++          tr.setSelection(sel)
++        }
+       }
+     }
++  } catch (e) {
++    console.warn('[y-prosemirror patch] selection restore failed; applying remote update with default selection', e)
+   }
+ }
+ 
