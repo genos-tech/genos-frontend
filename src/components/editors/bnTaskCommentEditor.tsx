@@ -253,18 +253,23 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
     // Process files dropped on the comment tab (outside the editor).
     useEffect(() => {
         if (!pendingFiles || pendingFiles.length === 0 || !clearPendingFiles) return;
+        // Capture + clear the queue SYNCHRONOUSLY, before any await.
+        // Clearing in a `finally` (the chat editor's shape) leaves the
+        // parent's queue populated for the whole upload; if this editor
+        // remounts meanwhile (tab switch, edit-mode toggle), the fresh
+        // mount would re-run this effect against the same array and
+        // insert every file a second time.
+        const queued = pendingFiles;
+        clearPendingFiles();
         if (!uploadChannelId) {
             // No upload channel — the caller shouldn't have forwarded the
-            // drop here (its fallback attaches to the Attachments tab),
-            // but clear defensively so files don't wedge in the queue.
-            clearPendingFiles();
+            // drop here (its fallback attaches to the Attachments tab).
             return;
         }
         // Drop oversize files up-front so the dim overlay only counts
         // files we'll actually try to upload.
-        const acceptedFiles = filterFiles(pendingFiles);
+        const acceptedFiles = filterFiles(queued);
         if (acceptedFiles.length === 0) {
-            clearPendingFiles();
             return;
         }
         const insertFiles = async () => {
@@ -296,8 +301,9 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                     }
                 }
             } finally {
+                // Queue was already cleared synchronously above — only
+                // the overlay needs tearing down here.
                 setPendingUpload(null);
-                clearPendingFiles();
             }
         };
         void insertFiles();

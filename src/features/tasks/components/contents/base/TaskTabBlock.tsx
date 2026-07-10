@@ -420,8 +420,29 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                     handleDroppedFiles(e);
                                     return;
                                 }
+                                // Drops landing INSIDE the compose editor's
+                                // editable are handled by BlockNote itself
+                                // (it has `uploadFile`, so ProseMirror's own
+                                // drop handler uploads + inserts, same as
+                                // the chat editor). Handling them here TOO
+                                // inserted the file twice. Read-only
+                                // comment previews are contenteditable
+                                // ="false", so they don't match and still
+                                // route through the queue below.
+                                const target = e.target as HTMLElement | null;
+                                if (target?.closest('[contenteditable="true"]')) {
+                                    return;
+                                }
                                 e.preventDefault();
-                                const files = Array.from(e.dataTransfer.files);
+                                // Dedupe by name — macOS can deliver the
+                                // same file twice in one drop's
+                                // `dataTransfer.files` (same quirk
+                                // `appendFiles` dedupes for).
+                                const files = Array.from(
+                                    new Map(
+                                        Array.from(e.dataTransfer.files).map((f) => [f.name, f])
+                                    ).values()
+                                );
                                 if (files.length > 0) setPendingCommentFiles(files);
                             }}
                             onDragOver={(e) => {
