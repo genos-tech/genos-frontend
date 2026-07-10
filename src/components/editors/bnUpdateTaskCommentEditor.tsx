@@ -117,9 +117,12 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
     useAnchorClickIntercept(editorBoxRef, urlLinkModal);
     const bnBoxClassName: string = `bn-task-comment-box-${mode}`;
 
-    // Disable the Audio and Image blocks from the built-in schema
-    // This is done by picking out the blocks you want to disable
-    const { audio, image, video, file, ...remainingBlockSpecs } = defaultBlockSpecs;
+    // Disable only the Audio and Video blocks from the built-in schema.
+    // Image + File must stay registered: comments composed since the
+    // drag-and-drop-into-comment change can carry those blocks, and
+    // BlockNote rejects the whole document ("node type not found in
+    // schema") when asked to edit one it can't represent.
+    const { audio, video, ...remainingBlockSpecs } = defaultBlockSpecs;
 
     const { mentionGroups } = useMentionGroupsContext();
 
@@ -200,10 +203,16 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
             if (node.children?.length) {
                 count += countLines(node.children); // recursive call
             }
-            if (node.content[0]) {
+            // Guarded: image/file blocks carry no `content` array.
+            if (node.content && node.content[0]) {
                 if (node.content[0].text) {
                     count += node.content[0].text.split("\n").length;
                 }
+            }
+            // Add lines for each image to avoid scroll issues (same
+            // heuristic as BnChatEditor).
+            if (node.type === "image") {
+                count += 10;
             }
         }
         return count;

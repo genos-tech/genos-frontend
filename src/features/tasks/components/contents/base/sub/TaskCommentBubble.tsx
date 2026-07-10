@@ -231,7 +231,23 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
         }
     }, [showEmojiPicker, isCompact]);
 
-    if (comment.commentBody[0].content.length === 0) {
+    // Empty-comment guard. The old check read
+    // `commentBody[0].content.length`, which (a) crashed on comments
+    // whose FIRST block is an image/file (those carry no `content`
+    // array — possible since drag-and-drop into the comment editor) and
+    // (b) would have hidden such comments even without the crash. A
+    // comment is empty only when NO block carries anything: media
+    // blocks ARE content, table blocks carry object content, nested
+    // children are walked.
+    const blockHasContent = (block: any): boolean => {
+        if (!block) return false;
+        if (["image", "file", "video", "audio"].includes(block.type)) return true;
+        if (Array.isArray(block.content) ? block.content.length > 0 : block.content != null) {
+            return true;
+        }
+        return Array.isArray(block.children) && block.children.some(blockHasContent);
+    };
+    if (!comment.commentBody?.some?.(blockHasContent)) {
         return null;
     }
 

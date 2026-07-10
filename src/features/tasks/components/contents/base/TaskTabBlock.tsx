@@ -217,6 +217,24 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
         appendFiles(event.dataTransfer.files, true);
     };
 
+    // ---- Comments-tab drop → comment editor -------------------------
+    //
+    // Files dropped on the Comments tab are uploaded and inserted into
+    // the comment editor as image/file blocks (the user then sends them
+    // as part of a comment), matching the chat editor's drop UX.
+    // Uploads are v3 channel-scoped, so this needs the task's project PM
+    // channel; `chat.project.projectId` is the v3 join key, with the
+    // legacy `chatId === String(projectId)` compare kept as a fallback
+    // for pre-migration rows (same lookup as TaskNoteMain's pmChat).
+    const pmChannel = useCM.allChats.find(
+        (chat) =>
+            chat.chatType === 3 &&
+            projectId != null &&
+            (chat.project?.projectId === projectId || chat.chatId === String(projectId))
+    );
+    const [pendingCommentFiles, setPendingCommentFiles] = useState<File[]>([]);
+    const clearPendingCommentFiles = useCallback(() => setPendingCommentFiles([]), []);
+
     const handleDelete = async (attachmentId: number) => {
         // Negative ids haven't reached the server yet — just drop them
         // locally. We rely on the parent's tmp/upload reconciliation in
@@ -382,24 +400,51 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                     {/* Comments Tab */}
                     <TabPanel sx={{ p: 0 }} value={0}>
                         {/* Drop-zone wrapper.
-                            The comment editors (`bnTaskCommentEditor` /
-                            `bnUpdateTaskCommentEditor`) strip
-                            image/file/audio/video from their schemas and
-                            don't supply an `uploadFile`, so BlockNote
-                            registers no drop handler of its own. Without
-                            a handler here, anything the user drags onto
-                            the comment editor escapes to the browser's
-                            default behaviour (navigating to the file
-                            URL in a new tab).
-                            We forward drops through the same
-                            `handleDroppedFiles` path the Attachments
-                            tab uses, so dropped files are persisted as
-                            task attachments — which is the closest
-                            equivalent now that the comment payload
-                            itself can't carry binary blocks. */}
+                            Files dropped anywhere on the Comments tab go
+                            INTO the comment editor: they're uploaded to
+                            the task's project PM channel and inserted as
+                            image/file blocks, so the user sends them as
+                            part of a comment — same UX as dropping a
+                            file on the chat pane. (The previous spec
+                            forwarded drops to the Attachments tab, which
+                            surprised users who dropped a screenshot to
+                            talk about it.)
+                            Fallback: when no PM channel is resolvable
+                            (task without a project / channels not
+                            loaded), drops keep the old attach-to-
+                            Attachments behaviour rather than vanishing. */}
                         <Box
                             sx={{ position: "relative" }}
-                            onDrop={handleDroppedFiles}
+                            onDrop={(e) => {
+                                if (!pmChannel) {
+                                    handleDroppedFiles(e);
+                                    return;
+                                }
+                                // Drops landing INSIDE the compose editor's
+                                // editable are handled by BlockNote itself
+                                // (it has `uploadFile`, so ProseMirror's own
+                                // drop handler uploads + inserts, same as
+                                // the chat editor). Handling them here TOO
+                                // inserted the file twice. Read-only
+                                // comment previews are contenteditable
+                                // ="false", so they don't match and still
+                                // route through the queue below.
+                                const target = e.target as HTMLElement | null;
+                                if (target?.closest('[contenteditable="true"]')) {
+                                    return;
+                                }
+                                e.preventDefault();
+                                // Dedupe by name — macOS can deliver the
+                                // same file twice in one drop's
+                                // `dataTransfer.files` (same quirk
+                                // `appendFiles` dedupes for).
+                                const files = Array.from(
+                                    new Map(
+                                        Array.from(e.dataTransfer.files).map((f) => [f.name, f])
+                                    ).values()
+                                );
+                                if (files.length > 0) setPendingCommentFiles(files);
+                            }}
                             onDragOver={(e) => {
                                 e.preventDefault();
                                 if (e.dataTransfer?.types?.includes("Files")) {
@@ -429,9 +474,11 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                 }
                             />
                             <TaskCommentEditorBlock
+                                clearPendingFiles={clearPendingCommentFiles}
                                 editTargetComment={editTargetComment}
                                 isInEdit={isInEdit}
                                 myself={myself}
+                                pendingFiles={pendingCommentFiles}
                                 setIsInEdit={setIsInEdit}
                                 setMyself={setMyself}
                                 setTaskCommentLines={setTaskCommentLines}
@@ -440,6 +487,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                 task={tmpCurrentTaskContent}
                                 taskCommentLines={taskCommentLines}
                                 taskComments={taskComments}
+                                uploadChannelId={pmChannel ? String(pmChannel.chatId) : undefined}
                                 useCM={useCM}
                                 useTEM={useTEM}
                                 useTM={useTM}
