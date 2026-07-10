@@ -782,6 +782,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                             >
                                 <TaskMainBlock
                                     assignee={assignee}
+                                    hostZIndex={hostZIndex}
                                     isMilestone={previewTaskKind === "milestone"}
                                     isOpenProjectList={isOpenProjectList}
                                     isOpenTagList={isOpenTagList}
@@ -884,6 +885,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                             {/* Subtasks Section */}
                             <TaskSubTasksBlock
                                 currentTaskContent={taskEditState.tmpCurrentTaskContent}
+                                hostZIndex={hostZIndex}
                                 myself={myself}
                                 SectionHeader={SectionHeader}
                                 setMyself={setMyself}
@@ -1108,10 +1110,23 @@ const MilestonePreviewInner = ({
 
     const milestone: Milestone | null = useMemo(() => {
         const projectId = usePM.currentProject?.projectId;
-        if (!projectId) return null;
-        return (
-            useSM.projectMilestones[projectId]?.find((m) => m.milestoneId === milestoneId) ?? null
-        );
+        const fromCurrent = projectId
+            ? (useSM.projectMilestones[projectId]?.find((m) => m.milestoneId === milestoneId) ??
+              null)
+            : null;
+        if (fromCurrent) return fromCurrent;
+        // Fallback: scan every project bucket. The refreshMilestone
+        // effect below upserts under the milestone's OWN project id,
+        // which needn't match the host page's currentProject — e.g. a
+        // milestone-backing task opened in the UrlLinkModal from a chat
+        // page (Spotlight chip, task-note link). Without this the
+        // lookup missed forever and the 3s auto-close below killed the
+        // preview even though the data had loaded fine.
+        for (const bucket of Object.values(useSM.projectMilestones)) {
+            const hit = bucket?.find((m) => m.milestoneId === milestoneId);
+            if (hit) return hit;
+        }
+        return null;
     }, [usePM.currentProject?.projectId, useSM.projectMilestones, milestoneId]);
 
     // Per-status task counts for this milestone, computed from
@@ -2197,6 +2212,7 @@ const MilestonePreviewInner = ({
                     >
                         <TaskMainBlock
                             assignee={assignee}
+                            hostZIndex={hostZIndex}
                             isMilestone={true}
                             isOpenProjectList={isOpenProjectList}
                             isOpenTagList={isOpenTagList}
@@ -2290,6 +2306,7 @@ const MilestonePreviewInner = ({
                         currentTaskContent={taskContentLike}
                         emptyText={t.tasks.preview.emptyMilestoneTasks}
                         forceLoad={true}
+                        hostZIndex={hostZIndex}
                         myself={myself}
                         SectionHeader={SectionHeader}
                         setMyself={setMyself}

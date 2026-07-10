@@ -71,6 +71,7 @@ import { PermissionBanner } from "./services/notifications/PermissionBanner";
 import { NotificationIntent } from "./services/notifications/types";
 import { refreshAllData } from "./services/refreshAllData";
 import { useRuntimeConfigBootstrap } from "./services/runtimeConfig/useRuntimeConfig";
+import { canonicalSpotlightHref, milestoneIdFromEntityId } from "./utils/canonicalSpotlightHref";
 
 import { I18nProvider } from "./i18n";
 import { purpleTheme } from "./theme/purplePalette";
@@ -109,47 +110,9 @@ const V3ChatShell = lazy(() =>
 
 const API_DOWN_THRESHOLD = 3;
 
-// Build the canonical in-app URL for a SpotlightResult so we can feed
-// it to UrlLinkModalProvider.openModalByHref (which parses URLs via
-// parseInternalUrl into a ModalTarget). Returns null when there's no
-// modal-capable URL — either the entity_type doesn't have a modal view
-// yet (project) or the source is missing the ids needed to deep-link.
-// Mirrors the URL shapes encoded in `handleSpotlightSelect` below.
-const canonicalSpotlightHref = (r: SpotlightResult): string | null => {
-    // A milestone is backed by a TaskMaster row; it opens via the same
-    // task deep-link the rest of the app uses, so route it like a task
-    // (the milestone result carries its backing task_id + project_id).
-    if ((r.entity_type === "task" || r.entity_type === "milestone") && r.task_id && r.project_id) {
-        return `/workspace/tasks/project/${r.project_id}/task/${r.task_id}`;
-    }
-    if (r.entity_type === "chat" && r.chat_type && r.chat_id) {
-        const base = `/workspace/chat/${r.chat_type}/${r.chat_id}`;
-        const withThread = r.thread_id ? `${base}/thread/${r.thread_id}` : base;
-        return r.message_id ? `${withThread}/message/${r.message_id}` : withThread;
-    }
-    if (r.entity_type === "note" && r.note_id) {
-        if (r.note_type === "personal") {
-            return `/workspace/notes/my/${r.note_id}`;
-        }
-        if (r.note_type === "task" && r.project_id && r.task_id) {
-            return (
-                `/workspace/notes/task/project/${r.project_id}` +
-                `/task/${r.task_id}/note/${r.note_id}`
-            );
-        }
-        if (r.note_type === "chat" && r.chat_type && r.chat_id) {
-            // Chat notes can live on a thread or on the main channel;
-            // thread_id=0 is the sentinel for "not in a thread" per the
-            // existing parseInternalUrl convention.
-            const tid = r.thread_id ?? "0";
-            return (
-                `/workspace/notes/chat/${r.chat_type}` +
-                `/${r.chat_id}/thread/${tid}/note/${r.note_id}`
-            );
-        }
-    }
-    return null;
-};
+// Chip/citation → in-app URL mapping lives in
+// `utils/canonicalSpotlightHref` (extracted for unit testing); keep its
+// URL shapes in sync with `handleSpotlightSelect` below.
 
 export const App = () => {
     // Call retained for the hook's resize-listener side effects; the
@@ -582,13 +545,22 @@ export const App = () => {
 
             spotlight.close();
 
-            // Milestones open via their backing task (same as the task
-            // diagram), so route them through the task deep-link.
-            if (
-                (r.entity_type === "task" || r.entity_type === "milestone") &&
-                r.task_id &&
-                r.project_id
-            ) {
+            // Milestones deep-link to the milestone route (the id rides
+            // in entity_id — see canonicalSpotlightHref for why routing
+            // through the backing task broke fresh milestones).
+            if (r.entity_type === "milestone" && r.project_id) {
+                const milestoneId = milestoneIdFromEntityId(r.entity_id);
+                if (milestoneId != null) {
+                    navigate(`/workspace/tasks/project/${r.project_id}/milestone/${milestoneId}`);
+                    return;
+                }
+                if (r.task_id) {
+                    navigate(`/workspace/tasks/project/${r.project_id}/task/${r.task_id}`);
+                    return;
+                }
+            }
+
+            if (r.entity_type === "task" && r.task_id && r.project_id) {
                 navigate(`/workspace/tasks/project/${r.project_id}/task/${r.task_id}`);
                 return;
             }
