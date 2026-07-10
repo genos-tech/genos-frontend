@@ -52,6 +52,7 @@ import { UserProps } from "../../../../../types/admin";
 import { TaskNoteProps } from "../../../../../types/notes";
 import { TaskProps } from "../../../../../types/tasks";
 import { ModalTaskDiagram } from "../../../diagram/components/ModalTaskDiagram";
+import { DIAGRAM_LIFT } from "../../../diagram/diagramZIndex";
 import { deleteEmptyTask } from "../../../services/deleteEmptyTask";
 import { CopyableTaskIdChip } from "../../CopyableTaskId";
 import { ModalDeleteTask } from "../../modals/ModalDeleteTask";
@@ -86,6 +87,11 @@ type TaskTitleBlockProps = {
     // AND we're in create mode — preview mode and untouched-create both
     // close immediately.
     isDirty?: boolean;
+    /** Present when this header renders inside the UrlLinkModal —
+     *  carries the host dialog's z-index so the task-graph dialog can
+     *  lift above it (see diagramZIndex.ts), and marks the surface as
+     *  modal-hosted for the header-action gating below. */
+    hostZIndex?: number;
 };
 
 export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
@@ -111,6 +117,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
         isMilestone,
         isSubTask,
         isDirty = false,
+        hostZIndex,
     } = props;
 
     const { accessToken } = useAuth();
@@ -127,6 +134,15 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
     // sidebar so we don't depend on `openingService` for a check the URL
     // already encodes.
     const isOnTasksRoute = location.pathname.includes("/workspace/tasks");
+    // Header actions (task-graph trigger + ⋮ more-menu). The original
+    // `isOnTasksRoute` gate was really about hiding them on the CHAT
+    // page's task-card side panel — but it also (unintentionally) hid
+    // them on the notes page and inside the UrlLinkModal, where users
+    // expect the full header. Show them everywhere EXCEPT the chat-page
+    // panel; a modal-hosted preview (`hostZIndex` present) shows them
+    // regardless of what URL the modal was opened over.
+    const isModalHosted = hostZIndex != null;
+    const showHeaderActions = isModalHosted || !location.pathname.includes("/workspace/chat");
     const [openDeleteTask, setOpenDeleteTask] = useState<boolean>(false);
     const [showCloseDiscardConfirm, setShowCloseDiscardConfirm] = useState(false);
     // Opens the React Flow task-graph modal anchored on this task.
@@ -538,7 +554,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                         treatment (36×36 padded button on tinted surface
                         with a translateY hover) so the affordance reads
                         consistently across both surfaces. */}
-                    {isOnTasksRoute &&
+                    {showHeaderActions &&
                         isPreviewMode &&
                         taskContent.id != null &&
                         taskContent.project?.projectId != null && (
@@ -567,7 +583,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                             </AppTooltip>
                         )}
 
-                    {isOnTasksRoute &&
+                    {showHeaderActions &&
                         (() => {
                             const items: MoreMenuItem[] = [
                                 {
@@ -594,6 +610,14 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                         taskContent.chatType !== null &&
                                         taskContent.chatId !== null,
                                     onClick: () => {
+                                        // Modal-hosted: close the dialog first —
+                                        // the navigation below lands on the chat
+                                        // page, which the modal would otherwise
+                                        // keep covered. (ModalTaskView overrides
+                                        // setIsTaskPreviewVisible(false) to close.)
+                                        if (isModalHosted) {
+                                            useTM.setIsTaskPreviewVisible(false);
+                                        }
                                         // See the "Check Thread" button above:
                                         // seed the project so the chat-page
                                         // auto-loader can fetch the preview task
@@ -620,10 +644,18 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                         );
                                     },
                                 },
+                                // The items below drive surfaces the modal
+                                // covers (task-page create form, notes page,
+                                // 10010-layer create/delete dialogs, or the
+                                // HOST page's taskNoteMeta, which belongs to
+                                // a different task here) — inside the modal
+                                // they'd dead-click or act on hidden/wrong
+                                // state, so they're page-hosted only.
                                 {
                                     id: "newTask",
                                     label: t.tasks.titleBlock.menu.newTask,
                                     icon: <AssignmentRoundedIcon sx={{ fontSize: 18 }} />,
+                                    visible: !isModalHosted,
                                     onClick: () => {
                                         useTM.handleCreateTask();
                                     },
@@ -632,6 +664,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                     id: "newSubTask",
                                     label: t.tasks.titleBlock.menu.newSubTask,
                                     icon: <AssignmentRoundedIcon sx={{ fontSize: 18 }} />,
+                                    visible: !isModalHosted,
                                     onClick: () => {
                                         if (
                                             taskContent.id !== undefined &&
@@ -657,6 +690,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                     id: "openNote",
                                     label: t.tasks.titleBlock.menu.openNote,
                                     icon: <NoteAltRoundedIcon sx={{ fontSize: 18 }} />,
+                                    visible: !isModalHosted,
                                     onClick: () => {
                                         if (useNM.setIsTaskNoteVisible && taskContent.project) {
                                             useTM.setIsTaskTableVisible(false);
@@ -691,6 +725,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                     id: "newTag",
                                     label: t.tasks.titleBlock.menu.newTag,
                                     icon: <LocalOfferRoundedIcon sx={{ fontSize: 18 }} />,
+                                    visible: !isModalHosted,
                                     onClick: () => {
                                         useTM.setOpenCreateTag(true);
                                     },
@@ -699,6 +734,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                     id: "newProject",
                                     label: t.tasks.titleBlock.menu.newProject,
                                     icon: <AddIcon sx={{ fontSize: 18 }} />,
+                                    visible: !isModalHosted,
                                     onClick: () => {
                                         usePM.setOpenCreateProject(true);
                                     },
@@ -740,7 +776,12 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                     id: "deleteTask",
                                     label: t.tasks.titleBlock.menu.deleteTask,
                                     icon: <DeleteRoundedIcon sx={{ fontSize: 18 }} />,
-                                    visible: taskContent.status.status !== "Closed",
+                                    // ModalDeleteTask sits at z 10010 — BELOW
+                                    // the UrlLinkModal (10020) — so inside the
+                                    // modal the confirm dialog would open
+                                    // invisibly behind the preview.
+                                    visible:
+                                        taskContent.status.status !== "Closed" && !isModalHosted,
                                     danger: true,
                                     onClick: () => {
                                         setOpenDeleteTask(true);
@@ -758,6 +799,11 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                         border: `1px solid ${styles.buttonBorder}`,
                                         borderRadius: "10px",
                                     }}
+                                    // Modal-hosted: the dropdown portal
+                                    // defaults to 9999, which sits BEHIND
+                                    // the UrlLinkModal (10020) — lift it
+                                    // just above the host dialog.
+                                    zIndex={hostZIndex != null ? hostZIndex + 1 : undefined}
                                 />
                             );
                         })()}
@@ -915,6 +961,10 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                     open={openTaskDiagram}
                     projectId={Number(taskContent.project.projectId)}
                     myself={myself}
+                    // Modal-hosted previews (UrlLinkModal) must lift the
+                    // graph above the host dialog or it opens invisibly
+                    // behind it — see diagramZIndex.ts.
+                    zIndex={hostZIndex != null ? hostZIndex + DIAGRAM_LIFT : undefined}
                     // Always anchor the diagram on the WHOLE hierarchy
                     // the task lives in. `rootTaskId` walks up to the
                     // top of the parent chain (or self for unparented

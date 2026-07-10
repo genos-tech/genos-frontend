@@ -72,10 +72,27 @@ export const UrlLinkModal = (props: UrlLinkModalProps) => {
             return <ModalChatView target={target} {...rest} />;
         }
         if (target.kind === "task") {
-            return <ModalTaskView target={target} onClose={onClose} {...rest} />;
+            // `hostZIndex` tells the preview it's modal-hosted (header
+            // actions adapt) and what layer overlays it spawns (the task
+            // diagram) must stack above — see diagramZIndex.ts.
+            return (
+                <ModalTaskView
+                    hostZIndex={effectiveZIndex}
+                    target={target}
+                    onClose={onClose}
+                    {...rest}
+                />
+            );
         }
         if (target.kind === "milestone") {
-            return <ModalMilestoneView target={target} onClose={onClose} {...rest} />;
+            return (
+                <ModalMilestoneView
+                    hostZIndex={effectiveZIndex}
+                    target={target}
+                    onClose={onClose}
+                    {...rest}
+                />
+            );
         }
         if (
             target.kind === "myNote" ||

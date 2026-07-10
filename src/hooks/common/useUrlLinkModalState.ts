@@ -63,21 +63,35 @@ export const useUrlLinkModalState = ({
 
             if (classified.kind === "route") {
                 navigate(classified.pathname + classified.search);
+                // A route link clicked while the modal is open would
+                // otherwise navigate the page BEHIND the still-open
+                // dialog — the user sees "nothing happened". Close so
+                // the navigation is visible.
+                closeModal();
                 return "navigated";
             }
 
             if (SUPPORTED_KINDS.has(classified.kind)) {
-                setZIndex(opts?.zIndex);
+                // Preserve the current stacking when an already-open
+                // modal re-targets itself (a link clicked INSIDE the
+                // modal) and the caller didn't pass an explicit level.
+                // Without this, a preview opened from a high surface
+                // (Spotlight at 13200, or above a task diagram) would
+                // drop back to the 10020 default mid-flow and vanish
+                // behind its opener.
+                setZIndex(opts?.zIndex ?? (target !== null ? zIndex : undefined));
                 setTarget(classified);
                 return "opened";
             }
 
             // Known modal kind, not yet implemented in this phase. Fall
-            // back to react-router so the user lands on the real page.
+            // back to react-router so the user lands on the real page
+            // (and close for the same behind-the-dialog reason as above).
             navigate(href);
+            closeModal();
             return "navigated";
         },
-        [navigate]
+        [navigate, closeModal, target, zIndex]
     );
 
     return { closeModal, openModalByHref, target, zIndex };

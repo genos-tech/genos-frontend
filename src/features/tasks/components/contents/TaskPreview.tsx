@@ -46,6 +46,7 @@ import { LinkedPrCard } from "../../../integrations/components/LinkedPrCard";
 import { parsePrUrl } from "../../../integrations/utils/parsePrUrl";
 import { loadTaskNotes } from "../../../notes/task-notes/services/loadTaskNotes";
 import { ModalTaskDiagram } from "../../diagram/components/ModalTaskDiagram";
+import { DIAGRAM_LIFT } from "../../diagram/diagramZIndex";
 import { loadSpecificTask } from "../../services/loadSpecificTask";
 import { loadTaskActivities } from "../../services/loadTaskActivities";
 import { loadTaskComments } from "../../services/loadTaskComments";
@@ -110,6 +111,11 @@ type TaskPreviewProps = {
     setTodoFromMessageBubble?: (
         todoFromMessageBubble: MessageProps | ThreadMessageProps | TaskCommentProps
     ) => void;
+    /** Present when this preview is hosted inside the UrlLinkModal —
+     *  carries the host dialog's z-index. Header actions adapt (see
+     *  TaskTitleBlock) and the task-graph dialog lifts above the host
+     *  (see diagramZIndex.ts). Undefined on page-hosted previews. */
+    hostZIndex?: number;
 };
 
 export const TaskPreview = (props: TaskPreviewProps) => {
@@ -125,6 +131,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         useTEM,
         useCM,
         setTodoFromMessageBubble,
+        hostZIndex,
     } = props;
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
@@ -694,6 +701,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                 : (reroutedMilestoneId as number);
         return (
             <MilestonePreviewInner
+                hostZIndex={hostZIndex}
                 milestoneId={milestoneId}
                 myself={myself}
                 setMyself={setMyself}
@@ -733,6 +741,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                     }
                     header={
                         <TaskTitleBlock
+                            hostZIndex={hostZIndex}
                             isMilestone={previewTaskKind === "milestone"}
                             isPreviewMode={true}
                             isSubTask={previewTaskKind === "subtask"}
@@ -888,6 +897,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                     tabs={
                         <TaskTabBlock
                             editTargetComment={editTargetComment}
+                            hostZIndex={hostZIndex}
                             isInEdit={isInEdit}
                             isLoadingTaskActivities={isLoadingTaskActivities}
                             myself={myself}
@@ -934,6 +944,8 @@ const STATUS_COLOR: Record<string, string> = {
 
 type MilestonePreviewInnerProps = {
     milestoneId: number;
+    /** See TaskPreviewProps.hostZIndex. */
+    hostZIndex?: number;
     socket: Socket | null;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
@@ -1075,6 +1087,7 @@ const milestoneReporterToUserProps = (
 
 const MilestonePreviewInner = ({
     milestoneId,
+    hostZIndex,
     socket,
     myself,
     setMyself,
@@ -1998,6 +2011,10 @@ const MilestonePreviewInner = ({
                                         border: `1px solid ${styles.buttonBorder}`,
                                         borderRadius: "10px",
                                     }}
+                                    // Modal-hosted milestone preview: lift
+                                    // the dropdown above the UrlLinkModal
+                                    // (same fix as the task header's menu).
+                                    zIndex={hostZIndex != null ? hostZIndex + 1 : undefined}
                                 />
                             );
                         })()}
@@ -2265,6 +2282,7 @@ const MilestonePreviewInner = ({
                 milestone.taskId != null ? (
                     <TaskTabBlock
                         editTargetComment={editTargetComment}
+                        hostZIndex={hostZIndex}
                         isInEdit={isInEdit}
                         isLoadingTaskActivities={isLoadingTaskActivities}
                         myself={myself}
@@ -2312,6 +2330,10 @@ const MilestonePreviewInner = ({
                     usePM={usePM}
                     useSM={useSM}
                     useTM={useTM}
+                    // Modal-hosted milestone previews (UrlLinkModal) must
+                    // lift the graph above the host dialog or it opens
+                    // invisibly behind it — see diagramZIndex.ts.
+                    zIndex={hostZIndex != null ? hostZIndex + DIAGRAM_LIFT : undefined}
                     onClose={() => setOpenTaskDiagram(false)}
                 />
             )}

@@ -33,6 +33,7 @@ import { UploadingTileBadge } from "../../../../../components/ui/feedback/FileUp
 import { useFileSizeGuard } from "../../../../../components/ui/feedback/useFileSizeGuard";
 import { useAuth } from "../../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
+import { useUrlLinkModal } from "../../../../../hooks/common/UrlLinkModalContext";
 import { TeamManagementState } from "../../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../../hooks/notes/useNoteManagement";
@@ -96,6 +97,11 @@ type TaskTabBlockProps = {
     setTodoFromMessageBubble?: (
         todoFromMessageBubble: MessageProps | ThreadMessageProps | TaskCommentProps
     ) => void;
+    /** Present when this block renders inside the UrlLinkModal (see
+     *  TaskPreviewProps.hostZIndex). Notes-tab clicks then open the note
+     *  IN the modal (re-targeting it) instead of driving the notes-page
+     *  state behind the dialog, which looked like a dead click. */
+    hostZIndex?: number;
 };
 
 export const TaskTabBlock = (props: TaskTabBlockProps) => {
@@ -132,7 +138,10 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
         useTEM,
         useNM,
         setTodoFromMessageBubble,
+        hostZIndex,
     } = props;
+    const urlLinkModal = useUrlLinkModal();
+    const isModalHosted = hostZIndex != null;
 
     const attachments = taskContent.attachments ?? [];
     const previews = useAttachmentPreviews(attachments);
@@ -537,6 +546,18 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                                 },
                                             }}
                                             onClick={() => {
+                                                // Modal-hosted preview: driving the
+                                                // notes-page state below would change
+                                                // a surface the user can't see (the
+                                                // dialog stays on top) — a dead click.
+                                                // Re-target the hosting modal to the
+                                                // note view instead.
+                                                if (isModalHosted && urlLinkModal) {
+                                                    urlLinkModal.openModalByHref(
+                                                        `/workspace/notes/task/project/${taskNote.projectId}/task/${taskNote.taskId}/note/${taskNote.noteId}`
+                                                    );
+                                                    return;
+                                                }
                                                 if (useNM.setIsTaskNoteVisible) {
                                                     useTM.setIsTaskTableVisible(false);
                                                     useNM.setIsTaskNoteVisible(true);
@@ -578,56 +599,62 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                     </ListItem>
                                 ))}
 
-                                {/* Add New Note Button */}
-                                <ListItem sx={{ p: 0, mt: 0.5 }}>
-                                    <ListItemButton
-                                        sx={{
-                                            borderRadius: "10px",
-                                            px: 2,
-                                            py: 1,
-                                            justifyContent: "center",
-                                            gap: 1,
-                                            background: isDark
-                                                ? "linear-gradient(135deg, rgba(139,92,246,0.1) 0%, rgba(124,58,237,0.08) 100%)"
-                                                : "linear-gradient(135deg, rgba(124,58,237,0.08) 0%, rgba(124,58,237,0.06) 100%)",
-                                            border: "1px solid",
-                                            borderColor: isDark
-                                                ? "rgba(139,92,246,0.2)"
-                                                : "rgba(124,58,237,0.15)",
-                                            color: isDark ? "#a78bfa" : "#7c3aed",
-                                            fontWeight: 600,
-                                            transition: "all 0.2s ease",
-                                            "&:hover": {
+                                {/* Add New Note Button. Hidden in the
+                                    modal-hosted preview: creation opens the
+                                    editor on the notes page, which the
+                                    dialog covers — the click would look
+                                    like it did nothing. */}
+                                {!isModalHosted && (
+                                    <ListItem sx={{ p: 0, mt: 0.5 }}>
+                                        <ListItemButton
+                                            sx={{
+                                                borderRadius: "10px",
+                                                px: 2,
+                                                py: 1,
+                                                justifyContent: "center",
+                                                gap: 1,
                                                 background: isDark
-                                                    ? "linear-gradient(135deg, rgba(139,92,246,0.15) 0%, rgba(124,58,237,0.12) 100%)"
-                                                    : "linear-gradient(135deg, rgba(124,58,237,0.12) 0%, rgba(124,58,237,0.1) 100%)",
+                                                    ? "linear-gradient(135deg, rgba(139,92,246,0.1) 0%, rgba(124,58,237,0.08) 100%)"
+                                                    : "linear-gradient(135deg, rgba(124,58,237,0.08) 0%, rgba(124,58,237,0.06) 100%)",
+                                                border: "1px solid",
                                                 borderColor: isDark
-                                                    ? "rgba(139,92,246,0.3)"
-                                                    : "rgba(124,58,237,0.25)",
-                                            },
-                                        }}
-                                        onClick={() => {
-                                            if (
-                                                useNM.setIsTaskNoteVisible &&
-                                                taskContent.project
-                                            ) {
-                                                useTM.setIsTaskTableVisible(false);
-                                                useNM.setIsTaskNoteVisible(true);
-                                                useNM.handleCreateNewTaskNote(
-                                                    null,
-                                                    taskContent.project.projectId,
-                                                    Number(taskContent.id),
-                                                    taskContent.title
-                                                );
-                                            }
-                                        }}
-                                    >
-                                        <AddRoundedIcon sx={{ fontSize: 18 }} />
-                                        <Typography level="body-sm" sx={{ fontWeight: 600 }}>
-                                            New Note
-                                        </Typography>
-                                    </ListItemButton>
-                                </ListItem>
+                                                    ? "rgba(139,92,246,0.2)"
+                                                    : "rgba(124,58,237,0.15)",
+                                                color: isDark ? "#a78bfa" : "#7c3aed",
+                                                fontWeight: 600,
+                                                transition: "all 0.2s ease",
+                                                "&:hover": {
+                                                    background: isDark
+                                                        ? "linear-gradient(135deg, rgba(139,92,246,0.15) 0%, rgba(124,58,237,0.12) 100%)"
+                                                        : "linear-gradient(135deg, rgba(124,58,237,0.12) 0%, rgba(124,58,237,0.1) 100%)",
+                                                    borderColor: isDark
+                                                        ? "rgba(139,92,246,0.3)"
+                                                        : "rgba(124,58,237,0.25)",
+                                                },
+                                            }}
+                                            onClick={() => {
+                                                if (
+                                                    useNM.setIsTaskNoteVisible &&
+                                                    taskContent.project
+                                                ) {
+                                                    useTM.setIsTaskTableVisible(false);
+                                                    useNM.setIsTaskNoteVisible(true);
+                                                    useNM.handleCreateNewTaskNote(
+                                                        null,
+                                                        taskContent.project.projectId,
+                                                        Number(taskContent.id),
+                                                        taskContent.title
+                                                    );
+                                                }
+                                            }}
+                                        >
+                                            <AddRoundedIcon sx={{ fontSize: 18 }} />
+                                            <Typography level="body-sm" sx={{ fontWeight: 600 }}>
+                                                New Note
+                                            </Typography>
+                                        </ListItemButton>
+                                    </ListItem>
+                                )}
                             </List>
                         </Stack>
                     </TabPanel>
