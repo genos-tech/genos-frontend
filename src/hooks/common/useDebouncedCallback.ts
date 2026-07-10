@@ -16,12 +16,18 @@ import { useCallback, useEffect, useRef } from "react";
  *                No-op when nothing is pending.
  * - `cancel()` — drop any pending call without executing.
  *
+ * `fn` receives `isFlush`: `true` when invoked via `flush()` (the caller
+ * needs the resulting state committed synchronously — e.g. a submit click
+ * right after blur reads it), `false` on the trailing timer. The editors
+ * use this to mark the timer-path parent re-render as a React transition
+ * (interruptible by keystrokes) while keeping the flush path synchronous.
+ *
  * The latest `fn` is kept in a ref, so callers may pass a fresh closure on
  * every render without resetting the timer. Pending work is cancelled on
  * unmount — callers for whom the final call matters should `flush()` from
  * an appropriate DOM event (e.g. blur) instead.
  */
-export function useDebouncedCallback(fn: () => void, delayMs: number) {
+export function useDebouncedCallback(fn: (isFlush?: boolean) => void, delayMs: number) {
     const fnRef = useRef(fn);
     fnRef.current = fn;
     const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -37,7 +43,7 @@ export function useDebouncedCallback(fn: () => void, delayMs: number) {
         if (timerRef.current !== null) {
             clearTimeout(timerRef.current);
             timerRef.current = null;
-            fnRef.current();
+            fnRef.current(true);
         }
     }, []);
 
@@ -45,7 +51,7 @@ export function useDebouncedCallback(fn: () => void, delayMs: number) {
         if (timerRef.current !== null) clearTimeout(timerRef.current);
         timerRef.current = setTimeout(() => {
             timerRef.current = null;
-            fnRef.current();
+            fnRef.current(false);
         }, delayMs);
     }, [delayMs]);
 

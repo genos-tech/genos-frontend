@@ -2,7 +2,7 @@ import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 import "../../App.css";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { startTransition, useEffect, useMemo, useRef, useState } from "react";
 import { codeBlockOptions } from "@blocknote/code-block";
 import {
     BlockNoteSchema,
@@ -327,10 +327,25 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
     // fires, off the keystroke path. Flushed on blur so click-away flows
     // (e.g. the Create-Task submit button reading `body` state) see the
     // final content.
-    const syncBodyToParent = useDebouncedCallback(() => {
+    //
+    // Timer-path commits are transitions: `setBody` re-renders the whole
+    // TaskPreview / CreateTaskForm tree, and when that render used to start
+    // right as the user kept typing, the keystrokes buffered behind it and
+    // appeared in a delayed burst. `startTransition` lets React abandon the
+    // in-progress parent render for the urgent keystroke and redo it after.
+    // The blur/flush path stays synchronous — its callers read `body`
+    // immediately after flushing.
+    const syncBodyToParent = useDebouncedCallback((isFlush?: boolean) => {
         const doc: any[] = editor.document;
-        setNumEditorLines(countLines(doc));
-        setBody(doc);
+        const commit = () => {
+            setNumEditorLines(countLines(doc));
+            setBody(doc);
+        };
+        if (isFlush) {
+            commit();
+        } else {
+            startTransition(commit);
+        }
     }, EDITOR_BODY_SYNC_DEBOUNCE_MS);
 
     useEffect(() => {

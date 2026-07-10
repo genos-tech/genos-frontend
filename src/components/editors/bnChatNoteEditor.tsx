@@ -2,7 +2,7 @@ import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 import "../../App.css";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { startTransition, useEffect, useMemo, useRef, useState } from "react";
 import { codeBlockOptions } from "@blocknote/code-block";
 import {
     BlockNoteSchema,
@@ -337,8 +337,19 @@ export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
     // the parent tree synchronously in that path is what made typing lag.
     // Flushed on blur so click-away flows read the final content; Yjs is
     // the authoritative store either way.
-    const syncBodyToParent = useDebouncedCallback(() => {
-        setBody(editor.document);
+    //
+    // Timer-path commits are transitions: when the panel re-render used to
+    // start right as the user kept typing, keystrokes buffered behind it
+    // and appeared in a delayed burst. `startTransition` lets React abandon
+    // the parent render for the urgent keystroke. The blur/flush path stays
+    // synchronous — its callers read `body` immediately after flushing.
+    const syncBodyToParent = useDebouncedCallback((isFlush?: boolean) => {
+        const doc = editor.document;
+        if (isFlush) {
+            setBody(doc);
+        } else {
+            startTransition(() => setBody(doc));
+        }
     }, EDITOR_BODY_SYNC_DEBOUNCE_MS);
 
     useEffect(() => {
