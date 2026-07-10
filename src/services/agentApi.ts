@@ -102,12 +102,13 @@ export interface AskAgentArgs extends BaseStreamHandlers {
     // The old per-request `allow_web_search` flag was removed — a stale
     // client could send it wrong and silently drop the tool.
     // When set, the agent scopes its answer to one specific chat thread:
-    // it loads a thread summary into the system prompt, hard-disables
-    // every workspace-wide and write tool, and enables only
-    // `fetch_chat_thread` for drilling into specific messages. Used by
-    // the "Ask about this thread" modal launched from
-    // ThreadChatPaneHeader. When omitted, the normal Spotlight agent
-    // behavior applies.
+    // the backend injects the thread's summary into the system prompt
+    // and pre-seeds a source chip for it. The FULL tool set (including
+    // write tools — so "create a milestone and tasks from this chat"
+    // works here) stays available; only the user's persisted web-search
+    // preference gates tools. Used by the "Ask about this thread" modal
+    // launched from ThreadChatPaneHeader. When omitted, the normal
+    // Spotlight agent behavior applies.
     threadContext?: ThreadContext;
     // Mirror of `threadContext` for the per-note Ask flow. Used by the
     // "Ask about this note" modal launched from NoteHeaderActions —
