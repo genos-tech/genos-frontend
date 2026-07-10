@@ -18,6 +18,10 @@ import { MilestoneTarget } from "../../../utils/parseInternalUrl";
 type ModalMilestoneViewProps = {
     target: MilestoneTarget;
     onClose: () => void;
+    /** Stacking level of the hosting UrlLinkModal. Forwarded to
+     *  TaskPreview so the milestone header's task-graph dialog lifts
+     *  above this dialog (see diagramZIndex.ts). */
+    hostZIndex?: number;
     accessToken: string | null;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
@@ -71,6 +75,7 @@ export const ModalMilestoneView = (props: ModalMilestoneViewProps) => {
     const {
         target,
         onClose,
+        hostZIndex,
         myself,
         setMyself,
         socket,
@@ -160,6 +165,7 @@ export const ModalMilestoneView = (props: ModalMilestoneViewProps) => {
             sx={{ height: "100%", overflow: "auto", width: "100%" }}
         >
             <TaskPreview
+                hostZIndex={hostZIndex}
                 myself={myself}
                 setMyself={setMyself}
                 socket={socket}

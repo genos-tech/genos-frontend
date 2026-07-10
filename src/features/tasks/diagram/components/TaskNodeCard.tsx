@@ -33,6 +33,7 @@ import { purplePalette } from "../../../../theme/purplePalette";
 import { StatusChip } from "../../components/autocompletes/ACTaskSelector";
 import { CopyableTaskIdChip } from "../../components/CopyableTaskId";
 import { statuses } from "../../utils/taskMeta";
+import { useDiagramZIndex } from "../diagramZIndex";
 import { HANDLE, TaskNodeData } from "../types";
 import { getScheduleStatus, TONE_COLOR } from "../utils/scheduleStatus";
 
@@ -60,6 +61,11 @@ export const TaskNodeCard = memo((props: NodeProps) => {
     const { t } = useTranslation();
     const isDark = mode === "dark";
     const P = isDark ? purplePalette.dark : purplePalette.light;
+    // Popups (status menu, date editor) must stack ABOVE the enclosing
+    // diagram dialog, whose z varies by host surface — see
+    // diagramZIndex.ts. Default context (9999) keeps the historical
+    // 10000 for page-hosted diagrams.
+    const popupZIndex = useDiagramZIndex() + 1;
 
     const {
         task,
@@ -340,7 +346,7 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                                 // z-index lands on the inline style and
                                 // out-ranks the diagram modal's stacking
                                 // context.
-                                root: { style: { zIndex: 10000 } },
+                                root: { style: { zIndex: popupZIndex } },
                             }}
                         >
                             {statuses.map((s) => {
@@ -682,8 +688,17 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                 clear a date by blanking the field. Plain Stack layout
                 instead of Joy's DialogTitle/DialogContent: those
                 wrappers ship their own padding/typography that fought
-                with the compact look we want here. */}
-            <Modal open={dateEditorOpen} onClose={() => setDateEditorOpen(false)}>
+                with the compact look we want here.
+                zIndex: Joy's default modal z (~1300) would put this
+                BEHIND the enclosing diagram dialog — the editor
+                "opened" but was invisible. Diagram z + 1 matches the
+                status Menu above, which solved the same stacking
+                problem the same way. */}
+            <Modal
+                open={dateEditorOpen}
+                sx={{ zIndex: popupZIndex }}
+                onClose={() => setDateEditorOpen(false)}
+            >
                 <ModalDialog
                     variant="outlined"
                     sx={{

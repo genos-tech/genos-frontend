@@ -38,6 +38,7 @@ import { createTaskDependency } from "../../services/createTaskDependency";
 import { deleteTaskDependency } from "../../services/deleteTaskDependency";
 import { onTaskTouched } from "../../services/taskEvents";
 import { Sprint } from "../../sprint-milestone/types";
+import { DIAGRAM_LIFT, URL_LINK_MODAL_DEFAULT_Z, useDiagramZIndex } from "../diagramZIndex";
 import { useDagreLayout } from "../hooks/useDagreLayout";
 import { createDiagramSubtask } from "../services/createDiagramSubtask";
 import { deleteDiagramTask } from "../services/deleteDiagramTask";
@@ -498,6 +499,9 @@ const CanvasInner = ({
     // Null outside the provider (signin pages) — falls back to the
     // legacy close-diagram-and-open-preview path.
     const urlLinkModal = useUrlLinkModal();
+    // Effective z of the enclosing diagram dialog (see diagramZIndex.ts)
+    // — node-click previews must open ABOVE it, whatever surface hosts it.
+    const diagramZIndex = useDiagramZIndex();
 
     const [nodes, setNodes] = useState<Node[]>([]);
     const [edges, setEdges] = useState<Edge[]>([]);
@@ -763,13 +767,16 @@ const CanvasInner = ({
     const handleOpenPreview = useCallback(
         (taskId: number) => {
             // Preferred path: open the task/milestone in the global
-            // URL-link modal (UrlLinkModal, z=10020) which stacks ABOVE
-            // this diagram's Joy modal (z=9999) — the graph stays open
-            // behind the overlay. The modal views hydrate themselves
-            // from the ids in the URL (ModalTaskView / ModalMilestone-
-            // View keep global preview state untouched), so ghost
-            // (external) nodes just carry their own projectId in the
-            // URL — no `usePM.setCurrentProject` switch needed.
+            // URL-link modal, stacked ABOVE this diagram's Joy modal —
+            // the graph stays open behind the overlay. For a page-hosted
+            // diagram (z 9999) the max() resolves to the modal's 10020
+            // default, the historical stacking; for a modal-hosted
+            // diagram it lifts the preview past the raised graph. The
+            // modal views hydrate themselves from the ids in the URL
+            // (ModalTaskView / ModalMilestoneView keep global preview
+            // state untouched), so ghost (external) nodes just carry
+            // their own projectId in the URL — no
+            // `usePM.setCurrentProject` switch needed.
             const internal = graphRef.current?.tasks.find((t) => Number(t.id) === taskId);
             const ghost = graphRef.current?.externalTasks.find((t) => Number(t.id) === taskId);
             if (urlLinkModal && (internal || ghost)) {
@@ -782,7 +789,9 @@ const CanvasInner = ({
                     internal?.isMilestone === true && internal.milestoneId != null
                         ? `/workspace/tasks/project/${targetProjectId}/milestone/${internal.milestoneId}`
                         : `/workspace/tasks/project/${targetProjectId}/task/${taskId}`;
-                urlLinkModal.openModalByHref(href);
+                urlLinkModal.openModalByHref(href, {
+                    zIndex: Math.max(URL_LINK_MODAL_DEFAULT_Z, diagramZIndex + DIAGRAM_LIFT),
+                });
                 return;
             }
 
@@ -800,7 +809,7 @@ const CanvasInner = ({
             useTM.setCurrentPreviewTaskId(taskId);
             onCloseModal();
         },
-        [urlLinkModal, useTM, usePM, onCloseModal, projectId]
+        [urlLinkModal, useTM, usePM, onCloseModal, projectId, diagramZIndex]
     );
 
     // Wire handlers into a stable bag so `buildNodesAndEdges` doesn't

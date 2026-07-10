@@ -20,6 +20,10 @@ import { TaskTarget } from "../../../utils/parseInternalUrl";
 type ModalTaskViewProps = {
     target: TaskTarget;
     onClose: () => void;
+    /** Stacking level of the hosting UrlLinkModal. Forwarded to
+     *  TaskPreview so modal-hosted header actions render and the task
+     *  diagram lifts above this dialog (see diagramZIndex.ts). */
+    hostZIndex?: number;
     accessToken: string | null;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
@@ -51,6 +55,7 @@ export const ModalTaskView = (props: ModalTaskViewProps) => {
     const {
         target,
         onClose,
+        hostZIndex,
         accessToken,
         myself,
         setMyself,
@@ -181,6 +186,7 @@ export const ModalTaskView = (props: ModalTaskViewProps) => {
             sx={{ height: "100%", overflow: "auto", width: "100%" }}
         >
             <TaskPreview
+                hostZIndex={hostZIndex}
                 myself={myself}
                 setMyself={setMyself}
                 socket={socket}
