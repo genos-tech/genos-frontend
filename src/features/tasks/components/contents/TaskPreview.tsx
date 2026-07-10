@@ -3,6 +3,7 @@ import { PartialBlock } from "@blocknote/core";
 import AccountTreeRoundedIcon from "@mui/icons-material/AccountTreeRounded";
 import AddIcon from "@mui/icons-material/Add";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
+import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import CancelIcon from "@mui/icons-material/Cancel";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
@@ -1953,6 +1954,34 @@ const MilestonePreviewInner = ({
                                                 );
                                             }
                                         }
+                                    },
+                                },
+                                {
+                                    id: "organizeTasks",
+                                    label: t.tasks.preview.menu.organizeTasks,
+                                    icon: <AutoAwesomeRoundedIcon sx={{ fontSize: 18 }} />,
+                                    onClick: () => {
+                                        // Opens Spotlight with the organize
+                                        // prompt pre-filled (naming the
+                                        // milestone + ids so the agent skips
+                                        // the resolution round-trip). The
+                                        // user reviews/edits and presses
+                                        // Enter — the agent then proposes ONE
+                                        // update_tasks_bulk for approval.
+                                        window.dispatchEvent(
+                                            new CustomEvent("genos:spotlight-ask", {
+                                                detail: {
+                                                    query: fmt(
+                                                        t.tasks.preview.menu.organizeTasksPrefill,
+                                                        {
+                                                            title: milestone.title || "",
+                                                            milestoneId: milestone.milestoneId,
+                                                            projectId: milestone.projectId,
+                                                        }
+                                                    ),
+                                                },
+                                            })
+                                        );
                                     },
                                 },
                                 {

@@ -6,6 +6,17 @@ export const threadAsk = {
         label: "Ask",
         tooltip: "Ask AI about this thread",
     },
+    // "Plan tasks from this thread" — opens the same Ask modal with the
+    // create_task_plan prompt pre-filled (the user can name the target
+    // project / milestone before sending).
+    planTasks: {
+        menuLabel: "Plan tasks from this thread",
+        prefill:
+            "Create a milestone with tasks and subtasks based on this " +
+            "thread. Where the discussion implies an order, add " +
+            "dependencies between the tasks. Suggest priorities, effort " +
+            "levels and due dates from the context.",
+    },
     modal: {
         title: "Ask about this thread",
         close: "Close",

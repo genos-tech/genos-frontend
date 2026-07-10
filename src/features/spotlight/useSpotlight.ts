@@ -53,6 +53,7 @@ import {
     type CompletedTurn,
     type ToolEvent,
 } from "../agentQA";
+import { emitTasksBulkChanged, TASK_WRITE_TOOLS } from "../tasks/services/taskEvents";
 import type { SpotlightResult } from "./types";
 
 // Re-exported so existing consumers that import these types from
@@ -220,6 +221,23 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
 
         document.addEventListener("keydown", handleKeyDown);
         return () => document.removeEventListener("keydown", handleKeyDown);
+    }, []);
+
+    // ---- Programmatic open-with-prefill. ----
+    // Other features (e.g. the milestone preview's "Organize tasks with
+    // AI" menu item) open Spotlight with a prepared query by dispatching
+    // `genos:spotlight-ask`. Prefill, not auto-ask: the user reviews /
+    // edits the query and presses Enter to send it to the agent — the
+    // same explicit-ask contract every other entry point follows.
+    useEffect(() => {
+        const handler = (e: Event) => {
+            const q = (e as CustomEvent<{ query?: string }>).detail?.query;
+            if (!q) return;
+            setIsOpen(true);
+            setQuery(q);
+        };
+        window.addEventListener("genos:spotlight-ask", handler);
+        return () => window.removeEventListener("genos:spotlight-ask", handler);
     }, []);
 
     // ---- Fetch daily usage from the backend when the overlay opens. ----
@@ -579,6 +597,14 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
                     // note until a manual reload. Nudge it to refetch.
                     if (tool_name === "create_note" || tool_name === "update_note") {
                         window.dispatchEvent(new CustomEvent("noteChanged"));
+                    }
+                    // And for tasks/milestones: an approved agent write
+                    // (create_task_plan, update_tasks_bulk, ...) mutates
+                    // rows outside the task UI's flows — nudge
+                    // useProjectTaskManagement to re-run the same refresh
+                    // the window-focus handler uses.
+                    if (TASK_WRITE_TOOLS.has(tool_name)) {
+                        emitTasksBulkChanged();
                     }
                 },
                 onToolError: ({

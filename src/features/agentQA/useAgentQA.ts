@@ -26,6 +26,7 @@ import {
     type PendingApprovalPayload,
 } from "../../services/agentApi";
 import type { SpotlightResult } from "../spotlight/types";
+import { emitTasksBulkChanged, TASK_WRITE_TOOLS } from "../tasks/services/taskEvents";
 import {
     EMPTY_ASK_STATE,
     MAX_TURNS_IN_HISTORY,
@@ -196,6 +197,15 @@ export const useAgentQA = ({
                     // Spotlight overlay's handler.
                     if (tool_name === "create_note" || tool_name === "update_note") {
                         window.dispatchEvent(new CustomEvent("noteChanged"));
+                    }
+                    // Same idea for tasks/milestones: an approved agent
+                    // write mutates rows outside the task UI's flows, so
+                    // the table / diagram / milestone list would show
+                    // stale data until a reload. (The decide/resume
+                    // stream reuses these handlers, so approve-time
+                    // results are covered too.)
+                    if (TASK_WRITE_TOOLS.has(tool_name)) {
+                        emitTasksBulkChanged();
                     }
                 },
                 onToolError: ({
