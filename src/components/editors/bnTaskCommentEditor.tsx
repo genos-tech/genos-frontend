@@ -20,6 +20,10 @@ import {
     CreateLinkButton,
     DefaultReactSuggestionItem,
     FileCaptionButton,
+    FileDeleteButton,
+    FileDownloadButton,
+    FilePreviewButton,
+    FileRenameButton,
     FileReplaceButton,
     FormattingToolbar,
     getDefaultReactSlashMenuItems,
@@ -41,12 +45,18 @@ import { useIsMobile } from "../../hooks/common/useIsMobile";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
+import { useTranslation } from "../../i18n";
+import { channelService } from "../../services/channel/channelService";
 import { UserProps } from "../../types/admin";
 import { TaskCommentProps, TaskProps } from "../../types/tasks";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { resolveInsecureFileUrl } from "../../utils/downloadUtils";
 import { filterAndRankSuggestionItems } from "../../utils/suggestionRanking";
 import { EmojiPicker } from "../ui/emoji/EmojiPicker";
+import { FileSizeRejectionSnackbar } from "../ui/feedback/FileSizeRejectionSnackbar";
+import { FileUploadOverlay, FileUploadStatusBadge } from "../ui/feedback/FileUploadProgress";
+import { useFileSizeGuard } from "../ui/feedback/useFileSizeGuard";
+import { useUploadCounter } from "../ui/feedback/useUploadCounter";
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
 import {
@@ -83,6 +93,17 @@ type BnTaskCommentEditorProps = {
     setTaskCommentLines: (value: number) => void;
     useCM: ChatManagementState;
     useTM: TaskManagementState;
+    /** v3 channel to upload inline image/file blocks against — the
+     *  task's project PM channel. When unset (task without a project /
+     *  PM channel not loaded), BlockNote gets no `uploadFile` and file
+     *  inserts are unavailable; drops are then handled by the caller's
+     *  fallback (attach to the task's Attachments tab). */
+    uploadChannelId?: string;
+    /** Files dropped on the comment tab (outside the editor itself).
+     *  Uploaded in series and inserted as image/file blocks — same
+     *  contract as BnChatEditor's chat-pane drop flow. */
+    pendingFiles?: File[];
+    clearPendingFiles?: () => void;
 };
 
 export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
@@ -100,8 +121,12 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
         setTaskCommentLines,
         useCM,
         useTM,
+        uploadChannelId,
+        pendingFiles,
+        clearPendingFiles,
     } = props;
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isMobile = useIsMobile();
     const urlLinkModal = useUrlLinkModal();
     const editorBoxRef = useRef<HTMLDivElement>(null);
@@ -117,9 +142,12 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
         .filter(Boolean)
         .join(" ");
 
-    // Disable the Audio and Image blocks from the built-in schema
-    // This is done by picking out the blocks you want to disable
-    const { audio, image, video, file, ...remainingBlockSpecs } = defaultBlockSpecs;
+    // Disable only the Audio and Video blocks from the built-in schema.
+    // Image + File stay in (same set as BnChatEditor) so files dropped
+    // on the comment tab can ride inside the comment body itself —
+    // TaskCommentBubble renders comments through BnChatPreview, which
+    // already displays both block types.
+    const { audio, video, ...remainingBlockSpecs } = defaultBlockSpecs;
 
     // Our schema with inline content specs, which contain the configs and
     // implementations for inline content  that we want our editor to use.
@@ -163,9 +191,28 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
     // We use the English, default dictionary
     const locale = en;
 
+    // Upload pipeline — mirrors BnChatEditor: the counter drives the
+    // "Uploading n files…" pill for BlockNote-initiated uploads
+    // (slash-menu / drag straight into the editor), the size guard
+    // rejects oversize files before any fetch and feeds the snackbar.
+    const { activeCount: editorUploadCount, wrap: trackUpload } = useUploadCounter();
+    const { rejection, dismissRejection, filterFiles, guardUploadFile } = useFileSizeGuard();
+
+    // Inline uploads are channel-scoped in v3; task comments ride the
+    // task's project PM channel. Without a resolvable channel there is
+    // no `uploadFile`, so BlockNote's own file insert paths stay inert.
+    const uploadFile = uploadChannelId
+        ? guardUploadFile(
+              trackUpload(async (file: File) =>
+                  channelService.uploadInlineFile(String(uploadChannelId), file)
+              )
+          )
+        : undefined;
+
     const editor = useCreateBlockNote({
         schema,
         resolveFileUrl: resolveInsecureFileUrl,
+        uploadFile,
         // `codeBlockEnterShortcut` augments the built-in
         // ``` + Space input rule with an Enter-key handler, so
         // users get the same Markdown shortcut they expect.
@@ -193,6 +240,69 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
     const draftCacheKey = task?.id != null ? `task-comment:${task.id}` : null;
     const { saveDraft, clearDraft } = useEditorDraft(editor, draftCacheKey);
 
+    // Tracks the comment-tab drop upload loop (separate from BlockNote's
+    // own `uploadFile` placeholder) so the editor surface can show a dim
+    // overlay with "Uploading 2 / 5 — large.pdf" while files POST in
+    // series. Same UX as BnChatEditor's chat-pane drop.
+    const [pendingUpload, setPendingUpload] = useState<{
+        index: number;
+        total: number;
+        name: string;
+    } | null>(null);
+
+    // Process files dropped on the comment tab (outside the editor).
+    useEffect(() => {
+        if (!pendingFiles || pendingFiles.length === 0 || !clearPendingFiles) return;
+        if (!uploadChannelId) {
+            // No upload channel — the caller shouldn't have forwarded the
+            // drop here (its fallback attaches to the Attachments tab),
+            // but clear defensively so files don't wedge in the queue.
+            clearPendingFiles();
+            return;
+        }
+        // Drop oversize files up-front so the dim overlay only counts
+        // files we'll actually try to upload.
+        const acceptedFiles = filterFiles(pendingFiles);
+        if (acceptedFiles.length === 0) {
+            clearPendingFiles();
+            return;
+        }
+        const insertFiles = async () => {
+            try {
+                for (let i = 0; i < acceptedFiles.length; i += 1) {
+                    const file = acceptedFiles[i];
+                    setPendingUpload({
+                        index: i + 1,
+                        total: acceptedFiles.length,
+                        name: file.name,
+                    });
+                    try {
+                        const url = await channelService.uploadInlineFile(
+                            String(uploadChannelId),
+                            file
+                        );
+                        const isImage = file.type.startsWith("image/");
+                        editor.insertBlocks(
+                            [
+                                isImage
+                                    ? { type: "image", props: { url, name: file.name } }
+                                    : { type: "file", props: { url, name: file.name } },
+                            ],
+                            editor.document[editor.document.length - 1],
+                            "after"
+                        );
+                    } catch (err) {
+                        console.error("Failed to insert dropped file:", err);
+                    }
+                }
+            } finally {
+                setPendingUpload(null);
+                clearPendingFiles();
+            }
+        };
+        void insertFiles();
+    }, [pendingFiles]);
+
     const boxRef = useRef<HTMLDivElement>(null);
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
     const [selectedEmoji, setSelectedEmoji] = useState<any>(null);
@@ -208,10 +318,16 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
             if (node.children?.length) {
                 count += countLines(node.children); // recursive call
             }
-            if (node.content[0]) {
+            // Guarded: image/file blocks carry no `content` array.
+            if (node.content && node.content[0]) {
                 if (node.content[0].text) {
                     count += node.content[0].text.split("\n").length;
                 }
+            }
+            // Add lines for each image to avoid scroll issues (same
+            // heuristic as BnChatEditor).
+            if (node.type === "image") {
+                count += 10;
             }
         }
         return count;
@@ -373,6 +489,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
 
     return (
         <Box ref={boxRef}>
+            <FileSizeRejectionSnackbar rejection={rejection} onDismiss={dismissRejection} />
             <EmojiPicker
                 pickerBottomPosition="auto"
                 pickerLeftPosition={pickerLeftPosition}
@@ -384,6 +501,16 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                 useFixedPosition={true}
             />
             <Box ref={editorBoxRef} className={bnBoxClassName} sx={{ position: "relative" }}>
+                <FileUploadStatusBadge count={editorUploadCount} />
+                <FileUploadOverlay
+                    label={t.common.ui.fileUpload.uploadingDroppedFiles}
+                    open={pendingUpload !== null}
+                    detail={
+                        pendingUpload
+                            ? `${pendingUpload.name} (${pendingUpload.index} / ${pendingUpload.total})`
+                            : undefined
+                    }
+                />
                 <BlockNoteView
                     className="bn-box"
                     editor={editor}
@@ -429,6 +556,10 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
 
                             <FileCaptionButton key={"fileCaptionButton"} />
                             <FileReplaceButton key={"replaceFileButton"} />
+                            <FileDeleteButton key={"fileDeleteButton"} />
+                            <FileDownloadButton key={"fileDownloadButton"} />
+                            <FilePreviewButton key={"filePreviewButton"} />
+                            <FileRenameButton key={"fileRenameButton"} />
 
                             <BasicTextStyleButton
                                 key={"boldStyleButton"}

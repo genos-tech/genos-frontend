@@ -26,6 +26,11 @@ type TaskCommentEditorBlockProps = {
     editTargetComment?: TaskCommentProps;
     useUISM: UIStateManagementState;
     useTM: TaskManagementState;
+    /** Pass-throughs for the drop-file-into-comment flow — see
+     *  `BnTaskCommentEditor` for the contract. */
+    uploadChannelId?: string;
+    pendingFiles?: File[];
+    clearPendingFiles?: () => void;
 };
 
 export const TaskCommentEditorBlock = (props: TaskCommentEditorBlockProps) => {
@@ -45,6 +50,9 @@ export const TaskCommentEditorBlock = (props: TaskCommentEditorBlockProps) => {
         editTargetComment,
         useCM,
         useTM,
+        uploadChannelId,
+        pendingFiles,
+        clearPendingFiles,
     } = props;
 
     return (
@@ -72,7 +80,9 @@ export const TaskCommentEditorBlock = (props: TaskCommentEditorBlockProps) => {
             )}
             {isInEdit === false && (
                 <BnTaskCommentEditor
+                    clearPendingFiles={clearPendingFiles}
                     myself={myself}
+                    pendingFiles={pendingFiles}
                     setMyself={setMyself}
                     setTaskCommentLines={setTaskCommentLines}
                     setTaskComments={setTaskComments}
@@ -80,6 +90,7 @@ export const TaskCommentEditorBlock = (props: TaskCommentEditorBlockProps) => {
                     task={task}
                     taskCommentLines={taskCommentLines}
                     taskComments={taskComments}
+                    uploadChannelId={uploadChannelId}
                     useCM={useCM}
                     useTEM={useTEM}
                     useTM={useTM}
