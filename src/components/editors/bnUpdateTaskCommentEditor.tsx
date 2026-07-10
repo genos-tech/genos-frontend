@@ -41,6 +41,7 @@ import { UIStateManagementState } from "../../hooks/common/useUIStateManagement"
 import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../types/admin";
 import { TaskCommentProps } from "../../types/tasks";
+import { resolveInsecureFileUrl } from "../../utils/downloadUtils";
 import { filterAndRankSuggestionItems } from "../../utils/suggestionRanking";
 import { EmojiPicker } from "../ui/emoji/EmojiPicker";
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
@@ -164,6 +165,7 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
     const initialContent: any[] = targetComment.commentBody;
     const editor = useCreateBlockNote({
         schema,
+        resolveFileUrl: resolveInsecureFileUrl,
         // `codeBlockEnterShortcut` augments the built-in
         // ``` + Space input rule with an Enter-key handler, so
         // users get the same Markdown shortcut they expect.

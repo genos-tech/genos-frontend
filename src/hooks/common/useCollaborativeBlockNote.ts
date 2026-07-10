@@ -12,6 +12,7 @@ import { IndexeddbPersistence } from "y-indexeddb";
 import * as Y from "yjs";
 
 import { UserProps } from "../../types/admin";
+import { resolveInsecureFileUrl } from "../../utils/downloadUtils";
 
 const COLLAB_URL = import.meta.env.VITE_COLLAB_URL;
 const MEDIA_URL = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
@@ -312,6 +313,7 @@ export function useCollaborativeBlockNote({
         if (!provider) {
             const opts: Record<string, any> = {
                 schema,
+                resolveFileUrl: resolveInsecureFileUrl,
                 dictionary,
                 uploadFile,
                 initialContent: initialBody && initialBody.length > 0 ? initialBody : undefined,

@@ -21,6 +21,25 @@ export const upgradeInsecureUrl = (url: string): string => {
 };
 
 /**
+ * BlockNote `resolveFileUrl` hook. BlockNote calls this for every
+ * image/file/video block's display `src` (via its `useResolveUrl`) and
+ * when opening a file block, so it's the single interception point for
+ * media rendered inside a message / note / task body.
+ *
+ * Those bodies bake absolute media URLs into the block `props.url` at
+ * upload time. Content saved before the backend started trusting the
+ * proxy's forwarded scheme (see genos-api `channel_views` inline-upload
+ * handler) carries an `http://` scheme, which the https SPA renders as
+ * Mixed Content — today an auto-upgraded warning, and a hard block once
+ * browsers stop silently upgrading passive mixed content. Historical
+ * content can't be un-baked, so upgrade the scheme at render time.
+ *
+ * No-op on plain-http pages (local dev) and for `blob:` / relative URLs.
+ */
+export const resolveInsecureFileUrl = (url: string): Promise<string> =>
+    Promise.resolve(upgradeInsecureUrl(url));
+
+/**
  * Downloads a file from a URL using blob to ensure proper local download
  * instead of opening in a new tab
  */
