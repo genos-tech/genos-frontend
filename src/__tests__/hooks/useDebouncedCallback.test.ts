@@ -34,6 +34,9 @@ describe("useDebouncedCallback", () => {
             vi.advanceTimersByTime(250);
         });
         expect(fn).toHaveBeenCalledTimes(1);
+        // Timer-path invocations announce themselves as non-flush so the
+        // editors can commit through startTransition.
+        expect(fn).toHaveBeenLastCalledWith(false);
     });
 
     it("flush() executes pending work immediately and only once", () => {
@@ -45,6 +48,9 @@ describe("useDebouncedCallback", () => {
             result.current.flush();
         });
         expect(fn).toHaveBeenCalledTimes(1);
+        // Flush-path invocations announce themselves so the editors commit
+        // synchronously (blur→submit flows read the state right after).
+        expect(fn).toHaveBeenLastCalledWith(true);
 
         // The flushed timer must not fire again later.
         act(() => {
