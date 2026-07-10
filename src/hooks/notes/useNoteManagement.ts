@@ -8,6 +8,10 @@ import { loadChatNoteMeta } from "../../features/notes/chat-notes/services/loadC
 import { loadChatNotesByChatId } from "../../features/notes/chat-notes/services/loadChatNotesByChatId";
 import { moveChatNote as moveChatNoteApi } from "../../features/notes/chat-notes/services/moveChatNote";
 import { addNote } from "../../features/notes/common/services/addNote";
+import {
+    applyNoteBodyToYjs,
+    noteDocumentName,
+} from "../../features/notes/common/services/applyNoteBodyToYjs";
 import { deleteNoteRole } from "../../features/notes/common/services/deleteNoteRole";
 import { loadNoteRoles } from "../../features/notes/common/services/loadNoteRoles";
 import { loadNoteVersions } from "../../features/notes/common/services/loadNoteVersions";
@@ -719,14 +723,77 @@ export const useNoteManagement = (
     // `taskNoteMetaTree` memos then flow the new note into the sidebar.
     // Refs keep the listener subscribed once while always calling the
     // latest fetchers (which are re-created each render).
+    //
+    // When the event's detail carries the backend's note ref with a BODY
+    // change (an approved agent update_note), the sidebar refetch isn't
+    // enough: the REST row changed but the note's collaborative Yjs doc
+    // did not, and the editors seed from REST only while the Yjs doc is
+    // empty — an ever-collaborated note would silently revert the agent's
+    // edit on next open. So we also refetch the fresh body (cache-
+    // bypassing, same as the version-restore flow), write it through the
+    // caches, and push it into the Yjs doc via a short headless collab
+    // session. If that push fails (collab down) and the note is the one
+    // currently open, fall back to the restore flow's resync nonce so the
+    // open editor writes the fresh body into Yjs itself on reconnect.
+    const applyAgentNoteUpdate = async (ref: {
+        note_id: number;
+        note_type: "personal" | "task";
+    }) => {
+        if (!accessToken) return;
+        const typeCode = ref.note_type === "task" ? 2 : 1;
+        const fetched = await loadSpecificNote(myself, typeCode, ref.note_id, accessToken);
+        if (!fetched || fetched.error) return;
+        addNote(typeCode, fetched);
+        upsertNoteCache(fetched);
+        const isCurrent =
+            typeCode === 1
+                ? currentMyNote?.noteId === ref.note_id
+                : currentTaskNote?.noteId === ref.note_id;
+        if (isCurrent) {
+            if (typeCode === 1) setCurrentMyNote(fetched as MyNoteProps);
+            else setCurrentTaskNote(fetched as TaskNoteProps);
+        }
+        const status = await applyNoteBodyToYjs({
+            documentName: noteDocumentName(ref.note_type, ref.note_id),
+            blocks: fetched.body ?? [],
+            accessToken,
+        });
+        if (status !== "applied") {
+            if (isCurrent) {
+                setNoteResyncNonce((n) => n + 1);
+            } else {
+                console.warn(
+                    "noteChanged: Yjs apply failed for closed note; REST body saved, " +
+                        "collab doc will lag until the next successful apply/open.",
+                    ref
+                );
+            }
+        }
+    };
     const getMyNoteMetaRef = useRef(getMyNoteMeta);
     getMyNoteMetaRef.current = getMyNoteMeta;
     const getTaskNoteMetaRef = useRef(getTaskNoteMeta);
     getTaskNoteMetaRef.current = getTaskNoteMeta;
+    const applyAgentNoteUpdateRef = useRef(applyAgentNoteUpdate);
+    applyAgentNoteUpdateRef.current = applyAgentNoteUpdate;
     useEffect(() => {
-        const handler = () => {
+        const handler = (e: Event) => {
             void getMyNoteMetaRef.current();
             void getTaskNoteMetaRef.current();
+            const ref = (e as CustomEvent).detail as
+                | { note_id?: number; note_type?: string; changed_fields?: string[] }
+                | undefined;
+            if (
+                ref?.note_id &&
+                (ref.note_type === "personal" || ref.note_type === "task") &&
+                Array.isArray(ref.changed_fields) &&
+                ref.changed_fields.includes("body")
+            ) {
+                void applyAgentNoteUpdateRef.current({
+                    note_id: ref.note_id,
+                    note_type: ref.note_type,
+                });
+            }
         };
         window.addEventListener("noteChanged", handler);
         return () => window.removeEventListener("noteChanged", handler);

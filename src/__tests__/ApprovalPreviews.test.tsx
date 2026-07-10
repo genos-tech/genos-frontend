@@ -142,6 +142,53 @@ describe("BulkUpdatePreview (update_tasks_bulk approval)", () => {
     });
 });
 
+describe("NoteWritePreview (create_note / update_note approvals)", () => {
+    it("renders a personal create with folder chip and markdown body", () => {
+        renderCard("create_note", {
+            note_type: "personal",
+            title: "Onboarding research",
+            content_text: "### Key findings\n- fewer steps convert better",
+            // Friendly-ized server-side to the folder's name.
+            folder_id: "Research",
+        });
+        expect(screen.getByText("New personal note")).toBeTruthy();
+        expect(screen.getByText("Folder: Research")).toBeTruthy();
+        expect(screen.getByText("Onboarding research")).toBeTruthy();
+        expect(screen.getByText("Key findings")).toBeTruthy();
+        expect(screen.getByText(/fewer steps convert better/)).toBeTruthy();
+        // Structured — the raw key:value fallback must NOT render.
+        expect(screen.queryByText("content_text:")).toBeNull();
+    });
+
+    it("renders a task create with project + task destination chips", () => {
+        renderCard("create_note", {
+            note_type: "task",
+            title: "Plan: mobile Safari perf",
+            content_text: "### Goal\nShip it",
+            // Friendly-ized: project name + task display id.
+            project_id: "Website Redesign",
+            task_id: "WRD-7",
+        });
+        expect(screen.getByText("New task note")).toBeTruthy();
+        expect(screen.getByText("Project: Website Redesign")).toBeTruthy();
+        expect(screen.getByText("Task: WRD-7")).toBeTruthy();
+    });
+
+    it("renders an update with the resolved note title and changed-field chips", () => {
+        renderCard("update_note", {
+            note_id: 42,
+            note_type: "personal",
+            note_title: "Spotlight tips",
+            content_text: "### Rewritten\nBetter structure",
+        });
+        expect(screen.getByText("Update note: Spotlight tips")).toBeTruthy();
+        // Body changes; title does not.
+        expect(screen.getByText("Body")).toBeTruthy();
+        expect(screen.queryByText("Title")).toBeNull();
+        expect(screen.getByText("Rewritten")).toBeTruthy();
+    });
+});
+
 describe("ApprovalCard fallback", () => {
     it("keeps the key:value monospace list for tools without a renderer", () => {
         renderCard("create_task", { title: "Buy coffee", project_id: "Website Redesign" });

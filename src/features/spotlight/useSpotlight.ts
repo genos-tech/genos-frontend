@@ -550,10 +550,12 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
                     step,
                     tool_name,
                     summary,
+                    note,
                 }: {
                     step: number;
                     tool_name: string;
                     summary: string;
+                    note?: import("../../services/agentApi").ToolResultNoteRef;
                 }) => {
                     setAsk((prev) => {
                         if (!stillCurrent(prev)) return prev;
@@ -579,7 +581,11 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
                     // (useNoteManagement) won't reflect an agent-written
                     // note until a manual reload. Nudge it to refetch.
                     if (tool_name === "create_note" || tool_name === "update_note") {
-                        window.dispatchEvent(new CustomEvent("noteChanged"));
+                        // detail = backend note ref (id/type/changed_fields)
+                        // → useNoteManagement can push body updates into
+                        // the note's Yjs doc; undefined on older backends
+                        // keeps the plain meta refetch.
+                        window.dispatchEvent(new CustomEvent("noteChanged", { detail: note }));
                     }
                     // And for tasks/milestones: an approved agent write
                     // (create_task_plan, update_tasks_bulk, ...) mutates

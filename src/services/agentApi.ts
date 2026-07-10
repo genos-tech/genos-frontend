@@ -34,10 +34,22 @@ export interface ToolCallStartPayload {
     arguments: Record<string, unknown>;
 }
 
+/** Compact ref the backend attaches to approved create_note /
+ * update_note results so the client can refresh note caches and, for
+ * body updates, push the new blocks into the live Yjs doc. Absent on
+ * every other tool (and on older backends). */
+export interface ToolResultNoteRef {
+    note_id: number;
+    note_type: "personal" | "task";
+    title?: string;
+    changed_fields?: string[];
+}
+
 export interface ToolCallResultPayload {
     step: number;
     tool_name: string;
     summary: string;
+    note?: ToolResultNoteRef;
 }
 
 export interface ToolCallErrorPayload {
@@ -639,6 +651,7 @@ function dispatchLine(line: string, h: BaseStreamHandlers): boolean {
                 step: evt.step,
                 tool_name: evt.tool_name,
                 summary: evt.summary,
+                note: evt.note,
             });
             return false;
         case "tool_call_error":

@@ -16,6 +16,7 @@
 import type { FC } from "react";
 
 import { BulkUpdatePreview } from "./BulkUpdatePreview";
+import { NoteWritePreview } from "./NoteWritePreview";
 import { TaskPlanPreview } from "./TaskPlanPreview";
 
 export interface ApprovalPreviewProps {
@@ -26,6 +27,10 @@ export interface ApprovalPreviewProps {
 const approvalRenderers: Record<string, FC<ApprovalPreviewProps>> = {
     create_task_plan: TaskPlanPreview,
     update_tasks_bulk: BulkUpdatePreview,
+    // One component for both note writes — it branches on the presence
+    // of `note_id` in the args (only updates have one).
+    create_note: NoteWritePreview,
+    update_note: NoteWritePreview,
 };
 
 export const getApprovalRenderer = (toolName: string): FC<ApprovalPreviewProps> | undefined =>

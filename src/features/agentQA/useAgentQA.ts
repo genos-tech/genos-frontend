@@ -172,10 +172,12 @@ export const useAgentQA = ({
                     step,
                     tool_name,
                     summary,
+                    note,
                 }: {
                     step: number;
                     tool_name: string;
                     summary: string;
+                    note?: import("../../services/agentApi").ToolResultNoteRef;
                 }) => {
                     setAsk((prev) => {
                         if (!stillCurrent(prev)) return prev;
@@ -196,7 +198,12 @@ export const useAgentQA = ({
                     // useNoteManagement to refetch its meta. Mirrors the
                     // Spotlight overlay's handler.
                     if (tool_name === "create_note" || tool_name === "update_note") {
-                        window.dispatchEvent(new CustomEvent("noteChanged"));
+                        // detail carries the backend's note ref (id/type/
+                        // changed_fields) so useNoteManagement can also
+                        // push a body update into the note's Yjs doc;
+                        // undefined against older backends → meta-refetch
+                        // only, exactly the previous behavior.
+                        window.dispatchEvent(new CustomEvent("noteChanged", { detail: note }));
                     }
                     // Same idea for tasks/milestones: an approved agent
                     // write mutates rows outside the task UI's flows, so
