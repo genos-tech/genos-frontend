@@ -34,6 +34,11 @@ export type MoreMenuProps = {
     iconFontSize?: number;
     /** Notified when the menu opens (`true`) or closes (`false`). */
     onOpenChange?: (open: boolean) => void;
+    /** Stacking level of the dropdown portal. Default 9999 — fine on
+     *  page surfaces, but a menu triggered from inside a higher layer
+     *  (e.g. the UrlLinkModal at 10020) must pass its host's z + 1 or
+     *  the dropdown opens invisibly BEHIND the host. */
+    zIndex?: number;
 };
 
 // Single purple accent for all non-danger items.
@@ -62,6 +67,7 @@ export const MoreMenu = ({
     ariaLabel,
     iconFontSize = 18,
     onOpenChange,
+    zIndex = 9999,
 }: MoreMenuProps) => {
     const { mode } = useColorScheme();
     const { t } = useTranslation();
@@ -194,7 +200,7 @@ export const MoreMenu = ({
                       position: "fixed",
                       top: menuPosition.top,
                       left: menuPosition.left,
-                      zIndex: 9999,
+                      zIndex,
                       minWidth: menuMinWidth,
                       py: 0.75,
                       borderRadius: "14px",

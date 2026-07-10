@@ -799,6 +799,11 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                         border: `1px solid ${styles.buttonBorder}`,
                                         borderRadius: "10px",
                                     }}
+                                    // Modal-hosted: the dropdown portal
+                                    // defaults to 9999, which sits BEHIND
+                                    // the UrlLinkModal (10020) — lift it
+                                    // just above the host dialog.
+                                    zIndex={hostZIndex != null ? hostZIndex + 1 : undefined}
                                 />
                             );
                         })()}

@@ -2011,6 +2011,10 @@ const MilestonePreviewInner = ({
                                         border: `1px solid ${styles.buttonBorder}`,
                                         borderRadius: "10px",
                                     }}
+                                    // Modal-hosted milestone preview: lift
+                                    // the dropdown above the UrlLinkModal
+                                    // (same fix as the task header's menu).
+                                    zIndex={hostZIndex != null ? hostZIndex + 1 : undefined}
                                 />
                             );
                         })()}
