@@ -20,6 +20,7 @@ import { AvatarWithStatus } from "../../../../../components/ui/avatars/avatarWit
 import { ActionButtonStyles } from "../../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
+import { useUrlLinkModal } from "../../../../../hooks/common/UrlLinkModalContext";
 import { TeamManagementState } from "../../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
@@ -52,6 +53,12 @@ type TaskSubTasksBlockProps = {
     title?: string;
     buttonLabel?: string;
     emptyText?: string;
+    // Set when rendering inside the UrlLinkModal (threaded from
+    // ModalTaskView / ModalMilestoneView via TaskPreview). Child rows
+    // then re-target the modal via openModalByHref instead of setting
+    // the host page's global preview id — which the modal ignores, so
+    // without this, clicking a sub-task in the modal did nothing.
+    hostZIndex?: number;
 };
 export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
     const { t } = useTranslation();
@@ -69,10 +76,12 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
         title = t.tasks.subTasks.title,
         buttonLabel = t.tasks.subTasks.buttonLabel,
         emptyText = t.tasks.subTasks.emptyText,
+        hostZIndex,
     } = props;
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
+    const urlLinkModal = useUrlLinkModal();
     const styles = isDark ? ActionButtonStyles.dark : ActionButtonStyles.light;
     const [childTasks, setChildTasks] = useState<TaskProps[]>([]);
 
@@ -318,19 +327,23 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                                                     marginLeft: "10px",
                                                 }}
                                                 onClick={() => {
-                                                    if (project && project.projectId && id) {
-                                                        // setCurrentProject({
-                                                        //     projectId: project.projectId,
-                                                        //     projectName: project.projectName,
-                                                        //     projectTags: project.projectTags || [],
-                                                        //     systemUserId: project.systemUserId,
-                                                        // });
-                                                        useTM.setCurrentPreviewTaskId(id);
-                                                    } else {
+                                                    if (!project?.projectId || !id) {
                                                         console.error(
                                                             "Failed to set the current project"
                                                         );
+                                                        return;
                                                     }
+                                                    // Modal-hosted → re-target
+                                                    // the modal; the global
+                                                    // preview id would change
+                                                    // the page BEHIND it.
+                                                    if (hostZIndex != null && urlLinkModal) {
+                                                        urlLinkModal.openModalByHref(
+                                                            `/workspace/tasks/project/${project.projectId}/task/${id}`
+                                                        );
+                                                        return;
+                                                    }
+                                                    useTM.setCurrentPreviewTaskId(id);
                                                 }}
                                             >
                                                 <Chip

@@ -11,6 +11,7 @@ import { AppTooltip } from "../../../../../components/ui/AppTooltip";
 import { AvatarWithStatus } from "../../../../../components/ui/avatars/avatarWithStatus";
 import { useAuth } from "../../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
+import { useUrlLinkModal } from "../../../../../hooks/common/UrlLinkModalContext";
 import { ProjectManagementState } from "../../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../../hooks/common/useUIStateManagement";
@@ -142,6 +143,13 @@ type TaskMainBlockProps = {
     // entirely because a sub-task always inherits both from its parent
     // chain — there's nothing meaningful for the user to pick here.
     isSubTask?: boolean;
+    // Set when this block renders inside the UrlLinkModal (threaded
+    // from ModalTaskView / ModalMilestoneView via TaskPreview). Relation
+    // clicks (parent task, dependency chips) then RE-TARGET the modal
+    // via openModalByHref instead of mutating the host page's global
+    // preview state — which the modal ignores, so without this the
+    // clicks silently did nothing.
+    hostZIndex?: number;
 };
 
 export const TaskMainBlock = (props: TaskMainBlockProps) => {
@@ -174,11 +182,13 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
         useSM,
         isMilestone,
         isSubTask,
+        hostZIndex,
     } = props;
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const { t } = useTranslation();
+    const urlLinkModal = useUrlLinkModal();
 
     const [openManageTags, setOpenManageTags] = useState(false);
     const [parentTask, setParentTask] = useState<TaskProps>();
@@ -954,6 +964,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                     create mode by the block itself — empty-task rows
                     pre-persistence shouldn't accept dependencies. */}
                 <TaskDependenciesBlock
+                    hostZIndex={hostZIndex}
                     isPreviewMode={isPreviewMode}
                     myself={myself}
                     taskContent={taskContent}
@@ -982,16 +993,45 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             }}
                             onClick={() => {
                                 if (
-                                    parentTask.project &&
-                                    parentTask.project.projectId &&
-                                    parentTask.id
+                                    !parentTask.project ||
+                                    !parentTask.project.projectId ||
+                                    !parentTask.id
                                 ) {
-                                    usePM.setCurrentProject({
-                                        projectId: parentTask.project.projectId,
-                                        projectName: parentTask.project.projectName,
-                                        projectTags: parentTask.tags,
-                                        systemUserId: parentTask.project.systemUserId,
-                                    });
+                                    return;
+                                }
+                                const projectId = parentTask.project.projectId;
+                                // A milestone's backing task must open as the
+                                // MILESTONE preview, not a bare task wrapping
+                                // the backing row (agent-created plans made
+                                // this path common: every top-level plan task
+                                // has the milestone backing task as parent).
+                                const parentMilestoneId =
+                                    (parentTask as any).isMilestone === true &&
+                                    (parentTask as any).milestoneId != null
+                                        ? Number((parentTask as any).milestoneId)
+                                        : null;
+                                // Modal-hosted → re-target the modal (keeps
+                                // its stacking level; see
+                                // useUrlLinkModalState). Global setters would
+                                // change the page BEHIND the modal instead.
+                                if (hostZIndex != null && urlLinkModal) {
+                                    urlLinkModal.openModalByHref(
+                                        parentMilestoneId != null
+                                            ? `/workspace/tasks/project/${projectId}/milestone/${parentMilestoneId}`
+                                            : `/workspace/tasks/project/${projectId}/task/${parentTask.id}`
+                                    );
+                                    return;
+                                }
+                                usePM.setCurrentProject({
+                                    projectId,
+                                    projectName: parentTask.project.projectName,
+                                    projectTags: parentTask.tags,
+                                    systemUserId: parentTask.project.systemUserId,
+                                });
+                                if (parentMilestoneId != null) {
+                                    useTM.setCurrentPreviewKind("milestone");
+                                    useTM.setCurrentPreviewMilestoneId(parentMilestoneId);
+                                } else {
                                     useTM.setCurrentPreviewTaskId(parentTask.id);
                                 }
                             }}

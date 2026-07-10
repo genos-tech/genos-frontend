@@ -5,6 +5,7 @@ import { Box, Chip, IconButton, ListItem, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { AppTooltip } from "../../../../../components/ui/AppTooltip";
+import { useUrlLinkModal } from "../../../../../hooks/common/UrlLinkModalContext";
 import { ProjectManagementState } from "../../../../../hooks/common/useProjectManagement";
 import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
 import { fmt, useTranslation } from "../../../../../i18n";
@@ -33,6 +34,10 @@ type Props = {
     useTM: TaskManagementState;
     myself: UserProps;
     isPreviewMode: boolean;
+    // Set when rendering inside the UrlLinkModal — dependency chips
+    // then re-target the modal instead of mutating the host page's
+    // preview state (which the modal ignores). See TaskMainBlock.
+    hostZIndex?: number;
 };
 
 // Compact dependency display + entry point to the manage modal. Always
@@ -46,11 +51,13 @@ export const TaskDependenciesBlock = ({
     useTM,
     myself,
     isPreviewMode,
+    hostZIndex,
 }: Props) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const { t } = useTranslation();
     const depsT = t.tasks.dependencies;
+    const urlLinkModal = useUrlLinkModal();
 
     const taskId = taskContent.id ?? null;
     const deps = (taskId != null && useTM.taskDependencies[taskId]) || {
@@ -69,6 +76,15 @@ export const TaskDependenciesBlock = ({
     };
 
     const handleChipClick = (ref_: TaskDependencyRef) => {
+        // Modal-hosted → re-target the modal (global preview setters
+        // would change the page BEHIND it; the click looked dead).
+        const chipProjectId = ref_.projectId ?? taskContent.project?.projectId;
+        if (hostZIndex != null && urlLinkModal && chipProjectId) {
+            urlLinkModal.openModalByHref(
+                `/workspace/tasks/project/${chipProjectId}/task/${ref_.otherTaskId}`
+            );
+            return;
+        }
         // Mirrors the Parent Task row navigation: when the dependency
         // is in a different project we have to switch the current
         // project so the preview pane can hydrate against that
