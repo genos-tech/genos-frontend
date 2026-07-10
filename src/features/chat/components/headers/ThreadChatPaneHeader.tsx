@@ -8,7 +8,6 @@ import AddTaskRoundedIcon from "@mui/icons-material/AddTaskRounded";
 import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRounded";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
-import ChecklistRtlRoundedIcon from "@mui/icons-material/ChecklistRtlRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import MoreVertRoundedIcon from "@mui/icons-material/MoreVertRounded";
 import NoteAltRoundedIcon from "@mui/icons-material/NoteAltRounded";
@@ -75,21 +74,6 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
         const threadId = useCM.currentThreadChat?.threadId;
         if (chatType === undefined || chatId === undefined || threadId === undefined) return;
         threadAsk.open({ chatType, chatId, threadId });
-    };
-    // "Plan tasks from this thread" — same modal, but with the ask input
-    // pre-filled with the create_task_plan prompt. Prefill, not
-    // auto-send: the input is disabled until the summary loads anyway,
-    // and the user can name the target project / milestone before
-    // sending (the agent asks when the project is ambiguous).
-    const openThreadAskWithPlan = () => {
-        const chatType = useCM.currentThreadChat?.chatType;
-        const chatId = useCM.currentThreadChat?.chatId;
-        const threadId = useCM.currentThreadChat?.threadId;
-        if (chatType === undefined || chatId === undefined || threadId === undefined) return;
-        threadAsk.open(
-            { chatType, chatId, threadId },
-            { prefillQuery: t.threadAsk.planTasks.prefill }
-        );
     };
     // Citation click handler for the thread-Ask modal. Mirrors
     // `handleSpotlightSelect` in App.tsx — same URL shapes / same
@@ -348,12 +332,6 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                                 sx={{ fontSize: 18, color: styles.accentColor }}
                             />
                             {t.threadAsk.headerButton.label}
-                        </MenuItem>
-                        <MenuItem onClick={openThreadAskWithPlan}>
-                            <ChecklistRtlRoundedIcon
-                                sx={{ fontSize: 18, color: styles.accentColor }}
-                            />
-                            {t.threadAsk.planTasks.menuLabel}
                         </MenuItem>
                         {hasTask && (
                             <MenuItem onClick={openTaskHandler}>
@@ -745,17 +723,21 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                     </IconButton>
                 </Tooltip>
 
-                {/* Secondary actions (Open Note + Create Task + Plan
-                    tasks) live in a MoreMenu so the header's right edge
-                    stays focused on the primary controls (mute / task
-                    pill / ask / close). "Plan tasks from this thread"
-                    is always available — it opens the thread-Ask modal
-                    with the create_task_plan prompt pre-filled. */}
+                {/* Secondary actions (Open Note + Create Task) live in
+                    a MoreMenu so the header's right edge stays focused
+                    on the primary controls (mute / task pill / ask /
+                    close). The menu trigger auto-hides when no items
+                    are visible (e.g. PM threads where Open Note is
+                    suppressed AND the thread already has a task).
+                    Agent actions (plan tasks, organize, …) deliberately
+                    have NO menu entry — users ask for them in the
+                    thread-Ask modal or Spotlight conversationally. */}
                 {(() => {
                     const hasTask = currentThreadTaskId !== -1;
                     const chatType = useCM.currentThreadChat?.chatType;
                     const showOpenNote = chatType !== 3;
                     const showCreateTask = !hasTask && chatType !== 3;
+                    if (!showOpenNote && !showCreateTask) return null;
                     return (
                         <MoreMenu
                             placement="bottom-end"
@@ -787,16 +769,6 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                                     ),
                                     visible: showCreateTask,
                                     onClick: createTaskHandler,
-                                },
-                                {
-                                    id: "plan-tasks",
-                                    label: t.threadAsk.planTasks.menuLabel,
-                                    icon: (
-                                        <ChecklistRtlRoundedIcon
-                                            sx={{ fontSize: 18, color: styles.accentColor }}
-                                        />
-                                    ),
-                                    onClick: openThreadAskWithPlan,
                                 },
                             ]}
                         />

@@ -223,23 +223,6 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
         return () => document.removeEventListener("keydown", handleKeyDown);
     }, []);
 
-    // ---- Programmatic open-with-prefill. ----
-    // Other features (e.g. the milestone preview's "Organize tasks with
-    // AI" menu item) open Spotlight with a prepared query by dispatching
-    // `genos:spotlight-ask`. Prefill, not auto-ask: the user reviews /
-    // edits the query and presses Enter to send it to the agent — the
-    // same explicit-ask contract every other entry point follows.
-    useEffect(() => {
-        const handler = (e: Event) => {
-            const q = (e as CustomEvent<{ query?: string }>).detail?.query;
-            if (!q) return;
-            setIsOpen(true);
-            setQuery(q);
-        };
-        window.addEventListener("genos:spotlight-ask", handler);
-        return () => window.removeEventListener("genos:spotlight-ask", handler);
-    }, []);
-
     // ---- Fetch daily usage from the backend when the overlay opens. ----
     // Re-fetches each open so the count is fresh after page navigations.
     // Silently no-ops on failure — the backend enforces the limit regardless.
