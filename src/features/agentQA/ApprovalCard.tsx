@@ -6,14 +6,21 @@
 // arguments the model proposed; Approve/Reject buttons resume the
 // stream via POST /api/v2/agent/decide/.
 //
-// String-free: labels come in as props so every agent surface
+// Composite tools (create_task_plan, update_tasks_bulk) get a
+// structured preview from `approval/approvalRenderers`; every other
+// tool keeps the key:value fallback below.
+//
+// String-free shell: labels come in as props so every agent surface
 // (Spotlight, threadAsk, future noteAsk) can mount the same component
-// with surface-specific i18n copy.
+// with surface-specific i18n copy. (The structured preview renderers
+// consume the `agentApproval` i18n namespace directly — see the note
+// in `locales/en/agentApproval.ts`.)
 
 import { Box, Button, Typography } from "@mui/joy";
 
 import type { PendingApprovalPayload } from "../../services/agentApi";
 import { purplePalette } from "../../theme/purplePalette";
+import { getApprovalRenderer } from "./approval/approvalRenderers";
 
 interface ApprovalCardProps {
     pending: PendingApprovalPayload;
@@ -38,6 +45,7 @@ export const ApprovalCard = ({
 }: ApprovalCardProps) => {
     const argEntries = Object.entries(pending.arguments || {});
     const palette = isDark ? purplePalette.dark : purplePalette.light;
+    const PreviewRenderer = getApprovalRenderer(pending.tool_name);
     return (
         <Box
             sx={{
@@ -63,29 +71,33 @@ export const ApprovalCard = ({
             >
                 {titleText}
             </Typography>
-            {argEntries.length > 0 && (
-                <Box
-                    sx={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: 0.15,
-                        mb: 0.75,
-                        fontSize: "0.9375rem",
-                        fontFamily: "monospace",
-                        opacity: 0.9,
-                    }}
-                >
-                    {argEntries.map(([k, v]) => (
-                        <Box key={k} sx={{ display: "flex", gap: 0.5 }}>
-                            <Box component="span" sx={{ opacity: 0.8 }}>
-                                {k}:
+            {PreviewRenderer ? (
+                <PreviewRenderer args={pending.arguments || {}} isDark={isDark} />
+            ) : (
+                argEntries.length > 0 && (
+                    <Box
+                        sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 0.15,
+                            mb: 0.75,
+                            fontSize: "0.9375rem",
+                            fontFamily: "monospace",
+                            opacity: 0.9,
+                        }}
+                    >
+                        {argEntries.map(([k, v]) => (
+                            <Box key={k} sx={{ display: "flex", gap: 0.5 }}>
+                                <Box component="span" sx={{ opacity: 0.8 }}>
+                                    {k}:
+                                </Box>
+                                <Box component="span" sx={{ flex: 1, wordBreak: "break-word" }}>
+                                    {typeof v === "string" ? v : JSON.stringify(v)}
+                                </Box>
                             </Box>
-                            <Box component="span" sx={{ flex: 1, wordBreak: "break-word" }}>
-                                {typeof v === "string" ? v : JSON.stringify(v)}
-                            </Box>
-                        </Box>
-                    ))}
-                </Box>
+                        ))}
+                    </Box>
+                )
             )}
             <Box sx={{ display: "flex", gap: 0.75 }}>
                 <Button
