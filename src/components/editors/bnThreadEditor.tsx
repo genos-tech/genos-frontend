@@ -48,6 +48,7 @@ import { channelService } from "../../services/channel/channelService";
 import { emitRequestError } from "../../services/requestErrorNotifier";
 import { UserProps } from "../../types/admin";
 import { ChatProps, ThreadProps } from "../../types/chat";
+import { resolveInsecureFileUrl } from "../../utils/downloadUtils";
 import { filterAndRankSuggestionItems } from "../../utils/suggestionRanking";
 import { EmojiPicker } from "../ui/emoji/EmojiPicker";
 import { FileSizeRejectionSnackbar } from "../ui/feedback/FileSizeRejectionSnackbar";
@@ -201,6 +202,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
     const locale = en;
     const editor = useCreateBlockNote({
         schema,
+        resolveFileUrl: resolveInsecureFileUrl,
         uploadFile,
         // `codeBlockEnterShortcut` augments the built-in
         // ``` + Space input rule with an Enter-key handler, so

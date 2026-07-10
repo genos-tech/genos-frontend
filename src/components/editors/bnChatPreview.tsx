@@ -28,7 +28,7 @@ import { UIStateManagementState } from "../../hooks/common/useUIStateManagement"
 import { useTranslation } from "../../i18n";
 import { UserProps } from "../../types/admin";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
-import { downloadFile } from "../../utils/downloadUtils";
+import { downloadFile, resolveInsecureFileUrl } from "../../utils/downloadUtils";
 import {
     CreateHashChatSpec,
     CreateHashNoteSpec,
@@ -104,6 +104,10 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
 
     const editor = useCreateBlockNote({
         schema,
+        // Upgrade http:// media URLs baked into saved image/file blocks to
+        // https:// so the HTTPS SPA renders them without a Mixed-Content
+        // warning (older bodies carry an http scheme; see the helper).
+        resolveFileUrl: resolveInsecureFileUrl,
         initialContent: content.slice(0, -1),
     });
 

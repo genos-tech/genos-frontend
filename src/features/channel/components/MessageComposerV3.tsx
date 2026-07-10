@@ -58,6 +58,7 @@ import {
 } from "../../../components/editors/HashMention";
 import { useEditorDraft } from "../../../hooks/common/useEditorDraft";
 import { channelService, ChannelServiceError } from "../../../services/channel/channelService";
+import { resolveInsecureFileUrl } from "../../../utils/downloadUtils";
 import { filterAndRankSuggestionItems } from "../../../utils/suggestionRanking";
 import { useAttachmentDraft } from "../hooks/useAttachmentDraft";
 import { createMentionGroupSpecV3, createMentionSpecV3 } from "./MentionV3";
@@ -181,6 +182,7 @@ export function MessageComposerV3({
 
     const editor = useCreateBlockNote({
         schema,
+        resolveFileUrl: resolveInsecureFileUrl,
         dictionary: {
             placeholders: {
                 emptyDocument: placeholder,

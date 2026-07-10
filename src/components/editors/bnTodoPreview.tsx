@@ -32,6 +32,7 @@ import { useAnchorClickIntercept } from "../../hooks/common/useAnchorClickInterc
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
+import { resolveInsecureFileUrl } from "../../utils/downloadUtils";
 import { filterAndRankSuggestionItems } from "../../utils/suggestionRanking";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
 import {
@@ -124,6 +125,7 @@ export const BnTodoPreview = (props: BnTodoPreviewProps) => {
     const locale = en;
     const editor = useCreateBlockNote({
         schema,
+        resolveFileUrl: resolveInsecureFileUrl,
         // `codeBlockEnterShortcut` augments the built-in
         // ``` + Space input rule with an Enter-key handler, so
         // users get the same Markdown shortcut they expect.

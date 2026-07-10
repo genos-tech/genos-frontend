@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { downloadFile, upgradeInsecureUrl } from "../utils/downloadUtils";
+import { downloadFile, resolveInsecureFileUrl, upgradeInsecureUrl } from "../utils/downloadUtils";
 
 describe("downloadFile", () => {
     let createElementSpy: ReturnType<typeof vi.spyOn>;
@@ -95,6 +95,38 @@ describe("upgradeInsecureUrl", () => {
         vi.stubGlobal("location", { protocol: "https:" });
         expect(upgradeInsecureUrl("https://api.genosai.dev/media/a.png")).toBe(
             "https://api.genosai.dev/media/a.png"
+        );
+    });
+});
+
+// BlockNote's `resolveFileUrl` hook — wraps `upgradeInsecureUrl` in a
+// promise so image/file blocks render baked http:// media URLs over https.
+describe("resolveInsecureFileUrl", () => {
+    afterEach(() => {
+        vi.unstubAllGlobals();
+    });
+
+    it("upgrades a baked http:// block URL to https:// on an HTTPS page", async () => {
+        vi.stubGlobal("location", { protocol: "https:" });
+        await expect(
+            resolveInsecureFileUrl("http://api.genosai.dev/media/chats/1/inline/x.png")
+        ).resolves.toBe("https://api.genosai.dev/media/chats/1/inline/x.png");
+    });
+
+    it("leaves http:// untouched on a plain-HTTP page (local dev)", async () => {
+        vi.stubGlobal("location", { protocol: "http:" });
+        await expect(resolveInsecureFileUrl("http://localhost:8890/media/x.png")).resolves.toBe(
+            "http://localhost:8890/media/x.png"
+        );
+    });
+
+    it("passes https:// and blob: URLs through unchanged", async () => {
+        vi.stubGlobal("location", { protocol: "https:" });
+        await expect(resolveInsecureFileUrl("https://api.genosai.dev/media/x.png")).resolves.toBe(
+            "https://api.genosai.dev/media/x.png"
+        );
+        await expect(resolveInsecureFileUrl("blob:https://app/uuid")).resolves.toBe(
+            "blob:https://app/uuid"
         );
     });
 });
