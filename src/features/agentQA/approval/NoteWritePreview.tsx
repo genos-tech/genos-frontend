@@ -98,7 +98,30 @@ export const NoteWritePreview = ({ args, isDark }: ApprovalPreviewProps) => {
                         },
                     }}
                 >
-                    <ReactMarkdown>{body}</ReactMarkdown>
+                    <ReactMarkdown
+                        components={{
+                            // Proposed bodies may carry citation-token links
+                            // ([prose](task:12)) that only become real
+                            // /workspace/... hrefs when the backend converts
+                            // the body at save time. Rendering them as
+                            // anchors here would navigate the SPA to a bogus
+                            // relative URL on click — show them as
+                            // underlined text instead; real web links open
+                            // in a new tab as usual.
+                            a: ({ href, children }) =>
+                                href && /^(https?:|mailto:)/.test(href) ? (
+                                    <a href={href} rel="noreferrer" target="_blank">
+                                        {children}
+                                    </a>
+                                ) : (
+                                    <Box component="span" sx={{ textDecoration: "underline" }}>
+                                        {children}
+                                    </Box>
+                                ),
+                        }}
+                    >
+                        {body}
+                    </ReactMarkdown>
                 </Box>
             ) : null}
         </Box>
