@@ -134,7 +134,7 @@ export const NoteAskModal = ({ state, onSelectSource }: NoteAskModalProps) => {
                 className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                 size="lg"
                 sx={{
-                    width: { xs: "92vw", sm: 620, md: 720 },
+                    width: { xs: "92vw", sm: 620, md: 800 },
                     maxHeight: "90vh",
                     overflowY: "auto",
                     overflowX: "hidden",
