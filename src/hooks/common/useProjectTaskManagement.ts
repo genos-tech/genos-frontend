@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 
+import { onTasksBulkChanged } from "../../features/tasks/services/taskEvents";
 import { useSprintMilestoneManagement } from "../tasks/useSprintMilestoneManagement";
 import { useTaskManagement } from "../tasks/useTaskManagement";
 import { useProjectManagement } from "./useProjectManagement";
@@ -117,6 +118,28 @@ export const useProjectTaskManagement = ({
         window.addEventListener("focus", onFocus);
         return () => window.removeEventListener("focus", onFocus);
     }, [usePM.currentProject]);
+
+    // Agent bulk-write invalidator. The agent's approved task writes
+    // (create_task_plan, update_tasks_bulk, ...) mutate tasks AND
+    // milestones outside every UI flow above, so without this the table
+    // / diagram / milestone list show stale data until a reload or
+    // focus cycle. Re-run the same network refresh the focus handler
+    // uses, plus the milestone slice (a plan can create a milestone;
+    // a bulk update changes the rollup counts) and the open milestone
+    // preview if any.
+    useEffect(() => {
+        return onTasksBulkChanged((detail) => {
+            const projectId = detail.projectId ?? usePM.currentProject?.projectId;
+            if (!projectId) return;
+            void usePM.refreshProjectTasks(projectId);
+            void useSM.loadMilestonesForProject(projectId, {
+                statuses: ["Open", "WIP", "Pending", "Closed"],
+            });
+            if (useTM.currentPreviewMilestoneId !== -1) {
+                void useSM.refreshMilestone(useTM.currentPreviewMilestoneId);
+            }
+        });
+    }, [usePM.currentProject, useTM.currentPreviewMilestoneId]);
 
     // (B) — re-run loadUpdatedTask whenever the row in `allTasks` for
     // the currently-previewed task has a newer `updatedAt` than what
