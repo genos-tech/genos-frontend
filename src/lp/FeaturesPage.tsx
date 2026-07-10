@@ -14,7 +14,7 @@ import {
     Search,
     Sparkles,
     Sun,
-    Zap,
+    Wand2,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -31,6 +31,7 @@ const FEATURE_ORDER = [
     "calendar",
     "integrations",
     "spotlight",
+    "agent",
 ] as const;
 
 const FEATURE_ICONS: Record<
@@ -44,6 +45,7 @@ const FEATURE_ICONS: Record<
     calendar: CalendarDays,
     integrations: Plug,
     spotlight: Search,
+    agent: Wand2,
 };
 
 function cn(...classes: Array<string | false | undefined>) {
@@ -287,36 +289,6 @@ function FeaturesPageInner() {
                         <p className="mt-5 text-center text-sm font-semibold text-slate-500 dark:text-slate-400">
                             {copy.shortcuts.platformNote}
                         </p>
-                    </div>
-                </section>
-
-                {/* Tips & tricks */}
-                <section className="px-4 py-16 sm:px-6 lg:px-8" id="tricks">
-                    <div className="mx-auto max-w-7xl">
-                        <SectionHeading eyebrow={copy.tricks.eyebrow} title={copy.tricks.title} />
-
-                        <div className="mt-12 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-                            {copy.tricks.items.map((trick, index) => (
-                                <motion.div
-                                    key={trick.title}
-                                    className="rounded-[1.75rem] border border-violet-100 bg-white p-6 shadow-lg shadow-violet-900/5 dark:border-white/10 dark:bg-white/5"
-                                    initial={{ opacity: 0, y: 16 }}
-                                    transition={{ duration: 0.5, delay: (index % 3) * 0.05 }}
-                                    viewport={{ once: true, margin: "-60px" }}
-                                    whileInView={{ opacity: 1, y: 0 }}
-                                >
-                                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-violet-700 shadow-sm dark:bg-slate-950 dark:text-violet-200">
-                                        <Zap className="h-5 w-5" />
-                                    </div>
-                                    <h3 className="mt-5 text-lg font-black text-slate-950 dark:text-white">
-                                        {trick.title}
-                                    </h3>
-                                    <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
-                                        {trick.desc}
-                                    </p>
-                                </motion.div>
-                            ))}
-                        </div>
                     </div>
                 </section>
 
