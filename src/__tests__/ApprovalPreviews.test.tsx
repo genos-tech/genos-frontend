@@ -90,6 +90,20 @@ describe("TaskPlanPreview (create_task_plan approval)", () => {
         fireEvent.click(screen.getByLabelText("Show details"));
         expect(screen.getByText("Build")).toBeTruthy();
     });
+
+    it("shows the anchor task in sub-task mode (parent_task_id)", () => {
+        renderCard("create_task_plan", {
+            project_id: "Website Redesign",
+            // Friendly-ized server-side to the task's display id.
+            parent_task_id: "WRD-7",
+            tasks: [{ title: "Rerun trace on real devices" }, { title: "Strip legacy CSS" }],
+        });
+        expect(screen.getByText("Sub-tasks of WRD-7")).toBeTruthy();
+        expect(screen.getByText("Rerun trace on real devices")).toBeTruthy();
+        // No milestone header in this mode.
+        expect(screen.queryByText("New milestone")).toBeNull();
+        expect(screen.queryByText("Existing milestone")).toBeNull();
+    });
 });
 
 describe("BulkUpdatePreview (update_tasks_bulk approval)", () => {

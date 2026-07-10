@@ -139,10 +139,12 @@ export const TaskPlanPreview = ({ args, isDark }: ApprovalPreviewProps) => {
     const milestone = (
         args.milestone && typeof args.milestone === "object" ? args.milestone : null
     ) as PlanMilestoneArg | null;
-    // Friendly-ized server-side: the project id arrives as its name and
-    // existing_milestone_id as the milestone's title.
+    // Friendly-ized server-side: the project id arrives as its name,
+    // existing_milestone_id as the milestone's title, and
+    // parent_task_id as the anchor task's display id (sub-task mode).
     const projectLabel = asString(args.project_id);
     const existingMilestone = asString(args.existing_milestone_id);
+    const parentTask = asString(args.parent_task_id);
 
     const milestoneChips: string[] = [];
     if (milestone?.priority) milestoneChips.push(milestone.priority);
@@ -179,13 +181,21 @@ export const TaskPlanPreview = ({ args, isDark }: ApprovalPreviewProps) => {
                 </Box>
             )}
 
+            {parentTask ? (
+                // Sub-task mode: the whole batch nests under this task.
+                <Typography level="body-sm" sx={{ fontWeight: 700, color: palette.text }}>
+                    {fmt(t.agentApproval.subtasksOf, { task: parentTask })}
+                </Typography>
+            ) : null}
+
             <Box
                 sx={{
                     display: "flex",
                     flexDirection: "column",
                     gap: 0.4,
-                    pl: milestone || existingMilestone ? 1.25 : 0,
-                    borderLeft: milestone || existingMilestone ? "2px solid" : "none",
+                    pl: milestone || existingMilestone || parentTask ? 1.25 : 0,
+                    borderLeft:
+                        milestone || existingMilestone || parentTask ? "2px solid" : "none",
                     borderColor: palette.borderMuted,
                 }}
             >

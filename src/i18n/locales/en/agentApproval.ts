@@ -13,6 +13,7 @@ export const agentApproval = {
     assignee: "Assignee",
     assignees: "Assignees",
     subtask: "Sub-task",
+    subtasksOf: "Sub-tasks of {task}",
     blockedBy: "Blocked by {tasks}",
     showDetails: "Show details",
     hideDetails: "Hide details",
