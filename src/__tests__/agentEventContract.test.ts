@@ -151,6 +151,32 @@ describe("agent NDJSON event contract", () => {
         }
     });
 
+    it("passes the optional note ref through tool_call_result", async () => {
+        // Approved create_note / update_note results carry a compact
+        // `note` ref (id / type / changed_fields) that drives the note
+        // cache refresh + Yjs body apply. Absent on other tools and on
+        // older backends — both sides must tolerate undefined.
+        const note = {
+            note_id: 7,
+            note_type: "personal",
+            title: "Research",
+            changed_fields: ["body"],
+        };
+        const handlers = await streamEvents([
+            {
+                type: "tool_call_result",
+                step: 1,
+                tool_name: "update_note",
+                summary: "ok",
+                note,
+            },
+            DONE,
+        ]);
+        expect(handlers.onToolResult).toHaveBeenCalledWith(
+            expect.objectContaining({ tool_name: "update_note", note })
+        );
+    });
+
     it("negative control: an unknown event type trips the unexpected-end error", async () => {
         // Proves the mechanism the contract relies on: an event the client
         // doesn't know leaves the stream without a terminal event, which
