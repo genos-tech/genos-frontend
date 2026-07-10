@@ -330,15 +330,6 @@ export const tasks = {
             copyMilestoneLink: "Copy milestone link",
             newTask: "New Task",
             openNote: "Open Note",
-            organizeTasks: "Organize tasks with AI",
-            // Pre-fills the Spotlight ask input (the ids let the agent
-            // skip the name→id resolution round-trip).
-            organizeTasksPrefill:
-                'Organize and prioritize the tasks in milestone "{title}" ' +
-                "(milestone id {milestoneId}, project id {projectId}): review " +
-                "statuses, priorities, effort and due dates against the " +
-                "dependency order, and propose the changes with a short " +
-                "rationale for each.",
             newTag: "New Tag",
             newProject: "New Project",
             deleteMilestone: "Delete Milestone",

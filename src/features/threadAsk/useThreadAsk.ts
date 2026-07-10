@@ -71,10 +71,7 @@ export interface ThreadSummaryState {
 export interface UseThreadAskReturn {
     // ---- Open / close ----
     isOpen: boolean;
-    // `prefillQuery` pre-fills the ask input (without sending) — used by
-    // action-flavored entry points like "Plan tasks from this thread" so
-    // the user can name the target project / adjust scope before sending.
-    open: (threadContext: ThreadContext, opts?: { prefillQuery?: string }) => void;
+    open: (threadContext: ThreadContext) => void;
     close: () => void;
 
     // The thread the modal is currently bound to. Null when the user
@@ -192,7 +189,7 @@ export const useThreadAsk = ({ accessToken, teamId }: UseThreadAskArgs): UseThre
     );
 
     const open = useCallback(
-        (ctx: ThreadContext, opts?: { prefillQuery?: string }) => {
+        (ctx: ThreadContext) => {
             setIsOpen(true);
             // Switching to a different thread tears down the existing
             // conversation: a Q&A about thread A makes no sense for thread B.
@@ -207,19 +204,12 @@ export const useThreadAsk = ({ accessToken, teamId }: UseThreadAskArgs): UseThre
                 setStaleSummary(false);
                 // Full wipe before loadSummary populates with server state.
                 agentQA.reset({ sessionId: null, turns: [] });
-                agentQA.setQuery(opts?.prefillQuery ?? "");
+                agentQA.setQuery("");
                 loadSummary(ctx, false);
-            } else {
-                if (!summary && !summaryLoading) {
-                    // Same thread but no summary yet (e.g. previous load
-                    // failed and we're reopening). Re-attempt.
-                    loadSummary(ctx, false);
-                }
-                // An action entry point ("Plan tasks…") re-opening the
-                // same thread still wants its prepared query in the box.
-                if (opts?.prefillQuery) {
-                    agentQA.setQuery(opts.prefillQuery);
-                }
+            } else if (!summary && !summaryLoading) {
+                // Same thread but no summary yet (e.g. previous load
+                // failed and we're reopening). Re-attempt.
+                loadSummary(ctx, false);
             }
         },
         [threadContext, summary, summaryLoading, loadSummary, agentQA]
