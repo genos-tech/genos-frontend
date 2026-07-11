@@ -249,6 +249,16 @@ export const App = () => {
         ]
     );
 
+    // Team roster for the Spotlight ask-input's `@` mention menu. The
+    // overlay mounts above AvatarContext, so it can't read
+    // teamMemberProfiles from context like the Ask modals do. Memoized:
+    // Object.values would otherwise mint a fresh array every render and
+    // defeat the mention-source memos downstream.
+    const spotlightMentionMembers = useMemo(
+        () => Object.values(useTEM.teamMemberProfiles),
+        [useTEM.teamMemberProfiles]
+    );
+
     // Push freshly-cached IDB data into React state after a background
     // network refresh writes it. Shared by the cache-first boot refresh and
     // the wake refresh — both refresh IDB, then call this to repaint.
@@ -893,38 +903,48 @@ export const App = () => {
                                                 mruOrder={serviceSwitcherMruOrder}
                                                 previewIndex={serviceSwitcherPreviewIndex}
                                             />
-                                            <SpotlightOverlay
-                                                aiAnswersEnabled={spotlight.aiAnswersEnabled}
-                                                ask={spotlight.ask}
-                                                backToHistoryList={spotlight.backToHistoryList}
-                                                closeHistory={spotlight.closeHistory}
-                                                dailyUsage={spotlight.dailyUsage}
-                                                error={spotlight.error}
-                                                historyDetail={spotlight.historyDetail}
-                                                historyIsLoading={spotlight.historyIsLoading}
-                                                historyMode={spotlight.historyMode}
-                                                historySessions={spotlight.historySessions}
-                                                isLoading={spotlight.isLoading}
-                                                isOpen={spotlight.isOpen}
-                                                openHistory={spotlight.openHistory}
-                                                query={spotlight.query}
-                                                results={spotlight.results}
-                                                turns={spotlight.turns}
-                                                viewHistorySession={spotlight.viewHistorySession}
-                                                onApprove={spotlight.onApprove}
-                                                onAsk={spotlight.onAsk}
-                                                onCancel={spotlight.onCancel}
-                                                onClose={spotlight.close}
-                                                onFeedback={spotlight.submitFeedback}
-                                                onNewConversation={spotlight.onNewConversation}
-                                                onOpenSettings={() =>
-                                                    setSpotlightSettingsOpen(true)
-                                                }
-                                                onPreview={handleSpotlightPreview}
-                                                onQueryChange={spotlight.setQuery}
-                                                onReject={spotlight.onReject}
-                                                onSelect={handleSpotlightSelect}
-                                            />
+                                            {/* Second HashMentionDataProvider: the overlay
+                                                mounts above the main provider tree (line
+                                                ~1000), so it gets its own wrapper reusing
+                                                the same memoized value — the ask input's
+                                                `#` mention menu reads it via context. */}
+                                            <HashMentionDataProvider value={hashMentionData}>
+                                                <SpotlightOverlay
+                                                    aiAnswersEnabled={spotlight.aiAnswersEnabled}
+                                                    ask={spotlight.ask}
+                                                    backToHistoryList={spotlight.backToHistoryList}
+                                                    closeHistory={spotlight.closeHistory}
+                                                    dailyUsage={spotlight.dailyUsage}
+                                                    error={spotlight.error}
+                                                    historyDetail={spotlight.historyDetail}
+                                                    historyIsLoading={spotlight.historyIsLoading}
+                                                    historyMode={spotlight.historyMode}
+                                                    historySessions={spotlight.historySessions}
+                                                    isLoading={spotlight.isLoading}
+                                                    isOpen={spotlight.isOpen}
+                                                    mentionMembers={spotlightMentionMembers}
+                                                    openHistory={spotlight.openHistory}
+                                                    query={spotlight.query}
+                                                    results={spotlight.results}
+                                                    turns={spotlight.turns}
+                                                    viewHistorySession={
+                                                        spotlight.viewHistorySession
+                                                    }
+                                                    onApprove={spotlight.onApprove}
+                                                    onAsk={spotlight.onAsk}
+                                                    onCancel={spotlight.onCancel}
+                                                    onClose={spotlight.close}
+                                                    onFeedback={spotlight.submitFeedback}
+                                                    onNewConversation={spotlight.onNewConversation}
+                                                    onOpenSettings={() =>
+                                                        setSpotlightSettingsOpen(true)
+                                                    }
+                                                    onPreview={handleSpotlightPreview}
+                                                    onQueryChange={spotlight.setQuery}
+                                                    onReject={spotlight.onReject}
+                                                    onSelect={handleSpotlightSelect}
+                                                />
+                                            </HashMentionDataProvider>
                                             <SpotlightSettingsModal
                                                 open={spotlightSettingsOpen}
                                                 onClose={() => setSpotlightSettingsOpen(false)}

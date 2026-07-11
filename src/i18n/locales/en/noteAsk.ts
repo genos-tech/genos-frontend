@@ -37,6 +37,9 @@ export const noteAsk = {
         cancel: "Cancel",
         clear: "Clear conversation",
     },
+    mentions: {
+        ariaLabel: "Mention suggestions",
+    },
     states: {
         streaming: "streaming…",
         thinking: "Thinking…",

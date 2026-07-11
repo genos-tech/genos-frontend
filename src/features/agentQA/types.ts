@@ -8,6 +8,7 @@
 
 import type { AskAgentArgs, PendingApprovalPayload } from "../../services/agentApi";
 import type { SpotlightResult } from "../spotlight/types";
+import type { AgentMentionRef } from "./mentions/types";
 
 export type ToolEventStatus = "pending" | "done" | "error";
 
@@ -122,6 +123,11 @@ export interface AgentQALabels {
         // ICU-template-ish string with `{toolName}` placeholder.
         titleWithTool: string;
     };
+    // @/# mention dropdown a11y label. Optional so existing locale
+    // label sets don't break; the dropdown falls back to English.
+    mentions?: {
+        ariaLabel: string;
+    };
 }
 
 export interface UseAgentQAArgs {
@@ -140,8 +146,11 @@ export interface UseAgentQAReturn {
     turns: CompletedTurn[];
     sessionId: string | null;
     // `overrideQuery` lets a past turn's "Ask again" button re-fire its
-    // original question without stomping the live input.
-    onAsk: (overrideQuery?: string) => void;
+    // original question without stomping the live input. `mentions` are
+    // the structured @/# refs the input's picker collected for the live
+    // query (retry passes none — the tokens remain in the text, but the
+    // resolved ids aren't stored on completed turns in v1).
+    onAsk: (overrideQuery?: string, mentions?: AgentMentionRef[]) => void;
     onCancel: () => void;
     onApprove: () => void;
     onReject: () => void;

@@ -49,6 +49,8 @@ import { searchSpotlight } from "../../services/searchApi";
 import { isMac } from "../../utils/platform";
 import {
     MAX_TURNS_IN_HISTORY,
+    toWireMentions,
+    type AgentMentionRef,
     type AskState,
     type CompletedTurn,
     type ToolEvent,
@@ -108,7 +110,7 @@ export interface UseSpotlightReturn {
     results: SpotlightResult[];
     isLoading: boolean;
     error: string | null;
-    onAsk: (overrideQuery?: string) => void;
+    onAsk: (overrideQuery?: string, mentions?: AgentMentionRef[]) => void;
     onApprove: () => void;
     onReject: () => void;
     onCancel: () => void;
@@ -645,8 +647,11 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
     // ---- Enter / Ask button handler: stream the agent's answer. ----
     // `overrideQuery` is supplied by the retry button on past turns so
     // it can bypass the query input state without a render cycle.
+    // `mentions` are the structured @/# refs from the overlay's picker;
+    // retry passes none (the tokens remain in the query text, but the
+    // resolved ids aren't stored on completed turns in v1).
     const onAsk = useCallback(
-        (overrideQuery?: string) => {
+        (overrideQuery?: string, mentions?: AgentMentionRef[]) => {
             const trimmed = (overrideQuery !== undefined ? overrideQuery : query).trim();
             if (!trimmed) return;
             // Defense: never start a new ask while the previous one is
@@ -702,6 +707,7 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
                 accessToken,
                 sessionId: ask.sessionId ?? undefined,
                 signal: controller.signal,
+                ...(mentions?.length ? { mentions: toWireMentions(mentions) } : {}),
                 ...buildStreamHandlers(askedTurnId),
             });
 

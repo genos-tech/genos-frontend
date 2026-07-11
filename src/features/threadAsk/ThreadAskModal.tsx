@@ -85,6 +85,9 @@ const buildLabels = (t: ReturnType<typeof useTranslation>["t"]): AgentQALabels =
     approval: {
         titleWithTool: t.threadAsk.approval.titleWithTool,
     },
+    mentions: {
+        ariaLabel: t.threadAsk.mentions.ariaLabel,
+    },
 });
 
 // Human-readable "updated N ago" for the summary header. Renders once

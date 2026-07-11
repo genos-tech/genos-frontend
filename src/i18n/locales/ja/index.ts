@@ -1328,6 +1328,9 @@ export const ja: DeepPartial<Messages> = {
             initial: "入力を開始すると、チャット・タスク・ノートを横断検索します。",
             noMatches: "該当する結果はありません — 別のキーワードで試してください。",
         },
+        mentions: {
+            ariaLabel: "メンション候補",
+        },
         errors: {
             noTeam: "チームが選択されていません。",
             searchFailed: "検索に失敗しました。もう一度お試しください。",

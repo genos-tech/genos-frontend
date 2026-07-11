@@ -38,3 +38,25 @@ export const filterAndRankSuggestionItems = (
         .filter((it) => matchesQuery(it, q))
         .sort((a, b) => matchRank(a, q) - matchRank(b, q));
 };
+
+// Generic single-text variant of the same filter+rank contract, for
+// suggestion lists that aren't BlockNote menu items (e.g. the agent
+// input's @/# mention dropdown). Identical semantics: strict substring
+// filter, exact → prefix → substring rank, stable within tiers.
+export const filterAndRankByText = <T>(
+    items: T[],
+    getText: (item: T) => string,
+    query: string
+): T[] => {
+    const q = (query || "").trim().toLowerCase();
+    if (!q) return items;
+    const rank = (item: T): number => {
+        const text = (getText(item) || "").toLowerCase();
+        if (text === q) return 0;
+        if (text.startsWith(q)) return 1;
+        return 2;
+    };
+    return items
+        .filter((it) => (getText(it) || "").toLowerCase().includes(q))
+        .sort((a, b) => rank(a) - rank(b));
+};
