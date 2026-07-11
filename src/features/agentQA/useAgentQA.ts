@@ -85,6 +85,7 @@ export const useAgentQA = ({
                     toolEvents: prev.toolEvents,
                     askError: prev.askError,
                     runId: prev.runId,
+                    mentions: prev.askedMentions,
                 };
                 setTurns((prevTurns) => {
                     const next = [...prevTurns, snapshot];
@@ -296,6 +297,7 @@ export const useAgentQA = ({
                 sessionId: ask.sessionId,
                 turnId: askedTurnId,
                 runId: null,
+                askedMentions: mentions?.length ? mentions : undefined,
             });
 
             // Consume the "new conversation" flag (set by clearConversation).

@@ -1223,6 +1223,7 @@ const ConversationPanel = memo(
                                 askError={turn.askError}
                                 isCurrent={false}
                                 isDark={isDark}
+                                mentions={turn.mentions}
                                 runId={turn.runId}
                                 toolEvents={turn.toolEvents}
                                 ts={ts}
@@ -1241,6 +1242,7 @@ const ConversationPanel = memo(
                                 askError={ask.askError}
                                 isDark={isDark}
                                 isStreaming={ask.isStreaming}
+                                mentions={ask.askedMentions}
                                 pendingApproval={ask.pendingApproval}
                                 runId={ask.runId}
                                 toolEvents={ask.toolEvents}
@@ -1284,12 +1286,15 @@ interface TurnViewProps {
     onPreview: (r: SpotlightResult) => void;
     onApprove?: () => void;
     onReject?: () => void;
+    // The structured mentions this turn was asked with — retry re-sends
+    // them so a "@Bob …" re-ask keeps its references block + boost.
+    mentions?: AgentMentionRef[];
     // Pass `onAsk` rather than a pre-bound `onRetry` so the prop reference
     // stays stable across renders of `ConversationPanel`. The retry click
     // handler is composed inside `TurnView` from `onAsk` + `askedQuery`,
     // so memoised past turns aren't invalidated when the current turn
     // streams in a new `answer_delta`.
-    onAsk?: (overrideQuery?: string) => void;
+    onAsk?: (overrideQuery?: string, mentions?: AgentMentionRef[]) => void;
     askDisabled?: boolean;
     // F1 — the turn's AgentRun id (from the `done` event) + the
     // feedback submitter. Both optional: error/cancelled turns and
@@ -1386,6 +1391,7 @@ const TurnViewInner = ({
     isStreaming,
     pendingApproval,
     isDark,
+    mentions,
     onPreview,
     onApprove,
     onReject,
@@ -1402,8 +1408,8 @@ const TurnViewInner = ({
     // own `askedQuery` so past turns can stay memoised across streaming
     // updates of the current turn.
     const onRetry = useCallback(() => {
-        if (onAsk) onAsk(askedQuery);
-    }, [onAsk, askedQuery]);
+        if (onAsk) onAsk(askedQuery, mentions);
+    }, [onAsk, askedQuery, mentions]);
 
     // Look-up table for `rewriteCitations` and the `a` override below.
     // Rebuilt only when the sources array reference changes, not on

@@ -460,6 +460,7 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
                     toolEvents: prev.toolEvents,
                     askError: prev.askError,
                     runId: prev.runId ?? null,
+                    mentions: prev.askedMentions,
                 };
                 setTurns((prevTurns) => {
                     const next = [...prevTurns, snapshot];
@@ -653,8 +654,8 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
     // `overrideQuery` is supplied by the retry button on past turns so
     // it can bypass the query input state without a render cycle.
     // `mentions` are the structured @/# refs from the overlay's picker;
-    // retry passes none (the tokens remain in the query text, but the
-    // resolved ids aren't stored on completed turns in v1).
+    // retry re-sends the refs stored on the turn (CompletedTurn.mentions),
+    // so a re-ask keeps its references block + search boost.
     const onAsk = useCallback(
         (overrideQuery?: string, mentions?: AgentMentionRef[]) => {
             const trimmed = (overrideQuery !== undefined ? overrideQuery : query).trim();
@@ -704,6 +705,7 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
                 pendingApproval: null,
                 sessionId: ask.sessionId,
                 turnId: askedTurnId,
+                askedMentions: mentions?.length ? mentions : undefined,
             });
 
             void askAgentStream({
@@ -814,6 +816,7 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
                         toolEvents: prev.toolEvents,
                         askError: prev.askError,
                         runId: prev.runId ?? null,
+                        mentions: prev.askedMentions,
                     };
                     setTurns((prevTurns) => {
                         const next = [...prevTurns, snapshot];

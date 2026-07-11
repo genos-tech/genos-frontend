@@ -21,6 +21,7 @@ import { agentQAUrlTransform, CitationAnchor } from "./CitationAnchor";
 import { buildSourcesById, citedChipSources, rewriteCitations } from "./citationUtils";
 import { FeedbackThumbs } from "./FeedbackThumbs";
 import { markdownAnswerSx } from "./markdownAnswerSx";
+import type { AgentMentionRef } from "./mentions/types";
 import { SourceChips } from "./SourceChips";
 import { ToolProgressList } from "./ToolProgressList";
 import type { AgentQALabels, CompletedTurn, UseAgentQAReturn } from "./types";
@@ -46,7 +47,11 @@ export const AgentQAConversation = ({
     // prop identity constant while always invoking the latest handler.
     const onRetryRef = useRef(state.onAsk);
     onRetryRef.current = state.onAsk;
-    const onRetry = useCallback((askedQuery: string) => onRetryRef.current?.(askedQuery), []);
+    const onRetry = useCallback(
+        (askedQuery: string, mentions?: AgentMentionRef[]) =>
+            onRetryRef.current?.(askedQuery, mentions),
+        []
+    );
     const onFeedbackRef = useRef(state.submitFeedback);
     onFeedbackRef.current = state.submitFeedback;
     const onFeedback = useCallback(
@@ -140,7 +145,7 @@ const TurnRowInner = ({
     isDark: boolean;
     sourcesById: Map<string, SpotlightResult>;
     onSelectSource?: (source: SpotlightResult) => void;
-    onRetry?: (askedQuery: string) => void;
+    onRetry?: (askedQuery: string, mentions?: AgentMentionRef[]) => void;
     onFeedback?: (runId: string, rating: number) => void;
 }) => {
     const [copied, setCopied] = useState(false);
@@ -157,7 +162,7 @@ const TurnRowInner = ({
                 /* non-secure context — ignore */
             });
     };
-    const handleRetry = () => onRetry?.(turn.askedQuery);
+    const handleRetry = () => onRetry?.(turn.askedQuery, turn.mentions);
     const showCopy = Boolean(turn.answer);
     const showRetry = Boolean(turn.askedQuery) && Boolean(onRetry);
     const rewritten = useMemo(
