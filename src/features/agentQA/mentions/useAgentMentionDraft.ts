@@ -11,13 +11,18 @@
 //     (tasks / notes / group chats), mirroring the BlockNote editors.
 //
 // Send-time contract: `consumeMentions(finalText)` re-walks the text and
-// returns only the refs whose `@Label` / `#Label` token still appears
-// (the user may have edited a token away), then clears the picked list —
-// exactly the `buildBody` re-validation semantics of `useMentionDraft`.
+// returns the refs whose `@Label` / `#Label` token appears — picked refs
+// (the user may have edited a token away) AND auto-resolved ones: a
+// hand-typed token that exactly matches a known candidate's label counts
+// as a mention without a dropdown pick, so typing `@design-crew` in full
+// is equivalent to picking it. The live highlight uses the same matcher,
+// so a token lighting up IS the confirmation it resolved. Partial titles
+// never auto-attach — the token must be the whole label, whitespace-
+// preceded, and not run into a longer word.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import type { AgentMentionCandidate, AgentMentionRef } from "./types";
+import { mentionKey, type AgentMentionCandidate, type AgentMentionRef } from "./types";
 
 // Dropdown row cap — long lists are noise; the user narrows by typing.
 const MAX_SUGGESTIONS = 8;
@@ -100,6 +105,10 @@ export function matchMentionTokens(
     picked: readonly AgentMentionRef[]
 ): MentionTokenMatch[] {
     if (!text || picked.length === 0) return [];
+    // Every token starts with a trigger char; without one in the text
+    // nothing can match. Cheap guard — the auto-resolve path feeds the
+    // WHOLE candidate pool through here on every keystroke.
+    if (!text.includes("@") && !text.includes("#")) return [];
     const refs = [...picked].sort((a, b) => b.label.length - a.label.length);
     const out: MentionTokenMatch[] = [];
     const claimed: Array<[number, number]> = [];
@@ -251,19 +260,49 @@ export function useAgentMentionDraft({
         if (trigger) setDismissedStart(trigger.start);
     }, [trigger]);
 
-    const consumeMentions = useCallback((finalText: string): AgentMentionRef[] => {
-        const picked = Array.from(pickedRef.current.values());
-        pickedRef.current = new Map();
-        setPicksVersion((v) => v + 1);
-        return matchMentionTokens(finalText, picked).map((m) => m.ref);
-    }, []);
+    // The full candidate pool, matched alongside picks so hand-typed
+    // exact tokens auto-resolve. Picked refs go FIRST: the matcher's
+    // length sort is stable, so for identical labels the picked instance
+    // claims the span (same entity → same result; a rare label collision
+    // resolves to what the user explicitly chose).
+    const candidateRefs = useMemo(
+        () => [...members, ...entities].map((c) => c.ref),
+        [members, entities]
+    );
+
+    const consumeMentions = useCallback(
+        (finalText: string): AgentMentionRef[] => {
+            const picked = Array.from(pickedRef.current.values());
+            pickedRef.current = new Map();
+            setPicksVersion((v) => v + 1);
+            // A ref can match through both its picked and its candidate
+            // instance (two occurrences of the same token) — the wire
+            // payload carries each entity once.
+            const seen = new Set<string>();
+            const out: AgentMentionRef[] = [];
+            for (const m of matchMentionTokens(finalText, [...picked, ...candidateRefs])) {
+                const key = mentionKey(m.ref);
+                if (seen.has(key)) continue;
+                seen.add(key);
+                out.push(m.ref);
+            }
+            return out;
+        },
+        [candidateRefs]
+    );
 
     // Live token ranges for the highlight overlay. `picksVersion` keys
     // the pick set; `value` keys the text the tokens are matched in.
+    // Duplicate occurrences all highlight (unlike the deduped payload) —
+    // visually, every resolved token should read as resolved.
     const highlightRanges = useMemo(
-        () => matchMentionTokens(value, Array.from(pickedRef.current.values())),
+        () =>
+            matchMentionTokens(value, [
+                ...Array.from(pickedRef.current.values()),
+                ...candidateRefs,
+            ]),
         // eslint-disable-next-line react-hooks/exhaustive-deps -- picksVersion stands in for pickedRef.current
-        [value, picksVersion]
+        [value, picksVersion, candidateRefs]
     );
 
     const reset = useCallback(() => {

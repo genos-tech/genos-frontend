@@ -233,10 +233,60 @@ describe("useAgentMentionDraft", () => {
         act(() => {
             result.current.draft.selectSuggestion(MEMBERS[0]); // "@Alice "
         });
-        // User edits Alice's token away before sending.
+        // User edits Alice's token away before sending — a bare name
+        // without the trigger char is prose, not a mention.
         expect(result.current.draft.consumeMentions("ask Bob instead")).toEqual([]);
-        // ...and consuming clears picks: a stale pick can't resurface.
-        expect(result.current.draft.consumeMentions("@Alice")).toEqual([]);
+        // Consuming clears picks, but "@Alice" is an exact candidate
+        // token, so it AUTO-resolves — picked or not, the same text
+        // sends the same mention.
+        expect(result.current.draft.consumeMentions("@Alice")).toEqual([MEMBERS[0].ref]);
+    });
+
+    it("typed-exact tokens auto-attach without a pick; partials never do", () => {
+        const { result } = renderHook(() => useHarness());
+        // Whole label after the trigger → highlight + wire ref, no pick.
+        act(() => {
+            result.current.setValue("status of #Write docs please");
+        });
+        expect(result.current.draft.highlightRanges).toEqual([
+            { ref: ENTITIES[2].ref, start: 10, end: 21 },
+        ]);
+        expect(result.current.draft.consumeMentions("status of #Write docs please")).toEqual([
+            ENTITIES[2].ref,
+        ]);
+        // A partial title is still just typing.
+        act(() => {
+            result.current.setValue("status of #Write doc please");
+        });
+        expect(result.current.draft.highlightRanges).toEqual([]);
+        // Wrong trigger for the kind doesn't resolve either.
+        act(() => {
+            result.current.setValue("status of @Write docs please");
+        });
+        expect(result.current.draft.highlightRanges).toEqual([]);
+    });
+
+    it("a ref picked AND typed twice highlights both tokens but sends one wire ref", () => {
+        const { result } = renderHook(() => useHarness());
+        act(() => {
+            result.current.setValue("@Al");
+        });
+        act(() => {
+            result.current.draft.setCaret(3);
+        });
+        act(() => {
+            result.current.draft.selectSuggestion(MEMBERS[0]); // "@Alice "
+        });
+        act(() => {
+            result.current.setValue("@Alice ping @Alice again");
+        });
+        expect(result.current.draft.highlightRanges.map((r) => [r.start, r.end])).toEqual([
+            [0, 6],
+            [12, 18],
+        ]);
+        expect(result.current.draft.consumeMentions("@Alice ping @Alice again")).toEqual([
+            MEMBERS[0].ref,
+        ]);
     });
 
     it("consumeMentions assigns overlapping tokens to the longest label", () => {
@@ -340,19 +390,22 @@ describe("useAgentMentionDraft", () => {
             result.current.setValue("ask Bob instead");
         });
         expect(result.current.draft.highlightRanges).toEqual([]);
-        // ...and restoring the exact token text brings it back (the
-        // pick is still held until consumed).
+        // ...and restoring the exact token text brings it back.
         act(() => {
             result.current.setValue("hey @Alice");
         });
         expect(result.current.draft.highlightRanges).toEqual([
             { ref: MEMBERS[0].ref, start: 4, end: 10 },
         ]);
-        // Consuming clears picks → highlight gone even with token text.
+        // Consuming clears the pick, but the token text still reads as
+        // a mention via auto-resolve — the highlight (and a re-send)
+        // survive, keeping WYSIWYG with what the next ask would send.
         act(() => {
             result.current.draft.consumeMentions(result.current.value);
         });
-        expect(result.current.draft.highlightRanges).toEqual([]);
+        expect(result.current.draft.highlightRanges).toEqual([
+            { ref: MEMBERS[0].ref, start: 4, end: 10 },
+        ]);
     });
 });
 
@@ -513,10 +566,14 @@ describe("AgentQAInput mention integration", () => {
         render(<Harness onAsk={onAsk} />);
         const textarea = screen.getByPlaceholderText("Ask…");
 
-        // Nothing highlighted for merely-typed text — even if it happens
-        // to spell out a real entity title.
+        // Bare prose — an entity name without its trigger char — never
+        // highlights.
         fireEvent.change(textarea, { target: { value: "ping Alice" } });
         expect(screen.queryByTestId("mention-highlight-overlay")).toBeNull();
+
+        // Typing the exact token auto-resolves without a pick.
+        fireEvent.change(textarea, { target: { value: "status of #Ship v2" } });
+        expect(screen.getByTestId("mention-highlight-overlay")).toBeInTheDocument();
 
         // Pick from the menu → the token gets the marker highlight.
         fireEvent.change(textarea, { target: { value: "ping @Al" } });
