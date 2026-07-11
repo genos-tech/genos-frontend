@@ -57,6 +57,12 @@ interface NoteHeaderActionsProps {
     onDeleteNote: () => void;
     onCloseNotes: () => void;
     onCopyNoteLink?: () => void;
+    /** Set when this header is rendered inside the UrlLinkModal (see
+     *  ModalNoteView). The ⋮ MoreMenu portals to document.body at its
+     *  default z (9999) which sits BEHIND the modal (≥10020) — pass the
+     *  host's z so the dropdown lifts above it. Mirrors the task header's
+     *  fix (TaskPreview.tsx). Undefined on page surfaces → default z. */
+    hostZIndex?: number;
 }
 
 export const NoteHeaderActions = ({
@@ -77,6 +83,7 @@ export const NoteHeaderActions = ({
     onCloseNotes,
     onCopyNoteLink,
     useNM,
+    hostZIndex,
 }: NoteHeaderActionsProps) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
@@ -781,6 +788,9 @@ export const NoteHeaderActions = ({
                         placement="bottom-end"
                         triggerSize={36}
                         triggerSx={actionButtonStyle}
+                        // Modal-hosted note preview: lift the dropdown above
+                        // the UrlLinkModal (default 9999 renders behind it).
+                        zIndex={hostZIndex != null ? hostZIndex + 1 : undefined}
                     />
                 );
             })()}

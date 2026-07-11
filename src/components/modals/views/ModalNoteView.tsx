@@ -49,6 +49,10 @@ type ModalNoteViewProps = {
     useTM: TaskManagementState;
     usePM: ProjectManagementState;
     useNM: NoteManagementState;
+    // Host modal's z-index (UrlLinkModal). Threaded into the note header
+    // so its ⋮ MoreMenu — a document.body portal at default z 9999 —
+    // lifts above the modal (≥10020) instead of opening behind it.
+    hostZIndex?: number;
 };
 
 const CenteredMessage = ({ children }: { children: React.ReactNode }) => (
@@ -100,6 +104,7 @@ export const ModalNoteView = (props: ModalNoteViewProps) => {
         useTM,
         usePM,
         useNM,
+        hostZIndex,
     } = props;
 
     const { t } = useTranslation();
@@ -221,6 +226,7 @@ export const ModalNoteView = (props: ModalNoteViewProps) => {
         return wrapper(
             <>
                 <MyNoteMain
+                    hostZIndex={hostZIndex}
                     isInTaskPage={false}
                     myself={myself}
                     setMyself={setMyself}
@@ -303,6 +309,7 @@ export const ModalNoteView = (props: ModalNoteViewProps) => {
         return wrapper(
             <>
                 <TaskNoteMain
+                    hostZIndex={hostZIndex}
                     isInTaskPage={false}
                     myself={myself}
                     setMyself={setMyself}
@@ -385,6 +392,7 @@ export const ModalNoteView = (props: ModalNoteViewProps) => {
     return wrapper(
         <>
             <ChatNoteMain
+                hostZIndex={hostZIndex}
                 isInChatPage={false}
                 isInTaskPage={false}
                 myself={myself}

@@ -36,10 +36,14 @@ interface MyNoteMainProps {
     useNM: NoteManagementState;
     /** Chat management state and actions */
     useCM: ChatManagementState;
+    /** Host modal's z-index when rendered inside the UrlLinkModal, so the
+     *  header's ⋮ menu lifts above it. Undefined on page surfaces. */
+    hostZIndex?: number;
 }
 
 export const MyNoteMain = (props: MyNoteMainProps) => {
-    const { isInTaskPage, useTEM, socket, myself, setMyself, useUISM, useNM, useCM } = props;
+    const { isInTaskPage, useTEM, socket, myself, setMyself, useUISM, useNM, useCM, hostZIndex } =
+        props;
 
     const { accessToken } = useAuth();
     const [openDeleteNote, setOpenDeleteNote] = useState<boolean>(false);
@@ -164,6 +168,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
 
                         <NoteHeaderActions
                             currentTask={undefined}
+                            hostZIndex={hostZIndex}
                             isInTaskPage={isInTaskPage}
                             myself={myself}
                             noteType={1}

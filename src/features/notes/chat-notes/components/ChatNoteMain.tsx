@@ -45,6 +45,9 @@ interface ChatNoteMainProps {
     useNM: NoteManagementState;
     /** Chat management state and actions */
     useCM: ChatManagementState;
+    /** Host modal's z-index when rendered inside the UrlLinkModal, so the
+     *  header's ⋮ menu lifts above it. Undefined on page surfaces. */
+    hostZIndex?: number;
 }
 
 export const ChatNoteMain = (props: ChatNoteMainProps) => {
@@ -60,6 +63,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
         usePM,
         useNM,
         useCM,
+        hostZIndex,
     } = props;
 
     const { accessToken } = useAuth();
@@ -262,6 +266,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                         <ChatNoteHeader
                             chat={chat}
                             handleCloseTab={handleCloseTab}
+                            hostZIndex={hostZIndex}
                             isInChatPage={isInChatPage}
                             isInTaskPage={isInTaskPage}
                             myself={myself}
