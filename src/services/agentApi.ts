@@ -113,7 +113,9 @@ export type AgentMentionPayload =
     | { type: "task"; task_id: number; label: string }
     | { type: "note"; note_type: 1 | 2 | 3; note_id: number; label: string }
     | { type: "chat"; chat_type: number; chat_id: string; label: string }
-    | { type: "project"; project_id: number; label: string };
+    | { type: "project"; project_id: number; label: string }
+    | { type: "group"; group_id: number; label: string }
+    | { type: "todo"; item_id: number; label: string };
 
 export interface AskAgentArgs extends BaseStreamHandlers {
     query: string;

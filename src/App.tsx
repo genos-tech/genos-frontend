@@ -63,6 +63,7 @@ import { useUrlLinkModalState } from "./hooks/common/useUrlLinkModalState";
 import { useWakeRefresh } from "./hooks/common/useWakeRefresh";
 import { useWebSocket } from "./hooks/common/useWebSocket";
 import { useWindowSize } from "./hooks/common/useWindowSize";
+import { useTodoGroups } from "./hooks/useTodoGroups";
 import { registerApiHealthListener, unregisterApiHealthListener } from "./services/api";
 import { useChannelServiceBootstrap } from "./services/channel/useChannelServiceBootstrap";
 import { NotificationsProvider } from "./services/notifications/NotificationsContext";
@@ -216,6 +217,11 @@ export const App = () => {
         socketInstance,
     });
 
+    // Daily todo groups — one instance for the whole app: the chat todo
+    // pane (prop-drilled through ChatHome) and the agent-input "#"
+    // mention picker (via HashMentionDataContext) share it.
+    const useTG = useTodoGroups(myself, accessToken);
+
     // Backing data for the "#" mention menu (tasks / notes / GM chats /
     // projects), fed to every editor's `HashSuggestionMenuController` via
     // `HashMentionDataProvider`. Memoized so the four arrays keep stable
@@ -236,6 +242,7 @@ export const App = () => {
             chats: useCM.allChats.filter((c) => c.chatType === 2),
             allChats: useCM.allChats,
             projects: usePM.teamProjects,
+            todoGroups: useTG.groups,
             myself,
         }),
         [
@@ -246,6 +253,7 @@ export const App = () => {
             useNM.sharedNoteMeta,
             useCM.allChats,
             usePM.teamProjects,
+            useTG.groups,
             myself,
         ]
     );
@@ -923,6 +931,7 @@ export const App = () => {
                                                     historySessions={spotlight.historySessions}
                                                     isLoading={spotlight.isLoading}
                                                     isOpen={spotlight.isOpen}
+                                                    mentionGroups={useMGM.mentionGroups}
                                                     mentionMembers={spotlightMentionMembers}
                                                     openHistory={spotlight.openHistory}
                                                     query={spotlight.query}
@@ -1316,6 +1325,9 @@ export const App = () => {
                                                                                                         isActiveRoute={
                                                                                                             activeService ===
                                                                                                             "chat"
+                                                                                                        }
+                                                                                                        useTG={
+                                                                                                            useTG
                                                                                                         }
                                                                                                     />
                                                                                                 </Suspense>

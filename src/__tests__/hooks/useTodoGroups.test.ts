@@ -105,7 +105,7 @@ describe("useTodoGroups — parent completion cascades to children", () => {
     it("closing a parent closes its still-open children (and only those)", async () => {
         loadTodoGroupsMock.mockResolvedValue([seedGroup()]);
         echoUpdate();
-        const { result } = renderHook(() => useTodoGroups(myself, "token", true));
+        const { result } = renderHook(() => useTodoGroups(myself, "token"));
         await flush();
 
         await act(async () => {
@@ -132,7 +132,7 @@ describe("useTodoGroups — parent completion cascades to children", () => {
     it("completing a child does NOT propagate up to the parent or across siblings", async () => {
         loadTodoGroupsMock.mockResolvedValue([seedGroup()]);
         echoUpdate();
-        const { result } = renderHook(() => useTodoGroups(myself, "token", true));
+        const { result } = renderHook(() => useTodoGroups(myself, "token"));
         await flush();
 
         await act(async () => {
@@ -150,7 +150,7 @@ describe("useTodoGroups — parent completion cascades to children", () => {
     it("re-opening a parent leaves its children completed (cascade is close-only)", async () => {
         loadTodoGroupsMock.mockResolvedValue([seedGroup(true)]); // parent + children all done
         echoUpdate();
-        const { result } = renderHook(() => useTodoGroups(myself, "token", true));
+        const { result } = renderHook(() => useTodoGroups(myself, "token"));
         await flush();
 
         await act(async () => {

@@ -34,7 +34,7 @@ import { NoteManagementState } from "../../hooks/notes/useNoteManagement";
 import { SprintMilestoneManagementState } from "../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
 import { usePanelSizes } from "../../hooks/usePanelSizes";
-import { useTodoGroups } from "../../hooks/useTodoGroups";
+import { UseTodoGroupsState } from "../../hooks/useTodoGroups";
 import { useWindowSize } from "../../hooks/useWindowSize";
 import { UserProps } from "../../types/admin";
 import { MessageProps, ThreadMessageProps } from "../../types/chat";
@@ -59,6 +59,10 @@ type ChatHomeProps = {
     // row (e.g. the thread chat header's "Open Task" button on a
     // milestone-tied thread).
     useSM: SprintMilestoneManagementState;
+    // Owned by App (single instance — it also feeds the agent-input "#"
+    // mention picker via HashMentionDataContext) and passed down so the
+    // todo pane keeps its one source of truth.
+    useTG: UseTodoGroupsState;
     // False while this Home is kept mounted but hidden (keep-alive). Threaded
     // into useChatRouting so a backgrounded Chat Home doesn't hijack the URL.
     isActiveRoute: boolean;
@@ -76,6 +80,7 @@ export const ChatHome = (props: ChatHomeProps) => {
         usePM,
         useTM,
         useSM,
+        useTG,
         isActiveRoute,
     } = props;
 
@@ -99,7 +104,6 @@ export const ChatHome = (props: ChatHomeProps) => {
     const { height } = useWindowSize();
     const { mainChatPanelSize, setMainChatPanelSize, subChatPanelSize, setSubChatPanelSize } =
         usePanelSizes();
-    const useTG = useTodoGroups(myself, accessToken, isToDoVisible);
     const { incompleteCount } = useTG;
 
     // URL-based routing
@@ -218,6 +222,14 @@ export const ChatHome = (props: ChatHomeProps) => {
 
     useEffect(() => {
         localStorage.setItem("isToDoVisible", isToDoVisible.toString());
+    }, [isToDoVisible]);
+
+    // The App-owned useTG no longer refetches on visibility flips (that
+    // dep moved out with the hook); re-pull when the pane opens so it
+    // still shows fresh data after edits from other sessions.
+    useEffect(() => {
+        if (isToDoVisible) void useTG.refresh();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isToDoVisible]);
 
     useEffect(() => {

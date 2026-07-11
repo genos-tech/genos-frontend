@@ -50,6 +50,7 @@ import type {
     AgentUsage,
     PendingApprovalPayload,
 } from "../../services/agentApi";
+import type { MentionGroup } from "../../services/mentionGroupsApi";
 import { purplePalette } from "../../theme/purplePalette";
 // Dark-mode text colors tuned for legibility against the translucent
 // purple sheet background (rgba(30,20,46,0.92)). These replace
@@ -145,6 +146,9 @@ interface Props {
     // authed provider tree); the `#` entities come from
     // HashMentionDataProvider, which App wraps around the overlay.
     mentionMembers?: UserProps[];
+    // Mention groups for the `@` picker — same reason as mentionMembers:
+    // the overlay mounts outside MentionGroupsProvider.
+    mentionGroups?: MentionGroup[];
 }
 
 // Distance from the bottom (px) under which we consider the user
@@ -187,6 +191,7 @@ export const SpotlightOverlay = ({
     backToHistoryList,
     closeHistory,
     onOpenSettings,
+    mentionGroups,
     mentionMembers,
 }: Props) => {
     const { mode } = useColorScheme();
@@ -263,12 +268,16 @@ export const SpotlightOverlay = ({
     );
 
     // ---- @/# mention picker. ----
-    // `@` members come from the `mentionMembers` prop (the overlay sits
-    // outside AvatarContext); `#` entities from HashMentionDataProvider
-    // (App wraps the overlay in one). Picking splices a plain-text token
-    // into `localInput` via `handleInputChange`, which dual-writes the
-    // hook `query` — so `onAsk` still reads the full text.
-    const mentionSources = useAgentMentionSources({ membersOverride: mentionMembers });
+    // `@` members and groups come from props (the overlay sits outside
+    // AvatarContext and MentionGroupsProvider); `#` entities from
+    // HashMentionDataProvider (App wraps the overlay in one). Picking
+    // splices a plain-text token into `localInput` via
+    // `handleInputChange`, which dual-writes the hook `query` — so
+    // `onAsk` still reads the full text.
+    const mentionSources = useAgentMentionSources({
+        membersOverride: mentionMembers,
+        groupsOverride: mentionGroups,
+    });
     const mention = useAgentMentionDraft({
         value: localInput,
         onChange: handleInputChange,

@@ -1,7 +1,7 @@
 import { createContext, ReactNode, useContext } from "react";
 
 import { UserProps } from "../types/admin";
-import { AllChatProps } from "../types/chat";
+import { AllChatProps, TodoGroupProps } from "../types/chat";
 import {
     ChatNoteMetaProps,
     MyNoteMetaProps,
@@ -39,6 +39,10 @@ export type HashMentionData = {
     // the leak rationale above doesn't apply there.
     allChats: AllChatProps[];
     projects: ProjectProps[];
+    // Daily todo groups (agent-input "#" picker only — todos are the
+    // requester's own, so the editors' shared-surface leak rationale
+    // rules them out of the BlockNote menu the same way DMs are).
+    todoGroups: TodoGroupProps[];
     // Current user — used by the task-mention hover card to fetch a task's
     // live status (`loadSpecificTask` needs `myself.teamId`). Null outside
     // the provider; the hover card degrades to a static label.
@@ -51,6 +55,7 @@ const EMPTY: HashMentionData = {
     chats: [],
     allChats: [],
     projects: [],
+    todoGroups: [],
     myself: null,
 };
 
