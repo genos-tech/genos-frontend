@@ -43,7 +43,13 @@ export const useTodoGroups = (myself: UserProps, accessToken: string | null) => 
     groupsRef.current = groups;
 
     // Load: IDB fast path, then authoritative fetch.
+    //
+    // Identity guard: since the App-root lift (the hook used to live in
+    // ChatHome, which only mounts post-auth) the first render can run
+    // with an empty `myself` — an unguarded fetch then hits
+    // /todo/groups/?team_id= and 500s on the server's UUID validation.
     useEffect(() => {
+        if (!myself.userId || !myself.teamId) return;
         let cancelled = false;
         (async () => {
             setIsLoading(true);
@@ -302,6 +308,8 @@ export const useTodoGroups = (myself: UserProps, accessToken: string | null) => 
     }, []);
 
     const refresh = useCallback(async () => {
+        // Same identity guard as the load effect above.
+        if (!myself.userId || !myself.teamId) return;
         const fresh = await loadTodoGroups(myself, accessToken);
         if (fresh) setGroups(fresh);
     }, [accessToken, myself]);

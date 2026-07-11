@@ -101,6 +101,29 @@ const completionById = (items: TodoItemProps[]): Record<number, boolean> =>
 
 afterEach(() => vi.clearAllMocks());
 
+describe("useTodoGroups — identity guard", () => {
+    // Regression: since the App-root lift the hook can mount before
+    // `myself` resolves; an unguarded load hit /todo/groups/?team_id=
+    // and 500'd on the server's UUID validation.
+    it("does not fetch (load or refresh) while myself is empty", async () => {
+        const empty = { userId: "", teamId: "", userName: "", userEmail: "" } as UserProps;
+        const { result } = renderHook(() => useTodoGroups(empty, "token"));
+        await flush();
+        expect(loadTodoGroupsMock).not.toHaveBeenCalled();
+        await act(async () => {
+            await result.current.refresh();
+        });
+        expect(loadTodoGroupsMock).not.toHaveBeenCalled();
+    });
+
+    it("fetches once myself carries user + team ids", async () => {
+        loadTodoGroupsMock.mockResolvedValue([seedGroup()]);
+        renderHook(() => useTodoGroups(myself, "token"));
+        await flush();
+        expect(loadTodoGroupsMock).toHaveBeenCalledTimes(1);
+    });
+});
+
 describe("useTodoGroups — parent completion cascades to children", () => {
     it("closing a parent closes its still-open children (and only those)", async () => {
         loadTodoGroupsMock.mockResolvedValue([seedGroup()]);
