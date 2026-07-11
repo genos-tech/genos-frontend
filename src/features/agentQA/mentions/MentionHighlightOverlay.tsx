@@ -64,14 +64,27 @@ export const MentionHighlightOverlay = ({
         const cRect = container.getBoundingClientRect();
         // clientLeft/Top skip the border; clientWidth/Height give the
         // padding box (minus any scrollbar), which is where text lays out.
-        setBox({
+        // Equality-guarded: this runs per keystroke (the effect below
+        // keys on `value` because the Spotlight textarea autosizes), and
+        // an unconditional fresh-object setState would force a second
+        // render pass on every character even when nothing moved.
+        const nextBox: OverlayBox = {
             top: taRect.top - cRect.top + ta.clientTop,
             left: taRect.left - cRect.left + ta.clientLeft,
             width: ta.clientWidth,
             height: ta.clientHeight,
-        });
+        };
+        setBox((prev) =>
+            prev &&
+            prev.top === nextBox.top &&
+            prev.left === nextBox.left &&
+            prev.width === nextBox.width &&
+            prev.height === nextBox.height
+                ? prev
+                : nextBox
+        );
         const cs = window.getComputedStyle(ta);
-        setTypo({
+        const nextTypo: CSSProperties = {
             font: cs.font,
             lineHeight: cs.lineHeight,
             letterSpacing: cs.letterSpacing,
@@ -80,7 +93,14 @@ export const MentionHighlightOverlay = ({
             paddingRight: cs.paddingRight,
             paddingBottom: cs.paddingBottom,
             paddingLeft: cs.paddingLeft,
-        });
+        };
+        setTypo((prev) =>
+            (Object.keys(nextTypo) as Array<keyof CSSProperties>).every(
+                (k) => prev[k] === nextTypo[k]
+            )
+                ? prev
+                : nextTypo
+        );
     }, [containerRef, textareaRef]);
 
     // Re-measure synchronously whenever the mirrored text changes (the

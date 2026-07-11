@@ -7,7 +7,7 @@
 // Sources for citation resolution are aggregated across every turn +
 // the live ask, so a token emitted on turn 1 still resolves on turn 3.
 
-import { useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useRef, useState } from "react";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import ReplayRoundedIcon from "@mui/icons-material/ReplayRounded";
@@ -38,6 +38,27 @@ export const AgentQAConversation = ({
     isDark,
     onSelectSource,
 }: AgentQAConversationProps) => {
+    // Stable identities for the callbacks handed to every TurnRow.
+    // `state.onAsk` re-mints per keystroke (it closes over the live
+    // query) and the hosts' `onSelectSource` may be an inline lambda —
+    // either would defeat TurnRow's memo below, re-parsing every past
+    // turn's markdown on each keystroke. Ref-backed wrappers keep the
+    // prop identity constant while always invoking the latest handler.
+    const onRetryRef = useRef(state.onAsk);
+    onRetryRef.current = state.onAsk;
+    const onRetry = useCallback((askedQuery: string) => onRetryRef.current?.(askedQuery), []);
+    const onFeedbackRef = useRef(state.submitFeedback);
+    onFeedbackRef.current = state.submitFeedback;
+    const onFeedback = useCallback(
+        (runId: string, rating: number) => onFeedbackRef.current?.(runId, rating),
+        []
+    );
+    const onSelectSourceRef = useRef(onSelectSource);
+    onSelectSourceRef.current = onSelectSource;
+    const onSelectSourceStable = useCallback(
+        (source: SpotlightResult) => onSelectSourceRef.current?.(source),
+        []
+    );
     // Aggregate every source ever cited in this conversation so a token
     // emitted on turn 1 still resolves on turn 3's answer. Dedup by
     // entity_id since the same task / chat / note may be cited many
@@ -86,9 +107,9 @@ export const AgentQAConversation = ({
                     labels={labels}
                     sourcesById={sourcesById}
                     turn={turn}
-                    onRetry={state.onAsk}
-                    onFeedback={state.submitFeedback}
-                    onSelectSource={onSelectSource}
+                    onRetry={onRetry}
+                    onFeedback={onFeedback}
+                    onSelectSource={onSelectSourceStable}
                 />
             ))}
             {hasInFlightAnswer ? (
@@ -105,7 +126,7 @@ export const AgentQAConversation = ({
 };
 
 // One past Q&A turn rendered as a card-ish block.
-const TurnRow = ({
+const TurnRowInner = ({
     turn,
     labels,
     isDark,
@@ -251,6 +272,14 @@ const TurnRow = ({
         </Box>
     );
 };
+
+// Memo: a past turn's props only change when the conversation itself
+// changes (new turn / new sources), so typing in the input and
+// `answer_delta` streaming skip re-rendering every prior turn's
+// ReactMarkdown parse. Same pattern (and rationale) as Spotlight's
+// `TurnView`; requires the stable callback wrappers built in
+// `AgentQAConversation` above.
+const TurnRow = memo(TurnRowInner);
 
 // The currently-streaming or just-errored turn (not yet promoted into
 // the turns history).
