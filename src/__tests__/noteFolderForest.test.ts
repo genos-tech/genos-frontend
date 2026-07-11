@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { MyNoteFolderProps, MyNoteMetaTreeNode } from "../types/notes";
+import { MyNoteFolderProps, MyNoteMetaTreeNode, TaskNoteMetaProps } from "../types/notes";
 import {
     buildFolderCrumbChain,
     buildMyNoteFolderForest,
     buildMyNoteTree,
+    buildTaskNoteContextCrumbs,
     collectDescendantFolderIds,
     collectFolderAncestorIds,
 } from "../utils/note";
@@ -128,6 +129,106 @@ describe("buildFolderCrumbChain", () => {
         expect(buildFolderCrumbChain(folders, null)).toEqual([]);
         expect(buildFolderCrumbChain(folders, undefined)).toEqual([]);
         expect(buildFolderCrumbChain(folders, 42)).toEqual([]);
+    });
+});
+
+describe("buildTaskNoteContextCrumbs", () => {
+    const meta = (over: Partial<TaskNoteMetaProps>): TaskNoteMetaProps => ({
+        noteType: 2,
+        noteId: 1,
+        parentNoteId: null,
+        projectId: 10,
+        projectName: "Q2 Roadmap",
+        taskId: 20,
+        taskTitle: "Synthesize interviews",
+        title: "note",
+        tsUpdated: "2026-01-01T00:00:00Z",
+        ...over,
+    });
+
+    const labels = (crumbs: { label: string; kind: string }[]) =>
+        crumbs.map((c) => `${c.kind}:${c.label}`);
+
+    it("inserts the milestone between project and task (the reported gap)", () => {
+        expect(
+            labels(
+                buildTaskNoteContextCrumbs(
+                    meta({ milestoneId: 5, milestoneTitle: "Q2 Discovery Sprint" })
+                )
+            )
+        ).toEqual([
+            "project:Q2 Roadmap",
+            "milestone:Q2 Discovery Sprint",
+            "task:Synthesize interviews",
+        ]);
+    });
+
+    it("omits the milestone for a loose task", () => {
+        expect(labels(buildTaskNoteContextCrumbs(meta({})))).toEqual([
+            "project:Q2 Roadmap",
+            "task:Synthesize interviews",
+        ]);
+    });
+
+    it("stops at the milestone when the note's task IS the milestone", () => {
+        expect(
+            labels(
+                buildTaskNoteContextCrumbs(
+                    meta({
+                        isMilestone: true,
+                        milestoneId: 5,
+                        milestoneTitle: "Q2 Discovery Sprint",
+                    })
+                )
+            )
+        ).toEqual(["project:Q2 Roadmap", "milestone:Q2 Discovery Sprint"]);
+    });
+
+    it("nests a subtask under its parent task", () => {
+        expect(
+            labels(
+                buildTaskNoteContextCrumbs(
+                    meta({
+                        milestoneId: 5,
+                        milestoneTitle: "M",
+                        parentTaskId: 19,
+                        parentTaskTitle: "Parent task",
+                    })
+                )
+            )
+        ).toEqual([
+            "project:Q2 Roadmap",
+            "milestone:M",
+            "task:Parent task",
+            "task:Synthesize interviews",
+        ]);
+    });
+
+    it("skips the parent crumb when the parent is the milestone backing task", () => {
+        expect(
+            labels(
+                buildTaskNoteContextCrumbs(
+                    meta({
+                        milestoneId: 5,
+                        milestoneTitle: "M",
+                        parentTaskId: 18,
+                        parentTaskTitle: "Milestone task",
+                        parentTaskIsMilestone: true,
+                    })
+                )
+            )
+        ).toEqual(["project:Q2 Roadmap", "milestone:M", "task:Synthesize interviews"]);
+    });
+
+    it("falls back to #ids and returns [] for a missing root", () => {
+        expect(buildTaskNoteContextCrumbs(null)).toEqual([]);
+        expect(
+            labels(
+                buildTaskNoteContextCrumbs(
+                    meta({ projectName: undefined, taskTitle: undefined, displayId: null })
+                )
+            )
+        ).toEqual(["project:#10", "task:#20"]);
     });
 });
 
