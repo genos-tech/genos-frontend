@@ -13,11 +13,11 @@
 // focused through the pick — same trick as the ThreadPanelV3 picker.
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type RefObject } from "react";
+import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
 import StickyNote2RoundedIcon from "@mui/icons-material/StickyNote2Rounded";
-import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
-import { Box, Sheet, Typography } from "@mui/joy";
+import { Box, Chip, Sheet } from "@mui/joy";
 import { createPortal } from "react-dom";
 
 import type { AgentMentionCandidate, AgentMentionRef } from "./types";
@@ -28,17 +28,30 @@ const DROPDOWN_Z_INDEX = 14000;
 const VIEWPORT_GUTTER = 8;
 const MAX_MENU_HEIGHT = 280;
 
+// Same icon vocabulary as the answer's citation chips (`_sourceIcon` in
+// SpotlightOverlay / `sourceIcon` in SourceChips), so a mention option
+// and the source chip it later becomes read as the same object. `user`
+// has no citation-chip counterpart (people aren't citable) — Person is
+// its consistent extension.
 const kindIcon = (kind: AgentMentionRef["kind"]) => {
     switch (kind) {
         case "user":
-            return <PersonRoundedIcon sx={{ fontSize: 16 }} />;
+            return <PersonRoundedIcon sx={{ fontSize: 13 }} />;
         case "task":
-            return <TaskAltRoundedIcon sx={{ fontSize: 16 }} />;
+            return <AssignmentRoundedIcon sx={{ fontSize: 13 }} />;
         case "note":
-            return <StickyNote2RoundedIcon sx={{ fontSize: 16 }} />;
+            return <StickyNote2RoundedIcon sx={{ fontSize: 13 }} />;
         case "chat":
-            return <ChatBubbleOutlineRoundedIcon sx={{ fontSize: 16 }} />;
+            return <ChatBubbleOutlineRoundedIcon sx={{ fontSize: 13 }} />;
     }
+};
+
+// Chip text mirrors the citation-chip label shape: tasks lead with the
+// human-readable display id ("Task QRD-4: Title"); everything else is
+// the plain title (the icon already carries the kind).
+const chipLabel = (c: AgentMentionCandidate): string => {
+    if (c.ref.kind === "task" && c.subtitle) return `Task ${c.subtitle}: ${c.ref.label}`;
+    return c.ref.label;
 };
 
 interface MenuPos {
@@ -166,58 +179,39 @@ export const MentionSuggestionDropdown = ({
                         sx={{
                             display: "flex",
                             alignItems: "center",
-                            gap: 1,
-                            px: 1.25,
-                            py: 0.5,
+                            px: 0.75,
+                            py: 0.25,
                             cursor: "pointer",
-                            background: highlighted
-                                ? isDark
-                                    ? "rgba(255,255,255,0.1)"
-                                    : "rgba(0,0,0,0.06)"
-                                : "transparent",
-                            "&:hover": {
-                                background: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.04)",
-                            },
                         }}
                         onMouseDown={(e) => {
                             e.preventDefault();
                             onSelect(c);
                         }}
                     >
-                        <Box
+                        {/* Same chip family as the answer's citation chips
+                            (SourceChips soft / Spotlight solid): the
+                            keyboard-highlighted row flips to solid, which
+                            is both the selection indicator and a preview
+                            of the chip this mention will resolve to. */}
+                        <Chip
+                            color="primary"
+                            size="sm"
+                            startDecorator={kindIcon(c.ref.kind)}
+                            variant={highlighted ? "solid" : "soft"}
                             sx={{
-                                display: "inline-flex",
-                                flexShrink: 0,
-                                opacity: 0.7,
-                                color: isDark ? "#cebfeb" : undefined,
-                            }}
-                        >
-                            {kindIcon(c.ref.kind)}
-                        </Box>
-                        <Typography
-                            level="body-sm"
-                            sx={{
+                                pointerEvents: "none",
+                                fontSize: "0.8125rem",
+                                maxWidth: "100%",
                                 overflow: "hidden",
-                                textOverflow: "ellipsis",
                                 whiteSpace: "nowrap",
-                                color: isDark ? "#efe9fa" : undefined,
+                                textOverflow: "ellipsis",
+                                ...(highlighted && {
+                                    boxShadow: "0 0 0 2px var(--joy-palette-primary-300)",
+                                }),
                             }}
                         >
-                            {c.ref.label}
-                        </Typography>
-                        {c.subtitle && (
-                            <Typography
-                                level="body-xs"
-                                sx={{
-                                    ml: "auto",
-                                    flexShrink: 0,
-                                    opacity: 0.6,
-                                    color: isDark ? "#a89bbf" : undefined,
-                                }}
-                            >
-                                {c.subtitle}
-                            </Typography>
-                        )}
+                            {chipLabel(c)}
+                        </Chip>
                     </Box>
                 );
             })}
