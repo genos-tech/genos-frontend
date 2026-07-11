@@ -15,6 +15,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type RefObject } from "react";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
+import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
 import StickyNote2RoundedIcon from "@mui/icons-material/StickyNote2Rounded";
 import { Box, Chip, Sheet } from "@mui/joy";
@@ -43,6 +44,8 @@ const kindIcon = (kind: AgentMentionRef["kind"]) => {
             return <StickyNote2RoundedIcon sx={{ fontSize: 13 }} />;
         case "chat":
             return <ChatBubbleOutlineRoundedIcon sx={{ fontSize: 13 }} />;
+        case "project":
+            return <FolderRoundedIcon sx={{ fontSize: 13 }} />;
     }
 };
 

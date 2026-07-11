@@ -234,6 +234,7 @@ export const App = () => {
                 ...useNM.sharedNoteMeta.map((m) => ({ kind: "shared" as const, ...m })),
             ],
             chats: useCM.allChats.filter((c) => c.chatType === 2),
+            allChats: useCM.allChats,
             projects: usePM.teamProjects,
             myself,
         }),

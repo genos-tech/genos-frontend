@@ -29,8 +29,15 @@ export type HashNoteEntry =
 export type HashMentionData = {
     tasks: TaskTableProps[];
     notes: HashNoteEntry[];
-    // Already filtered to GM (chatType === 2) by the provider.
+    // Already filtered to GM (chatType === 2) by the provider. The
+    // editors' "#" menu keeps this GM-only scope deliberately (notes
+    // embed in shared surfaces where a DM title would leak who you
+    // talk to); the agent-input mention picker uses `allChats` below.
     chats: AllChatProps[];
+    // The unfiltered chat list (DM / GM / PM / MDM) for the agent-input
+    // "#" mention picker — agent asks are private to the requester, so
+    // the leak rationale above doesn't apply there.
+    allChats: AllChatProps[];
     projects: ProjectProps[];
     // Current user — used by the task-mention hover card to fetch a task's
     // live status (`loadSpecificTask` needs `myself.teamId`). Null outside
@@ -38,7 +45,14 @@ export type HashMentionData = {
     myself: UserProps | null;
 };
 
-const EMPTY: HashMentionData = { tasks: [], notes: [], chats: [], projects: [], myself: null };
+const EMPTY: HashMentionData = {
+    tasks: [],
+    notes: [],
+    chats: [],
+    allChats: [],
+    projects: [],
+    myself: null,
+};
 
 const HashMentionDataContext = createContext<HashMentionData | null>(null);
 
