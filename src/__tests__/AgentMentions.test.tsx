@@ -622,7 +622,7 @@ describe("useSpotlight mention forwarding", () => {
         ]);
     });
 
-    it("retry (overrideQuery) sends no mentions key", async () => {
+    it("retry (overrideQuery) without refs sends no mentions key", async () => {
         vi.mocked(askAgentStream).mockImplementation(async (args) => {
             args.onDone("sess-1", "run-1");
         });
@@ -636,5 +636,38 @@ describe("useSpotlight mention forwarding", () => {
             expect(askAgentStream).toHaveBeenCalledTimes(1);
         });
         expect(vi.mocked(askAgentStream).mock.calls[0][0].mentions).toBeUndefined();
+    });
+
+    it("completed turns carry their mentions; retrying with them re-sends the wire refs", async () => {
+        vi.mocked(askAgentStream).mockImplementation(async (args) => {
+            args.onDelta("Bob is on the redesign.");
+            args.onDone("sess-1", "run-1");
+        });
+        const { result } = renderHook(() =>
+            useSpotlight({ accessToken: "test-token", teamId: "team-1" })
+        );
+        const refs = [{ kind: "user", userId: "u-bob", label: "Bob" } as const];
+        act(() => {
+            result.current.onAsk("what is @Bob working on?", [...refs]);
+        });
+        await waitFor(() => {
+            expect(result.current.turns).toHaveLength(1);
+        });
+        // The snapshot keeps the refs the ask was sent with…
+        expect(result.current.turns[0].mentions).toEqual(refs);
+        // …and the retry path (TurnView passes turn.mentions back into
+        // onAsk) re-sends the same wire shape.
+        act(() => {
+            result.current.onAsk(
+                result.current.turns[0].askedQuery,
+                result.current.turns[0].mentions
+            );
+        });
+        await waitFor(() => {
+            expect(askAgentStream).toHaveBeenCalledTimes(2);
+        });
+        expect(vi.mocked(askAgentStream).mock.calls[1][0].mentions).toEqual([
+            { type: "user", user_id: "u-bob", label: "Bob" },
+        ]);
     });
 });

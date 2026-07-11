@@ -53,6 +53,10 @@ export interface AskState {
     // finishes; optional so the un-migrated Spotlight loop (which reuses
     // this type) compiles without threading it.
     runId?: string | null;
+    // Structured @/# mentions sent WITH this ask. Held so the completed
+    // turn can carry them and Retry re-sends the identical refs instead
+    // of degrading to plain text.
+    askedMentions?: AgentMentionRef[];
 }
 
 // Immutable snapshot of a finished turn. Promoted into the `turns` array
@@ -69,6 +73,10 @@ export interface CompletedTurn {
     // restored from older snapshots / cancelled before `done`. Optional so
     // the un-migrated Spotlight loop (which reuses this type) compiles.
     runId?: string | null;
+    // The structured mentions this turn was asked with — Retry re-sends
+    // them verbatim (labels are advisory; the server re-resolves + ACL-
+    // checks on every ask, so a stale ref degrades to a silent drop).
+    mentions?: AgentMentionRef[];
 }
 
 // Soft cap on how many completed turns we hold in client memory. The
