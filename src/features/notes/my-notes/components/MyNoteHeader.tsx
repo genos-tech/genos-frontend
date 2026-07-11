@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
+import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
 import { Stack } from "@mui/joy";
 
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
@@ -8,7 +9,7 @@ import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { buildFolderCrumbChain } from "../../../../utils/note";
-import { NoteBreadcrumbs } from "../../common/components/NoteBreadcrumbs";
+import { ContextCrumb, NoteBreadcrumbs } from "../../common/components/NoteBreadcrumbs";
 import { NoteHistoryChip } from "../../common/components/NoteHistoryChip";
 
 interface MyNoteHeaderProps {
@@ -36,8 +37,15 @@ export const MyNoteHeader = ({
     // chain[0]. Folder-less and shared notes yield an empty chain (see
     // buildFolderCrumbChain) — no segments render.
     const { currentMyNoteChain, myNoteFolders } = useNM;
-    const folderChain = useMemo(
-        () => buildFolderCrumbChain(myNoteFolders, currentMyNoteChain?.[0]?.folderId ?? null),
+    const folderCrumbs = useMemo<ContextCrumb[]>(
+        () =>
+            buildFolderCrumbChain(myNoteFolders, currentMyNoteChain?.[0]?.folderId ?? null).map(
+                (f) => ({
+                    key: `folder-${f.folderId}`,
+                    label: f.name,
+                    icon: <FolderRoundedIcon />,
+                })
+            ),
         [currentMyNoteChain, myNoteFolders]
     );
 
@@ -45,7 +53,7 @@ export const MyNoteHeader = ({
         <Stack alignItems="center" direction="row" spacing={1} sx={{ minWidth: 0, flex: 1 }}>
             <NoteBreadcrumbs
                 color="primary"
-                folderChain={folderChain}
+                contextCrumbs={folderCrumbs}
                 icon={<AssignmentRoundedIcon />}
                 label={t.notes.header.myNotesLabel}
                 noteChain={useNM.currentMyNoteChain}

@@ -1,6 +1,5 @@
 import { ReactNode, useEffect, useRef } from "react";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
 import { Box, Stack, Tooltip, Typography } from "@mui/joy";
 
 import { useIsMobile } from "../../../../hooks/common/useIsMobile";
@@ -10,9 +9,14 @@ export interface BreadcrumbNode {
     title: string;
 }
 
-export interface FolderCrumb {
-    folderId: number;
-    name: string;
+export interface ContextCrumb {
+    /** Stable React key + identity, e.g. "folder-3" / "proj-12" / "chan-7". */
+    key: string;
+    /** Display text — truncated in the chip, full in the tooltip. */
+    label: string;
+    /** Leading glyph; NoteBreadcrumbs applies the size/tint so callers
+     *  pass the bare icon element (e.g. `<FolderRoundedIcon />`). */
+    icon?: ReactNode;
 }
 
 interface NoteBreadcrumbsProps {
@@ -26,11 +30,11 @@ interface NoteBreadcrumbsProps {
     noteChain: BreadcrumbNode[] | null | undefined;
     /** Callback when a breadcrumb node is clicked */
     onNodeClick: (noteId: number) => void;
-    /** Optional ancestry of sidebar folders the note lives under
-     *  (outermost-first), rendered BEFORE the note chain as
-     *  non-interactive context labels. My-Notes only — task/chat notes
-     *  have no folder concept. */
-    folderChain?: FolderCrumb[] | null;
+    /** Optional container ancestry shown BEFORE the note chain as
+     *  non-interactive context labels (outermost-first): sidebar folders
+     *  for My notes, Project→Task for task notes, Channel→Thread for chat
+     *  notes. */
+    contextCrumbs?: ContextCrumb[] | null;
     /** Maximum characters to show before truncating (default: 14) */
     maxTitleLength?: number;
 }
@@ -90,7 +94,7 @@ export const NoteBreadcrumbs = ({
     color,
     noteChain,
     onNodeClick,
-    folderChain,
+    contextCrumbs,
     maxTitleLength = 14,
 }: NoteBreadcrumbsProps) => {
     const isMobile = useIsMobile();
@@ -105,7 +109,7 @@ export const NoteBreadcrumbs = ({
         if (scrollContainerRef.current) {
             scrollContainerRef.current.scrollLeft = scrollContainerRef.current.scrollWidth;
         }
-    }, [noteChain, folderChain]);
+    }, [noteChain, contextCrumbs]);
 
     // Hidden on mobile per design — the compact mobile header already
     // shows the current note title; the full breadcrumb trail is
@@ -195,19 +199,15 @@ export const NoteBreadcrumbs = ({
                 </Typography>
             </Box>
 
-            {/* Folder Chain (My Notes only). The note's sidebar-folder
-                ancestry, outermost-first, shown as non-interactive context
-                labels ahead of the note nodes. A leading folder icon +
-                muted tone distinguishes them from the clickable note
-                crumbs — folders are an organization layer, not a view. */}
-            {folderChain &&
-                folderChain.map((folder) => (
-                    <Stack
-                        key={`folder-${folder.folderId}`}
-                        alignItems="center"
-                        direction="row"
-                        spacing={0.5}
-                    >
+            {/* Context Chain. The note's container ancestry, outermost-
+                first, shown as non-interactive labels ahead of the note
+                nodes: sidebar folders (My notes), Project→Task (task
+                notes), Channel→Thread (chat notes). A leading icon + muted
+                tone distinguishes them from the clickable note crumbs —
+                containers are context, not a view you open. */}
+            {contextCrumbs &&
+                contextCrumbs.map((crumb) => (
+                    <Stack key={crumb.key} alignItems="center" direction="row" spacing={0.5}>
                         <ChevronRightIcon
                             sx={{
                                 fontSize: 16,
@@ -218,7 +218,7 @@ export const NoteBreadcrumbs = ({
                         <Tooltip
                             placement="bottom"
                             size="sm"
-                            title={folder.name}
+                            title={crumb.label}
                             variant="outlined"
                             sx={{
                                 maxWidth: 280,
@@ -242,10 +242,19 @@ export const NoteBreadcrumbs = ({
                                     whiteSpace: "nowrap",
                                 }}
                             >
-                                <FolderRoundedIcon
-                                    sx={{ fontSize: 15, color: scheme.text, opacity: 0.65 }}
-                                />
-                                <span>{truncateTitle(folder.name)}</span>
+                                {crumb.icon && (
+                                    <Box
+                                        sx={{
+                                            display: "inline-flex",
+                                            color: scheme.text,
+                                            opacity: 0.65,
+                                            "& svg": { fontSize: 15 },
+                                        }}
+                                    >
+                                        {crumb.icon}
+                                    </Box>
+                                )}
+                                <span>{truncateTitle(crumb.label)}</span>
                             </Box>
                         </Tooltip>
                     </Stack>
