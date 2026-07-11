@@ -61,6 +61,52 @@ export interface UseAgentMentionDraftArgs {
     entities: AgentMentionCandidate[];
 }
 
+export interface MentionTokenMatch {
+    ref: AgentMentionRef;
+    start: number;
+    end: number;
+}
+
+/** Locate each picked ref's `@Label` / `#Label` token in `text`.
+ *
+ *  Shared by `consumeMentions` (send-time pruning) and the in-input
+ *  highlight overlay, so what the user SEES highlighted is exactly what
+ *  gets sent. Rules: longest label first (a picked `@Alice` can't claim
+ *  part of a picked `@AliceB` occurrence), token must start the text or
+ *  follow whitespace, must not continue into a longer word, and each
+ *  text span is claimed at most once. One match per ref.
+ */
+export function matchMentionTokens(
+    text: string,
+    picked: readonly AgentMentionRef[]
+): MentionTokenMatch[] {
+    if (!text || picked.length === 0) return [];
+    const refs = [...picked].sort((a, b) => b.label.length - a.label.length);
+    const out: MentionTokenMatch[] = [];
+    const claimed: Array<[number, number]> = [];
+    for (const ref of refs) {
+        const token = `${ref.kind === "user" ? "@" : "#"}${ref.label}`;
+        let from = 0;
+        while (from <= text.length) {
+            const idx = text.indexOf(token, from);
+            if (idx === -1) break;
+            from = idx + 1;
+            // Token must start the text or follow whitespace…
+            if (idx > 0 && !/\s/.test(text[idx - 1] ?? "")) continue;
+            // …and must not continue into a longer word.
+            const endCh = text[idx + token.length];
+            if (endCh !== undefined && /\w/.test(endCh)) continue;
+            // …and must not overlap a longer, already-claimed token.
+            const end = idx + token.length;
+            if (claimed.some(([s, e]) => idx < e && end > s)) continue;
+            claimed.push([idx, end]);
+            out.push({ ref, start: idx, end });
+            break;
+        }
+    }
+    return out.sort((a, b) => a.start - b.start);
+}
+
 export interface UseAgentMentionDraftReturn {
     /** True when the caller should render the dropdown. */
     pickerOpen: boolean;
@@ -81,6 +127,10 @@ export interface UseAgentMentionDraftReturn {
     setCaret: (pos: number) => void;
     /** Send-time re-validation; see module docstring. Clears picks. */
     consumeMentions: (finalText: string) => AgentMentionRef[];
+    /** Character ranges of live mention tokens in `value` — the spans
+     *  the highlight overlay marks, and exactly what `consumeMentions`
+     *  would send right now. */
+    highlightRanges: MentionTokenMatch[];
     /** Clear picked refs + dismissal (e.g. surface closed). */
     reset: () => void;
 }
@@ -96,9 +146,13 @@ export function useAgentMentionDraft({
     // closed while the caret remains inside that same trigger.
     const [dismissedStart, setDismissedStart] = useState<number | null>(null);
     const [highlightIndex, setHighlightIndex] = useState(0);
-    // Picked refs live in a ref: they only matter at send time and
-    // updating them must never re-render the (large) host surfaces.
+    // Picked refs live in a ref so `consumeMentions` can read + clear
+    // them synchronously inside the submit handler. `picksVersion` is
+    // bumped on every mutation purely to invalidate the highlight memo
+    // (picks otherwise change in the same handler as a `value` change,
+    // but reset()/consume() don't have to).
     const pickedRef = useRef<Map<string, AgentMentionRef>>(new Map());
+    const [picksVersion, setPicksVersion] = useState(0);
 
     const trigger = useMemo(() => detectMentionTrigger(value, caret), [value, caret]);
 
@@ -145,6 +199,7 @@ export function useAgentMentionDraft({
             const next = `${value.slice(0, trigger.start)}${inserted}${value.slice(trigger.end)}`;
             const newCaret = trigger.start + inserted.length;
             pickedRef.current.set(c.key, c.ref);
+            setPicksVersion((v) => v + 1);
             onChange(next);
             setCaretPos(newCaret);
             return newCaret;
@@ -165,37 +220,21 @@ export function useAgentMentionDraft({
     const consumeMentions = useCallback((finalText: string): AgentMentionRef[] => {
         const picked = Array.from(pickedRef.current.values());
         pickedRef.current = new Map();
-        if (!finalText || picked.length === 0) return [];
-        // Longest label first so `@AliceB` can't be claimed by a picked
-        // `@Alice` (same overlap rule as useMentionDraft.buildBody).
-        const refs = [...picked].sort((a, b) => b.label.length - a.label.length);
-        const out: AgentMentionRef[] = [];
-        const claimed: Array<[number, number]> = [];
-        for (const ref of refs) {
-            const token = `${ref.kind === "user" ? "@" : "#"}${ref.label}`;
-            let from = 0;
-            while (from <= finalText.length) {
-                const idx = finalText.indexOf(token, from);
-                if (idx === -1) break;
-                from = idx + 1;
-                // Token must start the text or follow whitespace…
-                if (idx > 0 && !/\s/.test(finalText[idx - 1] ?? "")) continue;
-                // …and must not continue into a longer word.
-                const endCh = finalText[idx + token.length];
-                if (endCh !== undefined && /\w/.test(endCh)) continue;
-                // …and must not overlap a longer, already-claimed token.
-                const end = idx + token.length;
-                if (claimed.some(([s, e]) => idx < e && end > s)) continue;
-                claimed.push([idx, end]);
-                out.push(ref);
-                break;
-            }
-        }
-        return out;
+        setPicksVersion((v) => v + 1);
+        return matchMentionTokens(finalText, picked).map((m) => m.ref);
     }, []);
+
+    // Live token ranges for the highlight overlay. `picksVersion` keys
+    // the pick set; `value` keys the text the tokens are matched in.
+    const highlightRanges = useMemo(
+        () => matchMentionTokens(value, Array.from(pickedRef.current.values())),
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- picksVersion stands in for pickedRef.current
+        [value, picksVersion]
+    );
 
     const reset = useCallback(() => {
         pickedRef.current = new Map();
+        setPicksVersion((v) => v + 1);
         setDismissedStart(null);
         setHighlightIndex(0);
     }, []);
@@ -210,6 +249,7 @@ export function useAgentMentionDraft({
         closePicker,
         setCaret,
         consumeMentions,
+        highlightRanges,
         reset,
     };
 }

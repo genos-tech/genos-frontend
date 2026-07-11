@@ -22,6 +22,7 @@ import { AgentQAInput } from "../features/agentQA/AgentQAInput";
 import type { AgentMentionCandidate } from "../features/agentQA/mentions/types";
 import {
     detectMentionTrigger,
+    matchMentionTokens,
     useAgentMentionDraft,
 } from "../features/agentQA/mentions/useAgentMentionDraft";
 import {
@@ -225,6 +226,71 @@ describe("useAgentMentionDraft", () => {
         // "@Aliceland" must not count as a mention of Alice.
         expect(result.current.draft.consumeMentions("visit @Aliceland")).toEqual([]);
     });
+
+    it("highlightRanges tracks live tokens and follows edits", () => {
+        const { result } = renderHook(() => useHarness());
+        act(() => {
+            result.current.setValue("ask @Al");
+        });
+        act(() => {
+            result.current.draft.setCaret(7);
+        });
+        expect(result.current.draft.highlightRanges).toEqual([]);
+        act(() => {
+            result.current.draft.selectSuggestion(MEMBERS[0]); // "ask @Alice "
+        });
+        expect(result.current.draft.highlightRanges).toEqual([
+            { ref: MEMBERS[0].ref, start: 4, end: 10 },
+        ]);
+        // Editing the token away drops the highlight (WYSIWYG with what
+        // consumeMentions would send).
+        act(() => {
+            result.current.setValue("ask Bob instead");
+        });
+        expect(result.current.draft.highlightRanges).toEqual([]);
+        // ...and restoring the exact token text brings it back (the
+        // pick is still held until consumed).
+        act(() => {
+            result.current.setValue("hey @Alice");
+        });
+        expect(result.current.draft.highlightRanges).toEqual([
+            { ref: MEMBERS[0].ref, start: 4, end: 10 },
+        ]);
+        // Consuming clears picks → highlight gone even with token text.
+        act(() => {
+            result.current.draft.consumeMentions(result.current.value);
+        });
+        expect(result.current.draft.highlightRanges).toEqual([]);
+    });
+});
+
+// ---- matchMentionTokens ------------------------------------------------
+
+describe("matchMentionTokens", () => {
+    const alice = { kind: "user", userId: "u-alice", label: "Alice" } as const;
+    const fixLogin = { kind: "task", taskId: 1, label: "Fix login" } as const;
+    const fixLoginBug = { kind: "task", taskId: 2, label: "Fix login bug" } as const;
+
+    it("returns sorted ranges with word-boundary rules", () => {
+        const matches = matchMentionTokens("ping @Alice re #Fix login bug now", [
+            fixLoginBug,
+            alice,
+        ]);
+        expect(matches).toEqual([
+            { ref: alice, start: 5, end: 11 },
+            { ref: fixLoginBug, start: 15, end: 29 },
+        ]);
+    });
+
+    it("assigns overlapping tokens to the longest label", () => {
+        const matches = matchMentionTokens("see #Fix login bug", [fixLogin, fixLoginBug]);
+        expect(matches).toEqual([{ ref: fixLoginBug, start: 4, end: 18 }]);
+    });
+
+    it("rejects mid-word occurrences", () => {
+        expect(matchMentionTokens("mail@Alice", [alice])).toEqual([]);
+        expect(matchMentionTokens("@Aliceland", [alice])).toEqual([]);
+    });
 });
 
 // ---- AgentQAInput integration ----------------------------------------
@@ -340,6 +406,29 @@ describe("AgentQAInput mention integration", () => {
         fireEvent.keyDown(textarea, { key: "ArrowDown" });
         fireEvent.keyDown(textarea, { key: "ArrowUp" });
         expect(onAsk).not.toHaveBeenCalled();
+    });
+
+    it("highlights the picked token in the input and unhighlights when edited away", async () => {
+        const onAsk = vi.fn();
+        render(<Harness onAsk={onAsk} />);
+        const textarea = screen.getByPlaceholderText("Ask…");
+
+        // Nothing highlighted for merely-typed text — even if it happens
+        // to spell out a real entity title.
+        fireEvent.change(textarea, { target: { value: "ping Alice" } });
+        expect(screen.queryByTestId("mention-highlight-overlay")).toBeNull();
+
+        // Pick from the menu → the token gets the marker highlight.
+        fireEvent.change(textarea, { target: { value: "ping @Al" } });
+        fireEvent.keyDown(textarea, { key: "Enter" });
+        await waitFor(() => {
+            expect(screen.getByTestId("mention-highlight-overlay")).toBeInTheDocument();
+        });
+        expect(screen.getByTestId("mention-highlight-token")).toHaveTextContent("@Alice");
+
+        // Editing the token away removes the highlight.
+        fireEvent.change(textarea, { target: { value: "ping Bob" } });
+        expect(screen.queryByTestId("mention-highlight-overlay")).toBeNull();
     });
 });
 

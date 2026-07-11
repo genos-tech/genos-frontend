@@ -68,6 +68,7 @@ import {
     DARK_TEXT_STRONG,
     FeedbackThumbs,
     markdownAnswerSx,
+    MentionHighlightOverlay,
     MentionSuggestionDropdown,
     rewriteCitations,
     ToolProgressList,
@@ -192,6 +193,8 @@ export const SpotlightOverlay = ({
     const { t } = useTranslation();
     const isDark = mode === "dark";
     const inputRef = useRef<HTMLTextAreaElement | null>(null);
+    // Positioned anchor for the mention dropdown + highlight overlay.
+    const inputRowRef = useRef<HTMLDivElement | null>(null);
 
     // Auto-resize the textarea to fit its contents up to a sensible cap.
     // Below the cap the input expands to show every line the user typed;
@@ -410,6 +413,7 @@ export const SpotlightOverlay = ({
                     back. */}
                 {!historyOpen && (
                     <Box
+                        ref={inputRowRef}
                         sx={{
                             display: "flex",
                             // Anchor for the @/# mention dropdown.
@@ -464,6 +468,16 @@ export const SpotlightOverlay = ({
                                 onSelect={handleMentionSelect}
                             />
                         )}
+                        {/* Marker highlight over live mention tokens, so a
+                            picked mention is visibly different from the
+                            same words merely typed. */}
+                        <MentionHighlightOverlay
+                            containerRef={inputRowRef}
+                            isDark={isDark}
+                            ranges={mention.highlightRanges}
+                            textareaRef={inputRef}
+                            value={localInput}
+                        />
                         <Box
                             ref={inputRef}
                             component="textarea"

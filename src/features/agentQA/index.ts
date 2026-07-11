@@ -20,6 +20,7 @@ export { DARK_TEXT_STRONG, markdownAnswerSx } from "./markdownAnswerSx";
 export { markdownToBlocks } from "./markdownToBlocks";
 export { SourceChips } from "./SourceChips";
 export { humanReadableCall, ToolProgressList } from "./ToolProgressList";
+export { MentionHighlightOverlay } from "./mentions/MentionHighlightOverlay";
 export { MentionSuggestionDropdown } from "./mentions/MentionSuggestionDropdown";
 export {
     type AgentMentionCandidate,
@@ -29,7 +30,9 @@ export {
 } from "./mentions/types";
 export {
     detectMentionTrigger,
+    matchMentionTokens,
     useAgentMentionDraft,
+    type MentionTokenMatch,
     type UseAgentMentionDraftReturn,
 } from "./mentions/useAgentMentionDraft";
 export { useAgentMentionSources } from "./mentions/useAgentMentionSources";

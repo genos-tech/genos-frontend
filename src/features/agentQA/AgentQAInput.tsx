@@ -15,6 +15,7 @@ import { useCallback, useRef } from "react";
 import SendRoundedIcon from "@mui/icons-material/SendRounded";
 import { Box, Button, Stack, Textarea } from "@mui/joy";
 
+import { MentionHighlightOverlay } from "./mentions/MentionHighlightOverlay";
 import { MentionSuggestionDropdown } from "./mentions/MentionSuggestionDropdown";
 import type { AgentMentionCandidate } from "./mentions/types";
 import { useAgentMentionDraft } from "./mentions/useAgentMentionDraft";
@@ -35,6 +36,7 @@ export const AgentQAInput = ({ state, labels, disabled }: AgentQAInputProps) => 
     const sendDisabled = disabled || !state.query.trim();
 
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+    const wrapperRef = useRef<HTMLDivElement | null>(null);
     // Both host modals (ThreadAsk / NoteAsk) mount inside
     // HashMentionDataProvider + AvatarContext, so the sources hook
     // needs no props here.
@@ -71,7 +73,7 @@ export const AgentQAInput = ({ state, labels, disabled }: AgentQAInputProps) => 
     }, [state, mention]);
 
     return (
-        <Box sx={{ position: "relative" }}>
+        <Box ref={wrapperRef} sx={{ position: "relative" }}>
             {mention.pickerOpen && !isStreaming && (
                 <MentionSuggestionDropdown
                     ariaLabel={labels.mentions?.ariaLabel}
@@ -81,6 +83,14 @@ export const AgentQAInput = ({ state, labels, disabled }: AgentQAInputProps) => 
                     onSelect={handleMentionSelect}
                 />
             )}
+            {/* Marker highlight over live mention tokens, so a picked
+                mention is visibly different from identical typed text. */}
+            <MentionHighlightOverlay
+                containerRef={wrapperRef}
+                ranges={mention.highlightRanges}
+                textareaRef={textareaRef}
+                value={state.query}
+            />
             <Stack alignItems="flex-end" direction="row" spacing={1}>
                 <Textarea
                     disabled={isStreaming}
