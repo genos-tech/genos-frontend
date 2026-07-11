@@ -33,6 +33,7 @@ import {
     SharedNoteTarget,
     TaskNoteTarget,
 } from "../../../utils/parseInternalUrl";
+import { NoteModalHostZIndexProvider } from "../noteModalHostZIndex";
 
 type NoteTarget = MyNoteTarget | SharedNoteTarget | TaskNoteTarget | ChatNoteTarget;
 
@@ -49,6 +50,10 @@ type ModalNoteViewProps = {
     useTM: TaskManagementState;
     usePM: ProjectManagementState;
     useNM: NoteManagementState;
+    // Host modal's z-index (UrlLinkModal). Threaded into the note header
+    // so its ⋮ MoreMenu — a document.body portal at default z 9999 —
+    // lifts above the modal (≥10020) instead of opening behind it.
+    hostZIndex?: number;
 };
 
 const CenteredMessage = ({ children }: { children: React.ReactNode }) => (
@@ -100,6 +105,7 @@ export const ModalNoteView = (props: ModalNoteViewProps) => {
         useTM,
         usePM,
         useNM,
+        hostZIndex,
     } = props;
 
     const { t } = useTranslation();
@@ -161,12 +167,17 @@ export const ModalNoteView = (props: ModalNoteViewProps) => {
         return <CenteredMessage>{t.common.modalView.loadingNote}</CenteredMessage>;
 
     const wrapper = (children: React.ReactNode) => (
-        <Box
-            className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
-            sx={{ height: "100%", overflow: "auto", p: 2, width: "100%" }}
-        >
-            {children}
-        </Box>
+        // Expose the host modal's z to the note's Joy dialogs (Share,
+        // Ask, Move-to-folder, History, Delete) so they stack above this
+        // preview instead of opening behind it — see noteModalHostZIndex.
+        <NoteModalHostZIndexProvider value={hostZIndex}>
+            <Box
+                className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
+                sx={{ height: "100%", overflow: "auto", p: 2, width: "100%" }}
+            >
+                {children}
+            </Box>
+        </NoteModalHostZIndexProvider>
     );
 
     // --- My / Shared note branch ---
@@ -221,6 +232,7 @@ export const ModalNoteView = (props: ModalNoteViewProps) => {
         return wrapper(
             <>
                 <MyNoteMain
+                    hostZIndex={hostZIndex}
                     isInTaskPage={false}
                     myself={myself}
                     setMyself={setMyself}
@@ -303,6 +315,7 @@ export const ModalNoteView = (props: ModalNoteViewProps) => {
         return wrapper(
             <>
                 <TaskNoteMain
+                    hostZIndex={hostZIndex}
                     isInTaskPage={false}
                     myself={myself}
                     setMyself={setMyself}
@@ -385,6 +398,7 @@ export const ModalNoteView = (props: ModalNoteViewProps) => {
     return wrapper(
         <>
             <ChatNoteMain
+                hostZIndex={hostZIndex}
                 isInChatPage={false}
                 isInTaskPage={false}
                 myself={myself}

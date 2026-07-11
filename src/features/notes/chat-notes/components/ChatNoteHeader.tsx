@@ -56,6 +56,11 @@ interface ChatNoteHeaderProps {
     handleCloseTab: (tabIndex: number, closingNoteId: number) => Promise<void>;
     onCreateChildNote: () => void;
     onDeleteNote: () => void;
+    /** Set when rendered inside the UrlLinkModal (see ModalNoteView).
+     *  The ⋮ MoreMenu portals to document.body at its default z (9999),
+     *  behind the modal (≥10020) — pass the host's z so it lifts above.
+     *  Undefined on page surfaces → default z. */
+    hostZIndex?: number;
 }
 
 export const ChatNoteHeader = ({
@@ -78,6 +83,7 @@ export const ChatNoteHeader = ({
     handleCloseTab,
     onCreateChildNote,
     onDeleteNote,
+    hostZIndex,
 }: ChatNoteHeaderProps) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
@@ -478,6 +484,9 @@ export const ChatNoteHeader = ({
                             placement="bottom-end"
                             triggerSize={36}
                             triggerSx={actionButtonStyle}
+                            // Modal-hosted note preview: lift the dropdown
+                            // above the UrlLinkModal (default 9999 is behind).
+                            zIndex={hostZIndex != null ? hostZIndex + 1 : undefined}
                         />
                     );
                 })()}

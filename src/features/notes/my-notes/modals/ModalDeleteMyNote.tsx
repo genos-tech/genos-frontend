@@ -4,6 +4,10 @@ import NoteIcon from "@mui/icons-material/Note";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import { Alert, Box, Button, Modal, ModalDialog, Stack, Typography } from "@mui/joy";
 
+import {
+    noteModalChildStackSx,
+    useNoteModalHostZIndex,
+} from "../../../../components/modals/noteModalHostZIndex";
 import { useAuth } from "../../../../context/AuthContext";
 import { NoteService } from "../../../../db/services/note.service";
 import { DatabaseUtils } from "../../../../db/utils/database";
@@ -45,6 +49,7 @@ export const ModalDeleteMyNote: React.FC<Props> = ({
 }) => {
     const { accessToken } = useAuth();
     const { t } = useTranslation();
+    const hostZIndex = useNoteModalHostZIndex();
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const noteService = new NoteService();
 
@@ -84,6 +89,7 @@ export const ModalDeleteMyNote: React.FC<Props> = ({
                 zIndex: 10010,
                 backdropFilter: "blur(4px)",
                 backgroundColor: "rgba(0, 0, 0, 0.5)",
+                ...noteModalChildStackSx(hostZIndex),
             }}
             onClose={() => {
                 setOpenDeleteNote(false);

@@ -33,6 +33,10 @@ import { useColorScheme } from "@mui/joy/styles";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
+import {
+    noteModalChildStackSx,
+    useNoteModalHostZIndex,
+} from "../../components/modals/noteModalHostZIndex";
 import { useTranslation } from "../../i18n";
 import {
     AgentQAConversation,
@@ -112,6 +116,7 @@ export const NoteAskModal = ({ state, onSelectSource }: NoteAskModalProps) => {
     const { mode } = useColorScheme();
     const { t } = useTranslation();
     const isDark = mode === "dark";
+    const hostZIndex = useNoteModalHostZIndex();
 
     const labels = useMemo(() => buildLabels(t), [t]);
 
@@ -132,7 +137,7 @@ export const NoteAskModal = ({ state, onSelectSource }: NoteAskModalProps) => {
     const noteTitle = state.summary?.noteTitle || "";
 
     return (
-        <Modal open={state.isOpen} onClose={state.close}>
+        <Modal open={state.isOpen} sx={noteModalChildStackSx(hostZIndex)} onClose={state.close}>
             <ModalDialog
                 className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                 size="lg"

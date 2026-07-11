@@ -29,6 +29,9 @@ type TaskNoteMainProps = {
     setIsTaskTableVisible?: (value: boolean) => void;
     useNM: NoteManagementState;
     useTM: TaskManagementState;
+    /** Host modal's z-index when rendered inside the UrlLinkModal, so the
+     *  header's ⋮ menu lifts above it. Undefined on page surfaces. */
+    hostZIndex?: number;
 };
 
 export const TaskNoteMain = (props: TaskNoteMainProps) => {
@@ -43,6 +46,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
         setIsTaskTableVisible,
         useNM,
         useTM,
+        hostZIndex,
     } = props;
 
     const { accessToken } = useAuth();
@@ -211,6 +215,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
 
                         <NoteHeaderActions
                             currentTask={currentTask}
+                            hostZIndex={hostZIndex}
                             isInTaskPage={isInTaskPage}
                             myself={myself}
                             noteType={2}

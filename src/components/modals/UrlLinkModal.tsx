@@ -100,7 +100,14 @@ export const UrlLinkModal = (props: UrlLinkModalProps) => {
             target.kind === "taskNote" ||
             target.kind === "chatNote"
         ) {
-            return <ModalNoteView target={target} onClose={onClose} {...rest} />;
+            return (
+                <ModalNoteView
+                    hostZIndex={effectiveZIndex}
+                    target={target}
+                    onClose={onClose}
+                    {...rest}
+                />
+            );
         }
         return null;
     };

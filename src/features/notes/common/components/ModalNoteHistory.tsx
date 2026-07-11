@@ -14,6 +14,10 @@ import {
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import {
+    noteModalChildStackSx,
+    useNoteModalHostZIndex,
+} from "../../../../components/modals/noteModalHostZIndex";
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
@@ -106,6 +110,7 @@ export const ModalNoteHistory = ({
     const isDark = mode === "dark";
     const { accessToken } = useAuth();
     const { t } = useTranslation();
+    const hostZIndex = useNoteModalHostZIndex();
 
     const versions = useNM.currentNoteVersions;
     const headVersionNo = versions[0]?.versionNo ?? null;
@@ -172,7 +177,7 @@ export const ModalNoteHistory = ({
     };
 
     return (
-        <Modal open={open} onClose={onClose}>
+        <Modal open={open} sx={noteModalChildStackSx(hostZIndex)} onClose={onClose}>
             <Sheet
                 sx={{
                     width: 880,
