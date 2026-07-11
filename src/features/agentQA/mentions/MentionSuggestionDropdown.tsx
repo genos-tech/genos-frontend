@@ -1,18 +1,32 @@
 // Dropdown for the agent-input @/# mention picker. Purely
 // presentational — trigger detection, filtering, and keyboard state
-// live in `useAgentMentionDraft`; the host input owns focus and renders
-// this inside a `position: relative` wrapper.
+// live in `useAgentMentionDraft`; the host input owns focus.
+//
+// Rendered through a PORTAL to document.body and positioned off the
+// anchor element's viewport rect: the host surfaces clip absolutely-
+// positioned children (the Spotlight sheet is `overflow: hidden`, the
+// Ask modals scroll), so an in-tree menu taller than the host gets cut
+// off. The portal escapes any overflow context; position re-derives on
+// every render of the open menu (each keystroke) plus window resizes.
 //
 // `onMouseDown` (not onClick) with preventDefault keeps the textarea
 // focused through the pick — same trick as the ThreadPanelV3 picker.
 
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type RefObject } from "react";
 import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
 import StickyNote2RoundedIcon from "@mui/icons-material/StickyNote2Rounded";
 import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
 import { Box, Sheet, Typography } from "@mui/joy";
+import { createPortal } from "react-dom";
 
 import type { AgentMentionCandidate, AgentMentionRef } from "./types";
+
+// Above the Spotlight sheet (13100) and every Joy modal so the portaled
+// menu is never buried under its own host surface.
+const DROPDOWN_Z_INDEX = 14000;
+const VIEWPORT_GUTTER = 8;
+const MAX_MENU_HEIGHT = 280;
 
 const kindIcon = (kind: AgentMentionRef["kind"]) => {
     switch (kind) {
@@ -27,10 +41,20 @@ const kindIcon = (kind: AgentMentionRef["kind"]) => {
     }
 };
 
+interface MenuPos {
+    left: number;
+    top?: number;
+    bottom?: number;
+    maxWidth: number;
+    maxHeight: number;
+}
+
 interface Props {
     suggestions: AgentMentionCandidate[];
     highlightIndex: number;
     onSelect: (c: AgentMentionCandidate) => void;
+    // Element the menu is anchored to (the input row / input wrapper).
+    anchorRef: RefObject<HTMLElement | null>;
     // "above" for bottom-anchored inputs (chat-style agent mode),
     // "below" for top-anchored ones (Spotlight search mode).
     placement: "above" | "below";
@@ -44,27 +68,85 @@ export const MentionSuggestionDropdown = ({
     suggestions,
     highlightIndex,
     onSelect,
+    anchorRef,
     placement,
     isDark = false,
     ariaLabel,
 }: Props) => {
-    if (suggestions.length === 0) return null;
-    return (
+    const [pos, setPos] = useState<MenuPos | null>(null);
+    const posRef = useRef<MenuPos | null>(null);
+
+    const measure = useCallback(() => {
+        const anchor = anchorRef.current;
+        if (!anchor) return;
+        const r = anchor.getBoundingClientRect();
+        const next: MenuPos =
+            placement === "above"
+                ? {
+                      left: r.left,
+                      bottom: window.innerHeight - r.top + 4,
+                      maxWidth: Math.max(260, r.width),
+                      maxHeight: Math.min(MAX_MENU_HEIGHT, Math.max(80, r.top - VIEWPORT_GUTTER)),
+                  }
+                : {
+                      left: r.left,
+                      top: r.bottom + 4,
+                      maxWidth: Math.max(260, r.width),
+                      maxHeight: Math.min(
+                          MAX_MENU_HEIGHT,
+                          Math.max(80, window.innerHeight - r.bottom - VIEWPORT_GUTTER)
+                      ),
+                  };
+        // Equality guard: this runs on every render of the open menu,
+        // so an unconditional setState would loop.
+        const prev = posRef.current;
+        if (
+            prev &&
+            prev.left === next.left &&
+            prev.top === next.top &&
+            prev.bottom === next.bottom &&
+            prev.maxWidth === next.maxWidth &&
+            prev.maxHeight === next.maxHeight
+        ) {
+            return;
+        }
+        posRef.current = next;
+        setPos(next);
+    }, [anchorRef, placement]);
+
+    // Re-derive after every commit while open — the anchor moves when
+    // the textarea autosizes or the host relayouts, and those coincide
+    // with renders of this menu (value → suggestions recompute).
+    useLayoutEffect(() => {
+        measure();
+    });
+
+    useEffect(() => {
+        window.addEventListener("resize", measure);
+        return () => window.removeEventListener("resize", measure);
+    }, [measure]);
+
+    if (suggestions.length === 0 || !pos) {
+        // First open: render nothing this commit; the layout effect
+        // above sets `pos` and the menu appears on the next paint.
+        return null;
+    }
+
+    return createPortal(
         <Sheet
             aria-label={ariaLabel ?? "Mention suggestions"}
             data-testid="agent-mention-dropdown"
             role="listbox"
             sx={{
-                position: "absolute",
-                ...(placement === "above"
-                    ? { bottom: "100%", mb: 0.5 }
-                    : { top: "100%", mt: 0.5 }),
-                left: 0,
+                position: "fixed",
+                left: pos.left,
+                top: pos.top,
+                bottom: pos.bottom,
                 minWidth: 260,
-                maxWidth: "100%",
-                maxHeight: 280,
+                maxWidth: pos.maxWidth,
+                maxHeight: pos.maxHeight,
                 overflowY: "auto",
-                zIndex: 10,
+                zIndex: DROPDOWN_Z_INDEX,
                 borderRadius: "8px",
                 border: "1px solid",
                 borderColor: isDark ? "rgba(255,255,255,0.12)" : "divider",
@@ -139,6 +221,7 @@ export const MentionSuggestionDropdown = ({
                     </Box>
                 );
             })}
-        </Sheet>
+        </Sheet>,
+        document.body
     );
 };

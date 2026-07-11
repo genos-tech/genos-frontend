@@ -17,7 +17,6 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { filterAndRankByText } from "../../../utils/suggestionRanking";
 import type { AgentMentionCandidate, AgentMentionRef } from "./types";
 
 // Dropdown row cap — long lists are noise; the user narrows by typing.
@@ -32,15 +31,26 @@ interface Trigger {
     end: number;
 }
 
+// How far back from the caret we look for a trigger char. Entity titles
+// are capped around this length; anything further back is prose, not a
+// mention the user is still narrowing.
+const MAX_QUERY_LEN = 60;
+
 /** Resolve the live trigger from the caret position. Active when the
  *  caret sits after a `@`/`#` that starts the input or follows
- *  whitespace, with no whitespace (or second trigger char) in between —
- *  the same rule as `useMentionDraft.detectTrigger`, so emails and
- *  URL fragments don't open the picker. */
+ *  whitespace (so emails and URL fragments don't open the picker).
+ *
+ *  Unlike `useMentionDraft.detectTrigger`, the query may span SPACES —
+ *  entity titles are usually multi-word ("How to get the most out of
+ *  Spotlight"). The menu doesn't stay open forever because the hook
+ *  only shows suggestions while the query still substring-matches a
+ *  candidate; once the text diverges from every title the picker
+ *  closes. Newlines (and another trigger char) still end the scan, and
+ *  the lookback is capped at MAX_QUERY_LEN. */
 export function detectMentionTrigger(value: string, caret: number): Trigger | null {
     if (caret <= 0 || caret > value.length) return null;
     let i = caret - 1;
-    while (i >= 0) {
+    while (i >= 0 && caret - i <= MAX_QUERY_LEN + 1) {
         const ch = value[i];
         if (ch === "@" || ch === "#") {
             if (i === 0 || /\s/.test(value[i - 1] ?? "")) {
@@ -48,7 +58,7 @@ export function detectMentionTrigger(value: string, caret: number): Trigger | nu
             }
             return null;
         }
-        if (/\s/.test(ch)) return null;
+        if (ch === "\n") return null;
         i -= 1;
     }
     return null;
@@ -159,11 +169,26 @@ export function useAgentMentionDraft({
     const suggestions = useMemo(() => {
         if (!trigger) return [];
         if (dismissedStart === trigger.start) return [];
+        // A bare trigger (or whitespace-only query) shows nothing — the
+        // menu opens once the user starts narrowing.
+        const q = trigger.query.toLowerCase();
+        if (!q.trim()) return [];
         const pool = trigger.char === "@" ? members : entities;
-        return filterAndRankByText(pool, (c) => c.ref.label, trigger.query).slice(
-            0,
-            MAX_SUGGESTIONS
-        );
+        // Substring filter + exact→prefix→substring rank, on the RAW
+        // query — deliberately not `filterAndRankByText`, which trims.
+        // Keeping trailing spaces significant makes multi-word narrowing
+        // work ("#fix log" still matches "Fix login bug") while closing
+        // the menu right after a pick (the inserted token ends with a
+        // space no title contains).
+        const rank = (label: string): number => {
+            if (label === q) return 0;
+            if (label.startsWith(q)) return 1;
+            return 2;
+        };
+        return pool
+            .filter((c) => c.ref.label.toLowerCase().includes(q))
+            .sort((a, b) => rank(a.ref.label.toLowerCase()) - rank(b.ref.label.toLowerCase()))
+            .slice(0, MAX_SUGGESTIONS);
     }, [trigger, dismissedStart, members, entities]);
 
     // Keep the highlight inside the list as it refilters, and reset it

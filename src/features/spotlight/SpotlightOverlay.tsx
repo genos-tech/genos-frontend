@@ -460,6 +460,7 @@ export const SpotlightOverlay = ({
                             the results list. */}
                         {mention.pickerOpen && (
                             <MentionSuggestionDropdown
+                                anchorRef={inputRowRef}
                                 ariaLabel={t.spotlight.mentions.ariaLabel}
                                 highlightIndex={mention.highlightIndex}
                                 isDark={isDark}

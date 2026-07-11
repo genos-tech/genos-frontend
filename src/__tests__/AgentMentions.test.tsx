@@ -84,8 +84,17 @@ describe("detectMentionTrigger", () => {
         expect(detectMentionTrigger("a#1", 3)).toBeNull();
     });
 
-    it("deactivates once the query crosses whitespace", () => {
-        expect(detectMentionTrigger("@Alice hey", 10)).toBeNull();
+    it("allows spaces in the query (multi-word titles) but stops at newlines", () => {
+        expect(detectMentionTrigger("#How to get", 11)).toMatchObject({
+            char: "#",
+            query: "How to get",
+        });
+        expect(detectMentionTrigger("#Fix\nlogin", 10)).toBeNull();
+    });
+
+    it("caps the lookback so distant prose can't re-trigger", () => {
+        const value = `#${"x".repeat(70)}`;
+        expect(detectMentionTrigger(value, value.length)).toBeNull();
     });
 });
 
@@ -128,6 +137,50 @@ describe("useAgentMentionDraft", () => {
             result.current.draft.setCaret(5);
         });
         expect(result.current.draft.suggestions.map((s) => s.key)).toEqual(["task:3"]);
+    });
+
+    it("shows nothing for a bare trigger (empty query)", () => {
+        const { result } = renderHook(() => useHarness());
+        act(() => {
+            result.current.setValue("#");
+        });
+        act(() => {
+            result.current.draft.setCaret(1);
+        });
+        expect(result.current.draft.pickerOpen).toBe(false);
+        act(() => {
+            result.current.setValue("@ ");
+        });
+        act(() => {
+            result.current.draft.setCaret(2);
+        });
+        expect(result.current.draft.pickerOpen).toBe(false);
+    });
+
+    it("keeps narrowing across spaces and closes right after a pick", () => {
+        const { result } = renderHook(() => useHarness());
+        act(() => {
+            result.current.setValue("#Fix login b");
+        });
+        act(() => {
+            result.current.draft.setCaret(12);
+        });
+        // Multi-word query narrows to the one matching title.
+        expect(result.current.draft.suggestions.map((s) => s.key)).toEqual(["task:2"]);
+        act(() => {
+            result.current.draft.selectSuggestion(ENTITIES[1]); // "#Fix login bug "
+        });
+        // The inserted token's trailing space matches no title → closed.
+        expect(result.current.value).toBe("#Fix login bug ");
+        expect(result.current.draft.pickerOpen).toBe(false);
+        // Continuing the sentence keeps it closed.
+        act(() => {
+            result.current.setValue("#Fix login bug status?");
+        });
+        act(() => {
+            result.current.draft.setCaret(22);
+        });
+        expect(result.current.draft.pickerOpen).toBe(false);
     });
 
     it("selectSuggestion splices the token and reports the new caret", () => {
@@ -401,11 +454,19 @@ describe("AgentQAInput mention integration", () => {
         const onAsk = vi.fn();
         render(<Harness onAsk={onAsk} />);
         const textarea = screen.getByPlaceholderText("Ask…");
-        fireEvent.change(textarea, { target: { value: "@" } });
+        fireEvent.change(textarea, { target: { value: "@Al" } });
         expect(screen.getByTestId("agent-mention-dropdown")).toBeInTheDocument();
         fireEvent.keyDown(textarea, { key: "ArrowDown" });
         fireEvent.keyDown(textarea, { key: "ArrowUp" });
         expect(onAsk).not.toHaveBeenCalled();
+    });
+
+    it("a bare trigger shows no dropdown", () => {
+        const onAsk = vi.fn();
+        render(<Harness onAsk={onAsk} />);
+        const textarea = screen.getByPlaceholderText("Ask…");
+        fireEvent.change(textarea, { target: { value: "@" } });
+        expect(screen.queryByTestId("agent-mention-dropdown")).toBeNull();
     });
 
     it("highlights the picked token in the input and unhighlights when edited away", async () => {
