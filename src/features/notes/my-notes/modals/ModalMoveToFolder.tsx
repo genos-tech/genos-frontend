@@ -15,6 +15,10 @@ import {
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import {
+    noteModalChildStackSx,
+    useNoteModalHostZIndex,
+} from "../../../../components/modals/noteModalHostZIndex";
 import { useTranslation } from "../../../../i18n";
 import { MyNoteFolderProps } from "../../../../types/notes";
 import { collectDescendantFolderIds } from "../../../../utils/note";
@@ -82,6 +86,7 @@ export const ModalMoveToFolder = (props: ModalMoveToFolderProps) => {
     const { t } = useTranslation();
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
+    const hostZIndex = useNoteModalHostZIndex();
 
     const [selected, setSelected] = useState<number | null>(currentFolderId);
 
@@ -107,7 +112,15 @@ export const ModalMoveToFolder = (props: ModalMoveToFolderProps) => {
     });
 
     return (
-        <Modal open={open} sx={{ zIndex: 10010, backdropFilter: "blur(4px)" }} onClose={onClose}>
+        <Modal
+            open={open}
+            sx={{
+                zIndex: 10010,
+                backdropFilter: "blur(4px)",
+                ...noteModalChildStackSx(hostZIndex),
+            }}
+            onClose={onClose}
+        >
             <ModalDialog
                 sx={{
                     borderRadius: "16px",

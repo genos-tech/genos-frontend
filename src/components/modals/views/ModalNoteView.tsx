@@ -33,6 +33,7 @@ import {
     SharedNoteTarget,
     TaskNoteTarget,
 } from "../../../utils/parseInternalUrl";
+import { NoteModalHostZIndexProvider } from "../noteModalHostZIndex";
 
 type NoteTarget = MyNoteTarget | SharedNoteTarget | TaskNoteTarget | ChatNoteTarget;
 
@@ -166,12 +167,17 @@ export const ModalNoteView = (props: ModalNoteViewProps) => {
         return <CenteredMessage>{t.common.modalView.loadingNote}</CenteredMessage>;
 
     const wrapper = (children: React.ReactNode) => (
-        <Box
-            className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
-            sx={{ height: "100%", overflow: "auto", p: 2, width: "100%" }}
-        >
-            {children}
-        </Box>
+        // Expose the host modal's z to the note's Joy dialogs (Share,
+        // Ask, Move-to-folder, History, Delete) so they stack above this
+        // preview instead of opening behind it — see noteModalHostZIndex.
+        <NoteModalHostZIndexProvider value={hostZIndex}>
+            <Box
+                className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
+                sx={{ height: "100%", overflow: "auto", p: 2, width: "100%" }}
+            >
+                {children}
+            </Box>
+        </NoteModalHostZIndexProvider>
     );
 
     // --- My / Shared note branch ---

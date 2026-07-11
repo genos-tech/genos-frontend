@@ -18,6 +18,10 @@ import {
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import {
+    noteModalChildStackSx,
+    useNoteModalHostZIndex,
+} from "../../../../components/modals/noteModalHostZIndex";
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
@@ -66,6 +70,7 @@ export const ModalNoteSharing = ({
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const { t } = useTranslation();
+    const hostZIndex = useNoteModalHostZIndex();
 
     const ROLE_LABEL: Record<number, string> = {
         1: t.notes.sharing.roles.owner,
@@ -125,7 +130,7 @@ export const ModalNoteSharing = ({
     };
 
     return (
-        <Modal open={open} onClose={onClose}>
+        <Modal open={open} sx={noteModalChildStackSx(hostZIndex)} onClose={onClose}>
             <Sheet
                 sx={{
                     width: { xs: "calc(100vw - 16px)", sm: 520 },
