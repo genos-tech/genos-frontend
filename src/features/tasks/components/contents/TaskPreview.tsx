@@ -190,6 +190,10 @@ export const TaskPreview = (props: TaskPreviewProps) => {
     );
 
     // Use the custom hook to get the sendUpdatedTask function
+    // Declared ahead of `useSendUpdatedTask` (which captures it); the dirty-
+    // signal comment block further down explains the ref's role.
+    const currentBodyRef = useRef<PartialBlock[]>([]);
+
     const sendUpdatedTask = useSendUpdatedTask({
         socket,
         myself,
@@ -197,6 +201,8 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         currentPreviewTask: useTM.currentPreviewTask,
         setCurrentPreviewTask: useTM.setCurrentPreviewTask,
         taskEditState,
+        // Live body source — see `handleEditorBodySync`.
+        bodyRef: currentBodyRef,
     });
 
     useEffect(() => {
@@ -256,11 +262,21 @@ export const TaskPreview = (props: TaskPreviewProps) => {
     //    form before any real edit.
     const lastLoadedBodyRef = useRef<string>("");
     const prevTaskIdRef = useRef<number | null>(null);
-    const currentBodyRef = useRef<PartialBlock[]>([]);
 
     useEffect(() => {
         currentBodyRef.current = taskEditState.body;
     }, [taskEditState.body]);
+
+    // Editor→parent body sync target. Nothing RENDERS `taskEditState.body`
+    // — the editor owns the visual, `body` state only delivers the seed on
+    // task load/switch — yet routing the debounced sync through `setBody`
+    // re-rendered this whole subtree (comments, activity, attachments) on
+    // every ~1s typing pause. The sync now writes the ref only; the save
+    // paths (`useSendUpdatedTask` via `bodyRef`, `isBodyDirty`) read it at
+    // call time, which is also strictly fresher than the old state read.
+    const handleEditorBodySync = useCallback((next: PartialBlock[]) => {
+        currentBodyRef.current = next;
+    }, []);
 
     useEffect(() => {
         const id = window.setTimeout(() => {
@@ -867,7 +883,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                                     key={`TaskBodyBlock-${taskEditState.tmpCurrentTaskContent.id}`}
                                     body={taskEditState.body}
                                     myself={myself}
-                                    setBody={taskEditState.setBody}
+                                    setBody={handleEditorBodySync}
                                     setMyself={setMyself}
                                     setTaskBodyEdited={taskEditState.setTaskBodyEdited}
                                     setTaskBodySaved={taskEditState.setTaskBodySaved}
@@ -1194,6 +1210,14 @@ const MilestonePreviewInner = ({
     const [bodyDraft, setBodyDraft] = useState<PartialBlock[]>(
         (milestone?.description as PartialBlock[]) ?? []
     );
+    // Live body for the save loop. `bodyDraft` STATE only seeds the editor
+    // on milestone switch; the editor's debounced sync writes this ref so
+    // a mid-session sync doesn't re-render the whole preview subtree
+    // (same pattern as the task branch's `currentBodyRef`).
+    const bodyDraftRef = useRef<PartialBlock[]>((milestone?.description as PartialBlock[]) ?? []);
+    const handleMilestoneBodySync = useCallback((next: PartialBlock[]) => {
+        bodyDraftRef.current = next;
+    }, []);
     const [bodyEdited, setBodyEdited] = useState(false);
     const [bodySaved, setBodySaved] = useState(false);
     const [taskContentLike, setTaskContentLike] = useState<TaskProps>(() =>
@@ -1237,6 +1261,7 @@ const MilestonePreviewInner = ({
         setTitleDraft(milestone.title);
         if (!bodyEdited) {
             setBodyDraft((milestone.description as PartialBlock[]) ?? []);
+            bodyDraftRef.current = (milestone.description as PartialBlock[]) ?? [];
         }
     }, [milestone?.milestoneId]);
 
@@ -1658,6 +1683,8 @@ const MilestonePreviewInner = ({
     };
 
     // Auto-save body every 3s when edited (mirrors TaskPreview's loop).
+    // Reads the body from `bodyDraftRef` at fire time — see the ref's
+    // declaration for why the sync no longer flows through state.
     useEffect(() => {
         const id = setInterval(async () => {
             if (!milestone) return;
@@ -1665,7 +1692,7 @@ const MilestonePreviewInner = ({
             const updated = await useSM.updateExistingMilestone(
                 {
                     milestoneId: milestone.milestoneId,
-                    description: bodyDraft,
+                    description: bodyDraftRef.current,
                 },
                 milestone.projectId,
                 socket,
@@ -1686,7 +1713,7 @@ const MilestonePreviewInner = ({
             setBodySaved(true);
         }, 3000);
         return () => clearInterval(id);
-    }, [bodyEdited, bodyDraft, milestone?.milestoneId]);
+    }, [bodyEdited, milestone?.milestoneId]);
 
     // When TaskMainBlock signals taskUpdated, propagate.
     const [taskUpdated, setTaskUpdated] = useState(false);
@@ -2257,9 +2284,7 @@ const MilestonePreviewInner = ({
                             // where `taskId` hasn't been backfilled yet.
                             useTEM={useTEM}
                             useUISM={useUISM}
-                            setBody={(next) => {
-                                setBodyDraft(next);
-                            }}
+                            setBody={handleMilestoneBodySync}
                         />
                     </Box>
 

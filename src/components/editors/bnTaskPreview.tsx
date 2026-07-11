@@ -273,6 +273,16 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
         }
     }, [editor, onEditorReady]);
 
+    // Same real-user-input gate as the note editors (see `bnMyNoteEditor`):
+    // BlockNote's `onChange` also fires on the initial body load and every
+    // Yjs sync tick, and the ungated `setTaskBodyEdited(true)` from those
+    // fires is what forced TaskPreview to grow its `isBodyDirty` defense.
+    // Gating at the source keeps the flag honest.
+    const userInteractedRef = useRef(false);
+    useEffect(() => {
+        userInteractedRef.current = false;
+    }, [taskId]);
+
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
     const [selectedEmoji, setSelectedEmoji] = useState<any>(null);
     const insertEmoji = (emoji: any) => {
@@ -401,18 +411,31 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                     sideMenu={false}
                     theme={mode === "dark" ? "dark" : "light"}
                     data-changing-font-demo
+                    onBeforeInput={() => {
+                        userInteractedRef.current = true;
+                    }}
                     onBlur={() => syncBodyToParent.flush()}
                     onChange={() => {
                         // Heavy work (serialize + line count + parent
-                        // re-render) is debounced; only the cheap edited/
-                        // saved flags fire synchronously (no-ops after the
-                        // first keystroke), preserving auto-save semantics.
+                        // re-render) is debounced off the keystroke path.
                         syncBodyToParent.run();
-                        if (setTaskBodyEdited) {
-                            setTaskBodyEdited(true);
-                            if (setTaskBodySaved) {
-                                setTaskBodySaved(false);
-                            }
+                        // The edited/saved flags live in TaskPreview — a
+                        // ~2.4k-line subtree. They're no-ops while their
+                        // values are unchanged, but right after a save
+                        // cycle (autosave sets saved=true / edited=false)
+                        // the next keystroke's flips are REAL updates, and
+                        // a synchronous render of that subtree landed in
+                        // the keystroke path — one visible input hitch per
+                        // save cycle. Transition-wrapped, the render yields
+                        // to typing; the 3s autosave loop reads the flag
+                        // well after the transition commits.
+                        if (userInteractedRef.current && setTaskBodyEdited) {
+                            startTransition(() => {
+                                setTaskBodyEdited(true);
+                                if (setTaskBodySaved) {
+                                    setTaskBodySaved(false);
+                                }
+                            });
                         }
                     }}
                     onClick={(e) => {
@@ -424,11 +447,28 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                             handleImageClick((target as HTMLImageElement).src);
                         }
                     }}
+                    onCompositionStart={() => {
+                        userInteractedRef.current = true;
+                    }}
+                    onDrop={() => {
+                        userInteractedRef.current = true;
+                    }}
                     onKeyDown={(event) => {
+                        if (
+                            event.key !== "Shift" &&
+                            event.key !== "Control" &&
+                            event.key !== "Meta" &&
+                            event.key !== "Alt"
+                        ) {
+                            userInteractedRef.current = true;
+                        }
                         if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
                             if (editor.document.length > 1) {
                             }
                         }
+                    }}
+                    onPaste={() => {
+                        userInteractedRef.current = true;
                     }}
                 >
                     <SideMenuController
