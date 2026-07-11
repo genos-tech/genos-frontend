@@ -33,11 +33,7 @@ const recomputeGroupCompletion = (group: TodoGroupProps): TodoGroupProps => {
 
 export type UseTodoGroupsState = ReturnType<typeof useTodoGroups>;
 
-export const useTodoGroups = (
-    myself: UserProps,
-    accessToken: string | null,
-    isToDoVisible: boolean
-) => {
+export const useTodoGroups = (myself: UserProps, accessToken: string | null) => {
     const [groups, setGroups] = useState<TodoGroupProps[]>([]);
     const [categories, setCategories] = useState<TodoCategoryProps[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -70,7 +66,7 @@ export const useTodoGroups = (
         return () => {
             cancelled = true;
         };
-    }, [myself.userId, myself.teamId, accessToken, isToDoVisible]);
+    }, [myself.userId, myself.teamId, accessToken]);
 
     // Persist any non-empty state to IDB.
     useEffect(() => {

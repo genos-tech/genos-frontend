@@ -17,7 +17,10 @@ export type AgentMentionRef =
     // `NoteContext` uses (the "Shared" UI bucket is normalised to 1).
     | { kind: "note"; noteType: 1 | 2 | 3; noteId: number; label: string }
     | { kind: "chat"; chatType: number; chatId: string; label: string }
-    | { kind: "project"; projectId: number; label: string };
+    | { kind: "project"; projectId: number; label: string }
+    // Mention group — expands to its member list server-side.
+    | { kind: "group"; groupId: number; label: string }
+    | { kind: "todo"; itemId: number; label: string };
 
 // One dropdown row. `trigger` decides which menu ("@" members vs "#"
 // entities) the candidate belongs to; `key` is a stable identity used
@@ -42,6 +45,10 @@ export const mentionKey = (ref: AgentMentionRef): string => {
             return `chat:${ref.chatType}:${ref.chatId}`;
         case "project":
             return `project:${ref.projectId}`;
+        case "group":
+            return `group:${ref.groupId}`;
+        case "todo":
+            return `todo:${ref.itemId}`;
     }
 };
 
@@ -69,5 +76,9 @@ export const toWireMentions = (refs: AgentMentionRef[]): AgentMentionPayload[] =
                 };
             case "project":
                 return { type: "project", project_id: ref.projectId, label: ref.label };
+            case "group":
+                return { type: "group", group_id: ref.groupId, label: ref.label };
+            case "todo":
+                return { type: "todo", item_id: ref.itemId, label: ref.label };
         }
     });

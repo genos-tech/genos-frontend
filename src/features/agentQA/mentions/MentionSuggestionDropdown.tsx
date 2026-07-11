@@ -16,8 +16,10 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState, type RefObje
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
 import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
+import GroupRoundedIcon from "@mui/icons-material/GroupRounded";
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
 import StickyNote2RoundedIcon from "@mui/icons-material/StickyNote2Rounded";
+import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
 import { Box, Chip, Sheet } from "@mui/joy";
 import { createPortal } from "react-dom";
 
@@ -46,6 +48,12 @@ const kindIcon = (kind: AgentMentionRef["kind"]) => {
             return <ChatBubbleOutlineRoundedIcon sx={{ fontSize: 13 }} />;
         case "project":
             return <FolderRoundedIcon sx={{ fontSize: 13 }} />;
+        // Same icons as the editors' @group menu (GroupRounded) and the
+        // Spotlight todo citation chip (TaskAltRounded).
+        case "group":
+            return <GroupRoundedIcon sx={{ fontSize: 13 }} />;
+        case "todo":
+            return <TaskAltRoundedIcon sx={{ fontSize: 13 }} />;
     }
 };
 

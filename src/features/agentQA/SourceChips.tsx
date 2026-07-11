@@ -17,6 +17,7 @@ import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
 import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
 import StickyNote2RoundedIcon from "@mui/icons-material/StickyNote2Rounded";
+import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
 import { Box, Chip } from "@mui/joy";
 
 import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
@@ -28,6 +29,7 @@ const sourceIcon = (entityType: string) => {
     if (entityType === "chat") return <ChatBubbleOutlineRoundedIcon sx={{ fontSize: 13 }} />;
     if (entityType === "note") return <StickyNote2RoundedIcon sx={{ fontSize: 13 }} />;
     if (entityType === "project") return <FolderRoundedIcon sx={{ fontSize: 13 }} />;
+    if (entityType === "todo") return <TaskAltRoundedIcon sx={{ fontSize: 13 }} />;
     return undefined;
 };
 

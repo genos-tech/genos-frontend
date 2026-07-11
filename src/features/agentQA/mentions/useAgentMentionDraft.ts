@@ -77,6 +77,15 @@ export interface MentionTokenMatch {
     end: number;
 }
 
+/** The trigger character whose menu serves this ref's kind — MUST match
+ *  the pool split in `useAgentMentionSources` (users + groups are the
+ *  `@` people menu; every workspace entity is `#`). The token matcher
+ *  rebuilds tokens from refs, so a mismatch here makes a picked mention
+ *  silently unmatchable (no highlight, dropped from the wire payload).
+ */
+export const triggerForKind = (kind: AgentMentionRef["kind"]): "@" | "#" =>
+    kind === "user" || kind === "group" ? "@" : "#";
+
 /** Locate each picked ref's `@Label` / `#Label` token in `text`.
  *
  *  Shared by `consumeMentions` (send-time pruning) and the in-input
@@ -95,7 +104,7 @@ export function matchMentionTokens(
     const out: MentionTokenMatch[] = [];
     const claimed: Array<[number, number]> = [];
     for (const ref of refs) {
-        const token = `${ref.kind === "user" ? "@" : "#"}${ref.label}`;
+        const token = `${triggerForKind(ref.kind)}${ref.label}`;
         let from = 0;
         while (from <= text.length) {
             const idx = text.indexOf(token, from);
