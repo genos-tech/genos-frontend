@@ -9,6 +9,16 @@ export interface BreadcrumbNode {
     title: string;
 }
 
+export interface ContextCrumb {
+    /** Stable React key + identity, e.g. "folder-3" / "proj-12" / "chan-7". */
+    key: string;
+    /** Display text — truncated in the chip, full in the tooltip. */
+    label: string;
+    /** Leading glyph; NoteBreadcrumbs applies the size/tint so callers
+     *  pass the bare icon element (e.g. `<FolderRoundedIcon />`). */
+    icon?: ReactNode;
+}
+
 interface NoteBreadcrumbsProps {
     /** Icon element to display at the start */
     icon: ReactNode;
@@ -20,6 +30,11 @@ interface NoteBreadcrumbsProps {
     noteChain: BreadcrumbNode[] | null | undefined;
     /** Callback when a breadcrumb node is clicked */
     onNodeClick: (noteId: number) => void;
+    /** Optional container ancestry shown BEFORE the note chain as
+     *  non-interactive context labels (outermost-first): sidebar folders
+     *  for My notes, Project→Task for task notes, Channel→Thread for chat
+     *  notes. */
+    contextCrumbs?: ContextCrumb[] | null;
     /** Maximum characters to show before truncating (default: 14) */
     maxTitleLength?: number;
 }
@@ -79,6 +94,7 @@ export const NoteBreadcrumbs = ({
     color,
     noteChain,
     onNodeClick,
+    contextCrumbs,
     maxTitleLength = 14,
 }: NoteBreadcrumbsProps) => {
     const isMobile = useIsMobile();
@@ -93,7 +109,7 @@ export const NoteBreadcrumbs = ({
         if (scrollContainerRef.current) {
             scrollContainerRef.current.scrollLeft = scrollContainerRef.current.scrollWidth;
         }
-    }, [noteChain]);
+    }, [noteChain, contextCrumbs]);
 
     // Hidden on mobile per design — the compact mobile header already
     // shows the current note title; the full breadcrumb trail is
@@ -182,6 +198,67 @@ export const NoteBreadcrumbs = ({
                     {label}
                 </Typography>
             </Box>
+
+            {/* Context Chain. The note's container ancestry, outermost-
+                first, shown as non-interactive labels ahead of the note
+                nodes: sidebar folders (My notes), Project→Task (task
+                notes), Channel→Thread (chat notes). A leading icon + muted
+                tone distinguishes them from the clickable note crumbs —
+                containers are context, not a view you open. */}
+            {contextCrumbs &&
+                contextCrumbs.map((crumb) => (
+                    <Stack key={crumb.key} alignItems="center" direction="row" spacing={0.5}>
+                        <ChevronRightIcon
+                            sx={{
+                                fontSize: 16,
+                                color: "neutral.400",
+                                opacity: 0.7,
+                            }}
+                        />
+                        <Tooltip
+                            placement="bottom"
+                            size="sm"
+                            title={crumb.label}
+                            variant="outlined"
+                            sx={{
+                                maxWidth: 280,
+                                "& .MuiTooltip-arrow": {
+                                    color: "background.level2",
+                                },
+                            }}
+                            arrow
+                        >
+                            <Box
+                                sx={{
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: 0.5,
+                                    padding: "4px 10px",
+                                    borderRadius: "6px",
+                                    color: "text.tertiary",
+                                    fontWeight: 500,
+                                    fontSize: "0.875rem",
+                                    lineHeight: 1.43,
+                                    whiteSpace: "nowrap",
+                                }}
+                            >
+                                {crumb.icon && (
+                                    <Box
+                                        sx={{
+                                            display: "inline-flex",
+                                            color: scheme.text,
+                                            opacity: 0.65,
+                                            "& svg": { fontSize: 15 },
+                                        }}
+                                    >
+                                        {crumb.icon}
+                                    </Box>
+                                )}
+                                <span>{truncateTitle(crumb.label)}</span>
+                            </Box>
+                        </Tooltip>
+                    </Stack>
+                ))}
 
             {/* Breadcrumb Chain */}
             {noteChain &&

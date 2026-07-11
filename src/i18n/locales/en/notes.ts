@@ -112,6 +112,8 @@ export const notes = {
         myNotesLabel: "My Notes",
         taskNotesLabel: "Task Notes",
         chatNotesLabel: "Chat Notes",
+        // Breadcrumb container crumb for a chat note attached to a thread.
+        threadCrumb: "Thread",
         newNote: "New Note",
         share: "Share",
         shareNoteAria: "Share note",

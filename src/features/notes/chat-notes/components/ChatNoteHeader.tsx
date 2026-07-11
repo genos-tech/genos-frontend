@@ -1,13 +1,16 @@
+import { useMemo } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import CancelIcon from "@mui/icons-material/Cancel";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
+import ForumRoundedIcon from "@mui/icons-material/ForumRounded";
 import LaunchRoundedIcon from "@mui/icons-material/LaunchRounded";
 import NotificationsActiveRoundedIcon from "@mui/icons-material/NotificationsActiveRounded";
 import NotificationsOffRoundedIcon from "@mui/icons-material/NotificationsOffRounded";
 import QuestionAnswerIcon from "@mui/icons-material/QuestionAnswer";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
+import TagRoundedIcon from "@mui/icons-material/TagRounded";
 import { Box, IconButton, Stack, Tooltip } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { useNavigate } from "react-router-dom";
@@ -32,7 +35,7 @@ import { UserProps } from "../../../../types/admin";
 import { NoteAskModal, useNoteAsk } from "../../../noteAsk";
 import { SpotlightResult } from "../../../spotlight/types";
 import { ModalDeleteChatNote } from "../../chat-notes/modals/ModalDeleteChatNote";
-import { NoteBreadcrumbs } from "../../common/components/NoteBreadcrumbs";
+import { ContextCrumb, NoteBreadcrumbs } from "../../common/components/NoteBreadcrumbs";
 import { NoteHistoryChip } from "../../common/components/NoteHistoryChip";
 import { ACChatChildNotes } from "./autocompletes/ACChatChildNotes";
 
@@ -93,6 +96,27 @@ export const ChatNoteHeader = ({
     const notifCtx = useNotificationsContext();
     const { t } = useTranslation();
     const { accessToken } = useAuth();
+
+    // Container ancestry of the open chat note: Channel → Thread,
+    // prepended to the note breadcrumb. The channel name comes off the
+    // chain's root meta (falling back to the resolved `chat`); the Thread
+    // crumb only shows when the note is thread-scoped.
+    const contextCrumbs = useMemo<ContextCrumb[]>(() => {
+        const root = useNM.currentChatNoteChain?.[0];
+        if (!root) return [];
+        const channelLabel = root.chatName || chat?.chatName || `#${root.chatId}`;
+        const crumbs: ContextCrumb[] = [
+            { key: `chan-${root.chatId}`, label: channelLabel, icon: <TagRoundedIcon /> },
+        ];
+        if (root.isThread) {
+            crumbs.push({
+                key: `thread-${root.threadId}`,
+                label: t.notes.header.threadCrumb,
+                icon: <ForumRoundedIcon />,
+            });
+        }
+        return crumbs;
+    }, [useNM.currentChatNoteChain, chat, t]);
 
     // Chat type mapping for URL construction
     const CHAT_TYPE_PATH_MAP: Record<number, string> = {
@@ -235,6 +259,7 @@ export const ChatNoteHeader = ({
                 >
                     <NoteBreadcrumbs
                         color="warning"
+                        contextCrumbs={contextCrumbs}
                         icon={<QuestionAnswerRoundedIcon />}
                         label={t.notes.header.chatNotesLabel}
                         noteChain={useNM.currentChatNoteChain}
