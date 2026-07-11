@@ -29,6 +29,9 @@ export const spotlight = {
         initial: "Start typing to search across chats, tasks, and notes.",
         noMatches: "No matches yet — try different keywords.",
     },
+    mentions: {
+        ariaLabel: "Mention suggestions",
+    },
     errors: {
         noTeam: "No team selected.",
         searchFailed: "Search failed. Please try again.",

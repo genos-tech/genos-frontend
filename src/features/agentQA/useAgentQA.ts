@@ -27,6 +27,7 @@ import {
 } from "../../services/agentApi";
 import type { SpotlightResult } from "../spotlight/types";
 import { emitTasksBulkChanged, TASK_WRITE_TOOLS } from "../tasks/services/taskEvents";
+import { toWireMentions, type AgentMentionRef } from "./mentions/types";
 import {
     EMPTY_ASK_STATE,
     MAX_TURNS_IN_HISTORY,
@@ -263,7 +264,7 @@ export const useAgentQA = ({
 
     // ---- Send a question. ----
     const onAsk = useCallback(
-        (overrideQuery?: string) => {
+        (overrideQuery?: string, mentions?: AgentMentionRef[]) => {
             // `overrideQuery` wins when supplied (Retry on a past turn);
             // otherwise the live input is the source.
             const trimmed = (overrideQuery !== undefined ? overrideQuery : query).trim();
@@ -312,6 +313,7 @@ export const useAgentQA = ({
                 sessionId: ask.sessionId ?? undefined,
                 newConversation,
                 signal: controller.signal,
+                ...(mentions?.length ? { mentions: toWireMentions(mentions) } : {}),
                 ...extras,
                 ...buildStreamHandlers(askedTurnId),
             });

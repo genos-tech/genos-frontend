@@ -102,12 +102,27 @@ export interface NoteContext {
     noteId: number;
 }
 
+// One structured @/# mention attached to an ask — the wire shape of the
+// backend's `mentions` array (see genos-api `agent/mentions.py`). Int
+// codes mirror ThreadContext/NoteContext; `label` is advisory only (the
+// server re-resolves canonical titles and ACL-checks every entry,
+// silently dropping what the user can't read). Built from the picker's
+// refs via `toWireMentions` in features/agentQA/mentions.
+export type AgentMentionPayload =
+    | { type: "user"; user_id: string; label: string }
+    | { type: "task"; task_id: number; label: string }
+    | { type: "note"; note_type: 1 | 2 | 3; note_id: number; label: string }
+    | { type: "chat"; chat_type: number; chat_id: string; label: string };
+
 export interface AskAgentArgs extends BaseStreamHandlers {
     query: string;
     teamId: string;
     accessToken: string | null;
     sessionId?: string;
     entityTypes?: Array<"chat" | "task" | "note" | "todo">;
+    // Structured @/# mentions the user picked in the input. Omitted
+    // entirely when empty so older backends see an unchanged payload.
+    mentions?: AgentMentionPayload[];
     // Web-search gating is server-side only: the backend reads the user's
     // persisted `spotlight_web_search_enabled` preference (the Settings
     // toggle writes it via PATCH /user/preferences/spotlight-web-search/).
@@ -459,6 +474,7 @@ export async function askAgentStream(args: AskAgentArgs): Promise<void> {
             query: args.query,
             team_id: args.teamId,
             entity_types: args.entityTypes,
+            ...(args.mentions?.length ? { mentions: args.mentions } : {}),
             ...(args.sessionId ? { session_id: args.sessionId } : {}),
             ...(args.threadContext
                 ? {

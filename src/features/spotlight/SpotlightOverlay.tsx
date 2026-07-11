@@ -60,6 +60,7 @@ import { purplePalette } from "../../theme/purplePalette";
 // module (now in features/agentQA/) so the body text colour in the
 // typography block stays in lock-step with every other "answer surface"
 // (ThreadAskModal etc.) that renders the same theme.
+import type { UserProps } from "../../types/admin";
 import {
     ApprovalCard,
     CITATION_HREF_PREFIX,
@@ -67,8 +68,14 @@ import {
     DARK_TEXT_STRONG,
     FeedbackThumbs,
     markdownAnswerSx,
+    MentionHighlightOverlay,
+    MentionSuggestionDropdown,
     rewriteCitations,
     ToolProgressList,
+    useAgentMentionDraft,
+    useAgentMentionSources,
+    type AgentMentionCandidate,
+    type AgentMentionRef,
     type AskState,
     type CompletedTurn,
     type ToolEvent,
@@ -99,7 +106,9 @@ interface Props {
     // (`handleSpotlightPreview` falls back to `onSelect` navigation for
     // kinds with no preview modal.) Search result rows keep `onSelect`.
     onPreview: (r: SpotlightResult) => void;
-    onAsk: (overrideQuery?: string) => void;
+    // `mentions` carries the structured @/# refs the input's picker
+    // collected for the live query (absent on retry — see useSpotlight).
+    onAsk: (overrideQuery?: string, mentions?: AgentMentionRef[]) => void;
     onApprove: () => void;
     onReject: () => void;
     onCancel: () => void;
@@ -131,6 +140,11 @@ interface Props {
     // answer toggles) from the gear icon on the bar. Owned by the App
     // root so the dialog can layer above this overlay.
     onOpenSettings: () => void;
+    // Team roster for the `@` mention menu. Passed as a prop because the
+    // overlay mounts OUTSIDE AvatarContext (App.tsx renders it above the
+    // authed provider tree); the `#` entities come from
+    // HashMentionDataProvider, which App wraps around the overlay.
+    mentionMembers?: UserProps[];
 }
 
 // Distance from the bottom (px) under which we consider the user
@@ -173,11 +187,14 @@ export const SpotlightOverlay = ({
     backToHistoryList,
     closeHistory,
     onOpenSettings,
+    mentionMembers,
 }: Props) => {
     const { mode } = useColorScheme();
     const { t } = useTranslation();
     const isDark = mode === "dark";
     const inputRef = useRef<HTMLTextAreaElement | null>(null);
+    // Positioned anchor for the mention dropdown + highlight overlay.
+    const inputRowRef = useRef<HTMLDivElement | null>(null);
 
     // Auto-resize the textarea to fit its contents up to a sensible cap.
     // Below the cap the input expands to show every line the user typed;
@@ -243,6 +260,38 @@ export const SpotlightOverlay = ({
             onQueryChange(val);
         },
         [onQueryChange]
+    );
+
+    // ---- @/# mention picker. ----
+    // `@` members come from the `mentionMembers` prop (the overlay sits
+    // outside AvatarContext); `#` entities from HashMentionDataProvider
+    // (App wraps the overlay in one). Picking splices a plain-text token
+    // into `localInput` via `handleInputChange`, which dual-writes the
+    // hook `query` — so `onAsk` still reads the full text.
+    const mentionSources = useAgentMentionSources({ membersOverride: mentionMembers });
+    const mention = useAgentMentionDraft({
+        value: localInput,
+        onChange: handleInputChange,
+        members: mentionSources.members,
+        entities: mentionSources.entities,
+    });
+    const syncMentionCaret = useCallback(() => {
+        const ta = inputRef.current;
+        if (ta) mention.setCaret(ta.selectionStart ?? 0);
+    }, [mention]);
+    const handleMentionSelect = useCallback(
+        (c: AgentMentionCandidate) => {
+            const newCaret = mention.selectSuggestion(c);
+            // Restore focus + caret once React commits the new value.
+            requestAnimationFrame(() => {
+                const ta = inputRef.current;
+                if (ta) {
+                    ta.focus();
+                    ta.setSelectionRange(newCaret, newCaret);
+                }
+            });
+        },
+        [mention]
     );
 
     // -1 = nothing highlighted; resets immediately when local input changes
@@ -364,8 +413,11 @@ export const SpotlightOverlay = ({
                     back. */}
                 {!historyOpen && (
                     <Box
+                        ref={inputRowRef}
                         sx={{
                             display: "flex",
+                            // Anchor for the @/# mention dropdown.
+                            position: "relative",
                             // Top-align so the SearchIcon / Ask button stay
                             // anchored to the first line as the textarea
                             // grows downward.
@@ -401,6 +453,31 @@ export const SpotlightOverlay = ({
                                 // top edge.
                                 mt: { xs: "2px", sm: "3px" },
                             }}
+                        />
+                        {/* In agent mode the input row sits at the bottom
+                            of the sheet (order: 2), so the dropdown opens
+                            upward; in search mode it opens downward over
+                            the results list. */}
+                        {mention.pickerOpen && (
+                            <MentionSuggestionDropdown
+                                anchorRef={inputRowRef}
+                                ariaLabel={t.spotlight.mentions.ariaLabel}
+                                highlightIndex={mention.highlightIndex}
+                                isDark={isDark}
+                                placement={inAgentMode ? "above" : "below"}
+                                suggestions={mention.suggestions}
+                                onSelect={handleMentionSelect}
+                            />
+                        )}
+                        {/* Marker highlight over live mention tokens, so a
+                            picked mention is visibly different from the
+                            same words merely typed. */}
+                        <MentionHighlightOverlay
+                            containerRef={inputRowRef}
+                            isDark={isDark}
+                            ranges={mention.highlightRanges}
+                            textareaRef={inputRef}
+                            value={localInput}
                         />
                         <Box
                             ref={inputRef}
@@ -442,10 +519,50 @@ export const SpotlightOverlay = ({
                                     ? { color: DARK_TEXT_SOFT, opacity: 1 }
                                     : { opacity: 0.6 },
                             }}
-                            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                                handleInputChange(e.target.value)
-                            }
+                            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
+                                handleInputChange(e.target.value);
+                                mention.setCaret(e.target.selectionStart ?? e.target.value.length);
+                            }}
+                            onClick={syncMentionCaret}
+                            onKeyUp={syncMentionCaret}
                             onKeyDown={(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+                                // Mention-picker precedence: while the @/#
+                                // dropdown is open it owns Arrow / Enter /
+                                // Escape, beating result-row navigation and
+                                // ask-submit below. Escape additionally
+                                // stops propagation so the document-level
+                                // listener in useSpotlight doesn't close
+                                // the whole overlay on the same keystroke.
+                                if (mention.pickerOpen) {
+                                    if (e.key === "ArrowDown") {
+                                        e.preventDefault();
+                                        mention.moveHighlight(1);
+                                        return;
+                                    }
+                                    if (e.key === "ArrowUp") {
+                                        e.preventDefault();
+                                        mention.moveHighlight(-1);
+                                        return;
+                                    }
+                                    if (
+                                        e.key === "Enter" &&
+                                        !e.shiftKey &&
+                                        !e.metaKey &&
+                                        !e.ctrlKey &&
+                                        !e.altKey
+                                    ) {
+                                        e.preventDefault();
+                                        const c = mention.suggestions[mention.highlightIndex];
+                                        if (c) handleMentionSelect(c);
+                                        return;
+                                    }
+                                    if (e.key === "Escape") {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        mention.closePicker();
+                                        return;
+                                    }
+                                }
                                 // Once the query spans multiple lines, the
                                 // user almost certainly wants Up/Down to
                                 // move the caret between lines rather than
@@ -491,7 +608,7 @@ export const SpotlightOverlay = ({
                                     // editable so the search typeahead keeps
                                     // working in the results section below.
                                     if (askDisabled) return;
-                                    onAsk();
+                                    onAsk(undefined, mention.consumeMentions(localInput));
                                 }
                             }}
                         />
@@ -566,7 +683,9 @@ export const SpotlightOverlay = ({
                                             m: { xs: 0, sm: undefined },
                                         },
                                     }}
-                                    onClick={() => onAsk()}
+                                    onClick={() =>
+                                        onAsk(undefined, mention.consumeMentions(localInput))
+                                    }
                                 >
                                     <Box
                                         component="span"
