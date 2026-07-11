@@ -1,12 +1,14 @@
 // Structured @/# mention types for the agent input surfaces (Spotlight,
 // ThreadAsk, NoteAsk).
 //
-// The user picks entities from a dropdown; the input keeps the plain
-// `@Name` / `#Title` token in the query text (human-readable in session
-// history), while the picked `AgentMentionRef` carries the resolved ids.
-// At send time the surviving refs (tokens the user didn't edit away) are
-// converted to the backend wire shape and posted alongside the query —
-// see `toWireMentions` and `AgentMentionPayload` in services/agentApi.
+// The user picks entities from a dropdown — or just types the full
+// `@Name` / `#Title` token, which auto-resolves on exact label match
+// (see useAgentMentionDraft). The input keeps the plain token in the
+// query text (human-readable in session history), while the
+// `AgentMentionRef` carries the resolved ids. At send time the resolved
+// refs (tokens present in the final text) are converted to the backend
+// wire shape and posted alongside the query — see `toWireMentions` and
+// `AgentMentionPayload` in services/agentApi.
 
 import type { AgentMentionPayload } from "../../../services/agentApi";
 
