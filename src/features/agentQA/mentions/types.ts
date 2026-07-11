@@ -16,7 +16,8 @@ export type AgentMentionRef =
     // 1 = Personal, 2 = Task, 3 = Chat — the same integer codes
     // `NoteContext` uses (the "Shared" UI bucket is normalised to 1).
     | { kind: "note"; noteType: 1 | 2 | 3; noteId: number; label: string }
-    | { kind: "chat"; chatType: number; chatId: string; label: string };
+    | { kind: "chat"; chatType: number; chatId: string; label: string }
+    | { kind: "project"; projectId: number; label: string };
 
 // One dropdown row. `trigger` decides which menu ("@" members vs "#"
 // entities) the candidate belongs to; `key` is a stable identity used
@@ -39,6 +40,8 @@ export const mentionKey = (ref: AgentMentionRef): string => {
             return `note:${ref.noteType}:${ref.noteId}`;
         case "chat":
             return `chat:${ref.chatType}:${ref.chatId}`;
+        case "project":
+            return `project:${ref.projectId}`;
     }
 };
 
@@ -64,5 +67,7 @@ export const toWireMentions = (refs: AgentMentionRef[]): AgentMentionPayload[] =
                     chat_id: ref.chatId,
                     label: ref.label,
                 };
+            case "project":
+                return { type: "project", project_id: ref.projectId, label: ref.label };
         }
     });

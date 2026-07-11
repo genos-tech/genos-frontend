@@ -6,15 +6,18 @@
 //                  `membersOverride` prop for surfaces mounted outside
 //                  it (SpotlightOverlay receives `useTEM.teamMembers`
 //                  from the App root).
-//   `#` entities — `useHashMentionData()`: the same tasks / notes / GM
-//                  chats that back the BlockNote `#` menu, so both
-//                  pickers stay in coverage lock-step.
+//   `#` entities — `useHashMentionData()`: the tasks / notes / projects
+//                  that back the BlockNote `#` menu, plus ALL chat
+//                  types (`allChats`, not the editors' GM-only `chats`
+//                  list — agent asks are private to the requester, so
+//                  the DM-title leak rationale doesn't apply here).
 
 import { useMemo } from "react";
 
 import { useOptionalAvatarContext } from "../../../components/ui/avatars/AvatarContext";
 import { useHashMentionData } from "../../../context/HashMentionDataContext";
 import type { UserProps } from "../../../types/admin";
+import type { AllChatProps } from "../../../types/chat";
 import { mentionKey, type AgentMentionCandidate, type AgentMentionRef } from "./types";
 
 // HashNoteEntry kind → NoteContext integer code. "shared" is the UI
@@ -32,6 +35,17 @@ const candidate = (
     trigger: "@" | "#",
     subtitle?: string
 ): AgentMentionCandidate => ({ ref, trigger, key: mentionKey(ref), subtitle });
+
+// MDM (chatType 4) chats carry no server-side `chatName`; their display
+// name is the comma-separated member names — same convention as the
+// chat sidebar (`resolveChatDisplayName`). DM / GM / PM chatNames are
+// server-resolved.
+const chatDisplayName = (c: AllChatProps): string => {
+    if (c.chatType === 4 && !c.chatName) {
+        return c.mdmMembers?.map((m) => m.userName).join(", ") || "";
+    }
+    return c.chatName || "";
+};
 
 export interface UseAgentMentionSourcesArgs {
     membersOverride?: UserProps[];
@@ -75,18 +89,26 @@ export const useAgentMentionSources = (args?: UseAgentMentionSourcesArgs): Agent
             if (!n.title || !noteType) continue;
             out.push(candidate({ kind: "note", noteType, noteId: n.noteId, label: n.title }, "#"));
         }
-        // `hash.chats` is already GM-only (filtered by the provider).
-        for (const c of hash.chats) {
-            if (!c.chatName || !c.chatId) continue;
+        // All chat types (DM / GM / PM / MDM) — see the module comment.
+        for (const c of hash.allChats) {
+            const label = chatDisplayName(c);
+            if (!label || !c.chatId) continue;
+            out.push(
+                candidate({ kind: "chat", chatType: c.chatType, chatId: c.chatId, label }, "#")
+            );
+        }
+        for (const p of hash.projects) {
+            if (!p.projectName || !Number.isFinite(p.projectId)) continue;
             out.push(
                 candidate(
-                    { kind: "chat", chatType: c.chatType, chatId: c.chatId, label: c.chatName },
-                    "#"
+                    { kind: "project", projectId: p.projectId, label: p.projectName },
+                    "#",
+                    p.projectCode ?? undefined
                 )
             );
         }
         return out;
-    }, [hash.tasks, hash.notes, hash.chats]);
+    }, [hash.tasks, hash.notes, hash.allChats, hash.projects]);
 
     return useMemo(() => ({ members, entities }), [members, entities]);
 };
