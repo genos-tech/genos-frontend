@@ -280,6 +280,45 @@ describe("useAgentMentionDraft", () => {
         expect(result.current.draft.consumeMentions("visit @Aliceland")).toEqual([]);
     });
 
+    it("a picked @group highlights and reaches consumeMentions", () => {
+        // Regression: the token matcher inferred the trigger as
+        // `kind === "user" ? "@" : "#"`, so a picked group was searched
+        // as "#test-group" while the text held "@test-group" — no
+        // highlight, and the ref was silently dropped from the payload.
+        const group: AgentMentionCandidate = {
+            ref: { kind: "group", groupId: 3, label: "test-group" },
+            trigger: "@",
+            key: "group:3",
+        };
+        const { result } = renderHook(() => {
+            const [value, setValue] = useState("");
+            const draft = useAgentMentionDraft({
+                value,
+                onChange: setValue,
+                members: [group],
+                entities: [],
+            });
+            return { value, setValue, draft };
+        });
+        act(() => {
+            result.current.setValue("who is in @test");
+        });
+        act(() => {
+            result.current.draft.setCaret(15);
+        });
+        expect(result.current.draft.suggestions).toEqual([group]);
+        act(() => {
+            result.current.draft.selectSuggestion(group);
+        });
+        expect(result.current.value).toBe("who is in @test-group ");
+        expect(result.current.draft.highlightRanges).toEqual([
+            { ref: group.ref, start: 10, end: 21 },
+        ]);
+        expect(result.current.draft.consumeMentions("who is in @test-group ?")).toEqual([
+            { kind: "group", groupId: 3, label: "test-group" },
+        ]);
+    });
+
     it("highlightRanges tracks live tokens and follows edits", () => {
         const { result } = renderHook(() => useHarness());
         act(() => {
