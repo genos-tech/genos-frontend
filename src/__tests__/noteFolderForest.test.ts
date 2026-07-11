@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { MyNoteFolderProps, MyNoteMetaTreeNode } from "../types/notes";
 import {
+    buildFolderCrumbChain,
     buildMyNoteFolderForest,
     buildMyNoteTree,
     collectDescendantFolderIds,
@@ -102,6 +103,31 @@ describe("collectFolderAncestorIds", () => {
     it("terminates on cycle-corrupt input", () => {
         const corrupt = [folder(1, 2), folder(2, 1)];
         expect(collectFolderAncestorIds(corrupt, 1)).toEqual([1, 2]);
+    });
+});
+
+describe("buildFolderCrumbChain", () => {
+    const folders = [folder(1, null, "A"), folder(2, 1, "B"), folder(3, 2, "C")];
+
+    it("resolves outermost-first {folderId, name} crumbs", () => {
+        // Note filed in the deepest folder (3) → full ancestry, top-down.
+        expect(buildFolderCrumbChain(folders, 3)).toEqual([
+            { folderId: 1, name: "A" },
+            { folderId: 2, name: "B" },
+            { folderId: 3, name: "C" },
+        ]);
+    });
+
+    it("returns a single crumb for a root folder", () => {
+        expect(buildFolderCrumbChain(folders, 1)).toEqual([{ folderId: 1, name: "A" }]);
+    });
+
+    it("yields [] for folder-less and unknown folderIds (shared-note safety)", () => {
+        // null → no folder; 42 (not in this user's list, e.g. a shared
+        // note's owner-folder) → dropped, so no cross-user name leak.
+        expect(buildFolderCrumbChain(folders, null)).toEqual([]);
+        expect(buildFolderCrumbChain(folders, undefined)).toEqual([]);
+        expect(buildFolderCrumbChain(folders, 42)).toEqual([]);
     });
 });
 

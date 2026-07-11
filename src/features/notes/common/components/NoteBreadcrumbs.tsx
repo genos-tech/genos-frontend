@@ -1,5 +1,6 @@
 import { ReactNode, useEffect, useRef } from "react";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
 import { Box, Stack, Tooltip, Typography } from "@mui/joy";
 
 import { useIsMobile } from "../../../../hooks/common/useIsMobile";
@@ -7,6 +8,11 @@ import { useIsMobile } from "../../../../hooks/common/useIsMobile";
 export interface BreadcrumbNode {
     noteId: number;
     title: string;
+}
+
+export interface FolderCrumb {
+    folderId: number;
+    name: string;
 }
 
 interface NoteBreadcrumbsProps {
@@ -20,6 +26,11 @@ interface NoteBreadcrumbsProps {
     noteChain: BreadcrumbNode[] | null | undefined;
     /** Callback when a breadcrumb node is clicked */
     onNodeClick: (noteId: number) => void;
+    /** Optional ancestry of sidebar folders the note lives under
+     *  (outermost-first), rendered BEFORE the note chain as
+     *  non-interactive context labels. My-Notes only — task/chat notes
+     *  have no folder concept. */
+    folderChain?: FolderCrumb[] | null;
     /** Maximum characters to show before truncating (default: 14) */
     maxTitleLength?: number;
 }
@@ -79,6 +90,7 @@ export const NoteBreadcrumbs = ({
     color,
     noteChain,
     onNodeClick,
+    folderChain,
     maxTitleLength = 14,
 }: NoteBreadcrumbsProps) => {
     const isMobile = useIsMobile();
@@ -93,7 +105,7 @@ export const NoteBreadcrumbs = ({
         if (scrollContainerRef.current) {
             scrollContainerRef.current.scrollLeft = scrollContainerRef.current.scrollWidth;
         }
-    }, [noteChain]);
+    }, [noteChain, folderChain]);
 
     // Hidden on mobile per design — the compact mobile header already
     // shows the current note title; the full breadcrumb trail is
@@ -182,6 +194,62 @@ export const NoteBreadcrumbs = ({
                     {label}
                 </Typography>
             </Box>
+
+            {/* Folder Chain (My Notes only). The note's sidebar-folder
+                ancestry, outermost-first, shown as non-interactive context
+                labels ahead of the note nodes. A leading folder icon +
+                muted tone distinguishes them from the clickable note
+                crumbs — folders are an organization layer, not a view. */}
+            {folderChain &&
+                folderChain.map((folder) => (
+                    <Stack
+                        key={`folder-${folder.folderId}`}
+                        alignItems="center"
+                        direction="row"
+                        spacing={0.5}
+                    >
+                        <ChevronRightIcon
+                            sx={{
+                                fontSize: 16,
+                                color: "neutral.400",
+                                opacity: 0.7,
+                            }}
+                        />
+                        <Tooltip
+                            placement="bottom"
+                            size="sm"
+                            title={folder.name}
+                            variant="outlined"
+                            sx={{
+                                maxWidth: 280,
+                                "& .MuiTooltip-arrow": {
+                                    color: "background.level2",
+                                },
+                            }}
+                            arrow
+                        >
+                            <Box
+                                sx={{
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: 0.5,
+                                    padding: "4px 10px",
+                                    borderRadius: "6px",
+                                    color: "text.tertiary",
+                                    fontWeight: 500,
+                                    fontSize: "0.875rem",
+                                    lineHeight: 1.43,
+                                    whiteSpace: "nowrap",
+                                }}
+                            >
+                                <FolderRoundedIcon
+                                    sx={{ fontSize: 15, color: scheme.text, opacity: 0.65 }}
+                                />
+                                <span>{truncateTitle(folder.name)}</span>
+                            </Box>
+                        </Tooltip>
+                    </Stack>
+                ))}
 
             {/* Breadcrumb Chain */}
             {noteChain &&

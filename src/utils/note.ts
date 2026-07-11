@@ -97,6 +97,26 @@ export function collectFolderAncestorIds(
     return chain;
 }
 
+// Outermost-first folder ancestry for a note filed in `folderId`,
+// resolved to {folderId, name} crumbs for the note-header breadcrumb.
+// Built on `collectFolderAncestorIds` (nearest-first, cycle-safe) then
+// reversed. An unknown/absent folderId — a folder-less note, or a shared
+// note whose owner's folder isn't in this user's list — yields []
+// (folders are never shared, so no cross-user leak).
+export function buildFolderCrumbChain(
+    folders: MyNoteFolderProps[],
+    folderId: number | null | undefined
+): { folderId: number; name: string }[] {
+    const byId = new Map(folders.map((f) => [f.folderId, f]));
+    return collectFolderAncestorIds(folders, folderId)
+        .slice()
+        .reverse()
+        .flatMap((id) => {
+            const folder = byId.get(id);
+            return folder ? [{ folderId: folder.folderId, name: folder.name }] : [];
+        });
+}
+
 // All folder ids inside `folderId`'s subtree, itself included. The
 // move-to-folder picker disables these as targets (cycle prevention).
 // Tolerates cycle-corrupt input via the visited set.
