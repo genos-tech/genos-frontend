@@ -1220,6 +1220,32 @@ const MilestonePreviewInner = ({
     }, []);
     const [bodyEdited, setBodyEdited] = useState(false);
     const [bodySaved, setBodySaved] = useState(false);
+
+    // Deferred App-root sync for body autosaves. Persisting every 3s while
+    // edited is unchanged (durability), but the state writes each save used
+    // to make — the milestone-list upsert (which feeds this preview's own
+    // `milestone` memo, so it also rebuilt the whole preview subtree via
+    // the tsUpdatedAt-keyed effect), the currentMilestone mirror, and the
+    // allTasks row bump ("Updated" column) — now land ONCE, on the first
+    // idle tick after the last save (or on switch/unmount), instead of
+    // re-rendering the App while the user is still typing. The pending
+    // payload is the latest server response, so a late flush syncs exactly
+    // what was persisted. `syncMilestoneToAllTasks` is declared further
+    // down; the flush closure only reads it at call time, post-render.
+    const pendingMilestoneSyncRef = useRef<Milestone | null>(null);
+    const flushPendingMilestoneSync = () => {
+        const pending = pendingMilestoneSyncRef.current;
+        if (!pending) return;
+        pendingMilestoneSyncRef.current = null;
+        useSM.applyMilestoneToState(pending);
+        syncMilestoneToAllTasks(pending);
+    };
+    const flushPendingMilestoneSyncRef = useRef(flushPendingMilestoneSync);
+    flushPendingMilestoneSyncRef.current = flushPendingMilestoneSync;
+    // Unmount-only flush (the interval effect's own cleanup re-runs on
+    // every `bodyEdited` flip, so it can't host this without re-creating
+    // the per-save sync this defers).
+    useEffect(() => () => flushPendingMilestoneSyncRef.current(), []);
     const [taskContentLike, setTaskContentLike] = useState<TaskProps>(() =>
         milestoneToTaskProps(milestone ?? ({} as Milestone), usePM.currentProject, myself)
     );
@@ -1258,6 +1284,10 @@ const MilestonePreviewInner = ({
     // unsaved body either.
     useEffect(() => {
         if (!milestone) return;
+        // Land any deferred sync still pending for the PREVIOUS milestone
+        // before this one takes over the draft state (the pending payload
+        // carries its own ids, so flushing here is always safe).
+        flushPendingMilestoneSyncRef.current();
         setTitleDraft(milestone.title);
         if (!bodyEdited) {
             setBodyDraft((milestone.description as PartialBlock[]) ?? []);
@@ -1688,7 +1718,12 @@ const MilestonePreviewInner = ({
     useEffect(() => {
         const id = setInterval(async () => {
             if (!milestone) return;
-            if (!bodyEdited) return;
+            if (!bodyEdited) {
+                // The session went idle (a full tick with nothing to
+                // save) — land the deferred sync now.
+                flushPendingMilestoneSyncRef.current();
+                return;
+            }
             const updated = await useSM.updateExistingMilestone(
                 {
                     milestoneId: milestone.milestoneId,
@@ -1703,12 +1738,10 @@ const MilestonePreviewInner = ({
                           projectName: usePM.currentProject?.projectName ?? "",
                           displayId: milestone.displayId ?? null,
                       }
-                    : undefined
+                    : undefined,
+                { deferStateSync: true }
             );
-            // Body changes don't show in the table, but we still want
-            // tsUpdatedAt to bump there so any "Updated" column / sort
-            // stays correct after a description-only edit.
-            if (updated) syncMilestoneToAllTasks(updated);
+            if (updated) pendingMilestoneSyncRef.current = updated;
             setBodyEdited(false);
             setBodySaved(true);
         }, 3000);

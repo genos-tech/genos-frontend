@@ -140,8 +140,14 @@ export interface SprintMilestoneManagementState {
         input: UpdateMilestoneInput,
         projectId: number,
         socket?: Socket | null,
-        mentionMeta?: Omit<MilestoneMentionContext, "socket" | "tsUpdatedAt">
+        mentionMeta?: Omit<MilestoneMentionContext, "socket" | "tsUpdatedAt">,
+        opts?: { deferStateSync?: boolean }
     ) => Promise<Milestone | null>;
+    /** The App-root state writes `updateExistingMilestone` performs by
+     *  default (milestone-list upsert + currentMilestone mirror). A
+     *  `deferStateSync` caller invokes this itself once its editing
+     *  session goes idle. */
+    applyMilestoneToState: (m: Milestone) => void;
     moveMilestone: (
         milestoneId: number,
         sprintId: number | null,
@@ -366,12 +372,24 @@ export const useSprintMilestoneManagement = (
         [accessToken]
     );
 
+    // App-root state writes for a freshly-updated milestone, split out of
+    // `updateExistingMilestone` so the milestone-body autosave loop can
+    // DEFER them to the end of a typing session: `projectMilestones` feeds
+    // the open preview's own `milestone` memo, so an upsert here re-renders
+    // the whole App AND rebuilds the preview subtree — every 3s while the
+    // user is still typing.
+    const applyMilestoneToState = useCallback((m: Milestone) => {
+        setProjectMilestonesState((prev) => upsertMilestoneInList(prev, m));
+        setCurrentMilestone((prev) => (prev && prev.milestoneId === m.milestoneId ? m : prev));
+    }, []);
+
     const updateExistingMilestone = useCallback(
         async (
             input: UpdateMilestoneInput,
             _projectId: number,
             socket?: Socket | null,
-            mentionMeta?: Omit<MilestoneMentionContext, "socket" | "tsUpdatedAt">
+            mentionMeta?: Omit<MilestoneMentionContext, "socket" | "tsUpdatedAt">,
+            opts?: { deferStateSync?: boolean }
         ): Promise<Milestone | null> => {
             let mentionCtx: MilestoneMentionContext | undefined;
             if (socket && mentionMeta) {
@@ -381,15 +399,17 @@ export const useSprintMilestoneManagement = (
             }
             const res = await updateMilestone(input, accessToken, mentionCtx);
             if (res?.milestone) {
-                setProjectMilestonesState((prev) => upsertMilestoneInList(prev, res.milestone));
-                if (currentMilestone?.milestoneId === res.milestone.milestoneId) {
-                    setCurrentMilestone(res.milestone);
-                }
+                // IDB cache writes are render-free — immediate on both paths.
                 syncMilestoneBackingTaskCaches(res.milestone);
+                // `deferStateSync` callers own calling `applyMilestoneToState`
+                // (+ their table sync) when their editing session goes idle.
+                if (!opts?.deferStateSync) {
+                    applyMilestoneToState(res.milestone);
+                }
             }
             return res?.milestone ?? null;
         },
-        [accessToken, currentMilestone]
+        [accessToken, applyMilestoneToState]
     );
 
     const moveMilestone = useCallback(
@@ -500,6 +520,7 @@ export const useSprintMilestoneManagement = (
         removeSprint,
         createNewMilestone,
         updateExistingMilestone,
+        applyMilestoneToState,
         moveMilestone,
         removeMilestone,
         assignMilestoneMember,
