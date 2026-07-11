@@ -65,9 +65,10 @@ const openAndType = async (query: string) => {
         hook.result.current.open();
         hook.result.current.setQuery(query);
     });
-    // Let the 250ms debounce fire and both passes get issued.
+    // Let the search debounce (DEBOUNCE_MS in useSpotlight, 400ms) fire
+    // and both passes get issued.
     await act(async () => {
-        await vi.advanceTimersByTimeAsync(300);
+        await vi.advanceTimersByTimeAsync(450);
     });
     return hook;
 };

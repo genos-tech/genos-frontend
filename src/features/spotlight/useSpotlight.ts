@@ -63,7 +63,12 @@ import type { SpotlightResult } from "./types";
 // agentQA package becomes the canonical home.
 export type { AskState, CompletedTurn, ToolEvent };
 
-const DEBOUNCE_MS = 250;
+// Search debounce on query changes. Deliberately generous (was 250):
+// smooth typing beats fast results (product call, 2026-07-11) — with
+// the overlay's own 150 ms write debounce the typing→results floor is
+// ~550 ms, and fewer mid-typing result landings means fewer App-level
+// re-renders while the user is still composing.
+const DEBOUNCE_MS = 400;
 const RESULT_LIMIT = 20;
 // Typeahead relevance thresholds passed explicitly to the search view so
 // the *relative* floor drives result cutoff, not the absolute one.

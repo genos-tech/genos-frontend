@@ -155,6 +155,13 @@ interface Props {
 // "at the bottom" of the conversation. Streaming auto-scroll only
 // fires while at-bottom; if the user has scrolled up to read history,
 // we leave them in place.
+// Overlay→hook query write debounce (ms). Keystrokes update only the
+// overlay-local input; the App-level `query` (and thus the typeahead
+// search pipeline) sees the text once the user pauses. 150 keeps the
+// worst-case typing→results floor at ~550 ms with the hook's own
+// search debounce — an explicit smooth-typing > fast-results tradeoff.
+const QUERY_WRITE_DEBOUNCE_MS = 150;
+
 const SCROLL_FOLLOW_THRESHOLD_PX = 50;
 // Number of citation chips shown before the "+N more" expand button.
 const CHIPS_INITIAL = 4;
@@ -240,31 +247,66 @@ export const SpotlightOverlay = ({
     // ---- Input performance: decouple display from heavy renders. ----
     //
     // `localInput` updates on EVERY keystroke (instant, local). It drives
-    // only the input's `value` and the Ask-button-enabled check; it never
-    // re-enters the hook tree.
+    // the input's `value`, the mention picker, and the Ask-button check;
+    // it never re-enters the hook tree.
     //
-    // `onQueryChange(val)` fires immediately on every keystroke too, so
-    // the hook can schedule its own debounced fetch (250 ms — see
-    // `useSpotlight`). We used to add a 400 ms debounce here on top of
-    // the hook's debounce, which floored typing-to-results at ~650 ms.
-    // Dropping it cuts the floor to ~250 ms.
-    //
-    // To keep the results list smooth while `query` updates per
-    // keystroke, the list reads a *deferred* copy of `query` (further
-    // below). React schedules the highlight regex re-runs at low
-    // priority so the input itself never stutters.
+    // `onQueryChange` is DEBOUNCED (see `handleInputChange` below) —
+    // `query` lives in useSpotlight at the App root, so writing it per
+    // keystroke re-renders the whole App. The results list additionally
+    // reads a *deferred* copy of `query` so its highlight regex re-runs
+    // at low priority when the write does land.
     const [localInput, setLocalInput] = useState(query);
 
     useEffect(() => {
         setLocalInput(query);
     }, [query]);
 
+    // Trailing debounce for the overlay→hook query write. `query` state
+    // lives in useSpotlight at the App ROOT, so an eager per-keystroke
+    // setQuery re-renders the whole App — including the keep-alive
+    // ChatHome/TaskHome trees — on every character. Typing smoothness
+    // beats search latency (product call, 2026-07-11): keystrokes touch
+    // only `localInput`; App-level state updates once per pause. Submit
+    // never waits on this — both Ask sites pass `localInput` as
+    // `overrideQuery`, so the asked text can't go stale.
+    const queryWriteTimerRef = useRef<number | null>(null);
+    const pendingQueryRef = useRef<string | null>(null);
+
     const handleInputChange = useCallback(
         (val: string) => {
             setLocalInput(val);
-            onQueryChange(val);
+            pendingQueryRef.current = val;
+            if (queryWriteTimerRef.current !== null) {
+                window.clearTimeout(queryWriteTimerRef.current);
+            }
+            queryWriteTimerRef.current = window.setTimeout(() => {
+                queryWriteTimerRef.current = null;
+                if (pendingQueryRef.current !== null) {
+                    onQueryChange(pendingQueryRef.current);
+                    pendingQueryRef.current = null;
+                }
+            }, QUERY_WRITE_DEBOUNCE_MS);
         },
         [onQueryChange]
+    );
+
+    // External query updates (history restore, post-ask clear, close)
+    // supersede anything still pending in the debounce window.
+    useEffect(() => {
+        if (queryWriteTimerRef.current !== null) {
+            window.clearTimeout(queryWriteTimerRef.current);
+            queryWriteTimerRef.current = null;
+        }
+        pendingQueryRef.current = null;
+    }, [query]);
+
+    useEffect(
+        () => () => {
+            if (queryWriteTimerRef.current !== null) {
+                window.clearTimeout(queryWriteTimerRef.current);
+            }
+        },
+        []
     );
 
     // ---- @/# mention picker. ----
@@ -284,6 +326,21 @@ export const SpotlightOverlay = ({
         members: mentionSources.members,
         entities: mentionSources.entities,
     });
+    // Submit path: cancel any pending debounced query write (the ask
+    // supplies its own text; a post-ask write would just trigger a stray
+    // search + App re-render) and hand the CURRENT input to the hook as
+    // `overrideQuery` — never the debounced `query`, which may lag the
+    // input by up to QUERY_WRITE_DEBOUNCE_MS.
+    const { consumeMentions } = mention;
+    const submitAsk = useCallback(() => {
+        if (queryWriteTimerRef.current !== null) {
+            window.clearTimeout(queryWriteTimerRef.current);
+            queryWriteTimerRef.current = null;
+        }
+        pendingQueryRef.current = null;
+        onAsk(localInput, consumeMentions(localInput));
+    }, [onAsk, localInput, consumeMentions]);
+
     const syncMentionCaret = useCallback(() => {
         const ta = inputRef.current;
         if (ta) mention.setCaret(ta.selectionStart ?? 0);
@@ -617,7 +674,7 @@ export const SpotlightOverlay = ({
                                     // editable so the search typeahead keeps
                                     // working in the results section below.
                                     if (askDisabled) return;
-                                    onAsk(undefined, mention.consumeMentions(localInput));
+                                    submitAsk();
                                 }
                             }}
                         />
@@ -692,9 +749,7 @@ export const SpotlightOverlay = ({
                                             m: { xs: 0, sm: undefined },
                                         },
                                     }}
-                                    onClick={() =>
-                                        onAsk(undefined, mention.consumeMentions(localInput))
-                                    }
+                                    onClick={submitAsk}
                                 >
                                     <Box
                                         component="span"
