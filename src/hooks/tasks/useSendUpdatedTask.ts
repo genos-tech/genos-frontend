@@ -43,6 +43,13 @@ export interface UseSendUpdatedTaskParams {
 
     // Option 2: Provide consolidated state (recommended)
     taskEditState?: TaskEditStateManagement;
+
+    /** Live body source, read at CALL time. When provided it wins over the
+     *  render-captured `body` / `taskEditState.body`. TaskPreview routes the
+     *  editor's debounced body sync into a ref instead of state (a state
+     *  write re-rendered the whole preview subtree on every sync while
+     *  typing), so the PUT must read the ref for the freshest content. */
+    bodyRef?: { current: PartialBlock[] };
 }
 
 /**
@@ -72,12 +79,14 @@ export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
     const setStartIntervalUpdatingTask =
         taskEditState?.setStartIntervalUpdatingTask ?? params.setStartIntervalUpdatingTask!;
 
+    const bodyRef = params.bodyRef;
+
     const sendUpdatedTask = useCallback(
         async (taskSwitched: boolean) => {
             const baseTaskContent: TaskProps = {
                 ...tmpCurrentTaskContent,
                 title: taskTitle === "" ? initTaskTitle : taskTitle,
-                body: body,
+                body: bodyRef ? bodyRef.current : body,
             };
 
             // Snapshot of negative-id rows being sent up — anything
@@ -151,7 +160,16 @@ export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
             // + mirror effects. So on a switch we only persist (the PUT above)
             // and reset the flags below. The merge-attachments writeback runs
             // ONLY on the save-CURRENT path (the user edited the open task).
-            if (!taskSwitched) {
+            // Pure body autosaves (no attachments persisted, title
+            // unchanged) skip the writeback entirely: the merged values
+            // would be identity-churn only — body/title already live in
+            // local state and Yjs is the authoritative body store — but
+            // `setCurrentPreviewTask` is App-ROOT state, so each autosave
+            // was re-rendering the whole App mid-typing-session.
+            const writebackNeeded =
+                persistedAttachments.length > 0 ||
+                baseTaskContent.title !== tmpCurrentTaskContent.title;
+            if (!taskSwitched && writebackNeeded) {
                 // Use a functional updater so files the user added during
                 // the upload round-trip aren't clobbered by our stale
                 // closure on `tmpCurrentTaskContent`.
@@ -186,6 +204,7 @@ export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
             taskTitle,
             initTaskTitle,
             body,
+            bodyRef,
             taskBodyEdited,
             taskStatusUpdated,
             setUploadedFiles,
