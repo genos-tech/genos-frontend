@@ -274,7 +274,12 @@ export const UserProfileStatus = ({
                             )}
                         </Dropdown>
 
-                        {!openEditor && (
+                        {/* Self always sees the chip (it doubles as the
+                            "Update Status" button when empty). For other
+                            members, only show it when they actually have a
+                            status set — never the "Update Status" prompt,
+                            which you can't act on for someone else. */}
+                        {!openEditor && (isSelfView || customStatus !== "") && (
                             <Chip
                                 color="neutral"
                                 size="md"

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import {
     Box,
@@ -96,15 +96,35 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
     const [isSubmittingQuick, setIsSubmittingQuick] = useState(false);
     const [quickError, setQuickError] = useState<string | null>(null);
 
-    // External refresh signal: another client added/moved a subtask.
-    // Scoped by task id via the `genos:task-touched` bus; the local
+    // Mirror the loaded child ids so the touched-event listener can tell
+    // whether an "update" concerns a subtask we're currently showing,
+    // without re-subscribing every time the list changes.
+    const childTaskIdsRef = useRef<Set<number>>(new Set());
+    useEffect(() => {
+        childTaskIdsRef.current = new Set(
+            childTasks.map((c) => c.id).filter((id): id is number => id != null)
+        );
+    }, [childTasks]);
+
+    // External refresh signal via the `genos:task-touched` bus; the local
     // quick-add path refetches directly and doesn't need this.
     const [childRefreshNonce, setChildRefreshNonce] = useState(0);
     useEffect(() => {
         const parentTaskId = currentTaskContent.id;
         if (parentTaskId == null) return;
         return onTaskTouched(({ taskId, kind }) => {
+            // A subtask was added / moved / reparented under this parent.
             if (kind === "children" && taskId === parentTaskId) {
+                setChildRefreshNonce((n) => n + 1);
+                return;
+            }
+            // A subtask currently shown here was edited elsewhere (its own
+            // preview, a modal task view, or another client) — refetch so
+            // its row (status, title, assignee) reflects the change right
+            // away instead of after a reload. The load path's cache is
+            // invalidated on "update" too (see loadSpecificChildTasks), so
+            // this refetch hits fresh data.
+            if (kind === "update" && childTaskIdsRef.current.has(taskId)) {
                 setChildRefreshNonce((n) => n + 1);
             }
         });
