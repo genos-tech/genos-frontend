@@ -9,6 +9,7 @@ import { UIStateManagementState } from "../../hooks/common/useUIStateManagement"
 import { NoteManagementState } from "../../hooks/notes/useNoteManagement";
 import { SprintMilestoneManagementState } from "../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
+import { UseTodoGroupsState } from "../../hooks/useTodoGroups";
 import { UserProps } from "../../types/admin";
 import { ModalTarget } from "../../utils/parseInternalUrl";
 
@@ -29,6 +30,9 @@ const ModalNoteView = lazy(() =>
 );
 const ModalTaskView = lazy(() =>
     import("./views/ModalTaskView").then((m) => ({ default: m.ModalTaskView }))
+);
+const ModalTodoView = lazy(() =>
+    import("./views/ModalTodoView").then((m) => ({ default: m.ModalTodoView }))
 );
 
 const ViewLoadingFallback = () => (
@@ -51,6 +55,7 @@ type UrlLinkModalProps = {
     usePM: ProjectManagementState;
     useNM: NoteManagementState;
     useSM?: SprintMilestoneManagementState;
+    useTG: UseTodoGroupsState;
     // Stacking override. Defaults to 10020, the chat-message link case.
     // The Spotlight overlay sits at 13100, so the preview opened from a
     // citation inside an answer must pass a higher value (e.g. 13200)
@@ -63,7 +68,7 @@ type UrlLinkModalProps = {
 // via `onClose`. Sizing is viewport-relative so the dialog stays usable
 // on a wide range of screen sizes without overflowing.
 export const UrlLinkModal = (props: UrlLinkModalProps) => {
-    const { target, onClose, zIndex, ...rest } = props;
+    const { target, onClose, zIndex, useTG, ...rest } = props;
     const effectiveZIndex = zIndex ?? 10020;
 
     const renderBody = () => {
@@ -91,6 +96,25 @@ export const UrlLinkModal = (props: UrlLinkModalProps) => {
                     target={target}
                     onClose={onClose}
                     {...rest}
+                />
+            );
+        }
+        if (target.kind === "todo") {
+            // Narrower prop set than the other views on purpose — the
+            // todo pane renders against the shared useTG, not the
+            // task/project/note management states.
+            return (
+                <ModalTodoView
+                    accessToken={rest.accessToken}
+                    myself={rest.myself}
+                    setMyself={rest.setMyself}
+                    socket={rest.socket}
+                    target={target}
+                    useCM={rest.useCM}
+                    useTEM={rest.useTEM}
+                    useTG={useTG}
+                    useUISM={rest.useUISM}
+                    onClose={onClose}
                 />
             );
         }

@@ -1,4 +1,4 @@
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
 import FilterListRoundedIcon from "@mui/icons-material/FilterListRounded";
@@ -29,11 +29,28 @@ type ToDoPaneProps = {
     useUISM: UIStateManagementState;
     useTG: UseTodoGroupsState;
     currentWindowHeight: number;
+    // True when rendered inside UrlLinkModal (ModalTodoView): the pane
+    // fills its container instead of the viewport math below, and the
+    // Pro-Tip footer is dropped to give the list room.
+    hostedInModal?: boolean;
+    // Deep-link target: scroll the owning group into view and highlight
+    // the item (highlight threads down to TodoItemRow).
+    focusTarget?: { localDate: string; itemId?: number };
 };
 
 export const ToDoPane = (props: ToDoPaneProps) => {
-    const { useCM, myself, useTEM, setMyself, socket, useUISM, useTG, currentWindowHeight } =
-        props;
+    const {
+        useCM,
+        myself,
+        useTEM,
+        setMyself,
+        socket,
+        useUISM,
+        useTG,
+        currentWindowHeight,
+        hostedInModal = false,
+        focusTarget,
+    } = props;
     const { mode } = useColorScheme();
     const { t } = useTranslation();
     const isDark = mode === "dark";
@@ -78,10 +95,31 @@ export const ToDoPane = (props: ToDoPaneProps) => {
 
     const todayExists = groups.some((g) => g.localDate === getLocalCurrentDate());
 
+    // Deep-link: bring the target group into the viewport. Prefer the
+    // group that actually CONTAINS the item (belt-and-braces against the
+    // URL's date drifting from the item's real group), falling back to
+    // the localDate match for item-less date links. TodoItemRow then
+    // fine-centers the exact row via scrollIntoView.
+    const focusGroupIndex = useMemo(() => {
+        if (!focusTarget) return -1;
+        if (focusTarget.itemId != null) {
+            const byItem = displayGroups.findIndex((g) =>
+                g.items.some((i) => i.itemId === focusTarget.itemId)
+            );
+            if (byItem !== -1) return byItem;
+        }
+        return displayGroups.findIndex((g) => g.localDate === focusTarget.localDate);
+    }, [displayGroups, focusTarget]);
+
+    useEffect(() => {
+        if (focusGroupIndex < 0) return;
+        virtuosoRef.current?.scrollToIndex({ align: "start", index: focusGroupIndex });
+    }, [focusGroupIndex]);
+
     return (
         <Box
             sx={{
-                height: "calc(100dvh - 64px)",
+                height: hostedInModal ? "100%" : "calc(100dvh - 64px)",
                 display: "flex",
                 flexDirection: "column",
                 background: isDark
@@ -205,6 +243,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                     <Virtuoso
                         ref={virtuosoRef}
                         className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
+                        initialTopMostItemIndex={focusGroupIndex >= 0 ? focusGroupIndex : 0}
                         totalCount={displayGroups.length}
                         itemContent={(index) => {
                             const group = displayGroups[index] as TodoGroupProps;
@@ -213,6 +252,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                     key={`todo-group-${group.groupId}`}
                                     categories={categories}
                                     group={group}
+                                    highlightItemId={focusTarget?.itemId}
                                     myself={myself}
                                     setMyself={setMyself}
                                     socket={socket}
@@ -228,9 +268,11 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                             );
                         }}
                         style={{
-                            height: useCM.isSubChatVisible
-                                ? `${(currentWindowHeight - 250) * 0.43}px`
-                                : `${currentWindowHeight - 250}px`,
+                            height: hostedInModal
+                                ? "100%"
+                                : useCM.isSubChatVisible
+                                  ? `${(currentWindowHeight - 250) * 0.43}px`
+                                  : `${currentWindowHeight - 250}px`,
                         }}
                     />
                 ) : (
@@ -242,61 +284,63 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                 )}
             </Box>
 
-            {/* Pro Tip footer */}
-            <Box
-                sx={{
-                    mt: "auto",
-                    px: 2.5,
-                    py: 2,
-                    borderTop: "1px solid",
-                    borderColor: isDark ? "rgba(124,58,237,0.15)" : "rgba(124,58,237,0.1)",
-                    background: isDark
-                        ? "linear-gradient(135deg, rgba(124,58,237,0.08) 0%, rgba(168,85,247,0.08) 100%)"
-                        : "linear-gradient(135deg, rgba(124,58,237,0.06) 0%, rgba(168,85,247,0.06) 100%)",
-                }}
-            >
-                <Stack alignItems="center" direction="row" spacing={2}>
-                    <Box
-                        sx={{
-                            width: 40,
-                            height: 40,
-                            borderRadius: "10px",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            flexShrink: 0,
-                            backgroundColor: isDark
-                                ? "rgba(124,58,237,0.15)"
-                                : "rgba(124,58,237,0.1)",
-                        }}
-                    >
-                        <TipsAndUpdatesRoundedIcon
-                            sx={{ fontSize: 22, color: isDark ? "#a78bfa" : "#7c3aed" }}
-                        />
-                    </Box>
-                    <Box sx={{ flex: 1, minWidth: 0 }}>
-                        <Typography
-                            level="title-sm"
+            {/* Pro Tip footer — dropped in the modal to give the list room. */}
+            {hostedInModal ? null : (
+                <Box
+                    sx={{
+                        mt: "auto",
+                        px: 2.5,
+                        py: 2,
+                        borderTop: "1px solid",
+                        borderColor: isDark ? "rgba(124,58,237,0.15)" : "rgba(124,58,237,0.1)",
+                        background: isDark
+                            ? "linear-gradient(135deg, rgba(124,58,237,0.08) 0%, rgba(168,85,247,0.08) 100%)"
+                            : "linear-gradient(135deg, rgba(124,58,237,0.06) 0%, rgba(168,85,247,0.06) 100%)",
+                    }}
+                >
+                    <Stack alignItems="center" direction="row" spacing={2}>
+                        <Box
                             sx={{
-                                fontWeight: 600,
-                                color: isDark ? "rgba(255,255,255,0.85)" : "rgba(0,0,0,0.8)",
-                                mb: 0.25,
+                                width: 40,
+                                height: 40,
+                                borderRadius: "10px",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                flexShrink: 0,
+                                backgroundColor: isDark
+                                    ? "rgba(124,58,237,0.15)"
+                                    : "rgba(124,58,237,0.1)",
                             }}
                         >
-                            {t.chat.todoPane.proTip}
-                        </Typography>
-                        <Typography
-                            level="body-sm"
-                            sx={{
-                                color: isDark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.55)",
-                            }}
-                        >
-                            Ask the agent: "what's left today?" or "create a todo: …" — the
-                            Spotlight palette can read, add, and toggle your items directly.
-                        </Typography>
-                    </Box>
-                </Stack>
-            </Box>
+                            <TipsAndUpdatesRoundedIcon
+                                sx={{ fontSize: 22, color: isDark ? "#a78bfa" : "#7c3aed" }}
+                            />
+                        </Box>
+                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                            <Typography
+                                level="title-sm"
+                                sx={{
+                                    fontWeight: 600,
+                                    color: isDark ? "rgba(255,255,255,0.85)" : "rgba(0,0,0,0.8)",
+                                    mb: 0.25,
+                                }}
+                            >
+                                {t.chat.todoPane.proTip}
+                            </Typography>
+                            <Typography
+                                level="body-sm"
+                                sx={{
+                                    color: isDark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.55)",
+                                }}
+                            >
+                                Ask the agent: "what's left today?" or "create a todo: …" — the
+                                Spotlight palette can read, add, and toggle your items directly.
+                            </Typography>
+                        </Box>
+                    </Stack>
+                </Box>
+            )}
         </Box>
     );
 };

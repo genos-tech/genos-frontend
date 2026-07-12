@@ -26,6 +26,8 @@ export const chat = {
         proTipBody: "Double click on a message to add it to your todo",
         save: "Save",
         saved: "Saved",
+        copyLink: "Copy link",
+        linkCopied: "Link copied",
     },
     thread: {
         replyPlaceholder: "Reply in thread…",

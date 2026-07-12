@@ -341,6 +341,21 @@ export const App = () => {
     // hooks, BrowserRouter, and every provider above.
     const urlLinkModal = useUrlLinkModalState({ navigate });
 
+    // Fresh-load todo deep link: /workspace/todo/... has no page route
+    // (the /workspace/* catch-all renders nothing), so a pasted URL
+    // would land on a blank workspace. Once auth has settled, open the
+    // preview modal for it — one-shot, so closing the modal doesn't
+    // re-trigger on later renders.
+    const todoDeepLinkHandledRef = useRef(false);
+    useEffect(() => {
+        if (todoDeepLinkHandledRef.current) return;
+        if (!accessToken || !myself.userId) return;
+        if (!window.location.pathname.startsWith("/workspace/todo/")) return;
+        todoDeepLinkHandledRef.current = true;
+        urlLinkModal.openModalByHref(window.location.pathname);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [accessToken, myself.userId]);
+
     // Handle thread task interactions
     useThreadTaskHandling({ useCM, useTM });
 
@@ -1044,6 +1059,7 @@ export const App = () => {
                                                                                     usePM={usePM}
                                                                                     useSM={useSM}
                                                                                     useTEM={useTEM}
+                                                                                    useTG={useTG}
                                                                                     useTM={useTM}
                                                                                     accessToken={
                                                                                         accessToken

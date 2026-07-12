@@ -4,6 +4,7 @@ import AddIcon from "@mui/icons-material/Add";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import ExpandLessRoundedIcon from "@mui/icons-material/ExpandLessRounded";
 import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
+import LinkRoundedIcon from "@mui/icons-material/LinkRounded";
 import SubdirectoryArrowRightRoundedIcon from "@mui/icons-material/SubdirectoryArrowRightRounded";
 import { Box, Checkbox, IconButton, Input, Link, Stack } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
@@ -14,6 +15,7 @@ import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../../../hooks/common/UrlLinkModalContext";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
+import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TodoCategoryProps, TodoItemProps } from "../../../../types/chat";
 import { CategoryPickerMenu } from "./CategoryPickerMenu";
@@ -23,6 +25,13 @@ import { TodoNotesEditor } from "./TodoNotesEditor";
 interface TodoItemRowProps {
     item: TodoItemProps;
     categories: TodoCategoryProps[];
+    // The owning group's day bucket (YYYY-MM-DD) — the deep-link URL for
+    // this item is /workspace/todo/:localDate/item/:itemId.
+    localDate: string;
+    // Deep-link target: when it matches this row's itemId, the row is
+    // tinted + ringed and scrolled into view so the user can tell which
+    // todo the opened URL pointed at.
+    highlightItemId?: number;
     // Direct children of this row. Empty on rows that are themselves
     // children (one-level nesting cap).
     subitems?: TodoItemProps[];
@@ -155,6 +164,8 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
     const {
         item,
         categories,
+        localDate,
+        highlightItemId,
         subitems = [],
         myself,
         setMyself,
@@ -174,6 +185,7 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
     const isChild = item.parentItemId !== null;
 
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
 
     // null outside the app's UrlLinkModalProvider; passed to
@@ -198,6 +210,41 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
     );
     const [notesBody, setNotesBody] = useState<PartialBlock[]>(() => ensureNonEmpty(item.notes));
     const notesDirtyRef = useRef(false);
+
+    const isHighlighted = highlightItemId != null && item.itemId === highlightItemId;
+
+    // Copy-link feedback: flips the tooltip to "Link copied" briefly.
+    const [linkCopied, setLinkCopied] = useState(false);
+    const linkCopiedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    useEffect(() => {
+        return () => {
+            if (linkCopiedTimerRef.current) clearTimeout(linkCopiedTimerRef.current);
+        };
+    }, []);
+    const handleCopyLink = async () => {
+        const url = `${window.location.origin}/workspace/todo/${localDate}/item/${item.itemId}`;
+        try {
+            await navigator.clipboard.writeText(url);
+            setLinkCopied(true);
+            if (linkCopiedTimerRef.current) clearTimeout(linkCopiedTimerRef.current);
+            linkCopiedTimerRef.current = setTimeout(() => setLinkCopied(false), 1500);
+        } catch {
+            // Clipboard unavailable (permissions/insecure context) — the
+            // tooltip simply doesn't flip; nothing else to do.
+        }
+    };
+
+    // Center the deep-link target once it's rendered. The small delay
+    // defers past Virtuoso mounting the group row (ToDoPane scrolls the
+    // group into the viewport first; this fine-positions the item).
+    const rootRef = useRef<HTMLDivElement | null>(null);
+    useEffect(() => {
+        if (!isHighlighted) return;
+        const id = setTimeout(() => {
+            rootRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+        }, 120);
+        return () => clearTimeout(id);
+    }, [isHighlighted]);
 
     // Subitem add: a small inline input that the user opens with the
     // "+ subitem" button. Only meaningful on top-level rows; children
@@ -250,14 +297,30 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
 
     const currentCategory = categories.find((c) => c.categoryId === item.categoryId);
 
+    // Purple accent family, matching the pane's header/footer styling.
+    const accentBg = isDark ? "rgba(167,139,250,0.14)" : "rgba(124,58,237,0.08)";
+    const accentRing = isDark ? "rgba(167,139,250,0.6)" : "rgba(124,58,237,0.45)";
+
     return (
         <Box
+            ref={rootRef}
             sx={{
                 borderRadius: "8px",
                 px: 1,
                 py: 0.75,
+                // Tint the row while it's the deep-link target or being
+                // edited so the user can tell which todo is active; the
+                // ring is reserved for the URL target (unmistakable even
+                // next to hover/edit tints).
+                background: isHighlighted || isEditingTitle ? accentBg : undefined,
+                boxShadow: isHighlighted ? `inset 0 0 0 1.5px ${accentRing}` : undefined,
                 "&:hover": {
-                    background: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)",
+                    background:
+                        isHighlighted || isEditingTitle
+                            ? accentBg
+                            : isDark
+                              ? "rgba(255,255,255,0.03)"
+                              : "rgba(0,0,0,0.02)",
                 },
             }}
         >
@@ -365,6 +428,23 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
                         onSelect={(categoryId) => onCategoryChange(item.itemId, categoryId)}
                     />
                 )}
+                {/* Copy-link only on top-level rows — subitems have no
+                    own deep link (they're reachable via the parent). */}
+                {!isChild && (
+                    <AppTooltip
+                        title={linkCopied ? t.chat.todoPane.linkCopied : t.chat.todoPane.copyLink}
+                    >
+                        <IconButton
+                            aria-label={t.chat.todoPane.copyLink}
+                            size="sm"
+                            sx={{ borderRadius: "6px" }}
+                            variant="plain"
+                            onClick={handleCopyLink}
+                        >
+                            <LinkRoundedIcon sx={{ fontSize: 16 }} />
+                        </IconButton>
+                    </AppTooltip>
+                )}
                 {/* "+ subitem" only on top-level rows. */}
                 {!isChild && onAddSubitem && (
                     <AppTooltip title="Add subitem">
@@ -441,7 +521,9 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
                         <TodoItemRow
                             key={child.itemId}
                             categories={categories}
+                            highlightItemId={highlightItemId}
                             item={child}
+                            localDate={localDate}
                             myself={myself}
                             setMyself={setMyself}
                             socket={socket}

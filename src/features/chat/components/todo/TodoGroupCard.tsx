@@ -23,6 +23,8 @@ const COLORS = {
 interface TodoGroupCardProps {
     group: TodoGroupProps;
     categories: TodoCategoryProps[];
+    // Deep-link target item; forwarded to sections/rows for the highlight.
+    highlightItemId?: number;
     onAddItem: (localDate: string, title: string, categoryId: number | null) => Promise<void>;
     onAddSubitem: (localDate: string, parentItemId: number, title: string) => Promise<void>;
     onPatchItem: (itemId: number, patch: UpdateTodoItemPatch) => void;
@@ -40,6 +42,7 @@ export const TodoGroupCard = (props: TodoGroupCardProps) => {
     const {
         group,
         categories,
+        highlightItemId,
         onAddItem,
         onAddSubitem,
         onPatchItem,
@@ -190,7 +193,9 @@ export const TodoGroupCard = (props: TodoGroupCardProps) => {
                         key={`${group.groupId}-${s.categoryId ?? "none"}`}
                         categories={categories}
                         categoryId={s.categoryId}
+                        highlightItemId={highlightItemId}
                         items={s.items}
+                        localDate={group.localDate}
                         myself={myself}
                         setMyself={setMyself}
                         socket={socket}

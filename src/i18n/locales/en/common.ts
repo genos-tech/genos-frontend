@@ -138,6 +138,9 @@ export const common = {
         milestoneUnavailable: "This milestone isn't available.",
         milestoneLoadFailed: "Failed to load this milestone.",
         loadingMilestone: "Loading…",
+        todoUnavailable:
+            "This todo couldn't be found — it may have been deleted or belong to another user.",
+        loadingTodos: "Loading…",
     },
     editor: {
         send: "Send",
