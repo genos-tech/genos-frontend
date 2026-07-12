@@ -16,6 +16,7 @@ import {
     useMentionGroupModalState,
 } from "./context/MentionGroupModalContext";
 import { MentionGroupsProvider } from "./context/MentionGroupsContext";
+import { SessionSupersededOverlay } from "./components/common/SessionSupersededOverlay";
 import { FeatureErrorBoundary } from "./components/FeatureErrorBoundary";
 import { BottomTabBar } from "./components/layout/BottomTabBar";
 import { ConnectionStatusSnackbar } from "./components/layout/ConnectionStatusSnackbar";
@@ -125,7 +126,8 @@ export const App = () => {
     const location = useLocation();
 
     // Initialize app with authentication and basic setup
-    const { accessToken, myself, setMyself, useUISM, useTEM, useMGM } = useAppInitialization();
+    const { accessToken, myself, setMyself, useUISM, useTEM, useMGM, supersededByTeamName } =
+        useAppInitialization();
 
     // Analytics: identify the user when their profile is available and
     // emit a $pageview on every route change. Both hooks are passive
@@ -959,6 +961,11 @@ export const App = () => {
         <CssVarsProvider theme={purpleTheme} disableTransitionOnChange>
             <CssBaseline />
             <I18nProvider>
+                {/* Blocks the tab when another tab takes over the single
+                    browser session with a different team/user (see
+                    useMyself). Sits above everything; renders nothing in
+                    the normal case. */}
+                <SessionSupersededOverlay teamName={supersededByTeamName} />
                 <ThemePreferenceProvider>
                     <BubbleStylePreferenceProvider>
                         <DoubleClickTodoPreferenceProvider>

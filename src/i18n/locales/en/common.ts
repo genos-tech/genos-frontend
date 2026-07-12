@@ -142,6 +142,13 @@ export const common = {
             "This todo couldn't be found — it may have been deleted or belong to another user.",
         loadingTodos: "Loading…",
     },
+    sessionSuperseded: {
+        title: "Switched to another team",
+        // `{team}` is the team now signed in via another browser tab.
+        body: "You signed in to {team} in another tab. Only one team can be active per browser, so this tab is out of date. Reload to continue.",
+        reload: "Reload",
+        fallbackTeam: "another team",
+    },
     editor: {
         send: "Send",
         sendAriaLabel: "Send message",

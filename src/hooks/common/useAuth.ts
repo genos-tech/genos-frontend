@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { UserProps } from "../../types/admin";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
@@ -34,8 +34,32 @@ export const useMyself = (accessToken: string | null) => {
         avatarImgPath: "",
     });
 
+    // The team that took over the browser session from another tab, or
+    // null while this tab is still the active session. The browser holds
+    // exactly ONE session (the refresh cookie is singular per origin), so
+    // a fresh sign-in / team-switch in another tab orphans this one. When
+    // that happens we FREEZE this tab (see below) and surface the winning
+    // team's name so App can render a "reload to continue" banner. Sticky
+    // — once set, the tab stays frozen until the user reloads.
+    const [supersededByTeamName, setSupersededByTeamName] = useState<string | null>(null);
+    const supersededRef = useRef(false);
+    // Mirrors the latest `myself` so the storage listener compares the
+    // incoming localStorage identity against this tab's CURRENT team/user
+    // (which an in-app team switch updates via `setMyself`), not a stale
+    // boot-time capture — otherwise switching teams in THIS tab and then
+    // a third tab switching again would misfire.
+    const myselfRef = useRef(myself);
+    useEffect(() => {
+        myselfRef.current = myself;
+    }, [myself]);
+
     useEffect(() => {
         const fetchUserData = () => {
+            // Once superseded the tab is frozen — never re-pull identity
+            // (a token refresh re-runs this effect, and localStorage now
+            // holds the winning team, which would un-freeze the tab and
+            // resume the leaky in-place migration we're avoiding).
+            if (supersededRef.current) return;
             const newMyself: UserProps = {
                 teamId: localStorage.getItem("teamId") || "",
                 teamName: localStorage.getItem("teamName") || "",
@@ -67,7 +91,35 @@ export const useMyself = (accessToken: string | null) => {
         // actually reads. `evt.key === null` covers `localStorage.clear()`,
         // which wipes our keys too.
         const onStorage = (evt: StorageEvent) => {
+            // Already frozen behind the reload banner — ignore everything
+            // until the user reloads.
+            if (supersededRef.current) return;
             if (evt.key !== null && !WATCHED_STORAGE_KEYS.has(evt.key)) return;
+
+            // Detect another tab taking over the session with a DIFFERENT
+            // team or user. Only meaningful once THIS tab is itself signed
+            // into a team (empty identity = a signed-out/booting tab, which
+            // just hydrates normally). A different non-empty teamId/userId
+            // means "latest login wins" has moved the browser elsewhere.
+            const boundTeamId = myselfRef.current.teamId;
+            const boundUserId = myselfRef.current.userId;
+            if (boundTeamId || boundUserId) {
+                const nextTeamId = localStorage.getItem("teamId") || "";
+                const nextUserId = localStorage.getItem("userId") || "";
+                const teamSwitched = nextTeamId !== "" && nextTeamId !== boundTeamId;
+                const userSwitched = nextUserId !== "" && nextUserId !== boundUserId;
+                if (teamSwitched || userSwitched) {
+                    // Do NOT migrate `myself` in place: this tab's React
+                    // state, in-flight requests and the shared IndexedDB
+                    // cache are all scoped to the OLD team, so silently
+                    // flipping the id here is exactly what combines data
+                    // across teams. Freeze instead; the reload reboots the
+                    // tab cleanly onto the winning team.
+                    supersededRef.current = true;
+                    setSupersededByTeamName(localStorage.getItem("teamName") || "");
+                    return;
+                }
+            }
             fetchUserData();
         };
         window.addEventListener("storage", onStorage);
@@ -77,5 +129,5 @@ export const useMyself = (accessToken: string | null) => {
         };
     }, [accessToken]);
 
-    return { myself, setMyself };
+    return { myself, setMyself, supersededByTeamName };
 };

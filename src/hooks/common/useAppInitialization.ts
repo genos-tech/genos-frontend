@@ -11,7 +11,7 @@ import { useUIStateManagement } from "./useUIStateManagement";
 
 export const useAppInitialization = () => {
     const { accessToken } = useAuth();
-    const { myself, setMyself } = useMyself(accessToken);
+    const { myself, setMyself, supersededByTeamName } = useMyself(accessToken);
     const useUISM = useUIStateManagement();
     const useTEM = useTeamManagement(myself, accessToken);
     // Single instance of the mention-group cache for the whole app —
@@ -75,5 +75,6 @@ export const useAppInitialization = () => {
         useUISM,
         useTEM,
         useMGM,
+        supersededByTeamName,
     };
 };
