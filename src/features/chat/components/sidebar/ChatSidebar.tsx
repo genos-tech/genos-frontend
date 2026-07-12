@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import AccountTreeRoundedIcon from "@mui/icons-material/AccountTreeRounded";
+import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import DoneAllRoundedIcon from "@mui/icons-material/DoneAllRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import GroupsIcon from "@mui/icons-material/Groups";
@@ -789,24 +790,68 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
 
                     {/* Flagged Messages */}
                     {useCM.currentChatPaneType === CHAT_PANE_TYPES.FLAGGED && (
-                        <ChatList
-                            actions={{ setIsToDoVisible }}
-                            chatRouting={chatRouting}
-                            currentActivityMessageType={currentActivityMessageType}
-                            data={{ myself, setMyself }}
-                            flaggedViewMode={showPastFlagged ? "past" : "active"}
-                            selectedActivityChipIds={EMPTY_CHIP_SET}
-                            selectedActivityInstanceIds={EMPTY_INSTANCE_SET}
-                            selectedActivityMentionGroupIds={EMPTY_GROUP_ID_SET}
-                            socket={socket}
-                            state={{ showOnlyUnreadItems, incompleteTodoCount, isToDoVisible }}
-                            targetChatType={6}
-                            useCM={useCM}
-                            usePM={usePM}
-                            useTEM={useTEM}
-                            useTM={useTM}
-                            useUISM={useUISM}
-                        />
+                        <>
+                            {/* One-click return to the active flags while
+                                viewing completed flags (the more-menu is the
+                                way in; this is the easier way back out). */}
+                            {showPastFlagged && (
+                                <Box
+                                    role="button"
+                                    tabIndex={0}
+                                    sx={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 1,
+                                        cursor: "pointer",
+                                        mx: 1,
+                                        mb: 0.5,
+                                        px: 1.25,
+                                        py: 0.75,
+                                        borderRadius: "8px",
+                                        color: isDark ? "#a78bfa" : "#7c3aed",
+                                        fontSize: "0.8rem",
+                                        fontWeight: 600,
+                                        background: isDark
+                                            ? "rgba(124,58,237,0.1)"
+                                            : "rgba(124,58,237,0.06)",
+                                        transition: "background 0.15s ease",
+                                        "&:hover": {
+                                            background: isDark
+                                                ? "rgba(124,58,237,0.18)"
+                                                : "rgba(124,58,237,0.12)",
+                                        },
+                                    }}
+                                    onClick={() => setShowPastFlagged(false)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter" || e.key === " ") {
+                                            e.preventDefault();
+                                            setShowPastFlagged(false);
+                                        }
+                                    }}
+                                >
+                                    <ArrowBackRoundedIcon sx={{ fontSize: 18 }} />
+                                    {t.chat.sidebar.backToActiveFlaggedButton}
+                                </Box>
+                            )}
+                            <ChatList
+                                actions={{ setIsToDoVisible }}
+                                chatRouting={chatRouting}
+                                currentActivityMessageType={currentActivityMessageType}
+                                data={{ myself, setMyself }}
+                                flaggedViewMode={showPastFlagged ? "past" : "active"}
+                                selectedActivityChipIds={EMPTY_CHIP_SET}
+                                selectedActivityInstanceIds={EMPTY_INSTANCE_SET}
+                                selectedActivityMentionGroupIds={EMPTY_GROUP_ID_SET}
+                                socket={socket}
+                                state={{ showOnlyUnreadItems, incompleteTodoCount, isToDoVisible }}
+                                targetChatType={6}
+                                useCM={useCM}
+                                usePM={usePM}
+                                useTEM={useTEM}
+                                useTM={useTM}
+                                useUISM={useUISM}
+                            />
+                        </>
                     )}
                 </Box>
 

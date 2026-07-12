@@ -392,6 +392,7 @@ export const ja: DeepPartial<Messages> = {
             emptyPastFlaggedSubtitle: "完了にしたフラグはここに表示されます",
             viewPastFlaggedMenu: "完了したフラグを表示",
             viewActiveFlaggedMenu: "アクティブなフラグを表示",
+            backToActiveFlaggedButton: "アクティブなフラグに戻る",
         },
         listItem: {
             backToChat: "チャットに戻る",

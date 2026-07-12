@@ -105,6 +105,7 @@ export const chat = {
         emptyPastFlaggedSubtitle: "Flags you mark done show up here",
         viewPastFlaggedMenu: "View completed flags",
         viewActiveFlaggedMenu: "View active flags",
+        backToActiveFlaggedButton: "Back to active flags",
     },
     listItem: {
         backToChat: "Back to Chat",
