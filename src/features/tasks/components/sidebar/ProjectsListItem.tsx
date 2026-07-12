@@ -3,7 +3,7 @@ import AssignmentIcon from "@mui/icons-material/Assignment";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import LockOutlineIcon from "@mui/icons-material/LockOutline";
 import WorkIcon from "@mui/icons-material/Work";
-import { Box, List, ListItem, ListItemContent, Typography } from "@mui/joy";
+import { Avatar, Box, List, ListItem, ListItemContent, Typography } from "@mui/joy";
 import ListItemButton from "@mui/joy/ListItemButton";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
@@ -16,6 +16,7 @@ import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprin
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
+import { buildAvatarSrc } from "../../../../utils/avatarSrc";
 import { popSpecificProjectTasks } from "../../services/popSpecificProjectTasks";
 import { Toggler } from "./common";
 import { JoinProjectListItem } from "./projects_subs/JoinProjectListItem";
@@ -157,6 +158,17 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                             index
                         ) => {
                             const isSelected = projectId === usePM.currentProject?.projectId;
+                            // Resolve this project's PM chat (chatType 3) so we
+                            // can show its uploaded avatar image. Same canonical
+                            // lookup TaskHeader / HistoryModal use. When the PM
+                            // chat isn't hydrated or has no image, `buildAvatarSrc`
+                            // returns undefined and the <Avatar> falls back to the
+                            // AssignmentIcon child — i.e. the prior look.
+                            const pmChat = useCM.allChats.find(
+                                (chat) =>
+                                    chat.chatType === 3 && chat.project?.projectId === projectId
+                            );
+                            const avatarSrc = buildAvatarSrc(pmChat?.profileImagePath);
                             return (
                                 isJoined === true && (
                                     <Toggler
@@ -290,18 +302,28 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                                                     }
                                                 }}
                                             >
-                                                <AssignmentIcon
+                                                <Avatar
+                                                    size="sm"
+                                                    src={avatarSrc}
                                                     sx={{
-                                                        fontSize: 16,
-                                                        color: isSelected
-                                                            ? isDark
-                                                                ? "#fb923c"
-                                                                : "#ea580c"
-                                                            : isDark
-                                                              ? "rgba(255,255,255,0.6)"
-                                                              : "rgba(0,0,0,0.5)",
+                                                        width: 20,
+                                                        height: 20,
+                                                        flexShrink: 0,
                                                     }}
-                                                />
+                                                >
+                                                    <AssignmentIcon
+                                                        sx={{
+                                                            fontSize: 14,
+                                                            color: isSelected
+                                                                ? isDark
+                                                                    ? "#fb923c"
+                                                                    : "#ea580c"
+                                                                : isDark
+                                                                  ? "rgba(255,255,255,0.6)"
+                                                                  : "rgba(0,0,0,0.5)",
+                                                        }}
+                                                    />
+                                                </Avatar>
 
                                                 {isPrivate === true && (
                                                     <LockOutlineIcon
