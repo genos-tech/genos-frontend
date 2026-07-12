@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
 import FilterListRoundedIcon from "@mui/icons-material/FilterListRounded";
@@ -49,13 +49,51 @@ export const ToDoPane = (props: ToDoPaneProps) => {
         useTG,
         currentWindowHeight,
         hostedInModal = false,
-        focusTarget,
+        focusTarget: focusTargetProp,
     } = props;
     const { mode } = useColorScheme();
     const { t } = useTranslation();
     const isDark = mode === "dark";
 
     const virtuosoRef = useRef<VirtuosoHandle | null>(null);
+
+    // Page-mode deep-link target. A pasted /workspace/todo/... URL (or a
+    // Spotlight todo click) routes to the self-DM page — App can't prop-
+    // drill the target through the keep-alive ChatHome tree, so it hands
+    // it over via sessionStorage (pane not mounted yet on a fresh load)
+    // and the `openTodoPane` event detail (pane already mounted). The
+    // modal instance gets its target as a prop and skips both channels.
+    const [routedFocusTarget, setRoutedFocusTarget] = useState<{
+        localDate: string;
+        itemId?: number;
+    } | null>(() => {
+        if (hostedInModal) return null;
+        const raw = sessionStorage.getItem("todoDeepLinkTarget");
+        if (!raw) return null;
+        sessionStorage.removeItem("todoDeepLinkTarget");
+        try {
+            return JSON.parse(raw) as { localDate: string; itemId?: number };
+        } catch {
+            return null;
+        }
+    });
+    useEffect(() => {
+        if (hostedInModal) return;
+        const handler = (e: Event) => {
+            const detail = (e as CustomEvent).detail as
+                | { localDate?: string; itemId?: number }
+                | null
+                | undefined;
+            if (detail?.localDate) {
+                setRoutedFocusTarget({ itemId: detail.itemId, localDate: detail.localDate });
+                sessionStorage.removeItem("todoDeepLinkTarget");
+            }
+        };
+        window.addEventListener("openTodoPane", handler);
+        return () => window.removeEventListener("openTodoPane", handler);
+    }, [hostedInModal]);
+
+    const focusTarget = focusTargetProp ?? routedFocusTarget ?? undefined;
 
     const { groups, categories, incompleteCount, addItem, patchItem, removeItem, addCategory } =
         useTG;
@@ -115,6 +153,25 @@ export const ToDoPane = (props: ToDoPaneProps) => {
         if (focusGroupIndex < 0) return;
         virtuosoRef.current?.scrollToIndex({ align: "start", index: focusGroupIndex });
     }, [focusGroupIndex]);
+
+    // A completed target is invisible on the Incomplete tab — flip to
+    // All so the highlight can actually be seen. Once per target (the
+    // ref guard), so the user can still switch back to Incomplete
+    // afterwards without us fighting them. In the modal the tab is
+    // pre-initialized by ModalTodoView, making this a no-op there.
+    const tabFlipHandledRef = useRef<string | null>(null);
+    useEffect(() => {
+        if (!focusTarget || focusTarget.itemId == null) return;
+        const key = `${focusTarget.localDate}:${focusTarget.itemId}`;
+        if (tabFlipHandledRef.current === key) return;
+        const item = groups.flatMap((g) => g.items).find((i) => i.itemId === focusTarget.itemId);
+        if (!item) return; // groups still loading — retry on next change
+        tabFlipHandledRef.current = key;
+        if (item.isCompleted && useCM.showOnlyInCompleteTodos) {
+            useCM.setShowOnlyInCompleteTodos(false);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [focusTarget, groups, useCM.showOnlyInCompleteTodos]);
 
     return (
         <Box

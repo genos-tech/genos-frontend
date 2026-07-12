@@ -1,10 +1,8 @@
 import { ReactNode, useEffect, useRef, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
 import AddIcon from "@mui/icons-material/Add";
-import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import ExpandLessRoundedIcon from "@mui/icons-material/ExpandLessRounded";
 import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
-import LinkRoundedIcon from "@mui/icons-material/LinkRounded";
 import SubdirectoryArrowRightRoundedIcon from "@mui/icons-material/SubdirectoryArrowRightRounded";
 import { Box, Checkbox, IconButton, Input, Link, Stack } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
@@ -15,11 +13,10 @@ import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../../../hooks/common/UrlLinkModalContext";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
-import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TodoCategoryProps, TodoItemProps } from "../../../../types/chat";
-import { CategoryPickerMenu } from "./CategoryPickerMenu";
 import { useLinkifyPaste } from "./titleLinks";
+import { TodoItemMoreMenu } from "./TodoItemMoreMenu";
 import { TodoNotesEditor } from "./TodoNotesEditor";
 
 interface TodoItemRowProps {
@@ -185,7 +182,6 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
     const isChild = item.parentItemId !== null;
 
     const { mode } = useColorScheme();
-    const { t } = useTranslation();
     const isDark = mode === "dark";
 
     // null outside the app's UrlLinkModalProvider; passed to
@@ -294,8 +290,6 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
             onNotesCommit(item.itemId, isEffectivelyEmpty(notesBody) ? null : notesBody);
         }
     };
-
-    const currentCategory = categories.find((c) => c.categoryId === item.categoryId);
 
     // Purple accent family, matching the pane's header/footer styling.
     const accentBg = isDark ? "rgba(167,139,250,0.14)" : "rgba(124,58,237,0.08)";
@@ -416,35 +410,6 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
                         )}
                     </IconButton>
                 </AppTooltip>
-                {/* Tag picker sits right beside the subitem control. Both
-                    are top-level-only actions; children inherit the parent's
-                    tag, so the picker is hidden on child rows. */}
-                {!isChild && (
-                    <CategoryPickerMenu
-                        categories={categories}
-                        currentCategoryId={item.categoryId}
-                        triggerLabel={currentCategory ? currentCategory.name : null}
-                        onCreate={onCategoryCreate}
-                        onSelect={(categoryId) => onCategoryChange(item.itemId, categoryId)}
-                    />
-                )}
-                {/* Copy-link only on top-level rows — subitems have no
-                    own deep link (they're reachable via the parent). */}
-                {!isChild && (
-                    <AppTooltip
-                        title={linkCopied ? t.chat.todoPane.linkCopied : t.chat.todoPane.copyLink}
-                    >
-                        <IconButton
-                            aria-label={t.chat.todoPane.copyLink}
-                            size="sm"
-                            sx={{ borderRadius: "6px" }}
-                            variant="plain"
-                            onClick={handleCopyLink}
-                        >
-                            <LinkRoundedIcon sx={{ fontSize: 16 }} />
-                        </IconButton>
-                    </AppTooltip>
-                )}
                 {/* "+ subitem" only on top-level rows. */}
                 {!isChild && onAddSubitem && (
                     <AppTooltip title="Add subitem">
@@ -458,17 +423,18 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
                         </IconButton>
                     </AppTooltip>
                 )}
-                <AppTooltip title="Delete">
-                    <IconButton
-                        color="danger"
-                        size="sm"
-                        sx={{ borderRadius: "6px" }}
-                        variant="plain"
-                        onClick={() => onDelete(item.itemId)}
-                    >
-                        <DeleteOutlineRoundedIcon sx={{ fontSize: 16 }} />
-                    </IconButton>
-                </AppTooltip>
+                {/* Secondary actions (copy link / tag / delete) live behind
+                    one ⋮ menu — five inline icons per row was too noisy. */}
+                <TodoItemMoreMenu
+                    categories={categories}
+                    currentCategoryId={item.categoryId}
+                    isChild={isChild}
+                    linkCopied={linkCopied}
+                    onCopyLink={handleCopyLink}
+                    onCreateCategory={onCategoryCreate}
+                    onDelete={() => onDelete(item.itemId)}
+                    onSelectCategory={(categoryId) => onCategoryChange(item.itemId, categoryId)}
+                />
             </Stack>
             {notesExpanded && (
                 <Box

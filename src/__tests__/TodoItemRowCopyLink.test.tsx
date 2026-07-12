@@ -1,7 +1,8 @@
-// TodoItemRow — the per-item "Copy link" affordance. Top-level items
-// copy their /workspace/todo/:localDate/item/:itemId deep link to the
-// clipboard; child rows (subitems) have no link of their own, so the
-// button must not render on them.
+// TodoItemRow — the per-item "Copy link" affordance, now inside the ⋮
+// more-options menu. Top-level items copy their
+// /workspace/todo/:localDate/item/:itemId deep link to the clipboard;
+// child rows (subitems) have no link of their own, so their menu holds
+// only Delete.
 
 import { CssVarsProvider } from "@mui/joy/styles";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
@@ -52,10 +53,10 @@ const renderRow = (item: TodoItemProps) =>
         </CssVarsProvider>
     );
 
-describe("TodoItemRow — copy link", () => {
+describe("TodoItemRow — copy link via the more-options menu", () => {
     beforeEach(() => vi.clearAllMocks());
 
-    it("copies the item's deep link on a top-level row", async () => {
+    it("copies the item's deep link from a top-level row's menu", async () => {
         const writeText = vi.fn().mockResolvedValue(undefined);
         Object.defineProperty(navigator, "clipboard", {
             configurable: true,
@@ -63,7 +64,8 @@ describe("TodoItemRow — copy link", () => {
         });
 
         renderRow(makeItem());
-        fireEvent.click(screen.getByLabelText("Copy link"));
+        fireEvent.click(screen.getByLabelText("More options"));
+        fireEvent.click(await screen.findByText("Copy link"));
 
         await waitFor(() =>
             expect(writeText).toHaveBeenCalledWith(
@@ -72,8 +74,11 @@ describe("TodoItemRow — copy link", () => {
         );
     });
 
-    it("does not render the button on a child row (subitems have no own link)", () => {
+    it("offers only Delete on a child row (no link/tag of its own)", async () => {
         renderRow(makeItem({ parentItemId: 5 }));
-        expect(screen.queryByLabelText("Copy link")).toBeNull();
+        fireEvent.click(screen.getByLabelText("More options"));
+        await screen.findByText("Delete");
+        expect(screen.queryByText("Copy link")).toBeNull();
+        expect(screen.queryByText("Tag")).toBeNull();
     });
 });

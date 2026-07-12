@@ -73,6 +73,7 @@ import { NotificationIntent } from "./services/notifications/types";
 import { refreshAllData } from "./services/refreshAllData";
 import { useRuntimeConfigBootstrap } from "./services/runtimeConfig/useRuntimeConfig";
 import { canonicalSpotlightHref, milestoneIdFromEntityId } from "./utils/canonicalSpotlightHref";
+import { parseInternalUrl } from "./utils/parseInternalUrl";
 
 import { I18nProvider } from "./i18n";
 import { purpleTheme } from "./theme/purplePalette";
@@ -343,18 +344,48 @@ export const App = () => {
 
     // Fresh-load todo deep link: /workspace/todo/... has no page route
     // (the /workspace/* catch-all renders nothing), so a pasted URL
-    // would land on a blank workspace. Once auth has settled, open the
-    // preview modal for it — one-shot, so closing the modal doesn't
-    // re-trigger on later renders.
+    // would land on a blank workspace. Mirror how a pasted chat-message
+    // URL behaves — open the PAGE, not the preview modal (the modal is
+    // reserved for clicked links): route to the self-DM with the todo
+    // pane flipped visible and hand the focus target to ToDoPane via
+    // sessionStorage — ChatHome/ToDoPane aren't mounted yet on a fresh
+    // load, so a CustomEvent would be lost. One-shot; waits for the
+    // chat list so the self-DM is resolvable.
     const todoDeepLinkHandledRef = useRef(false);
     useEffect(() => {
         if (todoDeepLinkHandledRef.current) return;
         if (!accessToken || !myself.userId) return;
         if (!window.location.pathname.startsWith("/workspace/todo/")) return;
+        const classified = parseInternalUrl(window.location.pathname);
+        if (classified.kind !== "todo") {
+            todoDeepLinkHandledRef.current = true;
+            return;
+        }
+        const selfDm = useCM.allChats.find(
+            (c) => c.chatType === 1 && c.dmPartnerUser?.userId === myself.userId
+        );
+        // Chat list not loaded yet — the allChats dep re-runs us.
+        if (!selfDm) return;
         todoDeepLinkHandledRef.current = true;
-        urlLinkModal.openModalByHref(window.location.pathname);
+        localStorage.setItem("isToDoVisible", "true");
+        sessionStorage.setItem(
+            "todoDeepLinkTarget",
+            JSON.stringify({ itemId: classified.itemId, localDate: classified.localDate })
+        );
+        // PUNCH LIST (v3 chatId migration): same legacy-slot cast as the
+        // Spotlight todo branch below.
+        useCM.moveToSpecificChat(
+            1,
+            selfDm.chatId as unknown as number,
+            0,
+            false,
+            false,
+            useTM.setCurrentPreviewTaskId,
+            usePM.setCurrentProject,
+            undefined
+        );
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [accessToken, myself.userId]);
+    }, [accessToken, myself.userId, useCM.allChats]);
 
     // Handle thread task interactions
     useThreadTaskHandling({ useCM, useTM });
@@ -733,7 +764,23 @@ export const App = () => {
                     (c) => c.chatType === 1 && c.dmPartnerUser?.userId === myself.userId
                 );
                 localStorage.setItem("isToDoVisible", "true");
-                window.dispatchEvent(new CustomEvent("openTodoPane"));
+                // Hand the clicked item to ToDoPane so it can scroll to
+                // and highlight it: sessionStorage covers a pane that
+                // mounts later; the event detail covers one already
+                // mounted (its listener consumes the same shape).
+                const todoMatch = /^todo:(\d{4}-\d{2}-\d{2})(?::item:(\d+))?$/.exec(
+                    r.entity_id || ""
+                );
+                const focusDetail = todoMatch
+                    ? {
+                          itemId: todoMatch[2] ? Number(todoMatch[2]) : undefined,
+                          localDate: todoMatch[1],
+                      }
+                    : null;
+                if (focusDetail) {
+                    sessionStorage.setItem("todoDeepLinkTarget", JSON.stringify(focusDetail));
+                }
+                window.dispatchEvent(new CustomEvent("openTodoPane", { detail: focusDetail }));
                 if (selfDm) {
                     // PUNCH LIST (v3 chatId migration): `selfDm.chatId`
                     // is `string` post-flip; `moveToSpecificChat`'s
