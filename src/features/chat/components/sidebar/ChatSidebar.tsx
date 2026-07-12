@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import AccountTreeRoundedIcon from "@mui/icons-material/AccountTreeRounded";
+import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import DoneAllRoundedIcon from "@mui/icons-material/DoneAllRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import GroupsIcon from "@mui/icons-material/Groups";
 import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
+import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
 import NotificationsActiveRoundedIcon from "@mui/icons-material/NotificationsActiveRounded";
 import PeopleRoundedIcon from "@mui/icons-material/PeopleRounded";
@@ -145,6 +147,8 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
     const [openCreateGM, setOpenCreateGM] = useState(false);
     const [openCreateMDM, setOpenCreateMDM] = useState(false);
     const [showOnlyUnreadItems, setShowOnlyUnreadItems] = useState(false);
+    // Flagged pane: false = active flags, true = past/completed flags.
+    const [showPastFlagged, setShowPastFlagged] = useState(false);
     const [openJoinGM, setOpenJoinGM] = useState({
         flag: false,
         chatId: "",
@@ -180,6 +184,14 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
             setSelectedActivityInstanceIds(EMPTY_INSTANCE_SET);
         }
     }, [selectedActivityChipIds, selectedActivityInstanceIds.size]);
+
+    // Leaving the Flagged pane resets the past/active sub-mode so
+    // re-entering always lands on the active flags.
+    useEffect(() => {
+        if (useCM.currentChatPaneType !== CHAT_PANE_TYPES.FLAGGED) {
+            setShowPastFlagged(false);
+        }
+    }, [useCM.currentChatPaneType]);
 
     useEffect(() => {
         if (
@@ -603,6 +615,37 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                             {t.chat.sidebar.markFilteredActivitiesReadMenu}
                                         </MenuItem>
                                     )}
+                                    {/* Toggle the Flagged pane between active and
+                                        completed ("past") flags. Same separate-
+                                        children shape as the Activity item above
+                                        for Joy roving focus. */}
+                                    {useCM.currentChatPaneType === CHAT_PANE_TYPES.FLAGGED && (
+                                        <Divider sx={{ my: 0.5 }} />
+                                    )}
+                                    {useCM.currentChatPaneType === CHAT_PANE_TYPES.FLAGGED && (
+                                        <MenuItem
+                                            sx={{
+                                                borderRadius: "8px",
+                                                gap: 1.5,
+                                                fontSize: "0.85rem",
+                                            }}
+                                            onClick={() => {
+                                                const next = !showPastFlagged;
+                                                setShowPastFlagged(next);
+                                                if (next) void useCM.funcSetPastFlaggedMessages();
+                                            }}
+                                        >
+                                            <HistoryRoundedIcon
+                                                sx={{
+                                                    fontSize: 18,
+                                                    color: isDark ? "#a78bfa" : "#7c3aed",
+                                                }}
+                                            />
+                                            {showPastFlagged
+                                                ? t.chat.sidebar.viewActiveFlaggedMenu
+                                                : t.chat.sidebar.viewPastFlaggedMenu}
+                                        </MenuItem>
+                                    )}
                                 </Menu>
                             </Dropdown>
                         </Stack>
@@ -747,23 +790,68 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
 
                     {/* Flagged Messages */}
                     {useCM.currentChatPaneType === CHAT_PANE_TYPES.FLAGGED && (
-                        <ChatList
-                            actions={{ setIsToDoVisible }}
-                            chatRouting={chatRouting}
-                            currentActivityMessageType={currentActivityMessageType}
-                            data={{ myself, setMyself }}
-                            selectedActivityChipIds={EMPTY_CHIP_SET}
-                            selectedActivityInstanceIds={EMPTY_INSTANCE_SET}
-                            selectedActivityMentionGroupIds={EMPTY_GROUP_ID_SET}
-                            socket={socket}
-                            state={{ showOnlyUnreadItems, incompleteTodoCount, isToDoVisible }}
-                            targetChatType={6}
-                            useCM={useCM}
-                            usePM={usePM}
-                            useTEM={useTEM}
-                            useTM={useTM}
-                            useUISM={useUISM}
-                        />
+                        <>
+                            {/* One-click return to the active flags while
+                                viewing completed flags (the more-menu is the
+                                way in; this is the easier way back out). */}
+                            {showPastFlagged && (
+                                <Box
+                                    role="button"
+                                    tabIndex={0}
+                                    sx={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 1,
+                                        cursor: "pointer",
+                                        mx: 1,
+                                        mb: 0.5,
+                                        px: 1.25,
+                                        py: 0.75,
+                                        borderRadius: "8px",
+                                        color: isDark ? "#a78bfa" : "#7c3aed",
+                                        fontSize: "0.8rem",
+                                        fontWeight: 600,
+                                        background: isDark
+                                            ? "rgba(124,58,237,0.1)"
+                                            : "rgba(124,58,237,0.06)",
+                                        transition: "background 0.15s ease",
+                                        "&:hover": {
+                                            background: isDark
+                                                ? "rgba(124,58,237,0.18)"
+                                                : "rgba(124,58,237,0.12)",
+                                        },
+                                    }}
+                                    onClick={() => setShowPastFlagged(false)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter" || e.key === " ") {
+                                            e.preventDefault();
+                                            setShowPastFlagged(false);
+                                        }
+                                    }}
+                                >
+                                    <ArrowBackRoundedIcon sx={{ fontSize: 18 }} />
+                                    {t.chat.sidebar.backToActiveFlaggedButton}
+                                </Box>
+                            )}
+                            <ChatList
+                                actions={{ setIsToDoVisible }}
+                                chatRouting={chatRouting}
+                                currentActivityMessageType={currentActivityMessageType}
+                                data={{ myself, setMyself }}
+                                flaggedViewMode={showPastFlagged ? "past" : "active"}
+                                selectedActivityChipIds={EMPTY_CHIP_SET}
+                                selectedActivityInstanceIds={EMPTY_INSTANCE_SET}
+                                selectedActivityMentionGroupIds={EMPTY_GROUP_ID_SET}
+                                socket={socket}
+                                state={{ showOnlyUnreadItems, incompleteTodoCount, isToDoVisible }}
+                                targetChatType={6}
+                                useCM={useCM}
+                                usePM={usePM}
+                                useTEM={useTEM}
+                                useTM={useTM}
+                                useUISM={useUISM}
+                            />
+                        </>
                     )}
                 </Box>
 

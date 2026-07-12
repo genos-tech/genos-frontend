@@ -132,6 +132,8 @@ export function registerSocketRouter(socket: Socket): () => void {
     on<{ messageId: string }>("flag.removed", (e) =>
         channelService.handleFlagRemoved(e.messageId)
     );
+    on<{ flag: Flag }>("flag.completed", (e) => channelService.handleFlagCompleted(e.flag));
+    on<{ flag: Flag }>("flag.uncompleted", (e) => channelService.handleFlagUncompleted(e.flag));
 
     // Activity-feed live push. The v3 message and reaction handlers
     // emit `activity.created` to each recipient's `user:{id}` room

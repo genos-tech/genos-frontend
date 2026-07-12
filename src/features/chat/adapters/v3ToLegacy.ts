@@ -780,10 +780,18 @@ export function v3FlagsToLegacy(args: {
     membersByChannel: ReadonlyMap<string, readonly ChannelMember[]>;
     messagesByChannel: ReadonlyMap<string, readonly Message[]>;
     currentUserId: string | null;
+    // "active" (default) yields outstanding flags; "completed" yields
+    // done flags for the past view. `_flags` holds both, so callers pick
+    // the slice they want off the one snapshot.
+    filter?: "active" | "completed";
 }): FlaggedMessageProps[] {
     const { flags, channels, membersByChannel, messagesByChannel, currentUserId } = args;
+    const filter = args.filter ?? "active";
     const out: FlaggedMessageProps[] = [];
     for (const flag of flags.values()) {
+        const isCompleted = !!flag.completedAt;
+        if (filter === "active" && isCompleted) continue;
+        if (filter === "completed" && !isCompleted) continue;
         const located = locateFlaggedMessage(flag, channels, messagesByChannel);
         if (!located) continue;
         const { channel, message } = located;

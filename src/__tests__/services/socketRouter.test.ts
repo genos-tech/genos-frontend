@@ -80,6 +80,8 @@ describe("registerSocketRouter", () => {
         vi.spyOn(channelService, "handlePinRemoved").mockImplementation(() => {});
         vi.spyOn(channelService, "handleFlagAdded").mockImplementation(() => {});
         vi.spyOn(channelService, "handleFlagRemoved").mockImplementation(() => {});
+        vi.spyOn(channelService, "handleFlagCompleted").mockImplementation(() => {});
+        vi.spyOn(channelService, "handleFlagUncompleted").mockImplementation(() => {});
         vi.spyOn(channelService, "applyResyncBatch").mockResolvedValue(0);
         vi.spyOn(channelService, "syncChannel").mockResolvedValue(undefined);
 
@@ -97,7 +99,7 @@ describe("registerSocketRouter", () => {
         expect(V3_NAMESPACE).toBe("/v3");
     });
 
-    it("registers exactly one handler per server event (18 events)", () => {
+    it("registers exactly one handler per server event (20 events)", () => {
         const expected = [
             "message.created",
             "message.updated",
@@ -115,12 +117,14 @@ describe("registerSocketRouter", () => {
             "pin.removed",
             "flag.added",
             "flag.removed",
+            "flag.completed",
+            "flag.uncompleted",
             "activity.created",
             "resync.error",
         ];
         expect([...env.handlers.keys()].sort()).toEqual([...expected].sort());
         expect(env.socket.on).toHaveBeenCalledTimes(expected.length);
-        expect(expected).toHaveLength(18);
+        expect(expected).toHaveLength(20);
     });
 
     // ---- message.* --------------------------------------------------------
@@ -286,6 +290,20 @@ describe("registerSocketRouter", () => {
         expect(channelService.handleFlagRemoved).toHaveBeenCalledWith("m1");
     });
 
+    it("flag.completed unwraps e.flag and routes to handleFlagCompleted", () => {
+        const flag = { id: "f1", messageId: "m1", completedAt: "2026-01-03T00:00:00Z" };
+        env.fire("flag.completed", { flag });
+        expect(channelService.handleFlagCompleted).toHaveBeenCalledTimes(1);
+        expect(channelService.handleFlagCompleted).toHaveBeenCalledWith(flag);
+    });
+
+    it("flag.uncompleted unwraps e.flag and routes to handleFlagUncompleted", () => {
+        const flag = { id: "f1", messageId: "m1", completedAt: null };
+        env.fire("flag.uncompleted", { flag });
+        expect(channelService.handleFlagUncompleted).toHaveBeenCalledTimes(1);
+        expect(channelService.handleFlagUncompleted).toHaveBeenCalledWith(flag);
+    });
+
     // ---- activity.created -------------------------------------------------
 
     it("activity.created forwards the raw payload to handleV3Activity", () => {
@@ -331,13 +349,13 @@ describe("registerSocketRouter", () => {
         }
     });
 
-    it("a second registerSocketRouter call is independent: its teardown removes only its own 18 handlers", () => {
+    it("a second registerSocketRouter call is independent: its teardown removes only its own 20 handlers", () => {
         // Sanity: registering twice produces independent handler sets; the
         // second registration's teardown only removes its own handlers.
         const env2 = makeFakeSocket();
         const teardown2 = registerSocketRouter(env2.socket);
-        expect(env2.socket.on).toHaveBeenCalledTimes(18);
+        expect(env2.socket.on).toHaveBeenCalledTimes(20);
         teardown2();
-        expect(env2.socket.off).toHaveBeenCalledTimes(18);
+        expect(env2.socket.off).toHaveBeenCalledTimes(20);
     });
 });

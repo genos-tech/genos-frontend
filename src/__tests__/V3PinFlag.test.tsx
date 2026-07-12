@@ -323,6 +323,168 @@ describe("channelService flag (socket)", () => {
     });
 });
 
+describe("channelService flag completion (socket)", () => {
+    beforeEach(async () => {
+        await resetService();
+    });
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
+    const seedActiveFlag = () =>
+        channelService.handleFlagAdded({
+            id: "flag-1",
+            messageId: "m-1",
+            tsCreated: "2026-01-02T00:00:00Z",
+        });
+
+    it("completeFlag: emits flag.complete, drops from active index but retains in flags", async () => {
+        seedActiveFlag();
+        const sock = stubSocket();
+        await channelService.completeFlag("m-1");
+
+        const snap = channelService.getSnapshot();
+        // Off the active surfaces (list + bubble icon)…
+        expect(snap.flagByMessageId.has("m-1")).toBe(false);
+        // …but retained in `flags` with completedAt set.
+        const retained = Array.from(snap.flags.values()).find((f) => f.messageId === "m-1");
+        expect(retained?.completedAt).toBeTruthy();
+        expect(sock.emit).toHaveBeenCalledWith(
+            "flag.complete",
+            expect.objectContaining({ message_id: "m-1" }),
+            expect.any(Function)
+        );
+    });
+
+    it("completeFlag: ack fails → row restored to active", async () => {
+        seedActiveFlag();
+        const sock = stubSocket();
+        sock.setEmitImpl((_event, _payload, ack) => {
+            ack({ ok: false, code: "BACKEND_ERROR", message: "boom" });
+        });
+        await expect(channelService.completeFlag("m-1")).rejects.toThrow("boom");
+        expect(channelService.getSnapshot().flagByMessageId.has("m-1")).toBe(true);
+    });
+
+    it("reopenFlag: emits flag.uncomplete, returns a completed flag to active", async () => {
+        // A completed flag lives in `flags` only.
+        channelService.handleFlagCompleted({
+            id: "flag-1",
+            messageId: "m-1",
+            tsCreated: "2026-01-02T00:00:00Z",
+            completedAt: "2026-01-03T00:00:00Z",
+        });
+        expect(channelService.getSnapshot().flagByMessageId.has("m-1")).toBe(false);
+
+        const sock = stubSocket();
+        await channelService.reopenFlag("m-1");
+        expect(channelService.getSnapshot().flagByMessageId.has("m-1")).toBe(true);
+        expect(sock.emit).toHaveBeenCalledWith(
+            "flag.uncomplete",
+            expect.objectContaining({ message_id: "m-1" }),
+            expect.any(Function)
+        );
+    });
+
+    it("re-flagging a completed message reactivates it in place (not two rows)", async () => {
+        channelService.handleFlagCompleted({
+            id: "flag-1",
+            messageId: "m-1",
+            tsCreated: "2026-01-02T00:00:00Z",
+            completedAt: "2026-01-03T00:00:00Z",
+        });
+        const sock = stubSocket();
+        await channelService.flagMessage("m-1");
+
+        const snap = channelService.getSnapshot();
+        // Exactly one row for the message (the completed row reactivated
+        // in place), now active, and re-flagging emits flag.add.
+        const rowsForMessage = Array.from(snap.flags.values()).filter(
+            (f) => f.messageId === "m-1"
+        );
+        expect(rowsForMessage).toHaveLength(1);
+        expect(rowsForMessage[0].completedAt).toBeFalsy();
+        expect(snap.flagByMessageId.has("m-1")).toBe(true);
+        expect(sock.emit).toHaveBeenCalledWith(
+            "flag.add",
+            expect.objectContaining({ message_id: "m-1" }),
+            expect.any(Function)
+        );
+    });
+
+    it("unflagMessage removes a COMPLETED flag from flags (past-view Remove)", async () => {
+        channelService.handleFlagCompleted({
+            id: "flag-1",
+            messageId: "m-1",
+            tsCreated: "2026-01-02T00:00:00Z",
+            completedAt: "2026-01-03T00:00:00Z",
+        });
+        // Present in `flags` (past view), absent from the active index.
+        expect(
+            Array.from(channelService.getSnapshot().flags.values()).some(
+                (f) => f.messageId === "m-1"
+            )
+        ).toBe(true);
+
+        const sock = stubSocket();
+        sock.setEmitImpl((event, _payload, ack) => {
+            if (event === "flag.remove") {
+                ack({ ok: true });
+                channelService.handleFlagRemoved("m-1");
+            } else {
+                ack({ ok: true });
+            }
+        });
+        await channelService.unflagMessage("m-1");
+
+        // Gone from `flags` entirely (no orphan that would reappear on reload).
+        expect(
+            Array.from(channelService.getSnapshot().flags.values()).some(
+                (f) => f.messageId === "m-1"
+            )
+        ).toBe(false);
+    });
+
+    it("a flag.removed broadcast removes a COMPLETED flag (cross-tab)", () => {
+        channelService.handleFlagCompleted({
+            id: "flag-1",
+            messageId: "m-1",
+            tsCreated: "2026-01-02T00:00:00Z",
+            completedAt: "2026-01-03T00:00:00Z",
+        });
+        channelService.handleFlagRemoved("m-1");
+        expect(
+            Array.from(channelService.getSnapshot().flags.values()).some(
+                (f) => f.messageId === "m-1"
+            )
+        ).toBe(false);
+    });
+
+    it("flag.completed / flag.uncompleted broadcasts move the row between lists (map split)", () => {
+        seedActiveFlag();
+        // Completed broadcast: active index drops it, flags keeps it.
+        channelService.handleFlagCompleted({
+            id: "flag-1",
+            messageId: "m-1",
+            tsCreated: "2026-01-02T00:00:00Z",
+            completedAt: "2026-01-03T00:00:00Z",
+        });
+        let snap = channelService.getSnapshot();
+        expect(snap.flagByMessageId.has("m-1")).toBe(false);
+        expect(Array.from(snap.flags.values()).some((f) => f.messageId === "m-1")).toBe(true);
+
+        // Uncompleted broadcast: back to active.
+        channelService.handleFlagUncompleted({
+            id: "flag-1",
+            messageId: "m-1",
+            tsCreated: "2026-01-02T00:00:00Z",
+            completedAt: null,
+        });
+        snap = channelService.getSnapshot();
+        expect(snap.flagByMessageId.has("m-1")).toBe(true);
+    });
+});
+
 describe("useChannelList sorts pinned first", () => {
     beforeEach(async () => {
         await resetService();
