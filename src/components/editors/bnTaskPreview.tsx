@@ -92,6 +92,30 @@ import { WrapToggleButtons } from "./sub/WrapToggleButtons";
 const base_url = import.meta.env.VITE_API_BASE_URL;
 const django_url = import.meta.env.VITE_DJANGO_URL;
 
+// Approximate the rendered row count of a BlockNote document so the editor
+// height can grow with content. Pure + module-level so it can seed the
+// initial height synchronously from the `body` prop (see BnTaskPreview) —
+// the collaborative `editor.document` is empty until Yjs hydrates.
+const countLines = (nodes: any[]): number => {
+    let count = 0;
+    for (const node of nodes) {
+        count += 1; // count the current node itself
+        if (node.children?.length) {
+            count += countLines(node.children); // recursive call
+        }
+        if (node.content && node.content[0]) {
+            if (node.content[0].text) {
+                count += node.content[0].text.split("\n").length;
+            }
+        }
+        // Add 10 lines for each image to avoid scroll issues.
+        if (node.type === "image") {
+            count += 10;
+        }
+    }
+    return count;
+};
+
 type BnTaskPreviewProps = {
     useTEM: TeamManagementState;
     myself: UserProps;
@@ -290,45 +314,21 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
         setShowEmojiPicker(false);
     };
 
-    const countLines = (nodes: any[]): number => {
-        let count = 0;
-        for (const node of nodes) {
-            count += 1; // count the current node itself
-            if (node.children?.length) {
-                count += countLines(node.children); // recursive call
-            }
-            if (node.content && node.content[0]) {
-                if (node.content[0].text) {
-                    count += node.content[0].text.split("\n").length;
-                }
-            }
-            // Add 30 lines for each image to avoid scroll issues.
-            if (node.type === "image") {
-                count += 10;
-            }
-        }
-        return count;
-    };
-
-    const [numEditorLines, setNumEditorLines] = useState<number>(0);
+    // Editor height grows with the (approximate) rendered row count. Derive
+    // it straight from the `body` prop — the persisted task content that also
+    // seeds the collaborative doc — so the height is correct on the FIRST
+    // paint. The old approach measured `editor.document` in a mount effect,
+    // but the collaborative doc is still empty at mount (Yjs hydrates ~0.5s
+    // later via IndexedDB/WebSocket), so the editor opened at the CSS default
+    // 500px and only snapped to the right height once `onChange` → `setBody`
+    // recomputed it — the "open → re-render" jump. `body` tracks the editor
+    // after every debounced sync (see `syncBodyToParent`), so deriving from it
+    // stays correct during editing too, off the keystroke path.
+    const numEditorLines = useMemo(() => countLines(body ?? []), [body]);
+    const editorHeight: number = Math.min(Math.max(numEditorLines - 13, 0) * 20 + 500, 1000);
 
     const editorRef = useRef<HTMLDivElement>(null);
     useAnchorClickIntercept(editorRef, urlLinkModal);
-    useEffect(() => {
-        if (editorRef.current) {
-            const dynamicHeight: number = Math.min(
-                Math.max(numEditorLines - 13, 0) * 20 + 500,
-                1000
-            );
-            editorRef.current.style.setProperty("--task-body-editor-height", `${dynamicHeight}px`);
-        }
-    }, [numEditorLines]);
-
-    // initial height setup
-    useEffect(() => {
-        const comments: any[] = editor.document;
-        setNumEditorLines(countLines(comments));
-    }, []);
 
     // Debounced document→parent sync. `onChange` fires on every keystroke;
     // serializing the whole document (`editor.document`), walking it for the
@@ -348,7 +348,8 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
     const syncBodyToParent = useDebouncedCallback((isFlush?: boolean) => {
         const doc: any[] = editor.document;
         const commit = () => {
-            setNumEditorLines(countLines(doc));
+            // `numEditorLines`/height derive from `body` (see above), so
+            // committing the doc to the parent also drives the height.
             setBody(doc);
         };
         if (isFlush) {
@@ -384,7 +385,14 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
     return (
         <>
             <FileSizeRejectionSnackbar rejection={rejection} onDismiss={dismissRejection} />
-            <Box ref={editorRef} className={bnBoxClassName} sx={{ position: "relative" }}>
+            <Box
+                ref={editorRef}
+                className={bnBoxClassName}
+                // Set the height CSS var inline (not via a post-paint effect)
+                // so the FIRST paint already has the content-derived height.
+                style={{ ["--task-body-editor-height" as any]: `${editorHeight}px` }}
+                sx={{ position: "relative" }}
+            >
                 <FileUploadStatusBadge count={editorUploadCount} />
                 <Box sx={{ position: "absolute", top: 8, right: 8, zIndex: 10 }}>
                     <WrapToggleButtons
@@ -411,10 +419,10 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                     sideMenu={false}
                     theme={mode === "dark" ? "dark" : "light"}
                     data-changing-font-demo
+                    onBlur={() => syncBodyToParent.flush()}
                     onBeforeInput={() => {
                         userInteractedRef.current = true;
                     }}
-                    onBlur={() => syncBodyToParent.flush()}
                     onChange={() => {
                         // Heavy work (serialize + line count + parent
                         // re-render) is debounced off the keystroke path.
