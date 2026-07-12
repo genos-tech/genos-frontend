@@ -192,3 +192,34 @@ describe("UserProfileStatus — display-name rename (self only)", () => {
         expect(localStorage.getItem("userName")).not.toBe("New Name");
     });
 });
+
+describe("UserProfileStatus — 'Update Status' chip visibility", () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+        localStorage.clear();
+    });
+
+    it("shows the Update Status prompt on my own profile when no status is set", () => {
+        renderStatus({ myself: makeUser(), setMyself: vi.fn(), isYou: true });
+        expect(screen.getByText("Update Status")).toBeInTheDocument();
+    });
+
+    it("does NOT show Update Status on another member's profile with no status", () => {
+        const me = makeUser({ userId: "user-1" });
+        const other = makeUser({ userId: "user-2", userName: "Bob", customStatus: "" });
+        renderStatus({ myself: me, setMyself: vi.fn(), isYou: false, user: other });
+        expect(screen.queryByText("Update Status")).toBeNull();
+    });
+
+    it("still shows another member's status when they have one set", () => {
+        const me = makeUser({ userId: "user-1" });
+        const other = makeUser({
+            userId: "user-2",
+            userName: "Bob",
+            customStatus: "🌴 On Holiday",
+        });
+        renderStatus({ myself: me, setMyself: vi.fn(), isYou: false, user: other });
+        expect(screen.getByText("🌴 On Holiday")).toBeInTheDocument();
+        expect(screen.queryByText("Update Status")).toBeNull();
+    });
+});

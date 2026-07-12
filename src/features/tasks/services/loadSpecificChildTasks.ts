@@ -12,7 +12,21 @@ import { onTaskTouched } from "./taskEvents";
 const childTasksCache = createRequestCache<TaskProps[] | undefined>({ ttlMs: 30_000 });
 onTaskTouched(({ taskId, kind }) => {
     if (kind === "children") {
+        // This task's own child list changed (subtask add / move / reparent).
         childTasksCache.invalidate(`children:${taskId}:`);
+        return;
+    }
+    if (kind === "update") {
+        // A task's fields (status, title, assignee…) changed. That task
+        // may be a subtask inside ANY cached parent's list, and the event
+        // only carries the changed task's id — not its parent — so we
+        // can't target one entry. Drop every cached child list; they're
+        // small and "update" is user-initiated, so this won't reintroduce
+        // the refetch storm the cache guards against (rapid read-only
+        // click-through, during which no updates fire). Without this, a
+        // subtask's new status stays stale in the parent's Sub Tasks block
+        // for up to the 30s TTL after editing it.
+        childTasksCache.invalidate("children:");
     }
 });
 
