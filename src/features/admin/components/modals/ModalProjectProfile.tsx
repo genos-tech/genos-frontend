@@ -108,10 +108,10 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
     const [projectProfile, setProjectProfile] = useState<ProjectProfileProps | null>(null);
 
     // Pull the live chat row from `useCM.allChats` so the avatar reflects
-    // the freshest `profileImagePath` after a profile-image upload calls
-    // `syncChannel` + `funcSetAllChats` below. The `pmChat` prop is
-    // captured by the parent at modal-open time and otherwise goes stale —
-    // mirrors the `liveChat` pattern in ModalGMProfile.
+    // the freshest `profileImagePath` after a profile-image upload patches
+    // `allChats` below. The `pmChat` prop is captured by the parent at
+    // modal-open time and otherwise goes stale — mirrors the `liveChat`
+    // pattern in ModalGMProfile.
     const liveChat = useMemo(() => {
         const found = useCM.allChats.find(
             (c) => c.chatId === pmChat.chatId && c.chatType === pmChat.chatType
@@ -333,17 +333,42 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
             if (!uploadProfileImageResponse.ok) {
                 throw new Error(t.admin.projectProfile.uploadFailed);
             }
-            // v3 source. The PM channel mirrors the ProjectMaster row:
-            // the `_ensure_pm_channel_for_project` signal copies the new
-            // `profile_image_file_name` onto `Channel.profile_image_url`
-            // when the upload saves the project. But the legacy image
-            // endpoint does NOT fan out a `channel.updated` broadcast, so
-            // our own snapshot is stale — pull the channel fresh via
-            // `syncChannel` first, THEN re-derive `allChats` so `liveChat`
-            // (and the sidebar `ProjectAvatar`) pick up the new image.
-            // Mirrors the GM upload flow.
-            await channelService.syncChannel(pmChat.chatId);
-            await useCM.funcSetAllChats();
+            // The PUT returns the updated ProjectMaster row.
+            // `profile_image_file_name` is the FE-canonical media path with
+            // a server-appended `?v=<ts>` cache buster (see
+            // `ProjectProfileImageView`). Patch the avatar straight from that
+            // response rather than leaning on `syncChannel` + `funcSetAllChats`:
+            // `syncChannel` only pulls messages/threads/members (NOT channel
+            // metadata), and `funcSetAllChats` → `listChannels` is coalesced by
+            // `_listChannelsInflight`, so a refresh already in flight when the
+            // upload commits resolves with the STALE pre-upload image — the
+            // intermittent "project avatar never changes" bug. The
+            // `_ensure_pm_channel_for_project` signal has already written the
+            // new path onto `Channel.profile_image_url` server-side, so a later
+            // natural refresh stays consistent with the patch below.
+            const newImagePath: string =
+                (uploadProfileImageData?.profile_image_file_name as string) || "";
+            if (newImagePath) {
+                // 1. Patch the v3 snapshot channel so any later chat-list
+                //    re-derive keeps the new avatar (survives funcSetAllChats).
+                const snapChannel = channelService.getSnapshot().channels.get(pmChat.chatId);
+                if (snapChannel) {
+                    channelService.handleChannelUpdated({
+                        ...snapChannel,
+                        profileImageUrl: newImagePath,
+                    });
+                }
+                // 2. Optimistically patch the legacy chat row for an immediate
+                //    re-render of `liveChat` here + the sidebar `ProjectAvatar`
+                //    (mirrors the rename path in `handleNameSave`).
+                useCM.setAllChats((prev) =>
+                    prev.map((c) =>
+                        c.chatType === pmChat.chatType && c.chatId === pmChat.chatId
+                            ? { ...c, profileImagePath: newImagePath }
+                            : c
+                    )
+                );
+            }
         }
     };
 
