@@ -5,9 +5,12 @@
 import * as React from "react";
 import { useState } from "react";
 import AssignmentIcon from "@mui/icons-material/Assignment";
+import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
+import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import FlagIcon from "@mui/icons-material/Flag";
 import GroupsIcon from "@mui/icons-material/Groups";
 import PeopleRoundedIcon from "@mui/icons-material/PeopleRounded";
+import ReplayRoundedIcon from "@mui/icons-material/ReplayRounded";
 import { Avatar, Box, Chip, IconButton, ListDivider, ListItem, Stack, Typography } from "@mui/joy";
 import ListItemButton, { ListItemButtonProps } from "@mui/joy/ListItemButton";
 import { useColorScheme } from "@mui/joy/styles";
@@ -81,6 +84,9 @@ type ChatListItemForFlagMessagesProps = ListItemButtonProps & {
     setSelectedFlaggedMessageId: (value: string) => void;
     setCurrentProject: (value: ProjectProps) => void;
     useTM: TaskManagementState;
+    // "active" (default) = outstanding flag: primary action is Done, with
+    // a secondary hard-remove. "past" = completed flag: Reopen + Remove.
+    viewMode?: "active" | "past";
 };
 
 // Helper functions
@@ -166,6 +172,7 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
         useTEM,
         useCM,
         useTM,
+        viewMode = "active",
     } = props;
     const { mode } = useColorScheme();
     const { t } = useTranslation();
@@ -205,6 +212,31 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
             // the local toggle so the icon matches state.
             setTmpIsFlagged(true);
             console.error("Error updating flag status:", error);
+        }
+    };
+
+    // Mark done: retain the flag but drop it from the active list (moves
+    // it to the past view). The service handles the optimistic snapshot +
+    // rollback; the row disappears from the active list on the next
+    // subscription pass.
+    const completeFlagStatus = async () => {
+        const v3MessageUuid = flaggedMessage.messageId as unknown as string;
+        if (!v3MessageUuid) return;
+        try {
+            await channelService.completeFlag(v3MessageUuid);
+        } catch (error) {
+            console.error("Error completing flag:", error);
+        }
+    };
+
+    // Reopen a completed flag back into the active list.
+    const reopenFlagStatus = async () => {
+        const v3MessageUuid = flaggedMessage.messageId as unknown as string;
+        if (!v3MessageUuid) return;
+        try {
+            await channelService.reopenFlag(v3MessageUuid);
+        } catch (error) {
+            console.error("Error reopening flag:", error);
         }
     };
 
@@ -744,8 +776,9 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                     }}
                     onClick={onClickHandler}
                 >
-                    {/* Flagged indicator line */}
-                    {tmpIsFlagged && (
+                    {/* Active-flag indicator line — not shown in the past
+                        view (those flags are completed, not outstanding). */}
+                    {tmpIsFlagged && viewMode === "active" && (
                         <Box
                             sx={{
                                 background: isDark
@@ -829,9 +862,53 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                                 >
                                     {extractYYYYMMDDHHMM(flaggedMessage.tsSent)}
                                 </Typography>
+                                {viewMode === "active" ? (
+                                    <AppTooltip size="sm" title={t.chat.listItem.completeFlag}>
+                                        <IconButton
+                                            color="success"
+                                            size="sm"
+                                            variant="plain"
+                                            sx={{
+                                                transition: "all 0.2s ease",
+                                                "&:hover": { transform: "scale(1.1)" },
+                                            }}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                completeFlagStatus();
+                                            }}
+                                        >
+                                            <CheckCircleOutlineRoundedIcon sx={{ fontSize: 18 }} />
+                                        </IconButton>
+                                    </AppTooltip>
+                                ) : (
+                                    <AppTooltip size="sm" title={t.chat.listItem.reopenFlag}>
+                                        <IconButton
+                                            color="primary"
+                                            size="sm"
+                                            variant="plain"
+                                            sx={{
+                                                transition: "all 0.2s ease",
+                                                "&:hover": { transform: "scale(1.1)" },
+                                            }}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                reopenFlagStatus();
+                                            }}
+                                        >
+                                            <ReplayRoundedIcon sx={{ fontSize: 18 }} />
+                                        </IconButton>
+                                    </AppTooltip>
+                                )}
+                                {/* Hard remove — deletes the flag entirely
+                                    (for an accidental flag). Available in both
+                                    the active and past views. */}
                                 <AppTooltip size="sm" title={t.chat.listItem.unflag}>
                                     <IconButton
-                                        color={tmpIsFlagged ? "danger" : "neutral"}
+                                        color={
+                                            viewMode === "active" && tmpIsFlagged
+                                                ? "danger"
+                                                : "neutral"
+                                        }
                                         size="sm"
                                         variant="plain"
                                         sx={{
@@ -845,7 +922,11 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                                             updateFlagStatus();
                                         }}
                                     >
-                                        <FlagIcon sx={{ fontSize: 16 }} />
+                                        {viewMode === "active" ? (
+                                            <FlagIcon sx={{ fontSize: 16 }} />
+                                        ) : (
+                                            <DeleteOutlineRoundedIcon sx={{ fontSize: 16 }} />
+                                        )}
                                     </IconButton>
                                 </AppTooltip>
                             </Stack>

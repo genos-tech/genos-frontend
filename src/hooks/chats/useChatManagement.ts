@@ -74,6 +74,13 @@ export interface ChatManagementState {
     flaggedMessages: FlaggedMessageProps[];
     // Same reasoning as setCurrentThreadChat above.
     setFlaggedMessages: Dispatch<SetStateAction<FlaggedMessageProps[]>>;
+    // Completed ("done") flags for the past-flagged view. Derived off the
+    // same v3 snapshot as `flaggedMessages` but filtered to completed.
+    pastFlaggedMessages: FlaggedMessageProps[];
+    setPastFlaggedMessages: Dispatch<SetStateAction<FlaggedMessageProps[]>>;
+    // Loads completed flags from the server into the snapshot (they're not
+    // broadcast to fresh sessions); the subscription then derives the list.
+    funcSetPastFlaggedMessages: () => Promise<void>;
     activityMessages: ActivityMessageProps[];
     setActivityMessages: (value: ActivityMessageProps[]) => void;
     unReadChatCounts: Record<string, number>;
@@ -152,6 +159,7 @@ export const useChatManagement = (
     // Chat data
     const [allChats, setAllChats] = useState<AllChatProps[]>([]);
     const [flaggedMessages, setFlaggedMessages] = useState<FlaggedMessageProps[]>([]);
+    const [pastFlaggedMessages, setPastFlaggedMessages] = useState<FlaggedMessageProps[]>([]);
     const [activityMessages, setActivityMessages] = useState<ActivityMessageProps[]>([]);
 
     // Unread counts
@@ -185,7 +193,9 @@ export const useChatManagement = (
             return false;
         };
         const missing = Array.from(snapshot.flags.values()).filter(
-            (f) => !inSnapshot(f.messageId)
+            // Only back-fill ACTIVE flags here; completed flags are loaded
+            // + back-filled separately by funcSetPastFlaggedMessages.
+            (f) => !f.completedAt && !inSnapshot(f.messageId)
         );
         if (missing.length > 0) {
             await Promise.all(missing.map((f) => channelService.fetchMessageById(f.messageId)));
@@ -199,6 +209,12 @@ export const useChatManagement = (
             currentUserId: myself.userId || null,
         });
         setFlaggedMessages(next);
+    };
+
+    // Fetch completed flags from the server into the snapshot; the flagged
+    // subscription below then derives `pastFlaggedMessages` from it.
+    const funcSetPastFlaggedMessages = async () => {
+        await channelService.fetchCompletedFlags();
     };
 
     const funcSetAllChats = async () => {
@@ -806,14 +822,15 @@ export const useChatManagement = (
             const snapshot = channelService.getSnapshot();
             if (snapshot.version === lastVersion) return;
             lastVersion = snapshot.version;
-            const next = v3FlagsToLegacy({
+            const common = {
                 flags: snapshot.flags,
                 channels: snapshot.channels,
                 membersByChannel: snapshot.membersByChannel,
                 messagesByChannel: snapshot.messagesByChannel,
                 currentUserId: myself.userId || null,
-            });
-            setFlaggedMessages(next);
+            };
+            setFlaggedMessages(v3FlagsToLegacy({ ...common, filter: "active" }));
+            setPastFlaggedMessages(v3FlagsToLegacy({ ...common, filter: "completed" }));
         };
         const unsubscribe = channelService.subscribe(apply);
         apply();
@@ -863,6 +880,7 @@ export const useChatManagement = (
         funcSetActivityMessages,
         funcSetAllChats,
         funcSetFlaggedMessages,
+        funcSetPastFlaggedMessages,
         isChatNoteVisibleInChat,
         isMainChatVisible,
         isSubChatVisible,
@@ -871,6 +889,7 @@ export const useChatManagement = (
         moveToSpecificChat,
         moveToSpecificThreadChat,
         notMoveChatPaneType,
+        pastFlaggedMessages,
         setActivityMessages,
         setAllChats,
         setCurrentChatPaneType,
@@ -878,6 +897,7 @@ export const useChatManagement = (
         setCurrentSubChat,
         setCurrentThreadChat,
         setFlaggedMessages,
+        setPastFlaggedMessages,
         setIsChatNoteVisibleInChat,
         setIsMainChatVisible,
         setIsSubChatVisible,

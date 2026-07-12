@@ -145,6 +145,10 @@ export interface Flag {
     id: string;
     messageId: string;
     tsCreated: string;
+    // Null/absent while the flag is active. Set (ISO ts) when the user
+    // marks it done: the flag drops off the active list + bubble icon but
+    // is retained for the past/completed flags view. Cleared on reopen.
+    completedAt?: string | null;
 }
 
 /**

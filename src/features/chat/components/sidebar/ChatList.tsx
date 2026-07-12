@@ -106,6 +106,9 @@ const sortAllChatByPinned = (allChats: AllChatProps[]) => {
 type ChatListProps = {
     socket: Socket | null;
     targetChatType: number;
+    // Only meaningful for the FLAGGED pane: "active" (default) renders
+    // outstanding flags, "past" renders completed ("done") flags.
+    flaggedViewMode?: "active" | "past";
     includeMDM?: boolean; // When true, include MDM (type 4) chats along with DM (type 1)
     currentActivityMessageType: number;
     // Multi-select chip refinement that AND-composes with the
@@ -213,13 +216,25 @@ const useFilteredActivityMessages = (
     return tmpActivityMessages;
 };
 
-// Empty state component
-const EmptyState = ({ chatType }: { chatType: number }) => {
+// Empty state component. `titleKey`/`subtitleKey` optionally override the
+// per-chatType config — used by the past-flagged view, which has no
+// chatType code of its own.
+const EmptyState = ({
+    chatType,
+    titleKey,
+    subtitleKey,
+}: {
+    chatType: number;
+    titleKey?: keyof Messages["chat"]["sidebar"];
+    subtitleKey?: keyof Messages["chat"]["sidebar"];
+}) => {
     const { mode } = useColorScheme();
     const { t } = useTranslation();
     const isDark = mode === "dark";
     const config = EMPTY_STATES[chatType] || EMPTY_STATES[CHAT_TYPES.DM];
     const Icon = config.icon;
+    const resolvedTitleKey = titleKey ?? config.titleKey;
+    const resolvedSubtitleKey = subtitleKey ?? config.subtitleKey;
 
     return (
         <Box
@@ -286,7 +301,7 @@ const EmptyState = ({ chatType }: { chatType: number }) => {
                     textAlign: "center",
                 }}
             >
-                {t.chat.sidebar[config.titleKey]}
+                {t.chat.sidebar[resolvedTitleKey]}
             </Typography>
             <Typography
                 level="body-xs"
@@ -296,7 +311,7 @@ const EmptyState = ({ chatType }: { chatType: number }) => {
                     maxWidth: 180,
                 }}
             >
-                {t.chat.sidebar[config.subtitleKey]}
+                {t.chat.sidebar[resolvedSubtitleKey]}
             </Typography>
         </Box>
     );
@@ -463,6 +478,7 @@ const FlaggedListRenderer = ({
     useTM,
     usePM,
     isDark,
+    viewMode,
 }: {
     tmpFlaggedMessages: FlaggedMessageProps[];
     virtuosoRef: React.RefObject<VirtuosoHandle | null>;
@@ -476,6 +492,7 @@ const FlaggedListRenderer = ({
     useTM: TaskManagementState;
     usePM: ProjectManagementState;
     isDark: boolean;
+    viewMode: "active" | "past";
 }) => (
     <Virtuoso
         ref={virtuosoRef}
@@ -513,6 +530,7 @@ const FlaggedListRenderer = ({
                             useTEM={useTEM}
                             useTM={useTM}
                             useUISM={useUISM}
+                            viewMode={viewMode}
                         />
                     </Stack>
                 </Box>
@@ -525,6 +543,7 @@ export const ChatList = (props: ChatListProps) => {
     const {
         socket,
         targetChatType,
+        flaggedViewMode = "active",
         includeMDM = false,
         currentActivityMessageType,
         selectedActivityChipIds,
@@ -580,6 +599,9 @@ export const ChatList = (props: ChatListProps) => {
     const [tmpFlaggedMessages, setTmpFlaggedMessages] = useState<FlaggedMessageProps[]>(
         useCM.flaggedMessages
     );
+    const [tmpPastFlaggedMessages, setTmpPastFlaggedMessages] = useState<FlaggedMessageProps[]>(
+        useCM.pastFlaggedMessages
+    );
     const [selectedActivityId, setSelectedActivityId] = useState<string>("");
     const [selectedFlaggedMessageId, setSelectedFlaggedMessageId] = useState<string>("");
 
@@ -614,6 +636,9 @@ export const ChatList = (props: ChatListProps) => {
     useEffect(() => {
         setTmpFlaggedMessages(useCM.flaggedMessages);
     }, [useCM.flaggedMessages]);
+    useEffect(() => {
+        setTmpPastFlaggedMessages(useCM.pastFlaggedMessages);
+    }, [useCM.pastFlaggedMessages]);
 
     // Cmd/Alt+Shift+ArrowUp/Down moves the selection within the list.
     //
@@ -857,8 +882,18 @@ export const ChatList = (props: ChatListProps) => {
 
     const renderFlaggedList = () => {
         if (targetChatType === CHAT_TYPES.FLAGGED) {
-            if (tmpFlaggedMessages.length === 0) {
-                return <EmptyState chatType={CHAT_TYPES.FLAGGED} />;
+            const isPast = flaggedViewMode === "past";
+            const list = isPast ? tmpPastFlaggedMessages : tmpFlaggedMessages;
+            if (list.length === 0) {
+                return isPast ? (
+                    <EmptyState
+                        chatType={CHAT_TYPES.FLAGGED}
+                        subtitleKey="emptyPastFlaggedSubtitle"
+                        titleKey="emptyPastFlaggedTitle"
+                    />
+                ) : (
+                    <EmptyState chatType={CHAT_TYPES.FLAGGED} />
+                );
             }
             return (
                 <FlaggedListRenderer
@@ -867,12 +902,13 @@ export const ChatList = (props: ChatListProps) => {
                     selectedFlaggedMessageId={selectedFlaggedMessageId}
                     setSelectedFlaggedMessageId={setSelectedFlaggedMessageId}
                     socket={socket}
-                    tmpFlaggedMessages={tmpFlaggedMessages}
+                    tmpFlaggedMessages={list}
                     useCM={useCM}
                     usePM={usePM}
                     useTEM={useTEM}
                     useTM={useTM}
                     useUISM={useUISM}
+                    viewMode={isPast ? "past" : "active"}
                     virtuosoRef={virtuosoFlaggedRef}
                 />
             );

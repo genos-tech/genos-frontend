@@ -4,6 +4,7 @@ import DoneAllRoundedIcon from "@mui/icons-material/DoneAllRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import GroupsIcon from "@mui/icons-material/Groups";
 import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
+import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
 import NotificationsActiveRoundedIcon from "@mui/icons-material/NotificationsActiveRounded";
 import PeopleRoundedIcon from "@mui/icons-material/PeopleRounded";
@@ -145,6 +146,8 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
     const [openCreateGM, setOpenCreateGM] = useState(false);
     const [openCreateMDM, setOpenCreateMDM] = useState(false);
     const [showOnlyUnreadItems, setShowOnlyUnreadItems] = useState(false);
+    // Flagged pane: false = active flags, true = past/completed flags.
+    const [showPastFlagged, setShowPastFlagged] = useState(false);
     const [openJoinGM, setOpenJoinGM] = useState({
         flag: false,
         chatId: "",
@@ -180,6 +183,14 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
             setSelectedActivityInstanceIds(EMPTY_INSTANCE_SET);
         }
     }, [selectedActivityChipIds, selectedActivityInstanceIds.size]);
+
+    // Leaving the Flagged pane resets the past/active sub-mode so
+    // re-entering always lands on the active flags.
+    useEffect(() => {
+        if (useCM.currentChatPaneType !== CHAT_PANE_TYPES.FLAGGED) {
+            setShowPastFlagged(false);
+        }
+    }, [useCM.currentChatPaneType]);
 
     useEffect(() => {
         if (
@@ -603,6 +614,37 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                             {t.chat.sidebar.markFilteredActivitiesReadMenu}
                                         </MenuItem>
                                     )}
+                                    {/* Toggle the Flagged pane between active and
+                                        completed ("past") flags. Same separate-
+                                        children shape as the Activity item above
+                                        for Joy roving focus. */}
+                                    {useCM.currentChatPaneType === CHAT_PANE_TYPES.FLAGGED && (
+                                        <Divider sx={{ my: 0.5 }} />
+                                    )}
+                                    {useCM.currentChatPaneType === CHAT_PANE_TYPES.FLAGGED && (
+                                        <MenuItem
+                                            sx={{
+                                                borderRadius: "8px",
+                                                gap: 1.5,
+                                                fontSize: "0.85rem",
+                                            }}
+                                            onClick={() => {
+                                                const next = !showPastFlagged;
+                                                setShowPastFlagged(next);
+                                                if (next) void useCM.funcSetPastFlaggedMessages();
+                                            }}
+                                        >
+                                            <HistoryRoundedIcon
+                                                sx={{
+                                                    fontSize: 18,
+                                                    color: isDark ? "#a78bfa" : "#7c3aed",
+                                                }}
+                                            />
+                                            {showPastFlagged
+                                                ? t.chat.sidebar.viewActiveFlaggedMenu
+                                                : t.chat.sidebar.viewPastFlaggedMenu}
+                                        </MenuItem>
+                                    )}
                                 </Menu>
                             </Dropdown>
                         </Stack>
@@ -752,6 +794,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             chatRouting={chatRouting}
                             currentActivityMessageType={currentActivityMessageType}
                             data={{ myself, setMyself }}
+                            flaggedViewMode={showPastFlagged ? "past" : "active"}
                             selectedActivityChipIds={EMPTY_CHIP_SET}
                             selectedActivityInstanceIds={EMPTY_INSTANCE_SET}
                             selectedActivityMentionGroupIds={EMPTY_GROUP_ID_SET}

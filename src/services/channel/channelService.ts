@@ -1627,25 +1627,43 @@ export class ChannelService {
         }
     }
 
+    // Completed flags aren't in `_flagByMessageId` (active-only). Scan
+    // `_flags` to find one by message id — used to reactivate in place.
+    private _findCompletedFlagByMessage(messageId: string): Flag | undefined {
+        for (const f of this._flags.values()) {
+            if (f.messageId === messageId && f.completedAt) return f;
+        }
+        return undefined;
+    }
+
     async flagMessage(messageId: string): Promise<Flag | undefined> {
-        const optimistic: Flag = {
-            id: `optimistic-${messageId}`,
-            messageId,
-            tsCreated: new Date().toISOString(),
-        };
+        // Re-flagging a COMPLETED message must reactivate its existing row
+        // in place (reuse its id, clear completedAt) so it doesn't briefly
+        // appear in BOTH the active and past lists. The server's POST does
+        // the same reset (FlagView.post), and its `flag.added` broadcast
+        // reconciles the same row. A fresh flag keeps the optimistic id.
+        const completed = this._findCompletedFlagByMessage(messageId);
+        const optimistic: Flag = completed
+            ? { ...completed, completedAt: null }
+            : { id: `optimistic-${messageId}`, messageId, tsCreated: new Date().toISOString() };
         this._upsertFlag(optimistic);
         try {
             return await this.socketEmitOrThrow<Flag>("flag.add", {
                 message_id: messageId,
             });
         } catch (e) {
-            this._removeFlagByMessage(messageId);
+            if (completed) this._upsertFlag(completed);
+            else this._removeFlagByMessage(messageId);
             throw e;
         }
     }
 
     async unflagMessage(messageId: string): Promise<void> {
-        const existing = this._flagByMessageId.get(messageId);
+        // May be an active flag (in the message-keyed index) or a completed
+        // one (only in `_flags`) when removing from the past view — capture
+        // whichever so an ack failure restores the exact prior row/state.
+        const existing =
+            this._flagByMessageId.get(messageId) ?? this._findCompletedFlagByMessage(messageId);
         this._removeFlagByMessage(messageId);
         try {
             await this.socketEmitOrThrow<void>("flag.remove", {
@@ -1655,6 +1673,67 @@ export class ChannelService {
             if (existing) this._upsertFlag(existing);
             throw e;
         }
+    }
+
+    // Mark an active flag done: retain the row (completedAt set) but drop
+    // it from the active list + bubble icon. Distinct from unflag (which
+    // hard-deletes). Optimistic; rolls back to active on ack failure.
+    async completeFlag(messageId: string): Promise<void> {
+        const existing = this._flagByMessageId.get(messageId);
+        if (!existing) return;
+        this._upsertFlag({ ...existing, completedAt: new Date().toISOString() });
+        try {
+            await this.socketEmitOrThrow<Flag>("flag.complete", {
+                message_id: messageId,
+            });
+        } catch (e) {
+            this._upsertFlag({ ...existing, completedAt: null });
+            throw e;
+        }
+    }
+
+    // Reopen a completed flag back to active. The completed row lives in
+    // `_flags` (not the active index), so find it there.
+    async reopenFlag(messageId: string): Promise<void> {
+        const completed = this._findCompletedFlagByMessage(messageId);
+        if (!completed) return;
+        this._upsertFlag({ ...completed, completedAt: null });
+        try {
+            await this.socketEmitOrThrow<Flag>("flag.uncomplete", {
+                message_id: messageId,
+            });
+        } catch (e) {
+            this._upsertFlag(completed);
+            throw e;
+        }
+    }
+
+    // Load the user's COMPLETED flags from the server for the past view.
+    // Completed flags are never broadcast to a fresh session and may not
+    // be in the local IDB snapshot, so this GET is the only source. Merge
+    // them into `_flags` (map split keeps them out of the active index)
+    // and back-fill any host messages not synced this session so the
+    // adapter can resolve the row (mirrors funcSetFlaggedMessages).
+    async fetchCompletedFlags(): Promise<void> {
+        let flags: Flag[];
+        try {
+            const res = await this.api().get<{ flags: Flag[] }>("/api/v3/flags/?status=completed");
+            flags = res.data?.flags ?? [];
+        } catch {
+            return;
+        }
+        for (const f of flags) this._upsertFlag(f);
+        const hasMessage = (messageId: string): boolean => {
+            for (const msgs of this._messages.values()) {
+                if (msgs.some((m) => m.id === messageId)) return true;
+            }
+            return false;
+        };
+        const missing = flags.filter((f) => !hasMessage(f.messageId));
+        if (missing.length > 0) {
+            await Promise.all(missing.map((f) => this.fetchMessageById(f.messageId)));
+        }
+        this._notify();
     }
 
     // ---- Inbound pin / flag socket handlers -------------------------------
@@ -1680,6 +1759,17 @@ export class ChannelService {
 
     handleFlagRemoved(messageId: string): void {
         this._removeFlagByMessage(messageId);
+    }
+
+    // `flag.completed` / `flag.uncompleted` carry the full server flag row
+    // (with/without `completedAt`); `_upsertFlag` + the map split move it
+    // between the active and past surfaces. Same in every tab (user room).
+    handleFlagCompleted(flag: Flag): void {
+        this._upsertFlag(flag);
+    }
+
+    handleFlagUncompleted(flag: Flag): void {
+        this._upsertFlag(flag);
     }
 
     // ---- Inbound socket event handlers (called by socketRouter) ----------
@@ -2132,7 +2222,10 @@ export class ChannelService {
             }
             for (const f of flagRows) {
                 this._flags.set(f.id, f);
-                this._flagByMessageId.set(f.messageId, f);
+                // Only active flags index into the message-keyed map (which
+                // feeds the active list + bubble icon); completed flags stay
+                // in `_flags` for the past view. See `_upsertFlag`.
+                if (!f.completedAt) this._flagByMessageId.set(f.messageId, f);
             }
             if (flagRows.length > 0) this._flagsVersion += 1;
         } catch (e) {
@@ -2234,20 +2327,36 @@ export class ChannelService {
         const previous = this._flagByMessageId.get(flag.messageId);
         if (previous && previous.id !== flag.id) this._flags.delete(previous.id);
         this._flags.set(flag.id, flag);
-        this._flagByMessageId.set(flag.messageId, flag);
+        // Map split: `_flags` holds ALL flags (active + completed, for the
+        // past view + IDB retention); `_flagByMessageId` holds ACTIVE only,
+        // so it feeds the active list and the bubble `isFlagged` icon.
+        // Completing a flag therefore drops it from the active surfaces
+        // while keeping the row.
+        if (flag.completedAt) this._flagByMessageId.delete(flag.messageId);
+        else this._flagByMessageId.set(flag.messageId, flag);
         this._flagsVersion += 1;
         this._notify();
         void this._persistFlag(flag, previous?.id !== flag.id ? previous?.id : undefined);
     }
 
     private _removeFlagByMessage(messageId: string) {
-        const existing = this._flagByMessageId.get(messageId);
-        if (!existing) return;
-        this._flags.delete(existing.id);
+        // Collect every stored flag id for this message. Active flags are
+        // in `_flagByMessageId`; COMPLETED flags live only in `_flags`
+        // (map split), so scan both — otherwise removing a completed flag
+        // would be a silent no-op that orphans the row in memory + IDB
+        // (and reappears on reload from stale IDB).
+        const ids = new Set<string>();
+        const active = this._flagByMessageId.get(messageId);
+        if (active) ids.add(active.id);
+        for (const f of this._flags.values()) {
+            if (f.messageId === messageId) ids.add(f.id);
+        }
+        if (ids.size === 0) return;
+        for (const id of ids) this._flags.delete(id);
         this._flagByMessageId.delete(messageId);
         this._flagsVersion += 1;
         this._notify();
-        void this._persistFlagDelete(existing.id);
+        for (const id of ids) void this._persistFlagDelete(id);
     }
 
     private async _persistPin(pin: Pin, supersededId?: string) {
