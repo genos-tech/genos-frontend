@@ -1001,14 +1001,65 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                                     }
                                 >
                                     <Button
-                                        color="primary"
                                         disabled={isMilestoneSubmitDisabled}
                                         loading={isCreatingMilestone}
+                                        loadingPosition="start"
                                         size="sm"
-                                        startDecorator={<FlagRoundedIcon sx={{ fontSize: 14 }} />}
+                                        startDecorator={<FlagRoundedIcon sx={{ fontSize: 16 }} />}
+                                        variant="solid"
+                                        sx={{
+                                            fontWeight: 600,
+                                            fontSize: "13px",
+                                            borderRadius: "10px",
+                                            px: 2.5,
+                                            py: 0.75,
+                                            background: isMilestoneSubmitDisabled
+                                                ? isDark
+                                                    ? "rgba(255,255,255,0.08)"
+                                                    : "rgba(0,0,0,0.08)"
+                                                : "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)",
+                                            color: isMilestoneSubmitDisabled
+                                                ? isDark
+                                                    ? "rgba(255,255,255,0.3)"
+                                                    : "rgba(0,0,0,0.3)"
+                                                : "white",
+                                            boxShadow: isMilestoneSubmitDisabled
+                                                ? "none"
+                                                : "0 2px 8px rgba(124,58,237,0.3)",
+                                            transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                                            "&:hover": {
+                                                background: isMilestoneSubmitDisabled
+                                                    ? isDark
+                                                        ? "rgba(255,255,255,0.08)"
+                                                        : "rgba(0,0,0,0.08)"
+                                                    : "linear-gradient(135deg, #a78bfa 0%, #c084fc 100%)",
+                                                boxShadow: isMilestoneSubmitDisabled
+                                                    ? "none"
+                                                    : "0 4px 12px rgba(124,58,237,0.4)",
+                                                transform: isMilestoneSubmitDisabled
+                                                    ? "none"
+                                                    : "translateY(-1px)",
+                                            },
+                                            "&:active": {
+                                                transform: isMilestoneSubmitDisabled
+                                                    ? "none"
+                                                    : "translateY(0)",
+                                                boxShadow: isMilestoneSubmitDisabled
+                                                    ? "none"
+                                                    : "0 2px 6px rgba(124,58,237,0.25)",
+                                            },
+                                            "&:disabled": {
+                                                background: isDark
+                                                    ? "rgba(255,255,255,0.08)"
+                                                    : "rgba(0,0,0,0.08)",
+                                                color: isDark
+                                                    ? "rgba(255,255,255,0.3)"
+                                                    : "rgba(0,0,0,0.3)",
+                                            },
+                                        }}
                                         onClick={handleCreateMilestone}
                                     >
-                                        Create Milestone
+                                        {isCreatingMilestone ? "Creating…" : "Create Milestone"}
                                     </Button>
                                 </AppTooltip>
                             </Stack>
