@@ -110,6 +110,12 @@ export const ja: DeepPartial<Messages> = {
                 "この To-Do は見つかりませんでした。削除されたか、他のユーザーのものかもしれません。",
             loadingTodos: "読み込み中…",
         },
+        sessionSuperseded: {
+            title: "別のチームに切り替わりました",
+            body: "別のタブで {team} にサインインしました。1 つのブラウザーで有効なチームは 1 つだけのため、このタブは最新ではありません。再読み込みして続行してください。",
+            reload: "再読み込み",
+            fallbackTeam: "別のチーム",
+        },
         editor: {
             send: "送信",
             sendAriaLabel: "メッセージを送信",
