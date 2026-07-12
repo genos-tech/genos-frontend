@@ -27,11 +27,19 @@ const taskSource = {
     project_id: "7",
 } as unknown as SpotlightResult;
 
-// No deep-link URL: `sourceToUrl` has no todo branch → returns null.
+// Deep-links via the entity_id (`/workspace/todo/:localDate/item/:id`).
 const todoSource = {
     entity_type: "todo",
     entity_id: "todo:2026-07-03:item:117",
     title: "ship the fix",
+} as unknown as SpotlightResult;
+
+// No deep-link URL: `sourceToUrl` can't parse this legacy-mangled
+// entity_id (empty date) → returns null.
+const brokenTodoSource = {
+    entity_type: "todo",
+    entity_id: "todo::item:117",
+    title: "legacy todo",
 } as unknown as SpotlightResult;
 
 const renderChips = (
@@ -86,14 +94,25 @@ describe("SourceChips — preview-first click, navigate fallback", () => {
         expect(onSelectSource).toHaveBeenCalledWith(taskSource);
     });
 
+    it("opens the todo preview from a todo source's entity_id", async () => {
+        const user = userEvent.setup();
+        const onSelectSource = vi.fn();
+        const openModalByHref = vi.fn().mockReturnValue("opened" as const);
+        renderChips([todoSource], { onSelectSource, openModalByHref });
+
+        await user.click(screen.getByRole("button", { name: /ship the fix/ }));
+        expect(openModalByHref).toHaveBeenCalledWith("/workspace/todo/2026-07-03/item/117");
+        expect(onSelectSource).not.toHaveBeenCalled();
+    });
+
     it("falls back to onSelectSource when the source has no deep-link URL", async () => {
         const user = userEvent.setup();
         const onSelectSource = vi.fn();
         const openModalByHref = vi.fn();
-        renderChips([todoSource], { onSelectSource, openModalByHref });
+        renderChips([brokenTodoSource], { onSelectSource, openModalByHref });
 
-        await user.click(screen.getByRole("button", { name: /ship the fix/ }));
+        await user.click(screen.getByRole("button", { name: /legacy todo/ }));
         expect(openModalByHref).not.toHaveBeenCalled();
-        expect(onSelectSource).toHaveBeenCalledWith(todoSource);
+        expect(onSelectSource).toHaveBeenCalledWith(brokenTodoSource);
     });
 });

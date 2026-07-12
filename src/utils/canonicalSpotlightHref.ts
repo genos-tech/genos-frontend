@@ -18,6 +18,16 @@ export const milestoneIdFromEntityId = (entityId: string | undefined | null): nu
     return Number.isFinite(id) && id > 0 ? id : null;
 };
 
+// Todo sources carry their identity only inside `entity_id`
+// (`todo:YYYY-MM-DD:item:<id>`, the backend `_todo_source` convention;
+// `todo:YYYY-MM-DD` alone is the day-level grouping). Maps to the
+// `/workspace/todo/:localDate[/item/:itemId]` deep link.
+export const todoHrefFromEntityId = (entityId: string | undefined | null): string | null => {
+    const m = /^todo:(\d{4}-\d{2}-\d{2})(?::item:(\d+))?$/.exec(entityId || "");
+    if (!m) return null;
+    return m[2] ? `/workspace/todo/${m[1]}/item/${m[2]}` : `/workspace/todo/${m[1]}`;
+};
+
 export const canonicalSpotlightHref = (r: SpotlightResult): string | null => {
     // Milestones get their own deep link so the preview opens through
     // ModalMilestoneView, which loads the milestone and points the
@@ -69,6 +79,9 @@ export const canonicalSpotlightHref = (r: SpotlightResult): string | null => {
                 `/${r.chat_id}/thread/${tid}/note/${r.note_id}`
             );
         }
+    }
+    if (r.entity_type === "todo") {
+        return todoHrefFromEntityId(r.entity_id);
     }
     return null;
 };

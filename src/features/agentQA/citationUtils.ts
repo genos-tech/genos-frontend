@@ -7,6 +7,7 @@
 // converge once Spotlight migrates onto `useAgentQA` (stretch goal —
 // see the agentQA refactor plan).
 
+import { todoHrefFromEntityId } from "../../utils/canonicalSpotlightHref";
 import { SpotlightResult } from "../spotlight/types";
 
 // Matches `[type:id...]` tokens emitted by the LLM. Anchored to the
@@ -309,6 +310,9 @@ export const sourceToUrl = (s: SpotlightResult): string | null => {
             return `/workspace/notes/chat/${s.chat_type}/${s.chat_id}/thread/${s.thread_id}/note/${s.note_id}`;
         }
     }
+    if (s.entity_type === "todo") {
+        return todoHrefFromEntityId(s.entity_id);
+    }
     return null;
 };
 
@@ -326,5 +330,6 @@ const entitySubtitle = (s: SpotlightResult): string => {
         return s.thread_id ? `${base} thread` : base;
     }
     if (s.entity_type === "note") return "Note";
+    if (s.entity_type === "todo") return "Todo";
     return "Source";
 };

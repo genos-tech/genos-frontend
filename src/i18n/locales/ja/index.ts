@@ -106,6 +106,9 @@ export const ja: DeepPartial<Messages> = {
             milestoneUnavailable: "このマイルストーンは利用できません。",
             milestoneLoadFailed: "このマイルストーンの読み込みに失敗しました。",
             loadingMilestone: "読み込み中…",
+            todoUnavailable:
+                "この To-Do は見つかりませんでした。削除されたか、他のユーザーのものかもしれません。",
+            loadingTodos: "読み込み中…",
         },
         editor: {
             send: "送信",
@@ -330,6 +333,8 @@ export const ja: DeepPartial<Messages> = {
             proTipBody: "メッセージをダブルクリックすると To-Do に追加できます",
             save: "保存",
             saved: "保存済み",
+            copyLink: "リンクをコピー",
+            linkCopied: "リンクをコピーしました",
         },
         thread: {
             replyPlaceholder: "スレッドに返信…",

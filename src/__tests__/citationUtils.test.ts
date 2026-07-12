@@ -7,6 +7,7 @@ import {
     extractBareCitedIds,
     extractInlineCitedIds,
     rewriteCitations,
+    sourceToUrl,
 } from "../features/agentQA/citationUtils";
 import type { SpotlightResult } from "../features/spotlight/types";
 
@@ -256,5 +257,18 @@ describe("citedChipSources — cited sources (inline + bare), uncited dropped", 
         const b = src("chat", "dm:9:thread:4"); // normalises to chat:dm:9:thread:4 for matching
         const chips = citedChipSources("Both [task:42] and [chat:dm:9:thread:4].", [a, b]);
         expect(chips).toHaveLength(2);
+    });
+});
+
+describe("sourceToUrl — todo deep links", () => {
+    it("builds the item URL from the backend entity_id convention", () => {
+        expect(sourceToUrl(src("todo", "todo:2026-07-12:item:88"))).toBe(
+            "/workspace/todo/2026-07-12/item/88"
+        );
+    });
+
+    it("returns null for a mangled todo entity_id (navigate fallback)", () => {
+        expect(sourceToUrl(src("todo", "todo::item:88"))).toBeNull();
+        expect(sourceToUrl(src("todo", ""))).toBeNull();
     });
 });

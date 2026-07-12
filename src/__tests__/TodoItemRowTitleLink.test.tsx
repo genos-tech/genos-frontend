@@ -29,6 +29,7 @@ const renderRow = (title: string, onTitleCommit = vi.fn()) => {
             <TodoItemRow
                 categories={[]}
                 item={makeItem(title)}
+                localDate="2026-06-01"
                 myself={{} as UserProps}
                 setMyself={vi.fn()}
                 socket={null}

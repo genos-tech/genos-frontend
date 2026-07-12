@@ -380,6 +380,39 @@ describe("parseInternalUrl - note targets", () => {
     });
 });
 
+describe("parseInternalUrl - todo targets", () => {
+    it("parses an item deep link", () => {
+        expect(parseInternalUrl(`${ORIGIN}/workspace/todo/2026-07-12/item/88`)).toEqual({
+            kind: "todo",
+            localDate: "2026-07-12",
+            itemId: 88,
+        });
+    });
+
+    it("parses a date-only link (no item)", () => {
+        expect(parseInternalUrl(`${ORIGIN}/workspace/todo/2026-07-12`)).toEqual({
+            kind: "todo",
+            localDate: "2026-07-12",
+            itemId: undefined,
+        });
+    });
+
+    it("drops an invalid item id but keeps the date target", () => {
+        expect(parseInternalUrl(`${ORIGIN}/workspace/todo/2026-07-12/item/abc`)).toEqual({
+            kind: "todo",
+            localDate: "2026-07-12",
+            itemId: undefined,
+        });
+    });
+
+    it("falls back to a route when the date is malformed or missing", () => {
+        expect(parseInternalUrl(`${ORIGIN}/workspace/todo/2026-7-12/item/88`)).toMatchObject({
+            kind: "route",
+        });
+        expect(parseInternalUrl(`${ORIGIN}/workspace/todo`)).toMatchObject({ kind: "route" });
+    });
+});
+
 // --------------------------------------------------------------------------
 // urlHandler.ts
 // --------------------------------------------------------------------------

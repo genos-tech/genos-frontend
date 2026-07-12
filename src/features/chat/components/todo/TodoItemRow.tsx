@@ -1,7 +1,6 @@
 import { ReactNode, useEffect, useRef, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
 import AddIcon from "@mui/icons-material/Add";
-import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import ExpandLessRoundedIcon from "@mui/icons-material/ExpandLessRounded";
 import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
 import SubdirectoryArrowRightRoundedIcon from "@mui/icons-material/SubdirectoryArrowRightRounded";
@@ -16,13 +15,20 @@ import { TeamManagementState } from "../../../../hooks/common/useTeamManagement"
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
 import { TodoCategoryProps, TodoItemProps } from "../../../../types/chat";
-import { CategoryPickerMenu } from "./CategoryPickerMenu";
 import { useLinkifyPaste } from "./titleLinks";
+import { TodoItemMoreMenu } from "./TodoItemMoreMenu";
 import { TodoNotesEditor } from "./TodoNotesEditor";
 
 interface TodoItemRowProps {
     item: TodoItemProps;
     categories: TodoCategoryProps[];
+    // The owning group's day bucket (YYYY-MM-DD) — the deep-link URL for
+    // this item is /workspace/todo/:localDate/item/:itemId.
+    localDate: string;
+    // Deep-link target: when it matches this row's itemId, the row is
+    // tinted + ringed and scrolled into view so the user can tell which
+    // todo the opened URL pointed at.
+    highlightItemId?: number;
     // Direct children of this row. Empty on rows that are themselves
     // children (one-level nesting cap).
     subitems?: TodoItemProps[];
@@ -155,6 +161,8 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
     const {
         item,
         categories,
+        localDate,
+        highlightItemId,
         subitems = [],
         myself,
         setMyself,
@@ -198,6 +206,41 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
     );
     const [notesBody, setNotesBody] = useState<PartialBlock[]>(() => ensureNonEmpty(item.notes));
     const notesDirtyRef = useRef(false);
+
+    const isHighlighted = highlightItemId != null && item.itemId === highlightItemId;
+
+    // Copy-link feedback: flips the tooltip to "Link copied" briefly.
+    const [linkCopied, setLinkCopied] = useState(false);
+    const linkCopiedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    useEffect(() => {
+        return () => {
+            if (linkCopiedTimerRef.current) clearTimeout(linkCopiedTimerRef.current);
+        };
+    }, []);
+    const handleCopyLink = async () => {
+        const url = `${window.location.origin}/workspace/todo/${localDate}/item/${item.itemId}`;
+        try {
+            await navigator.clipboard.writeText(url);
+            setLinkCopied(true);
+            if (linkCopiedTimerRef.current) clearTimeout(linkCopiedTimerRef.current);
+            linkCopiedTimerRef.current = setTimeout(() => setLinkCopied(false), 1500);
+        } catch {
+            // Clipboard unavailable (permissions/insecure context) — the
+            // tooltip simply doesn't flip; nothing else to do.
+        }
+    };
+
+    // Center the deep-link target once it's rendered. The small delay
+    // defers past Virtuoso mounting the group row (ToDoPane scrolls the
+    // group into the viewport first; this fine-positions the item).
+    const rootRef = useRef<HTMLDivElement | null>(null);
+    useEffect(() => {
+        if (!isHighlighted) return;
+        const id = setTimeout(() => {
+            rootRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+        }, 120);
+        return () => clearTimeout(id);
+    }, [isHighlighted]);
 
     // Subitem add: a small inline input that the user opens with the
     // "+ subitem" button. Only meaningful on top-level rows; children
@@ -248,16 +291,30 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
         }
     };
 
-    const currentCategory = categories.find((c) => c.categoryId === item.categoryId);
+    // Purple accent family, matching the pane's header/footer styling.
+    const accentBg = isDark ? "rgba(167,139,250,0.14)" : "rgba(124,58,237,0.08)";
+    const accentRing = isDark ? "rgba(167,139,250,0.6)" : "rgba(124,58,237,0.45)";
 
     return (
         <Box
+            ref={rootRef}
             sx={{
                 borderRadius: "8px",
                 px: 1,
                 py: 0.75,
+                // Tint the row while it's the deep-link target or being
+                // edited so the user can tell which todo is active; the
+                // ring is reserved for the URL target (unmistakable even
+                // next to hover/edit tints).
+                background: isHighlighted || isEditingTitle ? accentBg : undefined,
+                boxShadow: isHighlighted ? `inset 0 0 0 1.5px ${accentRing}` : undefined,
                 "&:hover": {
-                    background: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)",
+                    background:
+                        isHighlighted || isEditingTitle
+                            ? accentBg
+                            : isDark
+                              ? "rgba(255,255,255,0.03)"
+                              : "rgba(0,0,0,0.02)",
                 },
             }}
         >
@@ -353,18 +410,6 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
                         )}
                     </IconButton>
                 </AppTooltip>
-                {/* Tag picker sits right beside the subitem control. Both
-                    are top-level-only actions; children inherit the parent's
-                    tag, so the picker is hidden on child rows. */}
-                {!isChild && (
-                    <CategoryPickerMenu
-                        categories={categories}
-                        currentCategoryId={item.categoryId}
-                        triggerLabel={currentCategory ? currentCategory.name : null}
-                        onCreate={onCategoryCreate}
-                        onSelect={(categoryId) => onCategoryChange(item.itemId, categoryId)}
-                    />
-                )}
                 {/* "+ subitem" only on top-level rows. */}
                 {!isChild && onAddSubitem && (
                     <AppTooltip title="Add subitem">
@@ -378,17 +423,18 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
                         </IconButton>
                     </AppTooltip>
                 )}
-                <AppTooltip title="Delete">
-                    <IconButton
-                        color="danger"
-                        size="sm"
-                        sx={{ borderRadius: "6px" }}
-                        variant="plain"
-                        onClick={() => onDelete(item.itemId)}
-                    >
-                        <DeleteOutlineRoundedIcon sx={{ fontSize: 16 }} />
-                    </IconButton>
-                </AppTooltip>
+                {/* Secondary actions (copy link / tag / delete) live behind
+                    one ⋮ menu — five inline icons per row was too noisy. */}
+                <TodoItemMoreMenu
+                    categories={categories}
+                    currentCategoryId={item.categoryId}
+                    isChild={isChild}
+                    linkCopied={linkCopied}
+                    onCopyLink={handleCopyLink}
+                    onCreateCategory={onCategoryCreate}
+                    onDelete={() => onDelete(item.itemId)}
+                    onSelectCategory={(categoryId) => onCategoryChange(item.itemId, categoryId)}
+                />
             </Stack>
             {notesExpanded && (
                 <Box
@@ -441,7 +487,9 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
                         <TodoItemRow
                             key={child.itemId}
                             categories={categories}
+                            highlightItemId={highlightItemId}
                             item={child}
+                            localDate={localDate}
                             myself={myself}
                             setMyself={setMyself}
                             socket={socket}

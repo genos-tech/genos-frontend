@@ -72,6 +72,14 @@ export type SharedNoteTarget = {
     noteId: number;
 };
 
+export type TodoTarget = {
+    kind: "todo";
+    // The group's day bucket (YYYY-MM-DD) — part of the URL so the modal
+    // can fetch that day's group when it's outside the loaded window.
+    localDate: string;
+    itemId?: number;
+};
+
 export type ModalTarget =
     | ChatMainTarget
     | ChatThreadTarget
@@ -80,7 +88,8 @@ export type ModalTarget =
     | ChatNoteTarget
     | TaskNoteTarget
     | MyNoteTarget
-    | SharedNoteTarget;
+    | SharedNoteTarget
+    | TodoTarget;
 
 export type UrlClassification =
     | ModalTarget
@@ -250,6 +259,17 @@ export const parseInternalUrl = (href: string): UrlClassification => {
             }
         }
         return route;
+    }
+
+    // /workspace/todo/:localDate[/item/:itemId]
+    //
+    // localDate is the todo group's day bucket (YYYY-MM-DD). Todos are
+    // per-user (self-DM pane), so the id alone identifies the item; the
+    // date rides along so the modal can fetch that day's group directly.
+    if (parts[1] === "todo") {
+        const localDate = /^\d{4}-\d{2}-\d{2}$/.test(parts[2] ?? "") ? parts[2] : undefined;
+        if (!localDate) return route;
+        return { itemId: toInt(segmentAfter(parts, "item")), kind: "todo", localDate };
     }
 
     return route;

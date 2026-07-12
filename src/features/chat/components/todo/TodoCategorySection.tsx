@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
 import AddIcon from "@mui/icons-material/Add";
 import ExpandLessRoundedIcon from "@mui/icons-material/ExpandLessRounded";
@@ -22,6 +22,11 @@ interface TodoCategorySectionProps {
     categoryId: number | null; // null = uncategorized
     items: TodoItemProps[];
     categories: TodoCategoryProps[];
+    // The owning group's day bucket — needed by rows to build their
+    // /workspace/todo/:localDate/item/:itemId copy-links.
+    localDate: string;
+    // Deep-link target item; forwarded to rows for the highlight.
+    highlightItemId?: number;
     onAddItem: (title: string, categoryId: number | null) => Promise<void>;
     onAddSubitem: (parentItemId: number, title: string) => Promise<void>;
     onPatchItem: (itemId: number, patch: UpdateTodoItemPatch) => void;
@@ -41,6 +46,8 @@ export const TodoCategorySection = (props: TodoCategorySectionProps) => {
         categoryId,
         items,
         categories,
+        localDate,
+        highlightItemId,
         onAddItem,
         onAddSubitem,
         onPatchItem,
@@ -58,6 +65,14 @@ export const TodoCategorySection = (props: TodoCategorySectionProps) => {
 
     const [collapsed, setCollapsed] = useState(false);
     const [newTitle, setNewTitle] = useState("");
+
+    // A deep link must beat a collapsed section — force-expand when this
+    // section owns the target item so the highlight is actually visible.
+    useEffect(() => {
+        if (highlightItemId != null && items.some((i) => i.itemId === highlightItemId)) {
+            setCollapsed(false);
+        }
+    }, [highlightItemId, items]);
 
     // Paste a URL over a selected word in the "+ Add item" field → "[word](url)".
     const addInputRef = useRef<HTMLInputElement | null>(null);
@@ -137,7 +152,9 @@ export const TodoCategorySection = (props: TodoCategorySectionProps) => {
                         <TodoItemRow
                             key={item.itemId}
                             categories={categories}
+                            highlightItemId={highlightItemId}
                             item={item}
+                            localDate={localDate}
                             myself={myself}
                             setMyself={setMyself}
                             socket={socket}

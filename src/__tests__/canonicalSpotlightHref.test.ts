@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import type { SpotlightResult } from "../features/spotlight/types";
-import { canonicalSpotlightHref, milestoneIdFromEntityId } from "../utils/canonicalSpotlightHref";
+import {
+    canonicalSpotlightHref,
+    milestoneIdFromEntityId,
+    todoHrefFromEntityId,
+} from "../utils/canonicalSpotlightHref";
 
 const base = (overrides: Partial<SpotlightResult>): SpotlightResult =>
     ({
@@ -63,5 +67,32 @@ describe("canonicalSpotlightHref", () => {
             base({ entity_type: "task", project_id: "3", task_id: "99" })
         );
         expect(href).toBe("/workspace/tasks/project/3/task/99");
+    });
+
+    it("routes todo chips through their entity_id", () => {
+        const href = canonicalSpotlightHref(
+            base({ entity_type: "todo", entity_id: "todo:2026-07-12:item:88" })
+        );
+        expect(href).toBe("/workspace/todo/2026-07-12/item/88");
+    });
+});
+
+describe("todoHrefFromEntityId", () => {
+    it("parses the item-level backend convention", () => {
+        expect(todoHrefFromEntityId("todo:2026-07-12:item:88")).toBe(
+            "/workspace/todo/2026-07-12/item/88"
+        );
+    });
+
+    it("parses the day-level grouping id", () => {
+        expect(todoHrefFromEntityId("todo:2026-07-12")).toBe("/workspace/todo/2026-07-12");
+    });
+
+    it("returns null for malformed ids", () => {
+        expect(todoHrefFromEntityId("todo::item:5")).toBeNull();
+        expect(todoHrefFromEntityId("todo:2026-7-12:item:5")).toBeNull();
+        expect(todoHrefFromEntityId("task:42")).toBeNull();
+        expect(todoHrefFromEntityId("")).toBeNull();
+        expect(todoHrefFromEntityId(undefined)).toBeNull();
     });
 });

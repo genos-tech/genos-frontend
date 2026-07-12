@@ -18,6 +18,7 @@ describe("TodoCategorySection — paste-a-URL-over-a-selection in the add-item f
                     categories={[]}
                     categoryId={null}
                     items={[]}
+                    localDate="2026-06-01"
                     myself={{} as UserProps}
                     setMyself={vi.fn()}
                     socket={null}

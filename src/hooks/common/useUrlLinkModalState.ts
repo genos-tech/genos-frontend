@@ -17,6 +17,7 @@ const SUPPORTED_KINDS: ReadonlySet<ModalTarget["kind"]> = new Set([
     "sharedNote",
     "task",
     "taskNote",
+    "todo",
 ]);
 
 export type OpenModalByHrefOptions = {
