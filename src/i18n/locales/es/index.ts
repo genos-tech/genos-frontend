@@ -1250,6 +1250,10 @@ export const es: DeepPartial<Messages> = {
             gmRequest: "Solicitud de GM",
             noteAccessRequest: "Acceso a nota",
         },
+        noteAccess: {
+            openNote: "Abrir nota",
+            openNoteNamed: "Abrir «{title}»",
+        },
         bubble: {
             approve: "Aprobar",
             reject: "Rechazar",

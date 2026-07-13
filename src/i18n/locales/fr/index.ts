@@ -1264,6 +1264,10 @@ export const fr: DeepPartial<Messages> = {
             gmRequest: "Demande de GM",
             noteAccessRequest: "Accès à la note",
         },
+        noteAccess: {
+            openNote: "Ouvrir la note",
+            openNoteNamed: "Ouvrir « {title} »",
+        },
         bubble: {
             approve: "Approuver",
             reject: "Rejeter",
