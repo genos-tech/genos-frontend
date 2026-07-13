@@ -1235,6 +1235,10 @@ export const zh: DeepPartial<Messages> = {
             gmRequest: "群组申请",
             noteAccessRequest: "笔记访问",
         },
+        noteAccess: {
+            openNote: "打开笔记",
+            openNoteNamed: "打开“{title}”",
+        },
         bubble: {
             approve: "通过",
             reject: "拒绝",

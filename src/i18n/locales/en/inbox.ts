@@ -25,6 +25,10 @@ export const inbox = {
         gmRequest: "GM Request",
         noteAccessRequest: "Note Access",
     },
+    noteAccess: {
+        openNote: "Open note",
+        openNoteNamed: "Open “{title}”",
+    },
     bubble: {
         approve: "Approve",
         reject: "Reject",

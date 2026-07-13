@@ -11,6 +11,7 @@ import { Socket } from "socket.io-client";
 
 import { BnChatPreview } from "../../../components/editors/bnChatPreview";
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
+import { useUrlLinkModal } from "../../../hooks/common/UrlLinkModalContext";
 import { TeamManagementState } from "../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../hooks/common/useUIStateManagement";
 import { fmt, getMessages, useTranslation } from "../../../i18n";
@@ -88,6 +89,21 @@ export const InboxBubble = (props: InboxBubbleProps) => {
     const isRequest = inboxItem.itemType >= 1 && inboxItem.itemType <= 4;
     const resolvedStatus = localStatus ?? inboxItem.requestStatus;
     const isHandled = resolvedStatus === "approved" || resolvedStatus === "rejected";
+
+    // Note-access requests (itemType 4) can open the referenced note in the
+    // URL-link modal. Only personal notes (note_type 1) are routable from
+    // the stored optionals (note_type/note_id) — the my-notes URL needs just
+    // the id, whereas task/chat notes need project/task/chat ids the request
+    // doesn't carry, so they show no open affordance (a scoped follow-up).
+    const urlLinkModal = useUrlLinkModal();
+    const noteOptionals = inboxItem.itemType === 4 ? inboxItem.itemOptionals : null;
+    const openableNote =
+        noteOptionals && noteOptionals.note_type === 1 && noteOptionals.note_id
+            ? {
+                  href: `/workspace/notes/my/${noteOptionals.note_id}`,
+                  title: noteOptionals.note_title || t.inbox.noteAccess.openNote,
+              }
+            : null;
 
     const handleApprove = () => {
         if (socket && config) {
@@ -220,6 +236,34 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                             useTEM={useTEM}
                             useUISM={useUISM}
                         />
+                    </Box>
+                )}
+
+                {/* Open-note affordance for a note-access request — opens
+                    the referenced note in the URL-link modal on top of the
+                    inbox (the owner has access, so it loads normally). */}
+                {openableNote && urlLinkModal && (
+                    <Box>
+                        <Chip
+                            color="primary"
+                            size="sm"
+                            startDecorator={<StickyNote2RoundedIcon sx={{ fontSize: 14 }} />}
+                            variant="soft"
+                            sx={{
+                                cursor: "pointer",
+                                maxWidth: "100%",
+                                borderRadius: "8px",
+                                fontWeight: 600,
+                                "& .MuiChip-label": {
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    whiteSpace: "nowrap",
+                                },
+                            }}
+                            onClick={() => urlLinkModal.openModalByHref(openableNote.href)}
+                        >
+                            {fmt(t.inbox.noteAccess.openNoteNamed, { title: openableNote.title })}
+                        </Chip>
                     </Box>
                 )}
 

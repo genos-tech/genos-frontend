@@ -26,4 +26,14 @@ export type InboxItemProps = {
     isRead: boolean;
     requestStatus: "pending" | "approved" | "rejected";
     tsSent: string;
+    // Request routing payload. Note-access items (itemType 4) carry
+    // note_type/note_id/note_title so the card can open the referenced
+    // note; other request types carry their own keys. Absent on plain
+    // activity items.
+    itemOptionals?: {
+        note_type?: number;
+        note_id?: number;
+        note_title?: string;
+        [key: string]: unknown;
+    } | null;
 };

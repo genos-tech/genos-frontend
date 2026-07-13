@@ -1249,6 +1249,10 @@ export const ar: DeepPartial<Messages> = {
             gmRequest: "طلب مجموعة",
             noteAccessRequest: "الوصول إلى الملاحظة",
         },
+        noteAccess: {
+            openNote: "فتح الملاحظة",
+            openNoteNamed: "فتح «{title}»",
+        },
         bubble: {
             approve: "موافقة",
             reject: "رفض",

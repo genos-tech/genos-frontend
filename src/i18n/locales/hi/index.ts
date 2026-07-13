@@ -1258,6 +1258,10 @@ export const hi: DeepPartial<Messages> = {
             gmRequest: "GM अनुरोध",
             noteAccessRequest: "नोट एक्सेस",
         },
+        noteAccess: {
+            openNote: "नोट खोलें",
+            openNoteNamed: "“{title}” खोलें",
+        },
         bubble: {
             approve: "स्वीकार करें",
             reject: "अस्वीकार करें",

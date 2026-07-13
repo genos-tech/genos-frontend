@@ -1303,6 +1303,10 @@ export const ja: DeepPartial<Messages> = {
             gmRequest: "GMリクエスト",
             noteAccessRequest: "ノートアクセス",
         },
+        noteAccess: {
+            openNote: "ノートを開く",
+            openNoteNamed: "「{title}」を開く",
+        },
         bubble: {
             approve: "承認",
             reject: "却下",
