@@ -1,6 +1,7 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DragDropContext, Droppable, DropResult } from "@hello-pangea/dnd";
 import AutorenewIcon from "@mui/icons-material/Autorenew";
+import BlockIcon from "@mui/icons-material/Block";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import HighlightOffIcon from "@mui/icons-material/HighlightOff";
 import PendingIcon from "@mui/icons-material/Pending";
@@ -231,6 +232,14 @@ export const statusOptions = [
         color: "#ff8c00",
         textColor: "white",
         icon: <AutorenewIcon style={{ color: "white" }} />,
+    },
+    {
+        label: "Blocked",
+        labelKey: "blocked" as const,
+        value: "Blocked",
+        color: "#e11d48",
+        textColor: "white",
+        icon: <BlockIcon style={{ color: "white" }} />,
     },
     {
         label: "Pending",

@@ -852,6 +852,7 @@ export const fr: DeepPartial<Messages> = {
         board: {
             columnOpen: "Ouvert",
             columnWip: "En cours",
+            columnBlocked: "Bloqué",
             columnClosed: "Clôturé",
             columnPending: "En attente",
             dropToColumn: "↳ Déposer dans {title}",
@@ -887,6 +888,7 @@ export const fr: DeepPartial<Messages> = {
             all: "Toutes",
             open: "Ouvert",
             wip: "En cours",
+            blocked: "Bloqué",
             pending: "En attente",
             closed: "Clôturé",
             expired: "Expirée",
@@ -989,6 +991,7 @@ export const fr: DeepPartial<Messages> = {
             member: "Membre",
             open: "Ouvert",
             wip: "En cours",
+            blocked: "Bloqué",
             pending: "En attente",
             closed: "Clôturé",
             total: "Total",
@@ -1004,6 +1007,7 @@ export const fr: DeepPartial<Messages> = {
             statusLabels: {
                 open: "Ouvert",
                 wip: "En cours",
+                blocked: "Bloqué",
                 pending: "En attente",
                 closed: "Terminé",
             },

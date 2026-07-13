@@ -863,6 +863,7 @@ export const ja: DeepPartial<Messages> = {
         board: {
             columnOpen: "未着手",
             columnWip: "進行中",
+            columnBlocked: "ブロック中",
             columnClosed: "完了",
             columnPending: "保留",
             dropToColumn: "↳ {title} にドロップ",
@@ -901,6 +902,7 @@ export const ja: DeepPartial<Messages> = {
             all: "すべて",
             open: "未着手",
             wip: "進行中",
+            blocked: "ブロック中",
             pending: "保留",
             closed: "完了",
             expired: "期限切れ",
@@ -1007,6 +1009,7 @@ export const ja: DeepPartial<Messages> = {
             member: "メンバー",
             open: "未着手",
             wip: "進行中",
+            blocked: "ブロック中",
             pending: "保留",
             closed: "完了",
             total: "合計",
@@ -1022,6 +1025,7 @@ export const ja: DeepPartial<Messages> = {
             statusLabels: {
                 open: "未着手",
                 wip: "進行中",
+                blocked: "ブロック中",
                 pending: "保留",
                 closed: "完了",
             },

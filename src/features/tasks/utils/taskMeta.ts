@@ -3,6 +3,9 @@ import { TaskEffortLevelProps, TaskPriorityProps, TaskStatusProps } from "../../
 export const statuses: TaskStatusProps[] = [
     { code: 0, status: "Open", color: "#0044c2", textColor: "white" },
     { code: 0, status: "WIP", color: "#ff8c00", textColor: "white" },
+    // Rose, deliberately distinct from Deleted's bright red — the two
+    // rarely co-occur in a view, but the chips must stay tellable-apart.
+    { code: 0, status: "Blocked", color: "#e11d48", textColor: "white" },
     { code: 0, status: "Pending", color: "#b900ff", textColor: "white" },
     { code: 0, status: "Closed", color: "#1dc200", textColor: "white" },
     { code: 0, status: "Deleted", color: "#ff2323", textColor: "white" },

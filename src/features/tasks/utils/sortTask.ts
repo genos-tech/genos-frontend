@@ -30,7 +30,7 @@ export type SortTier = {
 // "Low" because of the letter ordering. The rank maps below give each
 // value an explicit numeric weight so the comparator does the obvious
 // thing. Higher rank = more urgent for priority/effort. For status the
-// workflow order Open → WIP → Pending → Closed → Deleted is modelled as
+// workflow order Open → WIP → Blocked → Pending → Closed → Deleted is modelled as
 // ascending so "asc" naturally surfaces the most active rows first;
 // "desc" shows Deleted/Closed first.
 export const PRIORITY_RANK: Record<string, number> = {
@@ -56,9 +56,10 @@ export const EFFORT_RANK: Record<string, number> = {
 export const STATUS_RANK: Record<string, number> = {
     Open: 1,
     WIP: 2,
-    Pending: 3,
-    Closed: 4,
-    Deleted: 5,
+    Blocked: 3,
+    Pending: 4,
+    Closed: 5,
+    Deleted: 6,
 };
 
 // Parse a date string into epoch ms for numeric comparison. `dueDate` is

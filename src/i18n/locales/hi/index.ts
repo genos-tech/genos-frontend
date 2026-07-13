@@ -846,6 +846,7 @@ export const hi: DeepPartial<Messages> = {
         board: {
             columnOpen: "ओपन",
             columnWip: "प्रगति पर",
+            columnBlocked: "अवरुद्ध",
             columnClosed: "बंद",
             columnPending: "लंबित",
             dropToColumn: "↳ {title} में ड्रॉप करें",
@@ -884,6 +885,7 @@ export const hi: DeepPartial<Messages> = {
             all: "सभी",
             open: "ओपन",
             wip: "WIP",
+            blocked: "अवरुद्ध",
             pending: "लंबित",
             closed: "बंद",
             expired: "समाप्त",
@@ -990,6 +992,7 @@ export const hi: DeepPartial<Messages> = {
             member: "मेंबर",
             open: "ओपन",
             wip: "WIP",
+            blocked: "अवरुद्ध",
             pending: "लंबित",
             closed: "बंद",
             total: "कुल",
@@ -1005,6 +1008,7 @@ export const hi: DeepPartial<Messages> = {
             statusLabels: {
                 open: "ओपन",
                 wip: "प्रगति पर",
+                blocked: "अवरुद्ध",
                 pending: "लंबित",
                 closed: "पूरा",
             },

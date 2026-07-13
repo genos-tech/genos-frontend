@@ -361,6 +361,7 @@ export const tasks = {
     board: {
         columnOpen: "Open",
         columnWip: "Work In Progress",
+        columnBlocked: "Blocked",
         columnClosed: "Closed",
         columnPending: "Pending",
         dropToColumn: "↳ Drop to {title}",
@@ -411,6 +412,7 @@ export const tasks = {
         all: "All",
         open: "Open",
         wip: "WIP",
+        blocked: "Blocked",
         pending: "Pending",
         closed: "Closed",
         expired: "Expired",
@@ -594,6 +596,7 @@ export const tasks = {
         member: "Member",
         open: "Open",
         wip: "WIP",
+        blocked: "Blocked",
         pending: "Pending",
         closed: "Closed",
         total: "Total",
@@ -609,6 +612,7 @@ export const tasks = {
         statusLabels: {
             open: "Open",
             wip: "In Progress",
+            blocked: "Blocked",
             pending: "Pending",
             closed: "Completed",
         },

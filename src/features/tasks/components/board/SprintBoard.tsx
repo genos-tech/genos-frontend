@@ -50,6 +50,14 @@ const COLUMNS: ColumnConfig[] = [
         bgColor: "rgba(255, 140, 0, 0.1)",
     },
     {
+        id: "blocked",
+        title: "Blocked",
+        titleKey: "columnBlocked",
+        status: "Blocked",
+        color: "#e11d48",
+        bgColor: "rgba(225, 29, 72, 0.1)",
+    },
+    {
         id: "closed",
         title: "Closed",
         titleKey: "columnClosed",
@@ -70,7 +78,9 @@ const COLUMNS: ColumnConfig[] = [
 // Style helpers
 const getBoardContainerStyles = (mode: "light" | "dark" | undefined): React.CSSProperties => ({
     display: "grid",
-    gridTemplateColumns: "repeat(4, 1fr)", // Fixed 4 equal columns
+    // One equal-width column per status — derived from COLUMNS so adding
+    // a status (e.g. Blocked) can't silently overflow the fixed grid.
+    gridTemplateColumns: `repeat(${COLUMNS.length}, 1fr)`,
     gap: 12,
     padding: 12,
     flex: 1,
