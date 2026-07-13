@@ -1438,6 +1438,7 @@ export const es: DeepPartial<Messages> = {
                 inboxTitleJoinTeam: "Solicitud para unirse al equipo",
                 inboxTitleJoinProject: "Solicitud para unirse al proyecto",
                 inboxTitleJoinGroup: "Solicitud para unirse al grupo",
+                inboxTitleNoteAccess: "Solicitud de acceso a nota",
             },
         },
     },

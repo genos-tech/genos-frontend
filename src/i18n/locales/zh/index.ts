@@ -1419,6 +1419,7 @@ export const zh: DeepPartial<Messages> = {
                 inboxTitleJoinTeam: "加入团队申请",
                 inboxTitleJoinProject: "加入项目申请",
                 inboxTitleJoinGroup: "加入群组申请",
+                inboxTitleNoteAccess: "笔记访问申请",
             },
         },
     },

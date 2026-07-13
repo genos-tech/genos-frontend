@@ -1445,6 +1445,7 @@ export const hi: DeepPartial<Messages> = {
                 inboxTitleJoinTeam: "टीम जॉइन करने का अनुरोध",
                 inboxTitleJoinProject: "प्रोजेक्ट जॉइन करने का अनुरोध",
                 inboxTitleJoinGroup: "ग्रुप जॉइन करने का अनुरोध",
+                inboxTitleNoteAccess: "नोट एक्सेस अनुरोध",
             },
         },
     },

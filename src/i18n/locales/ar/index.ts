@@ -1434,6 +1434,7 @@ export const ar: DeepPartial<Messages> = {
                 inboxTitleJoinTeam: "طلب الانضمام إلى الفريق",
                 inboxTitleJoinProject: "طلب الانضمام إلى المشروع",
                 inboxTitleJoinGroup: "طلب الانضمام إلى المجموعة",
+                inboxTitleNoteAccess: "طلب الوصول إلى الملاحظة",
             },
         },
     },

@@ -1454,6 +1454,7 @@ export const fr: DeepPartial<Messages> = {
                 inboxTitleJoinTeam: "Demande pour rejoindre l'équipe",
                 inboxTitleJoinProject: "Demande pour rejoindre le projet",
                 inboxTitleJoinGroup: "Demande pour rejoindre le groupe",
+                inboxTitleNoteAccess: "Demande d'accès à la note",
             },
         },
     },
