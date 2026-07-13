@@ -671,3 +671,52 @@ describe("useSpotlight mention forwarding", () => {
         ]);
     });
 });
+
+// ---- useSpotlight background stream on close --------------------------
+
+describe("useSpotlight keeps the agent stream running after close", () => {
+    beforeEach(() => {
+        vi.mocked(askAgentStream).mockClear();
+        localStorage.clear();
+    });
+
+    it("does not abort the in-flight ask on close and still promotes on done", async () => {
+        // Hold the stream open (don't call onDone yet) and capture the args
+        // so we can inspect the AbortSignal and drive completion later.
+        let captured: Parameters<typeof askAgentStream>[0] | null = null;
+        vi.mocked(askAgentStream).mockImplementation(async (args) => {
+            captured = args;
+        });
+        const { result } = renderHook(() =>
+            useSpotlight({ accessToken: "test-token", teamId: "team-1" })
+        );
+        act(() => {
+            result.current.open();
+        });
+        act(() => {
+            result.current.onAsk("why is the sky blue?");
+        });
+        await waitFor(() => expect(askAgentStream).toHaveBeenCalledTimes(1));
+        expect(result.current.ask.isStreaming).toBe(true);
+
+        // Close the overlay while the answer is still streaming.
+        act(() => {
+            result.current.close();
+        });
+        // The stream must NOT be aborted, and the streaming flag is kept so
+        // re-opening shows the spinner rather than a dead partial turn.
+        expect(captured?.signal?.aborted).toBe(false);
+        expect(result.current.ask.isStreaming).toBe(true);
+
+        // The background stream finishes while the overlay is closed → the
+        // turn is promoted into history and streaming clears, so re-opening
+        // shows the completed answer.
+        act(() => {
+            captured?.onDelta("Because of Rayleigh scattering.");
+            captured?.onDone("sess-1", "run-1");
+        });
+        await waitFor(() => expect(result.current.turns).toHaveLength(1));
+        expect(result.current.turns[0].answer).toBe("Because of Rayleigh scattering.");
+        expect(result.current.ask.isStreaming).toBe(false);
+    });
+});

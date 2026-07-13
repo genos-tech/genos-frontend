@@ -275,28 +275,31 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
     }, [teamId]);
 
     // ---- Overlay close: clear transient query / results, preserve
-    // conversation. ----
+    // conversation AND any in-flight answer. ----
     //
     // Phase 12 behavior change: a close (Escape, click-outside, Cmd-K
     // toggle) preserves `sessionId` and `turns` so the conversation
     // survives an accidental close. Only the explicit
-    // "New conversation" button wipes them. Any in-flight stream is
-    // still aborted — we don't want a background fetch to keep
-    // mutating state after the user has dismissed the UI.
+    // "New conversation" button wipes them.
+    //
+    // The agent can take a while to answer; users want to close the
+    // overlay and come back to the result. So an in-flight ASK stream is
+    // deliberately NOT aborted on close — the hook lives at the App root,
+    // so its stream handlers keep updating `ask` in the background and
+    // `onDone` still promotes the finished turn into `turns` (+ persists
+    // it). Re-opening shows the streaming answer, or the completed turn
+    // if it finished while closed. `isStreaming` is likewise kept true so
+    // the spinner (and Cancel button) reflect the still-running request.
+    // Only the SEARCH request is aborted here — typeahead results are
+    // throwaway once the overlay is dismissed.
     useEffect(() => {
         if (isOpen) return;
         abortRef.current?.abort();
         abortRef.current = null;
-        askAbortRef.current?.abort();
-        askAbortRef.current = null;
         setQuery("");
         setResults([]);
         setIsLoading(false);
         setError(null);
-        // Clear streaming flag so re-opening doesn't show a stuck
-        // spinner on a partial turn. Keep sessionId/turns/turnId so
-        // the conversation can resume on re-open.
-        setAsk((prev) => (prev.isStreaming ? { ...prev, isStreaming: false } : prev));
     }, [isOpen]);
 
     // ---- Persist conversation to localStorage on turns / sessionId change. ----
