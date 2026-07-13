@@ -1043,6 +1043,16 @@ export const hi: DeepPartial<Messages> = {
         },
     },
     notes: {
+        accessRequest: {
+            privateBadge: "निजी नोट",
+            heading: "आपके पास इस नोट का एक्सेस नहीं है",
+            body: "नोट के मालिक से इसे साझा करने का अनुरोध करें। अनुरोध उनके इनबॉक्स में जाएगा और वे एक क्लिक में स्वीकृत कर सकते हैं।",
+            sendButton: "एक्सेस का अनुरोध करें",
+            sentTitle: "अनुरोध भेजा गया",
+            sentBody: "मालिक के स्वीकृत करने पर आपको सूचित किया जाएगा।",
+            sendFailed: "अनुरोध भेजने में विफल। कृपया पुनः प्रयास करें।",
+            socketNotFound: "सॉकेट नहीं मिला।",
+        },
         list: {
             empty: "अभी कोई नोट नहीं",
             newNote: "नया नोट",
@@ -1246,6 +1256,7 @@ export const hi: DeepPartial<Messages> = {
             teamRequest: "टीम अनुरोध",
             projectRequest: "प्रोजेक्ट अनुरोध",
             gmRequest: "GM अनुरोध",
+            noteAccessRequest: "नोट एक्सेस",
         },
         bubble: {
             approve: "स्वीकार करें",

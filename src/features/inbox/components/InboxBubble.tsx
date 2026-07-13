@@ -4,6 +4,7 @@ import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
 import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
+import StickyNote2RoundedIcon from "@mui/icons-material/StickyNote2Rounded";
 import { Box, Button, Card, Chip, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
@@ -20,9 +21,9 @@ import { extractYYYYMMDDHHMM } from "../../../utils/dateUtils";
 
 // Item type configurations for cleaner code. `colorScheme` is intentionally
 // NOT mapped to the unified purple palette — each request type needs a
-// distinct hue (Team=blue, Project=green, GM=pink) so the user can tell
-// request types apart at a glance in a dense inbox.
-type RequestLabelKey = "teamRequest" | "projectRequest" | "gmRequest";
+// distinct hue (Team=blue, Project=green, GM=pink, Note=amber) so the user
+// can tell request types apart at a glance in a dense inbox.
+type RequestLabelKey = "teamRequest" | "projectRequest" | "gmRequest" | "noteAccessRequest";
 
 const ITEM_TYPE_CONFIG: Record<
     number,
@@ -55,6 +56,13 @@ const ITEM_TYPE_CONFIG: Record<
         rejectEvent: "reject_join_gm_request",
         colorScheme: { dark: "#f472b6", light: "#ec4899" },
     },
+    4: {
+        labelKey: "noteAccessRequest",
+        icon: <StickyNote2RoundedIcon sx={{ fontSize: 14 }} />,
+        approveEvent: "approve_note_access_request",
+        rejectEvent: "reject_note_access_request",
+        colorScheme: { dark: "#fbbf24", light: "#f59e0b" },
+    },
 };
 
 type InboxBubbleProps = {
@@ -77,7 +85,7 @@ export const InboxBubble = (props: InboxBubbleProps) => {
     const [isHovered, setIsHovered] = useState<boolean>(false);
 
     const config = ITEM_TYPE_CONFIG[inboxItem.itemType];
-    const isRequest = inboxItem.itemType >= 1 && inboxItem.itemType <= 3;
+    const isRequest = inboxItem.itemType >= 1 && inboxItem.itemType <= 4;
     const resolvedStatus = localStatus ?? inboxItem.requestStatus;
     const isHandled = resolvedStatus === "approved" || resolvedStatus === "rejected";
 

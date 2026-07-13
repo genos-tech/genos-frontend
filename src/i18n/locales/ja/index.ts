@@ -1061,6 +1061,16 @@ export const ja: DeepPartial<Messages> = {
         },
     },
     notes: {
+        accessRequest: {
+            privateBadge: "プライベートノート",
+            heading: "このノートへのアクセス権がありません",
+            body: "ノートのオーナーに共有をリクエストできます。リクエストはオーナーの受信トレイに届き、ワンクリックで承認できます。",
+            sendButton: "アクセスをリクエスト",
+            sentTitle: "リクエストを送信しました",
+            sentBody: "オーナーが承認すると通知されます。",
+            sendFailed: "リクエストの送信に失敗しました。もう一度お試しください。",
+            socketNotFound: "ソケットが見つかりません。",
+        },
         list: {
             empty: "ノートはまだありません",
             newNote: "新規ノート",
@@ -1291,6 +1301,7 @@ export const ja: DeepPartial<Messages> = {
             teamRequest: "チームリクエスト",
             projectRequest: "プロジェクトリクエスト",
             gmRequest: "GMリクエスト",
+            noteAccessRequest: "ノートアクセス",
         },
         bubble: {
             approve: "承認",

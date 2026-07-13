@@ -23,6 +23,7 @@ export const inbox = {
         teamRequest: "Team Request",
         projectRequest: "Project Request",
         gmRequest: "GM Request",
+        noteAccessRequest: "Note Access",
     },
     bubble: {
         approve: "Approve",

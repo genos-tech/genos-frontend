@@ -1025,6 +1025,16 @@ export const zh: DeepPartial<Messages> = {
         },
     },
     notes: {
+        accessRequest: {
+            privateBadge: "私密笔记",
+            heading: "你没有此笔记的访问权限",
+            body: "可以向笔记所有者请求共享。请求会发送到对方的收件箱，一键即可批准。",
+            sendButton: "请求访问",
+            sentTitle: "请求已发送",
+            sentBody: "所有者批准后你会收到通知。",
+            sendFailed: "请求发送失败，请重试。",
+            socketNotFound: "未找到套接字。",
+        },
         list: {
             empty: "暂无笔记",
             newNote: "新建笔记",
@@ -1223,6 +1233,7 @@ export const zh: DeepPartial<Messages> = {
             teamRequest: "团队申请",
             projectRequest: "项目申请",
             gmRequest: "群组申请",
+            noteAccessRequest: "笔记访问",
         },
         bubble: {
             approve: "通过",

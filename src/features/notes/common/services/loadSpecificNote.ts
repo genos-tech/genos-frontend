@@ -27,6 +27,13 @@ export const loadSpecificNote = async (
         }
     } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
+            // 403 = the note exists but the caller has no role on it —
+            // the shared-URL case. Surface it as a typed marker (instead
+            // of the generic undefined) so useNoteData can render the
+            // "request access" panel rather than a blank editor.
+            if (error.response?.status === 403) {
+                return { error: "forbidden" };
+            }
             console.error("API error:", error.response?.status, error.response?.data);
         } else {
             console.error("Unexpected error:", error);

@@ -11,6 +11,7 @@ import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import type { NoteTab } from "../../../../hooks/notes/useNoteTabs";
 import { UserProps } from "../../../../types/admin";
 import { MyNoteProps } from "../../../../types/notes";
+import { NoteAccessRequestPanel } from "../../common/components/NoteAccessRequestPanel";
 import { NoteEditor } from "../../common/components/NoteEditor";
 
 interface MyNoteEditorPanelProps {
@@ -42,7 +43,7 @@ export const MyNoteEditorPanel = ({
     useCM,
     useNM,
 }: MyNoteEditorPanelProps) => {
-    const { note } = useNoteData<MyNoteProps>(tab, { myself, accessToken });
+    const { note, accessDenied } = useNoteData<MyNoteProps>(tab, { myself, accessToken });
 
     const noteEditor = useNoteEditor({
         currentMyNote: note,
@@ -85,6 +86,16 @@ export const MyNoteEditorPanel = ({
         if (isActive) noteEditor.setNoteBodySaved(false);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isActive]);
+
+    if (accessDenied) {
+        // The note exists but this user has no role on it (shared-URL
+        // case) — offer the access-request flow instead of a blank pane.
+        return (
+            <Box sx={{ display: isActive ? "block" : "none", width: "100%", height: "100%" }}>
+                <NoteAccessRequestPanel noteId={tab.noteId} noteType={1} socket={socket} />
+            </Box>
+        );
+    }
 
     if (!note || !noteEditor.body) {
         // Don't render the visibility wrapper until the note has been
