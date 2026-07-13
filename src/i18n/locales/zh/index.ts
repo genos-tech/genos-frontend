@@ -829,6 +829,7 @@ export const zh: DeepPartial<Messages> = {
         board: {
             columnOpen: "待处理",
             columnWip: "进行中",
+            columnBlocked: "已阻塞",
             columnClosed: "已关闭",
             columnPending: "搁置",
             dropToColumn: "↳ 放入「{title}」",
@@ -867,6 +868,7 @@ export const zh: DeepPartial<Messages> = {
             all: "全部",
             open: "待处理",
             wip: "进行中",
+            blocked: "已阻塞",
             pending: "搁置",
             closed: "已关闭",
             expired: "已过期",
@@ -972,6 +974,7 @@ export const zh: DeepPartial<Messages> = {
             member: "成员",
             open: "待处理",
             wip: "进行中",
+            blocked: "已阻塞",
             pending: "搁置",
             closed: "已关闭",
             total: "总计",
@@ -987,6 +990,7 @@ export const zh: DeepPartial<Messages> = {
             statusLabels: {
                 open: "待处理",
                 wip: "进行中",
+                blocked: "已阻塞",
                 pending: "搁置",
                 closed: "已完成",
             },

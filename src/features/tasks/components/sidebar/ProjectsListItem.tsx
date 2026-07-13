@@ -25,7 +25,7 @@ import { NewProjectListItem } from "./projects_subs/NewProjectListItem";
 
 // Cover the full set used by `useTaskManagement.fetchProjectTasks` so the
 // stale read matches what the post-network refresh will pull from IDB.
-const ALL_TASK_STATUSES = ["Open", "WIP", "Pending", "Closed", "Deleted"];
+const ALL_TASK_STATUSES = ["Open", "WIP", "Blocked", "Pending", "Closed", "Deleted"];
 
 type ProjectsListItemProps = {
     usePM: ProjectManagementState;

@@ -397,8 +397,12 @@ export const useTaskManagement = (
 
     // Task lists
     const taskTypes: TaskTypesProps = {
-        all: { id: 0, statuses: ["Open", "WIP", "Pending", "Closed", "Deleted"], name: "All" },
-        ongoing: { id: 1, statuses: ["Open", "WIP", "Pending"], name: "Ongoing" },
+        all: {
+            id: 0,
+            statuses: ["Open", "WIP", "Blocked", "Pending", "Closed", "Deleted"],
+            name: "All",
+        },
+        ongoing: { id: 1, statuses: ["Open", "WIP", "Blocked", "Pending"], name: "Ongoing" },
         closed: { id: 2, statuses: ["Closed"], name: "Closed" },
         deleted: { id: 3, statuses: ["Deleted"], name: "Deleted" },
     };

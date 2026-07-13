@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
+import BlockRoundedIcon from "@mui/icons-material/BlockRounded";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import CancelIcon from "@mui/icons-material/Cancel";
 import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
@@ -98,6 +99,7 @@ const sprintBucketOf = (s: Sprint, todayIso: string): "past" | "current" | "upco
 const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
     Open: { bg: "rgba(59,130,246,0.12)", text: "#3b82f6" },
     WIP: { bg: "rgba(251,191,36,0.12)", text: "#fbbf24" },
+    Blocked: { bg: "rgba(244,63,94,0.12)", text: "#f43f5e" },
     Pending: { bg: "rgba(251,146,60,0.12)", text: "#fb923c" },
     Closed: { bg: "rgba(34,197,94,0.12)", text: "#22c55e" },
 };
@@ -117,9 +119,10 @@ const PRIORITY_COLORS: Record<string, { light: string; dark: string }> = Object.
 // Maps a backend status enum to the i18n key whose value renders in
 // the dashboard. Resolve through `t.tasks.dashboard.statusLabels[key]`
 // at the call site (`statusKeyFor` below).
-const STATUS_LABEL_KEYS: Record<string, "open" | "wip" | "pending" | "closed"> = {
+const STATUS_LABEL_KEYS: Record<string, "open" | "wip" | "blocked" | "pending" | "closed"> = {
     Open: "open",
     WIP: "wip",
+    Blocked: "blocked",
     Pending: "pending",
     Closed: "closed",
 };
@@ -131,6 +134,8 @@ const getStatusIcon = (status: string, size = 14) => {
             return <RadioButtonUncheckedRoundedIcon sx={sx} />;
         case "WIP":
             return <PlayCircleOutlineRoundedIcon sx={sx} />;
+        case "Blocked":
+            return <BlockRoundedIcon sx={sx} />;
         case "Pending":
             return <PendingActionsRoundedIcon sx={sx} />;
         case "Closed":
@@ -306,11 +311,20 @@ export const TaskHomeContent = ({
     const stats = useMemo(() => {
         const openCount = effectiveTasks.filter((t) => t.effectiveStatus === "Open").length;
         const wipCount = effectiveTasks.filter((t) => t.effectiveStatus === "WIP").length;
+        const blockedCount = effectiveTasks.filter((t) => t.effectiveStatus === "Blocked").length;
         const pendingCount = effectiveTasks.filter((t) => t.effectiveStatus === "Pending").length;
         const closedCount = effectiveTasks.filter((t) => t.effectiveStatus === "Closed").length;
-        const totalTasks = openCount + wipCount + pendingCount + closedCount;
+        const totalTasks = openCount + wipCount + blockedCount + pendingCount + closedCount;
         const completionRate = totalTasks > 0 ? Math.round((closedCount / totalTasks) * 100) : 0;
-        return { openCount, wipCount, pendingCount, closedCount, totalTasks, completionRate };
+        return {
+            openCount,
+            wipCount,
+            blockedCount,
+            pendingCount,
+            closedCount,
+            totalTasks,
+            completionRate,
+        };
     }, [effectiveTasks]);
 
     // ── Sprint-scoped metrics ──
@@ -360,6 +374,7 @@ export const TaskHomeContent = ({
                 imgPath: string | null;
                 open: number;
                 wip: number;
+                blocked: number;
                 pending: number;
                 closed: number;
                 closedInSprint: number;
@@ -373,6 +388,7 @@ export const TaskHomeContent = ({
                 imgPath: t.assigneeImgPath || null,
                 open: 0,
                 wip: 0,
+                blocked: 0,
                 pending: 0,
                 closed: 0,
                 closedInSprint: 0,
@@ -381,6 +397,7 @@ export const TaskHomeContent = ({
             entry.total++;
             if (t.effectiveStatus === "Open") entry.open++;
             else if (t.effectiveStatus === "WIP") entry.wip++;
+            else if (t.effectiveStatus === "Blocked") entry.blocked++;
             else if (t.effectiveStatus === "Pending") entry.pending++;
             else if (t.effectiveStatus === "Closed") {
                 entry.closed++;
@@ -433,6 +450,7 @@ export const TaskHomeContent = ({
                     tagTextColor: tag.tagTextColor || "white",
                     open: 0,
                     wip: 0,
+                    blocked: 0,
                     pending: 0,
                     closed: 0,
                     overdue: 0,
@@ -441,6 +459,7 @@ export const TaskHomeContent = ({
                 entry.total++;
                 if (tk.effectiveStatus === "Open") entry.open++;
                 else if (tk.effectiveStatus === "WIP") entry.wip++;
+                else if (tk.effectiveStatus === "Blocked") entry.blocked++;
                 else if (tk.effectiveStatus === "Pending") entry.pending++;
                 else if (isClosed) entry.closed++;
                 if (isOverdue) entry.overdue++;
@@ -544,6 +563,7 @@ export const TaskHomeContent = ({
 
         let openCount = 0;
         let wipCount = 0;
+        let blockedCount = 0;
         let pendingCount = 0;
         let closedCount = 0;
         let overdueCount = 0;
@@ -552,6 +572,7 @@ export const TaskHomeContent = ({
             const isClosed = t.effectiveStatus === "Closed";
             if (t.effectiveStatus === "Open") openCount++;
             else if (t.effectiveStatus === "WIP") wipCount++;
+            else if (t.effectiveStatus === "Blocked") blockedCount++;
             else if (t.effectiveStatus === "Pending") pendingCount++;
             else if (isClosed) closedCount++;
 
@@ -562,12 +583,13 @@ export const TaskHomeContent = ({
                 else if (d <= weekAhead) dueThisWeekCount++;
             }
         }
-        const totalCount = openCount + wipCount + pendingCount + closedCount;
-        const activeCount = openCount + wipCount + pendingCount;
+        const totalCount = openCount + wipCount + blockedCount + pendingCount + closedCount;
+        const activeCount = openCount + wipCount + blockedCount + pendingCount;
         const completionPct = totalCount > 0 ? Math.round((closedCount / totalCount) * 100) : 0;
         return {
             openCount,
             wipCount,
+            blockedCount,
             pendingCount,
             closedCount,
             totalCount,
@@ -2269,6 +2291,10 @@ export const TaskHomeContent = ({
                                                             value: stats.wipCount,
                                                         },
                                                         {
+                                                            color: STATUS_COLORS.Blocked.text,
+                                                            value: stats.blockedCount,
+                                                        },
+                                                        {
                                                             color: STATUS_COLORS.Pending.text,
                                                             value: stats.pendingCount,
                                                         },
@@ -2295,6 +2321,11 @@ export const TaskHomeContent = ({
                                                         key: "WIP",
                                                         count: stats.wipCount,
                                                         icon: <PlayCircleOutlineRoundedIcon />,
+                                                    },
+                                                    {
+                                                        key: "Blocked",
+                                                        count: stats.blockedCount,
+                                                        icon: <BlockRoundedIcon />,
                                                     },
                                                     {
                                                         key: "Pending",
@@ -2768,6 +2799,9 @@ export const TaskHomeContent = ({
                                                                 {t.tasks.dashboard.wip}
                                                             </th>
                                                             <th style={{ textAlign: "center" }}>
+                                                                {t.tasks.dashboard.blocked}
+                                                            </th>
+                                                            <th style={{ textAlign: "center" }}>
                                                                 {t.tasks.dashboard.pending}
                                                             </th>
                                                             <th style={{ textAlign: "center" }}>
@@ -2851,29 +2885,29 @@ export const TaskHomeContent = ({
                                                                 {(
                                                                     [
                                                                         {
+                                                                            key: "Open",
                                                                             val: a.open,
-                                                                            color: STATUS_COLORS
-                                                                                .Open.text,
                                                                         },
                                                                         {
+                                                                            key: "WIP",
                                                                             val: a.wip,
-                                                                            color: STATUS_COLORS
-                                                                                .WIP.text,
                                                                         },
                                                                         {
+                                                                            key: "Blocked",
+                                                                            val: a.blocked,
+                                                                        },
+                                                                        {
+                                                                            key: "Pending",
                                                                             val: a.pending,
-                                                                            color: STATUS_COLORS
-                                                                                .Pending.text,
                                                                         },
                                                                         {
+                                                                            key: "Closed",
                                                                             val: a.closed,
-                                                                            color: STATUS_COLORS
-                                                                                .Closed.text,
                                                                         },
                                                                     ] as const
-                                                                ).map((cell, i) => (
+                                                                ).map((cell) => (
                                                                     <td
-                                                                        key={i}
+                                                                        key={cell.key}
                                                                         style={{
                                                                             textAlign: "center",
                                                                         }}
@@ -2886,14 +2920,12 @@ export const TaskHomeContent = ({
                                                                                     minWidth: 28,
                                                                                     backgroundColor:
                                                                                         STATUS_COLORS[
-                                                                                            [
-                                                                                                "Open",
-                                                                                                "WIP",
-                                                                                                "Pending",
-                                                                                                "Closed",
-                                                                                            ][i]
+                                                                                            cell
+                                                                                                .key
                                                                                         ].bg,
-                                                                                    color: cell.color,
+                                                                                    color: STATUS_COLORS[
+                                                                                        cell.key
+                                                                                    ].text,
                                                                                     fontWeight: 600,
                                                                                 }}
                                                                             >
@@ -3358,6 +3390,12 @@ export const TaskHomeContent = ({
                                                                                             .WIP
                                                                                             .text,
                                                                                         value: row.wip,
+                                                                                    },
+                                                                                    {
+                                                                                        color: STATUS_COLORS
+                                                                                            .Blocked
+                                                                                            .text,
+                                                                                        value: row.blocked,
                                                                                     },
                                                                                     {
                                                                                         color: STATUS_COLORS

@@ -844,6 +844,7 @@ export const ar: DeepPartial<Messages> = {
         board: {
             columnOpen: "مفتوحة",
             columnWip: "قيد التنفيذ",
+            columnBlocked: "محظورة",
             columnClosed: "مغلقة",
             columnPending: "معلّقة",
             dropToColumn: "↳ إفلات في {title}",
@@ -879,6 +880,7 @@ export const ar: DeepPartial<Messages> = {
             all: "الكل",
             open: "مفتوحة",
             wip: "قيد التنفيذ",
+            blocked: "محظورة",
             pending: "معلّقة",
             closed: "مغلقة",
             expired: "منتهية",
@@ -981,6 +983,7 @@ export const ar: DeepPartial<Messages> = {
             member: "العضو",
             open: "مفتوحة",
             wip: "قيد التنفيذ",
+            blocked: "محظورة",
             pending: "معلّقة",
             closed: "مغلقة",
             total: "الإجمالي",
@@ -996,6 +999,7 @@ export const ar: DeepPartial<Messages> = {
             statusLabels: {
                 open: "مفتوحة",
                 wip: "قيد التنفيذ",
+                blocked: "محظورة",
                 pending: "معلّقة",
                 closed: "مكتملة",
             },

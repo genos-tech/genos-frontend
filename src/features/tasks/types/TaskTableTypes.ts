@@ -3,8 +3,12 @@ import { GridFilterModel } from "@mui/x-data-grid";
 import { TaskTypesProps } from "../../../types/tasks";
 
 export const taskTypes: TaskTypesProps = {
-    all: { id: 0, statuses: ["Open", "WIP", "Pending", "Closed", "Deleted"], name: "All" },
-    ongoing: { id: 1, statuses: ["Open", "WIP", "Pending"], name: "Ongoing" },
+    all: {
+        id: 0,
+        statuses: ["Open", "WIP", "Blocked", "Pending", "Closed", "Deleted"],
+        name: "All",
+    },
+    ongoing: { id: 1, statuses: ["Open", "WIP", "Blocked", "Pending"], name: "Ongoing" },
     closed: { id: 2, statuses: ["Closed"], name: "Closed" },
     deleted: { id: 3, statuses: ["Deleted"], name: "Deleted" },
 };
@@ -53,6 +57,15 @@ export const predefinedStatusFilters: FilterProps[] = [
         },
         lightModeColor: "#ff8c00",
         darkModeColor: "#ff8c00",
+    },
+    {
+        label: "Blocked",
+        labelKey: "blocked",
+        filterModel: {
+            items: [{ field: "status", operator: "equals", value: "Blocked" }],
+        },
+        lightModeColor: "#e11d48",
+        darkModeColor: "#fb7185",
     },
     {
         label: "Pending",
