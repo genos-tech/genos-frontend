@@ -124,6 +124,12 @@ const truncate = (s: string, max = 140): string => {
 // inbox items. Walks one level of inline content. `unknown` is the
 // honest type — the WS payload's `body` can be a BlockNote document or
 // some legacy shape; the type guards below narrow safely.
+//
+// Request item bodies (join team/project/gm, note access) LEAD with a
+// `mention` inline node carrying the actor's name in `props.userName` —
+// that node has no `.text`, so a text-only walk silently dropped the
+// "who" and the notification body read "…is requesting access to…" with
+// no name. Emit `@<userName>` for mention nodes so the actor survives.
 const extractInboxText = (body: unknown): string => {
     if (!Array.isArray(body)) return "";
     const lines: string[] = [];
@@ -134,7 +140,10 @@ const extractInboxText = (body: unknown): string => {
             lines.push(content);
         } else if (Array.isArray(content)) {
             for (const span of content) {
-                if (span && typeof span === "object" && typeof span.text === "string") {
+                if (!span || typeof span !== "object") continue;
+                if (span.type === "mention" && typeof span.props?.userName === "string") {
+                    lines.push(`@${span.props.userName}`);
+                } else if (typeof span.text === "string") {
                     lines.push(span.text);
                 }
             }
@@ -446,6 +455,7 @@ const buildInboxIntent = (
         1: routerMessages.inboxTitleJoinTeam,
         2: routerMessages.inboxTitleJoinProject,
         3: routerMessages.inboxTitleJoinGroup,
+        4: routerMessages.inboxTitleNoteAccess,
     };
     const title = titleByType[item.itemType] || routerMessages.inboxFallback;
 

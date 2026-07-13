@@ -1345,6 +1345,31 @@ describe("notificationRouter", () => {
             const result = buildIntentFromMessage(msg, myself, useTEM, useCM);
             expect(result!.title).toBe("New inbox item");
         });
+
+        it("keeps the requester name (mention node) in a note-access request body", () => {
+            // Mirrors the note-access item_body: a leading `mention` node
+            // (the requester) then the request prose + note title. The
+            // mention node has no `.text` — the body must still name who.
+            const item = {
+                ...inboxItem,
+                itemType: 4,
+                itemBody: [
+                    {
+                        content: [
+                            { type: "mention", props: { userName: "Bob" } },
+                            { text: " is requesting access to the note - " },
+                            { text: "Q3 Strategy", styles: { bold: true } },
+                            { text: "." },
+                        ],
+                    },
+                ],
+            };
+            const msg = { wsType: "inbox", data: item, alreadyExist: false };
+            const result = buildIntentFromMessage(msg, myself, useTEM, useCM);
+            expect(result!.title).toBe("Note access request");
+            expect(result!.body).toContain("@Bob");
+            expect(result!.body).toContain("Q3 Strategy");
+        });
     });
 
     describe("truncate behavior (via body)", () => {

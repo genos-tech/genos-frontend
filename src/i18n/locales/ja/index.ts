@@ -1492,6 +1492,7 @@ export const ja: DeepPartial<Messages> = {
                 inboxTitleJoinTeam: "チーム参加リクエスト",
                 inboxTitleJoinProject: "プロジェクト参加リクエスト",
                 inboxTitleJoinGroup: "グループ参加リクエスト",
+                inboxTitleNoteAccess: "ノートアクセスのリクエスト",
             },
         },
     },
