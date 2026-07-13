@@ -430,6 +430,7 @@ export const TaskHomeContent = ({
                 tagTextColor: string;
                 open: number;
                 wip: number;
+                blocked: number;
                 pending: number;
                 closed: number;
                 overdue: number;
