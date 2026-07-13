@@ -636,7 +636,24 @@ export const SpotlightOverlay = ({
                                 // through to the textarea's default for
                                 // multi-line content; keep result-row
                                 // navigation for the single-line common case.
-                                const isMultiline = localInput.includes("\n");
+                                //
+                                // "Multi-line" must count SOFT-wrapped text
+                                // too: a long query with no explicit "\n"
+                                // still renders on >1 visual row, and the
+                                // user expects Up/Down to walk those rows.
+                                // `includes("\n")` alone missed that case, so
+                                // arrows kept jumping to the results. Measure
+                                // the textarea's rendered rows (scrollHeight /
+                                // line-height) to cover both.
+                                const ta = inputRef.current;
+                                const lineHeightPx = ta
+                                    ? parseFloat(getComputedStyle(ta).lineHeight)
+                                    : 0;
+                                const visualRows =
+                                    ta && lineHeightPx > 0
+                                        ? Math.round(ta.scrollHeight / lineHeightPx)
+                                        : 1;
+                                const isMultiline = localInput.includes("\n") || visualRows > 1;
                                 if (e.key === "ArrowDown" && !isMultiline) {
                                     if (results.length === 0) return;
                                     e.preventDefault();
