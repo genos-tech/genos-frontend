@@ -50,6 +50,7 @@ import { channelService } from "../../../../services/channel/channelService";
 import { loadProjectProfile } from "../../../../services/loadProjectProfile";
 import { purplePalette } from "../../../../theme/purplePalette";
 import { ProjectProfileProps, UserProps } from "../../../../types/admin";
+import { ChannelKind } from "../../../../types/channel";
 import { AllChatProps } from "../../../../types/chat";
 import { buildAvatarSrc } from "../../../../utils/avatarSrc";
 import { extractYYYYMMDD } from "../../../../utils/dateUtils";
@@ -137,10 +138,11 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
     const isProjectOwner = !!projectProfile && myself.userId === projectProfile.ownerUserId;
     const canShowLeave = !!projectProfile && !isProjectOwner;
 
-    // Inline rename + transfer-ownership flow (owner-only). Mirrors the
-    // pattern in ModalTeamProfile: PUT through `updateProjectProfile`,
-    // update the local profile state on success so the modal reflects
-    // the change without a refetch.
+    // Inline rename + transfer-ownership flow (owner-only). Rename goes
+    // over the v3 socket rail (see handleNameSave) so every member's
+    // sidebar syncs live; owner transfer still PUTs through
+    // `updateProjectProfile`. Local profile state is updated on success
+    // so the modal reflects the change without a refetch.
     const [nameEditMode, setNameEditMode] = useState(false);
     const [nameDraft, setNameDraft] = useState("");
     const [nameError, setNameError] = useState<string | null>(null);
@@ -161,18 +163,29 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
         }
         setNameSaving(true);
         setNameError(null);
-        const ok = await updateProjectProfile(
-            accessToken,
-            pmChatIdLegacy,
-            { projectName: next },
-            setNameError
-        );
+        // Rename over the v3 socket rail (mirrors ModalGMProfile). A PM
+        // title patch DELEGATES to the project rename server-side (owner
+        // + collision rules unchanged), and the sockets proxy broadcasts
+        // `channel.updated` to the PM channel room — so every member's
+        // sidebar picks up the new name live. The previous REST
+        // PUT /project/ path updated the DB but broadcast nothing: other
+        // sessions kept the stale name until a full reload, and even the
+        // local patch below could be reverted by a stale in-flight
+        // listChannels response (the #91 coalescing gotcha).
+        let ok = false;
+        try {
+            await channelService.updateChannel(pmChat.chatId, ChannelKind.PM, { title: next });
+            ok = true;
+        } catch (e) {
+            console.error("[ModalProjectProfile] rename failed:", e);
+            setNameError(t.common.profileEdit.renameError);
+        }
         setNameSaving(false);
         if (ok) {
             setProjectProfile({ ...projectProfile, projectName: next });
-            // Reflect rename in the chat-list row too so the sidebar
-            // updates immediately. `funcSetAllChats` overwrites this
-            // entry on next sync anyway.
+            // Optimistic local patch — avoids the one-frame flicker
+            // between the emit ack and the `channel.updated` broadcast
+            // landing in channelService.
             useCM.setAllChats((prev) =>
                 prev.map((c) =>
                     c.chatType === pmChat.chatType && c.chatId === pmChat.chatId

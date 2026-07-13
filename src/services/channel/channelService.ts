@@ -1407,9 +1407,12 @@ export class ChannelService {
      * the user is changing; omitted fields stay untouched.
      *
      * DM channels can't be renamed (their identity is the user pair).
-     * PM channels mirror the project's title/avatar — the server returns
-     * 400 / `BACKEND_ERROR` and the caller should redirect through the
-     * project edit flow.
+     * PM channels mirror the project's metadata: a `title`-only patch is
+     * accepted and DELEGATED server-side to the project rename
+     * (project-owner-only; the signal mirrors the name back onto the
+     * channel), so a project rename broadcasts `channel.updated` like a
+     * GM rename. Any other PM field returns 400 / `BACKEND_ERROR` — go
+     * through the project edit flow.
      */
     updateChannel(
         channelId: string,
