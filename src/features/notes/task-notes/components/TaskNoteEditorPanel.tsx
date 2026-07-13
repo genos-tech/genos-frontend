@@ -14,6 +14,7 @@ import type { NoteTab } from "../../../../hooks/notes/useNoteTabs";
 import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TaskNoteProps } from "../../../../types/notes";
+import { NoteAccessRequestPanel } from "../../common/components/NoteAccessRequestPanel";
 import { useNoteAutoSave } from "../../common/hooks/useNoteAutoSave";
 
 interface TaskNoteEditorPanelProps {
@@ -48,7 +49,7 @@ export const TaskNoteEditorPanel = ({
     const { t } = useTranslation();
     const isMobile = useIsMobile();
     const titleInputRef = useRef<HTMLInputElement | null>(null);
-    const { note } = useNoteData<TaskNoteProps>(tab, { myself, accessToken });
+    const { note, accessDenied } = useNoteData<TaskNoteProps>(tab, { myself, accessToken });
 
     const {
         noteBodySaved,
@@ -95,6 +96,16 @@ export const TaskNoteEditorPanel = ({
         if (isActive) setNoteBodySaved(false);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isActive]);
+
+    if (accessDenied) {
+        // The note exists but this user has no role on it (shared-URL
+        // case) — offer the access-request flow instead of a blank pane.
+        return (
+            <Box sx={{ display: isActive ? "block" : "none", width: "100%", height: "100%" }}>
+                <NoteAccessRequestPanel noteId={tab.noteId} noteType={2} socket={socket} />
+            </Box>
+        );
+    }
 
     if (!note || !body) {
         return null;

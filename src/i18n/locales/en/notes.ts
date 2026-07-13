@@ -204,4 +204,18 @@ export const notes = {
         messageIdExists: "Message Id already exists.",
         unauthorizedLoginAgain: "Unauthorized. Please log in again.",
     },
+
+    // "Request access" panel — shown in place of the editor when a
+    // shared note URL answers 403 (the note exists; the viewer has no
+    // role on it). Mirrors the private-project / private-GM join flows.
+    accessRequest: {
+        privateBadge: "Private Note",
+        heading: "You don't have access to this note",
+        body: "Ask the note owner to share it with you. They'll get the request in their inbox and can approve it with one click.",
+        sendButton: "Request Access",
+        sentTitle: "Request sent",
+        sentBody: "You'll be notified when the owner approves your request.",
+        sendFailed: "Failed to send the request. Please try again.",
+        socketNotFound: "Socket not found.",
+    },
 } as const;

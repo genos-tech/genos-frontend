@@ -11,6 +11,7 @@ import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import type { NoteTab } from "../../../../hooks/notes/useNoteTabs";
 import { UserProps } from "../../../../types/admin";
 import { ChatNoteProps } from "../../../../types/notes";
+import { NoteAccessRequestPanel } from "../../common/components/NoteAccessRequestPanel";
 import { ChatNoteEditor } from "./ChatNoteEditor";
 
 interface ChatNoteEditorPanelProps {
@@ -41,7 +42,7 @@ export const ChatNoteEditorPanel = ({
     useCM,
     useNM,
 }: ChatNoteEditorPanelProps) => {
-    const { note } = useNoteData<ChatNoteProps>(tab, { myself, accessToken });
+    const { note, accessDenied } = useNoteData<ChatNoteProps>(tab, { myself, accessToken });
 
     const chatNoteEditor = useChatNoteEditor({
         currentChatNote: note,
@@ -90,6 +91,16 @@ export const ChatNoteEditorPanel = ({
         if (isActive) chatNoteEditor.setNoteBodySaved(false);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isActive]);
+
+    if (accessDenied) {
+        // The note exists but this user has no role on it (shared-URL
+        // case) — offer the access-request flow instead of a blank pane.
+        return (
+            <Box sx={{ display: isActive ? "block" : "none", width: "100%", height: "100%" }}>
+                <NoteAccessRequestPanel noteId={tab.noteId} noteType={3} socket={socket} />
+            </Box>
+        );
+    }
 
     if (!note || !chatNoteEditor.body) {
         return null;

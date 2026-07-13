@@ -1030,6 +1030,16 @@ export const ar: DeepPartial<Messages> = {
         },
     },
     notes: {
+        accessRequest: {
+            privateBadge: "ملاحظة خاصة",
+            heading: "ليس لديك صلاحية الوصول إلى هذه الملاحظة",
+            body: "اطلب من مالك الملاحظة مشاركتها معك. سيصل الطلب إلى صندوق الوارد الخاص به ويمكنه الموافقة بنقرة واحدة.",
+            sendButton: "طلب الوصول",
+            sentTitle: "تم إرسال الطلب",
+            sentBody: "سيتم إعلامك عندما يوافق المالك على طلبك.",
+            sendFailed: "فشل إرسال الطلب. حاول مرة أخرى.",
+            socketNotFound: "لم يتم العثور على المقبس.",
+        },
         list: {
             empty: "لا توجد ملاحظات بعد",
             newNote: "ملاحظة جديدة",
@@ -1233,6 +1243,7 @@ export const ar: DeepPartial<Messages> = {
             teamRequest: "طلب فريق",
             projectRequest: "طلب مشروع",
             gmRequest: "طلب مجموعة",
+            noteAccessRequest: "الوصول إلى الملاحظة",
         },
         bubble: {
             approve: "موافقة",

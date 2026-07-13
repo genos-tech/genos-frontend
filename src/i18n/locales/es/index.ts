@@ -1030,6 +1030,16 @@ export const es: DeepPartial<Messages> = {
         },
     },
     notes: {
+        accessRequest: {
+            privateBadge: "Nota privada",
+            heading: "No tienes acceso a esta nota",
+            body: "Pide al propietario que la comparta contigo. Recibirá la solicitud en su bandeja de entrada y podrá aprobarla con un clic.",
+            sendButton: "Solicitar acceso",
+            sentTitle: "Solicitud enviada",
+            sentBody: "Recibirás una notificación cuando el propietario apruebe tu solicitud.",
+            sendFailed: "No se pudo enviar la solicitud. Inténtalo de nuevo.",
+            socketNotFound: "Socket no encontrado.",
+        },
         list: {
             empty: "Aún no hay notas",
             newNote: "Nueva nota",
@@ -1234,6 +1244,7 @@ export const es: DeepPartial<Messages> = {
             teamRequest: "Solicitud de equipo",
             projectRequest: "Solicitud de proyecto",
             gmRequest: "Solicitud de GM",
+            noteAccessRequest: "Acceso a nota",
         },
         bubble: {
             approve: "Aprobar",

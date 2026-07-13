@@ -28,8 +28,17 @@ export interface UseNoteDataResult<T extends ResolvedNote = ResolvedNote> {
     note: T | null;
     isLoading: boolean;
     error: Error | null;
+    // True when the backend answered 403 for this note: it EXISTS but the
+    // caller has no role on it (the shared-URL case). Renderers show the
+    // "request access" panel instead of a blank editor. Never cached, so
+    // a granted request takes effect on the next open without a reload.
+    accessDenied: boolean;
     update: (next: T) => void;
 }
+
+// Sentinel distinguishing "no access" from "not found" in fetchForTab's
+// return channel.
+const FORBIDDEN = Symbol("note-access-forbidden");
 
 interface UseNoteDataOptions {
     myself: UserProps;
@@ -53,7 +62,7 @@ const fetchForTab = async (
     tab: NoteTab,
     myself: UserProps,
     accessToken: string | null
-): Promise<ResolvedNote | null> => {
+): Promise<ResolvedNote | typeof FORBIDDEN | null> => {
     const ns = getNoteService();
     try {
         if (tab.kind === "my") {
@@ -68,6 +77,7 @@ const fetchForTab = async (
                 tab.noteId,
                 accessToken
             );
+            if (fetched?.error === "forbidden") return FORBIDDEN;
             if (fetched && !fetched.error && fetched.noteType === 1) {
                 addNote(1, fetched);
                 return fetched;
@@ -86,6 +96,7 @@ const fetchForTab = async (
                 tab.noteId,
                 accessToken
             );
+            if (fetched?.error === "forbidden") return FORBIDDEN;
             if (fetched && !fetched.error && fetched.noteType === 2) {
                 addNote(2, fetched);
                 return fetched;
@@ -98,6 +109,7 @@ const fetchForTab = async (
         }
         if (!accessToken) return null;
         const fetched: ChatNoteProps = await loadSpecificNote(myself, 3, tab.noteId, accessToken);
+        if (fetched?.error === "forbidden") return FORBIDDEN;
         if (fetched && !fetched.error && fetched.noteType === 3) {
             addNote(3, fetched);
             return fetched;
@@ -121,6 +133,7 @@ export function useNoteData<T extends ResolvedNote = ResolvedNote>(
     });
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<Error | null>(null);
+    const [accessDenied, setAccessDenied] = useState<boolean>(false);
 
     const lastFetchedKeyRef = useRef<string | null>(null);
     const onFirstResolveRef = useRef(onFirstResolve);
@@ -131,6 +144,7 @@ export function useNoteData<T extends ResolvedNote = ResolvedNote>(
             setNote(null);
             setIsLoading(false);
             setError(null);
+            setAccessDenied(false);
             lastFetchedKeyRef.current = null;
             return;
         }
@@ -140,6 +154,7 @@ export function useNoteData<T extends ResolvedNote = ResolvedNote>(
         if (cached) {
             setNote(cached);
             setError(null);
+            setAccessDenied(false);
             // Do not refetch when we have a cached copy; mutations write
             // through `update()` and IDB writes go via addNote inside the
             // editor save path. Skipping the refetch is what makes tab
@@ -150,10 +165,15 @@ export function useNoteData<T extends ResolvedNote = ResolvedNote>(
         let cancelled = false;
         setIsLoading(true);
         setError(null);
+        setAccessDenied(false);
         (async () => {
             const resolved = await fetchForTab(tab, myself, accessToken);
             if (cancelled) return;
-            if (resolved) {
+            if (resolved === FORBIDDEN) {
+                // Deliberately NOT cached: once the owner approves the
+                // request, the next open refetches and succeeds.
+                setAccessDenied(true);
+            } else if (resolved) {
                 cache.set(key, resolved);
                 setNote(resolved as T);
                 if (lastFetchedKeyRef.current !== key) {
@@ -182,7 +202,7 @@ export function useNoteData<T extends ResolvedNote = ResolvedNote>(
         [tab]
     );
 
-    return { note, isLoading, error, update };
+    return { note, isLoading, error, accessDenied, update };
 }
 
 // Imperative cache mutation for code paths that don't render a
