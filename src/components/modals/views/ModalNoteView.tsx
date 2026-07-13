@@ -5,6 +5,7 @@ import { Socket } from "socket.io-client";
 
 import { ChatNoteEditorPanel } from "../../../features/notes/chat-notes/components/ChatNoteEditorPanel";
 import { ChatNoteMain } from "../../../features/notes/chat-notes/components/ChatNoteMain";
+import { NoteAccessRequestPanel } from "../../../features/notes/common/components/NoteAccessRequestPanel";
 import { loadSpecificNote } from "../../../features/notes/common/services/loadSpecificNote";
 import { MyNoteEditorPanel } from "../../../features/notes/my-notes/components/MyNoteEditorPanel";
 import { MyNoteMain } from "../../../features/notes/my-notes/components/MyNoteMain";
@@ -114,23 +115,28 @@ export const ModalNoteView = (props: ModalNoteViewProps) => {
     );
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    // True when the fetch 403s: the note exists but this user has no role
+    // on it (the shared-URL case — someone pasted a note link they own).
+    const [accessDenied, setAccessDenied] = useState(false);
+
+    // Shared notes live on the personal-note table on the backend, so we
+    // transparently alias kind `sharedNote` to `noteType=1` (the FE
+    // `currentNoteType` slot is still set to 4 below so the UI shows
+    // "Shared Notes" styling). This is also the `note_type` the
+    // access-request emit needs when the fetch 403s.
+    const backendNoteType =
+        target.kind === "myNote" || target.kind === "sharedNote"
+            ? 1
+            : target.kind === "taskNote"
+              ? 2
+              : 3;
 
     useEffect(() => {
         let cancelled = false;
         setIsLoading(true);
         setErrorMessage(null);
         setModalNote(null);
-
-        // Shared notes live on the personal-note table on the backend,
-        // so we transparently alias kind `sharedNote` to `noteType=1`.
-        // The frontend `currentNoteType` slot still gets set to 4 below
-        // so the UI shows "Shared Notes" styling, not "My Notes".
-        const backendNoteType =
-            target.kind === "myNote" || target.kind === "sharedNote"
-                ? 1
-                : target.kind === "taskNote"
-                  ? 2
-                  : 3;
+        setAccessDenied(false);
 
         (async () => {
             try {
@@ -141,6 +147,13 @@ export const ModalNoteView = (props: ModalNoteViewProps) => {
                     accessToken
                 );
                 if (cancelled) return;
+                if (fetched?.error === "forbidden") {
+                    // Offer the request-access flow instead of a dead
+                    // "unavailable" message.
+                    setAccessDenied(true);
+                    setIsLoading(false);
+                    return;
+                }
                 if (!fetched || fetched.error) {
                     setErrorMessage(t.common.modalView.noteUnavailable);
                     setIsLoading(false);
@@ -160,7 +173,20 @@ export const ModalNoteView = (props: ModalNoteViewProps) => {
         return () => {
             cancelled = true;
         };
-    }, [target.kind, target.noteId, accessToken, myself]);
+    }, [target.kind, target.noteId, accessToken, myself, backendNoteType]);
+
+    // Shared-URL, no role: same request-access panel the full-page note
+    // editors show, so the modal path (link clicked in a task preview /
+    // chat message) offers the request instead of a dead end.
+    if (accessDenied) {
+        return (
+            <NoteAccessRequestPanel
+                noteId={target.noteId}
+                noteType={backendNoteType}
+                socket={socket}
+            />
+        );
+    }
 
     if (errorMessage) return <CenteredMessage>{errorMessage}</CenteredMessage>;
     if (isLoading || !modalNote)
