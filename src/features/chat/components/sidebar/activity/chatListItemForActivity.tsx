@@ -552,7 +552,10 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
         if (!useNM || !noteTypeForActivity) return;
         const noteId = activity.chatId;
         const fetched = await loadSpecificNote(myself, noteTypeForActivity, noteId, accessToken);
-        if (!fetched) {
+        // Bail on any non-note result: `undefined` (load failure) OR the
+        // `{ error: "forbidden" }` 403 marker — the latter is truthy, so
+        // a `!fetched`-only guard would set the marker as a fake note.
+        if (!fetched || fetched.error) {
             return;
         }
         if (noteTypeForActivity === 1) {
