@@ -199,7 +199,23 @@ export const ModalNoteView = (props: ModalNoteViewProps) => {
         <NoteModalHostZIndexProvider value={hostZIndex}>
             <Box
                 className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
-                sx={{ height: "100%", overflow: "auto", p: 2, width: "100%" }}
+                // `position: relative` makes THIS scroll container the
+                // containing block for the note editors' absolutely-positioned
+                // title inputs (NoteEditor / BnTaskNoteEditor / ChatNoteEditor
+                // render the title with `position:absolute; top:auto`). Without
+                // it the title anchors to the non-scrolling ModalDialog and
+                // stays pinned while the note scrolls; anchored here it sits at
+                // its natural flow position (below the header) and scrolls with
+                // the content. Modal-only — the full-page workspace anchors the
+                // title to NoteContentRenderer's own relative container, which
+                // this doesn't touch.
+                sx={{
+                    height: "100%",
+                    overflow: "auto",
+                    p: 2,
+                    position: "relative",
+                    width: "100%",
+                }}
             >
                 {children}
             </Box>
