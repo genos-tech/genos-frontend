@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import TrendingUpRoundedIcon from "@mui/icons-material/TrendingUpRounded";
 import { Box, Card, Chip, CircularProgress, Option, Select, Stack, Typography } from "@mui/joy";
 
+import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
 import { useAuth } from "../../../../context/AuthContext";
 import { fmt, useTranslation } from "../../../../i18n";
 import {
@@ -207,8 +208,16 @@ export const TaskVelocitySection = ({
                         >
                             <Option value="">{v.allMembers}</Option>
                             {members.map((m) => (
-                                <Option key={m.id} value={m.id}>
-                                    {m.name}
+                                <Option key={m.id} label={m.name} value={m.id}>
+                                    <Stack alignItems="center" direction="row" spacing={1}>
+                                        <UserAvatar
+                                            clickable={false}
+                                            showPulseDot={false}
+                                            size={22}
+                                            userId={m.id}
+                                        />
+                                        <Typography level="body-sm">{m.name}</Typography>
+                                    </Stack>
                                 </Option>
                             ))}
                         </Select>
