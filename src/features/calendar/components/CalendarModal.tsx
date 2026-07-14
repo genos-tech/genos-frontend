@@ -89,6 +89,7 @@ const groupEventsByDay = (
 
 interface ModalInitial {
     add_meet?: boolean;
+    all_day?: boolean;
     attendees?: Array<{ email: string; displayName?: string }>;
     calendar_id?: string;
     description?: string;
@@ -298,8 +299,13 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
 
     const openEdit = (e: CalendarEvent) => {
         setEditingEventId(e.id);
+        // All-day events carry `start.date`/`end.date` (no `dateTime`).
+        // Pass the date strings + the flag so the modal opens in all-day
+        // mode instead of showing empty datetime fields.
+        const isAllDay = !!e.start?.date && !e.start?.dateTime;
         setEventModalInitial({
             add_meet: !!e.hangoutLink,
+            all_day: isAllDay,
             // Pre-populate the attendee picker so the user sees
             // who's already invited and can prune / add. We drop
             // `self`-flagged entries (Google echoes the organizer
@@ -313,8 +319,8 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
                     displayName: a.displayName,
                 })),
             description: e.description,
-            end: e.end?.dateTime,
-            start: e.start?.dateTime,
+            end: isAllDay ? e.end?.date : e.end?.dateTime,
+            start: isAllDay ? e.start?.date : e.start?.dateTime,
             summary: e.summary,
         });
         setEventModalOpen(true);

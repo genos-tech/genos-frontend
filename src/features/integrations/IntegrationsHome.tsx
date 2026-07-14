@@ -51,6 +51,7 @@ type TabKey = "connections" | "calendar" | "github";
 
 interface ModalInitial {
     add_meet?: boolean;
+    all_day?: boolean;
     attendees?: Array<{ email: string; displayName?: string }>;
     calendar_id?: string;
     description?: string;
@@ -143,8 +144,12 @@ const CalendarTab = ({
 
     const openEdit = (event: CalendarEvent) => {
         setEditingEventId(event.id);
+        // All-day events carry `start.date`/`end.date` (no `dateTime`) —
+        // pass the date strings + flag so the modal opens in all-day mode.
+        const isAllDay = !!event.start?.date && !event.start?.dateTime;
         setModalInitial({
             add_meet: !!event.hangoutLink,
+            all_day: isAllDay,
             // Pre-populate the attendee picker (drop `self` entries
             // so we don't try to re-invite the organizer / current
             // user). External attendees without a team-member match
@@ -153,8 +158,8 @@ const CalendarTab = ({
                 .filter((a) => !a.self && !!a.email)
                 .map((a) => ({ email: a.email, displayName: a.displayName })),
             description: event.description,
-            end: event.end?.dateTime,
-            start: event.start?.dateTime,
+            end: isAllDay ? event.end?.date : event.end?.dateTime,
+            start: isAllDay ? event.start?.date : event.start?.dateTime,
             summary: event.summary,
         });
         setModalOpen(true);
