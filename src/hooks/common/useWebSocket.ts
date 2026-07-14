@@ -99,16 +99,15 @@ export const useWebSocket = (
         };
     }, [socketInstance, showDisconnected]);
 
-    // Setup join and heartbeat
+    // Setup heartbeat.
+    //
+    // The legacy `socket.emit("join", {chatType:1, joiningCGId:-1, ...})`
+    // that used to run here was dropped: v3 manages room membership at
+    // connect time (connect_handlers auto-subscribe + `channel.subscribe`),
+    // and the legacy `"join"` event has had no server handler since the v3
+    // migration, so it was a silent no-op.
     useEffect(() => {
         if (socketInstance) {
-            socketInstance.emit("join", {
-                joiningCGId: -1,
-                joiningCGName: myself.userName,
-                chatType: 1,
-                dmPartnerUserId: myself.userId,
-            });
-
             sendHeartBeat();
 
             const intervalId = setInterval(() => {
@@ -119,7 +118,7 @@ export const useWebSocket = (
                 clearInterval(intervalId);
             };
         }
-    }, [socketInstance, myself, sendHeartBeat]);
+    }, [socketInstance, sendHeartBeat]);
 
     return {
         socketInstance,

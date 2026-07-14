@@ -87,9 +87,6 @@ export const updateTaskFromTable = async (
             : updatedRow.dueDate;
         updatedTask.dueDate = dueDateStr || updatedTask.dueDate;
 
-        // Determine if status was updated (for sending thread message)
-        const taskStatusUpdated = fullTask.status.status !== updatedRow.status;
-
         // Send the updated task to the backend
         await sendUpdatedSpecificTask(
             socket,
@@ -97,7 +94,6 @@ export const updateTaskFromTable = async (
             updatedTask,
             true, // syncCard: a table inline edit is a metadata change (status/
             // assignee/due) → rewrite the PM task card + broadcast.
-            taskStatusUpdated,
             accessToken
         );
 

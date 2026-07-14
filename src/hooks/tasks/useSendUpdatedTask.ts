@@ -66,7 +66,6 @@ export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
     const taskTitle = taskEditState?.taskTitle ?? params.taskTitle!;
     const initTaskTitle = taskEditState?.initTaskTitle ?? params.initTaskTitle!;
     const body = taskEditState?.body ?? params.body!;
-    const taskStatusUpdated = taskEditState?.taskStatusUpdated ?? params.taskStatusUpdated!;
     const setUploadedFiles = taskEditState?.setUploadedFiles ?? params.setUploadedFiles!;
     const setTmpCurrentTaskContent =
         taskEditState?.setTmpCurrentTaskContent ?? params.setTmpCurrentTaskContent!;
@@ -108,7 +107,6 @@ export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
                 myself,
                 baseTaskContent,
                 syncCard,
-                taskStatusUpdated,
                 accessToken
             );
 
@@ -209,7 +207,6 @@ export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
             initTaskTitle,
             body,
             bodyRef,
-            taskStatusUpdated,
             setUploadedFiles,
             setTmpCurrentTaskContent,
             setCurrentPreviewTask,

@@ -7,7 +7,7 @@ import { authApi } from "../../../services/api";
 import { channelService } from "../../../services/channel/channelService";
 import { UserProps } from "../../../types/admin";
 import { TaskProps } from "../../../types/tasks";
-import { taskMessageTemplate, taskThreadMessageTemplate } from "../utils/TaskMessageTemplate";
+import { taskMessageTemplate } from "../utils/TaskMessageTemplate";
 import { addTask } from "./addTask";
 import { uploadTaskAttachments } from "./uploadTaskAttachments";
 
@@ -25,7 +25,6 @@ export const sendUpdatedSpecificTask = async (
     // true after every task load, which skipped the card sync on the FIRST
     // metadata edit after opening a task (the "PM card stays stale" bug).
     syncCard: boolean,
-    taskStatusUpdated: boolean,
     accessToken: string | null,
     setErrorMessage?: (value: string) => void
 ) => {
@@ -148,7 +147,6 @@ export const sendUpdatedSpecificTask = async (
             // post-save merge stripped the now-orphaned negative-id rows.
             if (res && syncCard) {
                 const updatedTaskMessage = taskMessageTemplate(myself, updatedTask);
-                const updatedTaskThreadMessage = taskThreadMessageTemplate(myself, updatedTask);
                 // Rewrite the PM task-card header so the status / title /
                 // priority / assignee change fans out to every viewer of the
                 // PM channel (and this editor's own pane) in real time. The
@@ -176,36 +174,6 @@ export const sendUpdatedSpecificTask = async (
                                 e
                             );
                         });
-                }
-
-                if (socket) {
-                    // NOTE: legacy dead emit — the Flask `thread_message`
-                    // handler was also removed in the v3 migration, so this
-                    // status-change thread note posts nowhere. Left in place
-                    // (harmless no-op) as a SEPARATE feature to migrate to v3
-                    // later; not part of the card-sync fix above.
-                    if (taskStatusUpdated === true) {
-                        socket.emit("thread_message", {
-                            methodType: "POST",
-                            isInit: false,
-                            rootMessageTSSent: "",
-                            rootMessageSenderId: null,
-                            rootMessageReceiverId: null,
-                            threadId: 0,
-                            threadMessage: updatedTaskThreadMessage,
-                            chatType: 3,
-                            dmPartnerUserId: null,
-                            senderId: updatedTask.project.systemUserId,
-                            senderName: updatedTask.project.projectName,
-                            destCGName: updatedTask.project.projectName,
-                            destCGId: updatedTask.project.projectId,
-                            taskId: updatedTask.id,
-                            displayId: updatedTask.displayId,
-                            systemUserId: updatedTask.project.systemUserId,
-                            messageIdForPut: null,
-                            sendActivity: false, // Do not send activity for task status update.
-                        });
-                    }
                 }
             }
 
