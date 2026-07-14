@@ -7,7 +7,8 @@ import { ActivityMessageProps } from "../../../types/chat";
 // times while you're offline, a task that collects a dozen comments, a
 // note edited by a mention-happy teammate) used to land as one sidebar
 // row PER activity, burying everything else in the feed. The feed only
-// needs the LATEST row per topic; the earlier ones carry no extra
+// needs the LATEST row per topic per time window (see
+// `ACTIVITY_AGGREGATION_WINDOW_MS`); the earlier ones carry no extra
 // information once the latest is shown.
 //
 // Aggregation is a pure DISPLAY concern: every activity row is still
@@ -78,50 +79,88 @@ export const activityTopicKey = (a: ActivityMessageProps): string => {
  * Collapse same-topic runs to one representative row per topic — the
  * member with the latest `tsSent` (defensive compare; the feed arrives
  * sorted newest-first, in which case the representative is also the
- * first member seen and output order is unchanged).
+ * first member seen).
+ *
+ * TIME WINDOW: a topic is not collapsed across its whole history — a
+ * thread that's active for weeks must not compress into a single
+ * "+800 earlier" row (the IDB store retains 30 days). Members chain
+ * into buckets anchored at each bucket's NEWEST member: walking a
+ * topic newest→oldest, an activity joins the current bucket while it's
+ * within `windowMs` of that bucket's newest member; anything older
+ * starts a new bucket anchored at itself. So a burst collapses to one
+ * row regardless of clock boundaries, while a continuously-active
+ * topic yields roughly one row per window of activity. Rows for older
+ * buckets keep their own `aggregatedIds` / unread state, so mark-read
+ * stays scoped to the bucket the user actually clicked.
+ *
+ * Output is feed-ordered (newest representative first).
  *
  * Pure; input rows are not mutated (representatives are copies).
  */
+export const ACTIVITY_AGGREGATION_WINDOW_MS = 24 * 60 * 60 * 1000;
+
 export const aggregateActivityMessages = (
-    rows: ActivityMessageProps[]
+    rows: ActivityMessageProps[],
+    windowMs: number = ACTIVITY_AGGREGATION_WINDOW_MS
 ): AggregatedActivityMessage[] => {
-    type Bucket = { ids: string[]; rep: ActivityMessageProps; unread: number };
-    const byKey = new Map<string, Bucket>();
-    const order: string[] = [];
+    const byKey = new Map<string, ActivityMessageProps[]>();
     for (const a of rows) {
         const key = activityTopicKey(a);
-        const bucket = byKey.get(key);
-        if (!bucket) {
-            byKey.set(key, { ids: [a.activityId], rep: a, unread: a.isRead === false ? 1 : 0 });
-            order.push(key);
-            continue;
-        }
-        bucket.ids.push(a.activityId);
-        if (a.isRead === false) bucket.unread += 1;
-        if (new Date(a.tsSent).getTime() > new Date(bucket.rep.tsSent).getTime()) {
-            bucket.rep = a;
-        }
+        const members = byKey.get(key);
+        if (members) members.push(a);
+        else byKey.set(key, [a]);
     }
-    return order.map((key) => {
-        const bucket = byKey.get(key) as Bucket;
-        return {
-            ...bucket.rep,
-            aggregatedCount: bucket.ids.length,
-            aggregatedIds: bucket.ids,
-            aggregatedUnreadCount: bucket.unread,
-            isRead: bucket.unread === 0,
+
+    const out: AggregatedActivityMessage[] = [];
+    for (const members of byKey.values()) {
+        // Newest first (defensive — the feed already arrives sorted
+        // desc; stable sort keeps input order on ties).
+        const sorted = [...members].sort(
+            (x, y) => new Date(y.tsSent).getTime() - new Date(x.tsSent).getTime()
+        );
+        let bucket: ActivityMessageProps[] = [];
+        let anchorTs = 0;
+        const flush = () => {
+            if (bucket.length === 0) return;
+            const rep = bucket[0];
+            const unread = bucket.reduce((n, a) => (a.isRead === false ? n + 1 : n), 0);
+            out.push({
+                ...rep,
+                aggregatedCount: bucket.length,
+                aggregatedIds: bucket.map((a) => a.activityId),
+                aggregatedUnreadCount: unread,
+                isRead: unread === 0,
+            });
         };
-    });
+        for (const a of sorted) {
+            const ts = new Date(a.tsSent).getTime();
+            // NaN timestamps fail the `>` check and fall into the open
+            // bucket rather than fragmenting the topic.
+            if (bucket.length === 0 || anchorTs - ts > windowMs) {
+                flush();
+                bucket = [a];
+                anchorTs = ts;
+            } else {
+                bucket.push(a);
+            }
+        }
+        flush();
+    }
+
+    // Feed order: newest representative first. Buckets from different
+    // topics (and older buckets of the same topic) interleave at their
+    // natural chronological position.
+    return out.sort((x, y) => new Date(y.tsSent).getTime() - new Date(x.tsSent).getTime());
 };
 
 /**
  * Unread count for the Activity-tab badge, in AGGREGATED units: the
- * number of topics with at least one unread member. Keeps the badge
- * consistent with what the feed renders — 100 unread replies in one
- * thread are ONE unread feed row, so the badge says 1, and clearing
- * that row (which marks all members read) zeroes it. Drops the
- * synthetic thread-root placeholder the same way
- * `selectVisibleActivityMessages` does.
+ * number of topic BUCKETS (topic × time window) with at least one
+ * unread member. Keeps the badge consistent with what the feed
+ * renders — 100 unread replies in one thread are ONE unread feed row,
+ * so the badge says 1, and clearing that row (which marks all members
+ * read) zeroes it. Drops the synthetic thread-root placeholder the
+ * same way `selectVisibleActivityMessages` does.
  */
 export const countUnreadActivityTopics = (rows: ActivityMessageProps[]): number =>
     aggregateActivityMessages(
