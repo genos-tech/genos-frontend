@@ -14,6 +14,7 @@ import { TaskManagementState } from "../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../i18n";
 import { UserProps } from "../../../types/admin";
 import { MilestoneTarget } from "../../../utils/parseInternalUrl";
+import { useModalLocalTaskComments } from "./useModalLocalTaskComments";
 
 type ModalMilestoneViewProps = {
     target: MilestoneTarget;
@@ -91,6 +92,9 @@ export const ModalMilestoneView = (props: ModalMilestoneViewProps) => {
     const { t } = useTranslation();
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    // Modal-local comment slots — see the hook's doc comment. Declared
+    // unconditionally (before the early returns) per rules-of-hooks.
+    const localTaskComments = useModalLocalTaskComments();
 
     useEffect(() => {
         let cancelled = false;
@@ -149,9 +153,14 @@ export const ModalMilestoneView = (props: ModalMilestoneViewProps) => {
 
     // Force TaskPreview into milestone mode without touching the host
     // page's preview state. `setIsTaskPreviewVisible(false)` (fired by the
-    // preview's own close path) routes to the modal's onClose.
+    // preview's own close path) routes to the modal's onClose. The
+    // comment slots are modal-local for the same reason as ModalTaskView:
+    // MilestonePreviewInner loads the backing task's comments through the
+    // shared `setTaskComments`, which overwrote the host preview's
+    // Comments tab.
     const useTMOverride: TaskManagementState = {
         ...useTM,
+        ...localTaskComments,
         currentPreviewKind: "milestone",
         currentPreviewMilestoneId: target.milestoneId,
         setIsTaskPreviewVisible: (visible: boolean) => {

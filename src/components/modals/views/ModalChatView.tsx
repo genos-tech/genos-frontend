@@ -18,6 +18,7 @@ import { UserProps } from "../../../types/admin";
 import { ChatProps, MessageProps, ThreadMessageProps, ThreadProps } from "../../../types/chat";
 import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
 import { ChatMainTarget, ChatThreadTarget } from "../../../utils/parseInternalUrl";
+import { useModalLocalTaskComments } from "./useModalLocalTaskComments";
 
 type ModalChatViewProps = {
     target: ChatMainTarget | ChatThreadTarget;
@@ -82,6 +83,14 @@ export const ModalChatView = (props: ModalChatViewProps) => {
     // via useChatContext(); we keep it scoped to the modal so we don't
     // collide with the host page's own ChatProvider value.
     const [modalThreadTaskId, setModalThreadTaskId] = useState<number>(-1);
+
+    // Modal-local comment slots — see the hook's doc comment. The
+    // thread branch renders ThreadCommentsView (via ThreadPane), whose
+    // comment load writes `setTaskComments`; without this override a PM
+    // task-thread link opened while a task preview is visible on the
+    // host page would overwrite that preview's Comments tab.
+    const localTaskComments = useModalLocalTaskComments();
+    const useTMOverride: TaskManagementState = { ...useTM, ...localTaskComments };
 
     // Pulled out of the deps array so eslint can statically check them.
     // `targetThreadId` is undefined for `chatMain` targets; tracking
@@ -311,7 +320,7 @@ export const ModalChatView = (props: ModalChatViewProps) => {
                 useNM={useNM}
                 usePM={usePM}
                 useTEM={useTEM}
-                useTM={useTM}
+                useTM={useTMOverride}
                 useUISM={useUISM}
             >
                 <Box sx={{ height: "100%", width: "100%" }}>
@@ -326,7 +335,7 @@ export const ModalChatView = (props: ModalChatViewProps) => {
                         useNM={useNM}
                         usePM={usePM}
                         useTEM={useTEM}
-                        useTM={useTM}
+                        useTM={useTMOverride}
                         useUISM={useUISM}
                     />
                 </Box>
@@ -350,7 +359,7 @@ export const ModalChatView = (props: ModalChatViewProps) => {
                 useCM={useCMOverride}
                 usePM={usePM}
                 useTEM={useTEM}
-                useTM={useTM}
+                useTM={useTMOverride}
                 useUISM={useUISM}
                 {...NOOP_TODOS_PROPS}
             />
