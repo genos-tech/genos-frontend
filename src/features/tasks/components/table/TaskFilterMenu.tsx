@@ -28,7 +28,18 @@ import {
     predefinedEffortLevelFilters,
     predefinedPriorityFilters,
     predefinedStatusFilters,
+    taskTypes,
 } from "../../types/TaskTableTypes";
+
+// Default status selection = the "ongoing" statuses (Open, WIP, Blocked,
+// Pending) — everything except Closed / Expired / Deleted. Derived by label
+// from the canonical `taskTypes.ongoing` set rather than a positional
+// `predefinedStatusFilters.slice(1, 4)`: that slice silently dropped Pending
+// when "Blocked" was inserted into the status list, so the default must not
+// depend on ordering.
+const defaultStatusFilters: FilterProps[] = predefinedStatusFilters.filter((f) =>
+    taskTypes.ongoing.statuses.includes(f.label)
+);
 
 // Sentinels used by the milestone filter alongside numeric milestone
 // ids. Mirrors the `NO_MILESTONE` pattern in `SprintMilestonePicker`
@@ -103,7 +114,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
 
     // Status filter — when status filter is hidden (e.g. sprint board), default to "All"
     const [selectedStatus, setSelectedStatus] = React.useState<FilterProps[]>(
-        hideStatusFilter ? [predefinedStatusFilters[0]] : predefinedStatusFilters.slice(1, 4)
+        hideStatusFilter ? [predefinedStatusFilters[0]] : defaultStatusFilters
     );
     const [anchorElStatusFilter, setAnchorElStatusFilter] = React.useState<null | HTMLElement>(
         null
@@ -548,13 +559,13 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
     };
 
     const resetFilters = () => {
-        setSelectedStatus(predefinedStatusFilters.slice(1, 4));
+        setSelectedStatus(defaultStatusFilters);
         setSelectedTags([predefinedTagsFilters[0]]);
         setSelectedPriorities([predefinedPriorityFilters[0]]);
         setSelectedEffortLevels([predefinedEffortLevelFilters[0]]);
         setSelectedMilestoneKeys([MILESTONE_ALL]);
         applyFilters(
-            predefinedStatusFilters.slice(1, 4),
+            defaultStatusFilters,
             [predefinedTagsFilters[0]],
             [predefinedPriorityFilters[0]],
             [predefinedEffortLevelFilters[0]],

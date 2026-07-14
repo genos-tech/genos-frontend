@@ -2309,8 +2309,21 @@ export const TaskHomeContent = ({
                                             </Box>
                                         )}
 
-                                        {/* Status cards */}
-                                        <Grid spacing={1.5} container>
+                                        {/* Status cards — one equal-width card per
+                                            status, all on a single row. A CSS grid
+                                            (not the 12-column MUI Grid): 12 isn't
+                                            divisible by 5, so the 5th card wrapped to
+                                            a second row. */}
+                                        <Box
+                                            sx={{
+                                                display: "grid",
+                                                gridTemplateColumns: {
+                                                    xs: "repeat(2, 1fr)",
+                                                    md: "repeat(5, 1fr)",
+                                                },
+                                                gap: 1.5,
+                                            }}
+                                        >
                                             {(
                                                 [
                                                     {
@@ -2348,92 +2361,87 @@ export const TaskHomeContent = ({
                                                           )
                                                         : 0;
                                                 return (
-                                                    <Grid key={s.key} md={3} xs={6}>
-                                                        <Card
-                                                            variant="soft"
-                                                            sx={{
-                                                                p: 2,
-                                                                background: isDark
-                                                                    ? sc.bg
-                                                                    : sc.bg.replace(
-                                                                          "0.12",
-                                                                          "0.08"
-                                                                      ),
-                                                                border: "1px solid",
-                                                                borderColor: cardBorder,
-                                                                transition: "transform 0.2s ease",
-                                                                "&:hover": {
-                                                                    transform: "translateY(-2px)",
-                                                                },
-                                                            }}
-                                                        >
-                                                            <Stack spacing={1}>
-                                                                <Stack
-                                                                    alignItems="center"
-                                                                    direction="row"
-                                                                    justifyContent="space-between"
+                                                    <Card
+                                                        key={s.key}
+                                                        variant="soft"
+                                                        sx={{
+                                                            p: 2,
+                                                            background: isDark
+                                                                ? sc.bg
+                                                                : sc.bg.replace("0.12", "0.08"),
+                                                            border: "1px solid",
+                                                            borderColor: cardBorder,
+                                                            transition: "transform 0.2s ease",
+                                                            "&:hover": {
+                                                                transform: "translateY(-2px)",
+                                                            },
+                                                        }}
+                                                    >
+                                                        <Stack spacing={1}>
+                                                            <Stack
+                                                                alignItems="center"
+                                                                direction="row"
+                                                                justifyContent="space-between"
+                                                            >
+                                                                <Box
+                                                                    sx={{
+                                                                        width: 32,
+                                                                        height: 32,
+                                                                        borderRadius: "8px",
+                                                                        display: "flex",
+                                                                        alignItems: "center",
+                                                                        justifyContent: "center",
+                                                                        color: sc.text,
+                                                                        backgroundColor: isDark
+                                                                            ? "rgba(255,255,255,0.06)"
+                                                                            : "rgba(255,255,255,0.8)",
+                                                                    }}
                                                                 >
-                                                                    <Box
-                                                                        sx={{
-                                                                            width: 32,
-                                                                            height: 32,
-                                                                            borderRadius: "8px",
-                                                                            display: "flex",
-                                                                            alignItems: "center",
-                                                                            justifyContent:
-                                                                                "center",
-                                                                            color: sc.text,
-                                                                            backgroundColor: isDark
-                                                                                ? "rgba(255,255,255,0.06)"
-                                                                                : "rgba(255,255,255,0.8)",
-                                                                        }}
-                                                                    >
-                                                                        {s.icon}
-                                                                    </Box>
-                                                                    <Typography
-                                                                        level="body-xs"
-                                                                        sx={{
-                                                                            color: sc.text,
-                                                                            fontWeight: 600,
-                                                                        }}
-                                                                    >
-                                                                        {pct}%
-                                                                    </Typography>
-                                                                </Stack>
-                                                                <Box>
-                                                                    <Typography
-                                                                        level="h3"
-                                                                        sx={{
-                                                                            fontWeight: 700,
-                                                                            fontSize: "1.4rem",
-                                                                            color: textPrimary,
-                                                                        }}
-                                                                    >
-                                                                        {s.count}
-                                                                    </Typography>
-                                                                    <Typography
-                                                                        level="body-xs"
-                                                                        sx={{
-                                                                            color: textSecondary,
-                                                                            fontWeight: 500,
-                                                                        }}
-                                                                    >
-                                                                        {
-                                                                            t.tasks.dashboard
-                                                                                .statusLabels[
-                                                                                STATUS_LABEL_KEYS[
-                                                                                    s.key
-                                                                                ] ?? "open"
-                                                                            ]
-                                                                        }
-                                                                    </Typography>
+                                                                    {s.icon}
                                                                 </Box>
+                                                                <Typography
+                                                                    level="body-xs"
+                                                                    sx={{
+                                                                        color: sc.text,
+                                                                        fontWeight: 600,
+                                                                    }}
+                                                                >
+                                                                    {pct}%
+                                                                </Typography>
                                                             </Stack>
-                                                        </Card>
-                                                    </Grid>
+                                                            <Box>
+                                                                <Typography
+                                                                    level="h3"
+                                                                    sx={{
+                                                                        fontWeight: 700,
+                                                                        fontSize: "1.4rem",
+                                                                        color: textPrimary,
+                                                                    }}
+                                                                >
+                                                                    {s.count}
+                                                                </Typography>
+                                                                <Typography
+                                                                    level="body-xs"
+                                                                    sx={{
+                                                                        color: textSecondary,
+                                                                        fontWeight: 500,
+                                                                    }}
+                                                                >
+                                                                    {
+                                                                        t.tasks.dashboard
+                                                                            .statusLabels[
+                                                                            STATUS_LABEL_KEYS[
+                                                                                s.key
+                                                                            ] ?? "open"
+                                                                        ]
+                                                                    }
+                                                                </Typography>
+                                                            </Box>
+                                                        </Stack>
+                                                    </Card>
                                                 );
                                             })}
-                                        </Grid>
+                                        </Box>
                                     </Box>
 
                                     {/* ════════ Section F: Overdue & Upcoming ════════ */}
@@ -2996,6 +3004,7 @@ export const TaskHomeContent = ({
                                     {/* ════════ Tag Insights ════════ */}
                                     <Box>
                                         <Typography
+                                            component="div"
                                             level="title-sm"
                                             sx={{
                                                 fontWeight: 600,
@@ -3216,6 +3225,7 @@ export const TaskHomeContent = ({
                                                         [
                                                             "Open",
                                                             "WIP",
+                                                            "Blocked",
                                                             "Pending",
                                                             "Closed",
                                                         ] as const
