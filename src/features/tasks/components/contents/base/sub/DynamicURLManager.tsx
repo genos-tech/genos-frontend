@@ -11,7 +11,7 @@ import { AppTooltip } from "../../../../../../components/ui/AppTooltip";
 import { useTranslation } from "../../../../../../i18n";
 import { TaskProps } from "../../../../../../types/tasks";
 import { getPageTitle } from "../../../../utils/getPageTitle";
-import { resolveLinkBrand } from "../../../../utils/linkBrandIcons";
+import { brandColor, resolveLinkBrand } from "../../../../utils/linkBrandIcons";
 
 type LinkItem = {
     id: string;
@@ -280,12 +280,16 @@ export const DynamicURLManager = (props: DynamicURLManagerProps) => {
 // icon. Brand glyphs get the same muted `text.secondary` tint as every
 // other metadata icon so the list stays one visual system in light/dark.
 const LinkLeadIcon = ({ url }: { url: string }) => {
+    const { mode } = useColorScheme();
     const brand = resolveLinkBrand(url);
     if (!brand) {
         return <LinkIcon sx={{ color: "text.secondary", fontSize: "20px" }} />;
     }
     return (
-        <SvgIcon sx={{ color: "text.secondary", fontSize: "20px" }} viewBox="0 0 24 24">
+        <SvgIcon
+            sx={{ color: brandColor(brand, mode === "dark"), fontSize: "20px" }}
+            viewBox="0 0 24 24"
+        >
             <title>{brand.title}</title>
             <path d={brand.path} />
         </SvgIcon>

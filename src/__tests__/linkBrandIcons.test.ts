@@ -1,8 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { resolveLinkBrand } from "../features/tasks/utils/linkBrandIcons";
+import { brandColor, resolveLinkBrand } from "../features/tasks/utils/linkBrandIcons";
 
 const titleFor = (url: string) => resolveLinkBrand(url)?.title ?? null;
+const brandFor = (url: string) => {
+    const b = resolveLinkBrand(url);
+    if (!b) throw new Error(`no brand for ${url}`);
+    return b;
+};
 
 describe("resolveLinkBrand", () => {
     it("matches known hosts regardless of path/query", () => {
@@ -45,5 +50,29 @@ describe("resolveLinkBrand", () => {
         const brand = resolveLinkBrand("https://slack.com");
         expect(brand?.title).toBe("Slack");
         expect(brand?.path.startsWith("M")).toBe(true);
+    });
+});
+
+describe("brandColor", () => {
+    it("keeps a high-contrast brand color in both themes", () => {
+        const yt = brandFor("https://youtube.com/watch?v=x"); // #FF0000
+        expect(brandColor(yt, false)).toBe(yt.color);
+        expect(brandColor(yt, true)).toBe(yt.color);
+    });
+
+    it("adjusts a near-black brand for dark mode but keeps it in light mode", () => {
+        const gh = brandFor("https://github.com/x"); // #181717
+        expect(brandColor(gh, false)).toBe(gh.color); // dark-on-light: fine as-is
+        const dark = brandColor(gh, true); // would vanish on a dark bg
+        expect(dark).not.toBe(gh.color);
+        expect(dark).toMatch(/^rgb\(/);
+    });
+
+    it("adjusts a near-white brand for light mode but keeps it in dark mode", () => {
+        const gb = brandFor("https://acme.gitbook.io/docs"); // #BBDDE5
+        expect(brandColor(gb, true)).toBe(gb.color); // light-on-dark: fine as-is
+        const light = brandColor(gb, false); // would vanish on a white bg
+        expect(light).not.toBe(gb.color);
+        expect(light).toMatch(/^rgb\(/);
     });
 });
