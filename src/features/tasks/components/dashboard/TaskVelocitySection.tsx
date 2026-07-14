@@ -31,13 +31,13 @@ const toIso = (d: Date): string => {
     return `${y}-${m}-${day}`;
 };
 
-// Default window when the caller doesn't pin one: the last 30 days in
-// day mode, ~12 weeks in week mode — enough history to read a trend
-// without an unreadable wall of bars.
+// Default window when the caller doesn't pin one: the last 14 days in
+// day mode (chunky, readable daily bars), ~12 weeks in week mode — each
+// enough history to read a trend without an unreadable wall of bars.
 const defaultWindow = (granularity: VelocityGranularity): { start: string; end: string } => {
     const end = new Date();
     const start = new Date();
-    start.setDate(start.getDate() - (granularity === "day" ? 29 : 7 * 12 - 1));
+    start.setDate(start.getDate() - (granularity === "day" ? 13 : 7 * 12 - 1));
     return { start: toIso(start), end: toIso(end) };
 };
 
