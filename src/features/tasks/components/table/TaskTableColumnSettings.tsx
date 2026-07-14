@@ -16,6 +16,7 @@ import {
     Typography,
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
+import { createPortal } from "react-dom";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { SortTier, useTaskSortPreferences } from "../../../../hooks/common/useTaskSortPreferences";
@@ -273,70 +274,92 @@ export const TaskTableColumnSettings = ({ open, onClose }: Props) => {
                                                 draggableId={col.field}
                                                 index={index}
                                             >
-                                                {(dragProvided, snapshot) => (
-                                                    <Stack
-                                                        ref={dragProvided.innerRef}
-                                                        {...dragProvided.draggableProps}
-                                                        alignItems="center"
-                                                        direction="row"
-                                                        spacing={1}
-                                                        sx={{
-                                                            px: 1.25,
-                                                            py: 1,
-                                                            borderBottom:
-                                                                index === orderedColumns.length - 1
-                                                                    ? "none"
-                                                                    : "1px solid",
-                                                            borderColor: isDark
-                                                                ? "rgba(255,255,255,0.06)"
-                                                                : "rgba(0,0,0,0.06)",
-                                                            background: snapshot.isDragging
-                                                                ? isDark
-                                                                    ? "rgba(167,139,250,0.12)"
-                                                                    : "rgba(124,58,237,0.08)"
-                                                                : "transparent",
-                                                            transition:
-                                                                "background-color 0.1s ease",
-                                                        }}
-                                                    >
-                                                        <Box
-                                                            {...dragProvided.dragHandleProps}
-                                                            sx={{
-                                                                display: "flex",
-                                                                alignItems: "center",
-                                                                cursor: "grab",
-                                                                color: isDark
-                                                                    ? "rgba(255,255,255,0.4)"
-                                                                    : "rgba(0,0,0,0.35)",
-                                                                "&:active": { cursor: "grabbing" },
+                                                {(dragProvided, snapshot) => {
+                                                    const row = (
+                                                        <Stack
+                                                            ref={dragProvided.innerRef}
+                                                            {...dragProvided.draggableProps}
+                                                            alignItems="center"
+                                                            direction="row"
+                                                            spacing={1}
+                                                            // While dragging, the row is portaled to
+                                                            // <body> (below) to escape the ModalDialog's
+                                                            // `translate(-50%,-50%)` centering transform —
+                                                            // that transform is the containing block for the
+                                                            // library's position:fixed drag clone, so without
+                                                            // this the dragged row is offset from the cursor.
+                                                            // At <body> it must out-stack the modal.
+                                                            style={{
+                                                                ...dragProvided.draggableProps
+                                                                    .style,
+                                                                ...(snapshot.isDragging
+                                                                    ? { zIndex: 1500 }
+                                                                    : {}),
                                                             }}
-                                                            title={
-                                                                t.tasks.table.columnSettings
-                                                                    .dragHandle
-                                                            }
+                                                            sx={{
+                                                                px: 1.25,
+                                                                py: 1,
+                                                                borderBottom:
+                                                                    index ===
+                                                                    orderedColumns.length - 1
+                                                                        ? "none"
+                                                                        : "1px solid",
+                                                                borderColor: isDark
+                                                                    ? "rgba(255,255,255,0.06)"
+                                                                    : "rgba(0,0,0,0.06)",
+                                                                background: snapshot.isDragging
+                                                                    ? isDark
+                                                                        ? "rgba(167,139,250,0.12)"
+                                                                        : "rgba(124,58,237,0.08)"
+                                                                    : "transparent",
+                                                                transition:
+                                                                    "background-color 0.1s ease",
+                                                            }}
                                                         >
-                                                            <DragIndicatorRoundedIcon
-                                                                sx={{ fontSize: 18 }}
+                                                            <Box
+                                                                {...dragProvided.dragHandleProps}
+                                                                sx={{
+                                                                    display: "flex",
+                                                                    alignItems: "center",
+                                                                    cursor: "grab",
+                                                                    color: isDark
+                                                                        ? "rgba(255,255,255,0.4)"
+                                                                        : "rgba(0,0,0,0.35)",
+                                                                    "&:active": {
+                                                                        cursor: "grabbing",
+                                                                    },
+                                                                }}
+                                                                title={
+                                                                    t.tasks.table.columnSettings
+                                                                        .dragHandle
+                                                                }
+                                                            >
+                                                                <DragIndicatorRoundedIcon
+                                                                    sx={{ fontSize: 18 }}
+                                                                />
+                                                            </Box>
+                                                            <Typography
+                                                                level="body-sm"
+                                                                sx={{ flex: 1, fontWeight: 500 }}
+                                                            >
+                                                                {labelFor(col)}
+                                                            </Typography>
+                                                            <Switch
+                                                                checked={isVisible(col)}
+                                                                size="sm"
+                                                                onChange={(e) =>
+                                                                    setVisibility(
+                                                                        col.field,
+                                                                        e.target.checked
+                                                                    )
+                                                                }
                                                             />
-                                                        </Box>
-                                                        <Typography
-                                                            level="body-sm"
-                                                            sx={{ flex: 1, fontWeight: 500 }}
-                                                        >
-                                                            {labelFor(col)}
-                                                        </Typography>
-                                                        <Switch
-                                                            checked={isVisible(col)}
-                                                            size="sm"
-                                                            onChange={(e) =>
-                                                                setVisibility(
-                                                                    col.field,
-                                                                    e.target.checked
-                                                                )
-                                                            }
-                                                        />
-                                                    </Stack>
-                                                )}
+                                                        </Stack>
+                                                    );
+                                                    return snapshot.isDragging
+                                                        ? createPortal(row, document.body)
+                                                        : row;
+                                                }}
                                             </Draggable>
                                         ))}
                                         {provided.placeholder}
