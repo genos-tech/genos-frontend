@@ -36,7 +36,6 @@ import { Socket } from "socket.io-client";
 
 import { useMentionGroupsContext } from "../../context/MentionGroupsContext";
 import { emitTaskTouched } from "../../features/tasks/services/taskEvents";
-import { taskThreadMessageForCommentAddedTemplate } from "../../features/tasks/utils/TaskMessageTemplate";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
 import { useAnchorClickIntercept } from "../../hooks/common/useAnchorClickIntercept";
@@ -423,40 +422,11 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                 // server payload (correct commentId, ts, mentions…).
                 useTM.setIsTaskCommentUpdated({ isUpdate: true, scrollToBottom: true });
                 emitTaskTouched(Number(task.id), "comment");
-
-                // IMPORTANT: emit the thread_message AFTER the task_comment
-                // ack. The backend processes socket events in concurrent
-                // threads, so emitting both back-to-back races the auto-
-                // bubble's `pm/message/` GET (which counts TaskComments for
-                // taskCommentCount) against this comment's INSERT commit.
-                // If the GET wins, the broadcast carries a stale count and
-                // the bubble's chip reverts to the pre-insert value after
-                // our optimistic live-bump. Serializing here guarantees
-                // the count read on the server is post-commit.
-                if (task.project && task.id) {
-                    const updatedTaskThreadMessage =
-                        taskThreadMessageForCommentAddedTemplate(myself);
-                    socket.emit("thread_message", {
-                        methodType: "POST",
-                        isInit: false,
-                        rootMessageTSSent: "",
-                        rootMessageSenderId: null,
-                        rootMessageReceiverId: null,
-                        threadId: null,
-                        threadMessage: updatedTaskThreadMessage,
-                        chatType: 3,
-                        dmPartnerUserId: null,
-                        senderId: task.project.systemUserId,
-                        senderName: task.project.projectName,
-                        destCGName: task.project.projectName,
-                        destCGId: task.project.projectId,
-                        taskId: task.id,
-                        displayId: task.displayId,
-                        systemUserId: task.project.systemUserId,
-                        messageIdForPut: null,
-                        sendActivity: false,
-                    });
-                }
+                // (Removed a dead `thread_message` emit that used to bump the
+                // PM bubble's comment-count chip: its Flask handler was
+                // dropped in the v3 migration, so it posted nowhere. The chip
+                // now reads the server-computed `taskCommentCount`, refreshed
+                // by the `task_comment` broadcast + this `task-touched` event.)
             }
         );
     };
