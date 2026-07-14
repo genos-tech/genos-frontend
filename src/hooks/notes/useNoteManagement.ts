@@ -77,6 +77,15 @@ import { ChatPanelNoteApi, useChatPanelNote } from "./useChatPanelNote";
 import { getCachedNote, upsertNoteCache } from "./useNoteData";
 import { NoteTabsApi, noteToTab, useNoteTabs } from "./useNoteTabs";
 
+/** Optional overrides for the create-note handlers. Used by markdown
+ *  import: `title` replaces the auto-numbered "New … Note (n)" name and
+ *  `body` seeds the note with parsed blocks instead of the empty
+ *  placeholder paragraph. */
+export interface NoteCreateOverrides {
+    title?: string;
+    body?: unknown[];
+}
+
 export interface NoteManagementState {
     // New tab strip API (synchronous; replaces the legacy
     // tabItems/selectedTabIndex/loadNote dance).
@@ -234,7 +243,8 @@ export interface NoteManagementState {
         chatId: number,
         isThread: boolean,
         threadId: number,
-        chatName?: string
+        chatName?: string,
+        opts?: NoteCreateOverrides
     ) => Promise<ChatNoteProps | null>;
 
     handleCreateNewChatNoteIfNotExist: (
@@ -249,12 +259,14 @@ export interface NoteManagementState {
         parentNoteId: number | null,
         projectId: number,
         taskId: number,
-        title?: string
+        title?: string,
+        opts?: NoteCreateOverrides
     ) => Promise<void>;
 
     handleCreateNewMyNote: (
         parentNoteId: number | null,
-        folderId?: number | null
+        folderId?: number | null,
+        opts?: NoteCreateOverrides
     ) => Promise<void>;
 
     // Note loading function
@@ -455,14 +467,17 @@ export const useNoteManagement = (
         chatId: number,
         isThread: boolean,
         threadId: number,
-        chatName?: string
+        chatName?: string,
+        opts?: NoteCreateOverrides
     ): Promise<ChatNoteProps | null> => {
         if (!accessToken) return null;
 
         try {
-            const title = `${parentNoteId ? "Child" : "New"} Chat Note (${
-                newlyCreatedChatNotes.length + 1
-            })`;
+            const title =
+                opts?.title ??
+                `${parentNoteId ? "Child" : "New"} Chat Note (${
+                    newlyCreatedChatNotes.length + 1
+                })`;
             const newNote = await createEmptyChatNote(
                 myself,
                 parentNoteId,
@@ -471,7 +486,8 @@ export const useNoteManagement = (
                 isThread,
                 threadId,
                 title,
-                accessToken
+                accessToken,
+                opts?.body
             );
 
             if (newNote) {
@@ -571,21 +587,25 @@ export const useNoteManagement = (
         parentNoteId: number | null,
         projectId: number,
         taskId: number,
-        title?: string
+        title?: string,
+        opts?: NoteCreateOverrides
     ) => {
         if (!accessToken) return;
 
         try {
-            const noteTitle = `${parentNoteId ? "Child" : "New"} Task Note (${
-                newlyCreatedTaskNotes.length + 1
-            })`;
+            const noteTitle =
+                opts?.title ??
+                `${parentNoteId ? "Child" : "New"} Task Note (${
+                    newlyCreatedTaskNotes.length + 1
+                })`;
             const newNote = await createEmptyTaskNote(
                 myself,
                 parentNoteId,
                 projectId,
                 taskId,
                 noteTitle,
-                accessToken
+                accessToken,
+                opts?.body
             );
 
             if (newNote) {
@@ -661,20 +681,22 @@ export const useNoteManagement = (
     // My Note related
     const handleCreateNewMyNote = async (
         parentNoteId: number | null,
-        folderId: number | null = null
+        folderId: number | null = null,
+        opts?: NoteCreateOverrides
     ) => {
         if (!accessToken) return;
 
         try {
-            const noteTitle = `${parentNoteId ? "Child" : "New"} My Note (${
-                newlyCreatedMyNotes.length + 1
-            })`;
+            const noteTitle =
+                opts?.title ??
+                `${parentNoteId ? "Child" : "New"} My Note (${newlyCreatedMyNotes.length + 1})`;
             const newNote = await createEmptyMyNote(
                 myself,
                 parentNoteId,
                 noteTitle,
                 accessToken,
-                folderId
+                folderId,
+                opts?.body
             );
 
             if (newNote) {

@@ -10,9 +10,13 @@ export const createEmptyMyNote = async (
     accessToken: string | null,
     // Sidebar folder to file the new note into ("New note here" on a
     // folder row). Null/omitted = My Notes root.
-    folderId: number | null = null
+    folderId: number | null = null,
+    // Initial body blocks (markdown import). Omitted = the usual
+    // one-empty-paragraph placeholder. A brand-new note's Yjs doc is
+    // empty, so the editor seeds from this REST body on first open.
+    body?: unknown[]
 ) => {
-    const initBody = [
+    const initBody = body ?? [
         {
             type: "paragraph",
             props: {

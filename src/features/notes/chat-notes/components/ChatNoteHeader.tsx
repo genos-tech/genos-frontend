@@ -1,9 +1,11 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import CancelIcon from "@mui/icons-material/Cancel";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
+import FileDownloadRoundedIcon from "@mui/icons-material/FileDownloadRounded";
+import FileUploadRoundedIcon from "@mui/icons-material/FileUploadRounded";
 import ForumRoundedIcon from "@mui/icons-material/ForumRounded";
 import LaunchRoundedIcon from "@mui/icons-material/LaunchRounded";
 import NotificationsActiveRoundedIcon from "@mui/icons-material/NotificationsActiveRounded";
@@ -35,8 +37,14 @@ import { UserProps } from "../../../../types/admin";
 import { NoteAskModal, useNoteAsk } from "../../../noteAsk";
 import { SpotlightResult } from "../../../spotlight/types";
 import { ModalDeleteChatNote } from "../../chat-notes/modals/ModalDeleteChatNote";
+import {
+    ImportMarkdownContext,
+    ModalImportMarkdown,
+} from "../../common/components/ModalImportMarkdown";
 import { ContextCrumb, NoteBreadcrumbs } from "../../common/components/NoteBreadcrumbs";
 import { NoteHistoryChip } from "../../common/components/NoteHistoryChip";
+import { loadSpecificNote } from "../../common/services/loadSpecificNote";
+import { downloadMarkdown, noteBlocksToMarkdown } from "../../common/services/noteMarkdown";
 import { ACChatChildNotes } from "./autocompletes/ACChatChildNotes";
 
 interface ChatNoteHeaderProps {
@@ -137,6 +145,33 @@ export const ChatNoteHeader = ({
     const openNoteAsk = () => {
         if (!askButtonAvailable || activeChatNoteId == null) return;
         noteAsk.open({ noteType: 3, noteId: activeChatNoteId });
+    };
+
+    // ---- Markdown import / export (⋮ menu) ----
+    // Import creates a NEW chat note anchored to the same chat/thread as
+    // the open one; export downloads the open note's latest saved body.
+    const [importMdOpen, setImportMdOpen] = useState(false);
+    const importContext: ImportMarkdownContext | null = useNM.currentChatNote
+        ? {
+              kind: "chat",
+              chatType: useNM.currentChatNote.chatType,
+              chatId: useNM.currentChatNote.chatId,
+              isThread: useNM.currentChatNote.isThread,
+              threadId: useNM.currentChatNote.threadId,
+          }
+        : null;
+    const handleExportMarkdown = async () => {
+        if (activeChatNoteId == null) return;
+        try {
+            // Re-fetch so the file reflects the latest SAVED body (the
+            // in-memory note can lag live edits by the autosave debounce).
+            const fresh = await loadSpecificNote(myself, 3, activeChatNoteId, accessToken);
+            const body = fresh && !fresh.error ? fresh.body : useNM.currentChatNote?.body;
+            const md = await noteBlocksToMarkdown(Array.isArray(body) ? body : []);
+            downloadMarkdown(fresh?.title || useNM.currentChatNote?.title || "note", md);
+        } catch (err) {
+            console.error("Markdown export failed:", err);
+        }
     };
     // Citation click handler — same URL routing as NoteHeaderActions /
     // ThreadChatPaneHeader. Inline rather than shared because the
@@ -447,6 +482,22 @@ export const ChatNoteHeader = ({
                             onClick: onCreateChildNote,
                         },
                         {
+                            id: "importMarkdown",
+                            label: t.notes.header.importMarkdown,
+                            icon: <FileUploadRoundedIcon sx={{ fontSize: 18 }} />,
+                            visible: importContext != null,
+                            onClick: () => setImportMdOpen(true),
+                        },
+                        {
+                            id: "exportMarkdown",
+                            label: t.notes.header.exportMarkdown,
+                            icon: <FileDownloadRoundedIcon sx={{ fontSize: 18 }} />,
+                            visible: activeChatNoteId != null,
+                            onClick: () => {
+                                void handleExportMarkdown();
+                            },
+                        },
+                        {
                             id: "openInNotes",
                             label: t.notes.header.openInNotes,
                             icon: <LaunchRoundedIcon sx={{ fontSize: 18 }} />,
@@ -561,6 +612,18 @@ export const ChatNoteHeader = ({
                         openDeleteNote={openDeleteNote}
                         setOpenDeleteNote={setOpenDeleteNote}
                         useNM={useNM}
+                    />
+                )}
+
+                {/* Markdown import — creates a NEW chat note under the same
+                    chat/thread from a local .md file. */}
+                {importContext != null && (
+                    <ModalImportMarkdown
+                        context={importContext}
+                        hostZIndex={hostZIndex}
+                        open={importMdOpen}
+                        useNM={useNM}
+                        onClose={() => setImportMdOpen(false)}
                     />
                 )}
 
