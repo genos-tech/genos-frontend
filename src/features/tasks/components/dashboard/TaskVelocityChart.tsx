@@ -1,3 +1,4 @@
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Box, Stack, Typography } from "@mui/joy";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
@@ -23,16 +24,20 @@ const SERIES = [
     { key: "updated", color: { dark: "#a78bfa", light: "#8b5cf6" } },
 ] as const;
 
-// Layout constants. Bars are thin so a full 30-day window fits; when it
-// doesn't, the parent's `overflow-x: auto` scrolls (each bucket keeps
-// `BUCKET_W`, so bars never squash to unreadable slivers).
-const BAR_W = 6;
-const BAR_GAP = 2;
-const BUCKET_PAD = 10;
-const BUCKET_W = SERIES.length * BAR_W + (SERIES.length - 1) * BAR_GAP + BUCKET_PAD * 2;
+// Layout. The chart is RESPONSIVE: buckets stretch to fill the measured
+// container width so a full 30-day window fits the card without
+// scrolling (the earlier fixed-width version overflowed and clipped the
+// most-recent days — where the activity actually is — off the right
+// edge). Only when there are so many buckets that even `MIN_BUCKET_W`
+// overflows do we fall back to `overflow-x: auto`, and then we
+// auto-scroll to the newest (right) end so recent velocity is what you
+// see first.
+const MIN_BUCKET_W = 26; // still fits 4 legible bars
+const MAX_BUCKET_W = 84; // don't blow a few-bucket chart up to giant bars
 const CHART_H = 150;
 const PLOT_H = 120; // bars area; the rest is the x-label strip
 const TOP_PAD = 8;
+const FALLBACK_W = 640; // width used for the first paint, before measure
 
 // "5/4" (day) or "W of 5/4" (week) — month/day is locale-neutral enough
 // for a compact axis; the tooltip carries the full ISO date.
@@ -60,7 +65,52 @@ export const TaskVelocityChart = ({
     const { t } = useTranslation();
     const v = t.tasks.dashboard.velocity;
 
-    if (data.length === 0) {
+    // Measure the scroll container so buckets can stretch to fill it.
+    const scrollRef = useRef<HTMLDivElement | null>(null);
+    const [containerW, setContainerW] = useState(FALLBACK_W);
+    useLayoutEffect(() => {
+        const el = scrollRef.current;
+        if (!el) return;
+        const measure = () => setContainerW(el.clientWidth || FALLBACK_W);
+        measure();
+        // Guard: ResizeObserver is absent in some test/SSR environments —
+        // the one-shot measure above still gives a sane width there.
+        if (typeof ResizeObserver === "undefined") return;
+        const ro = new ResizeObserver(measure);
+        ro.observe(el);
+        return () => ro.disconnect();
+    }, []);
+
+    const n = data.length;
+
+    // Bucket width: fill the container, clamped. When even the minimum
+    // overflows (very long windows) we keep MIN_BUCKET_W and scroll.
+    const fits = n === 0 || n * MIN_BUCKET_W <= containerW;
+    const bucketW = fits
+        ? Math.min(MAX_BUCKET_W, Math.max(MIN_BUCKET_W, n > 0 ? containerW / n : MIN_BUCKET_W))
+        : MIN_BUCKET_W;
+    const width = Math.max(n * bucketW, 1);
+    const overflowing = width > containerW + 1;
+
+    // When the chart overflows, scroll to the newest (right) end so recent
+    // velocity is visible first instead of the older, emptier left side.
+    useEffect(() => {
+        const el = scrollRef.current;
+        if (el && overflowing) el.scrollLeft = el.scrollWidth;
+    }, [overflowing, width, granularity, n]);
+
+    // Bar geometry derived from bucket width: a centered group of 4 bars
+    // occupying ~68% of the bucket.
+    const barGap = Math.max(1, bucketW * 0.05);
+    const barW = Math.max(3, (bucketW * 0.68 - (SERIES.length - 1) * barGap) / SERIES.length);
+    const groupW = barW * SERIES.length + barGap * (SERIES.length - 1);
+    const groupPad = (bucketW - groupW) / 2;
+
+    // Label density from the actual bucket width so labels never collide
+    // (~34px each). Always label the first + last bucket.
+    const labelStep = Math.max(1, Math.ceil(34 / bucketW));
+
+    if (n === 0) {
         return (
             <Box sx={{ py: 4, textAlign: "center" }}>
                 <Typography level="body-sm" sx={{ color: textMuted }}>
@@ -82,10 +132,6 @@ export const TaskVelocityChart = ({
         ...data.map((p) => Math.max(p.created, p.started, p.closed, p.updated))
     );
     const yAt = (value: number) => TOP_PAD + (1 - value / maxVal) * (PLOT_H - TOP_PAD);
-    const width = data.length * BUCKET_W;
-    // Show at most ~12 x labels so they never collide; step through the
-    // buckets and only render every Nth one.
-    const labelStep = Math.ceil(data.length / 12);
 
     return (
         <Box>
@@ -108,9 +154,9 @@ export const TaskVelocityChart = ({
                 ))}
             </Stack>
 
-            {/* Horizontal scroll so a long window never squashes the bars
-                (the page body itself must never scroll sideways). */}
-            <Box sx={{ overflowX: "auto", overflowY: "hidden", pb: 0.5 }}>
+            {/* Buckets fill this box; only a very long window overflows and
+                scrolls (the page body itself must never scroll sideways). */}
+            <Box ref={scrollRef} sx={{ overflowX: "auto", overflowY: "hidden", pb: 0.5 }}>
                 <svg aria-label={v.title} height={CHART_H} role="img" width={width}>
                     {/* Baseline */}
                     <line
@@ -123,8 +169,8 @@ export const TaskVelocityChart = ({
                         y2={PLOT_H}
                     />
                     {data.map((p, i) => {
-                        const bucketX = i * BUCKET_W;
-                        const showLabel = i % labelStep === 0;
+                        const bucketX = i * bucketW;
+                        const showLabel = i % labelStep === 0 || i === n - 1;
                         return (
                             <g key={p.date}>
                                 {SERIES.map((s, si) => {
@@ -132,7 +178,7 @@ export const TaskVelocityChart = ({
                                     // Skip zero cells — no invisible zero-height
                                     // rects cluttering the DOM / hover targets.
                                     if (value <= 0) return null;
-                                    const x = bucketX + BUCKET_PAD + si * (BAR_W + BAR_GAP);
+                                    const x = bucketX + groupPad + si * (barW + barGap);
                                     const y = yAt(value);
                                     const color = isDark ? s.color.dark : s.color.light;
                                     return (
@@ -148,7 +194,7 @@ export const TaskVelocityChart = ({
                                                 fill={color}
                                                 height={Math.max(PLOT_H - y, 2)}
                                                 rx={1.5}
-                                                width={BAR_W}
+                                                width={barW}
                                                 x={x}
                                                 y={y}
                                             />
@@ -160,7 +206,7 @@ export const TaskVelocityChart = ({
                                         fill={textMuted}
                                         fontSize={9}
                                         textAnchor="middle"
-                                        x={bucketX + BUCKET_W / 2}
+                                        x={bucketX + bucketW / 2}
                                         y={PLOT_H + 14}
                                     >
                                         {bucketLabel(p.date, granularity, v.weekPrefix)}
