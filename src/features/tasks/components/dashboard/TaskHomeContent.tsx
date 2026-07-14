@@ -60,6 +60,7 @@ import { SprintMilestonesSection } from "../../sprint-milestone/components/Sprin
 import { Milestone, Sprint } from "../../sprint-milestone/types";
 import { predefinedPriorityFilters } from "../../types/TaskTableTypes";
 import { CopyableTaskIdText } from "../CopyableTaskId";
+import { TaskVelocitySection } from "./TaskVelocitySection";
 
 // A task augmented with status/close-date rolled up from its parent chain.
 // `effectiveStatus`:
@@ -495,6 +496,19 @@ export const TaskHomeContent = ({
             .slice(0, 12);
     }, [effectiveTasks, selectedSprint?.sprintId]);
 
+    // Numeric task ids for the sprint-scoped velocity chart. Same filter
+    // as `recentTasks` (selected sprint, or backlog when none) — velocity
+    // reflects exactly the sprint the header describes. Milestone-backing
+    // rows are included: their own activity is legitimate sprint flow.
+    const sprintTaskIds = useMemo(() => {
+        return effectiveTasks
+            .filter((t) =>
+                selectedSprint ? t.sprintId === selectedSprint.sprintId : t.sprintId == null
+            )
+            .map((t) => Number(t.id))
+            .filter((n) => Number.isFinite(n) && n > 0);
+    }, [effectiveTasks, selectedSprint?.sprintId]);
+
     // ── Priority breakdown (active tasks only) ──
     // "Active" uses effectiveStatus, so sub-tasks of Closed parents are
     // correctly excluded from the active count.
@@ -555,6 +569,12 @@ export const TaskHomeContent = ({
         () => effectiveTasks.filter((t) => t.assigneeId === myself.userId),
         [effectiveTasks, myself.userId]
     );
+
+    // Numeric task ids for the personal velocity chart (tasks assigned to
+    // me — consistent with the rest of the My Tasks tab).
+    const myTaskIds = useMemo(() => {
+        return myTasks.map((t) => Number(t.id)).filter((n) => Number.isFinite(n) && n > 0);
+    }, [myTasks]);
 
     const myStats = useMemo(() => {
         const today = new Date();
@@ -1629,6 +1649,18 @@ export const TaskHomeContent = ({
                                         useUISM={useUISM}
                                     />
 
+                                    {/* ════════ Section C: Sprint Velocity ════════ */}
+                                    <TaskVelocitySection
+                                        isDark={isDark}
+                                        taskIds={sprintTaskIds}
+                                        teamId={myself.teamId}
+                                        textMuted={textMuted}
+                                        textPrimary={textPrimary}
+                                        textSecondary={textSecondary}
+                                        windowEnd={selectedSprint?.endDate}
+                                        windowStart={selectedSprint?.startDate}
+                                    />
+
                                     {/* ════════ Section D: Recently Updated Tasks (sprint-scoped) ════════ */}
                                     {recentTasks.length > 0 && (
                                         <Box>
@@ -2035,6 +2067,16 @@ export const TaskHomeContent = ({
                                                     </Grid>
                                                 ))}
                                             </Grid>
+
+                                            {/* My velocity (personal throughput over time) */}
+                                            <TaskVelocitySection
+                                                isDark={isDark}
+                                                taskIds={myTaskIds}
+                                                teamId={myself.teamId}
+                                                textMuted={textMuted}
+                                                textPrimary={textPrimary}
+                                                textSecondary={textSecondary}
+                                            />
 
                                             {/* Up Next list */}
                                             <Box>
