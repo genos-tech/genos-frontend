@@ -5,12 +5,13 @@ import EditIcon from "@mui/icons-material/Edit";
 import LinkIcon from "@mui/icons-material/Link";
 import { Box, Button, IconButton, Input, Snackbar, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
+import SvgIcon from "@mui/joy/SvgIcon";
 
-import { GitHubIcon } from "../../../../../../assets/GithubIcon";
 import { AppTooltip } from "../../../../../../components/ui/AppTooltip";
 import { useTranslation } from "../../../../../../i18n";
 import { TaskProps } from "../../../../../../types/tasks";
 import { getPageTitle } from "../../../../utils/getPageTitle";
+import { resolveLinkBrand } from "../../../../utils/linkBrandIcons";
 
 type LinkItem = {
     id: string;
@@ -274,6 +275,23 @@ export const DynamicURLManager = (props: DynamicURLManagerProps) => {
     );
 };
 
+// Leading icon for a link row: a recognizable brand glyph (Slack, Notion,
+// Figma, GitHub, …) when we know the host, otherwise the generic chain
+// icon. Brand glyphs get the same muted `text.secondary` tint as every
+// other metadata icon so the list stays one visual system in light/dark.
+const LinkLeadIcon = ({ url }: { url: string }) => {
+    const brand = resolveLinkBrand(url);
+    if (!brand) {
+        return <LinkIcon sx={{ color: "text.secondary", fontSize: "20px" }} />;
+    }
+    return (
+        <SvgIcon sx={{ color: "text.secondary", fontSize: "20px" }} viewBox="0 0 24 24">
+            <title>{brand.title}</title>
+            <path d={brand.path} />
+        </SvgIcon>
+    );
+};
+
 // Link display component
 type LinkDisplayProps = {
     link: LinkItem;
@@ -295,8 +313,6 @@ const LinkDisplay = ({ link, editingId, onEdit, onSave, onDelete }: LinkDisplayP
         }
     }, [editingId, link]);
 
-    const LinkIconComponent = link.isGitHub ? GitHubIcon : LinkIcon;
-
     if (editingId === link.id) {
         return (
             <Stack
@@ -306,7 +322,7 @@ const LinkDisplay = ({ link, editingId, onEdit, onSave, onDelete }: LinkDisplayP
                 spacing={1}
                 sx={{ mt: 1 }}
             >
-                <LinkIconComponent sx={{ color: "text.secondary" }} />
+                <LinkLeadIcon url={link.url} />
                 <Input
                     placeholder={t.tasks.dynamicUrl.urlPlaceholder}
                     size="sm"
@@ -339,7 +355,7 @@ const LinkDisplay = ({ link, editingId, onEdit, onSave, onDelete }: LinkDisplayP
 
     return (
         <Stack alignItems="center" direction="row" justifyContent="flex-start">
-            <LinkIconComponent sx={{ color: "text.secondary" }} />
+            <LinkLeadIcon url={link.url} />
             <Typography
                 sx={{
                     whiteSpace: "nowrap",
