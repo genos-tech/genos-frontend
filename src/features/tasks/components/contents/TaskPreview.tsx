@@ -57,6 +57,7 @@ import {
     updateTeamMembersOptions,
 } from "../../services/updateTaskAutoCompleteOptions";
 import { uploadTaskAttachments } from "../../services/uploadTaskAttachments";
+import { sendMilestoneUpdatedMessage } from "../../sprint-milestone/services/sendMilestoneUpdatedMessage";
 import { Milestone } from "../../sprint-milestone/types";
 import { MILESTONE_STATUS_CHIP_COLORS } from "../../sprint-milestone/utils/sortMilestones";
 import { getTaskKind } from "../../utils/taskKind";
@@ -1566,6 +1567,32 @@ const MilestonePreviewInner = ({
         );
     };
 
+    // Live-sync the milestone's PM "card" bubble after a metadata edit —
+    // the milestone twin of the task-card sync in `sendUpdatedSpecificTask`.
+    // Resolve the display-only bits (sprint name, reporter/assignee
+    // UserProps) from the updated milestone, then hand off to
+    // `sendMilestoneUpdatedMessage`, which rebuilds the card via the same
+    // template the create path uses and pushes it through the by-task-id
+    // `channelService.updateTaskCard` endpoint. NOT called on body-only
+    // autosaves — the description isn't on the card.
+    const syncMilestoneCard = (updated: Milestone) => {
+        if (updated.taskId == null) return;
+        const sprintName =
+            updated.sprintId != null
+                ? (useSM.projectSprints[updated.projectId]?.find(
+                      (s) => s.sprintId === updated.sprintId
+                  )?.name ?? "")
+                : "";
+        void sendMilestoneUpdatedMessage({
+            myself,
+            milestone: updated,
+            sprintName,
+            reporter: milestoneReporterToUserProps(updated, useTEM.teamMembers, myself),
+            assignees: milestoneAssigneesToUserProps(updated, useTEM.teamMembers),
+            systemUserId: usePM.currentProject?.systemUserId,
+        });
+    };
+
     // Persist non-body field changes (sprint, due date, tags, ...) by
     // diffing the synthetic taskContentLike against the server-side
     // milestone whenever we get a "taskUpdated" signal. We keep this
@@ -1711,7 +1738,10 @@ const MilestonePreviewInner = ({
         // No actual changes worth a network round-trip.
         if (Object.keys(patch).length <= 1) return;
         const updated = await useSM.updateExistingMilestone(patch, projectId);
-        if (updated) syncMilestoneToAllTasks(updated);
+        if (updated) {
+            syncMilestoneToAllTasks(updated);
+            syncMilestoneCard(updated);
+        }
     };
 
     // Title save on blur / Enter.
@@ -1722,7 +1752,10 @@ const MilestonePreviewInner = ({
             { milestoneId: milestone.milestoneId, title: titleDraft.trim() },
             milestone.projectId
         );
-        if (updated) syncMilestoneToAllTasks(updated);
+        if (updated) {
+            syncMilestoneToAllTasks(updated);
+            syncMilestoneCard(updated);
+        }
     };
 
     // One-click status transition triggered by the header buttons
@@ -1739,7 +1772,10 @@ const MilestonePreviewInner = ({
             { milestoneId: milestone.milestoneId, status: newStatus },
             milestone.projectId
         );
-        if (updated) syncMilestoneToAllTasks(updated);
+        if (updated) {
+            syncMilestoneToAllTasks(updated);
+            syncMilestoneCard(updated);
+        }
     };
 
     // Auto-save body every 3s when edited (mirrors TaskPreview's loop).
