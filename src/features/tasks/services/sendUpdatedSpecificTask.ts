@@ -4,6 +4,7 @@ import { Socket } from "socket.io-client";
 import { cacheFullTask, invalidateCachedFullTask } from "../../../db/services/task-full.service";
 import { getMessages } from "../../../i18n";
 import { authApi } from "../../../services/api";
+import { channelService } from "../../../services/channel/channelService";
 import { UserProps } from "../../../types/admin";
 import { TaskProps } from "../../../types/tasks";
 import { taskMessageTemplate, taskThreadMessageTemplate } from "../utils/TaskMessageTemplate";
@@ -14,7 +15,16 @@ export const sendUpdatedSpecificTask = async (
     socket: Socket | null,
     myself: UserProps,
     updatedTask: TaskProps,
-    taskBodyEdited: boolean,
+    // Sync the PM task-card header (rebuild its body + broadcast) ONLY on a
+    // metadata save — status / title / assignee / priority / effort / due —
+    // NOT on body autosaves or switch-persist saves, whose card fields are
+    // unchanged so the rewrite would be identical churn. The CALLER knows
+    // which path it is. This deliberately replaces the old
+    // `taskBodyEdited === false` proxy: `taskBodyEdited` is unreliable — the
+    // collaborative editor's Yjs initial-sync `onChange` spuriously flips it
+    // true after every task load, which skipped the card sync on the FIRST
+    // metadata edit after opening a task (the "PM card stays stale" bug).
+    syncCard: boolean,
     taskStatusUpdated: boolean,
     accessToken: string | null,
     setErrorMessage?: (value: string) => void
@@ -127,39 +137,53 @@ export const sendUpdatedSpecificTask = async (
                 }
             }
 
-            // Send ws message only when task metadata is updated, not
-            // task body. Attachments and the IDB row mirror live OUTSIDE
-            // this guard — they must always run, including for
-            // body-edit saves and saves where the BlockNote editor's
-            // Yjs initial-sync onChange flipped `taskBodyEdited` to
-            // true even though the user only dropped a file. Scoping
-            // the upload to this guard caused the "file disappears
-            // with no POST in backend" bug: when `taskBodyEdited` was
-            // true the PUT succeeded but `uploadTaskAttachments` was
-            // skipped, then `useSendUpdatedTask`'s post-save merge
-            // stripped the now-orphaned negative-id rows.
-            if (res && taskBodyEdited === false) {
+            // Notify the PM channel only on a metadata save (`syncCard`).
+            // Attachments and the IDB row mirror live OUTSIDE this guard —
+            // they must always run, including for body-edit saves and saves
+            // where the editor's Yjs initial-sync onChange spuriously marked
+            // the body dirty even though the user only dropped a file.
+            // Scoping the upload to this guard caused the "file disappears
+            // with no POST in backend" bug: the PUT succeeded but
+            // `uploadTaskAttachments` was skipped, then `useSendUpdatedTask`'s
+            // post-save merge stripped the now-orphaned negative-id rows.
+            if (res && syncCard) {
                 const updatedTaskMessage = taskMessageTemplate(myself, updatedTask);
                 const updatedTaskThreadMessage = taskThreadMessageTemplate(myself, updatedTask);
-                if (socket) {
-                    socket.emit("message", {
-                        methodType: "PUT",
-                        message: updatedTaskMessage,
-                        destCGName: updatedTask.project.projectName,
-                        destCGId: updatedTask.project.projectId,
-                        chatType: 3,
-                        dmPartnerUserId: null,
-                        taskId: updatedTask.id,
-                        displayId: updatedTask.displayId,
-                        taskStatus: updatedTask.status.status,
-                        systemUserId: updatedTask.project.systemUserId,
-                        messageIdForPut: null,
-                        isPrivate: updatedTask.project.isPrivate,
-                    });
+                // Rewrite the PM task-card header so the status / title /
+                // priority / assignee change fans out to every viewer of the
+                // PM channel (and this editor's own pane) in real time. The
+                // server rewrites the stored card body and broadcasts
+                // `message.updated`; the returned row is also applied locally
+                // by `updateTaskCard` for an instant self-update.
+                //
+                // Replaces the pre-v3 `socket.emit("message", {methodType:
+                // "PUT"})`, whose Flask handler was removed in the v3
+                // migration — leaving the card frozen at creation time.
+                // Fire-and-forget: a failure here must not block the save
+                // (the task PUT already persisted; the next PM-channel delta
+                // sync reconciles the card).
+                if (updatedTask.id != null) {
+                    void channelService
+                        .updateTaskCard(updatedTask.id, updatedTaskMessage, updatedTask.title, {
+                            taskId: updatedTask.id,
+                            displayId: updatedTask.displayId,
+                            taskStatus: updatedTask.status.status,
+                            systemUserId: updatedTask.project.systemUserId,
+                        })
+                        .catch((e) => {
+                            console.error(
+                                "[sendUpdatedSpecificTask] PM task-card sync failed:",
+                                e
+                            );
+                        });
+                }
 
-                    // Send a thread message only when the task status is updated.
-                    // TODO: We can send other messages as well, but need more
-                    //       considerations about what kind of content we should send.
+                if (socket) {
+                    // NOTE: legacy dead emit — the Flask `thread_message`
+                    // handler was also removed in the v3 migration, so this
+                    // status-change thread note posts nowhere. Left in place
+                    // (harmless no-op) as a SEPARATE feature to migrate to v3
+                    // later; not part of the card-sync fix above.
                     if (taskStatusUpdated === true) {
                         socket.emit("thread_message", {
                             methodType: "POST",

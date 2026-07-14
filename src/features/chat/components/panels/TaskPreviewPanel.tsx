@@ -32,6 +32,12 @@ interface TaskPreviewPanelProps {
     setTodoFromMessageBubble?: (
         todoFromMessageBubble: MessageProps | ThreadMessageProps | TaskCommentProps
     ) => void;
+    /** Forwarded to TaskPreview. On the chat page the preview is always
+     *  driven by `currentPreviewTaskId`, so a working-copy/id mismatch
+     *  means "still loading the requested task" (or a failed cross-project
+     *  load) — show the loading pane instead of the previously-loaded
+     *  (stale) task. See TaskPreview.tsx. */
+    guardStaleTaskId?: boolean;
 }
 
 export const TaskPreviewPanel = ({
@@ -46,6 +52,7 @@ export const TaskPreviewPanel = ({
     useUISM,
     useSM,
     setTodoFromMessageBubble,
+    guardStaleTaskId,
 }: TaskPreviewPanelProps) => {
     const { mode } = useColorScheme();
 
@@ -72,6 +79,7 @@ export const TaskPreviewPanel = ({
                 }}
             >
                 <TaskPreview
+                    guardStaleTaskId={guardStaleTaskId}
                     myself={myself}
                     setMyself={setMyself}
                     setTodoFromMessageBubble={setTodoFromMessageBubble}
