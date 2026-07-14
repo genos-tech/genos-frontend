@@ -3004,6 +3004,7 @@ export const TaskHomeContent = ({
                                     {/* ════════ Tag Insights ════════ */}
                                     <Box>
                                         <Typography
+                                            component="div"
                                             level="title-sm"
                                             sx={{
                                                 fontWeight: 600,
