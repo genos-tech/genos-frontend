@@ -6,6 +6,8 @@ import CancelIcon from "@mui/icons-material/Cancel";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import DriveFileMoveRoundedIcon from "@mui/icons-material/DriveFileMoveRounded";
+import FileDownloadRoundedIcon from "@mui/icons-material/FileDownloadRounded";
+import FileUploadRoundedIcon from "@mui/icons-material/FileUploadRounded";
 import NoteAddRoundedIcon from "@mui/icons-material/NoteAddRounded";
 import NotificationsActiveRoundedIcon from "@mui/icons-material/NotificationsActiveRounded";
 import NotificationsOffRoundedIcon from "@mui/icons-material/NotificationsOffRounded";
@@ -36,7 +38,10 @@ import { NoteAskModal, useNoteAsk } from "../../../noteAsk";
 import { SpotlightResult } from "../../../spotlight/types";
 import { formatTaskDisplayId } from "../../../tasks/utils/taskDisplayId";
 import { ModalMoveToFolder } from "../../my-notes/modals/ModalMoveToFolder";
+import { loadSpecificNote } from "../services/loadSpecificNote";
+import { downloadMarkdown, noteBlocksToMarkdown } from "../services/noteMarkdown";
 import { getMyNoteRoleId, NOTE_ROLE_OWNER } from "../utils/noteRoles";
+import { ImportMarkdownContext, ModalImportMarkdown } from "./ModalImportMarkdown";
 import { ModalNoteSharing } from "./ModalNoteSharing";
 
 interface NoteHeaderActionsProps {
@@ -128,6 +133,45 @@ export const NoteHeaderActions = ({
     const [moveToFolderOpen, setMoveToFolderOpen] = useState(false);
     const openShareModal = () => {
         if (activeNoteId != null) setShareOpen(true);
+    };
+
+    // ---- Markdown import / export (⋮ menu) ----
+    const [importMdOpen, setImportMdOpen] = useState(false);
+    // Where an import lands: the surface this header is on. My-notes
+    // (incl. the shared-personal view, which is still "your" notes
+    // sidebar) get a folder picker in the dialog; a task-note import is
+    // anchored to the same project/task as the open note.
+    const importContext: ImportMarkdownContext | null =
+        noteType === 1 || noteType === 4
+            ? { kind: "my" }
+            : noteType === 2 && useNM.currentTaskNote
+              ? {
+                    kind: "task",
+                    projectId: useNM.currentTaskNote.projectId,
+                    taskId: useNM.currentTaskNote.taskId,
+                }
+              : null;
+
+    // Export re-fetches the note so the file reflects the latest SAVED
+    // body (the in-memory note object can lag live edits; the editors
+    // autosave on a short debounce, so "saved" is at most ~a second
+    // behind typing). Custom blocks (mentions, alerts, #refs) are
+    // degraded to plain text by the serializer — see noteMarkdown.ts.
+    const handleExportMarkdown = async () => {
+        if (activeNoteId == null || normalizedNoteType === null) return;
+        try {
+            const fresh = await loadSpecificNote(
+                myself,
+                normalizedNoteType,
+                activeNoteId,
+                accessToken
+            );
+            const body = fresh && !fresh.error ? fresh.body : activeNote?.body;
+            const md = await noteBlocksToMarkdown(Array.isArray(body) ? body : []);
+            downloadMarkdown(fresh?.title || activeNoteTitle, md);
+        } catch (err) {
+            console.error("Markdown export failed:", err);
+        }
     };
 
     // ---- "Ask about this note" wiring ----
@@ -743,6 +787,22 @@ export const NoteHeaderActions = ({
                         onClick: onCreateChildNote,
                     },
                     {
+                        id: "importMarkdown",
+                        label: t.notes.header.importMarkdown,
+                        icon: <FileUploadRoundedIcon sx={{ fontSize: 18 }} />,
+                        visible: importContext != null,
+                        onClick: () => setImportMdOpen(true),
+                    },
+                    {
+                        id: "exportMarkdown",
+                        label: t.notes.header.exportMarkdown,
+                        icon: <FileDownloadRoundedIcon sx={{ fontSize: 18 }} />,
+                        visible: activeNoteId != null,
+                        onClick: () => {
+                            void handleExportMarkdown();
+                        },
+                    },
+                    {
                         id: "muteNote",
                         label:
                             notifCtx &&
@@ -794,6 +854,19 @@ export const NoteHeaderActions = ({
                     />
                 );
             })()}
+
+            {/* Markdown import — creates a NEW note on this surface from a
+                local .md file (title defaults to the file name; my-notes
+                pick a destination folder). */}
+            {importContext != null && (
+                <ModalImportMarkdown
+                    context={importContext}
+                    hostZIndex={hostZIndex}
+                    open={importMdOpen}
+                    useNM={useNM}
+                    onClose={() => setImportMdOpen(false)}
+                />
+            )}
 
             {/* Personal-note folder picker (header path). */}
             {noteType === 1 && (

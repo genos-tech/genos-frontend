@@ -1204,6 +1204,18 @@ export const ja: DeepPartial<Messages> = {
             ownerLabel: "オーナー：{name}",
             ownerLabelWithMore: "オーナー：{name} ・ 他 {count} 名",
             membersLabel: "メンバー",
+            importMarkdown: "Markdownをインポート…",
+            exportMarkdown: "Markdownとしてエクスポート",
+        },
+        importMd: {
+            heading: "Markdownをインポート",
+            chooseFile: ".mdファイルを選択…",
+            titleLabel: "ノートのタイトル",
+            folderLabel: "フォルダ",
+            rootFolder: "マイノート（ルート）",
+            importButton: "インポート",
+            readError: "ファイルを読み込めませんでした。",
+            importError: "インポートに失敗しました。ノートは作成されていません。",
         },
         autocomplete: {
             searchAria: "検索",

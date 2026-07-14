@@ -9,9 +9,13 @@ export const createEmptyTaskNote = async (
     projectId: number,
     taskId: number,
     title: string,
-    accessToken: string | null
+    accessToken: string | null,
+    // Initial body blocks (markdown import). Omitted = the usual
+    // one-empty-paragraph placeholder. A brand-new note's Yjs doc is
+    // empty, so the editor seeds from this REST body on first open.
+    body?: unknown[]
 ) => {
-    const initBody = [
+    const initBody = body ?? [
         {
             type: "paragraph",
             props: {
