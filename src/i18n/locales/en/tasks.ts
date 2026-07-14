@@ -593,6 +593,20 @@ export const tasks = {
 
     // Dashboard table headers / labels.
     dashboard: {
+        velocity: {
+            title: "Velocity",
+            subtitle: "Tasks created, started, closed & updated over time",
+            day: "Day",
+            week: "Week",
+            created: "Created",
+            started: "Started",
+            closed: "Closed",
+            updated: "Updated",
+            weekPrefix: "W of",
+            empty: "No task activity in this window yet.",
+            barTooltip: "{count} {series} · {date}",
+            totals: "In view — {created} created, {started} started, {closed} closed, {updated} updated",
+        },
         member: "Member",
         open: "Open",
         wip: "WIP",
