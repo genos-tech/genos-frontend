@@ -138,7 +138,10 @@ describe("selectVisibleActivityMessages — primary 'Threads' filter end to end"
             "me",
             false
         );
-        expect(visible).toEqual([dmThreadReply]);
+        // Rows come back aggregation-annotated (aggregatedIds etc.), so
+        // match on content rather than strict equality.
+        expect(visible).toHaveLength(1);
+        expect(visible[0]).toMatchObject(dmThreadReply);
     });
 });
 

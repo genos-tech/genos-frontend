@@ -11,6 +11,7 @@ import { popActivityMessages } from "../../features/chat/components/sidebar/acti
 import { loadV3Chats } from "../../features/chat/services/loadV3Chats";
 import { loadV3SpecificMessages } from "../../features/chat/services/loadV3SpecificMessages";
 import { loadV3SpecificThreadMessages } from "../../features/chat/services/loadV3SpecificThreadMessages";
+import { countUnreadActivityTopics } from "../../features/chat/utils/activityAggregation";
 import {
     resolveV3MessageUuid,
     resolveV3ThreadRootUuid,
@@ -263,13 +264,12 @@ export const useChatManagement = (
         }, {});
     };
 
+    // Aggregated units — the badge counts unread TOPICS, matching the
+    // same-topic collapsing the sidebar feed applies (100 unread replies
+    // in one thread render as one feed row, so the badge says 1 and
+    // clearing that row zeroes it).
     const countUnreadActivityMessages = (activityMessages: ActivityMessageProps[]): number => {
-        return activityMessages.reduce<number>((acc, activity) => {
-            if (activity.isRead === false) {
-                acc += 1;
-            }
-            return acc;
-        }, 0);
+        return countUnreadActivityTopics(activityMessages);
     };
 
     const defineNewChat = (chat: AllChatProps, messages: MessageProps[]): ChatProps => {

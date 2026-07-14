@@ -123,6 +123,7 @@ export const chat = {
         threadChip: "Thread",
     },
     activity: {
+        aggregatedEarlier: "+{count} earlier on this topic",
         chipTaskComment: "Task Comment",
         chipReply: "Reply",
         chipReaction: "Reaction",
