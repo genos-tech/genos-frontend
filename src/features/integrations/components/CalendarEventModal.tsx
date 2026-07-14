@@ -19,10 +19,12 @@ import {
     Textarea,
     Typography,
 } from "@mui/joy";
+import dayjs from "dayjs";
 
 import { useOptionalAvatarContext } from "../../../components/ui/avatars/AvatarContext";
 import { useTranslation } from "../../../i18n";
 import { CalendarEvent, createEvent, deleteEvent, updateEvent } from "../services/calendar";
+import { dateOnly, googleEndToInclusive, inclusiveToGoogleEnd } from "../utils/allDayDates";
 import { ReconnectGoogleCalendarButton } from "./ReconnectGoogleCalendarButton";
 
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
@@ -46,6 +48,11 @@ interface EventFormInitial {
      *  this from `!!event.hangoutLink` when editing an existing
      *  event. */
     add_meet?: boolean;
+    /** When true, `start`/`end` are date-only ("YYYY-MM-DD") and `end`
+     *  is Google's EXCLUSIVE end date (as returned in `event.end.date`).
+     *  Callers set this from `!!event.start?.date` when editing an
+     *  existing all-day event. */
+    all_day?: boolean;
     /** Pre-populate the attendees picker when editing. Callers pass
      *  the event's existing attendees so the user sees who's
      *  already invited and can prune / add. */
@@ -87,6 +94,10 @@ interface CalendarEventModalProps {
 
 interface FormState {
     addMeet: boolean;
+    // When true, `startISO`/`endISO` hold date-only "YYYY-MM-DD" values
+    // (the inputs switch to type="date") and `endISO` is the INCLUSIVE
+    // last day. Otherwise they're "datetime-local" values as before.
+    allDay: boolean;
     attendees: AttendeeOption[];
     calendarId: string;
     description: string;
@@ -105,18 +116,33 @@ const toLocalInputValue = (iso: string | undefined): string => {
 
 const fromLocalInputValue = (value: string): string => new Date(value).toISOString();
 
-const formFromInitial = (initial: EventFormInitial | undefined): FormState => ({
-    addMeet: initial?.add_meet ?? false,
-    attendees: (initial?.attendees ?? []).map((a) => ({
-        email: a.email,
-        displayName: a.displayName || a.email,
-    })),
-    calendarId: initial?.calendar_id ?? "",
-    description: initial?.description ?? "",
-    endISO: toLocalInputValue(initial?.end),
-    startISO: toLocalInputValue(initial?.start),
-    summary: initial?.summary ?? "",
-});
+const formFromInitial = (initial: EventFormInitial | undefined): FormState => {
+    const allDay = initial?.all_day ?? false;
+    return {
+        addMeet: initial?.add_meet ?? false,
+        allDay,
+        attendees: (initial?.attendees ?? []).map((a) => ({
+            email: a.email,
+            displayName: a.displayName || a.email,
+        })),
+        calendarId: initial?.calendar_id ?? "",
+        description: initial?.description ?? "",
+        // All-day seeds date-only values, converting Google's exclusive
+        // end date to the inclusive last day the form shows; timed seeds
+        // datetime-local values as before.
+        startISO: allDay
+            ? initial?.start
+                ? dateOnly(initial.start)
+                : ""
+            : toLocalInputValue(initial?.start),
+        endISO: allDay
+            ? initial?.end
+                ? googleEndToInclusive(initial.end)
+                : ""
+            : toLocalInputValue(initial?.end),
+        summary: initial?.summary ?? "",
+    };
+};
 
 export const CalendarEventModal = ({
     accessToken,
@@ -201,9 +227,33 @@ export const CalendarEventModal = ({
         onError?.(message);
     };
 
+    // Flip between timed and all-day, converting the existing start/end so
+    // the inputs never show a value in the wrong format. Timed → all-day
+    // keeps the dates and drops the times; all-day → timed collapses to a
+    // 9–10am slot on the start day (a multi-day span can't survive the
+    // switch, so we don't try to preserve it).
+    const setAllDay = (checked: boolean) =>
+        setForm((f) => {
+            if (checked === f.allDay) return f;
+            if (checked) {
+                const start = f.startISO ? dateOnly(f.startISO) : dayjs().format("YYYY-MM-DD");
+                const end = f.endISO ? dateOnly(f.endISO) : start;
+                return { ...f, allDay: true, startISO: start, endISO: end < start ? start : end };
+            }
+            const base = f.startISO || dayjs().format("YYYY-MM-DD");
+            return { ...f, allDay: false, startISO: `${base}T09:00`, endISO: `${base}T10:00` };
+        });
+
     const submitForm = async () => {
         if (!form.summary || !form.startISO || !form.endISO) {
             reportError("Title, start, and end are required.");
+            return;
+        }
+        // All-day end is inclusive, so equal dates are a valid 1-day event;
+        // only a truly earlier end is invalid (string compare is safe for
+        // "YYYY-MM-DD"). Google rejects end-before-start with a 400.
+        if (form.allDay && form.endISO < form.startISO) {
+            reportError("End date can't be before the start date.");
             return;
         }
         setSubmitting(true);
@@ -226,8 +276,15 @@ export const CalendarEventModal = ({
                 : {}),
             ...(form.calendarId ? { calendar_id: form.calendarId } : {}),
             description: form.description || undefined,
-            end: { dateTime: fromLocalInputValue(form.endISO) },
-            start: { dateTime: fromLocalInputValue(form.startISO) },
+            // All-day events are date-only; Google's `end.date` is
+            // exclusive, so we submit the inclusive last day + 1. Timed
+            // events send a full dateTime as before.
+            end: form.allDay
+                ? { date: inclusiveToGoogleEnd(form.endISO) }
+                : { dateTime: fromLocalInputValue(form.endISO) },
+            start: form.allDay
+                ? { date: form.startISO }
+                : { dateTime: fromLocalInputValue(form.startISO) },
             summary: form.summary,
         };
         const result = editingEventId
@@ -301,10 +358,15 @@ export const CalendarEventModal = ({
                             onChange={(e) => setForm((f) => ({ ...f, summary: e.target.value }))}
                         />
                     </FormControl>
+                    <Checkbox
+                        checked={form.allDay}
+                        label={<Typography level="body-sm">All day</Typography>}
+                        onChange={(e) => setAllDay(e.target.checked)}
+                    />
                     <FormControl required>
                         <FormLabel>Start</FormLabel>
                         <Input
-                            type="datetime-local"
+                            type={form.allDay ? "date" : "datetime-local"}
                             value={form.startISO}
                             onChange={(e) => setForm((f) => ({ ...f, startISO: e.target.value }))}
                         />
@@ -312,10 +374,16 @@ export const CalendarEventModal = ({
                     <FormControl required>
                         <FormLabel>End</FormLabel>
                         <Input
-                            type="datetime-local"
+                            // For all-day, `min` keeps the (inclusive) end on
+                            // or after the start day.
+                            slotProps={form.allDay ? { input: { min: form.startISO } } : undefined}
+                            type={form.allDay ? "date" : "datetime-local"}
                             value={form.endISO}
                             onChange={(e) => setForm((f) => ({ ...f, endISO: e.target.value }))}
                         />
+                        {form.allDay && (
+                            <FormHelperText>Ends on this day (inclusive).</FormHelperText>
+                        )}
                     </FormControl>
                     <FormControl>
                         <FormLabel>Description (optional)</FormLabel>
