@@ -152,6 +152,17 @@ export const TaskVelocitySection = ({
         </Chip>
     );
 
+    // Avatar + name, shared by the dropdown options AND the closed
+    // Select's selected-value display (via `renderValue`).
+    const memberRow = (m: VelocityMember, avatarSize: number) => (
+        <Stack alignItems="center" direction="row" spacing={1}>
+            <UserAvatar clickable={false} showPulseDot={false} size={avatarSize} userId={m.id} />
+            <Typography level="body-sm" sx={{ whiteSpace: "nowrap" }}>
+                {m.name}
+            </Typography>
+        </Stack>
+    );
+
     return (
         <Card
             variant="soft"
@@ -204,20 +215,19 @@ export const TaskVelocitySection = ({
                             size="sm"
                             sx={{ minWidth: 160 }}
                             value={selectedMemberId}
+                            renderValue={(option) => {
+                                const m =
+                                    option && option.value
+                                        ? members.find((x) => x.id === option.value)
+                                        : undefined;
+                                return m ? memberRow(m, 20) : v.allMembers;
+                            }}
                             onChange={(_, val) => setSelectedMemberId(val ?? "")}
                         >
                             <Option value="">{v.allMembers}</Option>
                             {members.map((m) => (
                                 <Option key={m.id} label={m.name} value={m.id}>
-                                    <Stack alignItems="center" direction="row" spacing={1}>
-                                        <UserAvatar
-                                            clickable={false}
-                                            showPulseDot={false}
-                                            size={22}
-                                            userId={m.id}
-                                        />
-                                        <Typography level="body-sm">{m.name}</Typography>
-                                    </Stack>
+                                    {memberRow(m, 22)}
                                 </Option>
                             ))}
                         </Select>
