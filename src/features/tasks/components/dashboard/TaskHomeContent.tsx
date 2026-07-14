@@ -509,6 +509,31 @@ export const TaskHomeContent = ({
             .filter((n) => Number.isFinite(n) && n > 0);
     }, [effectiveTasks, selectedSprint?.sprintId]);
 
+    // Per-assignee task-id subsets for the velocity chart's "by member"
+    // picker (assignee lens). Distinct assignees of the sprint's tasks,
+    // each carrying their own valid numeric task ids; unassigned rows are
+    // skipped (nobody to attribute them to). Sorted by task count so the
+    // busiest members surface first in the dropdown.
+    const sprintMembers = useMemo(() => {
+        const map = new Map<string, { id: string; name: string; taskIds: number[] }>();
+        for (const t of effectiveTasks) {
+            const inSprint = selectedSprint
+                ? t.sprintId === selectedSprint.sprintId
+                : t.sprintId == null;
+            if (!inSprint || !t.assigneeId) continue;
+            const id = Number(t.id);
+            if (!Number.isFinite(id) || id <= 0) continue;
+            const entry = map.get(t.assigneeId) ?? {
+                id: t.assigneeId,
+                name: t.assigneeName || t.assigneeId,
+                taskIds: [],
+            };
+            entry.taskIds.push(id);
+            map.set(t.assigneeId, entry);
+        }
+        return Array.from(map.values()).sort((a, b) => b.taskIds.length - a.taskIds.length);
+    }, [effectiveTasks, selectedSprint?.sprintId]);
+
     // ── Priority breakdown (active tasks only) ──
     // "Active" uses effectiveStatus, so sub-tasks of Closed parents are
     // correctly excluded from the active count.
@@ -1652,6 +1677,7 @@ export const TaskHomeContent = ({
                                     {/* ════════ Section C: Sprint Velocity ════════ */}
                                     <TaskVelocitySection
                                         isDark={isDark}
+                                        members={sprintMembers}
                                         taskIds={sprintTaskIds}
                                         teamId={myself.teamId}
                                         textMuted={textMuted}

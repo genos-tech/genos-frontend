@@ -106,4 +106,29 @@ describe("TaskVelocitySection", () => {
         await screen.findByText(/No task activity in this window/);
         expect(loadMock).not.toHaveBeenCalled();
     });
+
+    it("scopes the fetch to a member's task subset when one is picked", async () => {
+        const members = [
+            { id: "u1", name: "Alice", taskIds: [1, 2] },
+            { id: "u2", name: "Bob", taskIds: [3] },
+        ];
+        renderSection({ taskIds: [1, 2, 3], members });
+
+        // First fetch = all sprint tasks.
+        await waitFor(() => expect(loadMock).toHaveBeenCalledTimes(1));
+        expect(loadMock.mock.calls[0][0]).toEqual([1, 2, 3]);
+
+        // Pick Bob from the assignee Select (Joy Select renders an
+        // options listbox on open).
+        fireEvent.mouseDown(screen.getByRole("combobox"));
+        fireEvent.click(await screen.findByText("Bob"));
+
+        await waitFor(() => expect(loadMock).toHaveBeenCalledTimes(2));
+        expect(loadMock.mock.calls[1][0]).toEqual([3]);
+    });
+
+    it("does not render the member picker when no members are provided", () => {
+        renderSection();
+        expect(screen.queryByText("Member")).not.toBeInTheDocument();
+    });
 });

@@ -603,6 +603,8 @@ export const tasks = {
             closed: "Closed",
             updated: "Updated",
             weekPrefix: "W of",
+            memberLabel: "Member",
+            allMembers: "All members",
             empty: "No task activity in this window yet.",
             barTooltip: "{count} {series} · {date}",
             totals: "In view — {created} created, {started} started, {closed} closed, {updated} updated",
