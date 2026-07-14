@@ -16,6 +16,7 @@ import { useTranslation } from "../../../i18n";
 import { UserProps } from "../../../types/admin";
 import { TaskProps } from "../../../types/tasks";
 import { TaskTarget } from "../../../utils/parseInternalUrl";
+import { useModalLocalTaskComments } from "./useModalLocalTaskComments";
 
 type ModalTaskViewProps = {
     target: TaskTarget;
@@ -73,6 +74,9 @@ export const ModalTaskView = (props: ModalTaskViewProps) => {
     const [modalTask, setModalTask] = useState<TaskProps | null>(null);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    // Modal-local comment slots — see the hook's doc comment. Declared
+    // unconditionally (before the early returns) per rules-of-hooks.
+    const localTaskComments = useModalLocalTaskComments();
 
     useEffect(() => {
         let cancelled = false;
@@ -150,12 +154,17 @@ export const ModalTaskView = (props: ModalTaskViewProps) => {
     }
 
     // Override the preview-task slot + the two setters that would
-    // otherwise leak into the host page's global state. Everything else
-    // (allTasks, taskComments, taskCommentLines, isTaskCommentUpdated…)
-    // passes through, so adding a comment in the modal still updates
-    // the underlying task on the main page.
+    // otherwise leak into the host page's global state, plus the
+    // comment slots: the modal's TaskPreview loads ITS task's comments
+    // through `setTaskComments`, and the global slot is shared with the
+    // host page's preview — passing it through overwrote the host
+    // task's Comments tab with this modal's comments. Everything else
+    // (allTasks, isTaskCommentUpdated…) passes through, so adding a
+    // comment in the modal still updates the underlying task on the
+    // main page.
     const useTMOverride: TaskManagementState = {
         ...useTM,
+        ...localTaskComments,
         currentPreviewTask: modalTask,
         currentPreviewTaskId: target.taskId,
         // Pin the preview router to task mode. TaskPreview renders
