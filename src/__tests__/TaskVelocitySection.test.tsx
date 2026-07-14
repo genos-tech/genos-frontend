@@ -19,6 +19,12 @@ vi.mock("../context/AuthContext", () => ({
     useAuth: () => ({ accessToken: "test-token" }),
 }));
 
+// UserAvatar reads AvatarContext (not provided in this harness) and is
+// irrelevant to the filter logic under test — stub it to a plain marker.
+vi.mock("../components/ui/avatars/UserAvatar", () => ({
+    UserAvatar: ({ userId }: { userId: string }) => <span data-avatar={userId} />,
+}));
+
 const loadMock = vi.hoisted(() => vi.fn());
 vi.mock("../features/tasks/services/loadTaskVelocity", () => ({
     loadTaskVelocity: loadMock,
