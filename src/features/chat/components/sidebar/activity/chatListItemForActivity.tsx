@@ -7,7 +7,7 @@
 // on react-vs-@mui ordering.
 /* eslint-disable react/jsx-sort-props */
 import * as React from "react";
-import { Box, ListDivider, ListItem, Stack } from "@mui/joy";
+import { Box, ListDivider, ListItem, Stack, Typography } from "@mui/joy";
 import ListItemButton from "@mui/joy/ListItemButton";
 import { useColorScheme } from "@mui/joy/styles";
 import { useNavigate } from "react-router-dom";
@@ -19,7 +19,7 @@ import { TeamManagementState } from "../../../../../hooks/common/useTeamManageme
 import { UIStateManagementState } from "../../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
-import { useTranslation } from "../../../../../i18n";
+import { fmt, useTranslation } from "../../../../../i18n";
 import { channelService } from "../../../../../services/channel/channelService";
 import { UserProps } from "../../../../../types/admin";
 import {
@@ -45,6 +45,7 @@ import {
     loadV3SpecificThreadMessages,
     readV3CachedThreadMessages,
 } from "../../../services/loadV3SpecificThreadMessages";
+import { AggregatedActivityMessage } from "../../../utils/activityAggregation";
 import { resolveV3ThreadRootUuid } from "../../../utils/channelIdResolvers";
 import { ActivityContent } from "./ActivityContent";
 import { ActivityHeader } from "./ActivityHeader";
@@ -114,6 +115,14 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
 
     const isYou = myself.userId === activity.dmPartnerUserId;
     const isSelected = selectedActivityId === activity.activityId;
+
+    // Same-topic aggregation: the feed hands us the LATEST activity of a
+    // topic annotated with how many rows it stands in for (see
+    // `activityAggregation.ts`). >1 means earlier same-topic activities
+    // are collapsed behind this row — surface that so the burst isn't
+    // silently invisible. Clicking the row marks the whole group read
+    // (handled in `useActivityStatus`).
+    const aggregatedCount = (activity as Partial<AggregatedActivityMessage>).aggregatedCount ?? 1;
 
     // Get color scheme based on activity type
     const getActivityColor = () => {
@@ -786,6 +795,25 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                             groupedReactions={groupedReactions}
                             myself={myself}
                         />
+
+                        {aggregatedCount > 1 && (
+                            <Typography
+                                level="body-xs"
+                                sx={{
+                                    ml: "44px",
+                                    mt: 0.25,
+                                    fontSize: "0.7rem",
+                                    fontWeight: 600,
+                                    color: isDark
+                                        ? `${activityColor.dark}cc`
+                                        : `${activityColor.light}cc`,
+                                }}
+                            >
+                                {fmt(t.chat.activity.aggregatedEarlier, {
+                                    count: aggregatedCount - 1,
+                                })}
+                            </Typography>
+                        )}
                     </Stack>
                 </ListItemButton>
             </ListItem>

@@ -6,6 +6,7 @@ import { ActivityService } from "../../../db/services";
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { v3ApiBaseURL } from "../../../services/v3Api";
 import { ActivityMessageProps } from "../../../types/chat";
+import { countUnreadActivityTopics, getAggregatedIds } from "../utils/activityAggregation";
 
 interface UseMarkFilteredActivityReadProps {
     useCM: ChatManagementState;
@@ -19,13 +20,15 @@ interface UseMarkFilteredActivityReadResult {
  * Mark a caller-supplied set of activities as read.
  *
  * Unlike {@link useMarkAllChatActivityRead} (which is channel-scoped), this
- * marks exactly the activities the caller passes in — the sidebar uses it to
- * clear the *currently-filtered* activity feed, a set that spans multiple
- * channels and channel-less surfaces (note mentions). It PUTs the unread
- * subset's ids to the v3 `/api/v3/activities/read-batch/` endpoint (which
- * requires a non-empty id list and so can never degrade into "mark
- * everything"), optimistically flips those rows in `useCM.activityMessages`,
- * and persists the affected rows to the activity IDB store.
+ * marks the activities the caller passes in — the sidebar uses it to clear
+ * the *currently-filtered* activity feed, a set that spans multiple
+ * channels and channel-less surfaces (note mentions). Rows that carry
+ * `aggregatedIds` (the same-topic-collapsed feed rows) are expanded to
+ * their member activities first. It PUTs the unread subset's ids to the
+ * v3 `/api/v3/activities/read-batch/` endpoint (which requires a
+ * non-empty id list and so can never degrade into "mark everything"),
+ * optimistically flips those rows in `useCM.activityMessages`, and
+ * persists the affected rows to the activity IDB store.
  *
  * No-ops when the filtered set has no unread rows, so the empty-list 400
  * branch of the endpoint is never hit from a stale click.
@@ -41,14 +44,21 @@ export const useMarkFilteredActivityRead = ({
                 console.error("Cannot mark filtered as read: missing access token.");
                 return;
             }
-            // Only the unread rows need flipping; the endpoint also filters
-            // `is_read=False`, but skipping read rows keeps the payload small
-            // and lets us short-circuit when nothing is unread.
-            const unread = filteredActivities.filter((a) => a.isRead === false);
-            if (unread.length === 0) {
+            // The visible feed is same-topic AGGREGATED: a row may stand in
+            // for many stored activities (its `aggregatedIds`). Expand every
+            // row to its members first — marking only the representative
+            // would leave the hidden members stuck unread forever (nothing
+            // visible left to clear them with). Then keep only the unread
+            // members: the endpoint also filters `is_read=False`, but
+            // skipping read rows keeps the payload small and lets us
+            // short-circuit when nothing is unread.
+            const targetIds = new Set(filteredActivities.flatMap(getAggregatedIds));
+            const unreadIds = useCM.activityMessages
+                .filter((a) => targetIds.has(a.activityId) && a.isRead === false)
+                .map((a) => a.activityId);
+            if (unreadIds.length === 0) {
                 return;
             }
-            const unreadIds = unread.map((a) => a.activityId);
             const unreadIdSet = new Set(unreadIds);
             void (async () => {
                 try {
@@ -80,10 +90,9 @@ export const useMarkFilteredActivityRead = ({
                     // Keep the Activity-tab unread badge in sync — it's
                     // independent state (not derived from `activityMessages`),
                     // so flipping rows alone would leave it stale. Mirrors
-                    // `countUnreadActivityMessages` (plain isRead===false count).
-                    useCM.setUnReadActivityMessageCounts(
-                        updated.reduce((acc, a) => (a.isRead === false ? acc + 1 : acc), 0)
-                    );
+                    // `countUnreadActivityMessages` (unread-TOPIC count, in
+                    // the same aggregated units the feed renders).
+                    useCM.setUnReadActivityMessageCounts(countUnreadActivityTopics(updated));
                 } catch (error: unknown) {
                     if (axios.isAxiosError(error)) {
                         console.error(

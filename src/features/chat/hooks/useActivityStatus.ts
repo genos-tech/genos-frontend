@@ -5,6 +5,8 @@ import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { UserProps } from "../../../types/admin";
 import { ActivityMessageProps } from "../../../types/chat";
 import { GroupedReactionProps, ReactionProps } from "../../../types/common";
+import { countUnreadActivityTopics, getAggregatedIds } from "../utils/activityAggregation";
+import { useMarkFilteredActivityRead } from "./useMarkFilteredActivityRead";
 
 interface UseActivityStatusProps {
     activity: ActivityMessageProps;
@@ -45,8 +47,23 @@ export const useActivityStatus = ({
             .sort((a, b) => b.count - a.count);
     };
 
+    const { markFilteredAsRead } = useMarkFilteredActivityRead({ useCM });
+
     const updateActivityReadStatus = () => {
         if (!accessToken || !activity.activityId) return;
+
+        // Same-topic-collapsed feed row: it stands in for every member
+        // in `aggregatedIds`, so a click must clear the whole group —
+        // marking just the representative would leave the hidden members
+        // stuck unread (badge counts topics, so it wouldn't even drop).
+        // `markFilteredAsRead` expands `aggregatedIds`, batch-PUTs, flips
+        // the rows, persists to IDB and updates the badge.
+        const memberIds = getAggregatedIds(activity);
+        if (memberIds.length > 1) {
+            markFilteredAsRead([activity]);
+            return;
+        }
+
         activityChannel
             .request("updateActivityReadStatus", {
                 accessToken,
@@ -58,6 +75,9 @@ export const useActivityStatus = ({
             .then((data) => {
                 if (Array.isArray(data)) {
                     useCM.setActivityMessages(data);
+                    // Keep the Activity-tab badge in sync (it's independent
+                    // state); mirrors `countUnreadActivityMessages`.
+                    useCM.setUnReadActivityMessageCounts(countUnreadActivityTopics(data));
                 } else if (data && "error" in data) {
                     console.error("updateActivityReadStatus failed:", data.error);
                 }

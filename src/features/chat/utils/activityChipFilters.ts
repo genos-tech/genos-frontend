@@ -1,4 +1,14 @@
 import { ActivityMessageProps } from "../../../types/chat";
+import {
+    aggregateActivityMessages,
+    AggregatedActivityMessage,
+    isTaskCommentActivity,
+} from "./activityAggregation";
+
+// Task-comment detection moved to `activityAggregation` (the topic-key
+// builder needs it and importing it from here would cycle); re-exported
+// so existing consumers keep their import path.
+export { isTaskCommentActivity };
 
 // Stable string id per filterable chip. Used as the multi-select
 // payload (`Set<ChipId>`) so the value space is closed at the type
@@ -19,18 +29,6 @@ export type ChipId =
     | "noteChat";
 
 type Predicate = (a: ActivityMessageProps) => boolean;
-
-// Task-comment detection — MUST mirror `ActivityTypeChips.isTaskComment`
-// (keep the two in sync). v3 task comments arrive as PM (chatType 3)
-// thread replies carrying the `isTaskComment` flag (set on the v3 mirror
-// from `message.metadata.taskCommentId`); the `chatType === 4 && taskId`
-// shape is the pre-v3 legacy fallback. The old `chatType === 4` test alone
-// matched NO v3 task comment, so they leaked into the `thread` / `reply`
-// filters (which should exclude them) and the `taskComment` filter showed
-// nothing. A task comment belongs to exactly the "Task Comment" + "Task"
-// categories — see `ActivityTypeChips` for the visual chips it mirrors.
-export const isTaskCommentActivity = (a: ActivityMessageProps): boolean =>
-    a.isTaskComment === true || (a.chatType === 4 && !!a.taskId);
 
 // Predicates mirror the chip render conditions in `ActivityTypeChips`
 // so the filter UI matches what the user sees on each activity row.
@@ -284,7 +282,16 @@ export const EMPTY_GROUP_ID_SET: ReadonlySet<number> = new Set<number>();
 //   1. drops the synthetic thread-root placeholder (isThread + messageId 1),
 //   2. the primary single-select filter (`ACTIVITY_PRIMARY_FILTERS`),
 //   3. chip / instance-name / mention-group refinements (AND),
-//   4. the "show only unread" toggle.
+//   4. same-topic aggregation — collapses a run of activities on one
+//      topic (thread / task comments / note / reacted message) to its
+//      latest row, annotated with the member ids (`aggregatedIds`) so
+//      the mark-read paths can expand it back out,
+//   5. the "show only unread" toggle (against the aggregated row's
+//      EFFECTIVE isRead — unread while any member is unread).
+// Aggregation runs AFTER the filters so each view collapses to the
+// latest row *matching that view* (e.g. under the "Mention" chip a
+// thread's latest mention represents the thread, not its latest plain
+// reply — which is a separate topic group anyway, keyed by type).
 // Used both by `ChatList.useFilteredActivityMessages` (what the user sees)
 // and by the "mark all filtered as read" action so the marked set is
 // exactly the rendered set. Pure — safe to call inside an effect or a
@@ -297,7 +304,7 @@ export const selectVisibleActivityMessages = (
     selectedMentionGroupIds: ReadonlySet<number>,
     myUserId: string,
     showOnlyUnreadItems: boolean
-): ActivityMessageProps[] => {
+): AggregatedActivityMessage[] => {
     const base = activityMessages.filter(
         (item) => !(item.isThread === true && item.messageId === 1)
     );
@@ -308,5 +315,6 @@ export const selectVisibleActivityMessages = (
     const filtered = base.filter(
         (item) => primaryFn(item) && chipFn(item) && instanceFn(item) && mentionGroupFn(item)
     );
-    return showOnlyUnreadItems ? filtered.filter((item) => item.isRead === false) : filtered;
+    const aggregated = aggregateActivityMessages(filtered);
+    return showOnlyUnreadItems ? aggregated.filter((item) => item.isRead === false) : aggregated;
 };
