@@ -21,6 +21,7 @@ import {
     ReactFlow,
     ReactFlowProvider,
     reconnectEdge,
+    useNodesInitialized,
     useReactFlow,
 } from "@xyflow/react";
 
@@ -493,6 +494,10 @@ const CanvasInner = ({
     const P = isDark ? purplePalette.dark : purplePalette.light;
     const { fitView } = useReactFlow();
     const dagreLayout = useDagreLayout();
+    // True once React Flow has measured every node (real dimensions). We
+    // gate viewport fitting on this — see `pendingFitRef` and the fit
+    // effect below for why fitting before measurement corrupts the view.
+    const nodesInitialized = useNodesInitialized();
     // Global URL-link modal (the same overlay chat links open). Used by
     // the node cards' "Open task / milestone" buttons so the target
     // opens ABOVE the diagram instead of tearing the diagram down.
@@ -513,6 +518,12 @@ const CanvasInner = ({
     // node we're about to re-parent (so the optimistic update
     // matches the server state).
     const graphRef = useRef<TaskGraph | null>(null);
+
+    // Set by `assembleAndLayout` when a fit is wanted (initial load /
+    // hide-closed toggle, but NOT in-place edits). Consumed by the fit
+    // effect below once the nodes are measured. Deferring like this is
+    // what prevents the NaN-viewport bug — see that effect.
+    const pendingFitRef = useRef(false);
 
     const refresh = useCallback(async () => {
         setError(null);
@@ -868,14 +879,36 @@ const CanvasInner = ({
             const positioned = dagreLayout(rawNodes, rawEdges, "TB");
             setNodes(positioned);
             setEdges(rawEdges);
+            // Don't fit here directly: on the first assemble (modal open)
+            // the nodes we just set haven't been measured yet and the pane
+            // can still be 0×0, so fitView() would derive the viewport from
+            // an empty node set against a zero-sized pane (0/0 = NaN) and
+            // leave a stuck NaN viewport. Flag the intent and let the fit
+            // effect run it once the nodes are measured.
             if (opts?.fit !== false) {
-                requestAnimationFrame(() => {
-                    fitView({ padding: 0.15, duration: 300 });
-                });
+                pendingFitRef.current = true;
             }
         },
-        [dagreLayout, fitView, rootTaskId, useSM, projectId, usePM.currentProject, hideClosed]
+        [dagreLayout, rootTaskId, useSM, projectId, usePM.currentProject, hideClosed]
     );
+
+    // Perform a pending fit once React Flow has measured the nodes.
+    // `fitView()` computes zoom from the bounds of the *measured* nodes:
+    // with none measured the bounds collapse to 0×0, and if the pane is
+    // also still unsized (true on the frame the diagram opens) the zoom is
+    // 0/0 = NaN. That NaN viewport sticks and every subsequent render
+    // paints the background dots, minimap and edges with NaN coordinates
+    // (the "<circle> attribute cx: Expected length, NaN" console spam).
+    // `nodesInitialized` guarantees a non-empty, finite fit bounds, so the
+    // viewport is always finite. `nodes` is in the deps too so a re-layout
+    // that only removes nodes (hide-closed) — which doesn't flip
+    // `nodesInitialized` — still triggers the pending fit.
+    useEffect(() => {
+        if (pendingFitRef.current && nodesInitialized) {
+            pendingFitRef.current = false;
+            fitView({ padding: 0.15, duration: 300 });
+        }
+    }, [nodesInitialized, nodes, fitView]);
 
     // Re-run layout when the hide-closed toggle flips so closed nodes
     // (and their edges) disappear / reappear in place without waiting
@@ -1140,6 +1173,11 @@ const CanvasInner = ({
                 deleteKeyCode={["Backspace", "Delete"]}
                 edges={edges}
                 edgeTypes={edgeTypes}
+                // Padding matches the deferred fit effect so React Flow's
+                // own init-fit and that effect frame the graph identically
+                // whichever lands last. Both are gated on node measurement,
+                // so neither produces the NaN viewport that effect guards.
+                fitViewOptions={{ padding: 0.15 }}
                 maxZoom={2}
                 minZoom={0.25}
                 nodes={nodes}
