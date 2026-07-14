@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import TrendingUpRoundedIcon from "@mui/icons-material/TrendingUpRounded";
-import { Box, Card, Chip, CircularProgress, Stack, Typography } from "@mui/joy";
+import { Box, Card, Chip, CircularProgress, Option, Select, Stack, Typography } from "@mui/joy";
 
 import { useAuth } from "../../../../context/AuthContext";
 import { fmt, useTranslation } from "../../../../i18n";
@@ -10,6 +10,15 @@ import {
     VelocityPoint,
 } from "../../services/loadTaskVelocity";
 import { TaskVelocityChart } from "./TaskVelocityChart";
+
+// One selectable assignee for the "by member" filter, carrying the
+// subset of `taskIds` assigned to them (assignee lens — the picked
+// member's own sprint tickets, regardless of who touched them).
+export type VelocityMember = {
+    id: string;
+    name: string;
+    taskIds: number[];
+};
 
 type Props = {
     taskIds: number[];
@@ -22,6 +31,10 @@ type Props = {
     // leaves them undefined and uses the granularity-derived default.
     windowStart?: string;
     windowEnd?: string;
+    // When provided (Sprint tab), renders an assignee picker that scopes
+    // the chart to one member's tasks. Omitted on My Tasks (already
+    // personal).
+    members?: VelocityMember[];
 };
 
 const toIso = (d: Date): string => {
@@ -55,18 +68,38 @@ export const TaskVelocitySection = ({
     textMuted,
     windowStart,
     windowEnd,
+    members,
 }: Props) => {
     const { t } = useTranslation();
     const v = t.tasks.dashboard.velocity;
     const { accessToken } = useAuth();
 
     const [granularity, setGranularity] = useState<VelocityGranularity>("day");
+    // "" = all members. Only used when `members` is provided.
+    const [selectedMemberId, setSelectedMemberId] = useState<string>("");
     const [data, setData] = useState<VelocityPoint[] | null>(null);
     const [loading, setLoading] = useState(false);
 
+    // Reset the picker to "All" when the member set changes out from under
+    // it (e.g. switching sprints), so it can't point at a stale member.
+    useEffect(() => {
+        if (selectedMemberId && !members?.some((m) => m.id === selectedMemberId)) {
+            setSelectedMemberId("");
+        }
+    }, [members, selectedMemberId]);
+
+    // Task ids actually charted: the picked member's subset, or all.
+    const activeTaskIds = useMemo(() => {
+        if (!selectedMemberId) return taskIds;
+        return members?.find((m) => m.id === selectedMemberId)?.taskIds ?? taskIds;
+    }, [selectedMemberId, members, taskIds]);
+
     // Stable primitive so the effect doesn't refetch on a fresh-array
     // identity every render.
-    const idsKey = useMemo(() => [...taskIds].sort((a, b) => a - b).join(","), [taskIds]);
+    const idsKey = useMemo(
+        () => [...activeTaskIds].sort((a, b) => a - b).join(","),
+        [activeTaskIds]
+    );
 
     const { start, end } = useMemo(() => {
         if (windowStart && windowEnd) return { start: windowStart, end: windowEnd };
@@ -74,13 +107,13 @@ export const TaskVelocitySection = ({
     }, [windowStart, windowEnd, granularity]);
 
     useEffect(() => {
-        if (taskIds.length === 0) {
+        if (activeTaskIds.length === 0) {
             setData([]);
             return;
         }
         let cancelled = false;
         setLoading(true);
-        void loadTaskVelocity(taskIds, start, end, granularity, teamId, accessToken).then(
+        void loadTaskVelocity(activeTaskIds, start, end, granularity, teamId, accessToken).then(
             (res) => {
                 if (cancelled) return;
                 setData(res ?? []);
@@ -90,7 +123,7 @@ export const TaskVelocitySection = ({
         return () => {
             cancelled = true;
         };
-        // `idsKey` stands in for `taskIds` (stable across identity-only
+        // `idsKey` stands in for `activeTaskIds` (stable across identity-only
         // changes); start/end already fold in granularity + window.
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [idsKey, start, end, granularity, teamId, accessToken]);
@@ -156,6 +189,31 @@ export const TaskVelocitySection = ({
                         {toggle("week")}
                     </Stack>
                 </Stack>
+
+                {/* Assignee filter (Sprint tab only). Scopes the chart to
+                    one member's sprint tickets; "All members" is the
+                    default. Own row so it never crowds the Day/Week
+                    toggles on narrow widths. */}
+                {members && members.length > 0 && (
+                    <Stack alignItems="center" direction="row" spacing={1}>
+                        <Typography level="body-xs" sx={{ color: textMuted, fontWeight: 600 }}>
+                            {v.memberLabel}
+                        </Typography>
+                        <Select
+                            size="sm"
+                            sx={{ minWidth: 160 }}
+                            value={selectedMemberId}
+                            onChange={(_, val) => setSelectedMemberId(val ?? "")}
+                        >
+                            <Option value="">{v.allMembers}</Option>
+                            {members.map((m) => (
+                                <Option key={m.id} value={m.id}>
+                                    {m.name}
+                                </Option>
+                            ))}
+                        </Select>
+                    </Stack>
+                )}
 
                 {loading && data === null ? (
                     <Stack alignItems="center" sx={{ py: 4 }}>
