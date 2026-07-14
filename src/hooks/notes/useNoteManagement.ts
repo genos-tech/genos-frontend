@@ -1144,7 +1144,14 @@ export const useNoteManagement = (
             // Local cache cleanup is best-effort.
         }
         setMyNoteMeta((prev) => prev.filter((n) => n.noteId !== noteId));
-        if (currentMyNote?.noteId === noteId) setCurrentMyNote(null);
+        // Don't null `currentMyNote` here: `closeTab` above already settled
+        // the active tab (to a neighbour, or none), and the active-tab sync
+        // effect drives `currentMyNote` off THAT. An extra null-write races
+        // the effect and, when a neighbour tab remains, wins without a
+        // re-sync (the effect is keyed only on `activeTabId`, which didn't
+        // change) — leaving the note pane blank over a valid tab. The
+        // note-header delete path (ModalDeleteMyNote → handleCloseTab) never
+        // nulls it and works correctly; mirror that.
         return true;
     };
 
@@ -1161,7 +1168,9 @@ export const useNoteManagement = (
             // Local cache cleanup is best-effort.
         }
         setTaskNoteMeta((prev) => prev.filter((n) => n.noteId !== noteId));
-        if (currentTaskNote?.noteId === noteId) setCurrentTaskNote(null);
+        // See deleteMyNoteById: `closeTab` + the active-tab sync effect own
+        // `currentTaskNote`; a stray null-write here blanks the pane over a
+        // surviving neighbour tab.
         return true;
     };
 
@@ -1178,7 +1187,9 @@ export const useNoteManagement = (
             // Local cache cleanup is best-effort.
         }
         setChatNoteMeta((prev) => prev.filter((n) => n.noteId !== noteId));
-        if (currentChatNote?.noteId === noteId) setCurrentChatNote(null);
+        // See deleteMyNoteById: `closeTab` + the active-tab sync effect own
+        // `currentChatNote`; a stray null-write here blanks the pane over a
+        // surviving neighbour tab.
         return true;
     };
 
