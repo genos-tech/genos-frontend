@@ -6,6 +6,11 @@
  * so the mark-read paths can clear the whole run. Topics partition by
  * activity type + surface (thread / task comments / note / reacted
  * message / channel) — a mention must never hide behind a plain reply.
+ *
+ * Collapsing is bounded by a TIME WINDOW (buckets anchored at their
+ * newest member): a topic active for weeks yields one row per window
+ * of activity, never a single "+800 earlier" row for its whole
+ * history.
  */
 
 import { describe, expect, it } from "vitest";
@@ -144,6 +149,53 @@ describe("aggregateActivityMessages", () => {
         const t1old = threadReply({ tsSent: "2026-07-14 11:00:00" });
         const rows = aggregateActivityMessages([t1, other, t1old]);
         expect(rows.map((r) => r.activityId)).toEqual([t1.activityId, other.activityId]);
+    });
+
+    it("does NOT collapse same-topic activity across the time window", () => {
+        const today = threadReply({ tsSent: "2026-07-14 12:00:00" });
+        const lastWeek = threadReply({ tsSent: "2026-07-07 12:00:00" });
+        const rows = aggregateActivityMessages([today, lastWeek]);
+        expect(rows).toHaveLength(2);
+        expect(rows[0].activityId).toBe(today.activityId);
+        expect(rows[0].aggregatedIds).toEqual([today.activityId]);
+        expect(rows[1].activityId).toBe(lastWeek.activityId);
+        expect(rows[1].aggregatedIds).toEqual([lastWeek.activityId]);
+    });
+
+    it("anchors each bucket at its newest member (chained, not calendar days)", () => {
+        // 23h gap joins the newest bucket; the next 23h-older row is
+        // >24h from THAT bucket's anchor, so it starts a second bucket.
+        const newest = threadReply({ tsSent: "2026-07-14 12:00:00" });
+        const within = threadReply({ tsSent: "2026-07-13 13:00:00" });
+        const beyond = threadReply({ tsSent: "2026-07-12 14:00:00" });
+        const rows = aggregateActivityMessages([newest, within, beyond]);
+        expect(rows).toHaveLength(2);
+        expect(rows[0].aggregatedIds).toEqual([newest.activityId, within.activityId]);
+        expect(rows[1].aggregatedIds).toEqual([beyond.activityId]);
+    });
+
+    it("interleaves an older bucket at its chronological feed position", () => {
+        const t1today = threadReply({ tsSent: "2026-07-14 12:00:00" });
+        const otherTopic = threadReply({
+            threadId: "th-2" as unknown as number,
+            tsSent: "2026-07-10 12:00:00",
+        });
+        const t1lastWeek = threadReply({ tsSent: "2026-07-07 12:00:00" });
+        const rows = aggregateActivityMessages([t1today, otherTopic, t1lastWeek]);
+        expect(rows.map((r) => r.activityId)).toEqual([
+            t1today.activityId,
+            otherTopic.activityId,
+            t1lastWeek.activityId,
+        ]);
+    });
+
+    it("respects a custom window size", () => {
+        const a = threadReply({ tsSent: "2026-07-14 12:00:00" });
+        const b = threadReply({ tsSent: "2026-07-14 11:00:00" });
+        const oneHalfHourMs = 90 * 60 * 1000;
+        const thirtyMinMs = 30 * 60 * 1000;
+        expect(aggregateActivityMessages([a, b], oneHalfHourMs)).toHaveLength(1);
+        expect(aggregateActivityMessages([a, b], thirtyMinMs)).toHaveLength(2);
     });
 });
 
