@@ -95,7 +95,8 @@ export const updateTaskFromTable = async (
             socket,
             myself,
             updatedTask,
-            false, // taskBodyEdited = false (table doesn't edit body)
+            true, // syncCard: a table inline edit is a metadata change (status/
+            // assignee/due) → rewrite the PM task card + broadcast.
             taskStatusUpdated,
             accessToken
         );

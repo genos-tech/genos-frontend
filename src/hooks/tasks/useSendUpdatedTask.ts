@@ -66,7 +66,6 @@ export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
     const taskTitle = taskEditState?.taskTitle ?? params.taskTitle!;
     const initTaskTitle = taskEditState?.initTaskTitle ?? params.initTaskTitle!;
     const body = taskEditState?.body ?? params.body!;
-    const taskBodyEdited = taskEditState?.taskBodyEdited ?? params.taskBodyEdited!;
     const taskStatusUpdated = taskEditState?.taskStatusUpdated ?? params.taskStatusUpdated!;
     const setUploadedFiles = taskEditState?.setUploadedFiles ?? params.setUploadedFiles!;
     const setTmpCurrentTaskContent =
@@ -82,7 +81,12 @@ export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
     const bodyRef = params.bodyRef;
 
     const sendUpdatedTask = useCallback(
-        async (taskSwitched: boolean) => {
+        // `syncCard` = "this is a metadata save; rebuild the PM task-card +
+        // broadcast." Passed true only by the metadata-save effect in
+        // TaskPreview; body autosaves / switch-persist / close saves leave it
+        // false so the card isn't rewritten with identical content. See the
+        // `syncCard` note in `sendUpdatedSpecificTask`.
+        async (taskSwitched: boolean, syncCard: boolean = false) => {
             const baseTaskContent: TaskProps = {
                 ...tmpCurrentTaskContent,
                 title: taskTitle === "" ? initTaskTitle : taskTitle,
@@ -103,7 +107,7 @@ export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
                 socket,
                 myself,
                 baseTaskContent,
-                taskBodyEdited,
+                syncCard,
                 taskStatusUpdated,
                 accessToken
             );
@@ -205,7 +209,6 @@ export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
             initTaskTitle,
             body,
             bodyRef,
-            taskBodyEdited,
             taskStatusUpdated,
             setUploadedFiles,
             setTmpCurrentTaskContent,

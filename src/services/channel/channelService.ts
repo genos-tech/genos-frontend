@@ -1282,6 +1282,55 @@ export class ChannelService {
         });
     }
 
+    /**
+     * Rewrite the PM "task card" header message for a task after the
+     * task's metadata (title / status / priority / assignee / due / ...)
+     * changed, so the card in the PM channel reflects the edit for every
+     * viewer — live.
+     *
+     * Keyed by `taskId` (the server locates the card by its `task` FK),
+     * NOT by message id, so it works even when the PM channel isn't
+     * loaded in this client (e.g. editing from Task Home). The card body
+     * is built client-side (`taskMessageTemplate`), so the caller passes
+     * the freshly-built `body`.
+     *
+     * The server rewrites the stored row and the Flask WS proxy
+     * re-broadcasts it as `message.updated` to the PM room. We ALSO apply
+     * the ack's row locally right away (deduped by id in `_upsertMessage`)
+     * so the editor's own PM pane updates without waiting for the room
+     * broadcast round-trip.
+     *
+     * Resolves to the updated `Message`, or `undefined` when the task has
+     * no PM card message (the server returns a `{updated:false}` sentinel
+     * — not an error).
+     *
+     * Replaces the pre-v3 `socket.emit("message", {methodType:"PUT"})`
+     * card-sync whose Flask handler was removed in the v3 migration.
+     */
+    async updateTaskCard(
+        taskId: number,
+        body: unknown[],
+        bodyText: string,
+        metadata: Record<string, unknown>
+    ): Promise<Message | undefined> {
+        const ack = await this.socketEmit<Message | { updated: false }>("task_card.updated", {
+            task_id: taskId,
+            body,
+            body_text: bodyText,
+            metadata,
+        });
+        if (!ack.ok) {
+            throw new ChannelServiceError(ack.code, ack.message);
+        }
+        const data = ack.data;
+        // The no-card-message sentinel (`{updated:false}`) has no `id`.
+        if (data && "id" in data && data.id) {
+            this.handleMessageUpdated(data);
+            return data;
+        }
+        return undefined;
+    }
+
     deleteMessage(messageId: string, channelId: string, channelKind: ChannelKind): Promise<void> {
         // Look up the message in the in-memory store to find out whether
         // it's a thread reply. If so, we forward `parent_id` to the

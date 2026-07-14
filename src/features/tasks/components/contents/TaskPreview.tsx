@@ -116,6 +116,18 @@ type TaskPreviewProps = {
      *  TaskTitleBlock) and the task-graph dialog lifts above the host
      *  (see diagramZIndex.ts). Undefined on page-hosted previews. */
     hostZIndex?: number;
+    /** Set by hosts whose preview is ALWAYS driven by
+     *  `useTM.currentPreviewTaskId` (the chat page). When the local working
+     *  copy's id doesn't match the requested id — the brief window during a
+     *  task switch, or a failed cross-project `loadTask` — render the loading
+     *  pane instead of the previously-loaded (stale) task. Keeps the panel
+     *  FRAME mounted through a switch (chatHome no longer gates the mount on
+     *  id-match), so switching tasks swaps the contents instead of closing +
+     *  reopening the pane. Left undefined by hosts that seed
+     *  `currentPreviewTask` directly without keeping `currentPreviewTaskId`
+     *  in sync (e.g. NoteHome), which must keep rendering off the working
+     *  copy alone. */
+    guardStaleTaskId?: boolean;
 };
 
 export const TaskPreview = (props: TaskPreviewProps) => {
@@ -132,6 +144,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         useCM,
         setTodoFromMessageBubble,
         hostZIndex,
+        guardStaleTaskId,
     } = props;
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
@@ -206,9 +219,12 @@ export const TaskPreview = (props: TaskPreviewProps) => {
     });
 
     useEffect(() => {
-        // Save updated task (title, assignee, status, ..., but not task body)
+        // Save updated task (title, assignee, status, ..., but not task body).
+        // `syncCard = true`: this is the metadata-save path, so rebuild the PM
+        // task-card header + broadcast it so every PM viewer's card updates
+        // live (the body autosave / switch / close saves pass false).
         if (taskEditState.taskUpdated === true) {
-            sendUpdatedTask(false);
+            sendUpdatedTask(false, true);
         }
     }, [taskEditState.taskUpdated]);
 
@@ -733,9 +749,23 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         );
     }
 
+    // With `guardStaleTaskId`, treat a working-copy/requested-id mismatch as
+    // "still loading" so we never render the previously-loaded (stale) task
+    // during a switch or after a failed cross-project load. The switch effect
+    // (Effect ~341) syncs `tmpCurrentTaskContent` to the incoming task once
+    // `loadTask` lands, closing this window — usually within a frame on an
+    // IDB cache hit. Hosts that don't set the flag render off the working
+    // copy alone (unchanged behavior).
+    const previewIdMatchesRequested =
+        !guardStaleTaskId ||
+        useTM.currentPreviewTaskId == null ||
+        useTM.currentPreviewTaskId === -1 ||
+        String(taskEditState.tmpCurrentTaskContent?.id ?? "") ===
+            String(useTM.currentPreviewTaskId);
+
     return (
         <>
-            {taskEditState.tmpCurrentTaskContent?.id ? (
+            {taskEditState.tmpCurrentTaskContent?.id && previewIdMatchesRequested ? (
                 <TaskPreviewLayout
                     ref={sheetRef}
                     isDark={isDark}

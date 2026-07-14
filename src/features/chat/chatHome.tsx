@@ -503,51 +503,44 @@ export const ChatHome = (props: ChatHomeProps) => {
                             )}
 
                             {/* Task Preview Pane.
-                        Milestone previews intentionally leave
-                        `currentPreviewTask` undefined and route via
-                        `currentPreviewKind === "milestone"` +
-                        `currentPreviewMilestoneId` (see TaskPreview.tsx),
-                        so the gate has to accept either case. Without the
-                        milestone branch, freshly-created milestones don't
-                        render here. Mirrors TaskHomeLayout.tsx. */}
-                            {initialTaskPreviewVisible &&
-                                useTM.isTaskPreviewVisible === true &&
-                                // Id-match guard: only render the preview when
-                                // the loaded `currentPreviewTask` is the task
-                                // the chat page asked for. `loadTask` keeps a
-                                // previously-loaded (different) task in
-                                // `currentPreviewTask` on an empty/failed load
-                                // (useTaskManagement.ts:432 only sets on
-                                // length>0). Without this match, a chat path
-                                // that can't resolve the right project (e.g. a
-                                // DM/GM task thread whose project isn't current)
-                                // would render the STALE task. Stringify both —
-                                // the id types are mixed across the codebase
-                                // (TaskProps.id:number vs the string ids on
-                                // table rows). Milestone previews leave
-                                // currentPreviewTask undefined, so keep their
-                                // own branch unguarded.
-                                ((useTM.currentPreviewTask &&
-                                    String(useTM.currentPreviewTask.id) ===
-                                        String(useTM.currentPreviewTaskId)) ||
-                                    useTM.currentPreviewKind === "milestone") && (
-                                    <>
-                                        <ResizeHandle key="task-preview-resize-handle" />
-                                        <TaskPreviewPanel
-                                            myself={myself}
-                                            setMyself={setMyself}
-                                            setTodoFromMessageBubble={setTodoFromMessageBubble}
-                                            socket={socket}
-                                            useCM={useCM}
-                                            useNM={useNM}
-                                            usePM={usePM}
-                                            useSM={useSM}
-                                            useTEM={useTEM}
-                                            useTM={useTM}
-                                            useUISM={useUISM}
-                                        />
-                                    </>
-                                )}
+                        Gate on visibility ONLY — deliberately NOT on an
+                        `currentPreviewTask.id === currentPreviewTaskId`
+                        match. That id-match used to live here, but on a
+                        PM→PM switch `currentPreviewTaskId` flips to the new
+                        id a beat before `loadTask` swaps `currentPreviewTask`,
+                        so the match went false mid-switch and UNMOUNTED the
+                        whole panel (+ ResizeHandle) — a jarring "close then
+                        reopen" flash on every task switch.
+                        The stale-task protection the id-match provided (a
+                        DM/GM task thread whose project isn't current →
+                        `loadTask` returns empty → `currentPreviewTask` stays a
+                        DIFFERENT task) now lives INSIDE TaskPreview via
+                        `guardStaleTaskId`: it shows the loading pane on a
+                        working-copy/id mismatch instead of rendering the stale
+                        task, keeping the panel frame mounted through the swap.
+                        Milestone previews (which leave `currentPreviewTask`
+                        undefined and route via `currentPreviewKind`) also just
+                        need visibility here — the milestone branch inside
+                        TaskPreview handles them. */}
+                            {initialTaskPreviewVisible && useTM.isTaskPreviewVisible === true && (
+                                <>
+                                    <ResizeHandle key="task-preview-resize-handle" />
+                                    <TaskPreviewPanel
+                                        guardStaleTaskId
+                                        myself={myself}
+                                        setMyself={setMyself}
+                                        setTodoFromMessageBubble={setTodoFromMessageBubble}
+                                        socket={socket}
+                                        useCM={useCM}
+                                        useNM={useNM}
+                                        usePM={usePM}
+                                        useSM={useSM}
+                                        useTEM={useTEM}
+                                        useTM={useTM}
+                                        useUISM={useUISM}
+                                    />
+                                </>
+                            )}
 
                             {/* Chat Note Pane */}
                             {useCM.isChatNoteVisibleInChat === true && (
