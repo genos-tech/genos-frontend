@@ -3,10 +3,7 @@ import { channelService } from "../../../../services/channel/channelService";
 import { UserProps } from "../../../../types/admin";
 import { ProjectProps } from "../../../../types/tasks";
 import { findPmChannelForProject } from "../../services/findPmChannel";
-import {
-    milestoneCreatedThreadMessageTemplate,
-    milestoneMessageTemplate,
-} from "../../utils/TaskMessageTemplate";
+import { milestoneMessageTemplate } from "../../utils/TaskMessageTemplate";
 import { Milestone } from "../types";
 
 type SendMilestoneCreatedMessageInput = {
@@ -107,26 +104,19 @@ export const sendMilestoneCreatedMessage = async ({
         systemUserId: project.systemUserId,
     };
 
-    // 1. Top-level "milestone created" bubble in PM, then 2. a system
-    //    thread follow-up under it.
+    // 1. Top-level "milestone created" bubble in PM. No system thread
+    //    follow-up: the thread's Activities tab renders the structured
+    //    audit log instead of system bubbles.
     try {
-        const sent = await channelService.send(pmChannel.id, createMilestoneMessage, {
+        await channelService.send(pmChannel.id, createMilestoneMessage, {
             bodyText: milestone.title,
             metadata,
         });
-        const threadFollowup = milestoneCreatedThreadMessageTemplate(myself);
-        if (threadFollowup && sent?.id) {
-            await channelService.send(pmChannel.id, threadFollowup, {
-                bodyText: milestone.title,
-                parentId: sent.id,
-                metadata,
-            });
-        }
     } catch (e) {
         console.error("[sendMilestoneCreatedMessage] failed to post PM milestone message", e);
     }
 
-    // 3. If the user created the milestone from inside an open DM/GM/MDM
+    // 2. If the user created the milestone from inside an open DM/GM/MDM
     //    thread, surface the bubble there too — same parity uploadNewTask
     //    keeps for tasks.
     if (

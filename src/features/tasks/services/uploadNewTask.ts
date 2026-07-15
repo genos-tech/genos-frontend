@@ -6,10 +6,7 @@ import { channelService } from "../../../services/channel/channelService";
 import { UserProps } from "../../../types/admin";
 import { ChannelKind } from "../../../types/channel";
 import { TaskProps } from "../../../types/tasks";
-import {
-    taskCreatedThreadMessageTemplate,
-    taskMessageTemplate,
-} from "../utils/TaskMessageTemplate";
+import { taskMessageTemplate } from "../utils/TaskMessageTemplate";
 import { addTask } from "./addTask";
 import { findPmChannelForProject } from "./findPmChannel";
 
@@ -263,28 +260,15 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                             taskStatus: taskCreateData.task.status,
                             systemUserId: taskContent.project.systemUserId,
                         };
-                        // Top-level "task created" message in the PM channel.
+                        // Top-level "task created" card in the PM channel.
+                        // No thread follow-up is posted: the task thread's
+                        // Activities tab renders the structured audit log
+                        // (`/task/activity/`) rather than system bubbles.
                         try {
-                            const sent = await channelService.send(
-                                pmChannel.id,
-                                createTaskMessage,
-                                {
-                                    bodyText: taskContent.title,
-                                    metadata: taskMetadata,
-                                }
-                            );
-                            // First thread reply on the task message —
-                            // legacy posted a follow-up that lives in the
-                            // task's thread pane. `parentId = sent.id`
-                            // turns it into a thread reply.
-                            const threadFollowup = taskCreatedThreadMessageTemplate(myself);
-                            if (threadFollowup && sent?.id) {
-                                await channelService.send(pmChannel.id, threadFollowup, {
-                                    bodyText: taskContent.title,
-                                    parentId: sent.id,
-                                    metadata: taskMetadata,
-                                });
-                            }
+                            await channelService.send(pmChannel.id, createTaskMessage, {
+                                bodyText: taskContent.title,
+                                metadata: taskMetadata,
+                            });
                         } catch (e) {
                             console.error("uploadNewTask: failed to post PM task message", e);
                         }

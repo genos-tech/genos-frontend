@@ -1018,10 +1018,6 @@ export const zh: DeepPartial<Messages> = {
             sprintLabel: "迭代：",
             assigneesLabel: "负责人：",
             unassigned: "未指派",
-            newTaskCreatedBy: "✨ 新任务由 ",
-            movedThisTaskTo: " 将此任务移动至 ",
-            newCommentFrom: "💬 新评论来自 ",
-            newMilestoneCreatedBy: "🚩 新里程碑由 ",
         },
     },
     notes: {

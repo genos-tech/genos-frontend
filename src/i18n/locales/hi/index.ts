@@ -1036,10 +1036,6 @@ export const hi: DeepPartial<Messages> = {
             sprintLabel: "स्प्रिंट: ",
             assigneesLabel: "असाइनी: ",
             unassigned: "असाइन नहीं",
-            newTaskCreatedBy: "✨ नया टास्क बनाया गया, बनाने वाला: ",
-            movedThisTaskTo: " ने इस टास्क को यहाँ ले जाया: ",
-            newCommentFrom: "💬 नया कमेंट, इनसे: ",
-            newMilestoneCreatedBy: "🚩 नया माइलस्टोन बनाया गया, बनाने वाला: ",
         },
     },
     notes: {

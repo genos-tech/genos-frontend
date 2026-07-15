@@ -659,10 +659,6 @@ export const tasks = {
         sprintLabel: "Sprint: ",
         assigneesLabel: "Assignees: ",
         unassigned: "Unassigned",
-        newTaskCreatedBy: "✨ New task created by ",
-        movedThisTaskTo: " moved this task to ",
-        newCommentFrom: "💬 New comment from ",
-        newMilestoneCreatedBy: "🚩 New milestone created by ",
     },
 
     // Task graph (React Flow diagram) — tooltips on nodes and modal chrome.

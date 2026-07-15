@@ -199,49 +199,6 @@ export const taskMessageTemplate = (myself: UserProps, task: TaskProps) => {
     ];
 };
 
-export const taskCreatedThreadMessageTemplate = (myself: UserProps) => {
-    const m = getMessages().tasks.messageTemplate;
-    return [
-        {
-            children: [],
-            content: [plainText(m.newTaskCreatedBy), mentionNode(myself, myself)],
-            props: DEFAULT_BLOCK_PROPS,
-            type: "paragraph",
-        },
-        blankParagraph(),
-    ];
-};
-
-export const taskThreadMessageTemplate = (myself: UserProps, task: TaskProps) => {
-    const m = getMessages().tasks.messageTemplate;
-    return [
-        {
-            children: [],
-            content: [
-                mentionNode(myself, myself),
-                plainText(m.movedThisTaskTo),
-                getStatusChip(task.status?.status),
-            ],
-            props: DEFAULT_BLOCK_PROPS,
-            type: "paragraph",
-        },
-        blankParagraph(),
-    ];
-};
-
-export const taskThreadMessageForCommentAddedTemplate = (myself: UserProps) => {
-    const m = getMessages().tasks.messageTemplate;
-    return [
-        {
-            children: [],
-            content: [plainText(m.newCommentFrom), mentionNode(myself, myself)],
-            props: DEFAULT_BLOCK_PROPS,
-            type: "paragraph",
-        },
-        blankParagraph(),
-    ];
-};
-
 // Milestone-flavoured equivalents of the task templates above. The
 // PM chat needs a similar "something was created" message bubble for
 // new milestones (see CreateTaskForm.handleCreateMilestone), but with
@@ -335,17 +292,4 @@ export const milestoneMessageTemplate = (
     blocks.push(blankParagraph());
 
     return blocks;
-};
-
-export const milestoneCreatedThreadMessageTemplate = (myself: UserProps) => {
-    const m = getMessages().tasks.messageTemplate;
-    return [
-        {
-            children: [],
-            content: [plainText(m.newMilestoneCreatedBy), mentionNode(myself, myself)],
-            props: DEFAULT_BLOCK_PROPS,
-            type: "paragraph",
-        },
-        blankParagraph(),
-    ];
 };

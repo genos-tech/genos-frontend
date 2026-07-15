@@ -1027,10 +1027,6 @@ export const ar: DeepPartial<Messages> = {
             sprintLabel: "السبرنت: ",
             assigneesLabel: "المُسنَد إليهم: ",
             unassigned: "غير مُسنَدة",
-            newTaskCreatedBy: "✨ مهمة جديدة أنشأها ",
-            movedThisTaskTo: " نقل هذه المهمة إلى ",
-            newCommentFrom: "💬 تعليق جديد من ",
-            newMilestoneCreatedBy: "🚩 معلم جديد أنشأه ",
         },
     },
     notes: {
