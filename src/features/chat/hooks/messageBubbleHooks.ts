@@ -23,6 +23,22 @@ export const useScrollToBottomOnNewMessage = (
     }, [chat]);
 };
 
+/**
+ * Auto-follow: keep a pane pinned to the newest message.
+ *
+ * Scrolls to LAST when the chat changes or a message arrives, EXCEPT when
+ * `notMove` marks an arrived/deleted-message update and the reader has
+ * scrolled away from the bottom (`visibleRangeEnd < maxIndex - 3`) — then
+ * they stay where they are.
+ *
+ * Jumping to a specific message is NOT this hook's job; `useScrollManagement`
+ * owns that. The two used to race, both firing `scrollToIndex` on a 300ms
+ * timer against the same Virtuoso.
+ *
+ * `visibleRangeStart` is unused but kept: the params are positional and all
+ * three range/index args are `number`, so dropping a middle one would
+ * silently shift the rest past the type-checker.
+ */
 export const useScrollToBottomOnChatChange = (
     virtuosoRef: React.RefObject<VirtuosoHandle>,
     currentMainChatId: number,
@@ -31,9 +47,7 @@ export const useScrollToBottomOnChatChange = (
     maxIndex: number,
     indexMap?: { [k: string]: any },
     moveToSpecificIndex?: string,
-    notMove?: boolean,
-    setErrorMessage?: (value: string) => void,
-    setErrorOpen?: (value: boolean) => void
+    notMove?: boolean
 ) => {
     useEffect(() => {
         const virtuoso = virtuosoRef.current;
@@ -41,34 +55,26 @@ export const useScrollToBottomOnChatChange = (
         // scrolling to the LAST when an user is around in the last/latest message.
         if (virtuoso === null || (notMove === true && visibleRangeEnd < maxIndex - 3)) {
             return;
-        } else {
-            setTimeout(() => {
-                if (indexMap && moveToSpecificIndex) {
-                    if (indexMap[moveToSpecificIndex]) {
-                        const targetIndex = indexMap[moveToSpecificIndex];
-                        // Only scroll if the target is not already visible
-                        if (targetIndex < visibleRangeStart || targetIndex > visibleRangeEnd) {
-                            virtuoso.scrollToIndex({
-                                index: targetIndex,
-                            });
-                        }
-                    } else if (
-                        indexMap.length > 0 &&
-                        Object.keys(indexMap)[0][0] !== moveToSpecificIndex[0]
-                    ) {
-                        if (setErrorMessage && setErrorOpen) {
-                            setErrorMessage("The message has been deleted.");
-                            setErrorOpen(true);
-                        }
-                    }
-                } else {
-                    virtuoso.scrollToIndex({
-                        index: "LAST",
-                        behavior: "auto",
-                    });
-                }
-            }, 300); // wait 300ms
         }
+        // Auto-follow only. Jumping to a specific message is owned by
+        // `useScrollManagement`, which is the single authority for it —
+        // it tracks which jump it has already performed and retries
+        // targets that aren't in the loaded slice yet. This hook used to
+        // race it with its own `scrollToIndex`, guarded by a stale
+        // visible range that skipped targets near the bottom.
+        //
+        // Bailing here (rather than falling through) is load-bearing: the
+        // scroll-to-LAST below would otherwise drag every jump straight to
+        // the bottom of the chat.
+        if (moveToSpecificIndex) {
+            return;
+        }
+        setTimeout(() => {
+            virtuoso.scrollToIndex({
+                behavior: "auto",
+                index: "LAST",
+            });
+        }, 300); // wait 300ms
     }, [currentMainChatId, indexMap]);
 };
 

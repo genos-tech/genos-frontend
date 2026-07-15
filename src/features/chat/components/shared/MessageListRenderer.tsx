@@ -29,8 +29,6 @@ interface MessageListRendererProps {
     myself: UserProps;
     usePM: ProjectManagementState;
     setEditTargetMessage: (message: MessageProps | ThreadMessageProps) => void;
-    setErrorMessage: (error: string) => void;
-    setErrorOpen: (open: boolean) => void;
     setIsInEdit: (value: boolean) => void;
     setIsScrolling: (value: boolean) => void;
     setMyself: (value: UserProps) => void;
@@ -64,8 +62,6 @@ export const MessageListRenderer = ({
     myself,
     usePM,
     setEditTargetMessage,
-    setErrorMessage,
-    setErrorOpen,
     setIsInEdit,
     setIsScrolling,
     setMyself,
@@ -80,6 +76,8 @@ export const MessageListRenderer = ({
     fillContainer = false,
     setTodoFromMessageBubble,
 }: MessageListRendererProps) => {
+    // Auto-follow only — jumping to a focused message is owned by
+    // `useScrollManagement` (see that hook + `resolveJumpScroll`).
     useScrollToBottomOnChatChange(
         virtuosoRef,
         currentChatId,
@@ -88,9 +86,7 @@ export const MessageListRenderer = ({
         messages.length - 1,
         indexMap,
         useCM.currentMainChat?.moveToSpecificIndex,
-        useCM.currentMainChat?.notMove,
-        setErrorMessage,
-        setErrorOpen
+        useCM.currentMainChat?.notMove
     );
 
     const { mode } = useColorScheme();

@@ -248,8 +248,6 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                                 messages={messageManagement.messages}
                                 myself={myself}
                                 setEditTargetMessage={messageManagement.setEditTargetMessage}
-                                setErrorMessage={messageManagement.setErrorMessage}
-                                setErrorOpen={messageManagement.setErrorOpen}
                                 setIsInEdit={messageManagement.setIsInEdit}
                                 setIsScrolling={scrollManagement.setIsScrolling}
                                 setMyself={setMyself}
