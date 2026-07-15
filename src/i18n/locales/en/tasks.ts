@@ -168,6 +168,20 @@ export const tasks = {
         deleteProject: {
             heading: "Delete Project?",
             body: "This action cannot be undone",
+            // Every line below is verified against what the API actually does
+            // (see the delete-scope tests in genos-api `test_project_views`).
+            // A warning users rely on before an irreversible action has to be
+            // exactly true — not reassuring, and not vague.
+            destroyedTitle: "Permanently deleted:",
+            destroyedMilestones: "All milestones",
+            destroyedTasks: "All tasks, with their comments, attachments and notes",
+            destroyedSprints: "All sprints and the sprint schedule",
+            destroyedMembersTags: "Project members and tags",
+            // The PM channel is soft-deleted, so the messages are not erased —
+            // but nobody can reach them again. Saying "kept" would imply the
+            // history is still readable; saying "deleted" would be untrue.
+            chatNote:
+                "The project chat disappears for everyone. Its messages aren't erased, but nobody can open them again.",
             cancelButton: "Cancel",
             confirmButton: "Delete Project",
             unexpectedError: "Unexpected error",
