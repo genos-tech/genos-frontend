@@ -577,7 +577,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                     )}
 
                     {/* Modal for creating a new project — global flag-gated */}
-                    <ModalCreateProject myself={myself} usePM={usePM} />
+                    <ModalCreateProject myself={myself} useCM={useCM} usePM={usePM} />
 
                     {/* Modal for creating a new tag — global flag-gated */}
                     <ModalCreateTag myself={myself} usePM={usePM} useTM={useTM} />

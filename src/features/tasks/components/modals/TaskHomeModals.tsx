@@ -57,7 +57,7 @@ export const TaskHomeModals = ({
 }: TaskHomeModalsProps) => {
     return (
         <>
-            <ModalCreateProject myself={myself} usePM={usePM} />
+            <ModalCreateProject myself={myself} useCM={useCM} usePM={usePM} />
             <ModalJoinProject
                 myself={myself}
                 openJoinProject={openJoinProject}
