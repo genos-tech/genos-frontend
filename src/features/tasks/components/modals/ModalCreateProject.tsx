@@ -16,6 +16,7 @@ import {
 } from "@mui/joy";
 
 import { useAuth } from "../../../../context/AuthContext";
+import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
@@ -34,9 +35,18 @@ type Props = {
     myself: UserProps;
     usePM: ProjectManagementState;
     setIsNewProjectCreated?: (value: boolean) => void;
+    /** Needed to refresh the chat list after the project lands — Django
+     *  creates the project's PM channel via a signal, but nothing tells
+     *  this tab about it (see `createProject`). */
+    useCM?: ChatManagementState;
 };
 
-export const ModalCreateProject: React.FC<Props> = ({ myself, usePM, setIsNewProjectCreated }) => {
+export const ModalCreateProject: React.FC<Props> = ({
+    myself,
+    usePM,
+    setIsNewProjectCreated,
+    useCM,
+}) => {
     const { accessToken } = useAuth();
     const { t } = useTranslation();
 
@@ -139,6 +149,34 @@ export const ModalCreateProject: React.FC<Props> = ({ myself, usePM, setIsNewPro
                                 usePM.setTeamProjects([...usePM.teamProjects, newProject]);
                                 usePM.setCurrentProject(newProject);
                                 usePM.setOpenCreateProject(false);
+                                // Pull the project's brand-new PM channel into
+                                // `allChats`. Django's `_ensure_pm_channel_for_project`
+                                // signal creates it, but Django owns no socket —
+                                // so nothing tells this tab, and `allChats` stays
+                                // stale until some unrelated refresh.
+                                //
+                                // Everything keyed off the PM chat row is missing
+                                // until then: the project sidebar entry, and — via
+                                // `TaskHeader`'s `{pmChat && …}` gate — the project
+                                // icon, which is the ONLY way into the project
+                                // profile (and so into "Add members"). A user who
+                                // just made a project couldn't invite anyone to it
+                                // without reloading first.
+                                //
+                                // Awaited, not fire-and-forget: `setCurrentProject`
+                                // above has already pointed the header at this
+                                // project, so the row wants to exist as soon as it
+                                // renders.
+                                if (useCM) {
+                                    try {
+                                        await useCM.funcSetAllChats();
+                                    } catch (e) {
+                                        console.error(
+                                            "[ModalCreateProject] chat-list refresh failed:",
+                                            e
+                                        );
+                                    }
+                                }
                                 if (setIsNewProjectCreated) {
                                     setIsNewProjectCreated(true);
                                     usePM.loadProjectsAndTasks(createProjectData.project_id);
