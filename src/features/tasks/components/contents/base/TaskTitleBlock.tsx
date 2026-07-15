@@ -54,6 +54,7 @@ import { TaskProps } from "../../../../../types/tasks";
 import { ModalTaskDiagram } from "../../../diagram/components/ModalTaskDiagram";
 import { DIAGRAM_LIFT } from "../../../diagram/diagramZIndex";
 import { deleteEmptyTask } from "../../../services/deleteEmptyTask";
+import { isNoMainPanelVisible } from "../../../utils/mainPanelVisibility";
 import { CopyableTaskIdChip } from "../../CopyableTaskId";
 import { ModalDeleteTask } from "../../modals/ModalDeleteTask";
 
@@ -173,13 +174,13 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                 useTM.setIsTaskPreviewVisible(false);
                 useTM.setCurrentPreviewTaskId(-1);
             }
+            // Fall back to the table ONLY when closing the preview would
+            // otherwise leave no main panel up. This test used to omit the
+            // dashboard, which is why closing a preview alongside an open
+            // dashboard closed the dashboard too — see `isNoMainPanelVisible`.
             if (useTM.isCreatingTask.flag === false && useNM.isTaskNoteVisible === false) {
-                if (useTM.isTaskTableVisible === false) {
-                    if (useTM.isSprintBoardVisible === false) {
-                        useTM.setIsTaskTableVisible(true);
-                    } else {
-                        useTM.setIsSprintBoardVisible(true);
-                    }
+                if (isNoMainPanelVisible(useTM)) {
+                    useTM.setIsTaskTableVisible(true);
                 }
             }
         }
@@ -192,18 +193,10 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
             milestoneId: null,
         });
 
-        if (useTM.isTaskPreviewVisible === false) {
-            if (useTM.isTaskTableVisible === false) {
-                if (useTM.isSprintBoardVisible === false) {
-                    if (useTM.isTaskDashboardVisible === false) {
-                        useTM.setIsTaskTableVisible(true);
-                    } else {
-                        useTM.setIsTaskDashboardVisible(true);
-                    }
-                } else {
-                    useTM.setIsSprintBoardVisible(true);
-                }
-            }
+        // (The old nested form's `else`s re-set whichever panel was already
+        // visible — no-ops — so this one-liner is equivalent.)
+        if (useTM.isTaskPreviewVisible === false && isNoMainPanelVisible(useTM)) {
+            useTM.setIsTaskTableVisible(true);
         }
 
         if (useNM.setIsTaskVisibleInNote) {
@@ -249,18 +242,10 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
         // the same fallback logic in `performClose`. We skip the
         // `setIsTaskPreviewVisible` branch performClose has — Hide never
         // closes a preview pane (there isn't one in create mode).
-        if (useTM.isTaskPreviewVisible === false) {
-            if (useTM.isTaskTableVisible === false) {
-                if (useTM.isSprintBoardVisible === false) {
-                    if (useTM.isTaskDashboardVisible === false) {
-                        useTM.setIsTaskTableVisible(true);
-                    } else {
-                        useTM.setIsTaskDashboardVisible(true);
-                    }
-                } else {
-                    useTM.setIsSprintBoardVisible(true);
-                }
-            }
+        // (The old nested form's `else`s re-set whichever panel was already
+        // visible — no-ops — so this one-liner is equivalent.)
+        if (useTM.isTaskPreviewVisible === false && isNoMainPanelVisible(useTM)) {
+            useTM.setIsTaskTableVisible(true);
         }
 
         if (useNM.setIsTaskVisibleInNote) {
