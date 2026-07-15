@@ -857,10 +857,24 @@ div[data-floating-ui-focusable] {
 }
 
 /* Inbox preview */
+
+/* The inbox card's body text is inset by TWO things stacked:
+     --bn-preview-box-px      BnChatPreview's own horizontal box padding
+     --inbox-preview-indent   the editor's extra indent, below
+
+   Anything rendered BESIDE the body (the card's chips) has to clear BOTH, or
+   it sits out to the left of the sentence it belongs to. `InboxBubble` adds
+   them with calc() rather than hard-coding the total, so tuning either one
+   keeps the chips aligned. */
+:root {
+    --bn-preview-box-px: 10px;
+    --inbox-preview-indent: 20px;
+}
+
 .inbox-preview-light .bn-editor {
     color: black;
     background-color: transparent;
-    padding-left: 20px;
+    padding-left: var(--inbox-preview-indent);
 }
 
 .inbox-preview-light code {
@@ -871,7 +885,7 @@ div[data-floating-ui-focusable] {
 .inbox-preview-dark .bn-editor {
     color: white;
     background-color: transparent;
-    padding-left: 20px;
+    padding-left: var(--inbox-preview-indent);
 }
 
 .inbox-preview-dark code {
