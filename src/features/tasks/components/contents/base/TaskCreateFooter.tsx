@@ -154,12 +154,17 @@ export const TaskCreateFooter = forwardRef<TaskCreateFooterHandle, TaskCreateFoo
             }
 
             if (taskContent.id !== undefined) {
-                deleteEmptyTask({
+                // Fire-and-forget cleanup: the form is already tearing down,
+                // so a failure here must be logged, never an uncaught
+                // rejection (and never blocks the close).
+                void deleteEmptyTask({
                     myself: myself,
                     taskId: taskContent.id,
                     accessToken: accessToken,
                     setInitialEmptyTaskId: useTM.setInitialEmptyTaskId,
-                });
+                }).catch((err) =>
+                    console.error("[TaskCreateFooter] deleteEmptyTask failed:", err)
+                );
             }
         };
 

@@ -845,6 +845,10 @@ export const ja: DeepPartial<Messages> = {
         createForm: {
             taskDetails: "タスクの詳細",
             preparing: "準備中…",
+            bootstrapFailed:
+                "新しいタスクを準備できませんでした。接続を確認して、もう一度お試しください。",
+            bootstrapRetry: "再試行",
+            bootstrapCancel: "キャンセル",
             description: "説明",
             attachments: "添付ファイル",
             templates: {

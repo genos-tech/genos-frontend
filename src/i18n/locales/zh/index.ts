@@ -810,6 +810,9 @@ export const zh: DeepPartial<Messages> = {
             confirmDeleteMilestone: "删除此里程碑？",
         },
         createForm: {
+            bootstrapFailed: "无法准备新任务。请检查网络连接后重试。",
+            bootstrapRetry: "重试",
+            bootstrapCancel: "取消",
             taskDetails: "任务详情",
             description: "描述",
             attachments: "附件",

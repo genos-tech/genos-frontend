@@ -827,6 +827,10 @@ export const hi: DeepPartial<Messages> = {
             confirmDeleteMilestone: "क्या इस माइलस्टोन को हटाएँ?",
         },
         createForm: {
+            bootstrapFailed:
+                "नया टास्क तैयार नहीं हो सका। अपना कनेक्शन जाँचें और फिर से कोशिश करें।",
+            bootstrapRetry: "फिर से कोशिश करें",
+            bootstrapCancel: "रद्द करें",
             taskDetails: "टास्क का विवरण",
             description: "विवरण",
             attachments: "अटैचमेंट",
