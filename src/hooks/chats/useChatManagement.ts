@@ -555,6 +555,36 @@ export const useChatManagement = (
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [myself.userId]);
 
+    // Re-fire the loads once the access token actually exists.
+    //
+    // The effect above keys on `myself.userId` alone, and returns early
+    // unless it CHANGED — so it fires exactly once, at userId hydration.
+    // But the two inputs land at different times: `myself.userId` comes
+    // out of localStorage synchronously, while `accessToken` arrives from
+    // an async refresh. So that one shot routinely runs token-less, and
+    // `channelService.api()` throws `UNAUTHENTICATED` before any request
+    // is made. `loadV3Chats` catches it and returns the IDB-hydrated
+    // snapshot instead — which is why the symptom was never an error but
+    // a chat list frozen at whatever the LAST good session cached:
+    // pre-existing channels rendered fine, and anything created since
+    // (a new project's PM channel, hence its task-header icon and note
+    // task-pill) was invisible until IDB happened to be refreshed.
+    //
+    // Ref-guarded so a token ROTATION doesn't re-pull the whole list;
+    // only the first null → token transition re-primes. A genuine account
+    // switch is still handled by the effect above.
+    const primedForTokenRef = useRef(false);
+    useEffect(() => {
+        if (!accessToken || !myself.userId) return;
+        if (primedForTokenRef.current) return;
+        primedForTokenRef.current = true;
+        void funcSetAllChats();
+        void funcSetFlaggedMessages();
+        void funcSetActivityMessages();
+        // Same rationale as above: `funcSet*` rebind every render.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [accessToken, myself.userId]);
+
     // Initialization Hooks
     useEffect(() => {
         funcSetAllChats();
