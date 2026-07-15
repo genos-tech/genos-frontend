@@ -45,6 +45,7 @@ import {
     updateTeamMembersOptions,
 } from "../../services/updateTaskAutoCompleteOptions";
 import { sendMilestoneCreatedMessage } from "../../sprint-milestone/services";
+import { isNoMainPanelVisible } from "../../utils/mainPanelVisibility";
 import { getCreationKind } from "../../utils/taskKind";
 import {
     TASK_TEMPLATE_OPTIONS,
@@ -550,11 +551,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
             // "+ Add milestone" from the sidebar hides the task home
             // panel; if no other main panel is visible, restore the task
             // home so the user always lands somewhere sensible.
-            if (
-                !useTM.isTaskTableVisible &&
-                !useTM.isTaskDashboardVisible &&
-                !useTM.isSprintBoardVisible
-            ) {
+            if (isNoMainPanelVisible(useTM)) {
                 useTM.setIsTaskTableVisible(true);
             }
         }

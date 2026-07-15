@@ -98,7 +98,11 @@ export const ModalTransferOwner = ({
             sx={{
                 zIndex: 10010,
                 backdropFilter: "blur(4px)",
-                backgroundColor: "rgba(0, 0, 0, 0.5)",
+                // Transparent: Joy's own Backdrop slot already paints
+                // `palette.background.backdrop` + blur(8px). Stacking a
+                // second 50% black on the modal root composited to ~75%,
+                // which read as a solid black page. Matches ModalUserProfile.
+                backgroundColor: "transparent",
             }}
             onClose={handleClose}
         >
@@ -220,14 +224,30 @@ export const ModalTransferOwner = ({
                                             my: 0.25,
                                             px: 1.25,
                                             py: 0.75,
-                                            "&.Mui-selected": {
-                                                background: "rgba(232,121,195,0.18)",
-                                                "&:hover": {
-                                                    background: "rgba(232,121,195,0.22)",
-                                                },
-                                            },
-                                            "&:hover": {
-                                                background: "rgba(255,255,255,0.05)",
+                                            // This dialog is dark in BOTH colour schemes (its
+                                            // background and text are hardcoded), so the row
+                                            // states have to be pinned too — left to Joy they
+                                            // resolve from the active palette and light mode
+                                            // painted an off-white row under white text.
+                                            //
+                                            // Set via Joy's own CSS variables rather than an
+                                            // `&:hover` block: Joy applies hover as
+                                            // `&:not(.Mui-selected, [aria-selected="true"]):hover`
+                                            // — specificity (0,3,0) — which outranks a plain
+                                            // `&:hover` from sx (0,2,0) whatever the source
+                                            // order. That's why the override here never took
+                                            // effect. Feeding the variables makes Joy's own
+                                            // rule paint these colours, so there's no
+                                            // specificity fight to lose.
+                                            "--variant-plainHoverBg": "rgba(255,255,255,0.08)",
+                                            "--variant-plainHoverColor": "rgba(255,255,255,0.9)",
+                                            "--variant-plainActiveBg": "rgba(232,121,195,0.18)",
+                                            "--variant-plainActiveColor": "rgba(255,255,255,0.9)",
+                                            // `selected` renders through the plainActive
+                                            // variant, hence the pink above; this keeps the
+                                            // hover-while-selected tint distinct from it.
+                                            "&.Mui-selected:hover": {
+                                                background: "rgba(232,121,195,0.22)",
                                             },
                                         }}
                                         onClick={() => setSelectedId(m.userId)}

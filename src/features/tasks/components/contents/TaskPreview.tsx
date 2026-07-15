@@ -60,6 +60,7 @@ import { uploadTaskAttachments } from "../../services/uploadTaskAttachments";
 import { sendMilestoneUpdatedMessage } from "../../sprint-milestone/services/sendMilestoneUpdatedMessage";
 import { Milestone } from "../../sprint-milestone/types";
 import { MILESTONE_STATUS_CHIP_COLORS } from "../../sprint-milestone/utils/sortMilestones";
+import { isNoMainPanelVisible } from "../../utils/mainPanelVisibility";
 import { getTaskKind } from "../../utils/taskKind";
 import { effortLevels, priorities } from "../../utils/taskMeta";
 import { TaskBodyBlock } from "./base/TaskBodyBlock";
@@ -2181,11 +2182,7 @@ const MilestonePreviewInner = ({
                                     useTM.setCurrentPreviewKind("task");
                                     useTM.setCurrentPreviewMilestoneId(-1);
                                     useTM.setTableMilestoneFilterId(null);
-                                    if (
-                                        useTM.isTaskTableVisible === false &&
-                                        useTM.isSprintBoardVisible === false &&
-                                        useTM.isTaskDashboardVisible === false
-                                    ) {
+                                    if (isNoMainPanelVisible(useTM)) {
                                         useTM.setIsTaskTableVisible(true);
                                     }
 
@@ -2363,11 +2360,11 @@ const MilestonePreviewInner = ({
                             key={`MilestoneBody-${milestone.milestoneId}`}
                             body={bodyDraft}
                             myself={myself}
+                            setBody={handleMilestoneBodySync}
                             setMyself={setMyself}
                             setTaskBodyEdited={setBodyEdited}
                             setTaskBodySaved={setBodySaved}
                             taskId={milestone.taskId ?? milestone.milestoneId}
-                            useCM={useCM}
                             socket={socket}
                             // Body-attachment uploads (`POST /task/body/attachment/`)
                             // resolve through `TaskBodyAttachmentFact.task` →
@@ -2381,9 +2378,9 @@ const MilestonePreviewInner = ({
                             // accepts. We fall back to `milestoneId` only as a
                             // belt-and-suspenders for partial server payloads
                             // where `taskId` hasn't been backfilled yet.
+                            useCM={useCM}
                             useTEM={useTEM}
                             useUISM={useUISM}
-                            setBody={handleMilestoneBodySync}
                         />
                     </Box>
 

@@ -88,7 +88,11 @@ export const ModalDeleteMyNote: React.FC<Props> = ({
             sx={{
                 zIndex: 10010,
                 backdropFilter: "blur(4px)",
-                backgroundColor: "rgba(0, 0, 0, 0.5)",
+                // Transparent: Joy's own Backdrop slot already paints
+                // `palette.background.backdrop` + blur(8px). Stacking a
+                // second 50% black on the modal root composited to ~75%,
+                // which read as a solid black page. Matches ModalUserProfile.
+                backgroundColor: "transparent",
                 ...noteModalChildStackSx(hostZIndex),
             }}
             onClose={() => {
