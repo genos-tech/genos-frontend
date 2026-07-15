@@ -144,14 +144,31 @@ export const ModalTaskDiagram = ({
                 zIndex: effectiveZIndex,
                 // Joy pins Select/Autocomplete listbox popups to
                 // calc(theme.zIndex.modal + 1) ≈ 1301 and does NOT track the
-                // sx z-index override above — so any default-z popup rendered
-                // inside the diagram would open behind this dialog.
-                // Re-stamp the var on the modal root (inline listboxes inherit
-                // it) and on sibling portaled listboxes so popups win. (The
-                // node-card status Menu is role="menu", not caught here, and
-                // pins itself to the same z+1 via useDiagramZIndex.)
+                // sx z-index override above — so a default-z popup rendered
+                // inside the diagram would open behind this dialog. Stamping
+                // the var on the modal root covers any popup that renders
+                // INLINE in this subtree (CSS custom properties inherit).
+                //
+                // Deliberately NOT also stamped on sibling portaled listboxes
+                // (`& ~ [role="listbox"]`): the diagram owns no listbox at all
+                // — the node-card status Menu is role="menu" and the date
+                // editor is a Modal, and both pin themselves via
+                // useDiagramZIndex. Such a rule could therefore only ever
+                // match a listbox belonging to a DIFFERENT surface, and the
+                // one it caught was the task preview the canvas opens ON TOP
+                // of the graph (UrlLinkModal, which stamps its own listboxes
+                // at its z + 10). Both rules are specificity (0,2,0), so the
+                // winner was decided by emotion's stylesheet insertion order —
+                // i.e. by which surface happened to render first in the
+                // session. When this one won, the preview's pickers were
+                // pinned below their own modal and opened invisibly: the
+                // intermittent "autocomplete shows nothing" bug.
+                //
+                // If a Select/Autocomplete is ever added INSIDE the diagram,
+                // lift its popup via slotProps on that component (or
+                // disablePortal so it inherits the var below) — never with a
+                // sibling rule, which claims popups this surface doesn't own.
                 "--unstable_popup-zIndex": effectiveZIndex + 1,
-                '& ~ [role="listbox"]': { "--unstable_popup-zIndex": effectiveZIndex + 1 },
             }}
             onClose={onClose}
         >
