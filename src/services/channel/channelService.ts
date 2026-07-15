@@ -604,21 +604,46 @@ export class ChannelService {
     // Mirrors the per-channel `_inflightSyncByChannel` dedup used by syncChannel.
     private _listChannelsInflight: Promise<Channel[]> | null = null;
 
-    async listChannels(): Promise<Channel[]> {
-        if (this._listChannelsInflight) {
-            return this._listChannelsInflight;
+    listChannels(): Promise<Channel[]> {
+        const existing = this._listChannelsInflight;
+        if (existing) return existing;
+
+        const promise = this._doListChannels();
+        this._listChannelsInflight = promise;
+        // Release the slot once the work settles, regardless of outcome.
+        //
+        // This MUST live out here rather than in a `finally` inside the
+        // async body: an async function runs synchronously up to its first
+        // `await`, and `api()` throws on a missing token BEFORE that await.
+        // So the body's `finally` would run while the right-hand side was
+        // still being evaluated — clearing the slot, and then the pending
+        // assignment would immediately re-fill it with the already-rejected
+        // promise. Result: a poisoned cache that replays that first failure
+        // to every later caller forever, without ever issuing a request.
+        //
+        // Identity-compare so a replacement queued by a later call isn't
+        // dropped, and swallow the derived chain's re-thrown rejection so
+        // cleanup doesn't log unhandled — the ORIGINAL promise still
+        // rejects normally and propagates to callers via `return`.
+        promise
+            .finally(() => {
+                if (this._listChannelsInflight === promise) {
+                    this._listChannelsInflight = null;
+                }
+            })
+            .catch(() => {
+                /* original rejection is the caller's to handle */
+            });
+        return promise;
+    }
+
+    private async _doListChannels(): Promise<Channel[]> {
+        try {
+            const res = await this.api().get<{ channels: Channel[] }>("/api/v3/channels/");
+            return res.data.channels ?? [];
+        } catch (e) {
+            throw unwrapAxiosError(e);
         }
-        this._listChannelsInflight = (async () => {
-            try {
-                const res = await this.api().get<{ channels: Channel[] }>("/api/v3/channels/");
-                return res.data.channels ?? [];
-            } catch (e) {
-                throw unwrapAxiosError(e);
-            } finally {
-                this._listChannelsInflight = null;
-            }
-        })();
-        return this._listChannelsInflight;
     }
 
     async fetchMessagesDelta(

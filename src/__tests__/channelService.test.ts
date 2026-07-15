@@ -9,6 +9,7 @@
  * spew so the test output stays clean).
  */
 
+import axios from "axios";
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ChannelService } from "../services/channel/channelService";
@@ -385,5 +386,65 @@ describe("channelService reactive store", () => {
 
         await expect(svc.markRead("ch-1", "m-1")).resolves.toBeUndefined();
         expect(emit).toHaveBeenCalledTimes(1);
+    });
+});
+
+/**
+ * `listChannels` in-flight dedup — recovery after a failed call.
+ *
+ * Regression: the dedup slot used to be cleared in a `finally` INSIDE the
+ * async body. An async function body runs synchronously up to its first
+ * `await`, and `api()` throws on a missing token BEFORE that await — so the
+ * clear ran while the assignment's right-hand side was still evaluating, and
+ * the assignment then re-filled the slot with the already-rejected promise.
+ *
+ * The slot stayed poisoned for the life of the tab: every later caller got
+ * the boot-time rejection replayed, with no HTTP issued, no matter that a
+ * token had since landed. That froze the chat list on its IDB snapshot for
+ * the whole session — a project created afterwards had no PM channel row, so
+ * its icon/profile never rendered.
+ */
+describe("channelService.listChannels in-flight dedup", () => {
+    it("recovers once a token lands after a token-less failure", async () => {
+        const svc = new ChannelService();
+        const get = vi.fn().mockResolvedValue({ data: { channels: [makeChannel()] } });
+        vi.spyOn(axios, "create").mockReturnValue({ get } as never);
+
+        // Boot: the mount effect fires before the async token refresh lands.
+        svc.setAccessToken(null);
+        await expect(svc.listChannels()).rejects.toThrow(/access token/i);
+        expect(get).not.toHaveBeenCalled();
+
+        // Token arrives. The next call must actually hit the network.
+        svc.setAccessToken("tok-1");
+        await expect(svc.listChannels()).resolves.toHaveLength(1);
+        expect(get).toHaveBeenCalledTimes(1);
+    });
+
+    it("still coalesces concurrent callers into one request", async () => {
+        const svc = new ChannelService();
+        const get = vi.fn().mockResolvedValue({ data: { channels: [makeChannel()] } });
+        vi.spyOn(axios, "create").mockReturnValue({ get } as never);
+        svc.setAccessToken("tok-1");
+
+        const [a, b] = await Promise.all([svc.listChannels(), svc.listChannels()]);
+
+        expect(get).toHaveBeenCalledTimes(1);
+        expect(a).toEqual(b);
+    });
+
+    it("does not cache a rejection from a failed request", async () => {
+        const svc = new ChannelService();
+        const get = vi
+            .fn()
+            .mockRejectedValueOnce(new Error("network down"))
+            .mockResolvedValue({ data: { channels: [makeChannel()] } });
+        vi.spyOn(axios, "create").mockReturnValue({ get } as never);
+        svc.setAccessToken("tok-1");
+
+        await expect(svc.listChannels()).rejects.toThrow();
+        // A retry must re-issue rather than replay the cached failure.
+        await expect(svc.listChannels()).resolves.toHaveLength(1);
+        expect(get).toHaveBeenCalledTimes(2);
     });
 });
