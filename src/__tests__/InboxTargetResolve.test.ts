@@ -90,8 +90,47 @@ describe("resolveInboxTarget", () => {
         ).toBeNull();
     });
 
-    it("returns null for activity items — they store no optionals", () => {
+    // Activity items (type 0) have no type to switch on — one item type
+    // covers every receipt — so the kind is inferred from WHICH ids are
+    // present. Only receipts whose target the reader can reach carry ids
+    // (approved / added); rejections and "waiting for approval" store none.
+    it("resolves an activity naming a project", () => {
+        const res = resolveInboxTarget(
+            item(0, { project_id: 42, project_name: "Apollo" }),
+            CHATS,
+            "Team"
+        );
+        expect(res).toMatchObject({ kind: "project", name: "Apollo" });
+    });
+
+    it("resolves an activity naming a GM", () => {
+        const res = resolveInboxTarget(
+            item(0, { gm_id: "gm-channel-uuid", gm_name: "Squad" }),
+            CHATS,
+            "Team"
+        );
+        expect(res).toMatchObject({ kind: "gm", name: "Squad" });
+    });
+
+    it("resolves an activity naming a team", () => {
+        expect(resolveInboxTarget(item(0, { team_name: "Genos" }), CHATS, "Team")).toEqual({
+            kind: "team",
+            name: "Genos",
+        });
+    });
+
+    it("does not mislabel an unresolvable project activity as the team", () => {
+        // A project the reader can't see must render nothing — NOT fall
+        // through to the current team, which would name the wrong object
+        // entirely. This is why team is checked last.
+        expect(resolveInboxTarget(item(0, { project_id: 999 }), CHATS, "Team")).toBeNull();
+    });
+
+    it("returns null for an activity with no optionals — rows predating the ids", () => {
+        // Rejections and pre-#76 rows. They can never be retrofitted: the
+        // data was never captured.
         expect(resolveInboxTarget(item(0, null), CHATS, "Team")).toBeNull();
+        expect(resolveInboxTarget(item(0, {}), CHATS, "Team")).toBeNull();
     });
 
     it("returns null for a note-access request (it has its own open-note chip)", () => {

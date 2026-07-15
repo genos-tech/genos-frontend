@@ -58,9 +58,12 @@ describe("addMembersToProjectWithNotice", () => {
             expect(String(url)).toContain("/project/join/");
         }
 
+        // `target_id` lets the receiver's inbox card LINK to the project,
+        // not just name it. A project's is the legacy integer.
         expect(socket.emit).toHaveBeenCalledWith("members_added_notice", {
             receiver_ids: ["u1", "u2"],
             target_kind: "project",
+            target_id: 7,
             target_name: "Proj",
         });
     });
@@ -162,9 +165,12 @@ describe("addMembersToGMWithNotice", () => {
 
         expect(res).toEqual({ addedIds: ["u1", "u2"], failedIds: [] });
         expect(addMembersSpy).toHaveBeenCalledWith("gm-uuid", ["u1", "u2"]);
+        // A GM's target_id is the v3 Channel UUID — NOT a legacy integer.
+        // The two id shapes are not interchangeable downstream.
         expect(socket.emit).toHaveBeenCalledWith("members_added_notice", {
             receiver_ids: ["u1", "u2"],
             target_kind: "gm",
+            target_id: "gm-uuid",
             target_name: "Squad",
         });
     });
