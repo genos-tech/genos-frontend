@@ -45,9 +45,23 @@ export async function loadV3Chats(currentUserId: string | null): Promise<AllChat
         // avatars) resolve on the FIRST chat-list render, instead of only
         // after the channel is opened (which lazily fetches members).
         channelService.ingestListMembers(fresh);
-    } catch {
-        // Network failure: fall through to whatever the snapshot
-        // already had (e.g. from a prior boot's IDB hydration).
+    } catch (e) {
+        // Falling back to the snapshot (a prior boot's IDB hydration) is
+        // deliberate — offline should still render the cached list. But
+        // this MUST be loud: swallowing it silently is what let a frozen
+        // chat list look like a rendering bug for days. The most common
+        // failure isn't the network at all, it's `UNAUTHENTICATED`:
+        // `channelService.api()` throws when no token is set yet, and the
+        // caller may be racing the async token refresh (see the
+        // token-landing re-fire in `useChatManagement`). When that
+        // happens every channel created since the last good load is
+        // invisible for the whole session, with nothing in the console
+        // to say why.
+        console.error(
+            "[loadV3Chats] listChannels failed — rendering the cached channel list, " +
+                "which will be missing anything created since the last successful load:",
+            e
+        );
     }
     const snapshot = channelService.getSnapshot();
     return v3ChannelsToLegacyChats({
