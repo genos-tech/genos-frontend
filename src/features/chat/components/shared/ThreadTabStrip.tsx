@@ -35,10 +35,14 @@ const TABS: ThreadTab[] = [
  * Two-tab pill strip wedged under `ThreadChatPaneHeader` for PM
  * threads tied to a task / milestone.
  *
- * "Activities" keeps the existing PM-message feed (task created /
- * updated bubbles); "Comments" swaps the feed + editor for the
- * dedicated task-comment list + BlockNote editor so users can reply
- * with task comments without leaving the thread.
+ * "Activities" shows the task's structured audit log (the same
+ * `TaskActivityFeed` as the task preview's Activity tab); "Comments"
+ * swaps it for the dedicated task-comment list + BlockNote editor so
+ * users can reply with task comments without leaving the thread.
+ *
+ * Activities used to render the PM message feed — auto-generated
+ * "task created / updated by …" bubbles. Those producers are gone; the
+ * audit log is the real record of what happened to the task.
  *
  * Kept stateless on purpose so consumers (currently `ThreadChatPane`)
  * own the active tab state and can persist it across mounts if we

@@ -4,9 +4,13 @@
  * The service used to emit deleted legacy `join`/`message`/`thread_message`
  * sockets, so nothing persisted — no message, no activity, no push. It now
  * routes through `channelService.send` (the v3 message path) like
- * `uploadNewTask`. These tests assert that wiring: the milestone bubble +
- * its thread follow-up are sent to the project's PM channel, and the
- * guards bail without sending.
+ * `uploadNewTask`. These tests assert that wiring: the milestone CARD is
+ * sent to the project's PM channel, and the guards bail without sending.
+ *
+ * The card send is the only one left. The service used to follow it with a
+ * "🚩 New milestone created by @X" thread reply; the PM thread's Activities
+ * tab now renders the structured audit log instead of system bubbles, so
+ * that follow-up was removed and must not come back.
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -17,7 +21,6 @@ import { ChannelKind } from "../types/channel";
 // Isolate the routing under test from the real BlockNote templates.
 vi.mock("../features/tasks/utils/TaskMessageTemplate", () => ({
     milestoneMessageTemplate: () => [{ type: "paragraph", content: "milestone created" }],
-    milestoneCreatedThreadMessageTemplate: () => [{ type: "paragraph", content: "thread" }],
 }));
 
 const PM = { id: "pm-uuid", kind: ChannelKind.PM, projectId: 7 };
@@ -56,20 +59,30 @@ describe("sendMilestoneCreatedMessage", () => {
         vi.spyOn(channelService, "send").mockResolvedValue({ id: "msg-1" } as any);
     });
 
-    it("posts the milestone bubble + thread follow-up to the project's PM channel", async () => {
+    it("posts the milestone card to the project's PM channel", async () => {
         await sendMilestoneCreatedMessage(baseInput());
 
         const send = channelService.send as unknown as ReturnType<typeof vi.fn>;
-        expect(send).toHaveBeenCalledTimes(2);
+        expect(send).toHaveBeenCalledTimes(1);
 
         const [chanId, , opts] = send.mock.calls[0];
         expect(chanId).toBe("pm-uuid");
         expect(opts.metadata.taskId).toBe(42);
         expect(opts.metadata.systemUserId).toBe("sys-1");
+    });
 
-        // Second call is the thread follow-up, parented to the first message.
-        const [, , followupOpts] = send.mock.calls[1];
-        expect(followupOpts.parentId).toBe("msg-1");
+    it("posts NO thread follow-up under the PM card", async () => {
+        await sendMilestoneCreatedMessage(baseInput());
+
+        // `parentId` is the only thing distinguishing a thread reply from
+        // a top-level card — both go through the same `send`. Scoped to
+        // the PM channel on purpose: the service also cross-posts into an
+        // open DM/GM/MDM thread (a parented send that must keep working),
+        // so a blanket "no parentId" would ban the wrong thing.
+        const send = channelService.send as unknown as ReturnType<typeof vi.fn>;
+        const pmSends = send.mock.calls.filter(([chanId]) => chanId === PM.id);
+        expect(pmSends).toHaveLength(1);
+        expect(pmSends[0][2]?.parentId).toBeUndefined();
     });
 
     it("falls back to a REST channel refresh when the snapshot lacks the PM channel", async () => {

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import { Sheet } from "@mui/joy";
+import { Box, Sheet } from "@mui/joy";
+import { useColorScheme } from "@mui/joy/styles";
 import { VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
 
@@ -24,6 +25,8 @@ import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../types/admin";
 import { ChatProps, MessageProps, ThreadMessageProps, ThreadProps } from "../../types/chat";
 import { TaskCommentProps } from "../../types/tasks";
+import { TaskActivityFeed } from "../tasks/components/contents/base/sub/TaskActivityFeed";
+import { useTaskActivities } from "../tasks/hooks/useTaskActivities";
 
 type MessagesPaneProps = {
     useTEM: TeamManagementState;
@@ -58,6 +61,8 @@ export const ThreadPane = (props: MessagesPaneProps) => {
     } = props;
 
     const { setCurrentThreadTaskId } = useChatContext();
+    const { mode } = useColorScheme();
+    const isDark = mode === "dark";
 
     // File drag-and-drop state. Used by the non-PM thread editor
     // (DM/group reply); PM threads route file drops through their
@@ -67,7 +72,8 @@ export const ThreadPane = (props: MessagesPaneProps) => {
     const handleDrop = useCallback(createFileDropHandler(setPendingFiles), []);
 
     // Two-tab state for PM threads tied to a task / milestone:
-    // "activities" (existing PM message feed, read-only) and
+    // "activities" (the task's structured audit log — the same
+    // `TaskActivityFeed` the task preview's Activity tab renders) and
     // "comments" (TaskCommentList + BlockNote editor reused from
     // TaskTabBlock — the only place a user can post). The strip
     // itself is hidden for non-PM threads and for PM threads that
@@ -86,6 +92,15 @@ export const ThreadPane = (props: MessagesPaneProps) => {
     useEffect(() => {
         setThreadTabValue("comments");
     }, [useCM.currentThreadChat?.threadId]);
+
+    // Audit rows for the Activities tab. Fetched here rather than inside
+    // the feed so switching tabs doesn't refetch and flash, and kept
+    // fresh on `genos:task-touched` for this task (a comment posted from
+    // the Comments tab writes a `comment_added` row, so hopping back to
+    // Activities shows it). Passing a null id while the strip is hidden
+    // keeps this a no-op for non-PM / task-less threads.
+    const { activities: threadTaskActivities, isLoading: isLoadingThreadTaskActivities } =
+        useTaskActivities(myself, showThreadTabStrip ? threadTaskId : null);
 
     // Update currentThreadTaskId when thread panel mounts or thread changes
     useEffect(() => {
@@ -188,14 +203,42 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                         useTM={useTM}
                         useUISM={useUISM}
                     />
+                ) : showThreadTabStrip && threadTaskId != null ? (
+                    // Activities: the task's structured audit log, the
+                    // same feed as the task preview's Activity tab.
+                    // This branch MUST sit above the generic `isPmThread`
+                    // one below, which would otherwise swallow it and
+                    // render the old message feed.
+                    //
+                    // `TaskActivityFeed` is a bare `<Stack>` — it owns no
+                    // scroller and no height cap, relying on its host to
+                    // constrain it (in TaskTabBlock the whole preview
+                    // page scrolls). This pane is a fixed-height flex
+                    // column, so it needs the flex-filling scroller here
+                    // or the feed would overflow with no way to reach the
+                    // older rows.
+                    <Box
+                        className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
+                        sx={{ flex: 1, minHeight: 0, overflowY: "auto" }}
+                    >
+                        <TaskActivityFeed
+                            activities={threadTaskActivities}
+                            allTasks={useTM.allTasks}
+                            isLoading={isLoadingThreadTaskActivities}
+                            myself={myself}
+                            setMyself={setMyself}
+                            socket={socket}
+                            useCM={useCM}
+                            useTEM={useTEM}
+                            useUISM={useUISM}
+                        />
+                    </Box>
                 ) : isPmThread ? (
-                    // Activities (or PM thread without task): read-only
-                    // PM-message feed. No editor — these are
-                    // auto-generated system bubbles ("Task created /
-                    // updated by …") and Project Updates threads are
-                    // read-only by design (mirrors MainChatPane's
-                    // `chatType !== 3` editor gate). Virtuoso flexes
-                    // to fill the freed bottom space.
+                    // PM thread without an associated task: read-only
+                    // PM-message feed. No editor — Project Updates
+                    // threads are read-only by design (mirrors
+                    // MainChatPane's `chatType !== 3` editor gate).
+                    // Virtuoso flexes to fill the freed bottom space.
                     <MessageListRenderer
                         chat={useCM.currentThreadChat as ThreadProps}
                         currentChatId={currentThreadChatId}

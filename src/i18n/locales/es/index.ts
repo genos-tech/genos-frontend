@@ -1027,10 +1027,6 @@ export const es: DeepPartial<Messages> = {
             sprintLabel: "Sprint: ",
             assigneesLabel: "Asignados: ",
             unassigned: "Sin asignar",
-            newTaskCreatedBy: "✨ Nueva tarea creada por ",
-            movedThisTaskTo: " movió esta tarea a ",
-            newCommentFrom: "💬 Nuevo comentario de ",
-            newMilestoneCreatedBy: "🚩 Nuevo hito creado por ",
         },
     },
     notes: {

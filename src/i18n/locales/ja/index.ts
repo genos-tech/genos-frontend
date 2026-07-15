@@ -1054,10 +1054,6 @@ export const ja: DeepPartial<Messages> = {
             sprintLabel: "スプリント：",
             assigneesLabel: "担当者：",
             unassigned: "未割り当て",
-            newTaskCreatedBy: "✨ 新規タスクが作成されました：",
-            movedThisTaskTo: " がこのタスクを次に移動しました：",
-            newCommentFrom: "💬 新しいコメント：",
-            newMilestoneCreatedBy: "🚩 新規マイルストーンが作成されました：",
         },
     },
     notes: {
