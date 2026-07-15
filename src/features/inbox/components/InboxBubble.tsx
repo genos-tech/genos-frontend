@@ -19,6 +19,7 @@ import { purplePalette } from "../../../theme/purplePalette";
 import { UserProps } from "../../../types/admin";
 import { InboxItemProps } from "../../../types/common";
 import { extractYYYYMMDDHHMM } from "../../../utils/dateUtils";
+import { InboxTargetChip } from "./InboxTargetChip";
 
 // Item type configurations for cleaner code. `colorScheme` is intentionally
 // NOT mapped to the unified purple palette — each request type needs a
@@ -87,6 +88,8 @@ export const InboxBubble = (props: InboxBubbleProps) => {
 
     const config = ITEM_TYPE_CONFIG[inboxItem.itemType];
     const isRequest = inboxItem.itemType >= 1 && inboxItem.itemType <= 4;
+    // Team / project / GM join requests — the ones with an openable target.
+    const isJoinRequest = inboxItem.itemType >= 1 && inboxItem.itemType <= 3;
     const resolvedStatus = localStatus ?? inboxItem.requestStatus;
     const isHandled = resolvedStatus === "approved" || resolvedStatus === "rejected";
 
@@ -229,6 +232,27 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                             content={inboxItem.itemBody}
                             customClassName="inbox-preview"
                             isSent={true}
+                            myself={myself}
+                            setMyself={setMyself}
+                            socket={socket}
+                            useCM={useCM}
+                            useTEM={useTEM}
+                            useUISM={useUISM}
+                        />
+                    </Box>
+                )}
+
+                {/* What the request is FOR. The body names the target in
+                    plain text, so the approver could read it but not open it —
+                    forcing them out of the inbox to find out who's asking for
+                    what. Renders nothing when the target can't be resolved.
+
+                    Join requests only (1-3): a note-access request has its own
+                    open-note chip below, and activity items carry no ids. */}
+                {isJoinRequest && (
+                    <Box>
+                        <InboxTargetChip
+                            inboxItem={inboxItem}
                             myself={myself}
                             setMyself={setMyself}
                             socket={socket}
