@@ -90,7 +90,7 @@ export const TaskCreateFooter = forwardRef<TaskCreateFooterHandle, TaskCreateFoo
 
             setIsCreatingTask?.(true);
             try {
-                await uploadNewTask({
+                const result = await uploadNewTask({
                     socket: socket,
                     myself: myself,
                     taskContent: taskContent,
@@ -101,6 +101,16 @@ export const TaskCreateFooter = forwardRef<TaskCreateFooterHandle, TaskCreateFoo
                     setCurrentPreviewTaskId: useTM.setCurrentPreviewTaskId,
                 });
 
+                // Bail BEFORE any of the success side effects. `setIsSubmitted`
+                // closes the form and wipes the draft, so running it on a
+                // failed create destroyed the user's title/body/attachments
+                // and left them staring at a task that was never created —
+                // `uploadNewTask` used to swallow its own throw, so every
+                // backend rejection looked exactly like success from here.
+                // It has already put the reason in the form's snackbar; keep
+                // everything on screen so the Create button IS the retry.
+                if (!result.ok) return;
+
                 if (taskContent.project && taskContent.project.projectId) {
                     localStorage.setItem("lastProjectId", String(taskContent.project.projectId));
                     usePM.setCurrentProject(taskContent.project);
@@ -108,27 +118,30 @@ export const TaskCreateFooter = forwardRef<TaskCreateFooterHandle, TaskCreateFoo
                     console.error("Failed to set the current project");
                 }
 
+                // Reveal the panels the new task lands in only once it exists
+                // — a failed create shouldn't swap the user's view out from
+                // under the form they're still editing.
+                if (window.location.pathname.includes("/workspace/tasks")) {
+                    useTM.setIsTaskTableVisible(true);
+                }
+                useTM.setIsTaskPreviewVisible(true);
+
                 setIsSubmitted(true);
             } finally {
-                // Always release the lock — `uploadNewTask` already reports
-                // failures through `setTitleError`, so leaving the form
-                // wedged on a transient backend hiccup would be worse than
-                // letting the user retry.
+                // Always release the lock — failures are reported through
+                // `setTitleError`, so leaving the form wedged on a transient
+                // backend hiccup would be worse than letting the user retry.
                 setIsCreatingTask?.(false);
             }
         };
 
-        // Pull the same gating + side effects the button's onClick uses
-        // (table reveal + preview reveal) into one place so both surfaces
-        // — click and Cmd/Ctrl+Enter — fire identically. The shortcut
-        // respects `isDisabled` so an empty title or in-flight create
-        // doesn't slip through.
+        // One entry point for both submit surfaces — click and
+        // Cmd/Ctrl+Enter — so gating and side effects fire identically. The
+        // shortcut respects `isDisabled` so an empty title or an in-flight
+        // create doesn't slip through. The table/preview reveals live inside
+        // `DoUploadNewTask` because they're success-only.
         const triggerSubmit = () => {
             if (isDisabled) return;
-            if (window.location.pathname.includes("/workspace/tasks")) {
-                useTM.setIsTaskTableVisible(true);
-            }
-            useTM.setIsTaskPreviewVisible(true);
             DoUploadNewTask();
         };
 
