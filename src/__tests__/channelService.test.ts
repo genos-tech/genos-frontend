@@ -448,3 +448,72 @@ describe("channelService.listChannels in-flight dedup", () => {
         expect(get).toHaveBeenCalledTimes(2);
     });
 });
+
+/**
+ * `reconcileChannelList` — dropping channels the server no longer lists.
+ *
+ * Regression: `listChannels` only ever ADDED. Callers push each row through
+ * `handleChannelCreated`, so a channel that vanished server-side lived on in
+ * the snapshot and in IDB forever. The removal path
+ * (`handleChannelMemberRemoved`) needs a live `channel.member_removed` event,
+ * and a channel can vanish without one — deleting a project soft-deletes its
+ * PM channel through a Django signal that emits nothing. The chat then sat in
+ * the sidebar pointing at a project that no longer existed, 404ing
+ * `sprint/config`, `milestone/list`, `messages`, `threads` and `members`.
+ */
+describe("channelService.reconcileChannelList", () => {
+    it("drops a channel the server no longer lists", () => {
+        const svc = new ChannelService();
+        svc.handleChannelCreated(makeChannel({ id: "gone" }));
+        svc.handleChannelCreated(makeChannel({ id: "kept" }));
+
+        svc.reconcileChannelList([makeChannel({ id: "kept" })]);
+
+        const ids = [...svc.getSnapshot().channels.keys()];
+        expect(ids).toEqual(["kept"]);
+    });
+
+    it("keeps everything when the server still lists it all", () => {
+        const svc = new ChannelService();
+        svc.handleChannelCreated(makeChannel({ id: "a" }));
+        svc.handleChannelCreated(makeChannel({ id: "b" }));
+
+        svc.reconcileChannelList([makeChannel({ id: "a" }), makeChannel({ id: "b" })]);
+
+        expect([...svc.getSnapshot().channels.keys()].sort()).toEqual(["a", "b"]);
+    });
+
+    it("clears an evicted channel's messages, cursors and members too", () => {
+        const svc = new ChannelService();
+        svc.handleChannelCreated(makeChannel({ id: "gone" }));
+        svc.handleMessageCreated(makeMessage({ id: "m-1", channelId: "gone" }));
+
+        svc.reconcileChannelList([]);
+
+        const snap = svc.getSnapshot();
+        expect(snap.channels.size).toBe(0);
+        expect(snap.messagesByChannel.get("gone")).toBeUndefined();
+        expect(snap.membersByChannel.get("gone")).toBeUndefined();
+        expect(snap.cursorsByChannel.get("gone")).toBeUndefined();
+    });
+
+    it("empties the store when the user has no channels left", () => {
+        const svc = new ChannelService();
+        svc.handleChannelCreated(makeChannel({ id: "only" }));
+
+        svc.reconcileChannelList([]);
+
+        expect(svc.getSnapshot().channels.size).toBe(0);
+    });
+
+    it("is a no-op when nothing is stale — no needless notify", () => {
+        const svc = new ChannelService();
+        svc.handleChannelCreated(makeChannel({ id: "a" }));
+        const before = svc.getSnapshot();
+
+        svc.reconcileChannelList([makeChannel({ id: "a" })]);
+
+        // Same snapshot identity => no re-render was triggered.
+        expect(svc.getSnapshot()).toBe(before);
+    });
+});

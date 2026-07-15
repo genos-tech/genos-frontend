@@ -77,3 +77,49 @@ describe("loadV3Chats pre-auth behaviour", () => {
         expect(errorSpy).not.toHaveBeenCalled();
     });
 });
+
+/**
+ * `loadV3Chats` must only reconcile against an AUTHORITATIVE full list.
+ *
+ * Reconciling drops every channel the response doesn't contain, so calling it
+ * with a failed or pre-auth response would wipe the user's entire chat list —
+ * turning a transient network blip into "all my chats vanished". The offline
+ * fallback exists precisely to avoid that.
+ */
+describe("loadV3Chats reconciliation safety", () => {
+    afterEach(() => {
+        vi.restoreAllMocks();
+        channelService.setAccessToken(null);
+    });
+
+    it("reconciles when the list load succeeds", async () => {
+        channelService.setAccessToken("tok-1");
+        const fresh = [{ id: "kept" }] as never[];
+        vi.spyOn(channelService, "listChannels").mockResolvedValue(fresh);
+        const reconcile = vi.spyOn(channelService, "reconcileChannelList");
+
+        await loadV3Chats("user-1");
+
+        expect(reconcile).toHaveBeenCalledWith(fresh);
+    });
+
+    it("NEVER reconciles when the list load fails — offline must not wipe the list", async () => {
+        vi.spyOn(console, "error").mockImplementation(() => {});
+        channelService.setAccessToken("tok-1");
+        vi.spyOn(channelService, "listChannels").mockRejectedValue(new Error("network down"));
+        const reconcile = vi.spyOn(channelService, "reconcileChannelList");
+
+        await loadV3Chats("user-1");
+
+        expect(reconcile).not.toHaveBeenCalled();
+    });
+
+    it("NEVER reconciles pre-auth — there is no response to reconcile against", async () => {
+        channelService.setAccessToken(null);
+        const reconcile = vi.spyOn(channelService, "reconcileChannelList");
+
+        await loadV3Chats("user-1");
+
+        expect(reconcile).not.toHaveBeenCalled();
+    });
+});
