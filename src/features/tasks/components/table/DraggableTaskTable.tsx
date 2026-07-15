@@ -28,7 +28,7 @@ import { createQuickTask } from "../../services/createQuickTask";
 import { emitTaskTouched } from "../../services/taskEvents";
 import { updateTaskFromTable } from "../../services/updateTaskFromTable";
 import { FilterProps } from "../../types/TaskTableTypes";
-import { buildComparator, nullTier, SortTier } from "../../utils/sortTask";
+import { sortTableTasks, SortTier } from "../../utils/sortTask";
 import { effortLevels, priorities, statuses } from "../../utils/taskMeta";
 import { DraggableTaskRow } from "./DraggableTaskRow";
 import { QuickAddDraft, QuickAddTaskRow } from "./QuickAddTaskRow";
@@ -458,6 +458,15 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         });
     }, [useTM.tableMilestoneFilterId, useTM.allTasks]);
 
+    // Order one level of the tree by the user's tiers (milestone-pinning
+    // and the default rules live in `sortTableTasks`). Defined above
+    // `childrenByParent` because the subtask index sorts each child group
+    // through this same function — every level obeys the one rule.
+    const sortTasks = useCallback(
+        (tasks: TaskTableProps[]) => sortTableTasks(tasks, sortTiers),
+        [sortTiers]
+    );
+
     const childrenByParent = useMemo(() => {
         // Include only child tasks with statuses/tags/priorities/effort
         // levels configured in TaskFilterMenu.
@@ -483,8 +492,18 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
             arr.push(task);
             map.set(parentId, arr);
         }
+        // Subtasks obey the user's sort condition too. Without this the
+        // groups render in raw `allTasks` order, so changing the sort
+        // reorders the root rows while every expanded subtask group sits
+        // untouched. `sortTasks` (not a bare comparator) keeps each level
+        // of the tree on the identical rule — and having it in the deps is
+        // what makes the groups *re-sort* when the condition changes,
+        // rather than only ordering correctly on first paint.
+        for (const [parentId, children] of map) {
+            if (children.length > 1) map.set(parentId, sortTasks(children));
+        }
         return map;
-    }, [useTM.allTasks, visibleChildTaskIds]);
+    }, [useTM.allTasks, visibleChildTaskIds, sortTasks]);
 
     // Unfiltered parent → children index used for the drag-and-drop cycle
     // check. The filtered `childrenByParent` above hides rows that don't
@@ -675,94 +694,6 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         }));
         setPredefinedTagsFilters([allTagFilter, ...tagBasedFilters]);
     }, [usePM.currentProject?.projectTags]);
-
-    // Sort tasks.
-    //
-    // Layered comparator, in order:
-    //   1. Milestone vs. task — milestones are higher-level work items and
-    //      are always pinned above regular tasks regardless of which column
-    //      / direction the user picked. Among the pinned milestones we sort
-    //      by sprint asc → due date asc → id asc so the next-up milestone
-    //      surfaces first. Filtering hides milestones; sorting never does.
-    //   2. Primary tier — the column the user clicked, with field-aware
-    //      comparison (numeric for ids/daysLeft, semantic-rank for
-    //      priority/status/effort, real date parsing for date columns,
-    //      locale-aware for text columns). Nulls always sink to the
-    //      bottom regardless of `asc`/`desc`.
-    //   3. "Always-on" multi-tier tie-breakers — Priority desc (Critical
-    //      first) → Status asc (Open → WIP → Pending → Closed → Deleted) →
-    //      Due Date asc (expired first). Each tier is skipped if it's
-    //      already the primary so the user's column click stays the
-    //      dominant signal.
-    //   4. Final deterministic tie-break by id so equal rows don't
-    //      visually shuffle on re-render.
-    const sortTasks = useCallback(
-        (tasks: TaskTableProps[]) => {
-            // 1. Milestone rows are pinned above every regular task,
-            //    sorted internally by daysLeft → dueDate → sprint → id
-            //    so the next-up milestone surfaces first regardless of
-            //    what the user picked for the task tiers.
-            // 2. Regular tasks fall to the shared `buildComparator`
-            //    over the user's sortTiers (0–2 entries). Empty tiers
-            //    array = preserve filter-pipeline ordering, falling
-            //    through to id-tiebreak for determinism.
-            const taskComparator = buildComparator(sortTiers);
-
-            const idCache = new Map<string | number, number | null>();
-            const cacheId = (raw: string | number | null | undefined) => {
-                if (raw == null) return null;
-                const cached = idCache.get(raw);
-                if (cached !== undefined) return cached;
-                const n = Number(raw);
-                const v = Number.isFinite(n) ? n : null;
-                idCache.set(raw, v);
-                return v;
-            };
-            const idTieBreak = (a: TaskTableProps, b: TaskTableProps) =>
-                (cacheId(a.id) ?? Number.MAX_SAFE_INTEGER) -
-                (cacheId(b.id) ?? Number.MAX_SAFE_INTEGER);
-
-            const compareMilestones = (a: TaskTableProps, b: TaskTableProps) => {
-                // daysLeft ascending so expired milestones top the list,
-                // then due-soon, with unscheduled (null) milestones at
-                // the bottom of the milestone group (still above tasks
-                // — that's enforced by the milestone-pin step).
-                const aDays = a.daysLeft ?? null;
-                const bDays = b.daysLeft ?? null;
-                const daysTier = nullTier(aDays, bDays);
-                if (daysTier !== 0) return daysTier;
-                if (aDays != null && bDays != null && aDays !== bDays) {
-                    return aDays - bDays;
-                }
-                // `daysLeft` is derived — fall back to the raw due date
-                // in case a row has one set without the other.
-                const aDue = a.dueDate ? new Date(a.dueDate).getTime() : NaN;
-                const bDue = b.dueDate ? new Date(b.dueDate).getTime() : NaN;
-                const aDueValid = Number.isFinite(aDue);
-                const bDueValid = Number.isFinite(bDue);
-                if (aDueValid !== bDueValid) return aDueValid ? -1 : 1;
-                if (aDueValid && bDueValid && aDue !== bDue) return aDue - bDue;
-                // Cluster milestones by sprint, then id.
-                const aSprint = a.sprintId ?? null;
-                const bSprint = b.sprintId ?? null;
-                const sprintTier = nullTier(aSprint, bSprint);
-                if (sprintTier !== 0) return sprintTier;
-                if (aSprint != null && bSprint != null && aSprint !== bSprint) {
-                    return aSprint - bSprint;
-                }
-                return idTieBreak(a, b);
-            };
-
-            return [...tasks].sort((a, b) => {
-                const aMile = a.isMilestone === true;
-                const bMile = b.isMilestone === true;
-                if (aMile !== bMile) return aMile ? -1 : 1;
-                if (aMile && bMile) return compareMilestones(a, b);
-                return taskComparator(a, b);
-            });
-        },
-        [sortTiers]
-    );
 
     // Reparent a task by dropping it ONTO another row (the `combine`
     // gesture from react-beautiful-dnd). Milestones can't be moved;

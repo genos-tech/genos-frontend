@@ -155,14 +155,17 @@ const cmpValues = (a: number | string | null, b: number | string | null): number
 };
 
 /**
- * Build a comparator for the given sort tiers. The comparator returns
- * a stable result (deterministic on ties via id), so callers can sort
- * in place without worrying about visual shuffle across re-renders.
+ * Comparator over the user's sort tiers **alone**, returning 0 when
+ * every tier ties. Callers append their own fallback ordering:
+ * `buildComparator` falls back to id, while the table's milestone group
+ * falls back to its due-date rule. An empty tier array compares
+ * everything as equal, which is what lets a caller's fallback act as the
+ * complete ordering when the user has configured no sort.
  *
  * Field values are cached per (task, field) so a tier's `fieldValue`
  * call is paid once per task, not 2× per comparator hit × N log N.
  */
-export const buildComparator = (
+export const buildTierComparator = (
     tiers: SortTier[]
 ): ((a: TaskTableProps, b: TaskTableProps) => number) => {
     // One cache per tier. Keys are task identity (we use `id` as a
@@ -182,6 +185,30 @@ export const buildComparator = (
         return v;
     };
 
+    return (a, b) => {
+        for (let i = 0; i < tiers.length; i++) {
+            const av = resolve(a, i);
+            const bv = resolve(b, i);
+            const tier = nullTier(av, bv);
+            if (tier !== 0) return tier;
+            const dir = tiers[i].direction === "asc" ? 1 : -1;
+            const cmp = cmpValues(av, bv) * dir;
+            if (cmp !== 0) return cmp;
+        }
+        return 0;
+    };
+};
+
+/**
+ * Build a comparator for the given sort tiers. The comparator returns
+ * a stable result (deterministic on ties via id), so callers can sort
+ * in place without worrying about visual shuffle across re-renders.
+ */
+export const buildComparator = (
+    tiers: SortTier[]
+): ((a: TaskTableProps, b: TaskTableProps) => number) => {
+    const compareTiers = buildTierComparator(tiers);
+
     const idCache = new Map<string | number, number | null>();
     const cacheId = (raw: string | number | null | undefined) => {
         if (raw == null) return null;
@@ -195,17 +222,91 @@ export const buildComparator = (
         (cacheId(a.id) ?? Number.MAX_SAFE_INTEGER) - (cacheId(b.id) ?? Number.MAX_SAFE_INTEGER);
 
     return (a, b) => {
-        for (let i = 0; i < tiers.length; i++) {
-            const av = resolve(a, i);
-            const bv = resolve(b, i);
-            const tier = nullTier(av, bv);
-            if (tier !== 0) return tier;
-            const dir = tiers[i].direction === "asc" ? 1 : -1;
-            const cmp = cmpValues(av, bv) * dir;
-            if (cmp !== 0) return cmp;
+        const cmp = compareTiers(a, b);
+        if (cmp !== 0) return cmp;
+        return idTieBreak(a, b);
+    };
+};
+
+/**
+ * Order one level of the task table's tree — root rows or a single
+ * parent's subtask group. Every level goes through here so the whole
+ * tree obeys one rule.
+ *
+ * Layered, in order:
+ *   1. Milestone vs. task — milestones are higher-level work items and
+ *      stay pinned above regular tasks whatever the user picked.
+ *      Filtering hides milestones; sorting never does.
+ *   2. The user's tiers, applied to tasks and (within the pinned group)
+ *      to milestones alike.
+ *   3. For milestones the tiers left tied: the built-in daysLeft →
+ *      dueDate → sprint → id rule, so the next-up milestone surfaces
+ *      first. With no tiers configured this rule is the whole ordering,
+ *      which is the long-standing default.
+ *   4. Deterministic id tie-break so equal rows don't shuffle on
+ *      re-render.
+ */
+export const sortTableTasks = (tasks: TaskTableProps[], tiers: SortTier[]): TaskTableProps[] => {
+    // Empty tiers = preserve the caller's (filter-pipeline) ordering,
+    // falling through to the id tie-break for determinism.
+    const taskComparator = buildComparator(tiers);
+    // Tier-only variant: returns 0 on a full tie so the milestone group
+    // can reach its own rule instead of the id tie-break that
+    // `buildComparator` would apply first.
+    const compareTiers = buildTierComparator(tiers);
+
+    const idCache = new Map<string | number, number | null>();
+    const cacheId = (raw: string | number | null | undefined) => {
+        if (raw == null) return null;
+        const cached = idCache.get(raw);
+        if (cached !== undefined) return cached;
+        const v = numericId(raw);
+        idCache.set(raw, v);
+        return v;
+    };
+    const idTieBreak = (a: TaskTableProps, b: TaskTableProps) =>
+        (cacheId(a.id) ?? Number.MAX_SAFE_INTEGER) - (cacheId(b.id) ?? Number.MAX_SAFE_INTEGER);
+
+    const compareMilestones = (a: TaskTableProps, b: TaskTableProps) => {
+        // The user's condition decides the milestone group's order too;
+        // everything below only breaks ties it left equal.
+        const tierCmp = compareTiers(a, b);
+        if (tierCmp !== 0) return tierCmp;
+        // daysLeft ascending so expired milestones top the list, then
+        // due-soon, with unscheduled (null) milestones at the bottom of
+        // the milestone group (still above tasks — that's the pin step).
+        const aDays = a.daysLeft ?? null;
+        const bDays = b.daysLeft ?? null;
+        const daysTier = nullTier(aDays, bDays);
+        if (daysTier !== 0) return daysTier;
+        if (aDays != null && bDays != null && aDays !== bDays) {
+            return aDays - bDays;
+        }
+        // `daysLeft` is derived — fall back to the raw due date in case a
+        // row has one set without the other.
+        const aDue = parseTs(a.dueDate);
+        const bDue = parseTs(b.dueDate);
+        const dueTier = nullTier(aDue, bDue);
+        if (dueTier !== 0) return dueTier;
+        if (aDue != null && bDue != null && aDue !== bDue) return aDue - bDue;
+        // Cluster milestones by sprint, then id.
+        const aSprint = a.sprintId ?? null;
+        const bSprint = b.sprintId ?? null;
+        const sprintTier = nullTier(aSprint, bSprint);
+        if (sprintTier !== 0) return sprintTier;
+        if (aSprint != null && bSprint != null && aSprint !== bSprint) {
+            return aSprint - bSprint;
         }
         return idTieBreak(a, b);
     };
+
+    return [...tasks].sort((a, b) => {
+        const aMile = a.isMilestone === true;
+        const bMile = b.isMilestone === true;
+        if (aMile !== bMile) return aMile ? -1 : 1;
+        if (aMile && bMile) return compareMilestones(a, b);
+        return taskComparator(a, b);
+    });
 };
 
 /**
