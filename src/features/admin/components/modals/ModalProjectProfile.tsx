@@ -41,7 +41,10 @@ import { FileSizeRejectionSnackbar } from "../../../../components/ui/feedback/Fi
 import { useFileSizeGuard } from "../../../../components/ui/feedback/useFileSizeGuard";
 import { ModalLeaveConfirm } from "../../../../components/ui/misc/ModalLeaveConfirm";
 import { ModalTransferOwner } from "../../../../components/ui/misc/ModalTransferOwner";
-import { ProfileModalStyles } from "../../../../components/ui/styles/commonStyle";
+import {
+    PROFILE_MODAL_Z_INDEX,
+    ProfileModalStyles,
+} from "../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
@@ -437,7 +440,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
             <Modal
                 open={openModalProjectProfile}
                 sx={{
-                    zIndex: 10001,
+                    zIndex: PROFILE_MODAL_Z_INDEX,
                     backdropFilter: "blur(8px)",
                     backgroundColor: "transparent",
                 }}
@@ -1374,6 +1377,10 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                 useCM={useCM}
                 useTEM={useTEM}
                 useUISM={useUISM}
+                // Derived from this modal's own layer, not hardcoded — the
+                // picker's page-level default (10000) is BELOW us and would
+                // open behind the modal that launched it.
+                zIndex={PROFILE_MODAL_Z_INDEX + 1}
                 heading={fmt(t.common.addMembers.headingProject, {
                     projectName: projectProfile?.projectName ?? pmChat.chatName,
                 })}

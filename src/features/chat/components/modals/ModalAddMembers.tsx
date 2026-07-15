@@ -57,6 +57,12 @@ type Props = {
     /** Title override — "Add members to <this project>" reads better than
      *  the DM-flavoured default when hosted in a profile modal. */
     heading?: string;
+    /** Stacking layer. Defaults to the page-level 10000 this modal has
+     *  always used (chat list / pane header open it over the page). A
+     *  modal-hosted opener MUST pass its own z + 1: the profile modals sit
+     *  at PROFILE_MODAL_Z_INDEX, so the default would render this picker
+     *  behind the very modal that opened it. */
+    zIndex?: number;
 };
 
 export const ModalAddMembers: React.FC<Props> = ({
@@ -72,6 +78,7 @@ export const ModalAddMembers: React.FC<Props> = ({
     excludeUserIds,
     onAdd,
     heading,
+    zIndex = 10000,
 }) => {
     const { t } = useTranslation();
     const [searchQuery, setSearchQuery] = useState("");
@@ -188,7 +195,7 @@ export const ModalAddMembers: React.FC<Props> = ({
         <Modal
             open={open}
             sx={{
-                zIndex: 10000,
+                zIndex,
                 backdropFilter: "blur(4px)",
                 // Transparent: Joy's own Backdrop slot already paints
                 // `palette.background.backdrop` + blur(8px). Stacking a
