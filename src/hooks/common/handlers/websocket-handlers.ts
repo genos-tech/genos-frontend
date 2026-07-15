@@ -6,6 +6,7 @@ import {
     v3MessageToLegacyChatPayload,
     v3MessageToLegacyThreadPayload,
 } from "../../../features/chat/adapters/v3MessageToNotification";
+import { inboxItemNamesAMissingChat } from "../../../features/inbox/utils/resolveInboxTarget";
 import { emitTaskTouched } from "../../../features/tasks/services/taskEvents";
 import { NotificationManager } from "../../../services/notifications/notificationManager";
 import {
@@ -233,6 +234,24 @@ export const setupWebSocketHandlers = (
             if (message.alreadyExist === false) {
                 await addInboxItem(inboxItem);
                 funcSetInboxItems();
+                // An activity announcing "you were added to / approved to join
+                // X" is proof we're now a member of X — but nothing pushes the
+                // new channel to us. A project add goes through
+                // `POST /project/join/` and the `_sync_pm_channel_member`
+                // Django signal, which emits nothing to any socket, and
+                // `allChats` otherwise only reloads on boot and on wake. So an
+                // added user's chat list stays stale for the entire session:
+                // the project chat never appears in their sidebar, and this
+                // card's target chip has no row to resolve against.
+                //
+                // This card IS the notification the chat list never got. Fire
+                // one refresh when it names a chat we don't hold. The
+                // membership is already committed server-side — the notice is
+                // only emitted after every `POST /project/join/` resolves — so
+                // this can't race ahead of it.
+                if (inboxItemNamesAMissingChat(inboxItem, useCM.allChats)) {
+                    void useCM.funcSetAllChats();
+                }
             }
         }
     });
