@@ -1,27 +1,26 @@
 /**
- * The "what is this request FOR" affordance on an inbox request card.
+ * The "what is this card ABOUT" affordance on an inbox card.
  *
- * A join request card names the requester (a rich `mention` node in
- * `itemBody`, hence already clickable) and the thing they want to join — but
- * the target is baked into the body as plain bold text at send time. So the
- * approver could see *who* and *what* by name, and open neither: deciding on
- * a request meant leaving the inbox to go look the target up.
+ * A card names a person (a rich `mention` node in `itemBody`, hence already
+ * clickable) and a thing — the project/GM/team they want to join, or that you
+ * were just approved for. But that thing is baked into the body as plain bold
+ * text at send time, so you could read *who* and *what* by name and open
+ * neither: acting on a card meant leaving the inbox to go look it up.
  *
- * The routing ids are already on the wire in `itemOptionals` (`project_id`,
- * `gm_id`); a team request's target is always the viewer's current team,
- * because the inbox GET is team-scoped. So this reads what's there rather
- * than touching the stored body — which also means every EXISTING request
- * card gets the chip, with no migration.
+ * Driven by `itemOptionals` rather than the stored body, so no card needs
+ * rewriting. Requests (1-3) have carried their routing ids all along, so every
+ * existing request card gets the chip with no migration. Activities (0) only
+ * started carrying them recently (api #76 + sockets #10) — older activity rows
+ * resolve to null forever, since the data was never captured.
  *
  * Self-contained (local open-state + hosted modal), mirroring `ProjectAvatar`
  * / `GMAvatar`, so `InboxBubble` doesn't hand-roll modal state three times.
  *
- * Resolvability is not assumed. The approver is the target's owner, so they
- * hold it in their own `allChats` — but a chip that opens nothing is worse
- * than no chip, so an unresolvable target falls back to plain text.
- *
- * Activity items (`itemType` 0) get nothing here: none of the nine handlers
- * that create them store `item_optionals`, so there is no id to resolve.
+ * Resolvability is never assumed — a chip that opens nothing is worse than no
+ * chip. Whoever reads the card usually holds the target in their own
+ * `allChats` (an approver owns it; someone just approved/added is now a
+ * member), but rejections and "waiting for approval" receipts name a thing the
+ * reader can't reach, and those render as plain text.
  */
 import { useState } from "react";
 import ChatRoundedIcon from "@mui/icons-material/ChatRounded";

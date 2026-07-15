@@ -32,6 +32,7 @@ const base_url = import.meta.env.VITE_API_BASE_URL;
 const emitAddedNotice = (
     socket: Socket | null,
     targetKind: "project" | "gm",
+    targetId: number | string,
     targetName: string,
     receiverIds: string[]
 ): void => {
@@ -56,6 +57,13 @@ const emitAddedNotice = (
         socket.emit("members_added_notice", {
             receiver_ids: receiverIds,
             target_kind: targetKind,
+            // Lets the receiver's inbox card link to the thing they were added
+            // to, instead of just naming it. A project's id is the legacy
+            // integer and a GM's is the v3 Channel UUID — the handler keys the
+            // stored optionals off `target_kind`, so the two never get mixed
+            // up. The handler treats this as optional, so an older client
+            // still gets a working (unlinked) notice.
+            target_id: targetId,
             target_name: targetName,
         });
     } catch (err) {
@@ -117,7 +125,7 @@ export const addMembersToProjectWithNotice = async ({
         }
     }
 
-    emitAddedNotice(socket, "project", projectName, addedIds);
+    emitAddedNotice(socket, "project", projectId, projectName, addedIds);
     return { addedIds, failedIds };
 };
 
@@ -146,6 +154,8 @@ export const addMembersToGMWithNotice = async ({
         return { addedIds: [], failedIds: memberIds };
     }
 
-    emitAddedNotice(socket, "gm", gmName, memberIds);
+    // `channelId` IS the GM's v3 Channel UUID — the same id the card resolves
+    // against `chat.chatId`.
+    emitAddedNotice(socket, "gm", channelId, gmName, memberIds);
     return { addedIds: memberIds, failedIds: [] };
 };

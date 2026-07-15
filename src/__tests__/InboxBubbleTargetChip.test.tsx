@@ -95,7 +95,18 @@ describe("InboxTargetChip", () => {
         expect(container).toBeEmptyDOMElement();
     });
 
-    it("renders nothing for an activity item", () => {
+    it("opens the project profile from an ACTIVITY card too", () => {
+        // "X added you to project Apollo" / "approved to join Apollo" — the
+        // receipt should reach the thing it names, same as a request does.
+        renderChip(0, { project_id: 42, project_name: "Apollo" });
+
+        fireEvent.click(screen.getByRole("button"));
+
+        expect(screen.getByTestId("project-profile")).toBeTruthy();
+    });
+
+    it("renders nothing for an activity that carries no ids", () => {
+        // Rejections, and every row created before activities stored ids.
         const { container } = renderChip(0, null);
         expect(container).toBeEmptyDOMElement();
     });

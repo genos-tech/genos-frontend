@@ -88,8 +88,11 @@ export const InboxBubble = (props: InboxBubbleProps) => {
 
     const config = ITEM_TYPE_CONFIG[inboxItem.itemType];
     const isRequest = inboxItem.itemType >= 1 && inboxItem.itemType <= 4;
-    // Team / project / GM join requests — the ones with an openable target.
-    const isJoinRequest = inboxItem.itemType >= 1 && inboxItem.itemType <= 3;
+    // Cards that can name an openable target: team/project/GM join requests
+    // (1-3) and activities (0). Note-access (4) is excluded — it has its own
+    // open-note chip. The chip renders nothing when nothing resolves, so this
+    // gate only decides where it's worth looking.
+    const canHaveTarget = inboxItem.itemType >= 0 && inboxItem.itemType <= 3;
     const resolvedStatus = localStatus ?? inboxItem.requestStatus;
     const isHandled = resolvedStatus === "approved" || resolvedStatus === "rejected";
 
@@ -242,14 +245,13 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                     </Box>
                 )}
 
-                {/* What the request is FOR. The body names the target in
-                    plain text, so the approver could read it but not open it —
-                    forcing them out of the inbox to find out who's asking for
-                    what. Renders nothing when the target can't be resolved.
-
-                    Join requests only (1-3): a note-access request has its own
-                    open-note chip below, and activity items carry no ids. */}
-                {isJoinRequest && (
+                {/* What the card is ABOUT. The body names the target in plain
+                    text, so you could read it but not open it — forcing you
+                    out of the inbox to find what you were just approved for,
+                    or who's asking for what. Renders nothing when the target
+                    can't be resolved, which includes every activity row
+                    created before activities carried ids. */}
+                {canHaveTarget && (
                     <Box>
                         <InboxTargetChip
                             inboxItem={inboxItem}
