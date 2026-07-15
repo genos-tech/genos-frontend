@@ -35,7 +35,23 @@ const emitAddedNotice = (
     targetName: string,
     receiverIds: string[]
 ): void => {
-    if (!socket || receiverIds.length === 0) return;
+    // Nobody landed — nothing to announce. Not a problem.
+    if (receiverIds.length === 0) return;
+    // Someone landed but we have no rail to announce it on. This is a
+    // wiring bug at the call site, and it used to fail silently: the member
+    // was added, and their invite simply never existed — no inbox row, no
+    // webpush, no error. `TaskHeader` hardcoded `socket={null}`, so every
+    // invite sent from the task-header project profile vanished while the
+    // identical GM flow worked.
+    if (!socket) {
+        console.error(
+            `[addMembersWithNotice] no socket — ${receiverIds.length} member(s) were added ` +
+                `to ${targetKind} "${targetName}" but will NOT be notified. ` +
+                `The caller must pass the legacy socket through.`,
+            receiverIds
+        );
+        return;
+    }
     try {
         socket.emit("members_added_notice", {
             receiver_ids: receiverIds,
