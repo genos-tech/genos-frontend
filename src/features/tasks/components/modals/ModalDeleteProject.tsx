@@ -162,16 +162,77 @@ export const ModalDeleteProject: React.FC<Props> = ({
                     {openDeleteProject.projectName}
                 </Typography>
 
-                {/* Warning */}
+                {/* Kept as the lead line: it's already translated into every
+                    locale, and it frames the list below. */}
                 <Typography
                     level="body-sm"
                     sx={{
                         color: "rgba(255, 255, 255, 0.5)",
-                        mb: 2.5,
+                        mb: 1.5,
                     }}
                 >
                     {t.tasks.modals.deleteProject.body}
                 </Typography>
+
+                {/* What deleting actually destroys.
+                    Spelled out rather than left at "this cannot be undone",
+                    because the scope is not guessable: a project takes its
+                    tasks, comments, attachments and notes with it, and none of
+                    it is recoverable. Every line is verified against the API's
+                    delete-scope tests. */}
+                <Box
+                    sx={{
+                        textAlign: "left",
+                        mb: 2.5,
+                        p: 1.5,
+                        borderRadius: "10px",
+                        background: "rgba(232,121,195,0.06)",
+                        border: "1px solid rgba(232,121,195,0.2)",
+                    }}
+                >
+                    <Typography
+                        level="body-sm"
+                        startDecorator={
+                            <WarningAmberIcon
+                                sx={{ fontSize: 16, color: "rgba(232,121,195,0.9)" }}
+                            />
+                        }
+                        sx={{ color: "rgba(232,121,195,0.9)", fontWeight: 600, mb: 1 }}
+                    >
+                        {t.tasks.modals.deleteProject.destroyedTitle}
+                    </Typography>
+
+                    <Box
+                        component="ul"
+                        sx={{
+                            listStyle: "disc",
+                            pl: 2.5,
+                            m: 0,
+                            "& li": {
+                                color: "rgba(255,255,255,0.75)",
+                                fontSize: "0.8rem",
+                                lineHeight: 1.7,
+                            },
+                        }}
+                    >
+                        <li>{t.tasks.modals.deleteProject.destroyedMilestones}</li>
+                        <li>{t.tasks.modals.deleteProject.destroyedTasks}</li>
+                        <li>{t.tasks.modals.deleteProject.destroyedSprints}</li>
+                        <li>{t.tasks.modals.deleteProject.destroyedMembersTags}</li>
+                    </Box>
+
+                    <Typography
+                        level="body-xs"
+                        sx={{
+                            color: "rgba(255,255,255,0.45)",
+                            mt: 1.25,
+                            pt: 1.25,
+                            borderTop: "1px solid rgba(255,255,255,0.08)",
+                        }}
+                    >
+                        {t.tasks.modals.deleteProject.chatNote}
+                    </Typography>
+                </Box>
 
                 {/* Error Alert */}
                 {errorMessage && (
