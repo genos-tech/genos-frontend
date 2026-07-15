@@ -43,6 +43,26 @@ type Props = {
     useTEM: TeamManagementState;
     useUISM: UIStateManagementState;
     setMyself: (value: UserProps) => void;
+    /** Extra user ids to hide from the picker, on top of the ones this
+     *  modal derives itself. Needed for GM / project, whose rosters this
+     *  component can't see — `AllChatProps` only carries `dmPartnerUser`
+     *  (DM) and `mdmMembers` (MDM). Callers pass the roster they already
+     *  loaded for their member list. */
+    excludeUserIds?: string[];
+    /** Overrides the default `addMembersToChat` dispatch. Return true on
+     *  success (the modal closes). Lets the profile modals own their own
+     *  add+notify while reusing this picker — `addMembersToChat` speaks
+     *  DM→MDM conversion and MDM adds, which is not what they need. */
+    onAdd?: (memberIds: string[]) => Promise<boolean>;
+    /** Title override — "Add members to <this project>" reads better than
+     *  the DM-flavoured default when hosted in a profile modal. */
+    heading?: string;
+    /** Stacking layer. Defaults to the page-level 10000 this modal has
+     *  always used (chat list / pane header open it over the page). A
+     *  modal-hosted opener MUST pass its own z + 1: the profile modals sit
+     *  at PROFILE_MODAL_Z_INDEX, so the default would render this picker
+     *  behind the very modal that opened it. */
+    zIndex?: number;
 };
 
 export const ModalAddMembers: React.FC<Props> = ({
@@ -55,6 +75,10 @@ export const ModalAddMembers: React.FC<Props> = ({
     useTEM,
     useUISM,
     setMyself,
+    excludeUserIds,
+    onAdd,
+    heading,
+    zIndex = 10000,
 }) => {
     const { t } = useTranslation();
     const [searchQuery, setSearchQuery] = useState("");
@@ -85,10 +109,13 @@ export const ModalAddMembers: React.FC<Props> = ({
             } else if (chat.chatType === 4 && chat.mdmMembers) {
                 chat.mdmMembers.forEach((m) => existingIds.add(m.userId));
             }
+            // GM / project rosters aren't on `AllChatProps`, so their
+            // callers hand us the list they already loaded.
+            excludeUserIds?.forEach((id) => existingIds.add(id));
 
             setExistingMemberIds(existingIds);
         }
-    }, [open, myself, useTEM.teamMembers, chat]);
+    }, [open, myself, useTEM.teamMembers, chat, excludeUserIds]);
 
     // Reset state when modal closes
     useEffect(() => {
@@ -139,6 +166,15 @@ export const ModalAddMembers: React.FC<Props> = ({
 
         try {
             const memberIds = selectedMembers.map((m) => m.userId);
+            if (onAdd) {
+                const ok = await onAdd(memberIds);
+                if (ok) {
+                    setOpen(false);
+                } else {
+                    setErrorMessage(t.chat.modals.addMembers.errorAdd);
+                }
+                return;
+            }
             await addMembersToChat(
                 myself,
                 chat,
@@ -159,7 +195,7 @@ export const ModalAddMembers: React.FC<Props> = ({
         <Modal
             open={open}
             sx={{
-                zIndex: 10000,
+                zIndex,
                 backdropFilter: "blur(4px)",
                 // Transparent: Joy's own Backdrop slot already paints
                 // `palette.background.backdrop` + blur(8px). Stacking a
@@ -212,7 +248,7 @@ export const ModalAddMembers: React.FC<Props> = ({
                             fontWeight: 600,
                         }}
                     >
-                        {t.chat.modals.addMembers.title}
+                        {heading ?? t.chat.modals.addMembers.title}
                     </Typography>
                 </Box>
 
@@ -300,7 +336,22 @@ export const ModalAddMembers: React.FC<Props> = ({
                                 }
                                 sx={{
                                     "--Chip-gap": "4px",
-                                    backgroundColor: "rgba(124,58,237,0.2)",
+                                    // This dialog is hardcoded dark in BOTH
+                                    // colour schemes, so the chip's colours have
+                                    // to be pinned too. Left to Joy, `soft` +
+                                    // `primary` resolves its TEXT from the ACTIVE
+                                    // palette: `primary-200` (light purple) in
+                                    // dark mode, but `primary-700` (dark purple)
+                                    // in light mode — which disappeared against
+                                    // the purple background, taking the ✕ with it
+                                    // (the icon inherits currentColor).
+                                    //
+                                    // Fed as Joy's own variables rather than a
+                                    // bare `color` / `backgroundColor`: the
+                                    // variant styles read these, so there's no
+                                    // cascade to fight.
+                                    "--variant-softBg": "rgba(124,58,237,0.2)",
+                                    "--variant-softColor": "rgba(255,255,255,0.95)",
                                 }}
                             >
                                 {member.userName}
@@ -457,6 +508,12 @@ export const ModalAddMembers: React.FC<Props> = ({
                             borderRadius: "10px",
                             backgroundColor: "rgba(232,121,195,0.1)",
                             border: "1px solid rgba(232,121,195,0.3)",
+                            // Same reason as the chips above: `danger` + the
+                            // default `soft` variant resolves the text from the
+                            // active palette — `danger-700` in light mode, i.e.
+                            // dark red on this always-dark dialog. Pin it to the
+                            // app's pink so it still reads as an error.
+                            "--variant-softColor": "rgba(232,121,195,0.95)",
                         }}
                     >
                         {errorMessage}

@@ -5,6 +5,11 @@ import type { DeepPartial, Messages } from "../../types";
  */
 export const zh: DeepPartial<Messages> = {
     common: {
+        addMembers: {
+            openButton: "添加成员",
+            headingProject: "向 {projectName} 添加成员",
+            headingGM: "向 {gmName} 添加成员",
+        },
         actions: {
             save: "保存",
             cancel: "取消",

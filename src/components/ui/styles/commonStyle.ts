@@ -8,6 +8,18 @@ import { purplePalette } from "../../../theme/purplePalette";
 
 const { dark: D, light: L } = purplePalette;
 
+/**
+ * Stacking layer of the profile-modal family (user / team / project / GM).
+ *
+ * Exported so anything opened FROM one of those modals can derive its own
+ * layer (`PROFILE_MODAL_Z_INDEX + 1`) instead of hardcoding a number that
+ * silently sinks behind its host — which is exactly what happened to the
+ * add-members picker: it carried a fixed 10000 from its page-level
+ * callers, so hosting it inside a profile modal rendered it underneath.
+ * See `frontend z-index` notes: derive from the host, never hardcode.
+ */
+export const PROFILE_MODAL_Z_INDEX = 10001;
+
 export const SignUpFormStyles = {
     dark: {
         cardBg: D.surface,

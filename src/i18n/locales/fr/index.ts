@@ -6,6 +6,11 @@ import type { DeepPartial, Messages } from "../../types";
  */
 export const fr: DeepPartial<Messages> = {
     common: {
+        addMembers: {
+            openButton: "Ajouter des membres",
+            headingProject: "Ajouter des membres à {projectName}",
+            headingGM: "Ajouter des membres à {gmName}",
+        },
         actions: {
             save: "Enregistrer",
             cancel: "Annuler",

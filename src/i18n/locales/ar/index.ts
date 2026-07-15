@@ -7,6 +7,11 @@ import type { DeepPartial, Messages } from "../../types";
  */
 export const ar: DeepPartial<Messages> = {
     common: {
+        addMembers: {
+            openButton: "إضافة أعضاء",
+            headingProject: "إضافة أعضاء إلى {projectName}",
+            headingGM: "إضافة أعضاء إلى {gmName}",
+        },
         actions: {
             save: "احفظ",
             cancel: "إلغاء",

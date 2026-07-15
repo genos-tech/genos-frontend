@@ -48,6 +48,11 @@ export const common = {
         gmDescription:
             "You'll no longer see this group's messages. You can re-join later if it's public.",
     },
+    addMembers: {
+        openButton: "Add members",
+        headingProject: "Add members to {projectName}",
+        headingGM: "Add members to {gmName}",
+    },
     profileEdit: {
         rename: "Rename",
         save: "Save",
