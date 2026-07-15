@@ -6,6 +6,11 @@ import type { DeepPartial, Messages } from "../../types";
  */
 export const ja: DeepPartial<Messages> = {
     common: {
+        addMembers: {
+            openButton: "メンバーを追加",
+            headingProject: "{projectName} にメンバーを追加",
+            headingGM: "{gmName} にメンバーを追加",
+        },
         actions: {
             save: "保存",
             cancel: "キャンセル",

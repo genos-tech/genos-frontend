@@ -43,6 +43,20 @@ type Props = {
     useTEM: TeamManagementState;
     useUISM: UIStateManagementState;
     setMyself: (value: UserProps) => void;
+    /** Extra user ids to hide from the picker, on top of the ones this
+     *  modal derives itself. Needed for GM / project, whose rosters this
+     *  component can't see — `AllChatProps` only carries `dmPartnerUser`
+     *  (DM) and `mdmMembers` (MDM). Callers pass the roster they already
+     *  loaded for their member list. */
+    excludeUserIds?: string[];
+    /** Overrides the default `addMembersToChat` dispatch. Return true on
+     *  success (the modal closes). Lets the profile modals own their own
+     *  add+notify while reusing this picker — `addMembersToChat` speaks
+     *  DM→MDM conversion and MDM adds, which is not what they need. */
+    onAdd?: (memberIds: string[]) => Promise<boolean>;
+    /** Title override — "Add members to <this project>" reads better than
+     *  the DM-flavoured default when hosted in a profile modal. */
+    heading?: string;
 };
 
 export const ModalAddMembers: React.FC<Props> = ({
@@ -55,6 +69,9 @@ export const ModalAddMembers: React.FC<Props> = ({
     useTEM,
     useUISM,
     setMyself,
+    excludeUserIds,
+    onAdd,
+    heading,
 }) => {
     const { t } = useTranslation();
     const [searchQuery, setSearchQuery] = useState("");
@@ -85,10 +102,13 @@ export const ModalAddMembers: React.FC<Props> = ({
             } else if (chat.chatType === 4 && chat.mdmMembers) {
                 chat.mdmMembers.forEach((m) => existingIds.add(m.userId));
             }
+            // GM / project rosters aren't on `AllChatProps`, so their
+            // callers hand us the list they already loaded.
+            excludeUserIds?.forEach((id) => existingIds.add(id));
 
             setExistingMemberIds(existingIds);
         }
-    }, [open, myself, useTEM.teamMembers, chat]);
+    }, [open, myself, useTEM.teamMembers, chat, excludeUserIds]);
 
     // Reset state when modal closes
     useEffect(() => {
@@ -139,6 +159,15 @@ export const ModalAddMembers: React.FC<Props> = ({
 
         try {
             const memberIds = selectedMembers.map((m) => m.userId);
+            if (onAdd) {
+                const ok = await onAdd(memberIds);
+                if (ok) {
+                    setOpen(false);
+                } else {
+                    setErrorMessage(t.chat.modals.addMembers.errorAdd);
+                }
+                return;
+            }
             await addMembersToChat(
                 myself,
                 chat,
@@ -212,7 +241,7 @@ export const ModalAddMembers: React.FC<Props> = ({
                             fontWeight: 600,
                         }}
                     >
-                        {t.chat.modals.addMembers.title}
+                        {heading ?? t.chat.modals.addMembers.title}
                     </Typography>
                 </Box>
 

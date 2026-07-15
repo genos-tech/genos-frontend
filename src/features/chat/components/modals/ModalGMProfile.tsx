@@ -12,6 +12,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
 import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
+import PersonAddAltRoundedIcon from "@mui/icons-material/PersonAddAltRounded";
 import SearchIcon from "@mui/icons-material/Search";
 import SwapHorizRoundedIcon from "@mui/icons-material/SwapHorizRounded";
 import {
@@ -45,6 +46,7 @@ import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { fmt, useTranslation } from "../../../../i18n";
+import { addMembersToGMWithNotice } from "../../../../services/addMembersWithNotice";
 import { channelService } from "../../../../services/channel/channelService";
 import { v3ApiBaseURL } from "../../../../services/v3Api";
 import { UserProps } from "../../../../types/admin";
@@ -56,6 +58,7 @@ import {
     useGMProfileImageVersion,
 } from "../../../../utils/gmProfileImageVersion";
 import { resolveLegacyChatId } from "../../utils/channelIdResolvers";
+import { ModalAddMembers } from "./ModalAddMembers";
 
 // GM profile-image upload uses the v3 host root (v3ApiBaseURL); the
 // legacy VITE_API_BASE_URL (`…/api/v2`) was double-prefixing the v3 path.
@@ -215,6 +218,26 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                 })),
         [gmProfile?.gmMembers, myself.userId]
     );
+
+    // Add-teammates flow. Open to ANY GM member, not just the owner
+    // (unlike rename / transfer above) — that was the ask, and the v3
+    // members endpoint authorises on membership, not ownership.
+    //
+    // No local roster patch: the v3 `channel.member.add` broadcast updates
+    // `snapshot.membersByChannel`, and this modal derives `gmProfile` from
+    // that snapshot via a `channelService.subscribe` — so the member list
+    // refreshes itself.
+    const [openAddMembers, setOpenAddMembers] = useState(false);
+
+    const handleAddMembers = async (memberIds: string[]): Promise<boolean> => {
+        const { failedIds } = await addMembersToGMWithNotice({
+            channelId: gmChat.chatId,
+            gmName: liveChat.chatName,
+            memberIds,
+            socket,
+        });
+        return failedIds.length === 0;
+    };
 
     const handleLeaveGM = async () => {
         // v3 leave. `channelService.removeMember` posts to the v3
@@ -812,26 +835,55 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                     justifyContent="space-between"
                                                     sx={{ mb: 1 }}
                                                 >
-                                                    <FormLabel
-                                                        sx={{
-                                                            color: styles.labelColor,
-                                                            fontSize: "0.75rem",
-                                                            fontWeight: 600,
-                                                            textTransform: "uppercase",
-                                                            letterSpacing: "0.05em",
-                                                            mb: 0,
-                                                        }}
+                                                    <Stack
+                                                        alignItems="center"
+                                                        direction="row"
+                                                        spacing={1}
                                                     >
-                                                        {fmt(
-                                                            t.chat.modals.gmProfile.membersCount,
-                                                            {
-                                                                filtered: filteredMembers.length,
-                                                                total:
-                                                                    gmProfile?.gmMembers?.length ||
-                                                                    0,
+                                                        <FormLabel
+                                                            sx={{
+                                                                color: styles.labelColor,
+                                                                fontSize: "0.75rem",
+                                                                fontWeight: 600,
+                                                                textTransform: "uppercase",
+                                                                letterSpacing: "0.05em",
+                                                                mb: 0,
+                                                            }}
+                                                        >
+                                                            {fmt(
+                                                                t.chat.modals.gmProfile
+                                                                    .membersCount,
+                                                                {
+                                                                    filtered:
+                                                                        filteredMembers.length,
+                                                                    total:
+                                                                        gmProfile?.gmMembers
+                                                                            ?.length || 0,
+                                                                }
+                                                            )}
+                                                        </FormLabel>
+                                                        {/* Any member can add teammates — no
+                                                            owner gate. */}
+                                                        <Button
+                                                            disabled={!gmProfile}
+                                                            size="sm"
+                                                            variant="soft"
+                                                            startDecorator={
+                                                                <PersonAddAltRoundedIcon
+                                                                    sx={{ fontSize: 14 }}
+                                                                />
                                                             }
-                                                        )}
-                                                    </FormLabel>
+                                                            sx={{
+                                                                borderRadius: "8px",
+                                                                fontSize: "12px",
+                                                                fontWeight: 600,
+                                                                flexShrink: 0,
+                                                            }}
+                                                            onClick={() => setOpenAddMembers(true)}
+                                                        >
+                                                            {t.common.addMembers.openButton}
+                                                        </Button>
+                                                    </Stack>
                                                     <Input
                                                         value={memberSearchQuery}
                                                         endDecorator={
@@ -1106,6 +1158,23 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                 title={t.common.profileEdit.transferTitle}
                 onCancel={() => setOpenTransfer(false)}
                 onConfirm={handleTransferConfirm}
+            />
+            {/* `onAdd` overrides the picker's DM→MDM dispatch;
+                `excludeUserIds` hides current members (the picker can't
+                derive a GM roster from `AllChatProps`). */}
+            <ModalAddMembers
+                chat={gmChat}
+                excludeUserIds={(gmProfile?.gmMembers ?? []).map((m) => m.userId)}
+                heading={fmt(t.common.addMembers.headingGM, { gmName: liveChat.chatName })}
+                myself={myself}
+                open={openAddMembers}
+                setMyself={setMyself}
+                setOpen={setOpenAddMembers}
+                socket={socket}
+                useCM={useCM}
+                useTEM={useTEM}
+                useUISM={useUISM}
+                onAdd={handleAddMembers}
             />
         </>
     );

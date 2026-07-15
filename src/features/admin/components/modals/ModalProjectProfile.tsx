@@ -12,6 +12,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import EditIcon from "@mui/icons-material/Edit";
 import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
+import PersonAddAltRoundedIcon from "@mui/icons-material/PersonAddAltRounded";
 import SearchIcon from "@mui/icons-material/Search";
 import SwapHorizRoundedIcon from "@mui/icons-material/SwapHorizRounded";
 import {
@@ -46,6 +47,7 @@ import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { fmt, useTranslation } from "../../../../i18n";
+import { addMembersToProjectWithNotice } from "../../../../services/addMembersWithNotice";
 import { channelService } from "../../../../services/channel/channelService";
 import { loadProjectProfile } from "../../../../services/loadProjectProfile";
 import { purplePalette } from "../../../../theme/purplePalette";
@@ -54,6 +56,7 @@ import { ChannelKind } from "../../../../types/channel";
 import { AllChatProps } from "../../../../types/chat";
 import { buildAvatarSrc } from "../../../../utils/avatarSrc";
 import { extractYYYYMMDD } from "../../../../utils/dateUtils";
+import { ModalAddMembers } from "../../../chat/components/modals/ModalAddMembers";
 import { resolveLegacyChatId } from "../../../chat/utils/channelIdResolvers";
 import { leaveProject } from "../../services/leaveProject";
 import { updateProjectProfile } from "../../services/updateProjectProfile";
@@ -392,6 +395,30 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
             accessToken
         );
         setProjectProfile(projectProfile);
+    };
+
+    // Add-teammates flow. Open to ANY project member, not just the owner
+    // (unlike rename / transfer above) — that was the ask, and the
+    // backend's `POST /project/join/` has no ownership check either.
+    const [openAddMembers, setOpenAddMembers] = useState(false);
+
+    const handleAddMembers = async (memberIds: string[]): Promise<boolean> => {
+        if (!projectProfile?.projectId) return false;
+        const { addedIds, failedIds } = await addMembersToProjectWithNotice({
+            accessToken,
+            memberIds,
+            myself,
+            projectId: projectProfile.projectId,
+            projectName: projectProfile.projectName ?? pmChat.chatName,
+            socket,
+        });
+        if (addedIds.length > 0) {
+            // Re-read the roster so the member list + count reflect the
+            // adds. Nothing to patch for the PM channel itself — the
+            // `_sync_pm_channel_member` signal mirrors it server-side.
+            await loadProjectProfileData();
+        }
+        return failedIds.length === 0;
     };
 
     useEffect(() => {
@@ -881,23 +908,52 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                     spacing={{ xs: 1, sm: 0 }}
                                                     sx={{ mb: 1 }}
                                                 >
-                                                    <FormLabel
-                                                        sx={{
-                                                            color: styles.labelColor,
-                                                            fontSize: "0.75rem",
-                                                            fontWeight: 600,
-                                                            textTransform: "uppercase",
-                                                            letterSpacing: "0.05em",
-                                                            mb: 0,
-                                                        }}
+                                                    <Stack
+                                                        alignItems="center"
+                                                        direction="row"
+                                                        spacing={1}
                                                     >
-                                                        {fmt(t.admin.projectProfile.members, {
-                                                            filtered: filteredMembers.length,
-                                                            total:
-                                                                projectProfile?.projectMembers
-                                                                    ?.length || 0,
-                                                        })}
-                                                    </FormLabel>
+                                                        <FormLabel
+                                                            sx={{
+                                                                color: styles.labelColor,
+                                                                fontSize: "0.75rem",
+                                                                fontWeight: 600,
+                                                                textTransform: "uppercase",
+                                                                letterSpacing: "0.05em",
+                                                                mb: 0,
+                                                            }}
+                                                        >
+                                                            {fmt(t.admin.projectProfile.members, {
+                                                                filtered: filteredMembers.length,
+                                                                total:
+                                                                    projectProfile?.projectMembers
+                                                                        ?.length || 0,
+                                                            })}
+                                                        </FormLabel>
+                                                        {/* Any member can add teammates — no
+                                                            owner gate. Disabled until the
+                                                            profile (and so the project id)
+                                                            has loaded. */}
+                                                        <Button
+                                                            disabled={!projectProfile?.projectId}
+                                                            size="sm"
+                                                            variant="soft"
+                                                            startDecorator={
+                                                                <PersonAddAltRoundedIcon
+                                                                    sx={{ fontSize: 14 }}
+                                                                />
+                                                            }
+                                                            sx={{
+                                                                borderRadius: "8px",
+                                                                fontSize: "12px",
+                                                                fontWeight: 600,
+                                                                flexShrink: 0,
+                                                            }}
+                                                            onClick={() => setOpenAddMembers(true)}
+                                                        >
+                                                            {t.common.addMembers.openButton}
+                                                        </Button>
+                                                    </Stack>
                                                     <Input
                                                         placeholder={
                                                             t.admin.projectProfile.searchMembers
@@ -1301,6 +1357,27 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                 candidates={transferCandidates}
                 onConfirm={handleTransferConfirm}
                 onCancel={() => setOpenTransfer(false)}
+            />
+            {/* Reuses the chat picker — it already does "search my team,
+                multi-select, chips". `onAdd` replaces its DM→MDM dispatch
+                (which can't handle PM), and `excludeUserIds` hides people
+                already in the project: the picker can't derive a PM roster
+                from `AllChatProps` on its own. */}
+            <ModalAddMembers
+                chat={pmChat}
+                excludeUserIds={(projectProfile?.projectMembers ?? []).map((m) => m.userId)}
+                myself={myself}
+                open={openAddMembers}
+                setMyself={setMyself}
+                setOpen={setOpenAddMembers}
+                socket={socket}
+                useCM={useCM}
+                useTEM={useTEM}
+                useUISM={useUISM}
+                heading={fmt(t.common.addMembers.headingProject, {
+                    projectName: projectProfile?.projectName ?? pmChat.chatName,
+                })}
+                onAdd={handleAddMembers}
             />
         </>
     );
