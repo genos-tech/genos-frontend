@@ -443,6 +443,16 @@ export class ChannelService {
     }
 
     /**
+     * Whether a token has been pushed in yet. Lets callers distinguish
+     * "not signed in / token still in flight" — an expected, quiet state —
+     * from a REST call that genuinely failed, rather than finding out via
+     * the `UNAUTHENTICATED` throw from `api()`.
+     */
+    hasAccessToken(): boolean {
+        return this.accessToken !== null;
+    }
+
+    /**
      * Set the current user id so message handlers can distinguish
      * self-sent (don't bump my unread count) from incoming events.
      *
