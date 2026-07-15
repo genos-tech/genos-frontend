@@ -53,6 +53,14 @@ export async function loadV3Chats(currentUserId: string | null): Promise<AllChat
             // off the snapshot see the same data the wire response had.
             const fresh = await channelService.listChannels();
             for (const c of fresh) channelService.handleChannelCreated(c);
+            // The upsert above only ADDS. Drop anything the server no longer
+            // lists, or a channel that disappeared without a live
+            // `channel.member_removed` event stays in the sidebar forever —
+            // deleting a project soft-deletes its PM channel via a Django
+            // signal that emits nothing, leaving a chat that 404s on every
+            // sync. Inside the try on purpose: this needs an authoritative
+            // full list, and a failed call must never evict anything.
+            channelService.reconcileChannelList(fresh);
             // The list payload carries `members` for DM/MDM rows — seed them
             // into the snapshot so DM partner names/avatars (and MDM member
             // avatars) resolve on the FIRST chat-list render, instead of only

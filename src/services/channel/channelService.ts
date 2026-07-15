@@ -656,6 +656,56 @@ export class ChannelService {
         }
     }
 
+    /**
+     * Drop channels the server no longer lists.
+     *
+     * `listChannels` only ever ADDS: callers push each row through
+     * `handleChannelCreated`, so a channel that disappears server-side lives on
+     * in the snapshot and in IDB forever. There is a removal path
+     * (`handleChannelMemberRemoved`), but it needs a live `channel.member_removed`
+     * event — and a channel can vanish without one. Deleting a project
+     * soft-deletes its PM channel through a Django signal that emits nothing, so
+     * the chat sat in the sidebar pointing at a project that no longer exists,
+     * 404ing `sprint/config`, `milestone/list`, `messages`, `threads` and
+     * `members` on every sync.
+     *
+     * `GET /api/v3/channels/` is the user's COMPLETE active set — unpaginated,
+     * not team-scoped, filtered on `is_deleted=False` and live membership. So
+     * anything held locally but absent from it is genuinely gone (deleted, or
+     * we were removed), and reconciling against it is safe.
+     *
+     * MUST only be called with an authoritative full list. Never call it with a
+     * partial or failed response — that would evict every real channel.
+     */
+    reconcileChannelList(fresh: Channel[]): void {
+        const live = new Set(fresh.map((c) => c.id));
+        const stale = [...this._channels.values()].filter((c) => !live.has(c.id));
+        if (stale.length === 0) return;
+
+        for (const channel of stale) {
+            // Stop the server pushing events for a channel we no longer show.
+            // Best-effort, exactly as in `handleChannelMemberRemoved`: the
+            // store has already dropped it, so any ghost event finds no
+            // matching entry and is ignored.
+            if (this.socket?.connected) {
+                void this.unsubscribeChannel(channel.id, channel.kind).catch(() => {
+                    /* best-effort — store already dropped it */
+                });
+            }
+            this._channels.delete(channel.id);
+            this._messages.delete(channel.id);
+            this._cursors.delete(channel.id);
+            this._members.delete(channel.id);
+            this._pinByChannelId.delete(channel.id);
+            void this._persistChannelDelete(channel.id);
+        }
+        console.info(
+            `[ChannelService] dropped ${stale.length} channel(s) the server no longer lists:`,
+            stale.map((c) => c.id)
+        );
+        this._notify();
+    }
+
     async fetchMessagesDelta(
         channelId: string,
         since?: string
