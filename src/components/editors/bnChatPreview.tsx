@@ -175,7 +175,11 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
     };
 
     return (
-        <Box ref={editorBoxRef} className={bnBoxClassName} sx={{ px: "10px" }}>
+        // `--bn-preview-box-px` is the same 10px this always used — named so
+        // callers that render something ALONGSIDE a preview (the inbox card's
+        // chips) can line up with the body text instead of guessing at the
+        // padding between them. See `--inbox-preview-indent` in App.css.
+        <Box ref={editorBoxRef} className={bnBoxClassName} sx={{ px: "var(--bn-preview-box-px)" }}>
             <BlockNoteView
                 className="bn-box"
                 editable={false}

@@ -67,6 +67,16 @@ const ITEM_TYPE_CONFIG: Record<
     },
 };
 
+// Where the card's body text actually starts, measured from the card's own
+// content edge. The body is inset TWICE — BnChatPreview wraps it in a box with
+// `px: var(--bn-preview-box-px)`, and `.inbox-preview-{light,dark} .bn-editor`
+// then adds `var(--inbox-preview-indent)` on top.
+//
+// Chips sit BESIDE the preview, not inside it, so they have to clear both or
+// they hang off to the left of the sentence they belong to. Summed with calc()
+// rather than hard-coded, so tuning either inset keeps the chips aligned.
+const BODY_TEXT_INDENT = "calc(var(--bn-preview-box-px) + var(--inbox-preview-indent))";
+
 type InboxBubbleProps = {
     useTEM: TeamManagementState;
     socket: Socket | null;
@@ -252,13 +262,12 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                     can't be resolved, which includes every activity row
                     created before activities carried ids. */}
                 {canHaveTarget && (
-                    // Line the chip up with the body text above it. The body is
-                    // a BlockNote preview, and `.inbox-preview-*-{light,dark}
-                    // .bn-editor` insets it — so a chip at the card's own left
-                    // edge reads as detached from the sentence it belongs to.
-                    // Shares the CSS variable rather than repeating the number,
-                    // so the two can't drift apart.
-                    <Box sx={{ pl: "var(--inbox-preview-indent)" }}>
+                    // Line the chip up with the body text above it, or it
+                    // reads as detached from the sentence it belongs to. The
+                    // body is inset TWICE: BnChatPreview's own box padding,
+                    // then `.inbox-preview-{light,dark} .bn-editor`. Clear
+                    // both, via the variables rather than a hard-coded total.
+                    <Box sx={{ pl: BODY_TEXT_INDENT }}>
                         <InboxTargetChip
                             inboxItem={inboxItem}
                             myself={myself}
@@ -276,7 +285,7 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                     inbox (the owner has access, so it loads normally). */}
                 {openableNote && urlLinkModal && (
                     // Indented to match the body, same as the target chip above.
-                    <Box sx={{ pl: "var(--inbox-preview-indent)" }}>
+                    <Box sx={{ pl: BODY_TEXT_INDENT }}>
                         <Chip
                             color="primary"
                             size="sm"
