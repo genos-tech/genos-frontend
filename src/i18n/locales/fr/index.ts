@@ -832,6 +832,10 @@ export const fr: DeepPartial<Messages> = {
             confirmDeleteMilestone: "Supprimer ce jalon ?",
         },
         createForm: {
+            bootstrapFailed:
+                "Impossible de préparer une nouvelle tâche. Vérifiez votre connexion et réessayez.",
+            bootstrapRetry: "Réessayer",
+            bootstrapCancel: "Annuler",
             taskDetails: "Détails de la tâche",
             description: "Description",
             attachments: "Pièces jointes",

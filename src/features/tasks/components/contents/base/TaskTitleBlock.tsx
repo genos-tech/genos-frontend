@@ -208,12 +208,14 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
             // persisted draft alongside the backend empty-task so the next
             // form open starts clean.
             useTM.setTaskDraft(null);
-            deleteEmptyTask({
+            // Fire-and-forget cleanup: the pane is already closing, so a
+            // failure here must be logged, never an uncaught rejection.
+            void deleteEmptyTask({
                 myself: myself,
                 taskId: taskContent.id,
                 accessToken: accessToken,
                 setInitialEmptyTaskId: useTM.setInitialEmptyTaskId,
-            });
+            }).catch((err) => console.error("[TaskTitleBlock] deleteEmptyTask failed:", err));
         }
     };
 

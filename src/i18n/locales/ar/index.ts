@@ -825,6 +825,9 @@ export const ar: DeepPartial<Messages> = {
             confirmDeleteMilestone: "حذف هذا المعلم؟",
         },
         createForm: {
+            bootstrapFailed: "تعذّر تجهيز مهمة جديدة. تحقّق من اتصالك وحاول مرة أخرى.",
+            bootstrapRetry: "إعادة المحاولة",
+            bootstrapCancel: "إلغاء",
             taskDetails: "تفاصيل المهمة",
             description: "الوصف",
             attachments: "المرفقات",

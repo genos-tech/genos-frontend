@@ -341,6 +341,9 @@ export const tasks = {
     createForm: {
         taskDetails: "Task Details",
         preparing: "Preparing task…",
+        bootstrapFailed: "Couldn't prepare a new task. Check your connection and try again.",
+        bootstrapRetry: "Try again",
+        bootstrapCancel: "Cancel",
         description: "Description",
         attachments: "Attachments",
         templates: {

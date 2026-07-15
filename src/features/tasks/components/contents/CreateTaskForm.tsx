@@ -57,8 +57,15 @@ import { TaskCreateAttachmentBlock } from "./base/TaskCreateAttachmentBlock";
 import { TaskCreateBodyBlock } from "./base/TaskCreateBodyBlock";
 import { TaskCreateFooter, type TaskCreateFooterHandle } from "./base/TaskCreateFooter";
 import { TaskMainBlock } from "./base/TaskMainBlock";
+import { TaskPaneError } from "./base/TaskPaneError";
 import { TaskPaneLoading } from "./base/TaskPaneLoading";
 import { TaskTitleBlock } from "./base/TaskTitleBlock";
+
+// How long to wait for the empty-task POST before treating it as failed.
+// Generous on purpose: this is a backstop against a request that never
+// settles (which no try/catch can see), not a latency budget — a cold
+// create legitimately takes a second or two.
+const BOOTSTRAP_TIMEOUT_MS = 25_000;
 
 // Section divider component
 const SectionDivider = ({ isDark }: { isDark: boolean }) => (
@@ -208,29 +215,102 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
     // before the new `createEmptyTask` POST returns.
     const freshEmptyTaskIdRef = useRef<number | undefined>(undefined);
 
+    // Bootstrap failure surfaces as `TaskPaneError` instead of the pane
+    // spinning forever. Previously the call below was fire-and-forget with
+    // no catch, so a rejected POST (offline, !ok, malformed body) — or a
+    // missing token, which the service used to swallow silently — left the
+    // loading pane up permanently with no way out.
+    const [bootstrapError, setBootstrapError] = useState<string | null>(null);
+    const [bootstrapRetryNonce, setBootstrapRetryNonce] = useState(0);
+    // One create per mount (or per explicit retry). Guards the effect below
+    // from re-running on an `accessToken` refresh — each POST writes a real
+    // backend row, so a re-run would orphan one.
+    const bootstrapStartedRef = useRef(false);
+    const bootstrapAbortRef = useRef<AbortController | null>(null);
+    const mountedRef = useRef(true);
     useEffect(() => {
-        let cancelled = false;
+        mountedRef.current = true;
+        return () => {
+            mountedRef.current = false;
+            // Abort only on unmount — NOT from the effect below's cleanup,
+            // which would kill an in-flight POST every time the token
+            // refreshed mid-request.
+            bootstrapAbortRef.current?.abort();
+            // Refs survive an unmount/remount of the same element (and a
+            // StrictMode double-invoke), so without this reset a remount
+            // would see `started === true`, skip the create, and sit on the
+            // loading pane forever — the very hang this is guarding.
+            bootstrapStartedRef.current = false;
+        };
+    }, []);
+
+    useEffect(() => {
+        // Wait for a token rather than failing on it: this form can mount in
+        // the same tick as the Cmd+T shortcut, before auth resolves. The
+        // timeout below is what stops "waiting" from becoming "hanging".
+        if (!accessToken) return;
+        if (bootstrapStartedRef.current) return;
+        bootstrapStartedRef.current = true;
+
+        const controller = new AbortController();
+        bootstrapAbortRef.current = controller;
+        // A fetch that never settles can't be caught — only aborted. Generous
+        // because a cold by-id load legitimately takes a second or two; this
+        // is a backstop against hanging, not a latency budget.
+        const abortTimer = setTimeout(() => controller.abort(), BOOTSTRAP_TIMEOUT_MS);
+
         // Drop any leftover id from a previously consumed creation flow
         // before kicking off the bootstrap. Belt-and-suspenders with the
-        // ref guard below — if anything else races to set the id (e.g.
-        // a cancelled prior mount), the watcher still won't seed until
-        // it sees the id we created here.
+        // ref guard in the watcher below — if anything else races to set the
+        // id (e.g. a cancelled prior mount), the watcher still won't seed
+        // until it sees the id we created here.
+        setBootstrapError(null);
         useTM.setInitialEmptyTaskId(undefined);
-        createEmptyTask({
-            myself: myself,
-            projectId: usePM.currentProject?.projectId || 0,
-            accessToken: accessToken,
-            setInitialEmptyTaskId: (id: number) => {
-                if (cancelled) return;
+
+        void (async () => {
+            try {
+                const id = await createEmptyTask({
+                    myself: myself,
+                    projectId: usePM.currentProject?.projectId || 0,
+                    accessToken: accessToken,
+                    signal: controller.signal,
+                });
+                if (!mountedRef.current) return;
                 freshEmptyTaskIdRef.current = id;
                 useTM.setInitialEmptyTaskId(id);
-            },
-        });
-        return () => {
-            cancelled = true;
-        };
+            } catch (err) {
+                if (!mountedRef.current) return;
+                console.error("[CreateTaskForm] empty-task bootstrap failed:", err);
+                setBootstrapError(t.tasks.createForm.bootstrapFailed);
+            } finally {
+                clearTimeout(abortTimer);
+            }
+        })();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [accessToken, bootstrapRetryNonce]);
+
+    // Manual retry only — never automatic. Every attempt POSTs a new backend
+    // row, so a retry loop would spray orphaned empty tasks and could mask a
+    // real outage. One orphan per deliberate retry is the accepted cost.
+    const retryBootstrap = () => {
+        bootstrapStartedRef.current = false;
+        setBootstrapRetryNonce((n) => n + 1);
+    };
+
+    // Give up: tear the form down properly rather than stranding the user in
+    // the error pane (which has no header, hence no X of its own).
+    const cancelBootstrap = () => {
+        useTM.setIsCreatingTask({
+            flag: false,
+            parentTaskId: null,
+            rootTaskId: null,
+            creationKind: "task",
+            milestoneId: null,
+        });
+        if (isNoMainPanelVisible(useTM)) {
+            useTM.setIsTaskTableVisible(true);
+        }
+    };
 
     // Default due date for a freshly-created task: inherit from the
     // immediate parent so a child can't outlast its container. Mental
@@ -1120,6 +1200,15 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                         </ModalDialog>
                     </Modal>
                 </Sheet>
+            ) : bootstrapError ? (
+                <TaskPaneError
+                    cancelLabel={t.tasks.createForm.bootstrapCancel}
+                    isDark={isDark}
+                    message={bootstrapError}
+                    retryLabel={t.tasks.createForm.bootstrapRetry}
+                    onCancel={cancelBootstrap}
+                    onRetry={retryBootstrap}
+                />
             ) : (
                 <TaskPaneLoading isDark={isDark} label={t.tasks.createForm.preparing} />
             )}
