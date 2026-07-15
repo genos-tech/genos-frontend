@@ -857,10 +857,19 @@ div[data-floating-ui-focusable] {
 }
 
 /* Inbox preview */
+
+/* The inbox card's body is inset by this much, so anything rendered BESIDE the
+   body (the target chip) must use the same value or it sits out to the left of
+   the text it belongs to. Read from `InboxBubble` — keep them linked here
+   rather than repeating the number. */
+:root {
+    --inbox-preview-indent: 20px;
+}
+
 .inbox-preview-light .bn-editor {
     color: black;
     background-color: transparent;
-    padding-left: 20px;
+    padding-left: var(--inbox-preview-indent);
 }
 
 .inbox-preview-light code {
@@ -871,7 +880,7 @@ div[data-floating-ui-focusable] {
 .inbox-preview-dark .bn-editor {
     color: white;
     background-color: transparent;
-    padding-left: 20px;
+    padding-left: var(--inbox-preview-indent);
 }
 
 .inbox-preview-dark code {

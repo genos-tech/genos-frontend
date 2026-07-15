@@ -252,7 +252,13 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                     can't be resolved, which includes every activity row
                     created before activities carried ids. */}
                 {canHaveTarget && (
-                    <Box>
+                    // Line the chip up with the body text above it. The body is
+                    // a BlockNote preview, and `.inbox-preview-*-{light,dark}
+                    // .bn-editor` insets it — so a chip at the card's own left
+                    // edge reads as detached from the sentence it belongs to.
+                    // Shares the CSS variable rather than repeating the number,
+                    // so the two can't drift apart.
+                    <Box sx={{ pl: "var(--inbox-preview-indent)" }}>
                         <InboxTargetChip
                             inboxItem={inboxItem}
                             myself={myself}
@@ -269,7 +275,8 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                     the referenced note in the URL-link modal on top of the
                     inbox (the owner has access, so it loads normally). */}
                 {openableNote && urlLinkModal && (
-                    <Box>
+                    // Indented to match the body, same as the target chip above.
+                    <Box sx={{ pl: "var(--inbox-preview-indent)" }}>
                         <Chip
                             color="primary"
                             size="sm"
