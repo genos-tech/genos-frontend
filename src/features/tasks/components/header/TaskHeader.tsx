@@ -8,6 +8,7 @@ import LockOutlineIcon from "@mui/icons-material/LockOutline";
 import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
 import { Box, IconButton, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
+import { Socket } from "socket.io-client";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { ProjectAvatar } from "../../../../components/ui/avatars/ProjectAvatar";
@@ -38,6 +39,11 @@ interface TaskHeaderProps {
     onDeleteProject: () => void;
     onCloseTaskHome: () => void;
     useTM: TaskManagementState;
+    // Reaches `ModalProjectProfile` (via `ProjectAvatar`) so its
+    // add-members flow can emit `members_added_notice` on the legacy
+    // namespace. Passing `null` here silently drops every invite
+    // notification opened from this header.
+    socket: Socket | null;
 }
 
 export const TaskHeader = ({
@@ -52,6 +58,7 @@ export const TaskHeader = ({
     onDeleteProject,
     onCloseTaskHome,
     useTM,
+    socket,
 }: TaskHeaderProps) => {
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
@@ -162,7 +169,7 @@ export const TaskHeader = ({
                                 myself={myself}
                                 pmChat={pmChat}
                                 setMyself={setMyself}
-                                socket={null}
+                                socket={socket}
                                 useCM={useCM}
                                 useTEM={useTEM}
                                 useUISM={useUISM}

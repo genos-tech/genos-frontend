@@ -33,7 +33,13 @@ const projectArgs = (over = {}) => ({
 });
 
 describe("addMembersToProjectWithNotice", () => {
-    afterEach(() => vi.unstubAllGlobals());
+    afterEach(() => {
+        vi.unstubAllGlobals();
+        // Spies too, not just globals: `console.error` spies otherwise
+        // survive into the next test WITH their recorded calls, so an
+        // assertion on call count silently reads the previous test's log.
+        vi.restoreAllMocks();
+    });
 
     it("POSTs one project/join per member and notifies them all", async () => {
         const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 200 });
@@ -104,6 +110,34 @@ describe("addMembersToProjectWithNotice", () => {
         vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, status: 200 }));
         const res = await addMembersToProjectWithNotice(projectArgs({ socket: null }));
         expect(res.addedIds).toEqual(["u1", "u2"]);
+    });
+
+    // The add committing while the notice evaporates is the WORST outcome:
+    // the member is in, nobody told them, and nothing was logged. That's
+    // exactly what `TaskHeader`'s hardcoded `socket={null}` produced — the
+    // project invite flow looked broken while the identical GM one worked.
+    // A missing socket is a wiring bug and must be audible.
+    it("reports loudly when members were added but no socket exists to notify them", async () => {
+        const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+        vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, status: 200 }));
+
+        await addMembersToProjectWithNotice(projectArgs({ socket: null }));
+
+        expect(errorSpy).toHaveBeenCalledTimes(1);
+        expect(String(errorSpy.mock.calls[0][0])).toContain("will NOT be notified");
+    });
+
+    it("stays quiet when there was nobody to notify in the first place", async () => {
+        const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+        vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, status: 400 }));
+
+        // Every add failed, so an absent socket is irrelevant — no notice
+        // was owed. Only the per-member failures should be logged.
+        await addMembersToProjectWithNotice(projectArgs({ socket: null }));
+
+        expect(
+            errorSpy.mock.calls.filter((c) => String(c[0]).includes("will NOT be notified"))
+        ).toHaveLength(0);
     });
 });
 

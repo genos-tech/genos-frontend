@@ -96,6 +96,7 @@ export const TaskHomeLayout = ({
                     <TaskHeader
                         myself={myself}
                         setMyself={setMyself}
+                        socket={socket}
                         useCM={useCM}
                         usePM={usePM}
                         useTEM={useTEM}
