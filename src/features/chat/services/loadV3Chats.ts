@@ -33,35 +33,44 @@ import { v3ChannelsToLegacyChats } from "../adapters/v3ToLegacy";
  * across failures.
  */
 export async function loadV3Chats(currentUserId: string | null): Promise<AllChatProps[]> {
-    try {
-        // `listChannels` is a pure REST GET — it doesn't auto-upsert.
-        // We push each row through `handleChannelCreated` so the
-        // in-memory store + IDB stay current, and subsequent reads
-        // off the snapshot see the same data the wire response had.
-        const fresh = await channelService.listChannels();
-        for (const c of fresh) channelService.handleChannelCreated(c);
-        // The list payload carries `members` for DM/MDM rows — seed them
-        // into the snapshot so DM partner names/avatars (and MDM member
-        // avatars) resolve on the FIRST chat-list render, instead of only
-        // after the channel is opened (which lazily fetches members).
-        channelService.ingestListMembers(fresh);
-    } catch (e) {
-        // Falling back to the snapshot (a prior boot's IDB hydration) is
-        // deliberate — offline should still render the cached list. But
-        // this MUST be loud: swallowing it silently is what let a frozen
-        // chat list look like a rendering bug for days. The most common
-        // failure isn't the network at all, it's `UNAUTHENTICATED`:
-        // `channelService.api()` throws when no token is set yet, and the
-        // caller may be racing the async token refresh (see the
-        // token-landing re-fire in `useChatManagement`). When that
-        // happens every channel created since the last good load is
-        // invisible for the whole session, with nothing in the console
-        // to say why.
-        console.error(
-            "[loadV3Chats] listChannels failed — rendering the cached channel list, " +
-                "which will be missing anything created since the last successful load:",
-            e
-        );
+    // Pre-auth: return the snapshot without touching the network.
+    //
+    // Two of the three loaders in `useChatManagement` fire before the async
+    // token refresh resolves — the mount-once effect runs before even
+    // `myself.userId` has hydrated. `api()` would throw `UNAUTHENTICATED`
+    // before issuing any request, so the call cannot do anything except
+    // fail. That is an expected boot state, not a failure worth reporting,
+    // and reporting it anyway put a red error in the console on every single
+    // boot — which is worse than useless: it trains everyone to ignore the
+    // one log that actually matters below.
+    //
+    // The real load is the token-landing re-fire in `useChatManagement`.
+    if (channelService.hasAccessToken()) {
+        try {
+            // `listChannels` is a pure REST GET — it doesn't auto-upsert.
+            // We push each row through `handleChannelCreated` so the
+            // in-memory store + IDB stay current, and subsequent reads
+            // off the snapshot see the same data the wire response had.
+            const fresh = await channelService.listChannels();
+            for (const c of fresh) channelService.handleChannelCreated(c);
+            // The list payload carries `members` for DM/MDM rows — seed them
+            // into the snapshot so DM partner names/avatars (and MDM member
+            // avatars) resolve on the FIRST chat-list render, instead of only
+            // after the channel is opened (which lazily fetches members).
+            channelService.ingestListMembers(fresh);
+        } catch (e) {
+            // Falling back to the snapshot (a prior boot's IDB hydration) is
+            // deliberate — offline should still render the cached list. But
+            // this MUST be loud: swallowing it silently is what let a frozen
+            // chat list look like a rendering bug for days. Anything that
+            // reaches here is a genuine failure — a token exists, so it's the
+            // network or the server, not the boot-time race above.
+            console.error(
+                "[loadV3Chats] listChannels failed — rendering the cached channel list, " +
+                    "which will be missing anything created since the last successful load:",
+                e
+            );
+        }
     }
     const snapshot = channelService.getSnapshot();
     return v3ChannelsToLegacyChats({
