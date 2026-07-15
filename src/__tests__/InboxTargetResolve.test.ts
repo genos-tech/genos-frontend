@@ -17,7 +17,10 @@
  */
 import { describe, expect, it } from "vitest";
 
-import { resolveInboxTarget } from "../features/inbox/utils/resolveInboxTarget";
+import {
+    inboxItemNamesAMissingChat,
+    resolveInboxTarget,
+} from "../features/inbox/utils/resolveInboxTarget";
 import type { AllChatProps } from "../types/chat";
 import type { InboxItemProps } from "../types/common";
 
@@ -153,5 +156,59 @@ describe("resolveInboxTarget", () => {
                 name: "GM name from chat",
             }
         );
+    });
+});
+
+/**
+ * "This card says I'm in something my chat list doesn't have."
+ *
+ * Nothing pushes a new PM channel to a user who was just added: the add lands
+ * via `POST /project/join/` and the `_sync_pm_channel_member` Django signal,
+ * which emits to no socket, and `allChats` otherwise only reloads on boot and
+ * on wake. So an added user's chat list is stale for the whole session — the
+ * project chat never appears in their sidebar, and the card's chip has no row
+ * to resolve. The card is the notification the chat list never got.
+ */
+describe("inboxItemNamesAMissingChat", () => {
+    it("fires for an activity naming a project we do not have", () => {
+        expect(inboxItemNamesAMissingChat(item(0, { project_id: 999 }), CHATS)).toBe(true);
+    });
+
+    it("fires for an activity naming a GM we do not have", () => {
+        expect(inboxItemNamesAMissingChat(item(0, { gm_id: "unknown-uuid" }), CHATS)).toBe(true);
+    });
+
+    it("does NOT fire when we already hold the chat — no pointless refetch", () => {
+        expect(inboxItemNamesAMissingChat(item(0, { project_id: 42 }), CHATS)).toBe(false);
+        expect(inboxItemNamesAMissingChat(item(0, { gm_id: "gm-channel-uuid" }), CHATS)).toBe(
+            false
+        );
+    });
+
+    it("does NOT fire for a request — it goes to the owner, who has the chat", () => {
+        expect(inboxItemNamesAMissingChat(item(2, { project_id: 999 }), CHATS)).toBe(false);
+        expect(inboxItemNamesAMissingChat(item(3, { gm_id: "unknown-uuid" }), CHATS)).toBe(false);
+    });
+
+    it("does NOT fire for an activity carrying no ids", () => {
+        // Rejections, and rows predating the ids. Nothing to look up.
+        expect(inboxItemNamesAMissingChat(item(0, null), CHATS)).toBe(false);
+        expect(inboxItemNamesAMissingChat(item(0, {}), CHATS)).toBe(false);
+    });
+
+    it("does NOT fire for a team activity — you can't see a team inbox you're not in", () => {
+        expect(inboxItemNamesAMissingChat(item(0, { team_name: "Genos" }), CHATS)).toBe(false);
+    });
+
+    it("agrees with resolveInboxTarget: refresh exactly when the chip can't resolve", () => {
+        // The two must never disagree, or we'd either refetch forever or
+        // leave a chip permanently dead. Same matching rules, by construction.
+        const missing = item(0, { project_id: 999 });
+        expect(resolveInboxTarget(missing, CHATS, "Team")).toBeNull();
+        expect(inboxItemNamesAMissingChat(missing, CHATS)).toBe(true);
+
+        const present = item(0, { project_id: 42 });
+        expect(resolveInboxTarget(present, CHATS, "Team")).not.toBeNull();
+        expect(inboxItemNamesAMissingChat(present, CHATS)).toBe(false);
     });
 });

@@ -46,6 +46,42 @@ const findGmChat = (allChats: AllChatProps[], gmId: unknown) =>
         : undefined;
 
 /**
+ * "This card says I'm in something my chat list doesn't have."
+ *
+ * An activity announcing membership — "added you to the project: X",
+ * "approved to join X" — is proof the reader is now a member. But nothing
+ * pushes the new channel to them: a project add lands via `POST /project/join/`
+ * and the Django `_sync_pm_channel_member` signal, which is a pure DB signal
+ * that emits nothing. `allChats` only reloads on boot and on wake, so an added
+ * user's chat list stays stale for the whole session — they don't see the
+ * project chat appear at all, and this card's target chip can't resolve.
+ *
+ * So the card itself is the notification the chat list never got. When it
+ * names a chat we don't hold, the list is provably behind and worth one
+ * refresh.
+ *
+ * Deliberately narrow: activities only (a REQUEST goes to the owner, who
+ * already has the chat), and only when the named chat is genuinely absent —
+ * so it can't loop or fire on every card. Uses the same matching rules as
+ * `resolveInboxTarget`, so "can the chip resolve it?" and "should we refresh?"
+ * can never disagree.
+ */
+export const inboxItemNamesAMissingChat = (
+    inboxItem: InboxItemProps,
+    allChats: AllChatProps[]
+): boolean => {
+    if (inboxItem.itemType !== 0) return false;
+    const opts = inboxItem.itemOptionals;
+    if (!opts) return false;
+
+    if (typeof opts.project_id === "number") return !findPmChat(allChats, opts.project_id);
+    if (typeof opts.gm_id === "string" && opts.gm_id) return !findGmChat(allChats, opts.gm_id);
+    // A team activity names no id, and you can't be looking at a team's inbox
+    // without already being in that team.
+    return false;
+};
+
+/**
  * Activity items (`itemType` 0) have no type to switch on — one item type
  * covers "approved to join", "added you to", and every other receipt. So the
  * kind is inferred from WHICH ids are present, using the same keys the request
