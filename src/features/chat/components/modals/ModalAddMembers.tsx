@@ -336,7 +336,22 @@ export const ModalAddMembers: React.FC<Props> = ({
                                 }
                                 sx={{
                                     "--Chip-gap": "4px",
-                                    backgroundColor: "rgba(124,58,237,0.2)",
+                                    // This dialog is hardcoded dark in BOTH
+                                    // colour schemes, so the chip's colours have
+                                    // to be pinned too. Left to Joy, `soft` +
+                                    // `primary` resolves its TEXT from the ACTIVE
+                                    // palette: `primary-200` (light purple) in
+                                    // dark mode, but `primary-700` (dark purple)
+                                    // in light mode — which disappeared against
+                                    // the purple background, taking the ✕ with it
+                                    // (the icon inherits currentColor).
+                                    //
+                                    // Fed as Joy's own variables rather than a
+                                    // bare `color` / `backgroundColor`: the
+                                    // variant styles read these, so there's no
+                                    // cascade to fight.
+                                    "--variant-softBg": "rgba(124,58,237,0.2)",
+                                    "--variant-softColor": "rgba(255,255,255,0.95)",
                                 }}
                             >
                                 {member.userName}
@@ -493,6 +508,12 @@ export const ModalAddMembers: React.FC<Props> = ({
                             borderRadius: "10px",
                             backgroundColor: "rgba(232,121,195,0.1)",
                             border: "1px solid rgba(232,121,195,0.3)",
+                            // Same reason as the chips above: `danger` + the
+                            // default `soft` variant resolves the text from the
+                            // active palette — `danger-700` in light mode, i.e.
+                            // dark red on this always-dark dialog. Pin it to the
+                            // app's pink so it still reads as an error.
+                            "--variant-softColor": "rgba(232,121,195,0.95)",
                         }}
                     >
                         {errorMessage}
