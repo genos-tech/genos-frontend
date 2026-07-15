@@ -550,10 +550,69 @@ export const TaskPreview = (props: TaskPreviewProps) => {
             }
         });
     }, [taskEditState.currentTaskId, useTM.currentPreviewTask?.id]);
+    // Does `MilestonePreviewInner` own the pane? Computed HERE, above the
+    // effects, even though the early return that uses it is far below —
+    // the loaders need to know, and it's a pure read of useTM/useSM.
+    //
+    // Reason 1: when the milestone preview takes over, this component's
+    // hooks all still run (the early return sits after them). Both would
+    // otherwise load into the SHARED `useTM.taskComments` slot and race.
+    //
+    // Reason 2 (the actual bug): a milestone jump clears
+    // `currentPreviewTask` but NOT `taskEditState.currentTaskId` (the sync
+    // effect bails on `if (!next) return`), so coming BACK to the same task
+    // left every dep unchanged, the load effect never re-ran, and the
+    // milestone's comments — written to the shared slot while it was up —
+    // simply stayed on screen under the child task. Going via a DIFFERENT
+    // task changed the id and hid it, which is exactly why it reproduced
+    // only on "milestone → same task again".
+    const fromNoteMilestoneId =
+        useTM.currentPreviewTask?.isMilestone === true &&
+        useTM.currentPreviewTask?.milestoneId != null
+            ? Number(useTM.currentPreviewTask.milestoneId)
+            : null;
+    // Defensive fallback: the chat thread header's "Open Task" button only
+    // sets `currentPreviewTaskId` and relies on a downstream load to
+    // hydrate `currentPreviewTask`. Two failure modes are possible:
+    //   1) The hydration endpoint (e.g. `getTaskByThreadId`) historically
+    //      didn't carry `isMilestone`/`milestoneId` — even after the
+    //      backend fix, older sessions may serve stale shapes.
+    //   2) `currentPreviewTask` is just stale from a previous selection.
+    // Look up the id in `useTM.allTasks` (which we keep populated with
+    // milestone metadata after milestone create / project task load) as
+    // a second source of truth. This catches every "open task by id"
+    // entry point — including future ones — without each caller having
+    // to manually decide between `setCurrentPreviewTaskId` and
+    // `setCurrentPreviewMilestoneId`.
+    const fromAllTasksMilestoneId = (() => {
+        if (useTM.currentPreviewTaskId == null || useTM.currentPreviewTaskId === -1) {
+            return null;
+        }
+        const match = useTM.allTasks.find((t) => Number(t.id) === useTM.currentPreviewTaskId);
+        return match?.isMilestone === true && match.milestoneId != null
+            ? Number(match.milestoneId)
+            : null;
+    })();
+    // Also covers navigating from a task-note's "Open Task" chip into a
+    // milestone's backing task, which seeds `currentPreviewTask` directly
+    // without going through the milestone routing — reroute so the user
+    // lands on the milestone preview, not a task preview wrapping the
+    // backing row.
+    const reroutedMilestoneId = fromNoteMilestoneId ?? fromAllTasksMilestoneId;
+    const isMilestoneMode =
+        !!useSM &&
+        ((useTM.currentPreviewKind === "milestone" && useTM.currentPreviewMilestoneId !== -1) ||
+            reroutedMilestoneId != null);
+
     const taskComments = useTM.taskComments;
     const setTaskComments = useTM.setTaskComments;
+    const previewTaskId = Number(useTM.currentPreviewTask?.id);
     useEffect(() => {
-        const previewTaskId = Number(useTM.currentPreviewTask?.id);
+        // The milestone preview owns the shared `taskComments` slot while
+        // it's up — don't fight it. Leaving milestone mode flips this dep
+        // back to false, which is what re-runs the load and replaces the
+        // milestone's comments with this task's own.
+        if (isMilestoneMode) return;
         if (!Number.isFinite(previewTaskId) || previewTaskId <= 0) {
             setTaskComments([]);
             markCommentsLoaded(0);
@@ -573,7 +632,11 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         return () => {
             cancelled = true;
         };
-    }, [commentRefreshNonce, taskEditState.currentTaskId]);
+        // Keyed on the id it actually READS. It used to key on
+        // `taskEditState.currentTaskId` — a copy that lags behind and, on
+        // the milestone round-trip, never changed at all.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [commentRefreshNonce, previewTaskId, isMilestoneMode]);
 
     // Get Task Activities. The fetch lives here (rather than inside
     // `TaskActivityFeed`) so the data survives Activity tab unmounts.
@@ -585,13 +648,18 @@ export const TaskPreview = (props: TaskPreviewProps) => {
     // feel as snappy as the others.
     //
     // Refetch triggers:
-    //   - currentTaskId changes (different task selected)
+    //   - `previewTaskId` changes (different task selected)
     //   - activityRefreshNonce bumps (a `genos:task-touched` event
     //     matched the open task — comment posted or task saved)
+    //
+    // Keyed on the id it READS, same as the comment loader above. These
+    // rows live in local state so they can't leak across previews the way
+    // the shared `taskComments` slot did — but the mismatched dep was the
+    // identical trap, and would become a leak the moment anyone hoists
+    // `taskActivities` into `useTM`.
     const [taskActivities, setTaskActivities] = useState<TaskActivityProps[]>([]);
     const [isLoadingTaskActivities, setIsLoadingTaskActivities] = useState(false);
     useEffect(() => {
-        const previewTaskId = Number(useTM.currentPreviewTask?.id);
         if (!Number.isFinite(previewTaskId) || previewTaskId <= 0) {
             setTaskActivities([]);
             return;
@@ -607,7 +675,8 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         return () => {
             cancelled = true;
         };
-    }, [taskEditState.currentTaskId, activityRefreshNonce]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [previewTaskId, activityRefreshNonce]);
 
     // Get team members
     const [isOpenTeamMembersList, setIsOpenTeamMembersList] = useState(false);
@@ -681,54 +750,14 @@ export const TaskPreview = (props: TaskPreviewProps) => {
     // list now uses `followOutput="auto"` to handle its own
     // scroll-to-newest, so we don't need a parallel outer-sheet scroll.
 
-    // Milestone preview takes over when `currentPreviewKind` is set to
-    // 'milestone'. We bail out early so the task-edit machinery below
-    // doesn't try to load a task that doesn't exist in milestone mode.
-    // The milestone branch reuses TaskMainBlock + TaskBodyBlock so the
-    // visual language matches a regular task; only the persistence layer
-    // differs (it routes through `useSM.updateExistingMilestone` instead
-    // of the task-update pipeline).
-    //
-    // Second branch: when navigating from a task-note's "Open Task" chip
-    // into a milestone's backing task, the system seeds
-    // `currentPreviewTask` directly without going through the milestone
-    // routing. We detect that here and reroute so the user lands on the
-    // milestone preview, not the task preview that wraps the backing
-    // row.
-    const fromNoteMilestoneId =
-        useTM.currentPreviewTask?.isMilestone === true &&
-        useTM.currentPreviewTask?.milestoneId != null
-            ? Number(useTM.currentPreviewTask.milestoneId)
-            : null;
-    // Third branch (defensive fallback): the chat thread header's
-    // "Open Task" button only sets `currentPreviewTaskId` and relies on
-    // a downstream load to hydrate `currentPreviewTask`. Two failure
-    // modes are possible:
-    //   1) The hydration endpoint (e.g. `getTaskByThreadId`) historically
-    //      didn't carry `isMilestone`/`milestoneId` — even after the
-    //      backend fix, older sessions may serve stale shapes.
-    //   2) `currentPreviewTask` is just stale from a previous selection.
-    // Look up the id in `useTM.allTasks` (which we keep populated with
-    // milestone metadata after milestone create / project task load) as
-    // a second source of truth. This catches every "open task by id"
-    // entry point — including future ones — without each caller having
-    // to manually decide between `setCurrentPreviewTaskId` and
-    // `setCurrentPreviewMilestoneId`.
-    const fromAllTasksMilestoneId = (() => {
-        if (useTM.currentPreviewTaskId == null || useTM.currentPreviewTaskId === -1) {
-            return null;
-        }
-        const match = useTM.allTasks.find((t) => Number(t.id) === useTM.currentPreviewTaskId);
-        return match?.isMilestone === true && match.milestoneId != null
-            ? Number(match.milestoneId)
-            : null;
-    })();
-    const reroutedMilestoneId = fromNoteMilestoneId ?? fromAllTasksMilestoneId;
-    if (
-        useSM &&
-        ((useTM.currentPreviewKind === "milestone" && useTM.currentPreviewMilestoneId !== -1) ||
-            reroutedMilestoneId != null)
-    ) {
+    // Milestone preview takes over when `isMilestoneMode` is true (see the
+    // computation near the top of this component). We bail out early so the
+    // task-edit machinery below doesn't try to load a task that doesn't
+    // exist in milestone mode. The milestone branch reuses TaskMainBlock +
+    // TaskBodyBlock so the visual language matches a regular task; only the
+    // persistence layer differs (it routes through
+    // `useSM.updateExistingMilestone` instead of the task-update pipeline).
+    if (isMilestoneMode) {
         const milestoneId =
             useTM.currentPreviewKind === "milestone" && useTM.currentPreviewMilestoneId !== -1
                 ? useTM.currentPreviewMilestoneId
@@ -1417,12 +1446,23 @@ const MilestonePreviewInner = ({
             markCommentsLoaded(0);
             return;
         }
+        // Cancelled-flag guard, mirroring the task preview's loader.
+        // `taskComments` is a SHARED slot: without this, navigating away
+        // mid-flight let this milestone's load land AFTER the task preview
+        // had already loaded the child task's comments, overwriting them —
+        // the timing-dependent half of the "milestone comments show up
+        // under the task" bug (the half that made it intermittent).
+        let cancelled = false;
         (async () => {
             const loaded = await loadTaskComments(myself, taskId, accessToken);
+            if (cancelled) return;
             const comments = loaded ?? [];
             setTaskComments(comments);
             markCommentsLoaded(comments.length);
         })();
+        return () => {
+            cancelled = true;
+        };
     }, [milestone?.taskId, commentRefreshNonce]);
 
     useEffect(() => {
