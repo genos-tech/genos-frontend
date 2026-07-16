@@ -613,6 +613,11 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             <FieldLabel isDark={isDark}>{t.tasks.fields.project}</FieldLabel>
                             <ACTeamProjects
                                 isOpenProjectList={isOpenProjectList}
+                                // Create mounts only (see the prop doc). Sub-task
+                                // creation is excluded: its parentTaskId comes from
+                                // `isCreatingTask`, not the milestone picker, and
+                                // must survive a project switch.
+                                resetMilestoneOnChange={!isPreviewMode && !isSubTask}
                                 setIsOpenProjectList={setIsOpenProjectList}
                                 setTaskContent={setTaskContent}
                                 setTaskUpdated={setTaskUpdated}
