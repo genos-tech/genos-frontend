@@ -34,7 +34,7 @@ import {
     COMPACT_FOCUSED_BG,
     COMPACT_TOOLBAR_OFFSET,
 } from "../../../../../chat/components/bubbles/bubbleStyleTokens";
-import { emitTaskTouched } from "../../../../services/taskEvents";
+import { ModalDeleteTaskComment } from "../../../modals/ModalDeleteTaskComment";
 
 type TaskCommentBubbleProps = {
     useTEM: TeamManagementState;
@@ -65,6 +65,12 @@ type TaskCommentBubbleProps = {
     setTodoFromMessageBubble?: (
         todoFromMessageBubble: MessageProps | ThreadMessageProps | TaskCommentProps
     ) => void;
+    /** Stacking level of the hosting surface, threaded down from
+     * `TaskTabBlock` when the preview is UrlLinkModal-hosted. The
+     * delete-confirm dialog derives its z from this so it opens ABOVE
+     * the preview modal instead of invisibly behind it (the known
+     * 10010-family bug). Absent on page-hosted mounts. */
+    hostZIndex?: number;
 };
 
 export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
@@ -84,6 +90,7 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
         isFocused = false,
         onCommentClick,
         setTodoFromMessageBubble,
+        hostZIndex,
     } = props;
 
     const { mode } = useColorScheme();
@@ -117,6 +124,9 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
     const [reactions, setReactions] = useState<ReactionProps[]>([]);
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
     const [selectedEmoji, setSelectedEmoji] = useState<any>(null);
+    // Delete-confirm dialog (own comments only; the button below is
+    // gated on `isSent`).
+    const [openDeleteComment, setOpenDeleteComment] = useState<boolean>(false);
     // Per-bubble wrap toggles. Same CSS-class approach as the chat
     // message bubbles — class lives on a wrapper Box around the
     // preview, App.css drives the actual wrap/scroll behaviour.
@@ -335,14 +345,13 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
         </AppTooltip>
     );
 
-    // Own comments only. This mirrors the reaction emits above by going
-    // straight to the socket rather than threading a callback down from
-    // `TaskPreview`: the delete is a soft-delete server-side, and the
-    // `wsType: "task"` broadcast it triggers is what refreshes every
-    // mounted list (host preview, chat-thread Comments tab, modal) via
-    // the scoped `task-touched` bus. The local `emitTaskTouched` on ack
-    // matches the edit editor — it just drops the 15s comment cache a
-    // beat earlier than the round-trip would.
+    // Own comments only. The button just opens the confirm dialog; the
+    // dialog owns the socket DELETE emit (mirroring how
+    // `ModalDeleteMessage` owns the chat-message delete), so no callback
+    // is threaded down from `TaskPreview`. The delete is a soft-delete
+    // server-side, and the `wsType: "task"` broadcast it triggers is
+    // what refreshes every mounted list (host preview, chat-thread
+    // Comments tab, modal) via the scoped `task-touched` bus.
     const deleteButton = isSent ? (
         <AppTooltip title={t.tasks.comment.deleteTooltip}>
             <IconButton
@@ -361,29 +370,28 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                 }}
                 onClick={(e) => {
                     e.stopPropagation();
-                    if (!socket) return;
-                    // Native confirm, as the milestone delete in
-                    // `TaskPreview` already uses.
-                    if (!window.confirm(t.tasks.comment.confirmDelete)) return;
-                    socket.emit(
-                        "task_comment",
-                        {
-                            method_type: "DELETE",
-                            project_id: currentProjectId,
-                            project_name: currentProjectName,
-                            task_id: comment.taskId,
-                            display_id: currentTaskDisplayId,
-                            comment_id: comment.commentId,
-                        },
-                        () => {
-                            emitTaskTouched(Number(comment.taskId), "comment");
-                        }
-                    );
+                    setOpenDeleteComment(true);
                 }}
             >
                 <DeleteOutlineIcon sx={{ fontSize: 16 }} />
             </IconButton>
         </AppTooltip>
+    ) : null;
+
+    // Rendered in both layout branches (like the EmojiPicker) so the
+    // dialog survives the hover toolbar unmounting when the pointer
+    // moves off the bubble and onto the dialog.
+    const deleteCommentModal = isSent ? (
+        <ModalDeleteTaskComment
+            comment={comment}
+            currentProjectId={currentProjectId}
+            currentProjectName={currentProjectName}
+            currentTaskDisplayId={currentTaskDisplayId}
+            hostZIndex={hostZIndex}
+            open={openDeleteComment}
+            setOpen={setOpenDeleteComment}
+            socket={socket}
+        />
     ) : null;
 
     const reactionsDisplay = (
@@ -477,6 +485,8 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                     />
                 )}
 
+                {deleteCommentModal}
+
                 {showUnderBarOption === true && (
                     <Box
                         ref={toolbarRef}
@@ -562,6 +572,8 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                     useFixedPosition={true}
                 />
             )}
+
+            {deleteCommentModal}
 
             <Box
                 key={`${comment.commentId}-${comment.tsUpdated}`}

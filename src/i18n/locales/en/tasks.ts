@@ -155,6 +155,13 @@ export const tasks = {
             confirmButton: "Delete Task",
             cancelButton: "Cancel",
         },
+        deleteComment: {
+            title: "Delete Comment?",
+            body: "This action cannot be undone",
+            confirmButton: "Delete Comment",
+            cancelButton: "Cancel",
+            error: "Failed to delete the comment.",
+        },
         createProject: {
             heading: "Create New Project",
             namePlaceholder: "Enter project name...",
@@ -500,7 +507,6 @@ export const tasks = {
     comment: {
         editTooltip: "Edit",
         deleteTooltip: "Delete",
-        confirmDelete: "Delete this comment?",
     },
 
     // Title block.
