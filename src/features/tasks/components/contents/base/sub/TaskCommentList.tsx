@@ -58,6 +58,11 @@ type TaskCommentListProps = {
     setTodoFromMessageBubble?: (
         todoFromMessageBubble: MessageProps | ThreadMessageProps | TaskCommentProps
     ) => void;
+    /** Hosting surface's stacking level, forwarded to each bubble so
+     * its delete-confirm dialog stacks above a UrlLinkModal-hosted
+     * preview. Supplied by the `TaskTabBlock` mount; the chat-thread
+     * mount doesn't thread one (page-hosted default). */
+    hostZIndex?: number;
 };
 
 /**
@@ -88,6 +93,7 @@ export const TaskCommentList = ({
     commentLinkBuilder,
     focusedCommentId,
     setTodoFromMessageBubble,
+    hostZIndex,
 }: TaskCommentListProps) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
@@ -192,6 +198,7 @@ export const TaskCommentList = ({
                                 currentProjectId={currentProjectId ?? undefined}
                                 currentProjectName={currentProjectName ?? undefined}
                                 currentTaskDisplayId={currentTaskDisplayId ?? undefined}
+                                hostZIndex={hostZIndex}
                                 isFocused={comment.commentId === focusedCommentId}
                                 myself={myself}
                                 setEditTargetComment={setEditTargetComment}
@@ -232,6 +239,7 @@ export const TaskCommentList = ({
                             currentProjectId={currentProjectId ?? undefined}
                             currentProjectName={currentProjectName ?? undefined}
                             currentTaskDisplayId={currentTaskDisplayId ?? undefined}
+                            hostZIndex={hostZIndex}
                             isFocused={comment.commentId === focusedCommentId}
                             myself={myself}
                             setEditTargetComment={setEditTargetComment}

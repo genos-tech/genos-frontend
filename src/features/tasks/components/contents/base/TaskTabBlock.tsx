@@ -466,6 +466,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                 currentProjectName={taskContent.project?.projectName}
                                 currentTaskDisplayId={taskContent.displayId}
                                 focusedCommentId={focusedCommentId}
+                                hostZIndex={hostZIndex}
                                 myself={myself}
                                 setEditTargetComment={setEditTargetComment}
                                 setIsInEdit={setIsInEdit}
