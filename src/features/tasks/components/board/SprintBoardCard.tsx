@@ -185,26 +185,66 @@ const SprintBoardCardImpl = ({
                                 }}
                             />
                         </Box>
-                        {priorityStyle && (
-                            <span
-                                style={{
-                                    display: "inline-flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    padding: "0 6px",
-                                    borderRadius: 4,
-                                    backgroundColor: priorityStyle.bg,
-                                    color: priorityStyle.text,
-                                    fontSize: "0.55rem",
-                                    height: 16,
-                                    fontWeight: 700,
-                                    letterSpacing: "0.3px",
-                                    textTransform: "uppercase",
-                                }}
-                            >
-                                {task.priority}
-                            </span>
-                        )}
+                        {/* Top-right cluster: open-graph trigger + priority. */}
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                            {/* Open the task graph anchored on this card.
+                                Root cards only (see the prop doc) — same
+                                icon + tooltip as the preview header's
+                                trigger. ALWAYS visible (no hover reveal,
+                                per request); the card's own onClick opens
+                                the preview, hence the stopPropagation. */}
+                            {onOpenDiagram && task.parentTaskId == null && (
+                                <AppTooltip title={t.tasks.tooltips.openTaskGraph}>
+                                    <IconButton
+                                        aria-label={t.tasks.tooltips.openTaskGraph}
+                                        size="sm"
+                                        variant="plain"
+                                        sx={{
+                                            "--IconButton-size": "18px",
+                                            minWidth: 18,
+                                            minHeight: 18,
+                                            p: 0,
+                                            borderRadius: "4px",
+                                            color: mode === "dark" ? "#a78bfa" : "#7c3aed",
+                                            opacity: 0.75,
+                                            "&:hover": {
+                                                opacity: 1,
+                                                backgroundColor:
+                                                    mode === "dark"
+                                                        ? "rgba(167,139,250,0.15)"
+                                                        : "rgba(124,58,237,0.1)",
+                                            },
+                                        }}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onOpenDiagram(task);
+                                        }}
+                                    >
+                                        <AccountTreeRoundedIcon sx={{ fontSize: 13 }} />
+                                    </IconButton>
+                                </AppTooltip>
+                            )}
+                            {priorityStyle && (
+                                <span
+                                    style={{
+                                        display: "inline-flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        padding: "0 6px",
+                                        borderRadius: 4,
+                                        backgroundColor: priorityStyle.bg,
+                                        color: priorityStyle.text,
+                                        fontSize: "0.55rem",
+                                        height: 16,
+                                        fontWeight: 700,
+                                        letterSpacing: "0.3px",
+                                        textTransform: "uppercase",
+                                    }}
+                                >
+                                    {task.priority}
+                                </span>
+                            )}
+                        </Box>
                     </Box>
 
                     {/* Title */}
@@ -318,75 +358,39 @@ const SprintBoardCardImpl = ({
                             </Typography>
                         </Box>
 
-                        {/* Right cluster: due date + open-graph trigger. */}
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 0.25 }}>
-                            {/* Due date — hidden for Closed tasks since
-                                the work is done and there's no remaining
-                                deadline to signal. Other statuses (Open /
-                                WIP / Pending) still show the chip; Pending
-                                cards keep it because a paused task can
-                                still have a real due date the user wants
-                                to see. */}
-                            {task.status !== "Closed" && (
-                                <Box
-                                    sx={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: 0.25,
-                                        color: getDaysLeftColor(task.daysLeft),
-                                        padding: "2px 6px",
-                                        borderRadius: 4,
-                                        backgroundColor:
-                                            task.daysLeft !== null && task.daysLeft <= 0
-                                                ? mode === "dark"
-                                                    ? "rgba(239, 68, 68, 0.15)"
-                                                    : "rgba(239, 68, 68, 0.1)"
-                                                : "transparent",
-                                    }}
+                        {/* Due date — hidden for Closed tasks since
+                            the work is done and there's no remaining
+                            deadline to signal. Other statuses (Open /
+                            WIP / Pending) still show the chip; Pending
+                            cards keep it because a paused task can
+                            still have a real due date the user wants
+                            to see. */}
+                        {task.status !== "Closed" && (
+                            <Box
+                                sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 0.25,
+                                    color: getDaysLeftColor(task.daysLeft),
+                                    padding: "2px 6px",
+                                    borderRadius: 4,
+                                    backgroundColor:
+                                        task.daysLeft !== null && task.daysLeft <= 0
+                                            ? mode === "dark"
+                                                ? "rgba(239, 68, 68, 0.15)"
+                                                : "rgba(239, 68, 68, 0.1)"
+                                            : "transparent",
+                                }}
+                            >
+                                <AccessTimeIcon sx={{ fontSize: 11 }} />
+                                <Typography
+                                    level="body-xs"
+                                    sx={{ fontWeight: 600, fontSize: "0.6rem" }}
                                 >
-                                    <AccessTimeIcon sx={{ fontSize: 11 }} />
-                                    <Typography
-                                        level="body-xs"
-                                        sx={{ fontWeight: 600, fontSize: "0.6rem" }}
-                                    >
-                                        {formatDaysLeft(task.daysLeft)}
-                                    </Typography>
-                                </Box>
-                            )}
-                            {/* Open the task graph anchored on this card.
-                                Root cards only (see the prop doc) — same
-                                icon + tooltip as the preview header's
-                                trigger. Fades in with the card hover so
-                                the footer stays quiet at rest; the card's
-                                own onClick opens the preview, hence the
-                                stopPropagation. */}
-                            {onOpenDiagram && task.parentTaskId == null && (
-                                <AppTooltip title={t.tasks.tooltips.openTaskGraph}>
-                                    <IconButton
-                                        aria-label={t.tasks.tooltips.openTaskGraph}
-                                        size="sm"
-                                        variant="plain"
-                                        sx={{
-                                            "--IconButton-size": "20px",
-                                            minWidth: 20,
-                                            minHeight: 20,
-                                            p: 0,
-                                            borderRadius: "4px",
-                                            opacity: isHovered ? 0.8 : 0,
-                                            transition: "opacity 0.15s ease",
-                                            color: mode === "dark" ? "#a78bfa" : "#7c3aed",
-                                            "&:hover": { opacity: 1 },
-                                        }}
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            onOpenDiagram(task);
-                                        }}
-                                    >
-                                        <AccountTreeRoundedIcon sx={{ fontSize: 13 }} />
-                                    </IconButton>
-                                </AppTooltip>
-                            )}
-                        </Box>
+                                    {formatDaysLeft(task.daysLeft)}
+                                </Typography>
+                            </Box>
+                        )}
                     </Box>
                 </div>
             )}
