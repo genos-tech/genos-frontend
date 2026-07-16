@@ -11,6 +11,7 @@ import { ProjectManagementState } from "../../../../hooks/common/useProjectManag
 import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { ProjectProps, TaskStatusProps, TaskTableProps } from "../../../../types/tasks";
+import { stripOwnerState } from "../../../../utils/joyAutocomplete";
 import { loadProjectTasksFromApi } from "../../services/loadProjectTasksFromApi";
 import { statuses } from "../../utils/taskMeta";
 
@@ -186,7 +187,11 @@ export const ACTaskSelector = ({
                         sx={INPUT_SX}
                         value={selectedProject}
                         renderOption={(props, opt) => (
-                            <Box component="li" {...props} key={opt.projectId}>
+                            // stripOwnerState: bespoke <li> rows (not Joy's
+                            // AutocompleteOption) must not forward Joy's
+                            // internal ownerState to the DOM — React warns
+                            // on every rendered option otherwise.
+                            <Box component="li" {...stripOwnerState(props)} key={opt.projectId}>
                                 <Stack
                                     alignItems="center"
                                     direction="row"
@@ -273,7 +278,7 @@ export const ACTaskSelector = ({
                         renderOption={(props, opt) => {
                             const meta = statusMeta(opt.status);
                             return (
-                                <Box component="li" {...props} key={opt.id}>
+                                <Box component="li" {...stripOwnerState(props)} key={opt.id}>
                                     <Stack
                                         alignItems="center"
                                         direction="row"
