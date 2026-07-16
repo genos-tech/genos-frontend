@@ -73,6 +73,14 @@ type Props = {
     /** Bumped by the parent after a successful add to clear the selection. */
     resetKey?: number;
     size?: "sm" | "md";
+    /** Both autocompletes' listboxes PORTAL to <body>, so they don't
+     * inherit the host dialog's `--unstable_popup-zIndex` stamp. A host
+     * lifted above Joy's defaults (ModalManageDependencies goes to
+     * 10010+, and higher when UrlLinkModal/diagram-hosted) must pass its
+     * own z here or the dropdowns open invisibly BEHIND it. Per-component
+     * on purpose — a `& ~ [role="listbox"]` sibling rule would claim
+     * popups this surface doesn't own (the fe #122 cascade race). */
+    popupZIndex?: number;
 };
 
 // Cross-project task picker. Two stacked autocompletes — Project on the
@@ -88,6 +96,7 @@ export const ACTaskSelector = ({
     onPick,
     resetKey,
     size = "md",
+    popupZIndex,
 }: Props) => {
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
@@ -216,7 +225,13 @@ export const ACTaskSelector = ({
                             </Box>
                         )}
                         slotProps={{
-                            listbox: { className: scrollbarClass, sx: LISTBOX_SLOT_SX },
+                            listbox: {
+                                className: scrollbarClass,
+                                sx: {
+                                    ...LISTBOX_SLOT_SX,
+                                    ...(popupZIndex != null ? { zIndex: popupZIndex } : {}),
+                                },
+                            },
                         }}
                         onChange={(_e, value) => setSelectedProject(value)}
                     />
@@ -293,7 +308,13 @@ export const ACTaskSelector = ({
                             );
                         }}
                         slotProps={{
-                            listbox: { className: scrollbarClass, sx: LISTBOX_SLOT_SX },
+                            listbox: {
+                                className: scrollbarClass,
+                                sx: {
+                                    ...LISTBOX_SLOT_SX,
+                                    ...(popupZIndex != null ? { zIndex: popupZIndex } : {}),
+                                },
+                            },
                         }}
                         onChange={(_e, value) => {
                             setSelectedTask(value);

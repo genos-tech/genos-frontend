@@ -39,6 +39,15 @@ type Props = {
     useTM: TaskManagementState;
     /** Which subsection to surface first when the modal opens. */
     focus?: "blocking" | "blockedBy";
+    /** Stacking level of the hosting surface. The preview this modal is
+     * opened from can itself sit far above Joy's modal layer — a
+     * UrlLinkModal preview is 10020+, and one opened from a task-diagram
+     * node is diagram-z + 15 — so without deriving from the host this
+     * dialog rendered at Joy's ~1300 default, invisibly BEHIND the
+     * diagram/preview ("can't open the dependency modal"). Host + 2
+     * mirrors the note-modal convention; absent ⇒ page-hosted 10010
+     * dialog-family default. */
+    hostZIndex?: number;
 };
 
 // Visual atoms per direction (color + icon only). Title/description
@@ -146,6 +155,7 @@ export const ModalManageDependencies = ({
     usePM,
     useTM,
     focus,
+    hostZIndex,
 }: Props) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
@@ -222,8 +232,24 @@ export const ModalManageDependencies = ({
             ? { items: deps.blocking, resetKey: resetBlocking }
             : { items: deps.blockedBy, resetKey: resetBlockedBy };
 
+    const modalZIndex = hostZIndex != null ? hostZIndex + 2 : 10010;
+
     return (
-        <Modal open={open} onClose={onClose}>
+        <Modal
+            open={open}
+            sx={{
+                zIndex: modalZIndex,
+                // Joy pins popups to ~theme.zIndex.modal + 1 and doesn't
+                // track the sx override above. Stamping the var on the
+                // modal root lifts every popup that renders INLINE in this
+                // subtree (tooltips included — CSS custom properties
+                // inherit). The ACTaskSelector listboxes PORTAL to <body>
+                // and can't inherit it, so they take the same value via
+                // `popupZIndex` below.
+                "--unstable_popup-zIndex": modalZIndex + 1,
+            }}
+            onClose={onClose}
+        >
             <ModalDialog
                 className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                 size="md"
@@ -340,6 +366,7 @@ export const ModalManageDependencies = ({
                                     isDark={isDark}
                                     kind={k}
                                     myself={myself}
+                                    popupZIndex={modalZIndex + 1}
                                     removeTooltip={depsT.modal.removeTooltip}
                                     resetKey={resetKey}
                                     title={title}
@@ -377,6 +404,8 @@ type SectionProps = {
     defaultProjectId: number | null;
     resetKey: number;
     busy: boolean;
+    /** Lifts the picker's portaled listboxes above the dialog. */
+    popupZIndex: number;
     onAdd: (picked: { taskId: number }) => void;
     onRemove: (dependencyId: number) => void;
 };
@@ -395,6 +424,7 @@ const DependencySection = ({
     defaultProjectId,
     resetKey,
     busy,
+    popupZIndex,
     onAdd,
     onRemove,
 }: SectionProps) => {
@@ -470,6 +500,7 @@ const DependencySection = ({
                     defaultProjectId={defaultProjectId}
                     excludeTaskIds={excludeIds}
                     myself={myself}
+                    popupZIndex={popupZIndex}
                     resetKey={resetKey}
                     usePM={usePM}
                     onPick={onAdd}

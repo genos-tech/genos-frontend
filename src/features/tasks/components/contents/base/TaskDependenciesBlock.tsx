@@ -1,6 +1,7 @@
 import { useState } from "react";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import BlockRoundedIcon from "@mui/icons-material/BlockRounded";
+import LinkOffRoundedIcon from "@mui/icons-material/LinkOffRounded";
 import { Box, Chip, IconButton, ListItem, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
@@ -67,12 +68,39 @@ export const TaskDependenciesBlock = ({
 
     const [modalOpen, setModalOpen] = useState(false);
     const [modalFocus, setModalFocus] = useState<"blocking" | "blockedBy">("blockedBy");
+    // Dependency id with an inline remove in flight — disables that
+    // chip's unlink button so a double-click can't fire the DELETE
+    // twice. Single slot (not a Set): the buttons are tiny and removes
+    // resolve fast; racing two different removes is fine (each targets
+    // its own dependencyId), we only guard re-clicks of the SAME one.
+    const [removingDepId, setRemovingDepId] = useState<number | null>(null);
 
     const isEmpty = deps.blocking.length === 0 && deps.blockedBy.length === 0;
 
     const openModal = (focus: "blocking" | "blockedBy") => {
         setModalFocus(focus);
         setModalOpen(true);
+    };
+
+    const handleChipRemove = async (ref_: TaskDependencyRef) => {
+        if (taskId == null || removingDepId === ref_.dependencyId) return;
+        setRemovingDepId(ref_.dependencyId);
+        try {
+            // Same call the manage modal makes: DELETE then refetch this
+            // task's dependency slots, so the chip disappears from state
+            // rather than being optimistically hidden. On failure the
+            // chip simply stays put (state untouched) — the modal remains
+            // the surface with explicit error copy.
+            const ok = await useTM.removeTaskDependency(ref_.dependencyId, taskId);
+            if (!ok) {
+                console.error(
+                    "[TaskDependenciesBlock] inline dependency remove failed:",
+                    ref_.dependencyId
+                );
+            }
+        } finally {
+            setRemovingDepId(null);
+        }
     };
 
     const handleChipClick = (ref_: TaskDependencyRef) => {
@@ -147,8 +175,11 @@ export const TaskDependenciesBlock = ({
                         isDark={isDark}
                         label={depsT.blockingLabel}
                         noneLabel={depsT.noneLabel}
+                        removeTooltip={depsT.removeChipTooltip}
+                        removingDepId={removingDepId}
                         onAdd={() => openModal("blocking")}
                         onChipClick={handleChipClick}
+                        onChipRemove={handleChipRemove}
                     />
                     <DependencyRow
                         addTooltip={fmt(depsT.addRowTooltip, { label: depsT.blockedByLabel })}
@@ -157,14 +188,18 @@ export const TaskDependenciesBlock = ({
                         isDark={isDark}
                         label={depsT.blockedByLabel}
                         noneLabel={depsT.noneLabel}
+                        removeTooltip={depsT.removeChipTooltip}
+                        removingDepId={removingDepId}
                         onAdd={() => openModal("blockedBy")}
                         onChipClick={handleChipClick}
+                        onChipRemove={handleChipRemove}
                     />
                 </>
             )}
 
             <ModalManageDependencies
                 focus={modalFocus}
+                hostZIndex={hostZIndex}
                 myself={myself}
                 open={modalOpen}
                 taskContent={taskContent}
@@ -183,8 +218,11 @@ const DependencyRow = ({
     isDark,
     addTooltip,
     noneLabel,
+    removeTooltip,
+    removingDepId,
     onAdd,
     onChipClick,
+    onChipRemove,
 }: {
     label: string;
     icon: React.ReactNode;
@@ -192,8 +230,11 @@ const DependencyRow = ({
     isDark: boolean;
     addTooltip: string;
     noneLabel: string;
+    removeTooltip: string;
+    removingDepId: number | null;
     onAdd: () => void;
     onChipClick: (ref_: TaskDependencyRef) => void;
+    onChipRemove: (ref_: TaskDependencyRef) => void;
 }) => (
     <ListItem sx={{ display: "flex", alignItems: "flex-start" }}>
         <Box
@@ -221,7 +262,10 @@ const DependencyRow = ({
                     key={d.dependencyId}
                     isDark={isDark}
                     ref_={d}
+                    removeTooltip={removeTooltip}
+                    removing={removingDepId === d.dependencyId}
                     onClick={() => onChipClick(d)}
+                    onRemove={() => onChipRemove(d)}
                 />
             ))}
             {deps.length === 0 && (
@@ -252,11 +296,17 @@ const DependencyRow = ({
 const DependencyChip = ({
     ref_,
     isDark,
+    removeTooltip,
+    removing,
     onClick,
+    onRemove,
 }: {
     ref_: TaskDependencyRef;
     isDark: boolean;
+    removeTooltip: string;
+    removing: boolean;
     onClick: () => void;
+    onRemove: () => void;
 }) => {
     const statusLabel = ref_.status.status ?? "";
     const tip = ref_.projectName
@@ -310,6 +360,35 @@ const DependencyChip = ({
                 >
                     {ref_.title}
                 </Typography>
+                {/* Inline unlink — same LinkOff icon (and hook call) as the
+                    manage modal's per-row remove, so a dependency can be
+                    dropped without opening the modal. Sits INSIDE the
+                    clickable chip, hence the stopPropagation: a mis-aimed
+                    remove must not also navigate to the other task. */}
+                <AppTooltip title={removeTooltip}>
+                    <IconButton
+                        aria-label={removeTooltip}
+                        color="danger"
+                        disabled={removing}
+                        size="sm"
+                        variant="plain"
+                        sx={{
+                            "--IconButton-size": "18px",
+                            minHeight: "18px",
+                            minWidth: "18px",
+                            p: 0,
+                            ml: -0.15,
+                            opacity: 0.55,
+                            "&:hover": { opacity: 1 },
+                        }}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onRemove();
+                        }}
+                    >
+                        <LinkOffRoundedIcon sx={{ fontSize: 13 }} />
+                    </IconButton>
+                </AppTooltip>
             </Box>
         </AppTooltip>
     );
