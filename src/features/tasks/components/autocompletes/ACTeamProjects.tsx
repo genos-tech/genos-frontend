@@ -10,6 +10,17 @@ type ACTeamProjectsProps = {
     setIsOpenProjectList: (value: boolean) => void;
     setTaskUpdated?: (value: boolean) => void;
     usePM: ProjectManagementState;
+    /** Create-form mounts set this: milestone/sprint are project-scoped,
+     * so switching the project invalidates the current picker selection —
+     * and the parent/root ids the milestone picker derived from it. If
+     * the stale ids ride into the finalize PUT the backend clears them
+     * anyway (they belong to the old project), but the FORM would keep
+     * showing them, and `addTask` would cache the stale milestoneId onto
+     * the created row in IDB. Preview/edit mounts leave this off — there
+     * the backend's move handler owns re-linking, an existing sub-task's
+     * parent edge must survive a move, and the preview refetches after
+     * the PUT. */
+    resetMilestoneOnChange?: boolean;
 };
 export const ACTeamProjects = (props: ACTeamProjectsProps) => {
     const {
@@ -19,6 +30,7 @@ export const ACTeamProjects = (props: ACTeamProjectsProps) => {
         isOpenProjectList,
         setIsOpenProjectList,
         setTaskUpdated,
+        resetMilestoneOnChange = false,
     } = props;
 
     return (
@@ -33,6 +45,7 @@ export const ACTeamProjects = (props: ACTeamProjectsProps) => {
             onOpen={() => setIsOpenProjectList(!isOpenProjectList)}
             onChange={(event, value) => {
                 if (value !== null) {
+                    const isActualChange = value.projectId !== taskContent.project?.projectId;
                     setTaskContent({
                         ...taskContent,
                         project: {
@@ -42,6 +55,14 @@ export const ACTeamProjects = (props: ACTeamProjectsProps) => {
                             systemUserId: value.systemUserId,
                         },
                         tags: [],
+                        ...(resetMilestoneOnChange && isActualChange
+                            ? {
+                                  milestoneId: null,
+                                  sprintId: null,
+                                  parentTaskId: null,
+                                  rootTaskId: null,
+                              }
+                            : {}),
                     });
                     if (value.projectId) {
                         usePM.setCurrentProject({
