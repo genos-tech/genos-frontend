@@ -142,6 +142,58 @@ input[type="checkbox"] {
    Scrollbar Styles
    ========================================================================== */
 
+/* Theme-resolved scrollbar palette. Joy's CssVarsProvider stamps
+   `data-joy-color-scheme` on <html>, so these two variables flip with the
+   app theme and the global default below always picks the right thumb —
+   no per-component `custom-scrollbar-light/dark` class needed. */
+:root,
+[data-joy-color-scheme="light"] {
+    --scrollbar-thumb-bg: var(--scrollbar-thumb-bg-light);
+    --scrollbar-thumb-bg-hover: var(--scrollbar-thumb-bg-hover-light);
+}
+
+[data-joy-color-scheme="dark"] {
+    --scrollbar-thumb-bg: var(--scrollbar-thumb-bg-dark);
+    --scrollbar-thumb-bg-hover: var(--scrollbar-thumb-bg-hover-dark);
+}
+
+/* Global default: every scrollable element gets the custom scrollbar.
+   The universal selector has ZERO specificity, so any element that styles
+   its own scrollbar — the `.custom-scrollbar-*` classes below, the
+   DataGrid overrides, or sx-level `&::-webkit-scrollbar` rules (including
+   the hidden tab-strip scrollbars) — still wins without changes. */
+*::-webkit-scrollbar {
+    width: var(--scrollbar-width);
+    height: var(--scrollbar-height);
+}
+
+*::-webkit-scrollbar-track {
+    background: var(--scrollbar-track-bg);
+}
+
+*::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb-bg);
+    border-radius: var(--scrollbar-border-radius);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    background: var(--scrollbar-thumb-bg-hover);
+}
+
+*::-webkit-scrollbar-corner {
+    background: var(--scrollbar-track-bg);
+}
+
+/* Firefox fallback only. Guarded because in Chrome 121+ a non-auto
+   `scrollbar-width`/`scrollbar-color` DISABLES all `::-webkit-scrollbar`
+   styling — applying this unguarded would wipe out every rule above. */
+@supports not selector(::-webkit-scrollbar) {
+    * {
+        scrollbar-width: thin;
+        scrollbar-color: var(--scrollbar-thumb-bg) var(--scrollbar-track-bg);
+    }
+}
+
 /* Base scrollbar styles */
 .custom-scrollbar-light::-webkit-scrollbar,
 .MuiAutocomplete-listbox::-webkit-scrollbar,
