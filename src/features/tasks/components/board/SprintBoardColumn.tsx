@@ -56,6 +56,10 @@ type SprintBoardColumnProps = {
     myself: UserProps;
     teamMemberProfiles: Record<string, UserProps>;
     onTaskClick?: (task: TaskTableProps) => void;
+    // Opens the board-level task-graph modal anchored on the clicked
+    // card. Must be identity-stable in the parent (SprintBoardCard is
+    // React.memo with shallow equality).
+    onOpenDiagram?: (task: TaskTableProps) => void;
     // Selection state passed in from the parent so milestone backing
     // rows can light up against `currentPreviewMilestoneId` while
     // regular rows light up against `currentPreviewTaskId`.
@@ -70,6 +74,7 @@ const SprintBoardColumnImpl = ({
     myself,
     teamMemberProfiles,
     onTaskClick,
+    onOpenDiagram,
     selectedTaskId,
     selectedMilestoneId,
     isMilestonePreviewActive,
@@ -262,6 +267,7 @@ const SprintBoardColumnImpl = ({
                                             myself={myself}
                                             task={task}
                                             teamMemberProfiles={teamMemberProfiles}
+                                            onOpenDiagram={onOpenDiagram}
                                             onTaskClick={onTaskClick}
                                         />
                                     );

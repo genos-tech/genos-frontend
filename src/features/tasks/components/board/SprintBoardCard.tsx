@@ -1,12 +1,15 @@
 import React from "react";
 import { Draggable } from "@hello-pangea/dnd";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import AccountTreeRoundedIcon from "@mui/icons-material/AccountTreeRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import Avatar from "@mui/joy/Avatar";
 import Box from "@mui/joy/Box";
+import IconButton from "@mui/joy/IconButton";
 import { useColorScheme } from "@mui/joy/styles";
 import Typography from "@mui/joy/Typography";
 
+import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { useResolvedUserName } from "../../../../components/ui/avatars/AvatarContext";
 import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
 import { fmt, useTranslation } from "../../../../i18n";
@@ -83,6 +86,12 @@ type SprintBoardCardProps = {
     // route the click to a milestone preview instead of a regular task
     // preview (mirrors DraggableTaskRow's openPreview behaviour).
     onTaskClick?: (task: TaskTableProps) => void;
+    // Opens the board-level task-graph modal anchored on this card.
+    // Rendered only on ROOT cards (parentTaskId null — root tasks and
+    // milestone backing rows); sub-task cards reach their graph from
+    // the root. Must be identity-stable in the parent (this component
+    // is React.memo with shallow equality).
+    onOpenDiagram?: (task: TaskTableProps) => void;
     isSelected?: boolean;
 };
 
@@ -92,6 +101,7 @@ const SprintBoardCardImpl = ({
     myself,
     teamMemberProfiles,
     onTaskClick,
+    onOpenDiagram,
     isSelected = false,
 }: SprintBoardCardProps) => {
     const { mode: colorMode } = useColorScheme();
@@ -175,26 +185,66 @@ const SprintBoardCardImpl = ({
                                 }}
                             />
                         </Box>
-                        {priorityStyle && (
-                            <span
-                                style={{
-                                    display: "inline-flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    padding: "0 6px",
-                                    borderRadius: 4,
-                                    backgroundColor: priorityStyle.bg,
-                                    color: priorityStyle.text,
-                                    fontSize: "0.55rem",
-                                    height: 16,
-                                    fontWeight: 700,
-                                    letterSpacing: "0.3px",
-                                    textTransform: "uppercase",
-                                }}
-                            >
-                                {task.priority}
-                            </span>
-                        )}
+                        {/* Top-right cluster: priority + open-graph trigger. */}
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                            {priorityStyle && (
+                                <span
+                                    style={{
+                                        display: "inline-flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        padding: "0 6px",
+                                        borderRadius: 4,
+                                        backgroundColor: priorityStyle.bg,
+                                        color: priorityStyle.text,
+                                        fontSize: "0.55rem",
+                                        height: 16,
+                                        fontWeight: 700,
+                                        letterSpacing: "0.3px",
+                                        textTransform: "uppercase",
+                                    }}
+                                >
+                                    {task.priority}
+                                </span>
+                            )}
+                            {/* Open the task graph anchored on this card.
+                                Root cards only (see the prop doc) — same
+                                icon + tooltip as the preview header's
+                                trigger. ALWAYS visible (no hover reveal,
+                                per request); the card's own onClick opens
+                                the preview, hence the stopPropagation. */}
+                            {onOpenDiagram && task.parentTaskId == null && (
+                                <AppTooltip title={t.tasks.tooltips.openTaskGraph}>
+                                    <IconButton
+                                        aria-label={t.tasks.tooltips.openTaskGraph}
+                                        size="sm"
+                                        variant="plain"
+                                        sx={{
+                                            "--IconButton-size": "18px",
+                                            minWidth: 18,
+                                            minHeight: 18,
+                                            p: 0,
+                                            borderRadius: "4px",
+                                            color: mode === "dark" ? "#a78bfa" : "#7c3aed",
+                                            opacity: 0.75,
+                                            "&:hover": {
+                                                opacity: 1,
+                                                backgroundColor:
+                                                    mode === "dark"
+                                                        ? "rgba(167,139,250,0.15)"
+                                                        : "rgba(124,58,237,0.1)",
+                                            },
+                                        }}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onOpenDiagram(task);
+                                        }}
+                                    >
+                                        <AccountTreeRoundedIcon sx={{ fontSize: 13 }} />
+                                    </IconButton>
+                                </AppTooltip>
+                            )}
+                        </Box>
                     </Box>
 
                     {/* Title */}

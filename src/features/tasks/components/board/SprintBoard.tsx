@@ -15,9 +15,11 @@ import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TagListProps, TaskTableProps } from "../../../../types/tasks";
+import { ModalTaskDiagram } from "../../diagram/components/ModalTaskDiagram";
 import { updateTaskFromTable } from "../../services/updateTaskFromTable";
 import { FilterProps } from "../../types/TaskTableTypes";
 import { buildComparator } from "../../utils/sortTask";
+import { formatTaskDisplayId } from "../../utils/taskDisplayId";
 import { statuses } from "../../utils/taskMeta";
 import { TaskFilterMenu } from "../table/TaskFilterMenu";
 import { ColumnConfig, SprintBoardColumn } from "./SprintBoardColumn";
@@ -462,6 +464,17 @@ export const SprintBoard = (props: SprintBoardProps) => {
 
     const PREVIEW_SWITCH_DEBOUNCE_MS = 150;
 
+    // Card whose task graph is open (null = diagram closed). One shared
+    // ModalTaskDiagram at the board level; cards request it through the
+    // identity-stable callback below (SprintBoardCard is React.memo with
+    // shallow equality, so the identity matters — same contract as
+    // handleTaskClick).
+    const [diagramTask, setDiagramTask] = useState<TaskTableProps | null>(null);
+    const handleOpenDiagram = useCallback((task: TaskTableProps) => {
+        if (task.id == null) return;
+        setDiagramTask(task);
+    }, []);
+
     const handleTaskClick = useCallback(
         (task: TaskTableProps) => {
             const isMile = task.isMilestone === true && task.milestoneId != null;
@@ -592,6 +605,7 @@ export const SprintBoard = (props: SprintBoardProps) => {
                                     selectedTaskId={selectedTaskId}
                                     tasks={boardTasks[column.id] || []}
                                     teamMemberProfiles={teamMemberProfiles}
+                                    onOpenDiagram={handleOpenDiagram}
                                     onTaskClick={handleTaskClick}
                                 />
                             );
@@ -599,6 +613,30 @@ export const SprintBoard = (props: SprintBoardProps) => {
                     </div>
                 </DragDropContext>
             </div>
+
+            {/* Shared task-graph modal for the per-card footer trigger.
+                The trigger only renders on root cards (parentTaskId
+                null — root tasks / milestone backing rows), so the card
+                is the top of its hierarchy; `rootTaskId ?? id` mirrors
+                the preview header's anchor. Page-hosted surface, so the
+                diagram's default 9999 layer applies (no zIndex). */}
+            {diagramTask != null &&
+                diagramTask.id != null &&
+                (diagramTask.projectId ?? usePM.currentProject?.projectId) != null && (
+                    <ModalTaskDiagram
+                        myself={myself}
+                        open={true}
+                        projectId={Number(
+                            diagramTask.projectId ?? usePM.currentProject?.projectId
+                        )}
+                        rootLabel={`${formatTaskDisplayId(diagramTask)} · ${diagramTask.title || "Untitled"}`}
+                        rootTaskId={Number(diagramTask.rootTaskId ?? diagramTask.id)}
+                        usePM={usePM}
+                        useSM={useSM}
+                        useTM={useTM}
+                        onClose={() => setDiagramTask(null)}
+                    />
+                )}
         </ThemeProvider>
     );
 };
