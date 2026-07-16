@@ -59,3 +59,5 @@ and Railway's Nixpacks Node major should be 22 to match.
 > Prettier and ESLint are wired to the repo config (`.prettierrc`,
 > `eslint.config.js`). Note `.prettierrc` sets `tabWidth: 4`, which applies to
 > YAML and JSON too — run `npm run format` before committing.
+
+<!-- CI skip-path probe: docs-only change; PR closed after verification -->
