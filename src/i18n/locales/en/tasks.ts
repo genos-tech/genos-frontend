@@ -480,6 +480,8 @@ export const tasks = {
         noneLabel: "None",
         blockedBadge: "Blocked",
         blockedTooltip: "One or more open blockers — see Dependencies below.",
+        // Inline unlink on the preview's dependency chips.
+        removeChipTooltip: "Remove dependency",
         modal: {
             title: "Manage dependencies",
             subtitle: "Cross-project links allowed within the same team.",
