@@ -62,6 +62,7 @@ export const ModalCreateMDM: React.FC<Props> = ({
     // and is unreadable. Force a light text + caret + placeholder color when
     // the effective scheme is light; dark mode already uses light text, so
     // we leave it untouched.
+    const isDark = mode === "dark";
     const isLightMode = (mode === "system" ? systemMode : mode) === "light";
     const lightInputTextSx = isLightMode
         ? {
@@ -169,6 +170,7 @@ export const ModalCreateMDM: React.FC<Props> = ({
             onClose={() => setOpen(false)}
         >
             <ModalDialog
+                className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                 sx={{
                     animation: `${fadeIn} 0.2s ease-out`,
                     background:

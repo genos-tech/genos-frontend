@@ -18,6 +18,7 @@ import {
     Stack,
     Typography,
 } from "@mui/joy";
+import { useColorScheme } from "@mui/joy/styles";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
@@ -268,6 +269,8 @@ const SprintRow = ({
 
 export const SprintManagerDialog = ({ open, onClose, projectId, useSM }: Props) => {
     const { t } = useTranslation();
+    const { mode } = useColorScheme();
+    const isDark = mode === "dark";
     const [showAdd, setShowAdd] = useState(false);
     const [adhocName, setAdhocName] = useState("");
     const [adhocStart, setAdhocStart] = useState(todayIso());
@@ -359,6 +362,7 @@ export const SprintManagerDialog = ({ open, onClose, projectId, useSM }: Props) 
     return (
         <Modal open={open} onClose={onClose}>
             <ModalDialog
+                className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                 sx={{
                     width: { xs: "calc(100vw - 24px)", md: "auto" },
                     minWidth: { xs: 0, md: 640 },

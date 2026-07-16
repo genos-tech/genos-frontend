@@ -403,6 +403,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                 onClose={() => setOpenModalGMProfile(false)}
             >
                 <ModalDialog
+                    className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                     sx={{
                         background: styles.bg,
                         border: `1px solid ${styles.border}`,

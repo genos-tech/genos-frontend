@@ -20,6 +20,7 @@ import {
     Switch,
     Typography,
 } from "@mui/joy";
+import { useColorScheme } from "@mui/joy/styles";
 
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { fmt, useTranslation } from "../../../../i18n";
@@ -101,6 +102,8 @@ const computeRealignmentPlan = (
 
 export const SprintConfigDialog = ({ open, onClose, projectId, useSM }: Props) => {
     const { t } = useTranslation();
+    const { mode } = useColorScheme();
+    const isDark = mode === "dark";
     const [durationDays, setDurationDays] = useState<number>(14);
     const [anchorDate, setAnchorDate] = useState<string>(todayIso());
     const [autoRoll, setAutoRoll] = useState<boolean>(true);
@@ -246,6 +249,7 @@ export const SprintConfigDialog = ({ open, onClose, projectId, useSM }: Props) =
     return (
         <Modal open={open} onClose={onClose}>
             <ModalDialog
+                className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                 sx={{
                     width: { xs: "calc(100vw - 24px)", md: "auto" },
                     minWidth: { xs: 0, md: 460 },

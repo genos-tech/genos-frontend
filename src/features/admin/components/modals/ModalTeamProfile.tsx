@@ -264,6 +264,7 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                 onClose={() => setOpenModalTeamProfile(false)}
             >
                 <ModalDialog
+                    className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                     sx={{
                         background: styles.bg,
                         border: `1px solid ${styles.border}`,

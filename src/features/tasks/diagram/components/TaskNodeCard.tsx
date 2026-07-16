@@ -700,6 +700,7 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                 onClose={() => setDateEditorOpen(false)}
             >
                 <ModalDialog
+                    className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                     variant="outlined"
                     sx={{
                         minWidth: 340,

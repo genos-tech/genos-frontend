@@ -10,7 +10,6 @@ import { ProjectManagementState } from "../../../../hooks/common/useProjectManag
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
-import { ProjectProps } from "../../../../types/tasks";
 import { ColorPickerMenu } from "../contents/base/sub/TagColorPickerMenu";
 
 const fadeIn = keyframes`
@@ -32,6 +31,7 @@ export const ModalCreateTag: React.FC<Props> = ({ myself, usePM, useTM }) => {
     const [errorTagCreateMessage, setErrorTagCreateMessage] = useState<string | null>(null);
     const [tagName, setTagName] = useState("");
     const { mode } = useColorScheme();
+    const isDark = mode === "dark";
     const [selectedColor, setSelectedColor] = useState({
         chipColor: "#ff2323",
         textColor: "white",
@@ -100,6 +100,7 @@ export const ModalCreateTag: React.FC<Props> = ({ myself, usePM, useTM }) => {
             onClose={() => useTM.setOpenCreateTag(false)}
         >
             <ModalDialog
+                className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                 sx={{
                     animation: `${fadeIn} 0.2s ease-out`,
                     background:

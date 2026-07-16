@@ -194,6 +194,7 @@ export const TaskTableColumnSettings = ({ open, onClose }: Props) => {
     return (
         <Modal open={open} onClose={onClose}>
             <ModalDialog
+                className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                 size="md"
                 sx={{
                     // Wider than the original 440px so the two sections

@@ -5,7 +5,6 @@ import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import {
     Alert,
-    Avatar,
     Box,
     Button,
     Checkbox,
@@ -16,6 +15,7 @@ import {
     Stack,
     Typography,
 } from "@mui/joy";
+import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
@@ -81,6 +81,8 @@ export const ModalAddMembers: React.FC<Props> = ({
     zIndex = 10000,
 }) => {
     const { t } = useTranslation();
+    const { mode } = useColorScheme();
+    const isDark = mode === "dark";
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedMembers, setSelectedMembers] = useState<UserProps[]>([]);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -206,6 +208,7 @@ export const ModalAddMembers: React.FC<Props> = ({
             onClose={() => setOpen(false)}
         >
             <ModalDialog
+                className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                 sx={{
                     animation: `${fadeIn} 0.2s ease-out`,
                     background:

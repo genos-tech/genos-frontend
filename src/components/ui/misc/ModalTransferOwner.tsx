@@ -17,6 +17,7 @@ import {
     Stack,
     Typography,
 } from "@mui/joy";
+import { useColorScheme } from "@mui/joy/styles";
 
 import { useTranslation } from "../../../i18n";
 
@@ -49,6 +50,8 @@ export const ModalTransferOwner = ({
     onConfirm,
     onCancel,
 }: Props) => {
+    const { mode } = useColorScheme();
+    const isDark = mode === "dark";
     const { t } = useTranslation();
     const [query, setQuery] = useState("");
     const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -107,6 +110,7 @@ export const ModalTransferOwner = ({
             onClose={handleClose}
         >
             <ModalDialog
+                className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                 sx={{
                     animation: `${fadeIn} 0.2s ease-out`,
                     background:

@@ -1,5 +1,6 @@
 import { lazy, Suspense } from "react";
 import { CircularProgress, Modal, ModalClose, ModalDialog, Stack } from "@mui/joy";
+import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
@@ -68,6 +69,8 @@ type UrlLinkModalProps = {
 // via `onClose`. Sizing is viewport-relative so the dialog stays usable
 // on a wide range of screen sizes without overflowing.
 export const UrlLinkModal = (props: UrlLinkModalProps) => {
+    const { mode } = useColorScheme();
+    const isDark = mode === "dark";
     const { target, onClose, zIndex, useTG, ...rest } = props;
     const effectiveZIndex = zIndex ?? 10020;
 
@@ -170,6 +173,7 @@ export const UrlLinkModal = (props: UrlLinkModalProps) => {
             onClose={onClose}
         >
             <ModalDialog
+                className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                 sx={(theme) => ({
                     border: "1px solid",
                     borderColor:
