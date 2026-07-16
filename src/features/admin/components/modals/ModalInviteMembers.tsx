@@ -8,6 +8,7 @@ import MarkEmailReadRoundedIcon from "@mui/icons-material/MarkEmailReadRounded";
 import PersonAddAltRoundedIcon from "@mui/icons-material/PersonAddAltRounded";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import { Alert, Box, Button, Chip, Input, Modal, ModalDialog, Stack, Typography } from "@mui/joy";
+import { useColorScheme } from "@mui/joy/styles";
 
 import { useAuth } from "../../../../context/AuthContext";
 import { ValidationUtils } from "../../../../db/utils/validation";
@@ -41,6 +42,8 @@ const STATUS_META: Record<InviteResultStatus, { color: string; Icon: typeof Info
 export const ModalInviteMembers = ({ open, teamId, onClose }: Props) => {
     const { accessToken } = useAuth();
     const { t } = useTranslation();
+    const { mode } = useColorScheme();
+    const isDark = mode === "dark";
 
     const [draft, setDraft] = useState("");
     const [emails, setEmails] = useState<string[]>([]);
@@ -114,6 +117,7 @@ export const ModalInviteMembers = ({ open, teamId, onClose }: Props) => {
             onClose={handleClose}
         >
             <ModalDialog
+                className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                 sx={{
                     animation: `${fadeIn} 0.2s ease-out`,
                     background:

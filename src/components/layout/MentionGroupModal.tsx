@@ -1,6 +1,7 @@
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import GroupRoundedIcon from "@mui/icons-material/GroupRounded";
 import { IconButton, Modal, ModalDialog, Stack, Typography } from "@mui/joy";
+import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { useMentionGroupModal } from "../../context/MentionGroupModalContext";
@@ -33,11 +34,14 @@ export const MentionGroupModal = ({
     useCM,
     useUISM,
 }: Props) => {
+    const { mode } = useColorScheme();
+    const isDark = mode === "dark";
     const { openGroupId, closeGroupModal } = useMentionGroupModal();
     const open = openGroupId != null;
     return (
         <Modal open={open} onClose={closeGroupModal}>
             <ModalDialog
+                className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                 size="md"
                 sx={{
                     width: { xs: "92vw", sm: 520 },

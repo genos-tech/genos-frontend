@@ -168,6 +168,7 @@ export const ModalManageTags: React.FC<Props> = ({
             onClose={onClose}
         >
             <ModalDialog
+                className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                 sx={{
                     animation: `${fadeIn} 0.2s ease-out`,
                     background:

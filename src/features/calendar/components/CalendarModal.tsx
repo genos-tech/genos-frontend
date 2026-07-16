@@ -16,6 +16,7 @@ import {
     Stack,
     Typography,
 } from "@mui/joy";
+import { useColorScheme } from "@mui/joy/styles";
 import dayjs, { Dayjs } from "dayjs";
 
 import { useAuth } from "../../../context/AuthContext";
@@ -101,6 +102,8 @@ interface ModalInitial {
 export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
     const { accessToken } = useAuth();
     const { t } = useTranslation();
+    const { mode } = useColorScheme();
+    const isDark = mode === "dark";
 
     // View persisted to localStorage so reopening the modal lands
     // on whatever granularity the user was last using. Anchor is
@@ -341,6 +344,7 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
     return (
         <Modal open={open} onClose={onClose}>
             <ModalDialog
+                className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                 size="lg"
                 sx={{
                     // Wider to make room for the timeline views —

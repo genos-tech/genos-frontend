@@ -173,6 +173,7 @@ export const ModalTaskDiagram = ({
             onClose={onClose}
         >
             <ModalDialog
+                className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                 size="lg"
                 variant="outlined"
                 sx={{
