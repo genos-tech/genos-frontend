@@ -24,11 +24,13 @@ import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TagListProps, TaskTableProps } from "../../../../types/tasks";
 import { popTeamMembers } from "../../../admin/services/popTeamMembers";
+import { ModalTaskDiagram } from "../../diagram/components/ModalTaskDiagram";
 import { createQuickTask } from "../../services/createQuickTask";
 import { emitTaskTouched } from "../../services/taskEvents";
 import { updateTaskFromTable } from "../../services/updateTaskFromTable";
 import { FilterProps } from "../../types/TaskTableTypes";
 import { sortTableTasks, SortTier } from "../../utils/sortTask";
+import { formatTaskDisplayId } from "../../utils/taskDisplayId";
 import { effortLevels, priorities, statuses } from "../../utils/taskMeta";
 import { DraggableTaskRow } from "./DraggableTaskRow";
 import { QuickAddDraft, QuickAddTaskRow } from "./QuickAddTaskRow";
@@ -309,9 +311,10 @@ const getHeaderCellStyles = (
 });
 
 // Leading gutter shared by the header placeholder, every task row
-// (28px drag handle + 20px hover quick-add "+") and the QuickAddTaskRow
-// draft row. All three must agree or the cell grid shears sideways.
-export const LEADING_GUTTER_WIDTH = 48;
+// (28px drag handle + 20px hover open-diagram + 20px hover quick-add
+// "+") and the QuickAddTaskRow draft row. All three must agree or the
+// cell grid shears sideways.
+export const LEADING_GUTTER_WIDTH = 68;
 
 // Drag handle placeholder in header
 const headerDragHandlePlaceholderStyles: React.CSSProperties = {
@@ -431,6 +434,16 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
             next.add(id);
             return next;
         });
+    }, []);
+
+    // Row whose task graph is open (null = diagram closed). One shared
+    // ModalTaskDiagram at the table level instead of one per row — rows
+    // only request it via the identity-stable callback below (excluded
+    // from DraggableTaskRow's areEqual, same contract as openQuickAdd).
+    const [diagramTask, setDiagramTask] = useState<TaskTableProps | null>(null);
+    const openDiagram = useCallback((task: TaskTableProps) => {
+        if (task.id == null) return;
+        setDiagramTask(task);
     }, []);
 
     const closeQuickAdd = useCallback(() => {
@@ -1467,6 +1480,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                                 useTEM={useTEM}
                                                 useTM={useTM}
                                                 useUISM={useUISM}
+                                                onOpenDiagram={openDiagram}
                                                 onQuickAddChild={openQuickAdd}
                                                 onRequestPreview={requestPreview}
                                                 onRowUpdate={handleRowUpdate}
@@ -1566,6 +1580,30 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                         ))}
                 </div>
             </div>
+
+            {/* Shared task-graph modal for the per-row gutter trigger.
+                Anchored on the row's OWN id: the trigger only renders on
+                depth-0 rows (root tasks / milestones), so the row IS the
+                top of its hierarchy — same net anchor the preview header
+                computes via `rootTaskId ?? id`. Page-hosted surface, so
+                the diagram's default 9999 layer applies (no zIndex). */}
+            {diagramTask != null &&
+                diagramTask.id != null &&
+                (diagramTask.projectId ?? usePM.currentProject?.projectId) != null && (
+                    <ModalTaskDiagram
+                        myself={myself}
+                        open={true}
+                        projectId={Number(
+                            diagramTask.projectId ?? usePM.currentProject?.projectId
+                        )}
+                        rootLabel={`${formatTaskDisplayId(diagramTask)} · ${diagramTask.title || "Untitled"}`}
+                        rootTaskId={Number(diagramTask.rootTaskId ?? diagramTask.id)}
+                        usePM={usePM}
+                        useSM={useSM}
+                        useTM={useTM}
+                        onClose={() => setDiagramTask(null)}
+                    />
+                )}
         </ThemeProvider>
     );
 };

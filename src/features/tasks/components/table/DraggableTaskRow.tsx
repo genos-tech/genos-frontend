@@ -1,5 +1,6 @@
 import { memo, useEffect, useRef, useState } from "react";
 import { Draggable } from "@hello-pangea/dnd";
+import AccountTreeRoundedIcon from "@mui/icons-material/AccountTreeRounded";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
@@ -218,6 +219,12 @@ type DraggableTaskRowProps = {
     // function (`useCallback` with `[]` + functional setState) — a
     // closure over changing state would go stale here.
     onQuickAddChild: (task: TaskTableProps) => void;
+    // Opens the shared task-graph modal anchored on this row (the hover
+    // tree icon in the leading gutter, root tasks / milestones only —
+    // sub-task rows never show it). Same identity-stability contract as
+    // `onQuickAddChild`: excluded from `areEqual`, so the parent must
+    // pass a `useCallback([])`-stable function.
+    onOpenDiagram: (task: TaskTableProps) => void;
 };
 
 const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
@@ -244,6 +251,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
         depth,
         sprintNamesById,
         onQuickAddChild,
+        onOpenDiagram,
     } = props;
 
     const { t } = useTranslation();
@@ -1491,6 +1499,9 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                             "&:hover .task-row-quick-add": {
                                 opacity: snapshot.isDragging ? 0 : 0.8,
                             },
+                            "&:hover .task-row-open-diagram": {
+                                opacity: snapshot.isDragging ? 0 : 0.8,
+                            },
                         }}
                         onDoubleClick={() => {
                             // Single debounced path for both task and
@@ -1568,6 +1579,35 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                             >
                                 <DragIndicatorIcon sx={{ fontSize: 20 }} />
                             </div>
+                            {/* Open the task graph anchored on this row.
+                                Root tasks / milestones only: a sub-task's
+                                graph is reachable from its root, and the
+                                icon on every nested row would just be
+                                gutter noise. Same hover-reveal CSS as the
+                                quick-add "+" (zero-re-render pattern). */}
+                            {!isChild && (
+                                <AppTooltip title={t.tasks.tooltips.openTaskGraph}>
+                                    <IconButton
+                                        className="task-row-open-diagram"
+                                        size="small"
+                                        sx={{
+                                            width: 20,
+                                            height: 20,
+                                            p: 0,
+                                            borderRadius: "4px",
+                                            opacity: 0,
+                                            color: mode === "dark" ? "#a78bfa" : "#7c3aed",
+                                            transition: "opacity 0.2s ease",
+                                        }}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onOpenDiagram(task);
+                                        }}
+                                    >
+                                        <AccountTreeRoundedIcon sx={{ fontSize: 14 }} />
+                                    </IconButton>
+                                </AppTooltip>
+                            )}
                             <AppTooltip title={t.tasks.table.quickAddTooltip}>
                                 <IconButton
                                     className="task-row-quick-add"

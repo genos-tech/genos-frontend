@@ -1,12 +1,15 @@
 import React from "react";
 import { Draggable } from "@hello-pangea/dnd";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import AccountTreeRoundedIcon from "@mui/icons-material/AccountTreeRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import Avatar from "@mui/joy/Avatar";
 import Box from "@mui/joy/Box";
+import IconButton from "@mui/joy/IconButton";
 import { useColorScheme } from "@mui/joy/styles";
 import Typography from "@mui/joy/Typography";
 
+import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { useResolvedUserName } from "../../../../components/ui/avatars/AvatarContext";
 import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
 import { fmt, useTranslation } from "../../../../i18n";
@@ -83,6 +86,12 @@ type SprintBoardCardProps = {
     // route the click to a milestone preview instead of a regular task
     // preview (mirrors DraggableTaskRow's openPreview behaviour).
     onTaskClick?: (task: TaskTableProps) => void;
+    // Opens the board-level task-graph modal anchored on this card.
+    // Rendered only on ROOT cards (parentTaskId null — root tasks and
+    // milestone backing rows); sub-task cards reach their graph from
+    // the root. Must be identity-stable in the parent (this component
+    // is React.memo with shallow equality).
+    onOpenDiagram?: (task: TaskTableProps) => void;
     isSelected?: boolean;
 };
 
@@ -92,6 +101,7 @@ const SprintBoardCardImpl = ({
     myself,
     teamMemberProfiles,
     onTaskClick,
+    onOpenDiagram,
     isSelected = false,
 }: SprintBoardCardProps) => {
     const { mode: colorMode } = useColorScheme();
@@ -308,39 +318,75 @@ const SprintBoardCardImpl = ({
                             </Typography>
                         </Box>
 
-                        {/* Due date — hidden for Closed tasks since
-                            the work is done and there's no remaining
-                            deadline to signal. Other statuses (Open /
-                            WIP / Pending) still show the chip; Pending
-                            cards keep it because a paused task can
-                            still have a real due date the user wants
-                            to see. */}
-                        {task.status !== "Closed" && (
-                            <Box
-                                sx={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: 0.25,
-                                    color: getDaysLeftColor(task.daysLeft),
-                                    padding: "2px 6px",
-                                    borderRadius: 4,
-                                    backgroundColor:
-                                        task.daysLeft !== null && task.daysLeft <= 0
-                                            ? mode === "dark"
-                                                ? "rgba(239, 68, 68, 0.15)"
-                                                : "rgba(239, 68, 68, 0.1)"
-                                            : "transparent",
-                                }}
-                            >
-                                <AccessTimeIcon sx={{ fontSize: 11 }} />
-                                <Typography
-                                    level="body-xs"
-                                    sx={{ fontWeight: 600, fontSize: "0.6rem" }}
+                        {/* Right cluster: due date + open-graph trigger. */}
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 0.25 }}>
+                            {/* Due date — hidden for Closed tasks since
+                                the work is done and there's no remaining
+                                deadline to signal. Other statuses (Open /
+                                WIP / Pending) still show the chip; Pending
+                                cards keep it because a paused task can
+                                still have a real due date the user wants
+                                to see. */}
+                            {task.status !== "Closed" && (
+                                <Box
+                                    sx={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 0.25,
+                                        color: getDaysLeftColor(task.daysLeft),
+                                        padding: "2px 6px",
+                                        borderRadius: 4,
+                                        backgroundColor:
+                                            task.daysLeft !== null && task.daysLeft <= 0
+                                                ? mode === "dark"
+                                                    ? "rgba(239, 68, 68, 0.15)"
+                                                    : "rgba(239, 68, 68, 0.1)"
+                                                : "transparent",
+                                    }}
                                 >
-                                    {formatDaysLeft(task.daysLeft)}
-                                </Typography>
-                            </Box>
-                        )}
+                                    <AccessTimeIcon sx={{ fontSize: 11 }} />
+                                    <Typography
+                                        level="body-xs"
+                                        sx={{ fontWeight: 600, fontSize: "0.6rem" }}
+                                    >
+                                        {formatDaysLeft(task.daysLeft)}
+                                    </Typography>
+                                </Box>
+                            )}
+                            {/* Open the task graph anchored on this card.
+                                Root cards only (see the prop doc) — same
+                                icon + tooltip as the preview header's
+                                trigger. Fades in with the card hover so
+                                the footer stays quiet at rest; the card's
+                                own onClick opens the preview, hence the
+                                stopPropagation. */}
+                            {onOpenDiagram && task.parentTaskId == null && (
+                                <AppTooltip title={t.tasks.tooltips.openTaskGraph}>
+                                    <IconButton
+                                        aria-label={t.tasks.tooltips.openTaskGraph}
+                                        size="sm"
+                                        variant="plain"
+                                        sx={{
+                                            "--IconButton-size": "20px",
+                                            minWidth: 20,
+                                            minHeight: 20,
+                                            p: 0,
+                                            borderRadius: "4px",
+                                            opacity: isHovered ? 0.8 : 0,
+                                            transition: "opacity 0.15s ease",
+                                            color: mode === "dark" ? "#a78bfa" : "#7c3aed",
+                                            "&:hover": { opacity: 1 },
+                                        }}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onOpenDiagram(task);
+                                        }}
+                                    >
+                                        <AccountTreeRoundedIcon sx={{ fontSize: 13 }} />
+                                    </IconButton>
+                                </AppTooltip>
+                            )}
+                        </Box>
                     </Box>
                 </div>
             )}
