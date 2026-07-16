@@ -1,12 +1,20 @@
 name: CI
 
-# Single-service repo: no path filters (every push/PR builds this repo).
 # Rollout: `frontend-test` is the check to mark *required* first.
 # `frontend-build` and `frontend-quality` stay report-only (non-required)
 # until the in-flight refactor's production-source type errors and the
 # ~14k eslint findings are separately remediated. Report-only is achieved
 # by leaving the check out of branch protection's required list — NOT by
 # `continue-on-error` (which would mask a red baseline).
+#
+# Path filtering happens INSIDE the workflow (the `changes` job below +
+# job-level `if`), NOT via `on.pull_request.paths`. All three CI jobs are
+# listed as required-check contexts in the (currently disabled) branch
+# ruleset; a trigger-level filter would leave those checks "Expected"
+# forever on a docs-only PR and block its merge, whereas a job skipped by
+# an `if` condition reports success. Pushes to main are never filtered —
+# the deploy job below rides `needs: frontend-test`, and a detection bug
+# must never be able to skip a deploy.
 
 on:
     push:
@@ -18,8 +26,46 @@ concurrency:
     cancel-in-progress: true
 
 jobs:
+    # Classifies the PR's changed files so docs-only PRs skip vitest and the
+    # build. FAIL-OPEN by construction: any API hiccup, or any event that is
+    # not a pull_request, yields code=true — an unnecessary extra run is
+    # noise, but a silently green-skipped test would be a correctness bug.
+    # The inert list is a deliberately narrow denylist (never an allowlist:
+    # a new top-level config file must default to running CI). Markdown is
+    # inert HERE (nothing under src/ imports .md, so neither vitest nor the
+    # vite build can see it) — but NOT for `frontend-quality`, which runs
+    # `prettier --check .` over md/yaml/json too and therefore stays
+    # unconditional.
+    changes:
+        name: detect relevant changes
+        runs-on: ubuntu-latest
+        outputs:
+            code: ${{ steps.filter.outputs.code }}
+        steps:
+            - name: Classify changed files (fail-open)
+              id: filter
+              env:
+                  GH_TOKEN: ${{ github.token }}
+              run: |
+                  if [ "${{ github.event_name }}" != "pull_request" ]; then
+                      echo "code=true" >> "$GITHUB_OUTPUT"; exit 0
+                  fi
+                  files=$(gh api "repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/files" \
+                      --paginate --jq '.[].filename') || files=""
+                  if [ -z "$files" ]; then
+                      echo "code=true" >> "$GITHUB_OUTPUT"; exit 0
+                  fi
+                  echo "changed files:"; printf '%s\n' "$files"
+                  if printf '%s\n' "$files" | grep -Evq '^docs/|\.md$|^LICENSE|^\.gitignore$'; then
+                      echo "code=true" >> "$GITHUB_OUTPUT"
+                  else
+                      echo "code=false" >> "$GITHUB_OUTPUT"
+                  fi
+
     frontend-test:
         name: frontend-test (required-first)
+        needs: changes
+        if: needs.changes.outputs.code == 'true'
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v4
@@ -40,6 +86,8 @@ jobs:
 
     frontend-build:
         name: frontend-build (report-only)
+        needs: changes
+        if: needs.changes.outputs.code == 'true'
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v4
@@ -61,6 +109,9 @@ jobs:
                   # chunk-rendering on this large app; GitHub runners have ~7GB.
                   NODE_OPTIONS: --max-old-space-size=4096
 
+    # Deliberately NOT gated on `changes`: prettier checks `.` — including
+    # markdown/yaml/json (.prettierrc's tabWidth applies to them) — so a
+    # docs-only PR is exactly the kind of change this job exists to check.
     frontend-quality:
         name: frontend-quality (report-only)
         runs-on: ubuntu-latest
