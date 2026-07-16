@@ -499,6 +499,8 @@ export const tasks = {
     // Comment bubble.
     comment: {
         editTooltip: "Edit",
+        deleteTooltip: "Delete",
+        confirmDelete: "Delete this comment?",
     },
 
     // Title block.

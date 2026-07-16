@@ -146,39 +146,53 @@ export const setupWebSocketHandlers = (
             // the preview no longer keys off it.
             emitTaskTouched(Number(message.taskId), "comment");
 
-            // Live-bump the PM bubble's `taskCommentCount` chip. Without
+            // Live-update the PM bubble's `taskCommentCount` chip. Without
             // this, the chip stays stale until the user refreshes the
             // page (the backend only computes the count on history
-            // fetches). Only POST events grow the count — PUTs are
-            // edits (`isEdited: true`) and the backend has no DELETE
-            // handler for task comments, so this single update covers
-            // every count-changing path today.
+            // fetches). Two of the three write paths move the count:
+            // POSTs grow it and DELETEs shrink it; PUTs are edits
+            // (`isEdited: true`) and leave it alone.
             //
             // The same `wsType: "task"` event is broadcast back to the
             // sender too (Flask-SocketIO `send` includes self by
             // default), so the same handler updates both author and
             // observers — no separate optimistic path needed.
             //
-            // We derive the new total from `message.commentId`. The
-            // backend assigns `comment_id = current_count + 1` on POST
-            // (see `TaskCommentsView.post`), so `commentId` equals the
-            // post-insert total. Using it directly with `Math.max`
-            // makes the bump idempotent against socket replays and
-            // out-of-order delivery (e.g. if the parent-message
-            // broadcast already set the count to the new value).
+            // New comments derive the total from `message.commentId`.
+            // The backend assigns `comment_id = current_count + 1` on
+            // POST (see `TaskCommentsView.post`), so `commentId` equals
+            // the post-insert total. Using it with `Math.max` makes the
+            // bump idempotent against socket replays and out-of-order
+            // delivery (e.g. if the parent-message broadcast already set
+            // the count to the new value).
+            //
+            // Deletes can't reuse that trick twice over: `commentId` is a
+            // claimed sequence slot, not a total (deleting #5 of 5 would
+            // "bump" the chip right back to 5), and a shrink can't be
+            // expressed as a `Math.max` at all. So the delete broadcast
+            // carries the server's authoritative post-delete count and we
+            // SET it. Ordering: a delete arriving late can only be
+            // corrected by the next channel resync, which is the same
+            // exposure the POST path already carries.
             const taskId = message.taskId;
             const newTotal = Number(message.commentId);
+            const deletedTotal = Number(message.taskCommentCount);
+            const isCommentDeleted =
+                message.isDeleted === true && Number.isFinite(deletedTotal) && deletedTotal >= 0;
             const isNewComment =
+                message.isDeleted !== true &&
                 message.isEdited !== true &&
                 message.isReactionUpdated !== true &&
                 Number.isFinite(newTotal) &&
                 newTotal > 0;
-            if (taskId != null && isNewComment) {
+            const resolveCount = (current: number | undefined): number =>
+                isCommentDeleted ? deletedTotal : Math.max(current ?? 0, newTotal);
+            if (taskId != null && (isNewComment || isCommentDeleted)) {
                 const bumpMessages = (msgs: MessageProps[]): MessageProps[] => {
                     let mutated = false;
                     const next = msgs.map((m) => {
                         if (m.taskId !== taskId) return m;
-                        const nextCount = Math.max(m.taskCommentCount ?? 0, newTotal);
+                        const nextCount = resolveCount(m.taskCommentCount);
                         if (nextCount === m.taskCommentCount) return m;
                         mutated = true;
                         return { ...m, taskCommentCount: nextCount };
@@ -215,7 +229,7 @@ export const setupWebSocketHandlers = (
                     prev.map((chat) => {
                         const latest = chat.latestMessage;
                         if (!latest || latest.taskId !== taskId) return chat;
-                        const nextCount = Math.max(latest.taskCommentCount ?? 0, newTotal);
+                        const nextCount = resolveCount(latest.taskCommentCount);
                         if (nextCount === latest.taskCommentCount) return chat;
                         return {
                             ...chat,

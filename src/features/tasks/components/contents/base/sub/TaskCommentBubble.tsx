@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import CodeIcon from "@mui/icons-material/Code";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import EditIcon from "@mui/icons-material/Edit";
 import WrapTextIcon from "@mui/icons-material/WrapText";
 import { Box, IconButton, Sheet, Stack, Typography } from "@mui/joy";
@@ -33,6 +34,7 @@ import {
     COMPACT_FOCUSED_BG,
     COMPACT_TOOLBAR_OFFSET,
 } from "../../../../../chat/components/bubbles/bubbleStyleTokens";
+import { emitTaskTouched } from "../../../../services/taskEvents";
 
 type TaskCommentBubbleProps = {
     useTEM: TeamManagementState;
@@ -333,6 +335,57 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
         </AppTooltip>
     );
 
+    // Own comments only. This mirrors the reaction emits above by going
+    // straight to the socket rather than threading a callback down from
+    // `TaskPreview`: the delete is a soft-delete server-side, and the
+    // `wsType: "task"` broadcast it triggers is what refreshes every
+    // mounted list (host preview, chat-thread Comments tab, modal) via
+    // the scoped `task-touched` bus. The local `emitTaskTouched` on ack
+    // matches the edit editor — it just drops the 15s comment cache a
+    // beat earlier than the round-trip would.
+    const deleteButton = isSent ? (
+        <AppTooltip title={t.tasks.comment.deleteTooltip}>
+            <IconButton
+                size="sm"
+                sx={{
+                    width: 28,
+                    height: 28,
+                    borderRadius: "8px",
+                    transition: "all 0.15s ease",
+                    color: isDark ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.55)",
+                    background: "transparent",
+                    "&:hover": {
+                        background: isDark ? "rgba(248,113,113,0.15)" : "rgba(239,68,68,0.1)",
+                        color: isDark ? "#f87171" : "#ef4444",
+                    },
+                }}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    if (!socket) return;
+                    // Native confirm, as the milestone delete in
+                    // `TaskPreview` already uses.
+                    if (!window.confirm(t.tasks.comment.confirmDelete)) return;
+                    socket.emit(
+                        "task_comment",
+                        {
+                            method_type: "DELETE",
+                            project_id: currentProjectId,
+                            project_name: currentProjectName,
+                            task_id: comment.taskId,
+                            display_id: currentTaskDisplayId,
+                            comment_id: comment.commentId,
+                        },
+                        () => {
+                            emitTaskTouched(Number(comment.taskId), "comment");
+                        }
+                    );
+                }}
+            >
+                <DeleteOutlineIcon sx={{ fontSize: 16 }} />
+            </IconButton>
+        </AppTooltip>
+    ) : null;
+
     const reactionsDisplay = (
         <Box onClick={(e) => e.stopPropagation()}>
             <ReactionTaskCommentEmojiDisplay
@@ -447,6 +500,7 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                         <Stack alignItems="center" direction="row" spacing={0.25}>
                             {wrapToggleButtons}
                             {editButton}
+                            {deleteButton}
                         </Stack>
                     </Box>
                 )}
@@ -628,6 +682,7 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                         <Stack alignItems="center" direction="row" spacing={0.25}>
                             {wrapToggleButtons}
                             {editButton}
+                            {deleteButton}
                         </Stack>
                     </Box>
 

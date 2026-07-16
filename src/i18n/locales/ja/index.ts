@@ -939,6 +939,8 @@ export const ja: DeepPartial<Messages> = {
         },
         comment: {
             editTooltip: "編集",
+            deleteTooltip: "削除",
+            confirmDelete: "このコメントを削除しますか？",
         },
         titleBlock: {
             titlePlaceholder: "タスクのタイトルを入力…",
