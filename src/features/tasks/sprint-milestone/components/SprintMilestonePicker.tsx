@@ -14,6 +14,7 @@ import {
 
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { useTranslation } from "../../../../i18n";
+import { stripOwnerState } from "../../../../utils/joyAutocomplete";
 import { Milestone, Sprint } from "../types";
 import { selectVisibleMilestones, selectVisibleSprints } from "../utils/sortMilestones";
 
@@ -208,7 +209,10 @@ export const SprintMilestonePicker = ({
                     sx={{ flex: 1, minWidth: 0 }}
                     value={selectedSprint}
                     renderOption={(props, option) => (
-                        <li {...props} key={`s-${option.id ?? "none"}`}>
+                        // stripOwnerState: bespoke <li> rows must not forward
+                        // Joy's internal ownerState to the DOM (React warns
+                        // on every rendered option otherwise).
+                        <li {...stripOwnerState(props)} key={`s-${option.id ?? "none"}`}>
                             <Stack
                                 direction="column"
                                 spacing={0.25}
@@ -274,7 +278,7 @@ export const SprintMilestonePicker = ({
                         const closed = m?.tasksClosed ?? 0;
                         const pct = total > 0 ? Math.round((closed / total) * 100) : 0;
                         return (
-                            <li {...props} key={`m-${option.id ?? "none"}`}>
+                            <li {...stripOwnerState(props)} key={`m-${option.id ?? "none"}`}>
                                 <Stack
                                     direction="column"
                                     spacing={0.25}

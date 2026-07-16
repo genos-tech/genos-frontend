@@ -34,6 +34,7 @@ import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TaskTableProps } from "../../../../types/tasks";
+import { stripOwnerState } from "../../../../utils/joyAutocomplete";
 import { PrStatusCell } from "../../../integrations/components/PrStatusCell";
 import { formatTaskDisplayId } from "../../utils/taskDisplayId";
 import { effortLevels, priorities } from "../../utils/taskMeta";
@@ -770,7 +771,10 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                             )}
                             renderOption={(props, option) => {
                                 const isSelected = option.userId === task.assigneeId;
-                                const { key, ...restProps } = props;
+                                // stripOwnerState: bespoke <li> rows must not
+                                // forward Joy's internal ownerState to the DOM
+                                // (React warns on every rendered option).
+                                const { key, ...restProps } = stripOwnerState(props);
                                 return (
                                     <Box
                                         key={key}
