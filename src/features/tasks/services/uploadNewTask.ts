@@ -23,7 +23,29 @@ type uploadTaskProps = {
     setCurrentPreviewTaskId: (value: number) => void;
 };
 
-export const uploadNewTask = async (props: uploadTaskProps) => {
+/** Did the task actually land? The caller tears the create form down (and
+ *  wipes the draft) on success, so this MUST NOT be optimistic — every
+ *  failure path returns `ok: false` and leaves the reason on screen in the
+ *  form's error snackbar via `setTitleError` / `setTitleErrorOpen`. */
+export type UploadNewTaskResult = { ok: true; taskId: number } | { ok: false };
+
+/**
+ * Finalize the create form's scaffold row into a real task: PUT the user's
+ * content over it, upload the staged attachments, then fan the "task
+ * created" card out to the project's PM channel.
+ *
+ * **Failure keeps the form open.** The reason goes to the error snackbar
+ * and `ok: false` tells `TaskCreateFooter` to leave the draft alone, so a
+ * retry is just the Create button again — the PUT targets the same
+ * `task_id`, so it rewrites that one row rather than creating a second.
+ *
+ * Retrying PAST a successful PUT (i.e. an attachment failed) does re-run
+ * the attachment uploads and the PM card send, so an already-uploaded file
+ * can duplicate and the channel can get a second card. That's the accepted
+ * cost of not silently discarding the user's staged files; the alternative
+ * — closing the form on a partial failure — loses them outright.
+ */
+export const uploadNewTask = async (props: uploadTaskProps): Promise<UploadNewTaskResult> => {
     const {
         socket,
         myself,
@@ -36,15 +58,22 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
     } = props;
 
     const errMsgs = getMessages().tasks.errors;
+
+    // Every "this didn't work" exit goes through here: show the reason in
+    // the create form's snackbar (rendered by `TaskTitleBlock`) AND tell
+    // the caller not to tear the form down.
+    const fail = (message: string): UploadNewTaskResult => {
+        setTitleError(message);
+        setTitleErrorOpen(true);
+        return { ok: false };
+    };
+
     if (taskContent.title === "") {
-        setTitleError(errMsgs.taskTitleRequired);
-        setTitleErrorOpen(true);
+        return fail(errMsgs.taskTitleRequired);
     } else if (taskContent.project === null) {
-        setTitleError(errMsgs.targetProjectRequired);
-        setTitleErrorOpen(true);
+        return fail(errMsgs.targetProjectRequired);
     } else if (taskContent.id === undefined) {
-        setTitleError(errMsgs.targetTaskIdRequired);
-        setTitleErrorOpen(true);
+        return fail(errMsgs.targetTaskIdRequired);
     } else {
         try {
             const taskCreateResponse = await fetch(`${base_url}/task/`, {
@@ -99,7 +128,16 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
             const taskCreateData = await taskCreateResponse.json();
 
             if (!taskCreateResponse.ok) {
-                throw new Error(errMsgs.createTaskFailed);
+                // Nothing was created and no side effect below has run, so
+                // the form's scaffold row is still a clean retry target.
+                // The body is logged (not shown) because a DRF validation
+                // error is developer-ese; the user gets the localized line.
+                console.error(
+                    "[uploadNewTask] task PUT failed:",
+                    taskCreateResponse.status,
+                    taskCreateData
+                );
+                return fail(errMsgs.createTaskFailed);
             } else {
                 const newly_mentioned_user_ids: string[] =
                     taskCreateData.newly_mentioned_user_ids ?? [];
@@ -159,7 +197,17 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                     const uploadAttachmentData = await uploadAttachmentResponse.json();
 
                     if (!uploadAttachmentResponse.ok) {
-                        throw new Error(
+                        // The task row itself is already saved by this point,
+                        // so this is a partial failure — but the staged files
+                        // only exist in this form, and closing it would drop
+                        // them with no way back. Keep the form up with the
+                        // reason; see the retry caveat in the docstring above.
+                        console.error(
+                            "[uploadNewTask] attachment upload failed:",
+                            uploadAttachmentResponse.status,
+                            uploadAttachmentData
+                        );
+                        return fail(
                             uploadAttachmentData.message || errMsgs.attachmentUploadFailed
                         );
                     }
@@ -315,10 +363,14 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                     }
                 }
                 void socket;
+                return { ok: true, taskId: taskCreateData.task.task_id };
             }
         } catch (error) {
-            console.error(error);
-            return [];
+            // Unexpected throws only — a network TypeError, a non-JSON error
+            // page. Their messages aren't presentable (or localized), so the
+            // user gets the generic line and the console gets the detail.
+            console.error("[uploadNewTask] unexpected failure:", error);
+            return fail(errMsgs.createTaskFailed);
         }
     }
 };
