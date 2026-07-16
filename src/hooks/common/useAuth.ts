@@ -78,8 +78,12 @@ export const useMyself = (accessToken: string | null) => {
             setMyself(newMyself);
         };
 
-        // Add a small delay to ensure localStorage is updated
-        setTimeout(fetchUserData, 50);
+        // Add a small delay to ensure localStorage is updated. Must be
+        // cleared on cleanup: unmounting (or a token refresh re-running
+        // this effect) within the 50ms window otherwise leaves an orphan
+        // timer that fires after teardown — a stale setMyself in prod,
+        // and in vitest a crash when it outlives the jsdom environment.
+        const hydrationTimer = setTimeout(fetchUserData, 50);
 
         // Listen for cross-document storage updates. Filter by key —
         // PostHog (and likely other third-party libs) re-writes its own
@@ -125,6 +129,7 @@ export const useMyself = (accessToken: string | null) => {
         window.addEventListener("storage", onStorage);
 
         return () => {
+            clearTimeout(hydrationTimer);
             window.removeEventListener("storage", onStorage);
         };
     }, [accessToken]);

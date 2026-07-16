@@ -5,7 +5,7 @@
 // so App can show a reload banner.
 
 import { act, renderHook, waitFor } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useMyself } from "../hooks/common/useAuth";
 
@@ -84,5 +84,20 @@ describe("useMyself — cross-tab session supersede", () => {
 
         await waitFor(() => expect(result.current.myself.teamId).toBe("team-1"));
         expect(result.current.supersededByTeamName).toBeNull();
+    });
+
+    it("clears the pending 50ms hydration timer on unmount", () => {
+        // An orphaned timer fires after teardown: a stale setMyself in
+        // prod, and here a crash once jsdom's localStorage is gone —
+        // this is the timer that intermittently failed CI runs.
+        vi.useFakeTimers();
+        try {
+            const { unmount } = renderHook(() => useMyself("token"));
+            expect(vi.getTimerCount()).toBe(1);
+            unmount();
+            expect(vi.getTimerCount()).toBe(0);
+        } finally {
+            vi.useRealTimers();
+        }
     });
 });
