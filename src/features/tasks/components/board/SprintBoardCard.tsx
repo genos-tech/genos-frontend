@@ -185,8 +185,28 @@ const SprintBoardCardImpl = ({
                                 }}
                             />
                         </Box>
-                        {/* Top-right cluster: open-graph trigger + priority. */}
+                        {/* Top-right cluster: priority + open-graph trigger. */}
                         <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                            {priorityStyle && (
+                                <span
+                                    style={{
+                                        display: "inline-flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        padding: "0 6px",
+                                        borderRadius: 4,
+                                        backgroundColor: priorityStyle.bg,
+                                        color: priorityStyle.text,
+                                        fontSize: "0.55rem",
+                                        height: 16,
+                                        fontWeight: 700,
+                                        letterSpacing: "0.3px",
+                                        textTransform: "uppercase",
+                                    }}
+                                >
+                                    {task.priority}
+                                </span>
+                            )}
                             {/* Open the task graph anchored on this card.
                                 Root cards only (see the prop doc) — same
                                 icon + tooltip as the preview header's
@@ -223,26 +243,6 @@ const SprintBoardCardImpl = ({
                                         <AccountTreeRoundedIcon sx={{ fontSize: 13 }} />
                                     </IconButton>
                                 </AppTooltip>
-                            )}
-                            {priorityStyle && (
-                                <span
-                                    style={{
-                                        display: "inline-flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        padding: "0 6px",
-                                        borderRadius: 4,
-                                        backgroundColor: priorityStyle.bg,
-                                        color: priorityStyle.text,
-                                        fontSize: "0.55rem",
-                                        height: 16,
-                                        fontWeight: 700,
-                                        letterSpacing: "0.3px",
-                                        textTransform: "uppercase",
-                                    }}
-                                >
-                                    {task.priority}
-                                </span>
                             )}
                         </Box>
                     </Box>
