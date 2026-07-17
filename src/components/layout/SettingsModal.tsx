@@ -20,6 +20,7 @@ import SettingsBrightnessRoundedIcon from "@mui/icons-material/SettingsBrightnes
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import ViewStreamRoundedIcon from "@mui/icons-material/ViewStreamRounded";
 import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
+import WorkspacePremiumRoundedIcon from "@mui/icons-material/WorkspacePremiumRounded";
 import {
     Alert,
     Box,
@@ -68,6 +69,7 @@ import { AgentFeatures, fetchAgentFeatures } from "../../services/agentApi";
 import { NotificationSettingsPanel } from "../../services/notifications/NotificationSettingsPanel";
 import { getServiceShortcutModifierKeys, isMac } from "../../utils/platform";
 import { MentionGroupsPanel } from "./MentionGroupsPanel";
+import { PlanUsageSection } from "./settings/PlanUsageSection";
 
 type Props = {
     open: boolean;
@@ -345,29 +347,36 @@ export const LlmModelSection = () => {
                         px: 1,
                         py: 0.25,
                         borderRadius: "sm",
-                        // Three-way: free=neutral, pro=primary, max=success.
-                        // Distinct hues so the upgrade ladder is visually
-                        // obvious without reading the label.
+                        // Tier ladder: free=neutral, pro=primary,
+                        // max=success, enterprise=warning. Distinct hues
+                        // so the upgrade ladder is visually obvious
+                        // without reading the label.
                         bgcolor:
-                            data.tier === "max"
-                                ? "success.softBg"
-                                : data.tier === "pro"
-                                  ? "primary.softBg"
-                                  : "neutral.softBg",
+                            data.tier === "enterprise"
+                                ? "warning.softBg"
+                                : data.tier === "max"
+                                  ? "success.softBg"
+                                  : data.tier === "pro"
+                                    ? "primary.softBg"
+                                    : "neutral.softBg",
                         color:
-                            data.tier === "max"
-                                ? "success.softColor"
-                                : data.tier === "pro"
-                                  ? "primary.softColor"
-                                  : "neutral.softColor",
+                            data.tier === "enterprise"
+                                ? "warning.softColor"
+                                : data.tier === "max"
+                                  ? "success.softColor"
+                                  : data.tier === "pro"
+                                    ? "primary.softColor"
+                                    : "neutral.softColor",
                         fontWeight: 600,
                     }}
                 >
-                    {data.tier === "max"
-                        ? t.settings.llmModel.tierMax
-                        : data.tier === "pro"
-                          ? t.settings.llmModel.tierPro
-                          : t.settings.llmModel.tierFree}
+                    {data.tier === "enterprise"
+                        ? t.settings.llmModel.tierEnterprise
+                        : data.tier === "max"
+                          ? t.settings.llmModel.tierMax
+                          : data.tier === "pro"
+                            ? t.settings.llmModel.tierPro
+                            : t.settings.llmModel.tierFree}
                 </Typography>
             </Stack>
             <Typography level="body-xs" sx={{ mb: 1.5 }}>
@@ -1112,6 +1121,7 @@ const KeyboardShortcutsSection = () => {
 // or inserting a new tab doesn't silently shift selection.
 type SettingsTabKey =
     | "general"
+    | "planUsage"
     | "chat"
     | "tasks"
     | "spotlight"
@@ -1207,6 +1217,10 @@ export const SettingsModal = ({
                             <SettingsRoundedIcon sx={SIDEBAR_TAB_ICON_SX} />
                             {t.settings.tabs.general}
                         </Tab>
+                        <Tab sx={SIDEBAR_TAB_SX} value="planUsage">
+                            <WorkspacePremiumRoundedIcon sx={SIDEBAR_TAB_ICON_SX} />
+                            {t.settings.tabs.planUsage}
+                        </Tab>
                         <Tab sx={SIDEBAR_TAB_SX} value="spotlight">
                             <AutoAwesomeRoundedIcon sx={SIDEBAR_TAB_ICON_SX} />
                             {t.settings.tabs.spotlight}
@@ -1246,6 +1260,11 @@ export const SettingsModal = ({
                             <AppearanceSection />
                             <LanguageSection />
                             <PrivacySection />
+                        </Stack>
+                    </TabPanel>
+                    <TabPanel sx={{ px: 0, py: 2 }} value="planUsage">
+                        <Stack spacing={2}>
+                            <PlanUsageSection />
                         </Stack>
                     </TabPanel>
                     <TabPanel sx={{ px: 0, py: 2 }} value="spotlight">
