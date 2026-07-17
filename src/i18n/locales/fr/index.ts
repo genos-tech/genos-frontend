@@ -251,6 +251,7 @@ export const fr: DeepPartial<Messages> = {
                 "Des plafonds quotidiens par forfait s'appliquent aussi aux modèles d'IA premium.",
             comparePlans: "Comparer les forfaits",
             seePlans: "Voir les forfaits",
+            legalNotice: "Mentions légales",
             billingReturnCancelled: "Paiement annulé — votre forfait est inchangé.",
         },
         appearance: {

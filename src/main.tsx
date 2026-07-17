@@ -23,6 +23,7 @@ import { App } from "./App";
 import GenosDemoPage from "./lp/DemoPage";
 import GenosFeaturesPage from "./lp/FeaturesPage";
 import GenosLandingPage from "./lp/LandingPage";
+import GenosLegalPage from "./lp/LegalPage";
 
 // Initialize PostHog once, before React mounts. No-ops when
 // VITE_POSTHOG_KEY / VITE_POSTHOG_HOST are unset, so leaving them blank
@@ -65,6 +66,12 @@ createRoot(document.getElementById("root")!).render(
                 prompts). Same isolation as /features-guide: renders its own
                 I18nProvider internally, no auth stack. */}
             <Route element={<GenosDemoPage />} path="/demo-guide" />
+
+            {/* 特定商取引法に基づく表記 — the legal disclosure Japanese law
+                requires of paid online services, incl. the cancellation /
+                refund policy the Stripe portal and checkout link to. Static
+                legal text (ja + en summary), so no I18nProvider. */}
+            <Route element={<GenosLegalPage />} path="/legal" />
 
             {/* All routes that need authentication context. */}
             <Route element={<AuthLayout />}>

@@ -60,6 +60,7 @@ export const settings = {
         premiumNote: "Daily caps for premium AI models also apply per plan.",
         comparePlans: "Compare plans",
         seePlans: "See plans",
+        legalNotice: "Legal Notice",
         billingReturnCancelled: "Checkout cancelled — your plan is unchanged.",
     },
     appearance: {

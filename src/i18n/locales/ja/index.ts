@@ -256,6 +256,7 @@ export const ja: DeepPartial<Messages> = {
             premiumNote: "プレミアム AI モデルには、プランごとの 1 日あたりの上限も適用されます。",
             comparePlans: "プランを比較",
             seePlans: "プランを見る",
+            legalNotice: "特定商取引法に基づく表記",
             billingReturnCancelled:
                 "チェックアウトをキャンセルしました — プランは変更されていません。",
         },

@@ -241,6 +241,7 @@ export const zh: DeepPartial<Messages> = {
             premiumNote: "高级 AI 模型另有按套餐的每日上限。",
             comparePlans: "比较套餐",
             seePlans: "查看套餐",
+            legalNotice: "法律声明",
             billingReturnCancelled: "已取消结账 — 您的套餐未更改。",
         },
         appearance: {

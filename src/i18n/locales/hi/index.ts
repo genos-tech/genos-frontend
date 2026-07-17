@@ -248,6 +248,7 @@ export const hi: DeepPartial<Messages> = {
             premiumNote: "प्रीमियम AI मॉडलों पर भी प्लान के अनुसार दैनिक सीमाएँ लागू होती हैं।",
             comparePlans: "प्लान की तुलना करें",
             seePlans: "प्लान देखें",
+            legalNotice: "कानूनी सूचना",
             billingReturnCancelled: "चेकआउट रद्द — आपका प्लान अपरिवर्तित है।",
         },
         appearance: {
