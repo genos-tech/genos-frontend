@@ -6,6 +6,7 @@
     "scripts": {
         "dev": "vite --host --port 3000",
         "build": "tsc -b && vite build",
+        "postbuild": "node scripts/generate-serve-config.mjs",
         "lint": "eslint .",
         "lint:fix": "eslint . --fix",
         "lint:check": "eslint . --max-warnings 0",
