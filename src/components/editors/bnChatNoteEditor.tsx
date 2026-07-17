@@ -312,7 +312,12 @@ export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
     const insertGif = (gif: { url: string; title: string }) => {
         // Standard image block: every read surface already renders and
         // animates it (same path as an uploaded GIF file).
-        editor.insertBlocks(
+        // `as any`: these collab editors are strictly schema-typed (the
+        // chat editors' `editor` is loose), and the PartialBlock union
+        // rejects a fresh image-props literal under tsc -b. Same idiom
+        // as the `editor as any` these files already use for
+        // BlockNoteView.
+        (editor as any).insertBlocks(
             [{ type: "image", props: { url: gif.url, name: gif.title } }],
             editor.getTextCursorPosition().block,
             "after"
