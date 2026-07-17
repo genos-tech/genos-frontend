@@ -18,7 +18,7 @@
 import { useCallback, useMemo, useSyncExternalStore } from "react";
 
 import { channelService } from "../../../services/channel/channelService";
-import type { Channel, Message, ReadCursor } from "../../../types/channel";
+import type { Channel, ChannelRetention, Message, ReadCursor } from "../../../types/channel";
 
 export interface UseChannelResult {
     channel: Channel | null;
@@ -41,6 +41,10 @@ export interface UseChannelResult {
      *  moment any channel row lands in the store — even if its message
      *  list is still empty. */
     isLoading: boolean;
+    /** Tier retention window for this channel (null = unlimited
+     *  history for the viewing user). `truncated` drives the
+     *  "history limited" banner. */
+    retention: ChannelRetention | null;
 }
 
 export function useChannel(channelId: string): UseChannelResult {
@@ -53,18 +57,25 @@ export function useChannel(channelId: string): UseChannelResult {
     const channel = snapshot.channels.get(channelId) ?? null;
     const allMessages = snapshot.messagesByChannel.get(channelId) ?? [];
     const readCursor = snapshot.cursorsByChannel.get(channelId) ?? null;
+    const retention = snapshot.retentionByChannel.get(channelId) ?? null;
+    const retentionCutoff = retention?.cutoff;
 
     // Split top-level vs thread replies. Memoize so consumers that
     // pass these as React.memo props don't re-render every snapshot.
+    // The retention cutoff drops IDB-cached rows that aged past the
+    // viewer's history window between syncs — server responses are
+    // already filtered, this only guards stale cache.
     const { messages, threadReplies } = useMemo(() => {
+        const cutoffMs = retentionCutoff ? Date.parse(retentionCutoff) : NaN;
         const top: Message[] = [];
         const replies: Message[] = [];
         for (const m of allMessages) {
+            if (!Number.isNaN(cutoffMs) && m.tsSent && Date.parse(m.tsSent) < cutoffMs) continue;
             if (m.isThreadReply) replies.push(m);
             else top.push(m);
         }
         return { messages: top, threadReplies: replies };
-    }, [allMessages]);
+    }, [allMessages, retentionCutoff]);
 
     const markRead = useCallback(
         async (messageId: string) => {
@@ -83,5 +94,6 @@ export function useChannel(channelId: string): UseChannelResult {
         // missing channel means it's genuinely not in the store
         // (consumers handle that case directly via `channel === null`).
         isLoading: !snapshot.hydrated,
+        retention,
     };
 }

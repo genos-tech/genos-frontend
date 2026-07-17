@@ -300,6 +300,7 @@ export const zh: DeepPartial<Messages> = {
         },
     },
     chat: {
+        retentionBanner: "根据您的套餐，超过 {days} 天的消息已被隐藏。升级后可查看完整历史记录。",
         composer: {
             placeholder: "输入消息…",
             sendTooltip: "发送",

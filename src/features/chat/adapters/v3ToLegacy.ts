@@ -572,8 +572,14 @@ export function v3MessagesToLegacy(args: {
     channelId: string;
     chatType: number;
     flaggedMessageIds?: { has(id: string): boolean };
+    /** Tier retention cutoff (ISO). Server responses are already
+     *  filtered; this guards IDB-CACHED rows that aged past the
+     *  viewer's history window between syncs — without it a hidden
+     *  message would keep rendering until the next evict/resync. */
+    retentionCutoff?: string;
 }): MessageProps[] {
-    const { messages, channelId, chatType, flaggedMessageIds } = args;
+    const { messages, channelId, chatType, flaggedMessageIds, retentionCutoff } = args;
+    const cutoffMs = retentionCutoff ? Date.parse(retentionCutoff) : NaN;
     // For PM channels, top-level messages are task-card headers — one
     // per task. Anything without a `taskId` is an orphan row (legacy
     // junk: task was deleted via `on_delete=SET_NULL`, or a non-task
@@ -585,6 +591,7 @@ export function v3MessagesToLegacy(args: {
     for (const m of messages) {
         if (m.isThreadReply) continue;
         if (m.deletedAt) continue;
+        if (!Number.isNaN(cutoffMs) && m.tsSent && Date.parse(m.tsSent) < cutoffMs) continue;
         // Adapt FIRST, then filter on the *resolved* taskId. The server
         // only fills the top-level `taskId` column when the `task` FK is
         // linked, but task-create messages carry the id in

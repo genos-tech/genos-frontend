@@ -309,6 +309,8 @@ export const es: DeepPartial<Messages> = {
         },
     },
     chat: {
+        retentionBanner:
+            "Los mensajes de hace más de {days} días están ocultos en tu plan. Mejora tu plan para ver el historial completo.",
         composer: {
             placeholder: "Escribe un mensaje…",
             sendTooltip: "Enviar",

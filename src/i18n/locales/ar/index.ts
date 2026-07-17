@@ -310,6 +310,8 @@ export const ar: DeepPartial<Messages> = {
         },
     },
     chat: {
+        retentionBanner:
+            "الرسائل الأقدم من {days} يومًا مخفية في خطتك. قم بالترقية لعرض السجل الكامل.",
         composer: {
             placeholder: "اكتب رسالة…",
             sendTooltip: "إرسال",

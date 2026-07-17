@@ -313,6 +313,8 @@ export const hi: DeepPartial<Messages> = {
         },
     },
     chat: {
+        retentionBanner:
+            "आपकी योजना में {days} दिनों से पुराने संदेश छिपे हुए हैं। पूरा इतिहास देखने के लिए अपग्रेड करें।",
         composer: {
             placeholder: "एक मेसेज लिखें…",
             sendTooltip: "भेजें",

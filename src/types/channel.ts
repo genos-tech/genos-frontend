@@ -152,12 +152,26 @@ export interface Flag {
 }
 
 /**
+ * Tier retention window stamped on message delta envelopes when the
+ * VIEWING user's plan limits chat history (hide-not-delete — upgrading
+ * restores). Absent for plans with unlimited history. `truncated` is
+ * true only when this channel actually has hidden history (drives the
+ * "history limited" banner).
+ */
+export interface ChannelRetention {
+    days: number;
+    cutoff: string;
+    truncated?: boolean;
+}
+
+/**
  * Standard delta envelope returned by every `?since=`-supporting
  * endpoint. Matches `DeltaEnvelopeSerializer` on the backend.
  */
 export interface DeltaEnvelope<TData = MessagesDeltaData> {
     server_time: string;
     force_full_reload?: boolean;
+    retention?: ChannelRetention;
     data: TData;
 }
 

@@ -319,6 +319,8 @@ export const ja: DeepPartial<Messages> = {
         },
     },
     chat: {
+        retentionBanner:
+            "プランの制限により、{days} 日より前のメッセージは非表示になっています。アップグレードすると全履歴を表示できます。",
         composer: {
             placeholder: "メッセージを入力…",
             sendTooltip: "送信",
