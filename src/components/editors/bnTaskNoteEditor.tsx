@@ -74,8 +74,10 @@ import { FileSizeRejectionSnackbar } from "../ui/feedback/FileSizeRejectionSnack
 import { FileUploadStatusBadge } from "../ui/feedback/FileUploadProgress";
 import { useFileSizeGuard } from "../ui/feedback/useFileSizeGuard";
 import { useUploadCounter } from "../ui/feedback/useUploadCounter";
+import { GifPicker } from "../ui/gif/GifPicker";
 import { CreateCustomEmojiSpec, insertEmojiValue } from "./CustomEmoji";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
+import { GifToolbarButton } from "./GifToolbarButton";
 import {
     CreateHashChatSpec,
     CreateHashNoteSpec,
@@ -287,12 +289,28 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
 
     const [showThreadsSidebar, setShowThreadsSidebar] = useState(false);
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
+    const [showGifPicker, setShowGifPicker] = useState<boolean>(false);
     const [selectedEmoji, setSelectedEmoji] = useState<any>(null);
     const insertEmoji = (emoji: any) => {
         // ":name:" shortcodes from the picker's Team Emoji category
         // become customEmoji inline nodes; unicode stays plain text.
         insertEmojiValue(editor, emoji);
         setShowEmojiPicker(false);
+    };
+    const insertGif = (gif: { url: string; title: string }) => {
+        // Standard image block: every read surface already renders and
+        // animates it (same path as an uploaded GIF file).
+        // `as any`: these collab editors are strictly schema-typed (the
+        // chat editors' `editor` is loose), and the PartialBlock union
+        // rejects a fresh image-props literal under tsc -b. Same idiom
+        // as the `editor as any` these files already use for
+        // BlockNoteView.
+        (editor as any).insertBlocks(
+            [{ type: "image", props: { url: gif.url, name: gif.title } }],
+            editor.getTextCursorPosition().block,
+            "after"
+        );
+        setShowGifPicker(false);
     };
 
     // Push the restored body into the live Yjs doc on a parent-bumped
@@ -437,6 +455,12 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
                     />
                 </Box>
 
+                <GifPicker
+                    pickerTopPosition={40}
+                    setShowGifPicker={setShowGifPicker}
+                    showGifPicker={showGifPicker}
+                    onSelect={insertGif}
+                />
                 <BlockNoteView
                     className="bn-box"
                     comments={false}
@@ -572,6 +596,10 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
                                                     />
                                                     <ColorStyleButton key={"colorStyleButton"} />
                                                     <CreateLinkButton key={"createLinkButton"} />
+                                                    <GifToolbarButton
+                                                        key={"gifButton"}
+                                                        setShowGifPicker={setShowGifPicker}
+                                                    />
                                                     <FileCaptionButton key={"fileCaptionButton"} />
                                                     <FileReplaceButton key={"fileReplaceButton"} />
                                                 </>

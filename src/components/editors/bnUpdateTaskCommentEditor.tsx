@@ -44,9 +44,11 @@ import { TaskCommentProps } from "../../types/tasks";
 import { resolveInsecureFileUrl } from "../../utils/downloadUtils";
 import { filterAndRankSuggestionItems } from "../../utils/suggestionRanking";
 import { EmojiPicker } from "../ui/emoji/EmojiPicker";
+import { GifPicker } from "../ui/gif/GifPicker";
 import { CreateCustomEmojiSpec, insertEmojiValue } from "./CustomEmoji";
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
+import { GifToolbarButton } from "./GifToolbarButton";
 import {
     CreateHashChatSpec,
     CreateHashNoteSpec,
@@ -192,12 +194,23 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
     });
 
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
+    const [showGifPicker, setShowGifPicker] = useState<boolean>(false);
     const [selectedEmoji, setSelectedEmoji] = useState<any>(null);
     const insertEmoji = (emoji: any) => {
         // ":name:" shortcodes from the picker's Team Emoji category
         // become customEmoji inline nodes; unicode stays plain text.
         insertEmojiValue(editor, emoji);
         setShowEmojiPicker(false);
+    };
+    const insertGif = (gif: { url: string; title: string }) => {
+        // Standard image block: every read surface already renders and
+        // animates it (same path as an uploaded GIF file).
+        editor.insertBlocks(
+            [{ type: "image", props: { url: gif.url, name: gif.title } }],
+            editor.getTextCursorPosition().block,
+            "after"
+        );
+        setShowGifPicker(false);
     };
 
     const countLines = (nodes: any[]): number => {
@@ -322,6 +335,16 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
                 showEmojiPicker={showEmojiPicker}
                 useFixedPosition={true}
             />
+            <GifPicker
+                pickerBottomPosition="auto"
+                pickerLeftPosition={pickerLeftPosition}
+                pickerRightPosition="auto"
+                pickerTopPosition={pickerTopPosition}
+                setShowGifPicker={setShowGifPicker}
+                showGifPicker={showGifPicker}
+                useFixedPosition={true}
+                onSelect={insertGif}
+            />
             <Box ref={editorBoxRef} className={bnBoxClassName} sx={{ position: "relative" }}>
                 <BlockNoteView
                     className="bn-box"
@@ -433,6 +456,12 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
                                 <CustomEmojiToolbar
                                     key={"customButton"}
                                     setShowEmojiPicker={setShowEmojiPicker}
+                                />
+                            )}
+                            {!isMobile && (
+                                <GifToolbarButton
+                                    key={"gifButton"}
+                                    setShowGifPicker={setShowGifPicker}
                                 />
                             )}
                         </FormattingToolbar>
