@@ -228,6 +228,10 @@ export const ar: DeepPartial<Messages> = {
             upgradeHint: "تتم معالجة الدفع بأمان بواسطة Stripe.",
             billingError: "تعذّر الوصول إلى خدمة الفوترة. يرجى المحاولة مرة أخرى.",
             billingReturnSuccess: "شكرًا — اشتراكك نشط الآن! ستُطبَّق خطتك الجديدة خلال ثوانٍ.",
+            planRenews: "يتجدد في",
+            planEnds: "تنتهي الخطة في",
+            cancelScheduled: "تم جدولة الإلغاء — تظل خطتك فعّالة حتى هذا التاريخ.",
+            pastDue: "هناك مشكلة في الدفع — يرجى تحديث طريقة الدفع في بوابة الفوترة.",
             billingReturnCancelled: "أُلغي الدفع — لم تتغير خطتك.",
         },
         appearance: {

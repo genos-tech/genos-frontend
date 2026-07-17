@@ -68,6 +68,36 @@ export async function openBillingPortal(accessToken: string): Promise<void> {
     window.location.assign(url);
 }
 
+export interface BillingSubscription {
+    // null = the subscription's price isn't mapped to a plan (env
+    // misconfiguration server-side) — show the row, skip the plan name.
+    plan: "pro" | "max" | null;
+    status: "active" | "trialing" | "past_due" | "paused";
+    cancel_at_period_end: boolean;
+    current_period_end: number | null; // unix seconds
+    cancel_at: number | null; // unix seconds
+}
+
+/**
+ * Renewal/expiry state for the Plan & Usage tab. Null when there is
+ * nothing to show: no billing account, billing disabled server-side,
+ * no live subscription — or any fetch failure (the row just hides).
+ */
+export async function fetchBillingSubscription(
+    accessToken: string
+): Promise<BillingSubscription | null> {
+    try {
+        const resp = await fetch(`${API_BASE}/billing/subscription/`, {
+            headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        if (!resp.ok) return null;
+        const data = await resp.json().catch(() => null);
+        return (data?.subscription as BillingSubscription | null) ?? null;
+    } catch {
+        return null;
+    }
+}
+
 /**
  * Pull-based tier reconcile: the backend re-reads the subscription
  * state from Stripe and rewrites the tier. Fired when the browser

@@ -12,7 +12,9 @@ import {
 } from "../../../services/agentApi";
 import {
     BillingConfig,
+    BillingSubscription,
     fetchBillingConfig,
+    fetchBillingSubscription,
     openBillingPortal,
     startCheckout,
 } from "../../../services/billingApi";
@@ -86,10 +88,11 @@ const UsageRow = ({
 
 export const PlanUsageSection = () => {
     const { accessToken } = useAuth();
-    const { t } = useTranslation();
+    const { t, locale } = useTranslation();
     const [data, setData] = useState<AgentFeatures | null>(null);
     const [failed, setFailed] = useState(false);
     const [billing, setBilling] = useState<BillingConfig | null>(null);
+    const [subscription, setSubscription] = useState<BillingSubscription | null>(null);
     // In-flight guard for the checkout/portal buttons: the click ends
     // in a full-page navigation to Stripe, so the button stays busy
     // until the browser leaves (or an error surfaces below it).
@@ -109,6 +112,11 @@ export const PlanUsageSection = () => {
         // "coming soon" placeholder.
         void fetchBillingConfig(accessToken).then((cfg) => {
             if (!cancelled) setBilling(cfg);
+        });
+        // Renewal/expiry row. Null (no billing account, no live
+        // subscription, or any failure) just hides the row.
+        void fetchBillingSubscription(accessToken).then((sub) => {
+            if (!cancelled) setSubscription(sub);
         });
         return () => {
             cancelled = true;
@@ -227,6 +235,52 @@ export const PlanUsageSection = () => {
                             : fmt(p.maxFileSizeMb, { mb: String(data.upload_max_mb) })}
                     </Typography>
                 </Stack>
+                {(() => {
+                    // Renewal / expiry row for a live personal
+                    // subscription. `cancel_at` wins over the period
+                    // end when a cancellation is scheduled (Stripe sets
+                    // both; cancel_at is the authoritative stop date).
+                    if (!subscription) return null;
+                    const willEnd =
+                        subscription.cancel_at_period_end || subscription.cancel_at !== null;
+                    const endTs = subscription.cancel_at ?? subscription.current_period_end;
+                    if (endTs == null) return null;
+                    const dateLabel = new Date(endTs * 1000).toLocaleDateString(locale, {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                    });
+                    return (
+                        <>
+                            <Stack
+                                alignItems="center"
+                                direction="row"
+                                justifyContent="space-between"
+                            >
+                                <Typography level="body-sm" sx={{ fontWeight: 600 }}>
+                                    {willEnd ? p.planEnds : p.planRenews}
+                                </Typography>
+                                <Typography
+                                    color={willEnd ? "warning" : undefined}
+                                    level="body-sm"
+                                    sx={willEnd ? undefined : { color: "text.tertiary" }}
+                                >
+                                    {dateLabel}
+                                </Typography>
+                            </Stack>
+                            {willEnd && (
+                                <Typography color="warning" level="body-xs">
+                                    {p.cancelScheduled}
+                                </Typography>
+                            )}
+                            {subscription.status === "past_due" && (
+                                <Typography color="danger" level="body-xs">
+                                    {p.pastDue}
+                                </Typography>
+                            )}
+                        </>
+                    );
+                })()}
             </Stack>
 
             <Divider sx={{ my: 1.5 }} />
