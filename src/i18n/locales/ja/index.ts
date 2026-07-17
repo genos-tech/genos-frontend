@@ -215,7 +215,6 @@ export const ja: DeepPartial<Messages> = {
             tierPro: "プロ",
             tierMax: "マックス",
             tierEnterprise: "エンタープライズ",
-            tierEnterprise: "エンタープライズ",
             unlimited: "無制限",
             todaySuffix: "（本日）",
             monthSuffix: "（今月）",

@@ -205,7 +205,6 @@ export const ar: DeepPartial<Messages> = {
             tierPro: "برو",
             tierMax: "ماكس",
             tierEnterprise: "المؤسسات",
-            tierEnterprise: "المؤسسات",
             unlimited: "غير محدود",
             todaySuffix: "اليوم",
             monthSuffix: "هذا الشهر",

@@ -204,7 +204,6 @@ export const zh: DeepPartial<Messages> = {
             tierPro: "专业版",
             tierMax: "旗舰版",
             tierEnterprise: "企业版",
-            tierEnterprise: "企业版",
             unlimited: "无限制",
             todaySuffix: "（今日）",
             monthSuffix: "（本月）",

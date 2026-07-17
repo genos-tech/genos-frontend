@@ -206,7 +206,6 @@ export const es: DeepPartial<Messages> = {
             tierPro: "Pro",
             tierMax: "Max",
             tierEnterprise: "Enterprise",
-            tierEnterprise: "Enterprise",
             unlimited: "Ilimitado",
             todaySuffix: "hoy",
             monthSuffix: "este mes",
