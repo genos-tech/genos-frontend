@@ -8,8 +8,11 @@
  * `startCheckout` / `openBillingPortal` NAVIGATE AWAY on success — the
  * returned URL is a Stripe-hosted page. The tier change itself lands
  * via the backend webhook; when the user returns
- * (`/?billing=success`), the app shows a confirmation and the next
- * `/agent/features/` fetch reflects the new tier.
+ * (`/?billing=success` / `/?billing=portal_return`),
+ * `BillingReturnSnackbar` also fires `refreshBillingTier` so the tier
+ * is pulled straight from Stripe even if the webhook was lost or
+ * hasn't arrived yet, and the next `/agent/features/` fetch reflects
+ * the new tier.
  */
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL;
@@ -63,4 +66,27 @@ export async function startCheckout(accessToken: string, plan: PurchasablePlan):
 export async function openBillingPortal(accessToken: string): Promise<void> {
     const url = await postForUrl("/billing/portal/", accessToken);
     window.location.assign(url);
+}
+
+/**
+ * Pull-based tier reconcile: the backend re-reads the subscription
+ * state from Stripe and rewrites the tier. Fired when the browser
+ * lands back from checkout/portal, so a lost or not-yet-delivered
+ * webhook can't leave the app showing a stale plan. Fire-and-forget:
+ * resolves to the reconciled personal tier, or null when billing is
+ * disabled or the call fails (nothing to surface — the webhook path
+ * still applies eventually).
+ */
+export async function refreshBillingTier(accessToken: string): Promise<string | null> {
+    try {
+        const resp = await fetch(`${API_BASE}/billing/refresh/`, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        if (!resp.ok) return null;
+        const data = await resp.json().catch(() => null);
+        return typeof data?.personal_tier === "string" ? data.personal_tier : null;
+    } catch {
+        return null;
+    }
 }
