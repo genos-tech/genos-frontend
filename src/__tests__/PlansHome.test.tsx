@@ -118,16 +118,20 @@ describe("PlansHome", () => {
 
     it("renders all four cards with Stripe prices and limits", async () => {
         renderPage();
-        expect(await screen.findByText("Plans & pricing")).toBeTruthy();
+        expect(await screen.findByText("Do more of your best work with Genos")).toBeTruthy();
         expect(screen.getByText("¥1,200")).toBeTruthy();
         expect(screen.getByText("¥2,500")).toBeTruthy();
         // "Free" appears as both the tier chip and the price line.
         expect(screen.getAllByText("Free").length).toBe(2);
         expect(screen.getByText("Contact sales")).toBeTruthy();
-        expect(screen.getByText("20 / day")).toBeTruthy();
-        expect(screen.getByText("10,000 / month")).toBeTruthy();
-        // Enterprise renders unlimited rows.
-        expect(screen.getAllByText("Unlimited").length).toBeGreaterThan(0);
+        expect(screen.getByText("20 AI asks every day")).toBeTruthy();
+        expect(screen.getByText("10,000 tasks per month")).toBeTruthy();
+        // Paid tiers + enterprise lead with unlimited history.
+        expect(screen.getAllByText("Unlimited message history").length).toBe(3);
+        // The recommended card carries the badge; paid tiers advertise
+        // premium models (pro + max — enterprise has everything anyway).
+        expect(screen.getByText("Best value")).toBeTruthy();
+        expect(screen.getAllByText("Premium AI models included").length).toBe(3);
     });
 
     it("free user gets checkout buttons; clicking starts the right plan", async () => {
@@ -170,8 +174,8 @@ describe("PlansHome", () => {
         });
         billingApi.fetchBillingConfig.mockResolvedValue(null);
         renderPage();
-        expect(await screen.findByText("Plans & pricing")).toBeTruthy();
-        expect(screen.getByText("20 / day")).toBeTruthy();
+        expect(await screen.findByText("Do more of your best work with Genos")).toBeTruthy();
+        expect(screen.getByText("20 AI asks every day")).toBeTruthy();
         expect(screen.queryByText("Upgrade to Pro")).toBeNull();
         expect(screen.queryByText("Manage billing")).toBeNull();
         expect(screen.queryByText("¥1,200")).toBeNull();
@@ -179,7 +183,7 @@ describe("PlansHome", () => {
 
     it("no owned teams: no team section", async () => {
         renderPage();
-        expect(await screen.findByText("Plans & pricing")).toBeTruthy();
+        expect(await screen.findByText("Do more of your best work with Genos")).toBeTruthy();
         expect(screen.queryByText("Team plan")).toBeNull();
     });
 

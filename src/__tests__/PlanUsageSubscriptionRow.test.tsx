@@ -101,6 +101,23 @@ describe("PlanUsageSection subscription row", () => {
         expect(await screen.findByText(/payment problem/i)).toBeTruthy();
     });
 
+    it("cancelled customer (free tier, billing account) keeps the portal button", async () => {
+        // After a cancellation runs out the tier is free again, but the
+        // Stripe customer still exists — invoice history and the /legal
+        // page's documented cancellation path must keep working.
+        billingApi.fetchBillingConfig.mockResolvedValue({
+            enabled: true,
+            plans: ["pro", "max"],
+            personal_tier: "free",
+            has_billing_account: true,
+        });
+        billingApi.fetchBillingSubscription.mockResolvedValue(null);
+        renderSection();
+        expect(await screen.findByText("Manage billing")).toBeTruthy();
+        // Upgrade buttons render too — free tier can re-subscribe.
+        expect(screen.getByText("Upgrade to Pro")).toBeTruthy();
+    });
+
     it("no subscription renders no renewal row", async () => {
         billingApi.fetchBillingSubscription.mockResolvedValue(null);
         renderSection();
