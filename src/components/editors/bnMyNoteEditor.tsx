@@ -77,7 +77,7 @@ import { useUploadCounter } from "../ui/feedback/useUploadCounter";
 import { GifPicker } from "../ui/gif/GifPicker";
 import { CreateCustomEmojiSpec, insertEmojiValue } from "./CustomEmoji";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
-import { GifToolbarButton } from "./GifToolbarButton";
+import { gifSlashMenuItem, GifToolbarButton } from "./GifToolbarButton";
 import {
     CreateHashChatSpec,
     CreateHashNoteSpec,
@@ -231,7 +231,10 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
     // List containing all default Slash Menu Items, as well as our custom one.
     const getCustomSlashMenuItems = (
         editor: typeof schema.BlockNoteEditor
-    ): DefaultReactSuggestionItem[] => getDefaultReactSlashMenuItems(editor);
+    ): DefaultReactSuggestionItem[] => [
+        ...getDefaultReactSlashMenuItems(editor),
+        gifSlashMenuItem(setShowGifPicker),
+    ];
 
     // Counter wraps `uploadFile` so the editor surfaces a small
     // "Uploading n file(s)…" pill for the duration of any in-flight
@@ -491,9 +494,11 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
                 </Box>
 
                 <GifPicker
-                    pickerTopPosition={40}
+                    pickerLeftPosition="calc(50vw - 170px)"
+                    pickerTopPosition="15vh"
                     setShowGifPicker={setShowGifPicker}
                     showGifPicker={showGifPicker}
+                    useFixedPosition={true}
                     onSelect={insertGif}
                 />
                 <BlockNoteView

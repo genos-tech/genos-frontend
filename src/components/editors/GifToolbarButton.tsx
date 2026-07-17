@@ -1,10 +1,25 @@
 import "@blocknote/mantine/style.css";
 
-import { useComponentsContext } from "@blocknote/react";
+import { DefaultReactSuggestionItem, useComponentsContext } from "@blocknote/react";
 import GifBoxOutlinedIcon from "@mui/icons-material/GifBoxOutlined";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { useTranslation } from "../../i18n";
+
+// "/gif" slash-menu entry. The toolbar button only appears on text
+// selection (notes/task body) or isn't discoverable (mobile), so the
+// slash menu is the always-available path to the GIF picker. BlockNote
+// removes the typed "/gif" text itself when the item is clicked.
+export const gifSlashMenuItem = (
+    setShowGifPicker: (value: boolean) => void
+): DefaultReactSuggestionItem => ({
+    title: "GIF",
+    subtext: "Search GIPHY and insert a GIF",
+    aliases: ["gif", "giphy"],
+    group: "Media",
+    icon: <GifBoxOutlinedIcon style={{ fontSize: 18 }} />,
+    onItemClick: () => setShowGifPicker(true),
+});
 
 type GifToolbarButtonProps = {
     setShowGifPicker: (value: boolean) => void;

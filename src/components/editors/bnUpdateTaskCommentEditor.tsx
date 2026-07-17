@@ -48,7 +48,7 @@ import { GifPicker } from "../ui/gif/GifPicker";
 import { CreateCustomEmojiSpec, insertEmojiValue } from "./CustomEmoji";
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
-import { GifToolbarButton } from "./GifToolbarButton";
+import { gifSlashMenuItem, GifToolbarButton } from "./GifToolbarButton";
 import {
     CreateHashChatSpec,
     CreateHashNoteSpec,
@@ -165,7 +165,10 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
     // List containing all default Slash Menu Items, as well as our custom one.
     const getCustomSlashMenuItems = (
         editor: typeof schema.BlockNoteEditor
-    ): DefaultReactSuggestionItem[] => getDefaultReactSlashMenuItems(editor);
+    ): DefaultReactSuggestionItem[] => [
+        ...getDefaultReactSlashMenuItems(editor),
+        gifSlashMenuItem(setShowGifPicker),
+    ];
 
     // We use the English, default dictionary
     const locale = en;
@@ -312,7 +315,7 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
     }, []);
 
     useEffect(() => {
-        if (!showEmojiPicker) return;
+        if (!showEmojiPicker && !showGifPicker) return;
         updatePickerPosition();
         window.addEventListener("resize", updatePickerPosition);
         // Use capture so we catch scrolls inside any scrollable ancestor too.
@@ -321,7 +324,7 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
             window.removeEventListener("resize", updatePickerPosition);
             window.removeEventListener("scroll", updatePickerPosition, true);
         };
-    }, [showEmojiPicker, updatePickerPosition]);
+    }, [showEmojiPicker, showGifPicker, updatePickerPosition]);
 
     return (
         <Box ref={boxRef}>

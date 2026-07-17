@@ -58,7 +58,7 @@ import { GifPicker } from "../ui/gif/GifPicker";
 import { CreateCustomEmojiSpec, insertEmojiValue } from "./CustomEmoji";
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
-import { GifToolbarButton } from "./GifToolbarButton";
+import { gifSlashMenuItem, GifToolbarButton } from "./GifToolbarButton";
 import {
     CreateHashChatSpec,
     CreateHashNoteSpec,
@@ -176,7 +176,10 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
     // List containing all default Slash Menu Items, as well as our custom one.
     const getCustomSlashMenuItems = (
         editor: typeof schema.BlockNoteEditor
-    ): DefaultReactSuggestionItem[] => getDefaultReactSlashMenuItems(editor);
+    ): DefaultReactSuggestionItem[] => [
+        ...getDefaultReactSlashMenuItems(editor),
+        gifSlashMenuItem(setShowGifPicker),
+    ];
 
     // We use the English, default dictionary
     const locale = en;
@@ -292,12 +295,19 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
     return (
         <Box>
             <FileSizeRejectionSnackbar rejection={rejection} onDismiss={dismissRejection} />
+            {/* Anchored so the picker's bottom edge sits right on the
+                editor's top edge (the zero-height wrapper renders directly
+                above the editor box) instead of floating over the list. */}
             <EmojiPicker
+                pickerBottomPosition={4}
+                pickerLeftPosition={8}
                 setSelectedEmoji={setSelectedEmoji}
                 setShowEmojiPicker={setShowEmojiPicker}
                 showEmojiPicker={showEmojiPicker}
             />
             <GifPicker
+                pickerBottomPosition={4}
+                pickerLeftPosition={8}
                 setShowGifPicker={setShowGifPicker}
                 showGifPicker={showGifPicker}
                 onSelect={insertGif}
