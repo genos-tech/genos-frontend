@@ -150,6 +150,7 @@ export const ar: DeepPartial<Messages> = {
             permissionDenied: "ليس لديك إذن للقيام بذلك.",
             requestFailed: "تعذّر إكمال الطلب. يرجى المحاولة مرة أخرى.",
             actionFailed: "تعذّر إكمال الإجراء. يرجى المحاولة مرة أخرى.",
+            limitReached: "لقد وصلت إلى حد خطتك. راجع الإعدادات ← الخطة والاستخدام.",
             messageSendFailed: "تعذّر إرسال رسالتك. يرجى المحاولة مرة أخرى.",
         },
     },

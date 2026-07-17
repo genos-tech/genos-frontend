@@ -14,6 +14,7 @@ export const app = {
         serverError: "Server error. Please try again shortly.",
         permissionDenied: "You don't have permission to do that.",
         requestFailed: "That request couldn't be completed. Please try again.",
+        limitReached: "You've reached a plan limit. See Settings → Plan & Usage for details.",
         actionFailed: "Couldn't complete that action. Please try again.",
         messageSendFailed: "Couldn't send your message. Please try again.",
     },

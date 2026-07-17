@@ -59,6 +59,11 @@ const attachInterceptors = (instance: AxiosInstance): AxiosInstance => {
                     emitRequestError("serverError");
                 } else if (status === 403) {
                     emitRequestError("permissionDenied");
+                } else if (status === 429 || status === 413) {
+                    // Plan limits: 429 = monthly creation caps / AI quotas,
+                    // 413 = per-file upload size. Both carry
+                    // `limit_reached: true` bodies from the tier system.
+                    emitRequestError("limitReached");
                 } else {
                     emitRequestError("requestFailed");
                 }

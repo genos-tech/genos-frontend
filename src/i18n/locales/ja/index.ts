@@ -158,6 +158,8 @@ export const ja: DeepPartial<Messages> = {
             permissionDenied: "この操作を行う権限がありません。",
             requestFailed: "リクエストを完了できませんでした。もう一度お試しください。",
             actionFailed: "操作を完了できませんでした。もう一度お試しください。",
+            limitReached:
+                "プランの上限に達しました。詳細は 設定 → プランと使用状況 をご確認ください。",
             messageSendFailed: "メッセージを送信できませんでした。もう一度お試しください。",
         },
     },
