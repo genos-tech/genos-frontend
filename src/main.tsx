@@ -24,6 +24,7 @@ import GenosDemoPage from "./lp/DemoPage";
 import GenosFeaturesPage from "./lp/FeaturesPage";
 import GenosLandingPage from "./lp/LandingPage";
 import GenosLegalPage from "./lp/LegalPage";
+import GenosPrivacyPage from "./lp/PrivacyPage";
 
 // Initialize PostHog once, before React mounts. No-ops when
 // VITE_POSTHOG_KEY / VITE_POSTHOG_HOST are unset, so leaving them blank
@@ -72,6 +73,11 @@ createRoot(document.getElementById("root")!).render(
                 refund policy the Stripe portal and checkout link to. Static
                 legal text (ja + en summary), so no I18nProvider. */}
             <Route element={<GenosLegalPage />} path="/legal" />
+
+            {/* プライバシーポリシー — same conventions as /legal (static
+                ja + en legal text, no I18nProvider). Linked from the Stripe
+                customer portal's privacy link and the landing footer. */}
+            <Route element={<GenosPrivacyPage />} path="/privacy" />
 
             {/* All routes that need authentication context. */}
             <Route element={<AuthLayout />}>

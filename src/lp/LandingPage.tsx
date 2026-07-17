@@ -233,6 +233,7 @@ const copy = {
             line: "An AI-native context operating system for product teams.",
             creator: "Created by Kentaro Kamiya",
             legal: "特定商取引法に基づく表記",
+            privacy: "プライバシーポリシー",
         },
     },
 
@@ -436,6 +437,7 @@ const copy = {
             line: "An AI-native context operating system for product teams.",
             creator: "Created by Kentaro Kamiya",
             legal: "Legal Notice",
+            privacy: "Privacy Policy",
         },
     },
 };
@@ -1295,6 +1297,12 @@ export default function GenosLandingPage() {
                                 to="/legal"
                             >
                                 {t.footer.legal}
+                            </Link>
+                            <Link
+                                className="transition hover:text-violet-700 dark:hover:text-white"
+                                to="/privacy"
+                            >
+                                {t.footer.privacy}
                             </Link>
                             <a
                                 className="inline-flex items-center gap-2 transition hover:text-violet-700 dark:hover:text-white"

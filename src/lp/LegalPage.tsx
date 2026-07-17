@@ -185,6 +185,11 @@ export default function LegalPage() {
                 </div>
 
                 <p className="mt-10 text-xs text-slate-400 dark:text-slate-500">
+                    <Link className="underline hover:text-violet-700" to="/privacy">
+                        プライバシーポリシー / Privacy Policy
+                    </Link>
+                </p>
+                <p className="mt-3 text-xs text-slate-400 dark:text-slate-500">
                     © {new Date().getFullYear()} Genos
                 </p>
             </div>
