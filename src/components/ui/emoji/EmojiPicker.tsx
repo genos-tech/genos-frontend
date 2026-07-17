@@ -19,6 +19,9 @@ type EmojiPickerProps = {
     pickerLeftPosition?: number | string;
     pickerTopPosition?: number | string;
     useFixedPosition?: boolean;
+    // Forwarded to EmojiPickerInner: whether the "Team Emoji" custom
+    // category appears. Default on; the user-status pickers opt out.
+    includeCustom?: boolean;
 };
 export const EmojiPicker = ({
     showEmojiPicker,
@@ -29,12 +32,18 @@ export const EmojiPicker = ({
     pickerLeftPosition = "auto",
     pickerTopPosition = "auto",
     useFixedPosition = false,
+    includeCustom = true,
 }: EmojiPickerProps) => {
     const { mode } = useColorScheme();
     const emojiPickerRef = useRef<HTMLDivElement>(null);
 
     const handleEmojiSelect = (emoji: any) => {
-        const emojiSymbol = emoji.native;
+        // Standard emoji carry `native` (the unicode glyph). Team custom
+        // emoji carry `id` + `src` instead — flatten to the ":name:"
+        // shortcode so every consumer keeps receiving a plain string
+        // (composers resolve it back to an inline node via
+        // insertEmojiValue; reactions store it verbatim).
+        const emojiSymbol = emoji.native ?? (emoji.id ? `:${emoji.id}:` : null);
 
         // Focus back to textarea after inserting emoji
         setTimeout(() => {
@@ -84,6 +93,7 @@ export const EmojiPicker = ({
         >
             <Suspense fallback={null}>
                 <EmojiPickerInner
+                    includeCustom={includeCustom}
                     theme={mode === "dark" ? "dark" : "light"}
                     onEmojiSelect={handleEmojiSelect}
                 />

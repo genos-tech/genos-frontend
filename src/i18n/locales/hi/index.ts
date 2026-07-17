@@ -197,6 +197,7 @@ export const hi: DeepPartial<Messages> = {
             spotlight: "स्पॉटलाइट",
             notifications: "सूचनाएँ",
             mentionGroups: "मेंशन समूह",
+            customEmoji: "कस्टम इमोजी",
             shortcuts: "शॉर्टकट",
         },
         planUsage: {

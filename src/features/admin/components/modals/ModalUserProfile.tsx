@@ -241,6 +241,9 @@ export const UserProfile = (props: UserProfileProps) => {
                         picker. `calc(50vw - 175px)` horizontally centers a
                         ~350px-wide emoji-mart picker on any viewport. */}
                         <EmojiPicker
+                            // customStatus is a plain string rendered in
+                            // shortcode-blind surfaces — no team emoji here.
+                            includeCustom={false}
                             pickerBottomPosition="20vh"
                             pickerLeftPosition="calc(50vw - 175px)"
                             setSelectedEmoji={setSelectedEmoji}

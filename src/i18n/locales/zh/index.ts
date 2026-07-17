@@ -194,6 +194,7 @@ export const zh: DeepPartial<Messages> = {
             spotlight: "Spotlight",
             notifications: "通知",
             mentionGroups: "提及群组",
+            customEmoji: "自定义表情",
             shortcuts: "快捷键",
         },
         planUsage: {

@@ -197,6 +197,7 @@ export const fr: DeepPartial<Messages> = {
             spotlight: "Spotlight",
             notifications: "Notifications",
             mentionGroups: "Groupes de mentions",
+            customEmoji: "Émojis personnalisés",
             shortcuts: "Raccourcis",
         },
         planUsage: {

@@ -195,6 +195,7 @@ export const ar: DeepPartial<Messages> = {
             spotlight: "Spotlight",
             notifications: "الإشعارات",
             mentionGroups: "مجموعات الإشارة",
+            customEmoji: "رموز تعبيرية مخصصة",
             shortcuts: "الاختصارات",
         },
         planUsage: {
