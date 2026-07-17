@@ -160,6 +160,7 @@ export const common = {
         removeBlock: "Remove block",
         resetType: "Reset Type",
         emoji: "Emoji",
+        gif: "GIF",
         emojiTypingHint: ":+typing",
         emojiGroup: "Emoji",
         loadingComments: "Loading comments...",

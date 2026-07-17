@@ -65,8 +65,10 @@ import { FileSizeRejectionSnackbar } from "../ui/feedback/FileSizeRejectionSnack
 import { FileUploadStatusBadge } from "../ui/feedback/FileUploadProgress";
 import { useFileSizeGuard } from "../ui/feedback/useFileSizeGuard";
 import { useUploadCounter } from "../ui/feedback/useUploadCounter";
+import { GifPicker } from "../ui/gif/GifPicker";
 import { CreateCustomEmojiSpec, insertEmojiValue } from "./CustomEmoji";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
+import { GifToolbarButton } from "./GifToolbarButton";
 import {
     CreateHashChatSpec,
     CreateHashNoteSpec,
@@ -310,12 +312,23 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
     }, [taskId]);
 
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
+    const [showGifPicker, setShowGifPicker] = useState<boolean>(false);
     const [selectedEmoji, setSelectedEmoji] = useState<any>(null);
     const insertEmoji = (emoji: any) => {
         // ":name:" shortcodes from the picker's Team Emoji category
         // become customEmoji inline nodes; unicode stays plain text.
         insertEmojiValue(editor, emoji);
         setShowEmojiPicker(false);
+    };
+    const insertGif = (gif: { url: string; title: string }) => {
+        // Standard image block: every read surface already renders and
+        // animates it (same path as an uploaded GIF file).
+        editor.insertBlocks(
+            [{ type: "image", props: { url: gif.url, name: gif.title } }],
+            editor.getTextCursorPosition().block,
+            "after"
+        );
+        setShowGifPicker(false);
     };
 
     // Editor height grows with the (approximate) rendered row count. Derive
@@ -406,6 +419,12 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                         unwrapCode={unwrapCode}
                     />
                 </Box>
+                <GifPicker
+                    pickerTopPosition={40}
+                    setShowGifPicker={setShowGifPicker}
+                    showGifPicker={showGifPicker}
+                    onSelect={insertGif}
+                />
                 <BlockNoteView
                     className="bn-box"
                     comments={false}
@@ -539,6 +558,10 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                                 />
                                 <ColorStyleButton key={"colorStyleButton"} />
                                 <CreateLinkButton key={"createLinkButton"} />
+                                <GifToolbarButton
+                                    key={"gifButton"}
+                                    setShowGifPicker={setShowGifPicker}
+                                />
                                 <FileCaptionButton key={"fileCaptionButton"} />
                                 <FileReplaceButton key={"fileReplaceButton"} />
                                 {threadStore && <AddCommentButton key={"addCommentButton"} />}

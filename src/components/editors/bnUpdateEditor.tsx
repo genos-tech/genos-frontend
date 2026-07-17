@@ -54,9 +54,11 @@ import { FileSizeRejectionSnackbar } from "../ui/feedback/FileSizeRejectionSnack
 import { FileUploadStatusBadge } from "../ui/feedback/FileUploadProgress";
 import { useFileSizeGuard } from "../ui/feedback/useFileSizeGuard";
 import { useUploadCounter } from "../ui/feedback/useUploadCounter";
+import { GifPicker } from "../ui/gif/GifPicker";
 import { CreateCustomEmojiSpec, insertEmojiValue } from "./CustomEmoji";
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
+import { GifToolbarButton } from "./GifToolbarButton";
 import {
     CreateHashChatSpec,
     CreateHashNoteSpec,
@@ -204,12 +206,23 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
     });
 
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
+    const [showGifPicker, setShowGifPicker] = useState<boolean>(false);
     const [selectedEmoji, setSelectedEmoji] = useState<any>(null);
     const insertEmoji = (emoji: any) => {
         // ":name:" shortcodes from the picker's Team Emoji category
         // become customEmoji inline nodes; unicode stays plain text.
         insertEmojiValue(editor, emoji);
         setShowEmojiPicker(false);
+    };
+    const insertGif = (gif: { url: string; title: string }) => {
+        // Standard image block: every read surface already renders and
+        // animates it (same path as an uploaded GIF file).
+        editor.insertBlocks(
+            [{ type: "image", props: { url: gif.url, name: gif.title } }],
+            editor.getTextCursorPosition().block,
+            "after"
+        );
+        setShowGifPicker(false);
     };
     useEffect(() => {
         if (selectedEmoji !== null) {
@@ -283,6 +296,11 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
                 setSelectedEmoji={setSelectedEmoji}
                 setShowEmojiPicker={setShowEmojiPicker}
                 showEmojiPicker={showEmojiPicker}
+            />
+            <GifPicker
+                setShowGifPicker={setShowGifPicker}
+                showGifPicker={showGifPicker}
+                onSelect={insertGif}
             />
             <Box ref={editorBoxRef} className={bnBoxClassName} sx={{ position: "relative" }}>
                 <FileUploadStatusBadge count={editorUploadCount} />
@@ -394,6 +412,12 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
                                 <CustomEmojiToolbar
                                     key={"customButton"}
                                     setShowEmojiPicker={setShowEmojiPicker}
+                                />
+                            )}
+                            {!isMobile && (
+                                <GifToolbarButton
+                                    key={"gifButton"}
+                                    setShowGifPicker={setShowGifPicker}
                                 />
                             )}
                         </FormattingToolbar>
