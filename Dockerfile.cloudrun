@@ -46,7 +46,12 @@ ENV VITE_API_BASE_URL=$VITE_API_BASE_URL \
     VITE_POSTHOG_HOST=$VITE_POSTHOG_HOST
 
 # Large app — raise Node's heap so the production build doesn't OOM (exit 134).
-RUN NODE_OPTIONS=--max-old-space-size=4096 npx vite build
+# The serve-config generator runs explicitly because this image calls
+# `vite build` directly (npm's postbuild hook only fires on `npm run
+# build`). It derives the CSP allow-list from the same VITE_* args
+# baked into the bundle above.
+RUN NODE_OPTIONS=--max-old-space-size=4096 npx vite build \
+    && node scripts/generate-serve-config.mjs
 
 EXPOSE 3000
 # `serve` is a project dependency; serve the static build on $PORT (Cloud Run injects 8080).
