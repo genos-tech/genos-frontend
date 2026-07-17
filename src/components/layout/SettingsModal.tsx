@@ -7,6 +7,7 @@ import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlin
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import DarkModeRoundedIcon from "@mui/icons-material/DarkModeRounded";
+import EmojiEmotionsRoundedIcon from "@mui/icons-material/EmojiEmotionsRounded";
 import GroupRoundedIcon from "@mui/icons-material/GroupRounded";
 import HubRoundedIcon from "@mui/icons-material/HubRounded";
 import KeyboardRoundedIcon from "@mui/icons-material/KeyboardRounded";
@@ -70,6 +71,7 @@ import { NotificationSettingsPanel } from "../../services/notifications/Notifica
 import { getServiceShortcutModifierKeys, isMac } from "../../utils/platform";
 import { MentionGroupsPanel } from "./MentionGroupsPanel";
 import { PlanUsageSection } from "./settings/PlanUsageSection";
+import { TeamEmojiPanel } from "./TeamEmojiPanel";
 
 type Props = {
     open: boolean;
@@ -1127,6 +1129,7 @@ type SettingsTabKey =
     | "spotlight"
     | "notifications"
     | "mentionGroups"
+    | "customEmoji"
     | "shortcuts"
     | "integrations";
 
@@ -1241,6 +1244,10 @@ export const SettingsModal = ({
                             <GroupRoundedIcon sx={SIDEBAR_TAB_ICON_SX} />
                             {t.settings.tabs.mentionGroups}
                         </Tab>
+                        <Tab sx={SIDEBAR_TAB_SX} value="customEmoji">
+                            <EmojiEmotionsRoundedIcon sx={SIDEBAR_TAB_ICON_SX} />
+                            {t.settings.tabs.customEmoji}
+                        </Tab>
                         <Tab sx={SIDEBAR_TAB_SX} value="shortcuts">
                             <KeyboardRoundedIcon sx={SIDEBAR_TAB_ICON_SX} />
                             {t.settings.tabs.shortcuts}
@@ -1313,6 +1320,20 @@ export const SettingsModal = ({
                                     useCM={useCM}
                                     useTEM={useTEM}
                                     useUISM={useUISM}
+                                />
+                            ) : (
+                                <Typography level="body-sm" sx={{ opacity: 0.7 }}>
+                                    Loading…
+                                </Typography>
+                            )}
+                        </Stack>
+                    </TabPanel>
+                    <TabPanel sx={{ px: 0, py: 2 }} value="customEmoji">
+                        <Stack spacing={2}>
+                            {myself ? (
+                                <TeamEmojiPanel
+                                    myself={myself}
+                                    teamMemberProfiles={useTEM?.teamMemberProfiles ?? {}}
                                 />
                             ) : (
                                 <Typography level="body-sm" sx={{ opacity: 0.7 }}>

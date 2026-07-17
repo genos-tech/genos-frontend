@@ -205,6 +205,7 @@ export const ja: DeepPartial<Messages> = {
             spotlight: "スポットライト",
             notifications: "通知",
             mentionGroups: "メンショングループ",
+            customEmoji: "カスタム絵文字",
             shortcuts: "ショートカット",
         },
         planUsage: {

@@ -8,6 +8,7 @@ export const settings = {
         spotlight: "Spotlight",
         notifications: "Notifications",
         mentionGroups: "Mention groups",
+        customEmoji: "Custom emoji",
         shortcuts: "Shortcuts",
         integrations: "Integrations",
     },

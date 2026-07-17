@@ -54,7 +54,7 @@ import { FileSizeRejectionSnackbar } from "../ui/feedback/FileSizeRejectionSnack
 import { FileUploadStatusBadge } from "../ui/feedback/FileUploadProgress";
 import { useFileSizeGuard } from "../ui/feedback/useFileSizeGuard";
 import { useUploadCounter } from "../ui/feedback/useUploadCounter";
-import { CreateCustomEmojiSpec } from "./CustomEmoji";
+import { CreateCustomEmojiSpec, insertEmojiValue } from "./CustomEmoji";
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
 import {
@@ -206,7 +206,9 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
     const [selectedEmoji, setSelectedEmoji] = useState<any>(null);
     const insertEmoji = (emoji: any) => {
-        editor.insertInlineContent([{ type: "text", text: emoji, styles: {} }]);
+        // ":name:" shortcodes from the picker's Team Emoji category
+        // become customEmoji inline nodes; unicode stays plain text.
+        insertEmojiValue(editor, emoji);
         setShowEmojiPicker(false);
     };
     useEffect(() => {
