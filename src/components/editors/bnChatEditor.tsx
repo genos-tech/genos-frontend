@@ -58,7 +58,7 @@ import { GifPicker } from "../ui/gif/GifPicker";
 import { CreateCustomEmojiSpec, insertEmojiValue } from "./CustomEmoji";
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
-import { gifSlashMenuItem, GifToolbarButton } from "./GifToolbarButton";
+import { GifToolbarButton, withGifSlashItem } from "./GifToolbarButton";
 import {
     CreateHashChatSpec,
     CreateHashNoteSpec,
@@ -188,10 +188,8 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
     // List containing all default Slash Menu Items, as well as our custom one.
     const getCustomSlashMenuItems = (
         editor: typeof schema.BlockNoteEditor
-    ): DefaultReactSuggestionItem[] => [
-        ...getDefaultReactSlashMenuItems(editor),
-        gifSlashMenuItem(setShowGifPicker),
-    ];
+    ): DefaultReactSuggestionItem[] =>
+        withGifSlashItem(getDefaultReactSlashMenuItems(editor), setShowGifPicker);
 
     // Counter wraps every `uploadFile` call so the small "Uploading n
     // files…" pill at the top of the editor reflects in-flight work
@@ -423,6 +421,10 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
                     className="bn-box"
                     editor={editor}
                     emojiPicker={false}
+                    // A custom "/" SuggestionMenuController is mounted below —
+                    // the built-in menu must be off or BOTH render on "/",
+                    // stacking duplicate group labels (the "Media x3" bug).
+                    slashMenu={false}
                     formattingToolbar={false}
                     sideMenu={false} // false for Chat/comment, true for Task content
                     theme={mode === "dark" ? "dark" : "light"}

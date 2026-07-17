@@ -77,7 +77,7 @@ import { useUploadCounter } from "../ui/feedback/useUploadCounter";
 import { GifPicker } from "../ui/gif/GifPicker";
 import { CreateCustomEmojiSpec, insertEmojiValue } from "./CustomEmoji";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
-import { gifSlashMenuItem, GifToolbarButton } from "./GifToolbarButton";
+import { GifToolbarButton, withGifSlashItem } from "./GifToolbarButton";
 import {
     CreateHashChatSpec,
     CreateHashNoteSpec,
@@ -231,10 +231,8 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
     // List containing all default Slash Menu Items, as well as our custom one.
     const getCustomSlashMenuItems = (
         editor: typeof schema.BlockNoteEditor
-    ): DefaultReactSuggestionItem[] => [
-        ...getDefaultReactSlashMenuItems(editor),
-        gifSlashMenuItem(setShowGifPicker),
-    ];
+    ): DefaultReactSuggestionItem[] =>
+        withGifSlashItem(getDefaultReactSlashMenuItems(editor), setShowGifPicker);
 
     // Counter wraps `uploadFile` so the editor surfaces a small
     // "Uploading n file(s)…" pill for the duration of any in-flight
@@ -507,6 +505,10 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
                     editable={isEditable}
                     editor={editor as any}
                     emojiPicker={false}
+                    // A custom "/" SuggestionMenuController is mounted below —
+                    // the built-in menu must be off or BOTH render on "/",
+                    // stacking duplicate group labels (the "Media x3" bug).
+                    slashMenu={false}
                     formattingToolbar={false}
                     renderEditor={false}
                     sideMenu={false}

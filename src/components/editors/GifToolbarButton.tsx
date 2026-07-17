@@ -21,6 +21,23 @@ export const gifSlashMenuItem = (
     onItemClick: () => setShowGifPicker(true),
 });
 
+// Splice the GIF item INTO the existing Media group instead of
+// appending it. BlockNote's menu emits one group label per group
+// TRANSITION and keys labels by the group name — an out-of-place
+// second "Media" run renders a duplicate label whose stale DOM node
+// then survives query narrowing (the "Media Media Media" bug).
+export const withGifSlashItem = (
+    items: DefaultReactSuggestionItem[],
+    setShowGifPicker: (value: boolean) => void
+): DefaultReactSuggestionItem[] => {
+    const gif = gifSlashMenuItem(setShowGifPicker);
+    const lastMedia = items.map((i) => i.group).lastIndexOf("Media");
+    if (lastMedia === -1) {
+        return [...items, gif];
+    }
+    return [...items.slice(0, lastMedia + 1), gif, ...items.slice(lastMedia + 1)];
+};
+
 type GifToolbarButtonProps = {
     setShowGifPicker: (value: boolean) => void;
 };
