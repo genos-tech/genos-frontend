@@ -67,7 +67,11 @@ describe("downloadFile", () => {
 
         await downloadFile("http://api.genosai.dev/media/chats/x/shot.png", "shot.png");
 
-        expect(fetchMock).toHaveBeenCalledWith("https://api.genosai.dev/media/chats/x/shot.png");
+        // Scheme upgraded AND credentials attached — the HttpOnly refresh
+        // cookie is what authenticates protected /media/ paths.
+        expect(fetchMock).toHaveBeenCalledWith("https://api.genosai.dev/media/chats/x/shot.png", {
+            credentials: "include",
+        });
         vi.unstubAllGlobals();
     });
 });
