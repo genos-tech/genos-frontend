@@ -230,6 +230,17 @@ export const ja: DeepPartial<Messages> = {
             upgradeComingSoon:
                 "セルフサービスでのアップグレードは近日提供予定です。プラン変更はワークスペース管理者にお問い合わせください。",
             loadError: "プラン情報を読み込めませんでした。もう一度お試しください。",
+            upgradeToPro: "プロにアップグレード",
+            upgradeToMax: "マックスにアップグレード",
+            manageBilling: "請求を管理",
+            manageBillingHint:
+                "プラン変更・支払い方法・解約は Stripe の安全なポータルで行えます。",
+            upgradeHint: "決済は Stripe が安全に処理します。",
+            billingError: "請求サービスに接続できませんでした。もう一度お試しください。",
+            billingReturnSuccess:
+                "ありがとうございます — サブスクリプションが有効になりました！新しいプランは数秒以内に反映されます。",
+            billingReturnCancelled:
+                "チェックアウトをキャンセルしました — プランは変更されていません。",
         },
         appearance: {
             heading: "外観",

@@ -10,6 +10,12 @@ import {
     QuotaBlock,
     SubscriptionTier,
 } from "../../../services/agentApi";
+import {
+    BillingConfig,
+    fetchBillingConfig,
+    openBillingPortal,
+    startCheckout,
+} from "../../../services/billingApi";
 
 /**
  * Settings → Plan & Usage.
@@ -25,9 +31,13 @@ import {
  * render only when the payload carries them, so this component is
  * safe to ship ahead of the API.
  *
- * The upgrade CTA is a placeholder until the Stripe billing phase —
- * plans are currently changed by an operator (`feature_access
- * set-tier` / `set-team-plan`).
+ * Billing buttons render from `fetchBillingConfig`: free personal
+ * tier → Stripe Checkout buttons per purchasable plan; an existing
+ * personal subscription → the customer portal (plan changes go
+ * through Stripe with proration — never a second checkout). With
+ * Stripe unconfigured server-side the tab keeps the disabled
+ * "coming soon" placeholder and plans stay operator-managed
+ * (`feature_access set-tier` / `set-team-plan`).
  */
 
 const TIER_COLOR: Record<SubscriptionTier, "neutral" | "primary" | "success" | "warning"> = {
@@ -79,6 +89,12 @@ export const PlanUsageSection = () => {
     const { t } = useTranslation();
     const [data, setData] = useState<AgentFeatures | null>(null);
     const [failed, setFailed] = useState(false);
+    const [billing, setBilling] = useState<BillingConfig | null>(null);
+    // In-flight guard for the checkout/portal buttons: the click ends
+    // in a full-page navigation to Stripe, so the button stays busy
+    // until the browser leaves (or an error surfaces below it).
+    const [billingBusy, setBillingBusy] = useState(false);
+    const [billingError, setBillingError] = useState<string | null>(null);
 
     useEffect(() => {
         if (!accessToken) return;
@@ -88,10 +104,29 @@ export const PlanUsageSection = () => {
             setData(features);
             setFailed(features === null);
         });
+        // Billing availability is independent of the usage payload —
+        // a null config (old backend / Stripe unset) keeps the
+        // "coming soon" placeholder.
+        void fetchBillingConfig(accessToken).then((cfg) => {
+            if (!cancelled) setBilling(cfg);
+        });
         return () => {
             cancelled = true;
         };
     }, [accessToken]);
+
+    const runBillingAction = (action: () => Promise<void>) => {
+        if (!accessToken || billingBusy) return;
+        setBillingBusy(true);
+        setBillingError(null);
+        action().catch((e: unknown) => {
+            // Success navigates away — only failures return here.
+            setBillingError(
+                e instanceof Error && e.message ? e.message : t.settings.planUsage.billingError
+            );
+            setBillingBusy(false);
+        });
+    };
 
     const p = t.settings.planUsage;
 
@@ -196,15 +231,84 @@ export const PlanUsageSection = () => {
 
             <Divider sx={{ my: 1.5 }} />
 
-            <Stack alignItems="center" direction="row" spacing={1.5}>
-                {/* Placeholder until the Stripe billing phase ships. */}
-                <Button disabled size="sm" variant="solid">
-                    {p.upgradeCta}
-                </Button>
-                <Typography level="body-xs" sx={{ color: "text.tertiary" }}>
-                    {p.upgradeComingSoon}
-                </Typography>
-            </Stack>
+            {billing?.enabled ? (
+                <Stack spacing={1}>
+                    <Stack alignItems="center" direction="row" spacing={1.5}>
+                        {/* Personal upgrades key off the user's OWN tier —
+                            a team-granted effective tier doesn't hide them
+                            (someone on team-pro may still buy personal max).
+                            A user with an existing personal subscription
+                            changes plans through the PORTAL (proration,
+                            no duplicate subscription), never a second
+                            checkout. An operator-set paid tier without a
+                            Stripe account shows neither. */}
+                        {billing.personal_tier === "free" && (
+                            <>
+                                {billing.plans.includes("pro") && (
+                                    <Button
+                                        disabled={billingBusy}
+                                        size="sm"
+                                        variant="solid"
+                                        onClick={() =>
+                                            runBillingAction(() =>
+                                                startCheckout(accessToken!, "pro")
+                                            )
+                                        }
+                                    >
+                                        {p.upgradeToPro}
+                                    </Button>
+                                )}
+                                {billing.plans.includes("max") && (
+                                    <Button
+                                        disabled={billingBusy}
+                                        size="sm"
+                                        variant="soft"
+                                        onClick={() =>
+                                            runBillingAction(() =>
+                                                startCheckout(accessToken!, "max")
+                                            )
+                                        }
+                                    >
+                                        {p.upgradeToMax}
+                                    </Button>
+                                )}
+                            </>
+                        )}
+                        {billing.personal_tier !== "free" && billing.has_billing_account && (
+                            <Button
+                                disabled={billingBusy}
+                                size="sm"
+                                variant="outlined"
+                                onClick={() =>
+                                    runBillingAction(() => openBillingPortal(accessToken!))
+                                }
+                            >
+                                {p.manageBilling}
+                            </Button>
+                        )}
+                        <Typography level="body-xs" sx={{ color: "text.tertiary" }}>
+                            {billing.personal_tier !== "free" && billing.has_billing_account
+                                ? p.manageBillingHint
+                                : p.upgradeHint}
+                        </Typography>
+                    </Stack>
+                    {billingError && (
+                        <Typography color="danger" level="body-xs">
+                            {billingError}
+                        </Typography>
+                    )}
+                </Stack>
+            ) : (
+                <Stack alignItems="center" direction="row" spacing={1.5}>
+                    {/* Stripe not configured server-side (or old backend). */}
+                    <Button disabled size="sm" variant="solid">
+                        {p.upgradeCta}
+                    </Button>
+                    <Typography level="body-xs" sx={{ color: "text.tertiary" }}>
+                        {p.upgradeComingSoon}
+                    </Typography>
+                </Stack>
+            )}
         </Sheet>
     );
 };

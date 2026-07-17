@@ -220,6 +220,15 @@ export const ar: DeepPartial<Messages> = {
             upgradeComingSoon:
                 "الترقية الذاتية قادمة قريبًا. تواصل مع مسؤول مساحة العمل لتغيير الخطة.",
             loadError: "تعذّر تحميل تفاصيل خطتك. يرجى المحاولة مرة أخرى.",
+            upgradeToPro: "الترقية إلى برو",
+            upgradeToMax: "الترقية إلى ماكس",
+            manageBilling: "إدارة الفوترة",
+            manageBillingHint:
+                "غيّر الخطة أو طريقة الدفع أو ألغِ الاشتراك عبر بوابة Stripe الآمنة.",
+            upgradeHint: "تتم معالجة الدفع بأمان بواسطة Stripe.",
+            billingError: "تعذّر الوصول إلى خدمة الفوترة. يرجى المحاولة مرة أخرى.",
+            billingReturnSuccess: "شكرًا — اشتراكك نشط الآن! ستُطبَّق خطتك الجديدة خلال ثوانٍ.",
+            billingReturnCancelled: "أُلغي الدفع — لم تتغير خطتك.",
         },
         appearance: {
             heading: "المظهر",

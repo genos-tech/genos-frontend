@@ -18,6 +18,7 @@ import {
 import { MentionGroupsProvider } from "./context/MentionGroupsContext";
 import { SessionSupersededOverlay } from "./components/common/SessionSupersededOverlay";
 import { FeatureErrorBoundary } from "./components/FeatureErrorBoundary";
+import { BillingReturnSnackbar } from "./components/layout/BillingReturnSnackbar";
 import { BottomTabBar } from "./components/layout/BottomTabBar";
 import { ConnectionStatusSnackbar } from "./components/layout/ConnectionStatusSnackbar";
 import { HistoryShell } from "./components/layout/HistoryShell";
@@ -1033,6 +1034,7 @@ export const App = () => {
                                                 showWsDisconnected={showWsDisconnected}
                                             />
                                             <RequestErrorSnackbar />
+                                            <BillingReturnSnackbar />
                                             <QuickMeetClipboardHost
                                                 ref={meetClipboardRef}
                                                 accessToken={accessToken}
