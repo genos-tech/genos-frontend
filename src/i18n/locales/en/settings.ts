@@ -61,6 +61,14 @@ export const settings = {
         comparePlans: "Compare plans",
         seePlans: "See plans",
         legalNotice: "Legal Notice",
+        teamPlansHeading: "Team plan",
+        teamPlansSubheading:
+            "One payer, every member benefits — billed per seat. Only the team owner sees this section.",
+        teamSeats: "{n} seats",
+        teamUpgradeToPro: "Team Pro",
+        teamUpgradeToMax: "Team Max",
+        manageTeamBilling: "Manage team billing",
+        perSeatMonth: "{price} × {n} seats / month",
         billingReturnCancelled: "Checkout cancelled — your plan is unchanged.",
     },
     appearance: {

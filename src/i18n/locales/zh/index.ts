@@ -242,6 +242,13 @@ export const zh: DeepPartial<Messages> = {
             comparePlans: "比较套餐",
             seePlans: "查看套餐",
             legalNotice: "法律声明",
+            teamPlansHeading: "团队套餐",
+            teamPlansSubheading: "一人付费，全员受益——按席位计费。仅团队所有者可见此区域。",
+            teamSeats: "{n} 个席位",
+            teamUpgradeToPro: "团队专业版",
+            teamUpgradeToMax: "团队旗舰版",
+            manageTeamBilling: "管理团队账单",
+            perSeatMonth: "{price} × {n} 个席位 / 月",
             billingReturnCancelled: "已取消结账 — 您的套餐未更改。",
         },
         appearance: {

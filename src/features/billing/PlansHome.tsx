@@ -21,10 +21,14 @@ import {
     BillingPlans,
     fetchBillingConfig,
     fetchBillingPlans,
+    fetchTeamBillingConfig,
     openBillingPortal,
+    openTeamBillingPortal,
     PlanPrice,
     PlanTier,
     startCheckout,
+    startTeamCheckout,
+    TeamBillingConfig,
 } from "../../services/billingApi";
 
 /**
@@ -84,6 +88,7 @@ export const PlansHome = () => {
     const { t, locale } = useTranslation();
     const [plans, setPlans] = useState<BillingPlans | null>(null);
     const [config, setConfig] = useState<BillingConfig | null>(null);
+    const [teamConfig, setTeamConfig] = useState<TeamBillingConfig | null>(null);
     const [failed, setFailed] = useState(false);
     // Checkout/portal navigate away on success; stay busy until then.
     const [busy, setBusy] = useState(false);
@@ -99,6 +104,11 @@ export const PlansHome = () => {
         });
         void fetchBillingConfig(accessToken).then((cfg) => {
             if (!cancelled) setConfig(cfg);
+        });
+        // Owned teams only — empty for everyone else, so the team
+        // section simply doesn't render.
+        void fetchTeamBillingConfig(accessToken).then((cfg) => {
+            if (!cancelled) setTeamConfig(cfg);
         });
         return () => {
             cancelled = true;
@@ -291,6 +301,128 @@ export const PlansHome = () => {
                     );
                 })}
             </Box>
+
+            {/* Team plans — only for teams the viewer OWNS (the config
+                endpoint returns an empty list for everyone else). Per-seat
+                on the SAME prices as the personal cards above; price math
+                comes from the plans payload so it can't drift. */}
+            {teamConfig?.enabled && teamConfig.teams.length > 0 && (
+                <>
+                    <Typography level="h4" sx={{ mt: 4, mb: 0.5 }}>
+                        {p.teamPlansHeading}
+                    </Typography>
+                    <Typography level="body-sm" sx={{ color: "text.tertiary", mb: 1.5 }}>
+                        {p.teamPlansSubheading}
+                    </Typography>
+                    <Stack spacing={1.5}>
+                        {teamConfig.teams.map((team) => {
+                            const seatPrice = (plan: "pro" | "max") => {
+                                const tierInfo = plans.tiers.find((t) => t.tier === plan);
+                                const label = tierInfo?.price
+                                    ? formatPrice(tierInfo.price, locale)
+                                    : null;
+                                return label
+                                    ? fmt(p.perSeatMonth, {
+                                          price: label,
+                                          n: String(team.seats),
+                                      })
+                                    : null;
+                            };
+                            return (
+                                <Card key={team.team_id} variant="outlined">
+                                    <Stack
+                                        alignItems="center"
+                                        direction="row"
+                                        flexWrap="wrap"
+                                        spacing={1.5}
+                                        useFlexGap
+                                    >
+                                        <Typography level="title-md">{team.team_name}</Typography>
+                                        <Chip
+                                            color={TIER_COLOR[team.plan]}
+                                            size="sm"
+                                            variant="soft"
+                                        >
+                                            {tierLabel[team.plan]}
+                                        </Chip>
+                                        <Typography
+                                            level="body-sm"
+                                            sx={{ color: "text.tertiary" }}
+                                        >
+                                            {fmt(p.teamSeats, { n: String(team.seats) })}
+                                        </Typography>
+                                        <Box sx={{ flex: 1 }} />
+                                        {team.plan === "free" ? (
+                                            <>
+                                                <Button
+                                                    disabled={busy}
+                                                    size="sm"
+                                                    variant="solid"
+                                                    onClick={() =>
+                                                        runBillingAction(() =>
+                                                            startTeamCheckout(
+                                                                accessToken!,
+                                                                team.team_id,
+                                                                "pro"
+                                                            )
+                                                        )
+                                                    }
+                                                >
+                                                    {p.teamUpgradeToPro}
+                                                </Button>
+                                                <Button
+                                                    disabled={busy}
+                                                    size="sm"
+                                                    variant="soft"
+                                                    onClick={() =>
+                                                        runBillingAction(() =>
+                                                            startTeamCheckout(
+                                                                accessToken!,
+                                                                team.team_id,
+                                                                "max"
+                                                            )
+                                                        )
+                                                    }
+                                                >
+                                                    {p.teamUpgradeToMax}
+                                                </Button>
+                                            </>
+                                        ) : (
+                                            team.has_billing_account && (
+                                                <Button
+                                                    disabled={busy}
+                                                    size="sm"
+                                                    variant="outlined"
+                                                    onClick={() =>
+                                                        runBillingAction(() =>
+                                                            openTeamBillingPortal(
+                                                                accessToken!,
+                                                                team.team_id
+                                                            )
+                                                        )
+                                                    }
+                                                >
+                                                    {p.manageTeamBilling}
+                                                </Button>
+                                            )
+                                        )}
+                                    </Stack>
+                                    {team.plan === "free" && (
+                                        <Typography
+                                            level="body-xs"
+                                            sx={{ color: "text.tertiary" }}
+                                        >
+                                            {[seatPrice("pro"), seatPrice("max")]
+                                                .filter(Boolean)
+                                                .join(" · ")}
+                                        </Typography>
+                                    )}
+                                </Card>
+                            );
+                        })}
+                    </Stack>
+                </>
+            )}
 
             <Typography level="body-xs" sx={{ color: "text.tertiary", mt: 2 }}>
                 {p.premiumNote} {plans.billing_enabled ? p.upgradeHint : ""}{" "}

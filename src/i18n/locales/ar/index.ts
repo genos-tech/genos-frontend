@@ -246,6 +246,14 @@ export const ar: DeepPartial<Messages> = {
             comparePlans: "قارن الخطط",
             seePlans: "عرض الخطط",
             legalNotice: "إشعار قانوني",
+            teamPlansHeading: "خطة الفريق",
+            teamPlansSubheading:
+                "يدفع شخص واحد ويستفيد جميع الأعضاء — فوترة لكل مقعد. هذا القسم يظهر لمالك الفريق فقط.",
+            teamSeats: "{n} مقاعد",
+            teamUpgradeToPro: "فريق برو",
+            teamUpgradeToMax: "فريق ماكس",
+            manageTeamBilling: "إدارة فوترة الفريق",
+            perSeatMonth: "{price} × {n} مقاعد / شهر",
             billingReturnCancelled: "أُلغي الدفع — لم تتغير خطتك.",
         },
         appearance: {

@@ -252,6 +252,14 @@ export const fr: DeepPartial<Messages> = {
             comparePlans: "Comparer les forfaits",
             seePlans: "Voir les forfaits",
             legalNotice: "Mentions légales",
+            teamPlansHeading: "Forfait équipe",
+            teamPlansSubheading:
+                "Un payeur, tous les membres en profitent — facturé par siège. Seul le propriétaire de l'équipe voit cette section.",
+            teamSeats: "{n} sièges",
+            teamUpgradeToPro: "Équipe Pro",
+            teamUpgradeToMax: "Équipe Max",
+            manageTeamBilling: "Gérer la facturation de l'équipe",
+            perSeatMonth: "{price} × {n} sièges / mois",
             billingReturnCancelled: "Paiement annulé — votre forfait est inchangé.",
         },
         appearance: {
