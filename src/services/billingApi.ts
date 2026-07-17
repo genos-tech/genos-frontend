@@ -112,6 +112,54 @@ export async function fetchBillingPlans(accessToken: string): Promise<BillingPla
     }
 }
 
+export interface TeamBillingTeam {
+    team_id: string;
+    team_name: string;
+    plan: "free" | "pro" | "max" | "enterprise";
+    seats: number;
+    has_billing_account: boolean;
+}
+
+export interface TeamBillingConfig {
+    enabled: boolean;
+    // Teams the requester OWNS — empty for everyone else, so the UI
+    // simply renders no team section.
+    teams: TeamBillingTeam[];
+}
+
+export async function fetchTeamBillingConfig(
+    accessToken: string
+): Promise<TeamBillingConfig | null> {
+    try {
+        const resp = await fetch(`${API_BASE}/billing/team/config/`, {
+            headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        if (!resp.ok) return null;
+        return (await resp.json()) as TeamBillingConfig;
+    } catch {
+        return null;
+    }
+}
+
+/** Quantity-based team Checkout (owner-only) and navigate to it. */
+export async function startTeamCheckout(
+    accessToken: string,
+    teamId: string,
+    plan: PurchasablePlan
+): Promise<void> {
+    const url = await postForUrl("/billing/team/checkout/", accessToken, {
+        team_id: teamId,
+        plan,
+    });
+    window.location.assign(url);
+}
+
+/** The TEAM's customer portal (owner-only): seats, plan, cancel, invoices. */
+export async function openTeamBillingPortal(accessToken: string, teamId: string): Promise<void> {
+    const url = await postForUrl("/billing/team/portal/", accessToken, { team_id: teamId });
+    window.location.assign(url);
+}
+
 export interface BillingSubscription {
     // null = the subscription's price isn't mapped to a plan (env
     // misconfiguration server-side) — show the row, skip the plan name.

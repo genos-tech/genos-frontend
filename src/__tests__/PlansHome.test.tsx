@@ -22,8 +22,11 @@ vi.mock("../context/AuthContext", () => ({
 const billingApi = vi.hoisted(() => ({
     fetchBillingPlans: vi.fn(),
     fetchBillingConfig: vi.fn(),
+    fetchTeamBillingConfig: vi.fn(),
     startCheckout: vi.fn().mockResolvedValue(undefined),
     openBillingPortal: vi.fn().mockResolvedValue(undefined),
+    startTeamCheckout: vi.fn().mockResolvedValue(undefined),
+    openTeamBillingPortal: vi.fn().mockResolvedValue(undefined),
 }));
 vi.mock("../services/billingApi", () => billingApi);
 
@@ -109,6 +112,8 @@ describe("PlansHome", () => {
         vi.clearAllMocks();
         billingApi.fetchBillingPlans.mockResolvedValue(PLANS);
         billingApi.fetchBillingConfig.mockResolvedValue(config());
+        // Default: viewer owns no teams — the section is absent.
+        billingApi.fetchTeamBillingConfig.mockResolvedValue({ enabled: true, teams: [] });
     });
 
     it("renders all four cards with Stripe prices and limits", async () => {
@@ -170,5 +175,58 @@ describe("PlansHome", () => {
         expect(screen.queryByText("Upgrade to Pro")).toBeNull();
         expect(screen.queryByText("Manage billing")).toBeNull();
         expect(screen.queryByText("¥1,200")).toBeNull();
+    });
+
+    it("no owned teams: no team section", async () => {
+        renderPage();
+        expect(await screen.findByText("Plans & pricing")).toBeTruthy();
+        expect(screen.queryByText("Team plan")).toBeNull();
+    });
+
+    it("owned free team: seat-priced checkout buttons wired with the team id", async () => {
+        billingApi.fetchTeamBillingConfig.mockResolvedValue({
+            enabled: true,
+            teams: [
+                {
+                    team_id: "team-1",
+                    team_name: "Apollo",
+                    plan: "free",
+                    seats: 3,
+                    has_billing_account: false,
+                },
+            ],
+        });
+        renderPage();
+        expect(await screen.findByText("Team plan")).toBeTruthy();
+        expect(screen.getByText("Apollo")).toBeTruthy();
+        expect(screen.getByText("3 seats")).toBeTruthy();
+        // Price math from the plans payload: ¥1,200 × 3 seats.
+        expect(screen.getByText(/¥1,200 × 3 seats \/ month/)).toBeTruthy();
+        fireEvent.click(screen.getByText("Team Pro"));
+        await waitFor(() =>
+            expect(billingApi.startTeamCheckout).toHaveBeenCalledWith("tok", "team-1", "pro")
+        );
+    });
+
+    it("paid team: portal button, never a second checkout", async () => {
+        billingApi.fetchTeamBillingConfig.mockResolvedValue({
+            enabled: true,
+            teams: [
+                {
+                    team_id: "team-1",
+                    team_name: "Apollo",
+                    plan: "pro",
+                    seats: 3,
+                    has_billing_account: true,
+                },
+            ],
+        });
+        renderPage();
+        const manage = await screen.findByText("Manage team billing");
+        expect(screen.queryByText("Team Pro")).toBeNull();
+        fireEvent.click(manage);
+        await waitFor(() =>
+            expect(billingApi.openTeamBillingPortal).toHaveBeenCalledWith("tok", "team-1")
+        );
     });
 });

@@ -249,6 +249,14 @@ export const hi: DeepPartial<Messages> = {
             comparePlans: "प्लान की तुलना करें",
             seePlans: "प्लान देखें",
             legalNotice: "कानूनी सूचना",
+            teamPlansHeading: "टीम प्लान",
+            teamPlansSubheading:
+                "एक सदस्य भुगतान करता है, पूरी टीम लाभ पाती है — प्रति सीट बिलिंग। यह सेक्शन केवल टीम मालिक को दिखता है।",
+            teamSeats: "{n} सीटें",
+            teamUpgradeToPro: "टीम प्रो",
+            teamUpgradeToMax: "टीम मैक्स",
+            manageTeamBilling: "टीम बिलिंग प्रबंधित करें",
+            perSeatMonth: "{price} × {n} सीटें / माह",
             billingReturnCancelled: "चेकआउट रद्द — आपका प्लान अपरिवर्तित है।",
         },
         appearance: {

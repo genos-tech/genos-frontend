@@ -251,6 +251,14 @@ export const es: DeepPartial<Messages> = {
             comparePlans: "Comparar planes",
             seePlans: "Ver planes",
             legalNotice: "Aviso legal",
+            teamPlansHeading: "Plan de equipo",
+            teamPlansSubheading:
+                "Uno paga y todos los miembros se benefician — facturado por puesto. Solo el propietario del equipo ve esta sección.",
+            teamSeats: "{n} puestos",
+            teamUpgradeToPro: "Equipo Pro",
+            teamUpgradeToMax: "Equipo Max",
+            manageTeamBilling: "Gestionar facturación del equipo",
+            perSeatMonth: "{price} × {n} puestos / mes",
             billingReturnCancelled: "Pago cancelado — tu plan no ha cambiado.",
         },
         appearance: {

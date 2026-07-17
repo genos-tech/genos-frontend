@@ -257,6 +257,14 @@ export const ja: DeepPartial<Messages> = {
             comparePlans: "プランを比較",
             seePlans: "プランを見る",
             legalNotice: "特定商取引法に基づく表記",
+            teamPlansHeading: "チームプラン",
+            teamPlansSubheading:
+                "1 人が支払い、メンバー全員が利用できます（シート課金）。このセクションはチームオーナーにのみ表示されます。",
+            teamSeats: "{n} シート",
+            teamUpgradeToPro: "チームプロ",
+            teamUpgradeToMax: "チームマックス",
+            manageTeamBilling: "チームの請求を管理",
+            perSeatMonth: "{price} × {n} シート / 月",
             billingReturnCancelled:
                 "チェックアウトをキャンセルしました — プランは変更されていません。",
         },
