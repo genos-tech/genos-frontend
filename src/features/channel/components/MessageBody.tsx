@@ -139,5 +139,28 @@ function InlineSpan({ node, currentUserId }: InlineSpanProps) {
             </span>
         );
     }
+    if (node?.type === "customEmoji") {
+        const name = String(node.props?.name ?? "");
+        const url = String(node.props?.url ?? "");
+        if (url) {
+            return (
+                <img
+                    alt={`:${name}:`}
+                    data-testid={`message-body-custom-emoji-${name}`}
+                    loading="lazy"
+                    src={url}
+                    style={{
+                        height: "1.4em",
+                        width: "auto",
+                        verticalAlign: "text-bottom",
+                        objectFit: "contain",
+                        display: "inline-block",
+                    }}
+                    title={`:${name}:`}
+                />
+            );
+        }
+        return <span>{name ? `:${name}:` : ""}</span>;
+    }
     return <span>{node?.text ?? ""}</span>;
 }

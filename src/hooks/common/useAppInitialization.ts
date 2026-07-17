@@ -6,6 +6,7 @@ import { DatabaseUtils } from "../../db/utils/database";
 import { clearTeamHydrated } from "../../services/hydrationState";
 import { useMyself } from "./useAuth";
 import { useMentionGroups } from "./useMentionGroups";
+import { useTeamEmoji } from "./useTeamEmoji";
 import { useTeamManagement } from "./useTeamManagement";
 import { useUIStateManagement } from "./useUIStateManagement";
 
@@ -19,6 +20,10 @@ export const useAppInitialization = () => {
     // `@` suggestion menu reads from the same fetched list instead of
     // each editor instance hitting `/mention-group/` on its own.
     const useMGM = useMentionGroups(myself, accessToken);
+    // Same single-fetch treatment for the team custom-emoji catalog.
+    // The hook also mirrors every fetch into the module-level
+    // `teamEmojiStore` for the non-React consumers (`:` suggestions).
+    const useTEJ = useTeamEmoji(myself, accessToken);
 
     // Track the team we last initialized for so we can detect a real switch
     // (vs. the initial mount where currentTeamId starts as "").
@@ -75,6 +80,7 @@ export const useAppInitialization = () => {
         useUISM,
         useTEM,
         useMGM,
+        useTEJ,
         supersededByTeamName,
     };
 };

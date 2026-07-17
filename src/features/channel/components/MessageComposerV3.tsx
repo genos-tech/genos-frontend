@@ -49,6 +49,7 @@ import {
     useCreateBlockNote,
 } from "@blocknote/react";
 
+import { CreateCustomEmojiSpec } from "../../../components/editors/CustomEmoji";
 import {
     CreateHashChatSpec,
     CreateHashNoteSpec,
@@ -118,6 +119,8 @@ export function deriveBodyText(blocks: any[]): string {
                         parts.push(`@${c.props.userName}`);
                     } else if (c?.type === "mentionGroup" && c.props?.groupName) {
                         parts.push(`@${c.props.groupName}`);
+                    } else if (c?.type === "customEmoji" && c.props?.name) {
+                        parts.push(`:${c.props.name}:`);
                     }
                 }
             }
@@ -171,6 +174,7 @@ export function MessageComposerV3({
                 ...defaultInlineContentSpecs,
                 mention: createMentionSpecV3(currentUserId),
                 mentionGroup: createMentionGroupSpecV3(),
+                customEmoji: CreateCustomEmojiSpec(),
                 hashTask: CreateHashTaskSpec(),
                 hashNote: CreateHashNoteSpec(),
                 hashChat: CreateHashChatSpec(),

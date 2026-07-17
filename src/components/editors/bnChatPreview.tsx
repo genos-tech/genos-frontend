@@ -29,6 +29,7 @@ import { useTranslation } from "../../i18n";
 import { UserProps } from "../../types/admin";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { downloadFile, resolveInsecureFileUrl } from "../../utils/downloadUtils";
+import { CreateCustomEmojiSpec } from "./CustomEmoji";
 import {
     CreateHashChatSpec,
     CreateHashNoteSpec,
@@ -86,6 +87,7 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
                 useCM
             ),
             mentionGroup: CreateMentionGroupSpec(),
+            customEmoji: CreateCustomEmojiSpec(),
             hashTask: CreateHashTaskSpec(),
             hashNote: CreateHashNoteSpec(),
             hashChat: CreateHashChatSpec(),

@@ -16,6 +16,7 @@
 
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 
+import { EmojiGlyph } from "../../../components/ui/emoji/EmojiGlyph";
 import { channelService, ChannelServiceError } from "../../../services/channel/channelService";
 import type { Message } from "../../../types/channel";
 import { useChannel } from "../hooks/useChannel";
@@ -470,7 +471,7 @@ function ReactionChips({ messageId, reactions, onToggle }: ReactionChipsProps) {
                     }}
                     onClick={() => onToggle(emoji)}
                 >
-                    {emoji} {info.count}
+                    <EmojiGlyph emoji={emoji} size={14} /> {info.count}
                 </button>
             ))}
         </div>

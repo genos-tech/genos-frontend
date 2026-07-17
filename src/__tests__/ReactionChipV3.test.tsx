@@ -13,6 +13,7 @@ import { fireEvent, render } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ShowEmojiReaction } from "../components/ui/emoji/ShowEmojiReaction";
+import { setTeamEmojiList } from "../services/teamEmojiStore";
 import type { UserProps } from "../types/admin";
 import { ChannelKind } from "../types/channel";
 import type { MessageProps, ThreadMessageProps } from "../types/chat";
@@ -129,5 +130,42 @@ describe("ShowEmojiReaction chip toggle → channelService (v3)", () => {
         clickChip(container, "✅");
 
         expect(unreact).toHaveBeenCalledWith("v3-thread-msg-9", "v3-ch-1", ChannelKind.GM, "✅");
+    });
+
+    it("renders a :shortcode: reaction as the team emoji image and toggles with the raw string", () => {
+        setTeamEmojiList([
+            {
+                emojiId: 1,
+                name: "party-blob",
+                url: "https://api.example.com/media/team_emoji/t1/u1-party-blob.gif",
+                createdBy: "u1",
+                tsCreatedAt: "2026-07-18T00:00:00Z",
+            },
+        ]);
+        const message = {
+            messageIdWithChatId: "v3-msg-3",
+            chatId: "v3-ch-1",
+            messageId: 7,
+            sender: other,
+        } as unknown as MessageProps;
+        const { container } = renderChips({
+            isThread: false,
+            message,
+            reactions: [mkReaction(":party-blob:", other)],
+        });
+
+        const img = container.querySelector("img[title=':party-blob:']");
+        expect(img).not.toBeNull();
+        expect(img?.getAttribute("src")).toContain("/media/team_emoji/");
+
+        // The chip's toggle payload stays the raw shortcode string —
+        // the pipeline (socket → Django CharField) never sees an image.
+        const chip = [...container.querySelectorAll(".MuiChip-root")].find((c) =>
+            c.querySelector("img[title=':party-blob:']")
+        );
+        fireEvent.click(chip?.querySelector("button") ?? (chip as Element));
+        expect(react).toHaveBeenCalledWith("v3-msg-3", "v3-ch-1", ChannelKind.GM, ":party-blob:");
+
+        setTeamEmojiList([]);
     });
 });

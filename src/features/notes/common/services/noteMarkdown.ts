@@ -77,6 +77,9 @@ const customInlineToText = (node: AnyRecord): string => {
             return `#${props.chatName || "chat"}`;
         case "hashProject":
             return `#${props.projectName || "project"}`;
+        case "customEmoji":
+            // Shortcode, not the URL the default branch would pick up.
+            return props.name ? `:${props.name}:` : "";
         default: {
             // Unknown future spec — fall back to any string prop so the
             // reference isn't silently dropped from the export.
