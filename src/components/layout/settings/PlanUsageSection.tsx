@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import WorkspacePremiumRoundedIcon from "@mui/icons-material/WorkspacePremiumRounded";
 import { Box, Button, Chip, Divider, LinearProgress, Sheet, Stack, Typography } from "@mui/joy";
+import { useNavigate } from "react-router-dom";
 
 import { useAuth } from "../../../context/AuthContext";
 import { fmt, useTranslation } from "../../../i18n";
@@ -86,9 +87,10 @@ const UsageRow = ({
     );
 };
 
-export const PlanUsageSection = () => {
+export const PlanUsageSection = ({ onNavigateAway }: { onNavigateAway?: () => void } = {}) => {
     const { accessToken } = useAuth();
     const { t, locale } = useTranslation();
+    const navigate = useNavigate();
     const [data, setData] = useState<AgentFeatures | null>(null);
     const [failed, setFailed] = useState(false);
     const [billing, setBilling] = useState<BillingConfig | null>(null);
@@ -340,6 +342,18 @@ export const PlanUsageSection = () => {
                                 {p.manageBilling}
                             </Button>
                         )}
+                        <Button
+                            size="sm"
+                            variant="plain"
+                            onClick={() => {
+                                // The settings modal would otherwise stay
+                                // open on top of the plans page.
+                                onNavigateAway?.();
+                                navigate("/workspace/plans");
+                            }}
+                        >
+                            {p.comparePlans}
+                        </Button>
                         <Typography level="body-xs" sx={{ color: "text.tertiary" }}>
                             {billing.personal_tier !== "free" && billing.has_billing_account
                                 ? p.manageBillingHint
@@ -357,6 +371,16 @@ export const PlanUsageSection = () => {
                     {/* Stripe not configured server-side (or old backend). */}
                     <Button disabled size="sm" variant="solid">
                         {p.upgradeCta}
+                    </Button>
+                    <Button
+                        size="sm"
+                        variant="plain"
+                        onClick={() => {
+                            onNavigateAway?.();
+                            navigate("/workspace/plans");
+                        }}
+                    >
+                        {p.comparePlans}
                     </Button>
                     <Typography level="body-xs" sx={{ color: "text.tertiary" }}>
                         {p.upgradeComingSoon}

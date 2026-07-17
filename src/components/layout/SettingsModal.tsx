@@ -1264,7 +1264,9 @@ export const SettingsModal = ({
                     </TabPanel>
                     <TabPanel sx={{ px: 0, py: 2 }} value="planUsage">
                         <Stack spacing={2}>
-                            <PlanUsageSection />
+                            {/* "Compare plans" navigates to /workspace/plans;
+                                close the modal so it doesn't sit on top. */}
+                            <PlanUsageSection onNavigateAway={onClose} />
                         </Stack>
                     </TabPanel>
                     <TabPanel sx={{ px: 0, py: 2 }} value="spotlight">

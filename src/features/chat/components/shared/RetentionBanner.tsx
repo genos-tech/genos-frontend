@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from "react";
 import HistoryToggleOffRoundedIcon from "@mui/icons-material/HistoryToggleOffRounded";
-import { Box, Typography } from "@mui/joy";
+import { Box, Link, Typography } from "@mui/joy";
+import { useNavigate } from "react-router-dom";
 
 import { fmt, useTranslation } from "../../../../i18n";
 import { channelService } from "../../../../services/channel/channelService";
@@ -26,6 +27,7 @@ export const RetentionBanner = ({
     channelId: string | number | null | undefined;
 }) => {
     const { t } = useTranslation();
+    const navigate = useNavigate();
     const snapshot = useSyncExternalStore(
         channelService.subscribe,
         channelService.getSnapshot,
@@ -50,7 +52,15 @@ export const RetentionBanner = ({
                 startDecorator={<HistoryToggleOffRoundedIcon sx={{ fontSize: 14 }} />}
                 sx={{ color: "warning.softColor", fontWeight: 500 }}
             >
-                {fmt(t.chat.retentionBanner, { days: String(retention.days) })}
+                {fmt(t.chat.retentionBanner, { days: String(retention.days) })}{" "}
+                <Link
+                    component="button"
+                    level="body-xs"
+                    sx={{ color: "warning.softColor", textDecoration: "underline" }}
+                    onClick={() => navigate("/workspace/plans")}
+                >
+                    {t.settings.planUsage.seePlans}
+                </Link>
             </Typography>
         </Box>
     );

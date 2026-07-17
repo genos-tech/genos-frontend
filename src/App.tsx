@@ -103,6 +103,9 @@ const IntegrationsHome = lazy(() =>
         default: m.IntegrationsHome,
     }))
 );
+const PlansHome = lazy(() =>
+    import("./features/billing/PlansHome").then((m) => ({ default: m.PlansHome }))
+);
 // The v3 chat shell's import graph reaches the message composer and
 // the whole BlockNote editor stack (the ~900 kB gzipped vendor-editor
 // chunk). Loading it lazily keeps that out of the initial entry — the
@@ -1309,6 +1312,20 @@ export const App = () => {
                                                                                                 }
                                                                                             />
                                                                                         )}
+                                                                                        <Route
+                                                                                            path="plans"
+                                                                                            element={
+                                                                                                <FeatureErrorBoundary feature="Plans">
+                                                                                                    <Suspense
+                                                                                                        fallback={
+                                                                                                            <RouteLoadingFallback />
+                                                                                                        }
+                                                                                                    >
+                                                                                                        <PlansHome />
+                                                                                                    </Suspense>
+                                                                                                </FeatureErrorBoundary>
+                                                                                            }
+                                                                                        />
                                                                                         {/* v3 proof-of-life routes. Behind `VITE_USE_V3_CHAT`
                                                                                         — production builds without the env flag don't
                                                                                         even register the routes. The bare `/v3` shows

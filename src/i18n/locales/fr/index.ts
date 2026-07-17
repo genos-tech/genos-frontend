@@ -237,6 +237,20 @@ export const fr: DeepPartial<Messages> = {
                 "L'annulation est programmée — votre forfait reste actif jusqu'à cette date.",
             pastDue:
                 "Problème de paiement — mettez à jour votre moyen de paiement dans le portail de facturation.",
+            plansHeading: "Forfaits et tarifs",
+            plansSubheading:
+                "Tous les forfaits incluent toutes les fonctionnalités — seuls les limites d'utilisation et l'historique changent.",
+            freePrice: "Gratuit",
+            perMonth: "/ mois",
+            contactSales: "Contacter les ventes",
+            contactUs: "Nous contacter",
+            currentPlan: "Forfait actuel",
+            perDay: "{n} / jour",
+            perMonthCount: "{n} / mois",
+            premiumNote:
+                "Des plafonds quotidiens par forfait s'appliquent aussi aux modèles d'IA premium.",
+            comparePlans: "Comparer les forfaits",
+            seePlans: "Voir les forfaits",
             billingReturnCancelled: "Paiement annulé — votre forfait est inchangé.",
         },
         appearance: {
