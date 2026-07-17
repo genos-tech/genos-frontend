@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
-import WorkspacePremiumRoundedIcon from "@mui/icons-material/WorkspacePremiumRounded";
+import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import {
     Box,
     Button,
@@ -74,15 +74,6 @@ const TIER_COLOR: Record<SubscriptionTier, "neutral" | "primary" | "success" | "
     enterprise: "warning",
 };
 
-const LimitRow = ({ label, value }: { label: string; value: string }) => (
-    <Stack alignItems="center" direction="row" justifyContent="space-between" spacing={1}>
-        <Typography level="body-sm">{label}</Typography>
-        <Typography level="body-sm" sx={{ color: "text.tertiary", textAlign: "right" }}>
-            {value}
-        </Typography>
-    </Stack>
-);
-
 export const PlansHome = () => {
     const { accessToken } = useAuth();
     const { t, locale } = useTranslation();
@@ -149,8 +140,6 @@ export const PlansHome = () => {
         enterprise: p.tierEnterprise,
     };
     const personalTier = config?.personal_tier ?? null;
-    const nUnlimited = (n: number | null, template: string) =>
-        n == null ? p.unlimited : fmt(template, { n: n.toLocaleString(locale) });
 
     const renderCta = (tier: PlanTier) => {
         if (tier.tier === personalTier) {
@@ -162,7 +151,13 @@ export const PlansHome = () => {
         }
         if (tier.contact_sales) {
             return (
-                <Button component="a" href={CONTACT_SALES_MAILTO} size="sm" variant="outlined">
+                <Button
+                    fullWidth
+                    component="a"
+                    href={CONTACT_SALES_MAILTO}
+                    size="sm"
+                    variant="outlined"
+                >
                     {p.contactUs}
                 </Button>
             );
@@ -171,6 +166,7 @@ export const PlansHome = () => {
         if (personalTier === "free") {
             return (
                 <Button
+                    fullWidth
                     disabled={busy}
                     size="sm"
                     variant={tier.tier === "pro" ? "solid" : "soft"}
@@ -189,6 +185,7 @@ export const PlansHome = () => {
             // portal with proration — never a second checkout.
             return (
                 <Button
+                    fullWidth
                     disabled={busy}
                     size="sm"
                     variant="outlined"
@@ -201,15 +198,55 @@ export const PlansHome = () => {
         return null;
     };
 
+    // Benefit-phrased checkmark rows, still fed by the enforcement
+    // table — selling order: history first (the classic upgrade
+    // trigger), then AI volume, premium models, and the rest.
+    const benefitRows = (tier: PlanTier): string[] => {
+        const L = tier.limits;
+        const n = (v: number) => v.toLocaleString(locale);
+        const rows = [
+            L.message_retention_days == null
+                ? p.benefitHistoryUnlimited
+                : fmt(p.benefitHistoryDays, { days: String(L.message_retention_days) }),
+            L.llm_ask_daily == null
+                ? p.benefitAiAsksUnlimited
+                : fmt(p.benefitAiAsks, { n: n(L.llm_ask_daily) }),
+        ];
+        // Free blocks opus-class models entirely; every paid tier
+        // includes them (with per-model daily caps).
+        if (tier.tier !== "free") rows.push(p.benefitPremiumModels);
+        rows.push(
+            L.web_search_daily == null
+                ? p.benefitWebSearchesUnlimited
+                : fmt(p.benefitWebSearches, { n: n(L.web_search_daily) }),
+            L.task_create_monthly == null
+                ? p.benefitTasksUnlimited
+                : fmt(p.benefitTasks, { n: n(L.task_create_monthly) }),
+            L.note_create_monthly == null
+                ? p.benefitNotesUnlimited
+                : fmt(p.benefitNotes, { n: n(L.note_create_monthly) })
+        );
+        if (L.upload_max_mb != null) {
+            rows.push(fmt(p.benefitUpload, { mb: String(L.upload_max_mb) }));
+        }
+        return rows;
+    };
+
+    const tagline: Record<SubscriptionTier, string> = {
+        free: p.taglineFree,
+        pro: p.taglinePro,
+        max: p.taglineMax,
+        enterprise: p.taglineEnterprise,
+    };
+
     return (
         <Box sx={{ p: 3, maxWidth: 1200, mx: "auto" }}>
-            <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 0.5 }}>
-                <WorkspacePremiumRoundedIcon />
-                <Typography level="h3">{p.plansHeading}</Typography>
+            <Stack alignItems="center" spacing={1} sx={{ mb: 4, mt: 1, textAlign: "center" }}>
+                <Typography level="h2">{p.plansHero}</Typography>
+                <Typography level="body-md" sx={{ color: "text.tertiary", maxWidth: 640 }}>
+                    {p.plansHeroSub}
+                </Typography>
             </Stack>
-            <Typography level="body-sm" sx={{ color: "text.tertiary", mb: 2.5 }}>
-                {p.plansSubheading}
-            </Typography>
 
             <Box
                 sx={{
@@ -220,28 +257,76 @@ export const PlansHome = () => {
                         lg: "repeat(4, 1fr)",
                     },
                     gap: 2,
+                    alignItems: "stretch",
                 }}
             >
                 {plans.tiers.map((tier) => {
                     const priceLabel = tier.price ? formatPrice(tier.price, locale) : null;
+                    // Slack-style highlight on the plan most users
+                    // should pick.
+                    const highlighted = tier.tier === "pro";
                     return (
-                        <Card key={tier.tier} sx={{ gap: 1 }} variant="outlined">
-                            <Chip
-                                color={TIER_COLOR[tier.tier]}
-                                size="sm"
-                                sx={{ alignSelf: "flex-start" }}
-                                variant="soft"
-                            >
+                        <Card
+                            key={tier.tier}
+                            sx={{
+                                gap: 1,
+                                overflow: "visible",
+                                position: "relative",
+                                ...(highlighted && {
+                                    borderColor: "primary.solidBg",
+                                    borderWidth: 2,
+                                    boxShadow: "md",
+                                }),
+                            }}
+                            variant="outlined"
+                        >
+                            {highlighted && (
+                                <Chip
+                                    color="primary"
+                                    size="sm"
+                                    sx={{
+                                        position: "absolute",
+                                        top: -12,
+                                        left: "50%",
+                                        transform: "translateX(-50%)",
+                                    }}
+                                    variant="solid"
+                                >
+                                    {p.bestValue}
+                                </Chip>
+                            )}
+                            <Typography level="title-lg" sx={{ mt: highlighted ? 0.5 : 0 }}>
                                 {tierLabel[tier.tier]}
-                            </Chip>
-                            <Stack alignItems="baseline" direction="row" spacing={0.5}>
+                            </Typography>
+                            {/* Fixed-height tagline keeps the price rows
+                                aligned across cards. */}
+                            <Typography
+                                level="body-sm"
+                                sx={{ color: "text.tertiary", minHeight: 40 }}
+                            >
+                                {tagline[tier.tier]}
+                            </Typography>
+                            <Stack
+                                alignItems="baseline"
+                                direction="row"
+                                spacing={0.5}
+                                sx={{ minHeight: 44 }}
+                            >
                                 {tier.contact_sales ? (
                                     <Typography level="title-lg">{p.contactSales}</Typography>
                                 ) : tier.price?.amount === 0 ? (
-                                    <Typography level="h4">{p.freePrice}</Typography>
+                                    <>
+                                        <Typography level="h2">{p.freePrice}</Typography>
+                                        <Typography
+                                            level="body-xs"
+                                            sx={{ color: "text.tertiary" }}
+                                        >
+                                            {p.freeForever}
+                                        </Typography>
+                                    </>
                                 ) : priceLabel ? (
                                     <>
-                                        <Typography level="h4">{priceLabel}</Typography>
+                                        <Typography level="h2">{priceLabel}</Typography>
                                         <Typography
                                             level="body-xs"
                                             sx={{ color: "text.tertiary" }}
@@ -251,52 +336,26 @@ export const PlansHome = () => {
                                     </>
                                 ) : null}
                             </Stack>
+                            <Box sx={{ minHeight: 36 }}>{renderCta(tier)}</Box>
                             <Divider />
                             <Stack spacing={0.75} sx={{ flex: 1 }}>
-                                <LimitRow
-                                    label={p.aiAsks}
-                                    value={nUnlimited(tier.limits.llm_ask_daily, p.perDay)}
-                                />
-                                <LimitRow
-                                    label={p.webSearches}
-                                    value={nUnlimited(tier.limits.web_search_daily, p.perDay)}
-                                />
-                                <LimitRow
-                                    label={p.tasksCreated}
-                                    value={nUnlimited(
-                                        tier.limits.task_create_monthly,
-                                        p.perMonthCount
-                                    )}
-                                />
-                                <LimitRow
-                                    label={p.notesCreated}
-                                    value={nUnlimited(
-                                        tier.limits.note_create_monthly,
-                                        p.perMonthCount
-                                    )}
-                                />
-                                <LimitRow
-                                    label={p.messageHistory}
-                                    value={
-                                        tier.limits.message_retention_days == null
-                                            ? p.unlimited
-                                            : fmt(p.messageHistoryDays, {
-                                                  days: String(tier.limits.message_retention_days),
-                                              })
-                                    }
-                                />
-                                <LimitRow
-                                    label={p.maxFileSize}
-                                    value={
-                                        tier.limits.upload_max_mb == null
-                                            ? p.unlimited
-                                            : fmt(p.maxFileSizeMb, {
-                                                  mb: String(tier.limits.upload_max_mb),
-                                              })
-                                    }
-                                />
+                                {benefitRows(tier).map((row) => (
+                                    <Typography
+                                        key={row}
+                                        level="body-sm"
+                                        startDecorator={
+                                            <CheckRoundedIcon
+                                                sx={{
+                                                    fontSize: 16,
+                                                    color: "success.solidBg",
+                                                }}
+                                            />
+                                        }
+                                    >
+                                        {row}
+                                    </Typography>
+                                ))}
                             </Stack>
-                            <Box sx={{ mt: 1 }}>{renderCta(tier)}</Box>
                         </Card>
                     );
                 })}
