@@ -67,6 +67,19 @@ const socketsOrigin = originOf(env.VITE_WS_BASE_URL) ?? "http://localhost:8889";
 const collabOrigin = originOf(env.VITE_COLLAB_URL) ?? "ws://localhost:8891";
 const posthogOrigin = originOf(env.VITE_POSTHOG_HOST);
 
+// posthog-js lazy-loads its extension scripts (web-vitals,
+// dead-clicks-autocapture, the /array/<key>/config bootstrap, session
+// recorder, …) from a dedicated ASSETS subdomain, not the api_host:
+// us.i.posthog.com → us-assets.i.posthog.com (same pattern for eu).
+// Both script-src and connect-src need it or PostHog logs CSP
+// violations on every page load in prod.
+const posthogAssetsOrigin = posthogOrigin
+    ? posthogOrigin.replace(
+          /^(https?:\/\/)([a-z0-9-]+)\.i\.posthog\.com$/,
+          "$1$2-assets.i.posthog.com"
+      )
+    : null;
+
 const uniq = (values) => [...new Set(values.filter(Boolean))];
 
 const connectSrc = uniq([
@@ -78,11 +91,12 @@ const connectSrc = uniq([
     ...schemeVariants(socketsOrigin),
     ...schemeVariants(collabOrigin),
     posthogOrigin,
+    posthogAssetsOrigin,
 ]);
 
 const csp = [
     `default-src 'self'`,
-    `script-src ${uniq(["'self'", posthogOrigin]).join(" ")}`,
+    `script-src ${uniq(["'self'", posthogOrigin, posthogAssetsOrigin]).join(" ")}`,
     `style-src 'self' 'unsafe-inline'`,
     `img-src 'self' data: blob: https:`,
     `font-src 'self' data:`,
