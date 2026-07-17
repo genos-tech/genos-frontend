@@ -190,14 +190,32 @@ export interface QuotaBlock {
     limit: number | null;
 }
 
-// User's tier + the two cross-cutting daily quotas (LLM ask total +
-// web search). The Settings UI uses `web_search.limit > 0` to decide
-// whether to surface the "your tier has no web search quota" warning
-// up front instead of letting the user hit a mid-stream ToolError.
+// Monthly quota dimensions (task/note creations) carry the window
+// label so the Plan & Usage UI never hardcodes which keys are monthly.
+export interface MonthlyQuotaBlock extends QuotaBlock {
+    period: "month";
+}
+
+export type SubscriptionTier = "free" | "pro" | "max" | "enterprise";
+
+// The single fetch behind Settings → Plan & Usage: the user's
+// EFFECTIVE tier (own tier, or a paying team's plan — `tier_source`
+// says which, `tier_team` names the granting team) plus every
+// metered/limited dimension. The Settings UI also uses
+// `web_search.limit > 0` to surface the "your tier has no web search
+// quota" warning up front instead of a mid-stream ToolError.
+// The four newer fields are absent from older backends — keep reads
+// null-safe.
 export interface AgentFeatures {
-    tier: "free" | "pro" | "max";
+    tier: SubscriptionTier;
+    tier_source?: "personal" | "team";
+    tier_team?: string | null;
     llm_ask: QuotaBlock;
     web_search: QuotaBlock;
+    task_create?: MonthlyQuotaBlock;
+    note_create?: MonthlyQuotaBlock;
+    message_retention_days?: number | null; // null = unlimited history
+    upload_max_mb?: number | null; // null = no tier file cap
 }
 
 export async function fetchAgentFeatures(accessToken: string): Promise<AgentFeatures | null> {
@@ -228,7 +246,7 @@ export interface AgentModelEntry {
 }
 
 export interface AgentModels {
-    tier: "free" | "pro" | "max";
+    tier: SubscriptionTier;
     current: { provider: string; model: string };
     models: AgentModelEntry[];
     // Cross-cutting per-tier daily quotas, mirroring AgentFeatures.

@@ -148,6 +148,7 @@ export const zh: DeepPartial<Messages> = {
             permissionDenied: "您没有执行此操作的权限。",
             requestFailed: "请求无法完成，请重试。",
             actionFailed: "操作无法完成，请重试。",
+            limitReached: "您已达到套餐限制。请前往 设置 → 套餐与用量 查看详情。",
             messageSendFailed: "消息发送失败，请重试。",
         },
     },

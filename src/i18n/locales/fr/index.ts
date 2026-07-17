@@ -149,6 +149,8 @@ export const fr: DeepPartial<Messages> = {
             permissionDenied: "Vous n'avez pas la permission de faire cela.",
             requestFailed: "Impossible de traiter la requête. Veuillez réessayer.",
             actionFailed: "Impossible d'effectuer cette action. Veuillez réessayer.",
+            limitReached:
+                "Vous avez atteint une limite de votre forfait. Voir Paramètres → Forfait et utilisation.",
             messageSendFailed: "Impossible d'envoyer votre message. Veuillez réessayer.",
         },
     },

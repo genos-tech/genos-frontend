@@ -21,6 +21,7 @@ export type RequestErrorKind =
     | "serverError" // API 5xx
     | "permissionDenied" // API 403
     | "requestFailed" // API other 4xx
+    | "limitReached" // API 429/413 with limit_reached — plan quota / file-size cap
     | "actionFailed" // v3 socket user-action emit failed (reaction / edit)
     | "messageSendFailed"; // chat message send failed (the composer)
 
