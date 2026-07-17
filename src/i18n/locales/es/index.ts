@@ -250,6 +250,7 @@ export const es: DeepPartial<Messages> = {
             premiumNote: "Los modelos de IA premium también tienen límites diarios por plan.",
             comparePlans: "Comparar planes",
             seePlans: "Ver planes",
+            legalNotice: "Aviso legal",
             billingReturnCancelled: "Pago cancelado — tu plan no ha cambiado.",
         },
         appearance: {

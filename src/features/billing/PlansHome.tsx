@@ -1,7 +1,17 @@
 import { useEffect, useState } from "react";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import WorkspacePremiumRoundedIcon from "@mui/icons-material/WorkspacePremiumRounded";
-import { Box, Button, Card, Chip, Divider, LinearProgress, Stack, Typography } from "@mui/joy";
+import {
+    Box,
+    Button,
+    Card,
+    Chip,
+    Divider,
+    LinearProgress,
+    Link,
+    Stack,
+    Typography,
+} from "@mui/joy";
 
 import { useAuth } from "../../context/AuthContext";
 import { fmt, useTranslation } from "../../i18n";
@@ -283,7 +293,11 @@ export const PlansHome = () => {
             </Box>
 
             <Typography level="body-xs" sx={{ color: "text.tertiary", mt: 2 }}>
-                {p.premiumNote} {plans.billing_enabled ? p.upgradeHint : ""}
+                {p.premiumNote} {plans.billing_enabled ? p.upgradeHint : ""}{" "}
+                {/* New tab so the legal doc doesn't interrupt a purchase. */}
+                <Link href="/legal" level="body-xs" rel="noreferrer" target="_blank">
+                    {p.legalNotice}
+                </Link>
             </Typography>
             {actionError && (
                 <Typography color="danger" level="body-sm" sx={{ mt: 1 }}>

@@ -245,6 +245,7 @@ export const ar: DeepPartial<Messages> = {
             premiumNote: "تنطبق أيضًا حدود يومية لكل خطة على نماذج الذكاء الاصطناعي المتقدمة.",
             comparePlans: "قارن الخطط",
             seePlans: "عرض الخطط",
+            legalNotice: "إشعار قانوني",
             billingReturnCancelled: "أُلغي الدفع — لم تتغير خطتك.",
         },
         appearance: {
