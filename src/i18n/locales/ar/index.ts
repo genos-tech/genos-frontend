@@ -592,6 +592,8 @@ export const ar: DeepPartial<Messages> = {
         },
         errors: {
             createTaskFailed: "تعذّر إنشاء المهمة",
+            taskLimitReached:
+                "لقد استخدمت {used} من أصل {limit} من إنشاءات المهام الشهرية في خطتك. قم بترقية خطتك لإنشاء المزيد من المهام.",
             deleteEmptyTaskFailed: "تعذّر حذف المهمة الفارغة",
             attachmentUploadFailed: "فشل رفع المرفق",
             sendInboxMessageFailed: "تعذّر إرسال رسالة إلى صندوق الوارد",

@@ -608,6 +608,8 @@ export const ja: DeepPartial<Messages> = {
         },
         errors: {
             createTaskFailed: "タスクの作成に失敗しました",
+            taskLimitReached:
+                "今月のタスク作成数がプラン上限に達しました（{used}/{limit}）。さらに作成するにはプランをアップグレードしてください。",
             deleteEmptyTaskFailed: "空のタスクの削除に失敗しました",
             attachmentUploadFailed: "添付ファイルのアップロードに失敗しました",
             sendInboxMessageFailed: "受信箱メッセージの送信に失敗しました",

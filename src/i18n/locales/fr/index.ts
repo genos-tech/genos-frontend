@@ -597,6 +597,8 @@ export const fr: DeepPartial<Messages> = {
         },
         errors: {
             createTaskFailed: "Échec de la création de la tâche",
+            taskLimitReached:
+                "Vous avez utilisé {used} des {limit} créations de tâches mensuelles de votre forfait. Passez à un forfait supérieur pour créer plus de tâches.",
             deleteEmptyTaskFailed: "Échec de la suppression de la tâche vide",
             attachmentUploadFailed: "Échec de l'envoi de la pièce jointe",
             sendInboxMessageFailed: "Échec de l'envoi d'un message dans la boîte de réception",

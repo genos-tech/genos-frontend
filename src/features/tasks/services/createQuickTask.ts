@@ -1,3 +1,5 @@
+import { fmt, getMessages } from "../../../i18n";
+import { LimitReachedError, parseLimitReached } from "../../../services/limitErrors";
 import { UserProps } from "../../../types/admin";
 import { taskContentTemplate } from "../utils/taskTemplates";
 
@@ -95,6 +97,22 @@ export const createQuickTask = async (
     });
 
     if (!res.ok) {
+        // Plan limit (429 limit_reached): typed error so the quick-add
+        // row can render the limit message inline instead of the
+        // generic failure copy.
+        const limitErr = await parseLimitReached(res);
+        if (limitErr) {
+            const errMsgs = getMessages().tasks.errors;
+            throw new LimitReachedError(
+                limitErr.limit != null
+                    ? fmt(errMsgs.taskLimitReached, {
+                          used: String(limitErr.used ?? limitErr.limit),
+                          limit: String(limitErr.limit),
+                      })
+                    : limitErr.message || errMsgs.createTaskFailed,
+                limitErr
+            );
+        }
         throw new Error(`Quick task create failed (${res.status})`);
     }
 
