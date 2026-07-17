@@ -330,7 +330,13 @@ export const PlanUsageSection = ({ onNavigateAway }: { onNavigateAway?: () => vo
                                 )}
                             </>
                         )}
-                        {billing.personal_tier !== "free" && billing.has_billing_account && (
+                        {/* The portal renders for ANYONE with a Stripe
+                            customer — including a free tier after a
+                            cancellation ran out. A cancelled customer
+                            still needs invoice history and a re-
+                            subscribe path, and the /legal page points
+                            here as the cancellation route. */}
+                        {billing.has_billing_account && (
                             <Button
                                 disabled={billingBusy}
                                 size="sm"

@@ -57,8 +57,8 @@ const JA_SECTIONS: Section[] = [
                     とプラン情報のみを保持します）。
                 </li>
                 <li>
-                    <b>利用状況</b>：機能改善のためのプロダクト分析（PostHog）。アプリ内の 設定 →
-                    プライバシーからいつでも無効にできます。また、AI
+                    <b>利用状況</b>：機能改善のためのプロダクト分析（PostHog）。アプリ内の「設定 →
+                    一般 → プライバシーと分析」からいつでも無効にできます。また、AI
                     利用回数などプラン上限の計測データを保持します。
                 </li>
                 <li>
@@ -89,7 +89,7 @@ const JA_SECTIONS: Section[] = [
                         API を利用しています）
                     </li>
                     <li>Tavily（AI のウェブ検索機能における検索クエリ）</li>
-                    <li>PostHog（プロダクト分析 — 設定から無効化できます）</li>
+                    <li>PostHog（プロダクト分析 — 「設定 → 一般」から無効化できます）</li>
                     <li>Resend（通知・確認メールの送信）</li>
                 </ul>
             </>
@@ -140,7 +140,7 @@ const JA_SECTIONS: Section[] = [
 const EN_SECTIONS: Section[] = [
     {
         heading: "What we collect",
-        body: "Account details (email, username, team), the content you create (messages, tasks, notes, files), Stripe customer/plan references (card numbers never touch our servers), product analytics (PostHog — can be disabled in Settings → Privacy), and cookies/browser storage for keeping you signed in. No advertising cookies.",
+        body: "Account details (email, username, team), the content you create (messages, tasks, notes, files), Stripe customer/plan references (card numbers never touch our servers), product analytics (PostHog — can be disabled in Settings → General → Privacy & analytics), and cookies/browser storage for keeping you signed in. No advertising cookies.",
     },
     {
         heading: "How we use it",
