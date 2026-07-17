@@ -34,6 +34,15 @@ export const settings = {
         upgradeComingSoon:
             "Self-serve upgrades are coming soon. Contact your workspace admin to change plans.",
         loadError: "Couldn't load your plan details. Please try again.",
+        upgradeToPro: "Upgrade to Pro",
+        upgradeToMax: "Upgrade to Max",
+        manageBilling: "Manage billing",
+        manageBillingHint: "Change plan, payment method, or cancel via the secure Stripe portal.",
+        upgradeHint: "Checkout is handled securely by Stripe.",
+        billingError: "Couldn't reach the billing service. Please try again.",
+        billingReturnSuccess:
+            "Thanks — your subscription is active! Your new plan applies within a few seconds.",
+        billingReturnCancelled: "Checkout cancelled — your plan is unchanged.",
     },
     appearance: {
         heading: "Appearance",

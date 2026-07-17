@@ -222,6 +222,16 @@ export const fr: DeepPartial<Messages> = {
             upgradeComingSoon:
                 "La mise à niveau en libre-service arrive bientôt. Contactez l'administrateur de votre espace de travail pour changer de forfait.",
             loadError: "Impossible de charger les détails de votre forfait. Veuillez réessayer.",
+            upgradeToPro: "Passer à Pro",
+            upgradeToMax: "Passer à Max",
+            manageBilling: "Gérer la facturation",
+            manageBillingHint:
+                "Changez de forfait, de moyen de paiement ou résiliez via le portail sécurisé Stripe.",
+            upgradeHint: "Le paiement est traité en toute sécurité par Stripe.",
+            billingError: "Impossible de joindre le service de facturation. Veuillez réessayer.",
+            billingReturnSuccess:
+                "Merci — votre abonnement est actif ! Votre nouveau forfait s'applique dans quelques secondes.",
+            billingReturnCancelled: "Paiement annulé — votre forfait est inchangé.",
         },
         appearance: {
             heading: "Apparence",

@@ -221,6 +221,17 @@ export const es: DeepPartial<Messages> = {
             upgradeComingSoon:
                 "Las mejoras autoservicio llegarán pronto. Contacta con el administrador de tu espacio de trabajo para cambiar de plan.",
             loadError: "No se pudieron cargar los detalles de tu plan. Inténtalo de nuevo.",
+            upgradeToPro: "Mejorar a Pro",
+            upgradeToMax: "Mejorar a Max",
+            manageBilling: "Gestionar facturación",
+            manageBillingHint:
+                "Cambia de plan, método de pago o cancela en el portal seguro de Stripe.",
+            upgradeHint: "Stripe procesa el pago de forma segura.",
+            billingError:
+                "No se pudo conectar con el servicio de facturación. Inténtalo de nuevo.",
+            billingReturnSuccess:
+                "¡Gracias! Tu suscripción está activa. Tu nuevo plan se aplicará en unos segundos.",
+            billingReturnCancelled: "Pago cancelado — tu plan no ha cambiado.",
         },
         appearance: {
             heading: "Apariencia",
