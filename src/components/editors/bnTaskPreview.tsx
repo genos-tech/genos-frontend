@@ -486,7 +486,12 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                         // editorRef (native capture phase). This handler
                         // only deals with image clicks.
                         const target = e.target as HTMLElement;
-                        if (target.tagName === "IMG") {
+                        if (
+                            target.tagName === "IMG" &&
+                            !target.hasAttribute("data-custom-emoji")
+                        ) {
+                            // (custom emoji are inline <img>s, not
+                            // zoomable/downloadable image blocks)
                             handleImageClick((target as HTMLImageElement).src);
                         }
                     }}

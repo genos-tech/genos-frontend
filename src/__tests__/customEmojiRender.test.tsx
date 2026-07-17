@@ -57,6 +57,9 @@ describe("EmojiGlyph", () => {
         const img = screen.getByTitle(":party-blob:");
         expect(img.tagName).toBe("IMG");
         expect(img).toHaveAttribute("src", partyBlob.url);
+        // The editors' image-click zoom/download handlers key off this
+        // marker to leave emoji alone.
+        expect(img).toHaveAttribute("data-custom-emoji", "true");
     });
 
     it("falls back to the literal text for unknown shortcodes (deleted emoji)", () => {
