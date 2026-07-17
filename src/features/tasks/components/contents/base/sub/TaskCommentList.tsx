@@ -195,6 +195,7 @@ export const TaskCommentList = ({
                             <TaskCommentBubble
                                 key={`task-comment-${comment.commentId}-${comment.tsUpdated}`}
                                 comment={comment}
+                                commentLink={commentLinkBuilder?.(comment.commentId)}
                                 currentProjectId={currentProjectId ?? undefined}
                                 currentProjectName={currentProjectName ?? undefined}
                                 currentTaskDisplayId={currentTaskDisplayId ?? undefined}
@@ -236,6 +237,7 @@ export const TaskCommentList = ({
                         <TaskCommentBubble
                             key={`task-comment-${comment.commentId}-${comment.tsUpdated}`}
                             comment={comment}
+                            commentLink={commentLinkBuilder?.(comment.commentId)}
                             currentProjectId={currentProjectId ?? undefined}
                             currentProjectName={currentProjectName ?? undefined}
                             currentTaskDisplayId={currentTaskDisplayId ?? undefined}

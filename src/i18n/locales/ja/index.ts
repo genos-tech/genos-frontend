@@ -1036,6 +1036,11 @@ export const ja: DeepPartial<Messages> = {
         comment: {
             editTooltip: "編集",
             deleteTooltip: "削除",
+            copyLink: "コメントリンクをコピー",
+            unwrapAll: "折り返しを解除",
+            wrapAll: "折り返して表示",
+            unwrapCode: "コードの折り返しを解除",
+            wrapCode: "コードを折り返して表示",
         },
         titleBlock: {
             titlePlaceholder: "タスクのタイトルを入力…",

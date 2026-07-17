@@ -511,6 +511,11 @@ export const tasks = {
     comment: {
         editTooltip: "Edit",
         deleteTooltip: "Delete",
+        copyLink: "Copy comment link",
+        unwrapAll: "Unwrap content",
+        wrapAll: "Wrap content",
+        unwrapCode: "Unwrap code blocks",
+        wrapCode: "Wrap code blocks",
     },
 
     // Title block.
