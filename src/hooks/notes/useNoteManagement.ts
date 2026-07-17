@@ -84,6 +84,13 @@ import { NoteTabsApi, noteToTab, useNoteTabs } from "./useNoteTabs";
 export interface NoteCreateOverrides {
     title?: string;
     body?: unknown[];
+    /** Skip opening a notes-page tab for the created note. Used by the
+     *  modal-hosted task preview's "New Note" button, which shows the
+     *  note by re-targeting the hosting UrlLinkModal instead — a page
+     *  tab opened underneath the dialog would just be surprise state
+     *  the next time the user visits the notes page. Cache/sidebar
+     *  bookkeeping still runs. */
+    skipOpenTab?: boolean;
 }
 
 export interface NoteManagementState {
@@ -255,13 +262,16 @@ export interface NoteManagementState {
         chatName?: string
     ) => Promise<void>;
 
+    // Resolves to the created note (mirrors handleCreateNewChatNote) so
+    // callers that show it themselves — the modal-hosted task preview —
+    // can build its URL; null when creation failed or was skipped.
     handleCreateNewTaskNote: (
         parentNoteId: number | null,
         projectId: number,
         taskId: number,
         title?: string,
         opts?: NoteCreateOverrides
-    ) => Promise<void>;
+    ) => Promise<TaskNoteProps | null>;
 
     handleCreateNewMyNote: (
         parentNoteId: number | null,
@@ -589,8 +599,8 @@ export const useNoteManagement = (
         taskId: number,
         title?: string,
         opts?: NoteCreateOverrides
-    ) => {
-        if (!accessToken) return;
+    ): Promise<TaskNoteProps | null> => {
+        if (!accessToken) return null;
 
         try {
             const noteTitle =
@@ -614,7 +624,9 @@ export const useNoteManagement = (
                 setCurrentTaskNote(taskNote);
                 addNote(2, taskNote);
                 upsertNoteCache(taskNote);
-                tabsApi.openTab(noteToTab(taskNote, myself.teamId));
+                if (!opts?.skipOpenTab) {
+                    tabsApi.openTab(noteToTab(taskNote, myself.teamId));
+                }
                 recordNoteOpen(taskNote.noteId, 2);
 
                 // Carry the new Project → Milestone → Task → Subtask
@@ -654,10 +666,12 @@ export const useNoteManagement = (
                     },
                     ...prev,
                 ]);
+                return taskNote;
             }
         } catch (error) {
             console.error("Error creating task note:", error);
         }
+        return null;
     };
 
     const getTaskNoteMeta = async () => {
