@@ -77,7 +77,7 @@ import { useUploadCounter } from "../ui/feedback/useUploadCounter";
 import { GifPicker } from "../ui/gif/GifPicker";
 import { CreateCustomEmojiSpec, insertEmojiValue } from "./CustomEmoji";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
-import { GifToolbarButton } from "./GifToolbarButton";
+import { GifToolbarButton, withGifSlashItem } from "./GifToolbarButton";
 import {
     CreateHashChatSpec,
     CreateHashNoteSpec,
@@ -215,7 +215,8 @@ export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
     // List containing all default Slash Menu Items, as well as our custom one.
     const getCustomSlashMenuItems = (
         editor: typeof schema.BlockNoteEditor
-    ): DefaultReactSuggestionItem[] => getDefaultReactSlashMenuItems(editor);
+    ): DefaultReactSuggestionItem[] =>
+        withGifSlashItem(getDefaultReactSlashMenuItems(editor), setShowGifPicker);
 
     // See `bnChatEditor` for the rationale on `useUploadCounter`.
     const { activeCount: editorUploadCount, wrap: trackUpload } = useUploadCounter();
@@ -466,9 +467,11 @@ export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
                 </Box>
 
                 <GifPicker
-                    pickerTopPosition={40}
+                    pickerLeftPosition="calc(50vw - 170px)"
+                    pickerTopPosition="15vh"
                     setShowGifPicker={setShowGifPicker}
                     showGifPicker={showGifPicker}
+                    useFixedPosition={true}
                     onSelect={insertGif}
                 />
                 <BlockNoteView
@@ -477,6 +480,10 @@ export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
                     editable={isEditable}
                     editor={editor as any}
                     emojiPicker={false}
+                    // A custom "/" SuggestionMenuController is mounted below —
+                    // the built-in menu must be off or BOTH render on "/",
+                    // stacking duplicate group labels (the "Media x3" bug).
+                    slashMenu={false}
                     formattingToolbar={false}
                     renderEditor={false}
                     sideMenu={false}
@@ -511,7 +518,12 @@ export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
                             // capture-phase listener on `editorBoxRef`).
                             // This handler only deals with image clicks.
                             const target = e.target as HTMLElement;
-                            if (target.tagName === "IMG") {
+                            if (
+                                target.tagName === "IMG" &&
+                                !target.hasAttribute("data-custom-emoji")
+                            ) {
+                                // (custom emoji are inline <img>s, not
+                                // zoomable/downloadable image blocks)
                                 handleImageClick((target as HTMLImageElement).src);
                             }
                         }}

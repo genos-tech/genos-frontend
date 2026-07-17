@@ -1,10 +1,42 @@
 import "@blocknote/mantine/style.css";
 
-import { useComponentsContext } from "@blocknote/react";
+import { DefaultReactSuggestionItem, useComponentsContext } from "@blocknote/react";
 import GifBoxOutlinedIcon from "@mui/icons-material/GifBoxOutlined";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { useTranslation } from "../../i18n";
+
+// "/gif" slash-menu entry. The toolbar button only appears on text
+// selection (notes/task body) or isn't discoverable (mobile), so the
+// slash menu is the always-available path to the GIF picker. BlockNote
+// removes the typed "/gif" text itself when the item is clicked.
+export const gifSlashMenuItem = (
+    setShowGifPicker: (value: boolean) => void
+): DefaultReactSuggestionItem => ({
+    title: "GIF",
+    subtext: "Search GIPHY and insert a GIF",
+    aliases: ["gif", "giphy"],
+    group: "Media",
+    icon: <GifBoxOutlinedIcon style={{ fontSize: 18 }} />,
+    onItemClick: () => setShowGifPicker(true),
+});
+
+// Splice the GIF item INTO the existing Media group instead of
+// appending it. BlockNote's menu emits one group label per group
+// TRANSITION and keys labels by the group name — an out-of-place
+// second "Media" run renders a duplicate label whose stale DOM node
+// then survives query narrowing (the "Media Media Media" bug).
+export const withGifSlashItem = (
+    items: DefaultReactSuggestionItem[],
+    setShowGifPicker: (value: boolean) => void
+): DefaultReactSuggestionItem[] => {
+    const gif = gifSlashMenuItem(setShowGifPicker);
+    const lastMedia = items.map((i) => i.group).lastIndexOf("Media");
+    if (lastMedia === -1) {
+        return [...items, gif];
+    }
+    return [...items.slice(0, lastMedia + 1), gif, ...items.slice(lastMedia + 1)];
+};
 
 type GifToolbarButtonProps = {
     setShowGifPicker: (value: boolean) => void;

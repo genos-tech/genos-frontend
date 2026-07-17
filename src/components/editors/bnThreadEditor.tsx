@@ -59,7 +59,7 @@ import { GifPicker } from "../ui/gif/GifPicker";
 import { CreateCustomEmojiSpec, insertEmojiValue } from "./CustomEmoji";
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
-import { GifToolbarButton } from "./GifToolbarButton";
+import { GifToolbarButton, withGifSlashItem } from "./GifToolbarButton";
 import {
     CreateHashChatSpec,
     CreateHashNoteSpec,
@@ -181,7 +181,8 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
     // List containing all default Slash Menu Items, as well as our custom one.
     const getCustomSlashMenuItems = (
         editor: typeof schema.BlockNoteEditor
-    ): DefaultReactSuggestionItem[] => getDefaultReactSlashMenuItems(editor);
+    ): DefaultReactSuggestionItem[] =>
+        withGifSlashItem(getDefaultReactSlashMenuItems(editor), setShowGifPicker);
 
     // See `bnChatEditor` for the rationale on `useUploadCounter`. Same
     // pattern: every uploadFile call ticks the counter so the in-editor
@@ -391,12 +392,19 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
     return (
         <Box>
             <FileSizeRejectionSnackbar rejection={rejection} onDismiss={dismissRejection} />
+            {/* Anchored so the picker's bottom edge sits right on the
+                editor's top edge (the zero-height wrapper renders directly
+                above the editor box) instead of floating over the list. */}
             <EmojiPicker
+                pickerBottomPosition={4}
+                pickerLeftPosition={8}
                 setSelectedEmoji={setSelectedEmoji}
                 setShowEmojiPicker={setShowEmojiPicker}
                 showEmojiPicker={showEmojiPicker}
             />
             <GifPicker
+                pickerBottomPosition={4}
+                pickerLeftPosition={8}
                 setShowGifPicker={setShowGifPicker}
                 showGifPicker={showGifPicker}
                 onSelect={insertGif}
@@ -416,6 +424,10 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                     className="bn-box"
                     editor={editor}
                     emojiPicker={false}
+                    // A custom "/" SuggestionMenuController is mounted below —
+                    // the built-in menu must be off or BOTH render on "/",
+                    // stacking duplicate group labels (the "Media x3" bug).
+                    slashMenu={false}
                     formattingToolbar={false}
                     sideMenu={false} // false for Chat/comment, true for Task content
                     theme={mode === "dark" ? "dark" : "light"}

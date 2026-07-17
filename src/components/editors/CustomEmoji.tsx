@@ -32,6 +32,10 @@ export const CustomEmojiImg = ({
     return (
         <img
             alt={`:${name}:`}
+            // Editor surfaces open an image-zoom/download modal on ANY
+            // <img> click; this attribute is their opt-out marker so an
+            // emoji never gets treated as a downloadable image block.
+            data-custom-emoji="true"
             loading="lazy"
             // Inline-spec props bypass the editor-level `resolveFileUrl`
             // hook, so the baked-http:// upgrade has to happen here.

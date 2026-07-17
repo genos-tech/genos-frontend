@@ -78,3 +78,19 @@ describe("GifPicker", () => {
         expect(await screen.findByText(/isn't configured/)).toBeInTheDocument();
     });
 });
+
+describe("gifSlashMenuItem", () => {
+    it("is findable as /gif and opens the picker on click", async () => {
+        const { gifSlashMenuItem } = await import("../components/editors/GifToolbarButton");
+        const setShowGifPicker = vi.fn();
+        const item = gifSlashMenuItem(setShowGifPicker);
+
+        expect(item.title).toBe("GIF");
+        expect(item.aliases).toContain("gif");
+        expect(item.aliases).toContain("giphy");
+        expect(item.group).toBe("Media");
+
+        item.onItemClick();
+        expect(setShowGifPicker).toHaveBeenCalledWith(true);
+    });
+});

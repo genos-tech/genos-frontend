@@ -156,7 +156,9 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
         const target = e.target as HTMLElement;
 
         // Handle image clicks
-        if (target.tagName === "IMG") {
+        if (target.tagName === "IMG" && !target.hasAttribute("data-custom-emoji")) {
+            // (custom emoji are inline <img>s, not
+            // zoomable/downloadable image blocks)
             handleImageClick((target as HTMLImageElement).src);
             return;
         }

@@ -60,7 +60,7 @@ import { GifPicker } from "../ui/gif/GifPicker";
 import { CreateCustomEmojiSpec, insertEmojiValue } from "./CustomEmoji";
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
-import { GifToolbarButton } from "./GifToolbarButton";
+import { GifToolbarButton, withGifSlashItem } from "./GifToolbarButton";
 import {
     CreateHashChatSpec,
     CreateHashNoteSpec,
@@ -189,7 +189,8 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
     // List containing all default Slash Menu Items, as well as our custom one.
     const getCustomSlashMenuItems = (
         editor: typeof schema.BlockNoteEditor
-    ): DefaultReactSuggestionItem[] => getDefaultReactSlashMenuItems(editor);
+    ): DefaultReactSuggestionItem[] =>
+        withGifSlashItem(getDefaultReactSlashMenuItems(editor), setShowGifPicker);
 
     // We use the English, default dictionary
     const locale = en;
@@ -469,7 +470,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
     }, []);
 
     useEffect(() => {
-        if (!showEmojiPicker) return;
+        if (!showEmojiPicker && !showGifPicker) return;
         updatePickerPosition();
         window.addEventListener("resize", updatePickerPosition);
         // Use capture so we catch scrolls inside any scrollable ancestor too.
@@ -478,7 +479,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
             window.removeEventListener("resize", updatePickerPosition);
             window.removeEventListener("scroll", updatePickerPosition, true);
         };
-    }, [showEmojiPicker, updatePickerPosition]);
+    }, [showEmojiPicker, showGifPicker, updatePickerPosition]);
 
     return (
         <Box ref={boxRef}>
@@ -518,6 +519,10 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                     className="bn-box"
                     editor={editor}
                     emojiPicker={false}
+                    // A custom "/" SuggestionMenuController is mounted below —
+                    // the built-in menu must be off or BOTH render on "/",
+                    // stacking duplicate group labels (the "Media x3" bug).
+                    slashMenu={false}
                     formattingToolbar={false}
                     sideMenu={false} // false for Chat/comment, true for Task content
                     theme={mode === "dark" ? "dark" : "light"}
