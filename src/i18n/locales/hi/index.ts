@@ -569,6 +569,8 @@ export const hi: DeepPartial<Messages> = {
         },
         errors: {
             createTaskFailed: "टास्क नहीं बनाया जा सका",
+            taskLimitReached:
+                "आपने अपनी योजना की {limit} मासिक कार्य-सीमा में से {used} का उपयोग कर लिया है। और कार्य बनाने के लिए प्लान अपग्रेड करें।",
             deleteEmptyTaskFailed: "खाली टास्क नहीं हटाया जा सका",
             attachmentUploadFailed: "अटैचमेंट अपलोड नहीं हो सका",
             sendInboxMessageFailed: "इनबॉक्स मेसेज नहीं भेजा जा सका",

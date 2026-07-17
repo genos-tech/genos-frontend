@@ -555,6 +555,8 @@ export const zh: DeepPartial<Messages> = {
         },
         errors: {
             createTaskFailed: "创建任务失败",
+            taskLimitReached:
+                "您已使用本套餐每月 {limit} 次任务创建中的 {used} 次。升级套餐以创建更多任务。",
             deleteEmptyTaskFailed: "删除空任务失败",
             attachmentUploadFailed: "附件上传失败",
             sendInboxMessageFailed: "发送收件箱消息失败",

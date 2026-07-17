@@ -33,6 +33,7 @@ import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
+import { LimitReachedError } from "../../../../services/limitErrors";
 import { UserProps } from "../../../../types/admin";
 import { TagListProps, TaskProps } from "../../../../types/tasks";
 import { isMac } from "../../../../utils/platform";
@@ -281,7 +282,14 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
             } catch (err) {
                 if (!mountedRef.current) return;
                 console.error("[CreateTaskForm] empty-task bootstrap failed:", err);
-                setBootstrapError(t.tasks.createForm.bootstrapFailed);
+                // Plan-limit rejections carry a user-facing "why" —
+                // show it in the error pane instead of the generic
+                // bootstrap-failure copy (retry won't help there).
+                setBootstrapError(
+                    err instanceof LimitReachedError && err.message
+                        ? err.message
+                        : t.tasks.createForm.bootstrapFailed
+                );
             } finally {
                 clearTimeout(abortTimer);
             }

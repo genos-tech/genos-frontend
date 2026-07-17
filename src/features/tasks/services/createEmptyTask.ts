@@ -1,4 +1,5 @@
-import { getMessages } from "../../../i18n";
+import { fmt, getMessages } from "../../../i18n";
+import { LimitReachedError, parseLimitReached } from "../../../services/limitErrors";
 import { UserProps } from "../../../types/admin";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
@@ -65,6 +66,20 @@ export const createEmptyTask = async (props: createEmptyTaskProps): Promise<numb
     // 502 HTML page, say) would otherwise throw an opaque SyntaxError here
     // instead of the real failure.
     if (!taskCreateResponse.ok) {
+        // Plan limit (429 limit_reached): keep the type so the form's
+        // error pane can show WHY instead of the generic failure copy.
+        const limitErr = await parseLimitReached(taskCreateResponse);
+        if (limitErr) {
+            throw new LimitReachedError(
+                limitErr.limit != null
+                    ? fmt(errMsgs.taskLimitReached, {
+                          used: String(limitErr.used ?? limitErr.limit),
+                          limit: String(limitErr.limit),
+                      })
+                    : limitErr.message || errMsgs.createTaskFailed,
+                limitErr
+            );
+        }
         throw new Error(errMsgs.createTaskFailed);
     }
 

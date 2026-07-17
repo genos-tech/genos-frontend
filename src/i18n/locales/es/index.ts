@@ -567,6 +567,8 @@ export const es: DeepPartial<Messages> = {
         },
         errors: {
             createTaskFailed: "No se pudo crear la tarea",
+            taskLimitReached:
+                "Has usado {used} de las {limit} creaciones de tareas mensuales de tu plan. Mejora tu plan para crear más tareas.",
             deleteEmptyTaskFailed: "No se pudo eliminar la tarea vacía",
             attachmentUploadFailed: "Error al subir el adjunto",
             sendInboxMessageFailed: "No se pudo enviar el mensaje a la bandeja",

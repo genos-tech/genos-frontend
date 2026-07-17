@@ -18,6 +18,7 @@ import { alpha } from "@mui/system";
 
 import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
 import { useTranslation } from "../../../../i18n";
+import { LimitReachedError } from "../../../../services/limitErrors";
 import { UserProps } from "../../../../types/admin";
 import { TaskTableProps } from "../../../../types/tasks";
 import { effortLevels, priorities } from "../../utils/taskMeta";
@@ -145,8 +146,14 @@ export const QuickAddTaskRow = (props: QuickAddTaskRowProps) => {
             // about-to-unmount row and is a harmless no-op.
             onDirtyChange(false);
             onClose();
-        } catch {
-            setError(t.tasks.table.quickAddError);
+        } catch (err) {
+            // Plan-limit rejections explain themselves — show the limit
+            // message inline; anything else keeps the generic copy.
+            setError(
+                err instanceof LimitReachedError && err.message
+                    ? err.message
+                    : t.tasks.table.quickAddError
+            );
         } finally {
             isSubmittingRef.current = false;
             setIsSubmitting(false);

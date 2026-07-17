@@ -42,6 +42,8 @@ export const tasks = {
     // Error strings thrown from service / hook modules.
     errors: {
         createTaskFailed: "Failed to create a task",
+        taskLimitReached:
+            "You've used {used} of your plan's {limit} monthly task creations. Upgrade your plan to create more tasks.",
         deleteEmptyTaskFailed: "Failed to delete the empty task",
         attachmentUploadFailed: "Attachment Upload Failed",
         sendInboxMessageFailed: "Failed to send a inbox message",
