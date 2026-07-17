@@ -1,4 +1,8 @@
 export const chat = {
+    // Tier retention strip (RetentionBanner) — shown when the viewer's
+    // plan hides part of this channel's history.
+    retentionBanner:
+        "Messages older than {days} days are hidden on your plan. Upgrade to see the full history.",
     composer: {
         placeholder: "Type a message…",
         sendTooltip: "Send",

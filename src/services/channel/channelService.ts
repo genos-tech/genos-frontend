@@ -40,6 +40,7 @@ import type {
     Channel,
     ChannelKind,
     ChannelMember,
+    ChannelRetention,
     DeltaEnvelope,
     Flag,
     Message,
@@ -221,6 +222,12 @@ export interface ChannelStoreSnapshot {
      *  to render below the timeline. Maintained in lockstep with the
      *  primary map; ordered by `enqueuedAt` asc. */
     pendingByChannel: ReadonlyMap<string, readonly PendingMessage[]>;
+    /** Per-channel tier retention window, as last reported by the
+     *  message delta envelope. Absent = unlimited history for the
+     *  viewing user. Drives the "history limited" banner and the
+     *  render-time cutoff filter for IDB-cached rows that aged past
+     *  the window between syncs. */
+    retentionByChannel: ReadonlyMap<string, ChannelRetention>;
 }
 
 /** correlation_id generator — uses uuidv4-ish style without adding a dep. */
@@ -328,6 +335,8 @@ export class ChannelService {
      *  O(1) per-channel lookup by the UI. */
     private _pendingByCorrelationId = new Map<string, PendingMessage>();
     private _pendingByChannel = new Map<string, PendingMessage[]>();
+    /** Tier retention per channel — see the snapshot field's doc. */
+    private _retentionByChannel = new Map<string, ChannelRetention>();
     /**
      * Resolver callbacks for in-flight `send()` Promises, keyed by
      * `correlationId`. NOT exposed on the snapshot (functions don't
@@ -375,6 +384,7 @@ export class ChannelService {
             },
             pendingByCorrelationId: this._pendingByCorrelationId,
             pendingByChannel: this._pendingByChannel,
+            retentionByChannel: this._retentionByChannel,
         };
     }
 
@@ -844,6 +854,14 @@ export class ChannelService {
     private _checkpointKeyThreads(channelId: string): string {
         return `v3:thrd:${channelId}`;
     }
+    /** Last-seen retention window per channel ("90" or "unlimited").
+     *  Persisted so a tier change (upgrade OR downgrade) between
+     *  sessions is detected on the next sync and triggers a full
+     *  evict + resync — upgrades instantly restore hidden history,
+     *  downgrades drop now-hidden rows from the cache. */
+    private _checkpointKeyRetention(channelId: string): string {
+        return `v3:retn:${channelId}`;
+    }
 
     private _checkpoints(): CheckpointRepository {
         if (!this._checkpointRepo) this._checkpointRepo = new CheckpointRepository();
@@ -885,7 +903,10 @@ export class ChannelService {
         return promise;
     }
 
-    private async _doSyncChannel(channelId: string): Promise<void> {
+    private async _doSyncChannel(
+        channelId: string,
+        opts?: { retentionResync?: boolean }
+    ): Promise<void> {
         const repo = this._checkpoints();
         const [rawMsgsCp, rawThreadsCp] = await Promise.all([
             repo.getCheckpoint(this._checkpointKeyMessages(channelId)),
@@ -920,6 +941,40 @@ export class ChannelService {
 
         if (members) {
             this.handleChannelMembersReplaced(channelId, members);
+        }
+
+        // ---- Tier retention (hide-not-delete) --------------------------
+        // The envelope stamps the viewer's history window when their plan
+        // limits it. When the window CHANGES relative to what this cache
+        // was built against (upgrade → server now returns older history
+        // our incremental delta didn't ask for; downgrade → cached rows
+        // are now out-of-window), the cached streams no longer match:
+        // evict everything (which also clears the since-checkpoints) and
+        // run one full resync. Guarded so a resync can't recurse.
+        const newRetention = msgsRes.retention ?? null;
+        const retentionVal = newRetention ? String(newRetention.days) : "unlimited";
+        if (!opts?.retentionResync) {
+            const retentionKey = this._checkpointKeyRetention(channelId);
+            const prevRaw = await repo.getCheckpoint(retentionKey).catch(() => null);
+            // No stored value on a cache that predates this feature is
+            // treated as "unlimited" — exactly right for the rollout:
+            // the first envelope that carries a window forces the evict
+            // that drops any cached out-of-window rows.
+            const prevVal = prevRaw || "unlimited";
+            const hadCheckpoint = Boolean(rawMsgsCp || rawThreadsCp);
+            if (prevVal !== retentionVal) {
+                await repo.setCheckpoint(retentionKey, retentionVal).catch(() => undefined);
+                if (hadCheckpoint) {
+                    await this._evictChannelMessages(channelId, "all");
+                    await this._doSyncChannel(channelId, { retentionResync: true });
+                    return;
+                }
+            }
+        }
+        if (newRetention) {
+            this._retentionByChannel.set(channelId, newRetention);
+        } else {
+            this._retentionByChannel.delete(channelId);
         }
 
         // force_full_reload: server is telling us our checkpoint is
@@ -966,6 +1021,11 @@ export class ChannelService {
             repo.setCheckpoint(this._checkpointKeyMessages(channelId), msgsRes.server_time),
             repo.setCheckpoint(this._checkpointKeyThreads(channelId), threadsRes.server_time),
         ]);
+
+        // Surface the (possibly first-seen) retention state to
+        // subscribers — the banner reads it off the snapshot, and the
+        // message writes above don't fire when a sync returns no rows.
+        this._notify();
     }
 
     /**

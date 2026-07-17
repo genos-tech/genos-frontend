@@ -12,6 +12,7 @@ import { MainChatPaneHeader } from "./components/headers/MainChatPaneHeader";
 import { ChatEditorSection } from "./components/shared/ChatEditorSection";
 import { ErrorSnackbar } from "./components/shared/ErrorSnackbar";
 import { MessageListRenderer } from "./components/shared/MessageListRenderer";
+import { RetentionBanner } from "./components/shared/RetentionBanner";
 import { useMessageManagement } from "./hooks/useMessageManagement";
 import { useReadStatusManagement } from "./hooks/useReadStatusManagement";
 import { useScrollManagement } from "./hooks/useScrollManagement";
@@ -214,6 +215,11 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                             useUISM={useUISM}
                         />
                     )}
+
+                    {/* Tier retention: "history limited" strip. Renders
+                        only when the server flagged hidden history for
+                        this channel (see RetentionBanner). */}
+                    <RetentionBanner channelId={useCM.currentMainChat?.chatId} />
 
                     {/* To-Do Pane for only myself */}
                     {isToDoVisible === true &&

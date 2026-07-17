@@ -725,6 +725,7 @@ export const useChatManagement = (
                 chatType,
                 flaggedMessageIds: snapshot.flagByMessageId,
                 messages: messagesSlice,
+                retentionCutoff: snapshot.retentionByChannel.get(channelId)?.cutoff,
             });
             setCurrentMainChat((prev) => {
                 // Guard against a chat-switch race: by the time the
@@ -768,6 +769,7 @@ export const useChatManagement = (
                 chatType,
                 flaggedMessageIds: snapshot.flagByMessageId,
                 messages: messagesSlice,
+                retentionCutoff: snapshot.retentionByChannel.get(channelId)?.cutoff,
             });
             setCurrentSubChat((prev) => {
                 if (!prev || prev.chatId !== channelId) return prev;

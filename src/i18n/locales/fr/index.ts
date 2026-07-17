@@ -337,6 +337,8 @@ export const fr: DeepPartial<Messages> = {
         },
     },
     chat: {
+        retentionBanner:
+            "Les messages de plus de {days} jours sont masqués avec votre forfait. Passez à un forfait supérieur pour voir tout l'historique.",
         composer: {
             placeholder: "Saisir un message…",
             sendTooltip: "Envoyer",

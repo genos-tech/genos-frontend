@@ -12,6 +12,7 @@ import { SubChatPaneHeader } from "./components/headers/SubChatPaneHeader";
 import { ChatEditorSection } from "./components/shared/ChatEditorSection";
 import { ErrorSnackbar } from "./components/shared/ErrorSnackbar";
 import { MessageListRenderer } from "./components/shared/MessageListRenderer";
+import { RetentionBanner } from "./components/shared/RetentionBanner";
 import { useMessageManagement } from "./hooks/useMessageManagement";
 import { useReadStatusManagement } from "./hooks/useReadStatusManagement";
 import { useScrollManagement } from "./hooks/useScrollManagement";
@@ -209,6 +210,10 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                     useTM={useTM}
                     useUISM={useUISM}
                 />
+
+                {/* Tier retention: "history limited" strip (see
+                    RetentionBanner). */}
+                <RetentionBanner channelId={useCM.currentSubChat?.chatId} />
 
                 {/* To-Do Pane for only myself */}
                 {isToDoVisible === true &&
