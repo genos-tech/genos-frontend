@@ -44,6 +44,7 @@ import { TaskCommentProps } from "../../types/tasks";
 import { resolveInsecureFileUrl } from "../../utils/downloadUtils";
 import { filterAndRankSuggestionItems } from "../../utils/suggestionRanking";
 import { EmojiPicker } from "../ui/emoji/EmojiPicker";
+import { CreateCustomEmojiSpec } from "./CustomEmoji";
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
 import {
@@ -142,6 +143,7 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
                 useCM
             ),
             mentionGroup: CreateMentionGroupSpec(),
+            customEmoji: CreateCustomEmojiSpec(),
             hashTask: CreateHashTaskSpec(),
             hashNote: CreateHashNoteSpec(),
             hashChat: CreateHashChatSpec(),

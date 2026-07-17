@@ -34,6 +34,7 @@ import { UIStateManagementState } from "../../hooks/common/useUIStateManagement"
 import { UserProps } from "../../types/admin";
 import { resolveInsecureFileUrl } from "../../utils/downloadUtils";
 import { filterAndRankSuggestionItems } from "../../utils/suggestionRanking";
+import { CreateCustomEmojiSpec } from "./CustomEmoji";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
 import {
     CreateHashChatSpec,
@@ -110,6 +111,7 @@ export const BnTodoPreview = (props: BnTodoPreviewProps) => {
                 useCM
             ),
             mentionGroup: CreateMentionGroupSpec(),
+            customEmoji: CreateCustomEmojiSpec(),
             hashTask: CreateHashTaskSpec(),
             hashNote: CreateHashNoteSpec(),
             hashChat: CreateHashChatSpec(),

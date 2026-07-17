@@ -56,6 +56,7 @@ import { FileSizeRejectionSnackbar } from "../ui/feedback/FileSizeRejectionSnack
 import { FileUploadOverlay, FileUploadStatusBadge } from "../ui/feedback/FileUploadProgress";
 import { useFileSizeGuard } from "../ui/feedback/useFileSizeGuard";
 import { useUploadCounter } from "../ui/feedback/useUploadCounter";
+import { CreateCustomEmojiSpec } from "./CustomEmoji";
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
 import {
@@ -166,6 +167,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                 useCM
             ),
             mentionGroup: CreateMentionGroupSpec(),
+            customEmoji: CreateCustomEmojiSpec(),
             hashTask: CreateHashTaskSpec(),
             hashNote: CreateHashNoteSpec(),
             hashChat: CreateHashChatSpec(),

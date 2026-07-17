@@ -58,6 +58,26 @@ describe("noteBlocksToMarkdown", () => {
         expect(md).toContain("#GEN-42 · Fix login");
     });
 
+    it("exports a customEmoji inline as its :shortcode:, not a prop dump", async () => {
+        // Without an explicit case the default branch would emit the
+        // first string prop — the name OR the URL, whichever the props
+        // object happens to order first.
+        const md = await noteBlocksToMarkdown([
+            {
+                type: "paragraph",
+                content: [
+                    { type: "text", text: "ship it ", styles: {} },
+                    {
+                        type: "customEmoji",
+                        props: { name: "party-blob", url: "https://x/media/p.gif" },
+                    },
+                ],
+            },
+        ]);
+        expect(md).toContain(":party-blob:");
+        expect(md).not.toContain("https://x/media/p.gif");
+    });
+
     it("degrades custom blocks (alert) to paragraphs", async () => {
         const md = await noteBlocksToMarkdown([
             {

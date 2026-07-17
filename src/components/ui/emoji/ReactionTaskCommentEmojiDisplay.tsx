@@ -9,6 +9,7 @@ import { GroupedReactionProps, ReactionProps } from "../../../types/common";
 import { TaskCommentProps } from "../../../types/tasks";
 import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
 import { AppTooltip } from "../AppTooltip";
+import { EmojiGlyph } from "./EmojiGlyph";
 
 export const groupEmojis = (reactions: ReactionProps[]): GroupedReactionProps[] => {
     const map = new Map<string, { count: number; senders: UserProps[] }>();
@@ -168,7 +169,7 @@ export const ReactionTaskCommentEmojiDisplay = (props: ReactionEmojiProps) => {
                         }
                         onClick={() => handleAddReaction(emoji)}
                     >
-                        {emoji}
+                        <EmojiGlyph emoji={emoji} />
                         {count}
                     </Chip>
                 </AppTooltip>
