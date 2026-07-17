@@ -231,6 +231,12 @@ export const es: DeepPartial<Messages> = {
                 "No se pudo conectar con el servicio de facturación. Inténtalo de nuevo.",
             billingReturnSuccess:
                 "¡Gracias! Tu suscripción está activa. Tu nuevo plan se aplicará en unos segundos.",
+            planRenews: "Se renueva el",
+            planEnds: "El plan termina el",
+            cancelScheduled:
+                "La cancelación está programada: tu plan sigue activo hasta esa fecha.",
+            pastDue:
+                "Hay un problema con el pago: actualiza tu método de pago en el portal de facturación.",
             billingReturnCancelled: "Pago cancelado — tu plan no ha cambiado.",
         },
         appearance: {

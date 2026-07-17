@@ -42,6 +42,11 @@ export const settings = {
         billingError: "Couldn't reach the billing service. Please try again.",
         billingReturnSuccess:
             "Thanks — your subscription is active! Your new plan applies within a few seconds.",
+        planRenews: "Renews on",
+        planEnds: "Plan ends on",
+        cancelScheduled: "Cancellation is scheduled — your plan stays active until this date.",
+        pastDue:
+            "There's a payment problem — please update your payment method in the billing portal.",
         billingReturnCancelled: "Checkout cancelled — your plan is unchanged.",
     },
     appearance: {

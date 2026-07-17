@@ -239,6 +239,10 @@ export const ja: DeepPartial<Messages> = {
             billingError: "請求サービスに接続できませんでした。もう一度お試しください。",
             billingReturnSuccess:
                 "ありがとうございます — サブスクリプションが有効になりました！新しいプランは数秒以内に反映されます。",
+            planRenews: "次回更新日",
+            planEnds: "プラン終了日",
+            cancelScheduled: "解約が予約されています。プランはこの日まで有効です。",
+            pastDue: "お支払いに問題があります。ポータルからお支払い方法を更新してください。",
             billingReturnCancelled:
                 "チェックアウトをキャンセルしました — プランは変更されていません。",
         },

@@ -231,6 +231,12 @@ export const fr: DeepPartial<Messages> = {
             billingError: "Impossible de joindre le service de facturation. Veuillez réessayer.",
             billingReturnSuccess:
                 "Merci — votre abonnement est actif ! Votre nouveau forfait s'applique dans quelques secondes.",
+            planRenews: "Renouvellement le",
+            planEnds: "Fin du forfait le",
+            cancelScheduled:
+                "L'annulation est programmée — votre forfait reste actif jusqu'à cette date.",
+            pastDue:
+                "Problème de paiement — mettez à jour votre moyen de paiement dans le portail de facturation.",
             billingReturnCancelled: "Paiement annulé — votre forfait est inchangé.",
         },
         appearance: {

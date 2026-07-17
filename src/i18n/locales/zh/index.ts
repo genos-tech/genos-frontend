@@ -225,6 +225,10 @@ export const zh: DeepPartial<Messages> = {
             upgradeHint: "付款由 Stripe 安全处理。",
             billingError: "无法连接账单服务，请重试。",
             billingReturnSuccess: "感谢您的订阅！新套餐将在几秒内生效。",
+            planRenews: "续订日期",
+            planEnds: "套餐结束日期",
+            cancelScheduled: "已安排取消——您的套餐在此日期前保持有效。",
+            pastDue: "付款出现问题——请在账单门户中更新您的付款方式。",
             billingReturnCancelled: "已取消结账 — 您的套餐未更改。",
         },
         appearance: {
