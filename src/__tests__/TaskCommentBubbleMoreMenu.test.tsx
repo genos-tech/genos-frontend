@@ -1,0 +1,127 @@
+// TaskCommentBubble — the hover toolbar is now just Edit + the ⋮ menu;
+// copy-link / wrap toggles / delete moved into the menu (MoreMenu).
+// Copy link writes `${origin}<commentLink>` and is hidden on mounts
+// that don't wire routing; Delete stays own-comments-only.
+
+import { CssVarsProvider } from "@mui/joy/styles";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { TaskCommentBubble } from "../features/tasks/components/contents/base/sub/TaskCommentBubble";
+import { ChatManagementState } from "../hooks/chats/useChatManagement";
+import { TeamManagementState } from "../hooks/common/useTeamManagement";
+import { UIStateManagementState } from "../hooks/common/useUIStateManagement";
+import { UserProps } from "../types/admin";
+import { TaskCommentProps } from "../types/tasks";
+
+// BnChatPreview transitively imports the BlockNote stack — stub it.
+vi.mock("../components/editors/bnChatPreview", () => ({
+    BnChatPreview: () => <div data-testid="bn-preview" />,
+}));
+
+// Socket-driven reaction strip and the emoji picker aren't under test.
+vi.mock("../components/ui/emoji/ReactionTaskCommentEmojiDisplay", () => ({
+    ReactionTaskCommentEmojiDisplay: () => <div data-testid="reactions" />,
+}));
+vi.mock("../components/ui/emoji/EmojiPicker", () => ({
+    EmojiPicker: () => null,
+}));
+
+// The confirm dialog owns the socket DELETE emit; here we only assert
+// the menu item opens it.
+vi.mock("../features/tasks/components/modals/ModalDeleteTaskComment", () => ({
+    ModalDeleteTaskComment: ({ open }: { open: boolean }) =>
+        open ? <div data-testid="delete-confirm-open" /> : null,
+}));
+
+vi.mock("../components/ui/avatars/UserAvatar", () => ({
+    UserAvatar: () => <div data-testid="avatar" />,
+}));
+
+const myself = { userId: "u1", teamId: "t1" } as UserProps;
+
+const makeComment = (overrides: Partial<TaskCommentProps> = {}): TaskCommentProps => ({
+    projectId: 7,
+    taskId: 42,
+    senderId: "u1",
+    senderName: "Me",
+    commentId: 3,
+    commentBody: [{ type: "paragraph", content: [{ type: "text", text: "hello" }] }],
+    tsSent: "2026-07-17T00:00:00Z",
+    tsUpdated: "2026-07-17T00:00:00Z",
+    isEdited: false,
+    ...overrides,
+});
+
+const renderBubble = (comment: TaskCommentProps, props: Partial<{ commentLink: string }> = {}) =>
+    render(
+        <CssVarsProvider>
+            <TaskCommentBubble
+                comment={comment}
+                myself={myself}
+                setEditTargetComment={vi.fn()}
+                setIsInEdit={vi.fn()}
+                setMyself={vi.fn()}
+                socket={null}
+                useCM={{} as unknown as ChatManagementState}
+                useTEM={{} as unknown as TeamManagementState}
+                useUISM={{} as unknown as UIStateManagementState}
+                {...props}
+            />
+        </CssVarsProvider>
+    );
+
+const openMoreMenu = () => fireEvent.click(screen.getByLabelText("More options"));
+
+describe("TaskCommentBubble — ⋮ more-options menu", () => {
+    beforeEach(() => vi.clearAllMocks());
+
+    it("copies the comment's absolute deep link", async () => {
+        const writeText = vi.fn().mockResolvedValue(undefined);
+        Object.defineProperty(navigator, "clipboard", {
+            configurable: true,
+            value: { writeText },
+        });
+
+        renderBubble(makeComment(), {
+            commentLink: "/workspace/tasks/project/7/task/42/comment/3",
+        });
+        openMoreMenu();
+        fireEvent.click(await screen.findByText("Copy comment link"));
+
+        await waitFor(() =>
+            expect(writeText).toHaveBeenCalledWith(
+                `${window.location.origin}/workspace/tasks/project/7/task/42/comment/3`
+            )
+        );
+    });
+
+    it("hides copy link when the mount wires no routing", async () => {
+        renderBubble(makeComment());
+        openMoreMenu();
+        await screen.findByText("Unwrap content");
+        expect(screen.queryByText("Copy comment link")).not.toBeInTheDocument();
+    });
+
+    it("opens the delete confirm from the menu on own comments only", async () => {
+        renderBubble(makeComment());
+        openMoreMenu();
+        fireEvent.click(await screen.findByText("Delete"));
+        expect(screen.getByTestId("delete-confirm-open")).toBeInTheDocument();
+    });
+
+    it("offers no delete on someone else's comment", async () => {
+        renderBubble(makeComment({ senderId: "u2", senderName: "Other" }));
+        openMoreMenu();
+        await screen.findByText("Unwrap content");
+        expect(screen.queryByText("Delete")).not.toBeInTheDocument();
+    });
+
+    it("flips the wrap toggle label once toggled", async () => {
+        renderBubble(makeComment());
+        openMoreMenu();
+        fireEvent.click(await screen.findByText("Unwrap content"));
+        openMoreMenu();
+        expect(await screen.findByText("Wrap content")).toBeInTheDocument();
+    });
+});

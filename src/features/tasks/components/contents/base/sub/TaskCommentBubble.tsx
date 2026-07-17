@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import CodeIcon from "@mui/icons-material/Code";
+import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import EditIcon from "@mui/icons-material/Edit";
 import WrapTextIcon from "@mui/icons-material/WrapText";
@@ -13,6 +14,7 @@ import { useResolvedUserName } from "../../../../../../components/ui/avatars/Ava
 import { UserAvatar } from "../../../../../../components/ui/avatars/UserAvatar";
 import { EmojiPicker } from "../../../../../../components/ui/emoji/EmojiPicker";
 import { ReactionTaskCommentEmojiDisplay } from "../../../../../../components/ui/emoji/ReactionTaskCommentEmojiDisplay";
+import { MoreMenu, MoreMenuItem } from "../../../../../../components/ui/MoreMenu";
 import { ChatManagementState } from "../../../../../../hooks/chats/useChatManagement";
 import { useBubbleStylePreference } from "../../../../../../hooks/common/useBubbleStylePreference";
 import { useDoubleClickTodoPreference } from "../../../../../../hooks/common/useDoubleClickTodoPreference";
@@ -62,6 +64,11 @@ type TaskCommentBubbleProps = {
      * but keeps the bubble reusable) get the original non-clickable
      * behaviour. */
     onCommentClick?: () => void;
+    /** App-relative deep-link path for this comment (same URL
+     * `onCommentClick` navigates to), threaded from `TaskCommentList`.
+     * Drives the more-menu's "Copy comment link" item; when absent the
+     * item is hidden (mount without routing wired). */
+    commentLink?: string;
     setTodoFromMessageBubble?: (
         todoFromMessageBubble: MessageProps | ThreadMessageProps | TaskCommentProps
     ) => void;
@@ -89,6 +96,7 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
         useUISM,
         isFocused = false,
         onCommentClick,
+        commentLink,
         setTodoFromMessageBubble,
         hostZIndex,
     } = props;
@@ -132,6 +140,11 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
     // preview, App.css drives the actual wrap/scroll behaviour.
     const [unwrapAll, setUnwrapAll] = useState<boolean>(false);
     const [unwrapCode, setUnwrapCode] = useState<boolean>(false);
+    // Keeps the hover toolbar mounted while the ⋮ menu's portal is open
+    // — the pointer leaves the bubble when it moves onto the dropdown,
+    // and unmounting the toolbar would tear the open menu down with it
+    // (same pattern as MessageBubble's isMoreMenuOpen).
+    const [isMoreMenuOpen, setIsMoreMenuOpen] = useState<boolean>(false);
     const previewWrapClassName = [unwrapAll && "bn-unwrap-all", unwrapCode && "bn-unwrap-code"]
         .filter(Boolean)
         .join(" ");
@@ -263,61 +276,6 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
         return null;
     }
 
-    // Shared button styling for the top-right cluster (wrap toggles +
-    // edit). Off = transparent neutral; on = accent-tinted background
-    // (matches the editor toolbars' `isSelected` styling for wrap).
-    const toggleButtonSx = (active: boolean) => ({
-        width: 28,
-        height: 28,
-        borderRadius: "8px",
-        transition: "all 0.15s ease",
-        color: active
-            ? isDark
-                ? "#a5b4fc"
-                : "#6366f1"
-            : isDark
-              ? "rgba(255,255,255,0.7)"
-              : "rgba(0,0,0,0.55)",
-        background: active
-            ? isDark
-                ? "rgba(99,102,241,0.20)"
-                : "rgba(99,102,241,0.10)"
-            : "transparent",
-        "&:hover": {
-            background: isDark ? "rgba(99,102,241,0.28)" : "rgba(99,102,241,0.15)",
-            color: isDark ? "#a5b4fc" : "#6366f1",
-        },
-    });
-
-    const wrapToggleButtons = (
-        <>
-            <AppTooltip title={unwrapAll ? "Wrap all content" : "Unwrap all content"}>
-                <IconButton
-                    size="sm"
-                    sx={toggleButtonSx(unwrapAll)}
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        setUnwrapAll(!unwrapAll);
-                    }}
-                >
-                    <WrapTextIcon sx={{ fontSize: 16 }} />
-                </IconButton>
-            </AppTooltip>
-            <AppTooltip title={unwrapCode ? "Wrap code blocks" : "Unwrap code blocks"}>
-                <IconButton
-                    size="sm"
-                    sx={toggleButtonSx(unwrapCode)}
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        setUnwrapCode(!unwrapCode);
-                    }}
-                >
-                    <CodeIcon sx={{ fontSize: 16 }} />
-                </IconButton>
-            </AppTooltip>
-        </>
-    );
-
     const editButton = (
         <AppTooltip title={t.tasks.comment.editTooltip}>
             <IconButton
@@ -345,38 +303,68 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
         </AppTooltip>
     );
 
-    // Own comments only. The button just opens the confirm dialog; the
-    // dialog owns the socket DELETE emit (mirroring how
-    // `ModalDeleteMessage` owns the chat-message delete), so no callback
-    // is threaded down from `TaskPreview`. The delete is a soft-delete
-    // server-side, and the `wsType: "task"` broadcast it triggers is
-    // what refreshes every mounted list (host preview, chat-thread
-    // Comments tab, modal) via the scoped `task-touched` bus.
-    const deleteButton = isSent ? (
-        <AppTooltip title={t.tasks.comment.deleteTooltip}>
-            <IconButton
-                size="sm"
-                sx={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: "8px",
-                    transition: "all 0.15s ease",
-                    color: isDark ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.55)",
-                    background: "transparent",
-                    "&:hover": {
-                        background: isDark ? "rgba(248,113,113,0.15)" : "rgba(239,68,68,0.1)",
-                        color: isDark ? "#f87171" : "#ef4444",
-                    },
-                }}
-                onClick={(e) => {
-                    e.stopPropagation();
-                    setOpenDeleteComment(true);
-                }}
-            >
-                <DeleteOutlineIcon sx={{ fontSize: 16 }} />
-            </IconButton>
-        </AppTooltip>
-    ) : null;
+    const handleCopyLinkClick = async () => {
+        if (!commentLink) return;
+        try {
+            await navigator.clipboard.writeText(`${window.location.origin}${commentLink}`);
+        } catch (err) {
+            console.error("Failed to copy link:", err);
+        }
+    };
+
+    // Everything except edit lives in the ⋮ menu to keep the hover
+    // toolbar down to two buttons. Delete stays own-comments-only; the
+    // menu item just opens the confirm dialog — the dialog owns the
+    // socket DELETE emit (mirroring how `ModalDeleteMessage` owns the
+    // chat-message delete), so no callback is threaded down from
+    // `TaskPreview`. The delete is a soft-delete server-side, and the
+    // `wsType: "task"` broadcast it triggers is what refreshes every
+    // mounted list (host preview, chat-thread Comments tab, modal) via
+    // the scoped `task-touched` bus.
+    // Keys sorted alphabetically (case-insensitive) per `sort-keys`.
+    const moreMenuItems: MoreMenuItem[] = [
+        {
+            icon: <ContentCopyRoundedIcon sx={{ fontSize: 18 }} />,
+            id: "copyLink",
+            label: t.tasks.comment.copyLink,
+            onClick: handleCopyLinkClick,
+            visible: !!commentLink,
+        },
+        {
+            active: unwrapAll,
+            icon: <WrapTextIcon sx={{ fontSize: 18 }} />,
+            id: "unwrapAll",
+            label: unwrapAll ? t.tasks.comment.wrapAll : t.tasks.comment.unwrapAll,
+            onClick: () => setUnwrapAll(!unwrapAll),
+        },
+        {
+            active: unwrapCode,
+            icon: <CodeIcon sx={{ fontSize: 18 }} />,
+            id: "unwrapCode",
+            label: unwrapCode ? t.tasks.comment.wrapCode : t.tasks.comment.unwrapCode,
+            onClick: () => setUnwrapCode(!unwrapCode),
+        },
+        {
+            danger: true,
+            icon: <DeleteOutlineIcon sx={{ fontSize: 18 }} />,
+            id: "delete",
+            label: t.tasks.comment.deleteTooltip,
+            onClick: () => setOpenDeleteComment(true),
+            visible: isSent,
+        },
+    ];
+
+    // The dropdown portals to document.body at zIndex 9999 — fine on
+    // page mounts, but a UrlLinkModal-hosted preview (10020) would
+    // cover it, so derive from the host's level when threaded down.
+    const moreMenu = (
+        <MoreMenu
+            items={moreMenuItems}
+            placement="bottom-end"
+            zIndex={hostZIndex !== undefined ? hostZIndex + 1 : undefined}
+            onOpenChange={setIsMoreMenuOpen}
+        />
+    );
 
     // Rendered in both layout branches (like the EmojiPicker) so the
     // dialog survives the hover toolbar unmounting when the pointer
@@ -487,7 +475,7 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
 
                 {deleteCommentModal}
 
-                {showUnderBarOption === true && (
+                {(showUnderBarOption || isMoreMenuOpen) && (
                     <Box
                         ref={toolbarRef}
                         sx={{
@@ -508,9 +496,8 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                         onDoubleClick={(e) => e.stopPropagation()}
                     >
                         <Stack alignItems="center" direction="row" spacing={0.25}>
-                            {wrapToggleButtons}
                             {editButton}
-                            {deleteButton}
+                            {moreMenu}
                         </Stack>
                     </Box>
                 )}
@@ -679,22 +666,24 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                         </Box>
                     </Stack>
 
-                    {/* Inline edit + wrap-toggle affordances, top-right
+                    {/* Inline edit + ⋮ more-menu affordances, top-right
                         of bubble. Both fade in with the hover toolbar
-                        so they don't add visual noise at rest. */}
+                        so they don't add visual noise at rest; kept
+                        interactive only while shown so the invisible
+                        buttons can't swallow clicks on the body. */}
                     <Box
                         sx={{
                             position: "absolute",
                             top: 8,
                             right: 8,
-                            opacity: showUnderBarOption ? 1 : 0,
+                            opacity: showUnderBarOption || isMoreMenuOpen ? 1 : 0,
+                            pointerEvents: showUnderBarOption || isMoreMenuOpen ? "auto" : "none",
                             transition: "opacity 0.15s ease",
                         }}
                     >
                         <Stack alignItems="center" direction="row" spacing={0.25}>
-                            {wrapToggleButtons}
                             {editButton}
-                            {deleteButton}
+                            {moreMenu}
                         </Stack>
                     </Box>
 
