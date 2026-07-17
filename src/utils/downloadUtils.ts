@@ -46,8 +46,13 @@ export const resolveInsecureFileUrl = (url: string): Promise<string> =>
 export const downloadFile = async (rawUrl: string, filename?: string): Promise<void> => {
     const url = upgradeInsecureUrl(rawUrl);
     try {
-        // Fetch the file as a blob to handle CORS and ensure proper download
-        const response = await fetch(url);
+        // Fetch the file as a blob to handle CORS and ensure proper download.
+        // `credentials: "include"` attaches the HttpOnly refresh cookie —
+        // the backend's /media/ routes require it for attachment paths
+        // (avatars stay public). Bare fetch() defaults to same-origin
+        // credentials, which sends nothing to the cross-origin API host
+        // and would 401 every attachment download.
+        const response = await fetch(url, { credentials: "include" });
         if (!response.ok) throw new Error("Network response was not ok");
 
         const blob = await response.blob();
