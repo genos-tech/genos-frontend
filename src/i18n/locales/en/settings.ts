@@ -47,6 +47,19 @@ export const settings = {
         cancelScheduled: "Cancellation is scheduled — your plan stays active until this date.",
         pastDue:
             "There's a payment problem — please update your payment method in the billing portal.",
+        plansHeading: "Plans & pricing",
+        plansSubheading:
+            "Every plan includes every feature — plans differ only in usage limits and history.",
+        freePrice: "Free",
+        perMonth: "/ month",
+        contactSales: "Contact sales",
+        contactUs: "Contact us",
+        currentPlan: "Current plan",
+        perDay: "{n} / day",
+        perMonthCount: "{n} / month",
+        premiumNote: "Daily caps for premium AI models also apply per plan.",
+        comparePlans: "Compare plans",
+        seePlans: "See plans",
         billingReturnCancelled: "Checkout cancelled — your plan is unchanged.",
     },
     appearance: {

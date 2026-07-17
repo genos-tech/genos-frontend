@@ -237,6 +237,19 @@ export const es: DeepPartial<Messages> = {
                 "La cancelación está programada: tu plan sigue activo hasta esa fecha.",
             pastDue:
                 "Hay un problema con el pago: actualiza tu método de pago en el portal de facturación.",
+            plansHeading: "Planes y precios",
+            plansSubheading:
+                "Todos los planes incluyen todas las funciones: solo cambian los límites de uso y el historial.",
+            freePrice: "Gratis",
+            perMonth: "/ mes",
+            contactSales: "Contactar ventas",
+            contactUs: "Contáctanos",
+            currentPlan: "Plan actual",
+            perDay: "{n} / día",
+            perMonthCount: "{n} / mes",
+            premiumNote: "Los modelos de IA premium también tienen límites diarios por plan.",
+            comparePlans: "Comparar planes",
+            seePlans: "Ver planes",
             billingReturnCancelled: "Pago cancelado — tu plan no ha cambiado.",
         },
         appearance: {

@@ -9,6 +9,7 @@
  */
 import { CssVarsProvider } from "@mui/joy/styles";
 import { render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { PlanUsageSection } from "../components/layout/settings/PlanUsageSection";
@@ -56,9 +57,11 @@ const sub = (over: Partial<BillingSubscription> = {}): BillingSubscription => ({
 
 const renderSection = () =>
     render(
-        <CssVarsProvider>
-            <PlanUsageSection />
-        </CssVarsProvider>
+        <MemoryRouter>
+            <CssVarsProvider>
+                <PlanUsageSection />
+            </CssVarsProvider>
+        </MemoryRouter>
     );
 
 describe("PlanUsageSection subscription row", () => {

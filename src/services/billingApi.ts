@@ -68,6 +68,50 @@ export async function openBillingPortal(accessToken: string): Promise<void> {
     window.location.assign(url);
 }
 
+export interface PlanPrice {
+    // Stripe's smallest-unit amount (JPY is zero-decimal: 1200 = ¥1,200).
+    amount: number | null;
+    currency: string;
+    interval: string;
+}
+
+export interface PlanTier {
+    tier: "free" | "pro" | "max" | "enterprise";
+    price: PlanPrice | null; // null = unavailable (contact-sales / Stripe dark)
+    purchasable: boolean;
+    contact_sales: boolean;
+    limits: {
+        llm_ask_daily: number | null;
+        web_search_daily: number | null;
+        task_create_monthly: number | null;
+        note_create_monthly: number | null;
+        message_retention_days: number | null;
+        upload_max_mb: number | null;
+    };
+}
+
+export interface BillingPlans {
+    billing_enabled: boolean;
+    tiers: PlanTier[];
+}
+
+/**
+ * The tier comparison for the plans page — limits served straight
+ * from the backend's enforcement table so the page can never drift
+ * from what the quota engine applies.
+ */
+export async function fetchBillingPlans(accessToken: string): Promise<BillingPlans | null> {
+    try {
+        const resp = await fetch(`${API_BASE}/billing/plans/`, {
+            headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        if (!resp.ok) return null;
+        return (await resp.json()) as BillingPlans;
+    } catch {
+        return null;
+    }
+}
+
 export interface BillingSubscription {
     // null = the subscription's price isn't mapped to a plan (env
     // misconfiguration server-side) — show the row, skip the plan name.
