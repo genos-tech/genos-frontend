@@ -182,6 +182,7 @@ export const notes = {
     },
     history: {
         chipTooltip: "View version history",
+        viewVersions: "View versions",
         chipSummary: "Edited by {name} · {time}",
         title: "Version history",
         ownerDescription:

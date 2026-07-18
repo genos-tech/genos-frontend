@@ -1290,6 +1290,7 @@ export const hi: DeepPartial<Messages> = {
         },
         history: {
             chipTooltip: "वर्शन हिस्ट्री देखें",
+            viewVersions: "वर्शन देखें",
             chipSummary: "{name} ने एडिट किया · {time}",
             title: "वर्शन हिस्ट्री",
             ownerDescription:

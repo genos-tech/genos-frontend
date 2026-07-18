@@ -1278,6 +1278,7 @@ export const ar: DeepPartial<Messages> = {
         },
         history: {
             chipTooltip: "عرض سجل الإصدارات",
+            viewVersions: "عرض الإصدارات",
             chipSummary: "حُرّر بواسطة {name} · {time}",
             title: "سجل الإصدارات",
             ownerDescription:

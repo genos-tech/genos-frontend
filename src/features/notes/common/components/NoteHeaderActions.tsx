@@ -355,23 +355,17 @@ export const NoteHeaderActions = ({
                 <Stack alignItems="center" direction="row" spacing={1}>
                     {/* Project Avatar with container. Tooltip names it as
                         the note's owning project; opening it (click) shows
-                        the project profile. */}
+                        the project profile. Shares `actionButtonStyle` with
+                        the Ask-AI / member buttons so the hover lift + glow
+                        matches the rest of the header row. */}
                     <AppTooltip title={t.notes.header.ownerProjectTooltip}>
                         <Box
                             sx={{
-                                p: 0.5,
-                                borderRadius: "10px",
-                                background: isDark
-                                    ? "rgba(124,58,237,0.1)"
-                                    : "rgba(124,58,237,0.06)",
-                                border: `1px solid ${isDark ? "rgba(124,58,237,0.2)" : "rgba(124,58,237,0.12)"}`,
-                                transition: "all 0.2s ease",
+                                ...actionButtonStyle,
                                 display: "inline-flex",
-                                "&:hover": {
-                                    background: isDark
-                                        ? "rgba(124,58,237,0.15)"
-                                        : "rgba(124,58,237,0.1)",
-                                },
+                                alignItems: "center",
+                                justifyContent: "center",
+                                p: 0.5,
                             }}
                         >
                             <ProjectAvatar
@@ -785,7 +779,7 @@ export const NoteHeaderActions = ({
                         // Hidden until the note has at least one saved
                         // version (matches the chip's own guard).
                         id: "versionHistory",
-                        label: t.notes.history.chipTooltip,
+                        label: t.notes.history.viewVersions,
                         icon: <HistoryRoundedIcon sx={{ fontSize: 18 }} />,
                         visible:
                             noteType === 2 &&

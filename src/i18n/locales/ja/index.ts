@@ -1386,6 +1386,7 @@ export const ja: DeepPartial<Messages> = {
         },
         history: {
             chipTooltip: "バージョン履歴を表示",
+            viewVersions: "バージョンを表示",
             chipSummary: "{name} が編集 ・ {time}",
             title: "バージョン履歴",
             ownerDescription:

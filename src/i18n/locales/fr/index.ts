@@ -1297,6 +1297,7 @@ export const fr: DeepPartial<Messages> = {
         },
         history: {
             chipTooltip: "Voir l'historique des versions",
+            viewVersions: "Voir les versions",
             chipSummary: "Modifié par {name} · {time}",
             title: "Historique des versions",
             ownerDescription:

@@ -1261,6 +1261,7 @@ export const zh: DeepPartial<Messages> = {
         },
         history: {
             chipTooltip: "查看版本历史",
+            viewVersions: "查看版本",
             chipSummary: "由 {name} 编辑 · {time}",
             title: "版本历史",
             ownerDescription: "选择一个版本以预览。恢复时会写入新版本，原历史得以保留。",
