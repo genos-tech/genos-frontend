@@ -92,7 +92,7 @@ describe("useSpotlight service filter → entity_types wire field", () => {
         }
     });
 
-    it("active chips scope the ask too (entityTypes on askAgentStream)", async () => {
+    it("filter chips never scope the ask (search-only)", async () => {
         vi.mocked(askAgentStream).mockImplementation(async (args) => {
             args.onDone("sess-1", "run-1");
         });
@@ -101,7 +101,9 @@ describe("useSpotlight service filter → entity_types wire field", () => {
         );
         act(() => {
             result.current.open();
+            // A mix of groundable + search-only chips.
             result.current.onToggleFilterService("task");
+            result.current.onToggleFilterService("answer");
         });
         act(() => {
             result.current.onAsk("which task first?");
@@ -109,55 +111,9 @@ describe("useSpotlight service filter → entity_types wire field", () => {
         await waitFor(() => {
             expect(askAgentStream).toHaveBeenCalledTimes(1);
         });
-        expect(vi.mocked(askAgentStream).mock.calls[0][0].entityTypes).toEqual([
-            "task",
-            "milestone",
-        ]);
-    });
-
-    it("an answers-only filter leaves the ask unscoped (grounding guard)", async () => {
-        vi.mocked(askAgentStream).mockImplementation(async (args) => {
-            args.onDone("sess-1", "run-1");
-        });
-        const { result } = renderHook(() =>
-            useSpotlight({ accessToken: "test-token", teamId: "team-1" })
-        );
-        act(() => {
-            result.current.open();
-            result.current.onToggleFilterService("answer");
-        });
-        act(() => {
-            result.current.onAsk("summarize");
-        });
-        await waitFor(() => {
-            expect(askAgentStream).toHaveBeenCalledTimes(1);
-        });
-        // "Genos answers" is search-only — the agent never grounds on it.
-        expect(vi.mocked(askAgentStream).mock.calls[0][0].entityTypes).toBeUndefined();
-    });
-
-    it("a mixed filter sends only groundable types to the ask", async () => {
-        vi.mocked(askAgentStream).mockImplementation(async (args) => {
-            args.onDone("sess-1", "run-1");
-        });
-        const { result } = renderHook(() =>
-            useSpotlight({ accessToken: "test-token", teamId: "team-1" })
-        );
-        act(() => {
-            result.current.open();
-            result.current.onToggleFilterService("task");
-            result.current.onToggleFilterService("answer");
-        });
-        act(() => {
-            result.current.onAsk("which task?");
-        });
-        await waitFor(() => {
-            expect(askAgentStream).toHaveBeenCalledTimes(1);
-        });
-        expect(vi.mocked(askAgentStream).mock.calls[0][0].entityTypes).toEqual([
-            "task",
-            "milestone",
-        ]);
+        // Search-only: the ask carries no entity_types, so Genos always
+        // answers from the full workspace regardless of active chips.
+        expect(vi.mocked(askAgentStream).mock.calls[0][0]).not.toHaveProperty("entityTypes");
     });
 
     it("asks without chips carry no entityTypes", async () => {
@@ -176,7 +132,7 @@ describe("useSpotlight service filter → entity_types wire field", () => {
         await waitFor(() => {
             expect(askAgentStream).toHaveBeenCalledTimes(1);
         });
-        expect(vi.mocked(askAgentStream).mock.calls[0][0].entityTypes).toBeUndefined();
+        expect(vi.mocked(askAgentStream).mock.calls[0][0]).not.toHaveProperty("entityTypes");
     });
 
     it("resets the selection when the overlay closes", async () => {

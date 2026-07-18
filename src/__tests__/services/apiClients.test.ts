@@ -719,7 +719,6 @@ describe("agentApi.askAgentStream", () => {
             query: "hi",
             teamId: "team1",
             accessToken: "tok",
-            entityTypes: ["chat", "task"],
         });
 
         const [url, init] = fetchMock.mock.calls[0];
@@ -733,9 +732,10 @@ describe("agentApi.askAgentStream", () => {
         expect(body).toEqual({
             query: "hi",
             team_id: "team1",
-            entity_types: ["chat", "task"],
         });
-        // Optional fields must be absent.
+        // Optional fields must be absent — the filter is search-only, so
+        // the ask never carries entity_types.
+        expect(body).not.toHaveProperty("entity_types");
         expect(body).not.toHaveProperty("session_id");
         expect(body).not.toHaveProperty("allow_web_search");
         expect(body).not.toHaveProperty("thread_context");
