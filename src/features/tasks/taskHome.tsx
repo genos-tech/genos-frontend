@@ -84,6 +84,7 @@ export const TaskHome = (props: TaskHomeProps) => {
 
                 {isMobile ? (
                     <MobileTaskHome
+                        isActiveRoute={isActiveRoute}
                         myself={myself}
                         setMyself={setMyself}
                         setOpenJoinProject={setOpenJoinProject}
@@ -99,6 +100,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                     />
                 ) : (
                     <TaskHomeLayout
+                        isActiveRoute={isActiveRoute}
                         myself={myself}
                         setMyself={setMyself}
                         setOpenJoinProject={setOpenJoinProject}

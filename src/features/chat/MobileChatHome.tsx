@@ -44,6 +44,9 @@ type MobileChatHomeProps = {
     setIsToDoVisible: (v: boolean) => void;
     useTG: UseTodoGroupsState;
     setTodoFromMessageBubble: (todo: MessageProps | ThreadMessageProps | TaskCommentProps) => void;
+    // Gates the create-task overlay: only the ACTIVE keep-alive Home
+    // may mount CreateTaskForm (see the overlay comment below).
+    isActiveRoute: boolean;
 };
 
 // Full-screen overlay shell for flag-driven side panes that have no URL
@@ -118,6 +121,7 @@ export const MobileChatHome = (props: MobileChatHomeProps) => {
         setIsToDoVisible,
         useTG,
         setTodoFromMessageBubble,
+        isActiveRoute,
     } = props;
 
     // URL-driven pane selection. Sidebar is the default; main chat takes
@@ -206,8 +210,12 @@ export const MobileChatHome = (props: MobileChatHomeProps) => {
                 </Box>
             )}
 
-            {/* Flag-driven overlays (no URL representation) */}
-            {useTM.isCreatingTask.flag === true && (
+            {/* Flag-driven overlays (no URL representation). Create-task
+                is gated on isActiveRoute: only the ACTIVE keep-alive
+                Home may mount CreateTaskForm (each mount POSTs its own
+                empty task and writes the shared `initialEmptyTaskId`,
+                so a hidden second instance races the visible one). */}
+            {useTM.isCreatingTask.flag === true && isActiveRoute && (
                 <MobileOverlay
                     onClose={() => useTM.setIsCreatingTask((prev) => ({ ...prev, flag: false }))}
                 >

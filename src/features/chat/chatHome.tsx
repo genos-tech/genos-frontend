@@ -337,6 +337,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                     {isMobile ? (
                         <MobileChatHome
                             chatRouting={chatRouting}
+                            isActiveRoute={isActiveRoute}
                             currentMainChatId={currentMainChatId}
                             currentThreadChatId={currentThreadChatId}
                             currentWindowHeight={height}
@@ -483,8 +484,14 @@ export const ChatHome = (props: ChatHomeProps) => {
                                 </>
                             )}
 
-                            {/* Create Task Pane */}
-                            {useTM.isCreatingTask.flag === true && (
+                            {/* Create Task Pane. Gated on isActiveRoute
+                                because the Homes are keep-alive: without
+                                it this hidden pane would mount a second
+                                CreateTaskForm while the task page shows
+                                its own, and the two instances race over
+                                the shared `initialEmptyTaskId` — the
+                                loser hangs on "Preparing task…". */}
+                            {useTM.isCreatingTask.flag === true && isActiveRoute && (
                                 <>
                                     <ResizeHandle key="create-task-resize-handle" />
                                     <CreateTaskPanel

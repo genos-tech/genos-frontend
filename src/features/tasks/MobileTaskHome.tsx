@@ -47,6 +47,11 @@ type MobileTaskHomeProps = {
     useCM: ChatManagementState;
     useUISM: UIStateManagementState;
     socket: Socket | null;
+    // Only the ACTIVE keep-alive Home may mount CreateTaskForm — each
+    // mount POSTs its own empty task and writes the shared
+    // `useTM.initialEmptyTaskId`, so a hidden second instance races the
+    // visible one and the loser hangs on "Preparing task…".
+    isActiveRoute: boolean;
     onCloseTaskHome: () => void;
     setOpenJoinProject: (value: {
         flag: boolean;
@@ -117,6 +122,7 @@ export const MobileTaskHome = (props: MobileTaskHomeProps) => {
         useCM,
         useUISM,
         socket,
+        isActiveRoute,
         onCloseTaskHome,
         setOpenJoinProject,
     } = props;
@@ -377,7 +383,7 @@ export const MobileTaskHome = (props: MobileTaskHomeProps) => {
                     </MobileOverlay>
                 )}
 
-            {useTM.isCreatingTask.flag === true && (
+            {useTM.isCreatingTask.flag === true && isActiveRoute && (
                 <MobileOverlay
                     onClose={() => useTM.setIsCreatingTask((prev) => ({ ...prev, flag: false }))}
                 >
