@@ -1259,6 +1259,7 @@ export const fr: DeepPartial<Messages> = {
             ownerLabel: "Propriétaire : {name}",
             ownerLabelWithMore: "Propriétaire : {name} · {count} de plus",
             membersLabel: "Membres",
+            ownerProjectTooltip: "Projet propriétaire",
         },
         autocomplete: {
             searchAria: "Rechercher",
@@ -1296,6 +1297,7 @@ export const fr: DeepPartial<Messages> = {
         },
         history: {
             chipTooltip: "Voir l'historique des versions",
+            viewVersions: "Voir les versions",
             chipSummary: "Modifié par {name} · {time}",
             title: "Historique des versions",
             ownerDescription:

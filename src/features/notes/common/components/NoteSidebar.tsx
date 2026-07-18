@@ -3,6 +3,7 @@ import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import CreateNewFolderRoundedIcon from "@mui/icons-material/CreateNewFolderRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import DriveFileMoveRoundedIcon from "@mui/icons-material/DriveFileMoveRounded";
+import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import MarkChatUnreadRoundedIcon from "@mui/icons-material/MarkChatUnreadRounded";
@@ -82,6 +83,14 @@ interface TaskGroup {
 interface MilestoneGroup {
     milestoneId: number;
     milestoneTitle: string;
+    // The milestone's backing task id + human-readable id, so the folder
+    // sub-label can show the milestone's display id (e.g. "GEN-12") the
+    // same way a task folder shows its own — rather than the literal word
+    // "Milestone". Captured opportunistically from whichever child note
+    // reveals the backing task (a direct milestone note, or a task note
+    // whose parent IS the backing task). Null when no note reveals it.
+    backingTaskId: number | null;
+    displayId: string | null;
     directNotes: TaskNoteMetaTreeNode[];
     tasks: TaskGroup[];
 }
@@ -137,7 +146,9 @@ function groupTaskNotes(notes: TaskNoteMetaTreeNode[], t: Messages): ProjectGrou
     const getMilestoneGroup = (
         pg: ProjectGroup,
         milestoneId: number,
-        milestoneTitle: string
+        milestoneTitle: string,
+        backingTaskId?: number | null,
+        displayId?: string | null
     ): MilestoneGroup => {
         let mg = pg.milestones.find((m) => m.milestoneId === milestoneId);
         if (!mg) {
@@ -145,10 +156,21 @@ function groupTaskNotes(notes: TaskNoteMetaTreeNode[], t: Messages): ProjectGrou
                 milestoneId,
                 milestoneTitle:
                     milestoneTitle || fmt(t.notes.defaults.milestoneFallback, { milestoneId }),
+                backingTaskId: backingTaskId ?? null,
+                displayId: displayId ?? null,
                 directNotes: [],
                 tasks: [],
             };
             pg.milestones.push(mg);
+        } else {
+            // Upgrade in place once a note reveals the backing task —
+            // the first note in the group may not have carried it.
+            if (mg.backingTaskId == null && backingTaskId != null) {
+                mg.backingTaskId = backingTaskId;
+            }
+            if (mg.displayId == null && displayId != null) {
+                mg.displayId = displayId;
+            }
         }
         return mg;
     };
@@ -202,20 +224,41 @@ function groupTaskNotes(notes: TaskNoteMetaTreeNode[], t: Messages): ProjectGrou
     for (const note of notes) {
         const pg = getProjectGroup(note);
 
+        // Whether the note's task hangs directly off the milestone's
+        // backing task — computed up front so both the milestone-group
+        // lookup (to learn the backing task's display id) and the L2/L3
+        // placement below can read it.
+        const parentIsMilestoneBacking = note.parentTaskIsMilestone === true;
+
         // Case 1: the note's task IS a milestone's backing task. The note
         // attaches to the milestone level itself (`directNotes`), not to
-        // any task folder.
+        // any task folder. This note directly names the backing task, so
+        // pass its id/displayId to seed the milestone folder's sub-label.
         if (note.isMilestone === true && note.milestoneId != null) {
-            const mg = getMilestoneGroup(pg, note.milestoneId, note.milestoneTitle ?? "");
+            const mg = getMilestoneGroup(
+                pg,
+                note.milestoneId,
+                note.milestoneTitle ?? "",
+                note.taskId,
+                note.displayId ?? null
+            );
             mg.directNotes.push(note);
             continue;
         }
 
         // Choose the bucket of L2 tasks: inside a milestone or "loose"
-        // tasks directly under the project.
+        // tasks directly under the project. When the note's parent IS the
+        // milestone backing task, its `parentTask*` fields describe that
+        // backing task — the milestone's own display id.
         let bucketTasks: TaskGroup[];
         if (note.milestoneId != null) {
-            const mg = getMilestoneGroup(pg, note.milestoneId, note.milestoneTitle ?? "");
+            const mg = getMilestoneGroup(
+                pg,
+                note.milestoneId,
+                note.milestoneTitle ?? "",
+                parentIsMilestoneBacking ? (note.parentTaskId ?? null) : null,
+                parentIsMilestoneBacking ? (note.parentTaskDisplayId ?? null) : null
+            );
             bucketTasks = mg.tasks;
         } else {
             bucketTasks = pg.looseTasks;
@@ -228,7 +271,6 @@ function groupTaskNotes(notes: TaskNoteMetaTreeNode[], t: Messages): ProjectGrou
         //       note's task should sit directly underneath the milestone
         //       (not as L3 inside a duplicate "Task N" folder that points
         //       at the same task the milestone already represents).
-        const parentIsMilestoneBacking = note.parentTaskIsMilestone === true;
         if (note.parentTaskId == null || parentIsMilestoneBacking) {
             const tg = findOrCreateTaskGroup(
                 bucketTasks,
@@ -730,8 +772,8 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             droppableId={taskContainerId(projectId, taskGroup.taskId)}
             droppableKind={2}
             groupKey={`${keyPrefix}-task-${taskGroup.taskId}`}
-            subLabel={taskGroup.taskTitle}
-            groupLabel={formatTaskDisplayId({
+            groupLabel={taskGroup.taskTitle}
+            subLabel={formatTaskDisplayId({
                 taskId: taskGroup.taskId,
                 displayId: taskGroup.displayId,
             })}
@@ -755,8 +797,8 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                     droppableId={taskContainerId(projectId, subGroup.taskId)}
                     droppableKind={2}
                     groupKey={`${keyPrefix}-task-${taskGroup.taskId}-sub-${subGroup.taskId}`}
-                    subLabel={subGroup.taskTitle}
-                    groupLabel={formatTaskDisplayId({
+                    groupLabel={subGroup.taskTitle}
+                    subLabel={formatTaskDisplayId({
                         taskId: subGroup.taskId,
                         displayId: subGroup.displayId,
                     })}
@@ -798,8 +840,21 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                             <GroupedNoteSection
                                 key={milestoneKey}
                                 groupKey={milestoneKey}
-                                groupLabel={`🚩 ${milestoneGroup.milestoneTitle}`}
-                                subLabel={t.notes.sidebar.milestoneLabel}
+                                groupLabel={milestoneGroup.milestoneTitle}
+                                // Same "<title> <display-id>" shape a task
+                                // folder uses; the flag icon marks it as a
+                                // milestone (matching the task page). Falls
+                                // back to no sub-label when no note revealed
+                                // the milestone's backing task id.
+                                subLabel={formatTaskDisplayId({
+                                    taskId: milestoneGroup.backingTaskId,
+                                    displayId: milestoneGroup.displayId,
+                                })}
+                                leadingIcon={
+                                    <FlagRoundedIcon
+                                        sx={{ color: "#f97316", flexShrink: 0, fontSize: 14 }}
+                                    />
+                                }
                                 defaultExpanded={milestoneGroupContainsNote(
                                     milestoneGroup,
                                     activeNoteId

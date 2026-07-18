@@ -4,14 +4,10 @@ import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import { Stack } from "@mui/joy";
 
-import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
-import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { useTranslation } from "../../../../i18n";
-import { UserProps } from "../../../../types/admin";
 import { buildTaskNoteContextCrumbs, TaskNoteCrumbKind } from "../../../../utils/note";
 import { ContextCrumb, NoteBreadcrumbs } from "../../common/components/NoteBreadcrumbs";
-import { NoteHistoryChip } from "../../common/components/NoteHistoryChip";
 
 // Per-level glyphs for the Project → Milestone → Task container chain.
 const TASK_CRUMB_ICON: Record<TaskNoteCrumbKind, ReactNode> = {
@@ -22,21 +18,9 @@ const TASK_CRUMB_ICON: Record<TaskNoteCrumbKind, ReactNode> = {
 
 interface TaskNoteHeaderProps {
     useNM: NoteManagementState;
-    myself: UserProps;
-    setMyself: (me: UserProps) => void;
-    socket: any;
-    useCM: ChatManagementState;
-    useUISM: UIStateManagementState;
 }
 
-export const TaskNoteHeader = ({
-    useNM,
-    myself,
-    setMyself,
-    socket,
-    useCM,
-    useUISM,
-}: TaskNoteHeaderProps) => {
+export const TaskNoteHeader = ({ useNM }: TaskNoteHeaderProps) => {
     const { t } = useTranslation();
 
     // Container ancestry of the open task note, prepended to the note
@@ -64,16 +48,8 @@ export const TaskNoteHeader = ({
                 noteChain={useNM.currentTaskNoteChain}
                 onNodeClick={(noteId) => useNM.loadNote(2, noteId, -1)}
             />
-            <NoteHistoryChip
-                myself={myself}
-                noteId={useNM.currentTaskNote?.noteId ?? 0}
-                noteType={2}
-                setMyself={setMyself}
-                socket={socket}
-                useCM={useCM}
-                useNM={useNM}
-                useUISM={useUISM}
-            />
+            {/* Version history moved to the header's ⋮ (More) menu — see
+                NoteHeaderActions. */}
         </Stack>
     );
 };

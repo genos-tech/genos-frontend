@@ -1241,6 +1241,7 @@ export const ar: DeepPartial<Messages> = {
             ownerLabel: "المالك: {name}",
             ownerLabelWithMore: "المالك: {name} · {count} آخرون",
             membersLabel: "الأعضاء",
+            ownerProjectTooltip: "المشروع المالك",
         },
         autocomplete: {
             searchAria: "بحث",
@@ -1277,6 +1278,7 @@ export const ar: DeepPartial<Messages> = {
         },
         history: {
             chipTooltip: "عرض سجل الإصدارات",
+            viewVersions: "عرض الإصدارات",
             chipSummary: "حُرّر بواسطة {name} · {time}",
             title: "سجل الإصدارات",
             ownerDescription:

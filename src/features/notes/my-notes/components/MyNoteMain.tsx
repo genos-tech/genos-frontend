@@ -157,14 +157,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                             mb: "5px",
                         }}
                     >
-                        <MyNoteHeader
-                            myself={myself}
-                            setMyself={setMyself}
-                            socket={socket}
-                            useCM={useCM}
-                            useNM={useNM}
-                            useUISM={useUISM}
-                        />
+                        <MyNoteHeader useNM={useNM} />
 
                         <NoteHeaderActions
                             currentTask={undefined}

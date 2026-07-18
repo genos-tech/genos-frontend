@@ -1226,6 +1226,7 @@ export const zh: DeepPartial<Messages> = {
             ownerLabel: "所有者：{name}",
             ownerLabelWithMore: "所有者：{name} · 还有 {count} 人",
             membersLabel: "成员",
+            ownerProjectTooltip: "所属项目",
         },
         autocomplete: {
             searchAria: "搜索",
@@ -1260,6 +1261,7 @@ export const zh: DeepPartial<Messages> = {
         },
         history: {
             chipTooltip: "查看版本历史",
+            viewVersions: "查看版本",
             chipSummary: "由 {name} 编辑 · {time}",
             title: "版本历史",
             ownerDescription: "选择一个版本以预览。恢复时会写入新版本，原历史得以保留。",

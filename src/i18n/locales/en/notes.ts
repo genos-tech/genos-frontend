@@ -135,6 +135,7 @@ export const notes = {
         ownerLabel: "Owner: {name}",
         ownerLabelWithMore: "Owner: {name} · {count} more",
         membersLabel: "Members",
+        ownerProjectTooltip: "Owner project",
     },
     importMd: {
         heading: "Import Markdown",
@@ -181,6 +182,7 @@ export const notes = {
     },
     history: {
         chipTooltip: "View version history",
+        viewVersions: "View versions",
         chipSummary: "Edited by {name} · {time}",
         title: "Version history",
         ownerDescription:

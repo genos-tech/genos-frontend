@@ -1832,8 +1832,18 @@ export const useNoteManagement = (
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [tabsApi.activeTabId]);
 
-    // Refresh note role members whenever the active note changes so the
-    // header's avatar strip and Share button see fresh data.
+    // Refresh note role members + versions whenever the active note
+    // changes so the header's avatar strip / Share button and the ⋮
+    // "View versions" item see fresh data.
+    //
+    // Depends on the RESOLVED note id, not just `activeTabId`: on a page
+    // refresh the restored `activeTabId` is set a tick before `tabs`
+    // populate, so `activeTab` (a `tabs.find(...)`) is momentarily null.
+    // Keying on `activeTabId` alone, this effect ran once against that
+    // null, cleared members/versions, and never re-fired (the id never
+    // changed once the tab resolved) — so version history stayed empty
+    // until the user switched tabs and back. `activeTab?.noteId` flips
+    // from undefined to the real id when the tab resolves, re-running us.
     useEffect(() => {
         const active = tabsApi.activeTab;
         if (!active) {
@@ -1844,7 +1854,7 @@ export const useNoteManagement = (
         loadNoteMembers(nt, active.noteId);
         loadNoteVersionsFor(nt, active.noteId);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [tabsApi.activeTabId]);
+    }, [tabsApi.activeTabId, tabsApi.activeTab?.noteId]);
 
     // Keep the legacy `tabItems`/`selectedTabIndex` mirrors in sync with
     // the new tabsApi state so any unmigrated consumer reads a coherent

@@ -13,6 +13,10 @@ interface GroupedNoteSectionProps {
     subLabel?: string;
     children: ReactNode;
     defaultExpanded?: boolean;
+    // Replaces the default open/closed folder glyph for this row. Used
+    // by milestone folders to show the same FlagRounded icon the task
+    // page uses. Callers that omit it keep the folder icon.
+    leadingIcon?: ReactNode;
     // When set, the header row becomes a sidebar-DnD drop target for
     // this container (drop a note onto the task/chat folder to
     // re-anchor it). Only NoteSidebar passes these — the component
@@ -30,6 +34,7 @@ function GroupedNoteSectionComponent({
     defaultExpanded = false,
     droppableId,
     droppableKind,
+    leadingIcon,
 }: GroupedNoteSectionProps) {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
@@ -87,14 +92,17 @@ function GroupedNoteSectionComponent({
 
             {/* Folder Icon — purple, and swaps open/closed on expand, to
                 match the my-note folder tree (MyNoteFolderTree) so task-note
-                and chat-note groups read as the same kind of folder. */}
-            <FolderIcon
-                sx={{
-                    fontSize: 14,
-                    color: isDark ? "#a78bfa" : "#7c3aed",
-                    flexShrink: 0,
-                }}
-            />
+                and chat-note groups read as the same kind of folder. A
+                `leadingIcon` (milestone flag) overrides it when supplied. */}
+            {leadingIcon ?? (
+                <FolderIcon
+                    sx={{
+                        fontSize: 14,
+                        color: isDark ? "#a78bfa" : "#7c3aed",
+                        flexShrink: 0,
+                    }}
+                />
+            )}
 
             <ListItemContent sx={{ minWidth: 0 }}>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>

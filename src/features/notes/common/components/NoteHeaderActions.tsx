@@ -8,6 +8,7 @@ import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import DriveFileMoveRoundedIcon from "@mui/icons-material/DriveFileMoveRounded";
 import FileDownloadRoundedIcon from "@mui/icons-material/FileDownloadRounded";
 import FileUploadRoundedIcon from "@mui/icons-material/FileUploadRounded";
+import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import NoteAddRoundedIcon from "@mui/icons-material/NoteAddRounded";
 import NotificationsActiveRoundedIcon from "@mui/icons-material/NotificationsActiveRounded";
 import NotificationsOffRoundedIcon from "@mui/icons-material/NotificationsOffRounded";
@@ -42,6 +43,7 @@ import { loadSpecificNote } from "../services/loadSpecificNote";
 import { downloadMarkdown, noteBlocksToMarkdown } from "../services/noteMarkdown";
 import { getMyNoteRoleId, NOTE_ROLE_OWNER } from "../utils/noteRoles";
 import { ImportMarkdownContext, ModalImportMarkdown } from "./ModalImportMarkdown";
+import { ModalNoteHistory } from "./ModalNoteHistory";
 import { ModalNoteSharing } from "./ModalNoteSharing";
 
 interface NoteHeaderActionsProps {
@@ -128,6 +130,10 @@ export const NoteHeaderActions = ({
     const overflowCount = Math.max(members.length - MAX_AVATARS_INLINE, 0);
 
     const [shareOpen, setShareOpen] = useState(false);
+    // Version-history modal. Used to live in a header chip
+    // (NoteHistoryChip in TaskNoteHeader); now opened from the ⋮ menu for
+    // task notes so the header stays uncluttered.
+    const [historyOpen, setHistoryOpen] = useState(false);
     // "Move to folder…" picker for personal notes (keyboard/mobile path
     // — the sidebar row menu is the pointer path).
     const [moveToFolderOpen, setMoveToFolderOpen] = useState(false);
@@ -347,31 +353,33 @@ export const NoteHeaderActions = ({
             {/* Task Notes: Project Avatar + Task Info Chips */}
             {noteType === 2 && !isInTaskPage && currentTask && currentTask.id && pmChat && (
                 <Stack alignItems="center" direction="row" spacing={1}>
-                    {/* Project Avatar with container */}
-                    <Box
-                        sx={{
-                            p: 0.5,
-                            borderRadius: "10px",
-                            background: isDark ? "rgba(124,58,237,0.1)" : "rgba(124,58,237,0.06)",
-                            border: `1px solid ${isDark ? "rgba(124,58,237,0.2)" : "rgba(124,58,237,0.12)"}`,
-                            transition: "all 0.2s ease",
-                            "&:hover": {
-                                background: isDark
-                                    ? "rgba(124,58,237,0.15)"
-                                    : "rgba(124,58,237,0.1)",
-                            },
-                        }}
-                    >
-                        <ProjectAvatar
-                            myself={myself}
-                            pmChat={pmChat}
-                            setMyself={setMyself}
-                            socket={socket}
-                            useCM={useCM}
-                            useTEM={useTEM}
-                            useUISM={useUISM}
-                        />
-                    </Box>
+                    {/* Project Avatar with container. Tooltip names it as
+                        the note's owning project; opening it (click) shows
+                        the project profile. Shares `actionButtonStyle` with
+                        the Ask-AI / member buttons so the hover lift + glow
+                        matches the rest of the header row. */}
+                    <AppTooltip title={t.notes.header.ownerProjectTooltip}>
+                        <Box
+                            sx={{
+                                ...actionButtonStyle,
+                                display: "inline-flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                p: 0.5,
+                            }}
+                        >
+                            <ProjectAvatar
+                                avatarSize={28}
+                                myself={myself}
+                                pmChat={pmChat}
+                                setMyself={setMyself}
+                                socket={socket}
+                                useCM={useCM}
+                                useTEM={useTEM}
+                                useUISM={useUISM}
+                            />
+                        </Box>
+                    </AppTooltip>
 
                     {/*
                         Unified Task pill — replaces the previously-isolated
@@ -765,6 +773,17 @@ export const NoteHeaderActions = ({
                         },
                     },
                     {
+                        // Version history — replaces the header chip that
+                        // used to sit in each note header (my / task).
+                        // Hidden until the note has at least one saved
+                        // version (matches the chip's own guard).
+                        id: "versionHistory",
+                        label: t.notes.history.viewVersions,
+                        icon: <HistoryRoundedIcon sx={{ fontSize: 18 }} />,
+                        visible: activeNoteId != null && useNM.currentNoteVersions.length > 0,
+                        onClick: () => setHistoryOpen(true),
+                    },
+                    {
                         id: "newNote",
                         label: t.notes.header.newNote,
                         icon: <NoteAddRoundedIcon sx={{ fontSize: 18 }} />,
@@ -911,6 +930,24 @@ export const NoteHeaderActions = ({
                         />
                     </IconButton>
                 </Tooltip>
+            )}
+
+            {/* Version-history modal — opened from the ⋮ menu (the chip
+                that used to open it was removed from the my / task note
+                headers). */}
+            {activeNoteId != null && (
+                <ModalNoteHistory
+                    myself={myself}
+                    noteId={activeNoteId}
+                    noteType={normalizedNoteType ?? noteType}
+                    open={historyOpen}
+                    setMyself={setMyself}
+                    socket={socket}
+                    useCM={useCM}
+                    useNM={useNM}
+                    useUISM={useUISM}
+                    onClose={() => setHistoryOpen(false)}
+                />
             )}
 
             {/* Share modal */}

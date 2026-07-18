@@ -202,16 +202,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                             </Box>
                         )}
 
-                        {isInTaskPage === false && (
-                            <TaskNoteHeader
-                                myself={myself}
-                                setMyself={setMyself}
-                                socket={socket}
-                                useCM={useCM}
-                                useNM={useNM}
-                                useUISM={useUISM}
-                            />
-                        )}
+                        {isInTaskPage === false && <TaskNoteHeader useNM={useNM} />}
 
                         <NoteHeaderActions
                             currentTask={currentTask}
