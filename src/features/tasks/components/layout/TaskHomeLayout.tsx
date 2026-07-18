@@ -40,6 +40,13 @@ interface TaskHomeLayoutProps {
     useCM: ChatManagementState;
     useUISM: UIStateManagementState;
     socket: Socket | null;
+    // True when the tasks pane is the visible keep-alive Home. The
+    // create-task panel must only mount in the ACTIVE home: every
+    // CreateTaskForm mount POSTs its own empty task and writes the
+    // shared `useTM.initialEmptyTaskId`, so two live instances (this
+    // one + ChatHome's hidden CreateTaskPanel) race over it and the
+    // loser sits on "Preparing task…" forever.
+    isActiveRoute: boolean;
 
     // Header props
     onCreateProject: () => void;
@@ -66,6 +73,7 @@ export const TaskHomeLayout = ({
     useCM,
     useUISM,
     socket,
+    isActiveRoute,
     onCreateProject,
     onCreateTag,
     onDeleteProject,
@@ -422,7 +430,7 @@ export const TaskHomeLayout = ({
                             useTM.currentPreviewTaskId !== -1 ||
                             useTM.currentPreviewKind === "milestone") &&
                         renderTaskPreviewPanel()}
-                    {useTM.isCreatingTask.flag && renderCreateTaskPanel()}
+                    {useTM.isCreatingTask.flag && isActiveRoute && renderCreateTaskPanel()}
                     {useNM.isTaskNoteVisible &&
                         useNM.currentTaskNoteChain &&
                         renderTaskNotePanel()}
