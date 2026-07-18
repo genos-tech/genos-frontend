@@ -71,7 +71,7 @@ export const tasks = {
 
     // Sidebar / search box on the tasks sidebar.
     sidebar: {
-        searchPlaceholder: "Search tasks...",
+        searchPlaceholder: "Search tasks (closed & deleted excluded)...",
         searchAriaLabel: "Search Tasks",
         recents: "Recents",
         projects: "Projects",

@@ -719,7 +719,7 @@ export const ja: DeepPartial<Messages> = {
             youSuffix: "（自分）",
         },
         sidebar: {
-            searchPlaceholder: "タスクを検索…",
+            searchPlaceholder: "タスクを検索(完了・削除済みを除く)…",
             searchAriaLabel: "タスクを検索",
             recents: "最近の項目",
             projects: "プロジェクト",

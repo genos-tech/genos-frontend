@@ -676,7 +676,7 @@ export const ar: DeepPartial<Messages> = {
             youSuffix: "(أنت)",
         },
         sidebar: {
-            searchPlaceholder: "ابحث في المهام...",
+            searchPlaceholder: "ابحث في المهام (باستثناء المغلقة والمحذوفة)...",
             searchAriaLabel: "البحث في المهام",
             recents: "الأخيرة",
             projects: "المشاريع",

@@ -679,7 +679,7 @@ export const hi: DeepPartial<Messages> = {
             youSuffix: "(आप)",
         },
         sidebar: {
-            searchPlaceholder: "टास्क खोजें…",
+            searchPlaceholder: "टास्क खोजें (बंद और हटाए गए को छोड़कर)…",
             searchAriaLabel: "टास्क खोजें",
             recents: "हाल के",
             projects: "प्रोजेक्ट",

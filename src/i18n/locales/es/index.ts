@@ -680,7 +680,7 @@ export const es: DeepPartial<Messages> = {
             youSuffix: "(Tú)",
         },
         sidebar: {
-            searchPlaceholder: "Buscar tareas…",
+            searchPlaceholder: "Buscar tareas (sin cerradas ni eliminadas)…",
             searchAriaLabel: "Buscar tareas",
             recents: "Recientes",
             projects: "Proyectos",
