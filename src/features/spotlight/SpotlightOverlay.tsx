@@ -861,6 +861,18 @@ export const SpotlightOverlay = ({
                             borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
                         }}
                     >
+                        <Typography
+                            level="body-xs"
+                            sx={{
+                                fontWeight: 700,
+                                mr: 0.25,
+                                whiteSpace: "nowrap",
+                                color: isDark ? DARK_TEXT_SOFT : undefined,
+                                opacity: isDark ? 1 : 0.6,
+                            }}
+                        >
+                            {t.spotlight.filter.label}
+                        </Typography>
                         {SPOTLIGHT_FILTER_SERVICES.map((service) => {
                             const active = filterServices.includes(service);
                             return (

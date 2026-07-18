@@ -31,6 +31,7 @@ export const spotlight = {
     },
     filter: {
         ariaLabel: "Filter results by service",
+        label: "Filters",
         chat: "Chats",
         task: "Tasks",
         note: "Notes",

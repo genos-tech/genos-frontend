@@ -156,6 +156,8 @@ describe("SpotlightOverlay filter chips", () => {
         const props = overlayProps();
         renderOverlay(props);
 
+        // The row leads with a "Filters" text label.
+        expect(screen.getByText("Filters")).toBeTruthy();
         // The chip label span is pointer-events: none in Joy — the
         // clickable surface is the ChipAction button, which takes its
         // accessible name from the label.
@@ -174,6 +176,7 @@ describe("SpotlightOverlay filter chips", () => {
         props.ask = { ...EMPTY_ASK_STATE, isStreaming: true, askedQuery: "why?" };
         renderOverlay(props);
 
+        expect(screen.queryByText("Filters")).toBeNull();
         expect(screen.queryByText("Chats")).toBeNull();
         expect(screen.queryByText("Tasks")).toBeNull();
         expect(screen.queryByText("Notes")).toBeNull();

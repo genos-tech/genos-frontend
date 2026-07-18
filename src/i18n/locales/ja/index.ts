@@ -1488,6 +1488,7 @@ export const ja: DeepPartial<Messages> = {
         },
         filter: {
             ariaLabel: "サービスで結果を絞り込む",
+            label: "絞り込み",
             chat: "チャット",
             task: "タスク",
             note: "ノート",
