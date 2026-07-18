@@ -29,6 +29,14 @@ export const spotlight = {
         initial: "Start typing to search across chats, tasks, and notes.",
         noMatches: "No matches yet — try different keywords.",
     },
+    filter: {
+        ariaLabel: "Filter results by service",
+        label: "Filters",
+        chat: "Chats",
+        task: "Tasks",
+        note: "Notes",
+        todo: "Todos",
+    },
     mentions: {
         ariaLabel: "Mention suggestions",
     },

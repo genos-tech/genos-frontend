@@ -56,6 +56,11 @@ import {
     type ToolEvent,
 } from "../agentQA";
 import { emitTasksBulkChanged, TASK_WRITE_TOOLS } from "../tasks/services/taskEvents";
+import {
+    entityTypesForFilter,
+    toggleFilterService,
+    type SpotlightFilterService,
+} from "./spotlightFilters";
 import type { SpotlightResult } from "./types";
 
 // Re-exported so existing consumers that import these types from
@@ -115,6 +120,12 @@ export interface UseSpotlightReturn {
     results: SpotlightResult[];
     isLoading: boolean;
     error: string | null;
+    // ----- Search-mode service filter (chips under the input box) -----
+    // Empty = no filter (backend default: everything). Toggling while
+    // results are on screen re-runs the search immediately (no typing
+    // debounce). Reset when the overlay closes.
+    filterServices: SpotlightFilterService[];
+    onToggleFilterService: (service: SpotlightFilterService) => void;
     onAsk: (overrideQuery?: string, mentions?: AgentMentionRef[]) => void;
     onApprove: () => void;
     onReject: () => void;
@@ -162,6 +173,8 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
     const [results, setResults] = useState<SpotlightResult[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    // Service filter chips (search mode only). Empty = all services.
+    const [filterServices, setFilterServices] = useState<SpotlightFilterService[]>([]);
     const [ask, setAsk] = useState<AskState>(EMPTY_ASK_STATE);
     const [turns, setTurns] = useState<CompletedTurn[]>([]);
     const [dailyUsage, setDailyUsage] = useState<AgentUsage | null>(null);
@@ -185,6 +198,10 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
     // Used to abort in-flight searches when the query changes or the
     // overlay closes.
     const abortRef = useRef<AbortController | null>(null);
+    // Last query the search effect ran for. Lets the effect tell "the
+    // user typed" (debounce) apart from "same query, different filter"
+    // (fire immediately — a chip click should feel instant).
+    const lastSearchedQueryRef = useRef<string | null>(null);
     // Separate abort handle for the Ask stream so a new search doesn't
     // cancel an in-progress answer.
     const askAbortRef = useRef<AbortController | null>(null);
@@ -300,6 +317,10 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
         setResults([]);
         setIsLoading(false);
         setError(null);
+        // Filter chips are transient like the query — a fresh open
+        // starts unfiltered rather than silently remembering a narrow
+        // scope from last time.
+        setFilterServices([]);
     }, [isOpen]);
 
     // ---- Persist conversation to localStorage on turns / sessionId change. ----
@@ -339,6 +360,7 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
             // Empty query: clear out any previous results immediately.
             abortRef.current?.abort();
             abortRef.current = null;
+            lastSearchedQueryRef.current = null;
             setResults([]);
             setIsLoading(false);
             setError(null);
@@ -348,6 +370,16 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
             setError(t.spotlight.errors.noTeam);
             return;
         }
+
+        // Debounce only while the query itself is changing (typing).
+        // A re-run with the same query — a filter-chip toggle — fires
+        // immediately so narrowing feels like a click, not a pause.
+        const delay = trimmed === lastSearchedQueryRef.current ? 0 : DEBOUNCE_MS;
+        lastSearchedQueryRef.current = trimmed;
+        // Selected services → entity_types; undefined (spread away)
+        // when no chips are active so the request stays byte-identical
+        // to the unfiltered wire format.
+        const entityTypes = entityTypesForFilter(filterServices);
 
         // Start a fresh request; supersede any in-flight one.
         abortRef.current?.abort();
@@ -377,6 +409,7 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
                 min_score_ratio: RESULT_MIN_SCORE_RATIO,
                 min_score: RESULT_MIN_SCORE,
                 use_vector: false,
+                ...(entityTypes ? { entity_types: entityTypes } : {}),
                 accessToken,
                 signal: controller.signal,
             })
@@ -399,6 +432,7 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
                     min_score_ratio: RESULT_MIN_SCORE_RATIO,
                     min_score: RESULT_MIN_SCORE,
                     use_vector: true,
+                    ...(entityTypes ? { entity_types: entityTypes } : {}),
                     accessToken,
                     signal: controller.signal,
                 });
@@ -419,13 +453,20 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
             } finally {
                 if (!controller.signal.aborted) setIsLoading(false);
             }
-        }, DEBOUNCE_MS);
+        }, delay);
 
         return () => {
             window.clearTimeout(timer);
             controller.abort();
         };
-    }, [query, isOpen, teamId, accessToken, t]);
+    }, [query, isOpen, teamId, accessToken, t, filterServices]);
+
+    // Chip toggle for the overlay's filter row. Selection order is
+    // preserved (pure helper); the search effect above re-fires with
+    // zero delay because the query hasn't changed.
+    const onToggleFilterService = useCallback((service: SpotlightFilterService) => {
+        setFilterServices((prev) => toggleFilterService(prev, service));
+    }, []);
 
     const open = useCallback(() => setIsOpen(true), []);
     const close = useCallback(() => setIsOpen(false), []);
@@ -955,6 +996,8 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
         results,
         isLoading,
         error,
+        filterServices,
+        onToggleFilterService,
         onAsk,
         onApprove,
         onReject,

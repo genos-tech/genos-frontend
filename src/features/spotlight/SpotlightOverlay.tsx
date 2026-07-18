@@ -81,6 +81,7 @@ import {
     type CompletedTurn,
     type ToolEvent,
 } from "../agentQA";
+import { SPOTLIGHT_FILTER_SERVICES, type SpotlightFilterService } from "./spotlightFilters";
 import {
     badgeFor,
     entitySubtitle,
@@ -100,6 +101,11 @@ interface Props {
     results: SpotlightResult[];
     isLoading: boolean;
     error: string | null;
+    // Search-mode service filter chips (under the input box). Hidden in
+    // agent mode — once the user asks Genos, the conversation panel owns
+    // the surface and results filtering is meaningless.
+    filterServices: SpotlightFilterService[];
+    onToggleFilterService: (service: SpotlightFilterService) => void;
     onSelect: (r: SpotlightResult) => void;
     // Inline citations AND source chips in the agent answer open a
     // quick-look preview (existing UrlLinkModal) on top of Spotlight
@@ -169,6 +175,17 @@ const CHIPS_INITIAL = 4;
 const DARK_TEXT_MEDIUM = "#cebfeb";
 const DARK_TEXT_SOFT = "#a89bbf";
 
+// Icons for the search-mode service filter chips. Reuses the same
+// icon-per-entity mapping as the agent answer's source chips
+// (`_chipIcon` below) so "chat" looks like chat everywhere in the
+// overlay.
+const FILTER_CHIP_ICON: Record<SpotlightFilterService, React.ReactNode> = {
+    chat: <ChatBubbleOutlineRoundedIcon sx={{ fontSize: 14 }} />,
+    task: <AssignmentRoundedIcon sx={{ fontSize: 14 }} />,
+    note: <StickyNote2RoundedIcon sx={{ fontSize: 14 }} />,
+    todo: <TaskAltRoundedIcon sx={{ fontSize: 14 }} />,
+};
+
 export const SpotlightOverlay = ({
     isOpen,
     onClose,
@@ -177,6 +194,8 @@ export const SpotlightOverlay = ({
     results,
     isLoading,
     error,
+    filterServices,
+    onToggleFilterService,
     onSelect,
     onPreview,
     onAsk,
@@ -585,12 +604,12 @@ export const SpotlightOverlay = ({
                                     ? { color: DARK_TEXT_SOFT, opacity: 1 }
                                     : { opacity: 0.6 },
                             }}
+                            onClick={syncMentionCaret}
+                            onKeyUp={syncMentionCaret}
                             onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
                                 handleInputChange(e.target.value);
                                 mention.setCaret(e.target.selectionStart ?? e.target.value.length);
                             }}
-                            onClick={syncMentionCaret}
-                            onKeyUp={syncMentionCaret}
                             onKeyDown={(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
                                 // Mention-picker precedence: while the @/#
                                 // dropdown is open it owns Arrow / Enter /
@@ -817,6 +836,74 @@ export const SpotlightOverlay = ({
                                 <SettingsRoundedIcon sx={{ fontSize: { xs: 18, sm: 20 } }} />
                             </IconButton>
                         </AppTooltip>
+                    </Box>
+                )}
+
+                {/* Service filter chips — search mode ONLY. The moment an
+                    ask starts (inAgentMode), the conversation panel owns
+                    the surface and the chips disappear; "New conversation"
+                    brings them back with the search view. An empty
+                    selection means "everything" (backend default); active
+                    chips narrow the search to those services and re-fire
+                    it immediately. */}
+                {!inAgentMode && (
+                    <Box
+                        aria-label={t.spotlight.filter.ariaLabel}
+                        role="group"
+                        sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            flexWrap: "wrap",
+                            gap: 0.75,
+                            px: { xs: 1, sm: 2 },
+                            py: 0.75,
+                            borderBottom: "1px solid",
+                            borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
+                        }}
+                    >
+                        <Typography
+                            level="body-xs"
+                            sx={{
+                                fontWeight: 700,
+                                mr: 0.25,
+                                whiteSpace: "nowrap",
+                                color: isDark ? DARK_TEXT_SOFT : undefined,
+                                opacity: isDark ? 1 : 0.6,
+                            }}
+                        >
+                            {t.spotlight.filter.label}
+                        </Typography>
+                        {SPOTLIGHT_FILTER_SERVICES.map((service) => {
+                            const active = filterServices.includes(service);
+                            return (
+                                <Chip
+                                    key={service}
+                                    color={active ? "primary" : "neutral"}
+                                    size="sm"
+                                    startDecorator={FILTER_CHIP_ICON[service]}
+                                    variant={active ? "solid" : "soft"}
+                                    slotProps={{
+                                        action: { "aria-pressed": active },
+                                    }}
+                                    sx={{
+                                        "--Chip-minHeight": "26px",
+                                        fontWeight: 600,
+                                        // Soft neutral chips vanish against the
+                                        // translucent dark sheet — give inactive
+                                        // ones an explicit bg + readable text.
+                                        ...(isDark && !active
+                                            ? {
+                                                  color: DARK_TEXT_MEDIUM,
+                                                  backgroundColor: "rgba(255,255,255,0.07)",
+                                              }
+                                            : {}),
+                                    }}
+                                    onClick={() => onToggleFilterService(service)}
+                                >
+                                    {t.spotlight.filter[service]}
+                                </Chip>
+                            );
+                        })}
                     </Box>
                 )}
 
