@@ -10,8 +10,12 @@ import { AllChatProps } from "../../../../types/chat";
  * untagged rows never pay the extra height and Virtuoso reflows at most
  * once (when the bundle lands).
  *
- * Layout: up to 3 chips + a "+N" overflow chip, single 18px line,
- * left-padded to align under the title (past the 40px avatar column).
+ * Rendered by `ChatListItemTitle` as the sub-name line — the same slot
+ * a DM row uses for the partner's custom status — so a tagged GM row is
+ * exactly as tall as a DM row with a status, instead of adding its own
+ * full-width row. Layout: up to 3 chips + a "+N" overflow chip on a
+ * single 16px line; when the row shows a lock icon the line is indented
+ * to stay aligned with the name (mirrors the custom-status indent).
  */
 
 const MAX_ROW_CHIPS = 3;
@@ -42,7 +46,9 @@ export const ChatListItemTags = ({ chat }: { chat: AllChatProps }) => {
                 flexWrap: "nowrap",
                 gap: 0.5,
                 overflow: "hidden",
-                pl: 4.5,
+                // Align with the name when the lock icon indents it,
+                // exactly like the custom-status line in the title.
+                pl: chat.isPrivate ? 2.25 : 0,
             }}
         >
             {shown.map((tag) => (
@@ -53,13 +59,14 @@ export const ChatListItemTags = ({ chat }: { chat: AllChatProps }) => {
                         background: isDark ? `${tag.color}20` : `${tag.color}18`,
                         border: "1px solid",
                         borderColor: `${tag.color}35`,
-                        borderRadius: "5px",
+                        borderRadius: "4px",
                         color: tag.color,
                         display: "inline-flex",
-                        fontSize: "0.62rem",
+                        fontSize: "0.6rem",
                         fontWeight: 600,
-                        height: 18,
+                        height: 16,
                         letterSpacing: "0.02em",
+                        lineHeight: 1,
                         maxWidth: 110,
                         overflow: "hidden",
                         px: 0.75,
@@ -76,13 +83,14 @@ export const ChatListItemTags = ({ chat }: { chat: AllChatProps }) => {
                         alignItems: "center",
                         border: "1px solid",
                         borderColor: isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.1)",
-                        borderRadius: "5px",
+                        borderRadius: "4px",
                         color: isDark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.5)",
                         display: "inline-flex",
                         flexShrink: 0,
-                        fontSize: "0.62rem",
+                        fontSize: "0.6rem",
                         fontWeight: 600,
-                        height: 18,
+                        height: 16,
+                        lineHeight: 1,
                         px: 0.75,
                         whiteSpace: "nowrap",
                     }}
