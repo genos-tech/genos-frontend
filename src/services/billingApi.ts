@@ -112,6 +112,23 @@ export async function fetchBillingPlans(accessToken: string): Promise<BillingPla
     }
 }
 
+/**
+ * No-auth variant for the public marketing pricing page (`/plans`),
+ * which renders while logged out. Same endpoint, now AllowAny — see
+ * BillingPlansView. The payload is user-agnostic (tier limits + public
+ * prices). Returns null on any failure so the page can show a clean
+ * "couldn't load pricing" state rather than crashing.
+ */
+export async function fetchPublicBillingPlans(): Promise<BillingPlans | null> {
+    try {
+        const resp = await fetch(`${API_BASE}/billing/plans/`);
+        if (!resp.ok) return null;
+        return (await resp.json()) as BillingPlans;
+    } catch {
+        return null;
+    }
+}
+
 export interface TeamBillingTeam {
     team_id: string;
     team_name: string;

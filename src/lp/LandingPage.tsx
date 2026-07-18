@@ -712,14 +712,12 @@ export default function GenosLandingPage() {
                             >
                                 {t.nav.ai}
                             </a>
-                            <a
+                            <Link
                                 className="transition hover:text-violet-700 dark:hover:text-white"
-                                href={`${APP_URL}/workspace/plans`}
-                                rel="noreferrer"
-                                target="_blank"
+                                to="/plans"
                             >
                                 {t.nav.plans}
-                            </a>
+                            </Link>
                             <a
                                 className="transition hover:text-violet-700 dark:hover:text-white"
                                 href="#contact"
@@ -1300,14 +1298,12 @@ export default function GenosLandingPage() {
                         </div>
                         <div className="flex flex-wrap items-center gap-4 text-sm font-semibold text-slate-500 dark:text-slate-400">
                             <span>© {year} Genos</span>
-                            <a
+                            <Link
                                 className="transition hover:text-violet-700 dark:hover:text-white"
-                                href={`${APP_URL}/workspace/plans`}
-                                rel="noreferrer"
-                                target="_blank"
+                                to="/plans"
                             >
                                 {t.nav.plans}
-                            </a>
+                            </Link>
                             <Link
                                 className="transition hover:text-violet-700 dark:hover:text-white"
                                 to="/legal"

@@ -24,6 +24,7 @@ import GenosDemoPage from "./lp/DemoPage";
 import GenosFeaturesPage from "./lp/FeaturesPage";
 import GenosLandingPage from "./lp/LandingPage";
 import GenosLegalPage from "./lp/LegalPage";
+import GenosPlansPage from "./lp/PlansPage";
 import GenosPrivacyPage from "./lp/PrivacyPage";
 
 // Initialize PostHog once, before React mounts. No-ops when
@@ -67,6 +68,11 @@ createRoot(document.getElementById("root")!).render(
                 prompts). Same isolation as /features-guide: renders its own
                 I18nProvider internally, no auth stack. */}
             <Route element={<GenosDemoPage />} path="/demo-guide" />
+
+            {/* Public pricing / plans comparison. Reachable from the landing
+                page without signing in: renders its own I18nProvider and reads
+                the public billing/plans endpoint (no auth stack, no guards). */}
+            <Route element={<GenosPlansPage />} path="/plans" />
 
             {/* 特定商取引法に基づく表記 — the legal disclosure Japanese law
                 requires of paid online services, incl. the cancellation /
