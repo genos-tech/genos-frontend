@@ -32,6 +32,10 @@ export const TeamEmojiPanel = ({ myself, teamMemberProfiles }: Props) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const { teamEmoji, loading, create, remove } = useTeamEmojiContext();
+    // The catalog includes the server-seeded global defaults; this
+    // panel manages only the team's own uploads, so defaults stay
+    // hidden here (they're still available in pickers/reactions).
+    const ownTeamEmoji = teamEmoji.filter((e) => !e.isDefault);
 
     const [name, setName] = useState("");
     const [file, setFile] = useState<File | null>(null);
@@ -155,7 +159,7 @@ export const TeamEmojiPanel = ({ myself, teamMemberProfiles }: Props) => {
             </Sheet>
 
             {/* Emoji grid */}
-            {teamEmoji.length === 0 ? (
+            {ownTeamEmoji.length === 0 ? (
                 <Typography level="body-sm" sx={{ opacity: 0.7, textAlign: "center", py: 2 }}>
                     {loading ? "Loading…" : "No custom emoji yet. Add the first one!"}
                 </Typography>
@@ -167,7 +171,7 @@ export const TeamEmojiPanel = ({ myself, teamMemberProfiles }: Props) => {
                         gap: 1,
                     }}
                 >
-                    {teamEmoji.map((e) => {
+                    {ownTeamEmoji.map((e) => {
                         const uploader = e.createdBy ? teamMemberProfiles[e.createdBy] : undefined;
                         const isMine = e.createdBy === myself.userId;
                         return (

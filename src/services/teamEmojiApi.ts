@@ -9,6 +9,12 @@ export interface TeamEmoji {
     url: string;
     createdBy: string | null;
     tsCreatedAt: string | null;
+    // True for the server-seeded global defaults (seed_default_emoji).
+    // They work everywhere (picker, `:` suggestions, reactions) but the
+    // Settings management panel hides them — defaults aren't
+    // user-managed custom emoji. Optional so a frontend deployed ahead
+    // of the API just behaves as before.
+    isDefault?: boolean;
 }
 
 const handle = (e: unknown, label: string): null => {
