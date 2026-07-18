@@ -249,6 +249,9 @@ export type SearchTeamTasksResponse = {
     taskId: number;
     displayId?: string | null;
     title: string;
+    // True for milestone backing rows — the search results and the
+    // sidebar Recents list render a flag icon for these.
+    isMilestone?: boolean;
     status: TaskStatusProps;
     tsUpdated: string;
 };

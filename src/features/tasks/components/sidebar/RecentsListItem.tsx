@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import FolderOpenIcon from "@mui/icons-material/FolderOpen";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
@@ -248,6 +249,19 @@ export const RecentsListItem = (props: RecentsListItemProps) => {
                                                     }
                                                 }}
                                             >
+                                                {/* Milestone rows get the flag
+                                                    glyph on the far left — same
+                                                    orange as the header's "New
+                                                    Milestone" menu item. */}
+                                                {task.isMilestone === true && (
+                                                    <FlagRoundedIcon
+                                                        sx={{
+                                                            color: "#f97316",
+                                                            flexShrink: 0,
+                                                            fontSize: 14,
+                                                        }}
+                                                    />
+                                                )}
                                                 <CopyableTaskIdChip
                                                     key={`task-id-chip-${task.taskId}`}
                                                     color="neutral"
