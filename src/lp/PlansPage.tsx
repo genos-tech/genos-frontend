@@ -118,13 +118,13 @@ function PlansPageInner() {
         const highlighted = tier.tier === "pro";
         return (
             <Link
+                to="/signup"
                 className={cn(
                     "mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-black transition hover:-translate-y-0.5",
                     highlighted
                         ? "bg-violet-600 text-white shadow-lg shadow-violet-600/25 hover:bg-violet-700"
                         : "border border-violet-200 bg-white text-violet-700 shadow-sm hover:border-violet-300 hover:bg-violet-50 dark:border-white/10 dark:bg-white/10 dark:text-violet-100 dark:hover:bg-white/15"
                 )}
-                to="/signup"
             >
                 {p.startForFree}
                 <ArrowRight className="h-4 w-4" />
@@ -246,14 +246,14 @@ function PlansPageInner() {
                                         <motion.div
                                             key={tier.tier}
                                             animate={{ opacity: 1, y: 0 }}
+                                            initial={{ opacity: 0, y: 18 }}
+                                            transition={{ duration: 0.5, delay: index * 0.06 }}
                                             className={cn(
                                                 "relative flex flex-col rounded-[1.75rem] border bg-white p-6 shadow-lg shadow-violet-900/5 dark:bg-white/5",
                                                 highlighted
                                                     ? "border-violet-500 ring-1 ring-violet-500 dark:border-violet-400/60"
                                                     : "border-violet-100 dark:border-white/10"
                                             )}
-                                            initial={{ opacity: 0, y: 18 }}
-                                            transition={{ duration: 0.5, delay: index * 0.06 }}
                                         >
                                             {highlighted && (
                                                 <span className="absolute -top-3 left-6 inline-flex items-center rounded-full bg-violet-600 px-3 py-1 text-[11px] font-black uppercase tracking-[0.14em] text-white shadow-sm">
