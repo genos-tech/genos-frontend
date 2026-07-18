@@ -179,4 +179,23 @@ describe("TeamEmojiPanel", () => {
         fireEvent.click(screen.getByTestId("delete-team-emoji-party-blob"));
         expect(remove).toHaveBeenCalledWith(1);
     });
+
+    it("hides server-seeded defaults — they aren't user-managed custom emoji", () => {
+        renderPanel({
+            teamEmoji: [
+                {
+                    ...partyBlob,
+                    emojiId: 3,
+                    name: "default-parrot",
+                    createdBy: null,
+                    isDefault: true,
+                },
+            ],
+        });
+
+        // The default is invisible here, so the panel shows its empty
+        // state (defaults still work in pickers/reactions).
+        expect(screen.queryByText(":default-parrot:")).toBeNull();
+        expect(screen.getByText(/No custom emoji yet/)).toBeInTheDocument();
+    });
 });
