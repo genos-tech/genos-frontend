@@ -1,3 +1,4 @@
+import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import {
     Autocomplete,
@@ -75,6 +76,14 @@ export const TaskSidebarSearchBox = (props: TaskSidebarSearchBoxProps) => {
                 <AutocompleteOption {...props} key={`ac-taskhome-search-task-${option.taskId}`}>
                     <ListItemContent sx={{ fontSize: "sm" }}>
                         <Stack alignItems="center" direction="row" spacing={1}>
+                            {/* Milestone rows get the flag glyph on the far
+                                left — same orange as the header's "New
+                                Milestone" menu item. */}
+                            {option.isMilestone === true && (
+                                <FlagRoundedIcon
+                                    sx={{ color: "#f97316", flexShrink: 0, fontSize: 16 }}
+                                />
+                            )}
                             <CopyableTaskIdChip
                                 key={`ac-taskhome-search-task-id-chip-${option.taskId}`}
                                 size="sm"
