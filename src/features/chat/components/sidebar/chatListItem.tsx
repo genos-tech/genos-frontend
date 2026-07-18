@@ -13,10 +13,12 @@ import { useColorScheme } from "@mui/joy/styles";
 import { useAuth } from "../../../../context/AuthContext";
 import { useChatListItem } from "../../hooks/useChatListItem";
 import { ModalAddMembers } from "../modals/ModalAddMembers";
+import { ModalAssignGMTags } from "../modals/ModalAssignGMTags";
 import { ChatListItemProps } from "./ChatListItem.types";
 import { ChatListItemActions } from "./ChatListItemActions";
 import { ChatListItemAvatar } from "./ChatListItemAvatar";
 import { ChatListItemMessage } from "./ChatListItemMessage";
+import { ChatListItemTags } from "./ChatListItemTags";
 import { ChatListItemTitle } from "./ChatListItemTitle";
 
 export const ChatListItem = memo((props: ChatListItemProps) => {
@@ -40,6 +42,7 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
     const isDark = mode === "dark";
     const [isHovered, setIsHovered] = useState(false);
     const [openAddMembers, setOpenAddMembers] = useState(false);
+    const [openAssignTags, setOpenAssignTags] = useState(false);
 
     const {
         isPinned,
@@ -74,6 +77,11 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
     const handleAddMembersClick = (event: React.MouseEvent) => {
         event.stopPropagation();
         setOpenAddMembers(true);
+    };
+
+    const handleManageTagsClick = (event: React.MouseEvent) => {
+        event.stopPropagation();
+        setOpenAssignTags(true);
     };
 
     // PUNCH LIST (v3 chatId migration): `lastReadMessageId` is `string`
@@ -208,15 +216,25 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
                                 onPinClick={handlePinClick}
                                 onSplitClick={handleSplitClick}
                                 onAddMembersClick={handleAddMembersClick}
+                                onManageTagsClick={handleManageTagsClick}
                                 setIsToDoVisible={setIsToDoVisible}
                                 isToDoVisible={isToDoVisible}
                             />
                         </Box>
                     </Stack>
 
+                    {/* Personal tag chips (GM rows only; renders null
+                        when the chat carries no tags). */}
+                    <ChatListItemTags chat={chat} />
+
                     <ChatListItemMessage chat={chat} />
                 </Stack>
             </ListItemButton>
+
+            {/* Personal tag assignment for GM chats */}
+            {chat.chatType === 2 && (
+                <ModalAssignGMTags chat={chat} open={openAssignTags} setOpen={setOpenAssignTags} />
+            )}
 
             {/* Add Members Modal for DM/MDM chats */}
             {(chat.chatType === 1 || chat.chatType === 4) && (

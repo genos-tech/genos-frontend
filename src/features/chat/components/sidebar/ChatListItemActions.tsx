@@ -5,6 +5,7 @@ import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
 import PersonAddRoundedIcon from "@mui/icons-material/PersonAddRounded";
 import PushPinIcon from "@mui/icons-material/PushPin";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
+import SellOutlinedIcon from "@mui/icons-material/SellOutlined";
 import SplitscreenIcon from "@mui/icons-material/Splitscreen";
 import {
     Badge,
@@ -32,6 +33,7 @@ interface ChatListItemActionsProps {
     onPinClick: (event: React.MouseEvent) => void;
     onSplitClick: (event: React.MouseEvent) => void;
     onAddMembersClick?: (event: React.MouseEvent) => void;
+    onManageTagsClick?: (event: React.MouseEvent) => void;
     setIsToDoVisible: (value: boolean) => void;
     isToDoVisible: boolean;
 }
@@ -44,6 +46,7 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
     onPinClick,
     onSplitClick,
     onAddMembersClick,
+    onManageTagsClick,
     setIsToDoVisible,
     isToDoVisible,
 }) => {
@@ -53,6 +56,8 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
 
     // Show add members option for DM and MDM chats (chatType 1 and 4)
     const showAddMembers = (chat.chatType === 1 || chat.chatType === 4) && onAddMembersClick;
+    // Personal tags are a GM-only surface (chatType 2)
+    const showManageTags = chat.chatType === 2 && onManageTagsClick;
 
     return (
         <Stack alignItems="center" direction="row">
@@ -187,6 +192,28 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
                                 sx={{ fontSize: 18, color: isDark ? "#a78bfa" : "#7c3aed" }}
                             />
                             {t.chat.listItem.addMembersMenu}
+                        </MenuItem>
+                    )}
+
+                    {/* Personal Tags Option (GM chats only) */}
+                    {showManageTags && (
+                        <MenuItem
+                            sx={{
+                                borderRadius: "6px",
+                                mx: 0.5,
+                                gap: 1.5,
+                                fontSize: "0.85rem",
+                                py: 1,
+                            }}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onManageTagsClick?.(e as unknown as React.MouseEvent);
+                            }}
+                        >
+                            <SellOutlinedIcon
+                                sx={{ fontSize: 18, color: isDark ? "#a78bfa" : "#7c3aed" }}
+                            />
+                            {t.chat.listItem.manageTagsMenu}
                         </MenuItem>
                     )}
 

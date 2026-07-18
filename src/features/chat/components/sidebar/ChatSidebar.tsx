@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import AccountTreeRoundedIcon from "@mui/icons-material/AccountTreeRounded";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import DoneAllRoundedIcon from "@mui/icons-material/DoneAllRounded";
@@ -29,6 +29,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { usePersonalGMTags } from "../../../../hooks/common/usePersonalGMTags";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
@@ -48,12 +49,14 @@ import {
     hasMentionGatingChip,
     selectVisibleActivityMessages,
 } from "../../utils/activityChipFilters";
+import { EMPTY_TAG_ID_SET, makeTagFilter, pruneSelection } from "../../utils/gmTagFilters";
 import { ModalCreateGM } from "../modals/ModalCreateGM";
 import { ModalCreateMDM } from "../modals/ModalCreateMDM";
 import { ModalJoinGM } from "../modals/ModalJoinGM";
 import { ChatList } from "./ChatList";
 import { ChatSearch } from "./ChatSearch";
 import { ActivityDivider } from "./ChatSidebarDividers";
+import { GMTagFilterRow } from "./GMTagFilterRow";
 
 // Chat type constants
 const CHAT_PANE_TYPES = {
@@ -178,6 +181,31 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
     // a stale selection can't leak across toggles.
     const [selectedActivityMentionGroupIds, setSelectedActivityMentionGroupIds] =
         useState<ReadonlySet<number>>(EMPTY_GROUP_ID_SET);
+
+    // Personal-tag filter for the GM pane (multi-select, OR semantics).
+    // Ephemeral like the Activity chip set. The prune effect below drops
+    // ids whose tag was deleted (here or in another tab) so a stale
+    // selection can't silently blank the list.
+    const [selectedGMTagIds, setSelectedGMTagIds] =
+        useState<ReadonlySet<number>>(EMPTY_TAG_ID_SET);
+    const { tags: personalGMTags, assignmentsByChannelId } = usePersonalGMTags();
+
+    useEffect(() => {
+        const pruned = pruneSelection(selectedGMTagIds, personalGMTags);
+        if (pruned !== selectedGMTagIds) {
+            setSelectedGMTagIds(pruned);
+        }
+    }, [selectedGMTagIds, personalGMTags]);
+
+    // Stable undefined when no tags are selected so `useFilteredChats`'
+    // memo doesn't churn on unrelated re-renders.
+    const gmTagFilter = useMemo(
+        () =>
+            selectedGMTagIds.size > 0
+                ? makeTagFilter(selectedGMTagIds, assignmentsByChannelId)
+                : undefined,
+        [selectedGMTagIds, assignmentsByChannelId]
+    );
 
     useEffect(() => {
         if (!hasGatingChip(selectedActivityChipIds) && selectedActivityInstanceIds.size > 0) {
@@ -693,6 +721,15 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                     />
                 )}
 
+                {/* Personal-tag filter (GM tab only). Renders nothing
+                    until the user has created at least one tag. */}
+                {useCM.currentChatPaneType === CHAT_PANE_TYPES.GM && (
+                    <GMTagFilterRow
+                        selectedTagIds={selectedGMTagIds}
+                        setSelectedTagIds={setSelectedGMTagIds}
+                    />
+                )}
+
                 {/* Chat Lists */}
                 <Box
                     sx={{
@@ -729,8 +766,11 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                         <ChatList
                             actions={{ setIsToDoVisible }}
                             chatRouting={chatRouting}
+                            chatTagFilter={gmTagFilter}
                             currentActivityMessageType={-1}
                             data={{ myself, setMyself }}
+                            emptySubtitleKey={gmTagFilter ? "emptyGMFilteredSubtitle" : undefined}
+                            emptyTitleKey={gmTagFilter ? "emptyGMFilteredTitle" : undefined}
                             selectedActivityChipIds={EMPTY_CHIP_SET}
                             selectedActivityInstanceIds={EMPTY_INSTANCE_SET}
                             selectedActivityMentionGroupIds={EMPTY_GROUP_ID_SET}

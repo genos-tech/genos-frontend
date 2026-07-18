@@ -125,6 +125,15 @@ type ChatListProps = {
     // `selectedActivityChipIds`; the parent auto-clears this when the
     // gating chip is deselected.
     selectedActivityMentionGroupIds: ReadonlySet<number>;
+    // Optional per-chat predicate composed after the chatType filter.
+    // The GM pane threads the personal-tag filter here; undefined (the
+    // stable "no filter" value — never pass a fresh always-true fn)
+    // passes everything.
+    chatTagFilter?: (chat: AllChatProps) => boolean;
+    // Empty-state overrides for when `chatTagFilter` is active — a tag
+    // filter with zero matches must not claim "No group messages".
+    emptyTitleKey?: keyof Messages["chat"]["sidebar"];
+    emptySubtitleKey?: keyof Messages["chat"]["sidebar"];
     useCM: ChatManagementState;
     state: ChatListState;
     actions: ChatListActions;
@@ -145,7 +154,8 @@ const useFilteredChats = (
     allChats: AllChatProps[],
     targetChatType: number,
     showOnlyUnreadItems: boolean,
-    includeMDM: boolean = false
+    includeMDM: boolean = false,
+    chatTagFilter?: (chat: AllChatProps) => boolean
 ) => {
     return useMemo(() => {
         const chatTypeFilter = (chat: AllChatProps) => {
@@ -156,6 +166,9 @@ const useFilteredChats = (
         };
 
         let filtered = allChats.filter(chatTypeFilter);
+        if (chatTagFilter) {
+            filtered = filtered.filter(chatTagFilter);
+        }
         if (showOnlyUnreadItems) {
             // `lastReadMessageId` is a string (the adapter writes "0" when
             // the channel has unread per the v3 `unreadCount`, else
@@ -172,7 +185,7 @@ const useFilteredChats = (
             });
         }
         return sortAllChatByPinned([...filtered]);
-    }, [allChats, targetChatType, showOnlyUnreadItems, includeMDM]);
+    }, [allChats, targetChatType, showOnlyUnreadItems, includeMDM, chatTagFilter]);
 };
 
 // Custom hook for managing filtered activity messages
@@ -549,6 +562,9 @@ export const ChatList = (props: ChatListProps) => {
         selectedActivityChipIds,
         selectedActivityInstanceIds,
         selectedActivityMentionGroupIds,
+        chatTagFilter,
+        emptyTitleKey,
+        emptySubtitleKey,
         state,
         actions,
         data,
@@ -585,7 +601,8 @@ export const ChatList = (props: ChatListProps) => {
         useCM.allChats,
         targetChatType,
         state.showOnlyUnreadItems,
-        includeMDM
+        includeMDM,
+        chatTagFilter
     );
     const tmpActivityMessages = useFilteredActivityMessages(
         useCM.activityMessages,
@@ -831,7 +848,13 @@ export const ChatList = (props: ChatListProps) => {
     const renderChatList = () => {
         if (targetChatType < CHAT_TYPES.ACTIVITY) {
             if (targetChats.length === 0) {
-                return <EmptyState chatType={targetChatType} />;
+                return (
+                    <EmptyState
+                        chatType={targetChatType}
+                        subtitleKey={emptySubtitleKey}
+                        titleKey={emptyTitleKey}
+                    />
+                );
             }
             const virtuosoRef = chatTypeLookup[targetChatType];
             return (

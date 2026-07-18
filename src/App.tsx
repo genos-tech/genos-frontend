@@ -54,6 +54,7 @@ import { DoubleClickTodoPreferenceProvider } from "./hooks/common/useDoubleClick
 import { useGlobalServiceShortcut } from "./hooks/common/useGlobalServiceShortcut";
 import { HistoryProvider } from "./hooks/common/useHistory";
 import { useNotifications } from "./hooks/common/useNotifications";
+import { PersonalGMTagsBootstrap } from "./hooks/common/usePersonalGMTags";
 import { useProjectTaskManagement } from "./hooks/common/useProjectTaskManagement";
 import { useReconcileMyselfAvatar } from "./hooks/common/useReconcileMyselfAvatar";
 import { useServiceInitialization } from "./hooks/common/useServiceInitialization";
@@ -986,6 +987,10 @@ export const App = () => {
                                 <SpotlightPreferencesProvider>
                                     <AnalyticsPreferencesProvider>
                                         <NotificationsProvider value={useNotif}>
+                                            {/* Null-rendering singleton: wires the auth
+                                                token into the module-level personal-GM-tags
+                                                store (fetch on token change / window focus). */}
+                                            <PersonalGMTagsBootstrap />
                                             <NotificationToastHost
                                                 subscribeToasts={useNotif.subscribeToasts}
                                                 onOpenIntent={openIntent}
