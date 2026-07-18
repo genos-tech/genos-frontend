@@ -1226,6 +1226,7 @@ export const zh: DeepPartial<Messages> = {
             ownerLabel: "所有者：{name}",
             ownerLabelWithMore: "所有者：{name} · 还有 {count} 人",
             membersLabel: "成员",
+            ownerProjectTooltip: "所属项目",
         },
         autocomplete: {
             searchAria: "搜索",

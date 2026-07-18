@@ -1259,6 +1259,7 @@ export const fr: DeepPartial<Messages> = {
             ownerLabel: "Propriétaire : {name}",
             ownerLabelWithMore: "Propriétaire : {name} · {count} de plus",
             membersLabel: "Membres",
+            ownerProjectTooltip: "Projet propriétaire",
         },
         autocomplete: {
             searchAria: "Rechercher",

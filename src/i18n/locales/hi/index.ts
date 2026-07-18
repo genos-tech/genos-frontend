@@ -1253,6 +1253,7 @@ export const hi: DeepPartial<Messages> = {
             ownerLabel: "ओनर: {name}",
             ownerLabelWithMore: "ओनर: {name} · {count} और",
             membersLabel: "मेंबर",
+            ownerProjectTooltip: "स्वामी प्रोजेक्ट",
         },
         autocomplete: {
             searchAria: "खोजें",

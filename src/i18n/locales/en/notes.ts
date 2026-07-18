@@ -135,6 +135,7 @@ export const notes = {
         ownerLabel: "Owner: {name}",
         ownerLabelWithMore: "Owner: {name} · {count} more",
         membersLabel: "Members",
+        ownerProjectTooltip: "Owner project",
     },
     importMd: {
         heading: "Import Markdown",

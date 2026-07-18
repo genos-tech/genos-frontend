@@ -1247,6 +1247,7 @@ export const es: DeepPartial<Messages> = {
             ownerLabel: "Propietario: {name}",
             ownerLabelWithMore: "Propietario: {name} · {count} más",
             membersLabel: "Miembros",
+            ownerProjectTooltip: "Proyecto propietario",
         },
         autocomplete: {
             searchAria: "Buscar",

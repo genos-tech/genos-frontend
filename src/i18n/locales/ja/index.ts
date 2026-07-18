@@ -1337,6 +1337,7 @@ export const ja: DeepPartial<Messages> = {
             ownerLabel: "オーナー：{name}",
             ownerLabelWithMore: "オーナー：{name} ・ 他 {count} 名",
             membersLabel: "メンバー",
+            ownerProjectTooltip: "所属プロジェクト",
             importMarkdown: "Markdownをインポート…",
             exportMarkdown: "Markdownとしてエクスポート",
         },

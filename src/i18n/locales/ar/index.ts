@@ -1241,6 +1241,7 @@ export const ar: DeepPartial<Messages> = {
             ownerLabel: "المالك: {name}",
             ownerLabelWithMore: "المالك: {name} · {count} آخرون",
             membersLabel: "الأعضاء",
+            ownerProjectTooltip: "المشروع المالك",
         },
         autocomplete: {
             searchAria: "بحث",
