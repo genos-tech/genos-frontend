@@ -40,6 +40,7 @@ const copy = {
             ai: "AI活用",
             contact: "お問い合わせ",
             faq: "FAQ",
+            plans: "料金",
             demo: "デモを試す",
         },
         hero: {
@@ -201,7 +202,7 @@ const copy = {
             items: [
                 {
                     q: "無料で使えますか？",
-                    a: "現在のMVPは無料で試せます。将来的には有料プランを追加予定ですが、initial usersには一定期間無料で提供する予定です。",
+                    a: "はい。すぐに使える無料プランがあり、クレジットカードは不要です。より多くの利用枠や機能が必要になったら、有料のProプラン・Maxプランもご用意しています。詳しくは料金ページで比較でき、プランはいつでも変更・解約できます。",
                 },
                 {
                     q: "ログインなしで試せますか？",
@@ -238,6 +239,7 @@ const copy = {
             ai: "AI",
             contact: "Contact",
             faq: "FAQ",
+            plans: "Plans",
             demo: "Try the demo",
         },
         hero: {
@@ -399,7 +401,7 @@ const copy = {
             items: [
                 {
                     q: "Is it free?",
-                    a: "The current MVP is free to try. Paid plans are planned for the future, and initial users will be offered access free for a limited period.",
+                    a: "Yes. Genos has a free plan you can start using right away, with no credit card required. When you need higher limits and more, paid Pro and Max plans are available — compare them on the Plans page, and change or cancel anytime.",
                 },
                 {
                     q: "Can I try it without logging in?",
@@ -709,6 +711,14 @@ export default function GenosLandingPage() {
                                 href="#ai"
                             >
                                 {t.nav.ai}
+                            </a>
+                            <a
+                                className="transition hover:text-violet-700 dark:hover:text-white"
+                                href={`${APP_URL}/workspace/plans`}
+                                rel="noreferrer"
+                                target="_blank"
+                            >
+                                {t.nav.plans}
                             </a>
                             <a
                                 className="transition hover:text-violet-700 dark:hover:text-white"
@@ -1290,6 +1300,14 @@ export default function GenosLandingPage() {
                         </div>
                         <div className="flex flex-wrap items-center gap-4 text-sm font-semibold text-slate-500 dark:text-slate-400">
                             <span>© {year} Genos</span>
+                            <a
+                                className="transition hover:text-violet-700 dark:hover:text-white"
+                                href={`${APP_URL}/workspace/plans`}
+                                rel="noreferrer"
+                                target="_blank"
+                            >
+                                {t.nav.plans}
+                            </a>
                             <Link
                                 className="transition hover:text-violet-700 dark:hover:text-white"
                                 to="/legal"
