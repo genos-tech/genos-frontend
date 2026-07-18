@@ -16,7 +16,7 @@ const BASE_COLORS = [
     { name: "Red", value: "#ff2323" },
     { name: "Green", value: "#1dc200" },
     { name: "Blue", value: "#0044c2" },
-    { name: "Yellow", value: "#ff8c00" },
+    { name: "Yellow", value: "#ffd93b" },
     { name: "Orange", value: "#ffa823" },
     { name: "Purple", value: "#8e23ff" },
     { name: "Pink", value: "#ff238a" },
@@ -103,7 +103,7 @@ export const ColorPickerMenu: React.FC<ColorPickerMenuProps> = ({ onSelectColor 
                 onClose={handleClose}
             >
                 {COLORS.map((color) => (
-                    <MenuItem key={color.value} onClick={() => handleSelect(color)}>
+                    <MenuItem key={color.name} onClick={() => handleSelect(color)}>
                         <ListItemDecorator>
                             <span
                                 style={{
