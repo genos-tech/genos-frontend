@@ -7,6 +7,7 @@ import { resolveDisplayName } from "../../../../components/ui/avatars/AvatarCont
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps } from "../../../../types/chat";
+import { ChatListItemTags } from "./ChatListItemTags";
 
 interface ChatListItemTitleProps {
     chat: AllChatProps;
@@ -110,6 +111,12 @@ export const ChatListItemTitle: React.FC<ChatListItemTitleProps> = ({
                         {customStatus}
                     </Typography>
                 )}
+
+                {/* GM rows: the user's personal tags act as the chat's
+                    "status" — same sub-name slot a DM uses for the
+                    partner's custom status (renders null on other chat
+                    types or when the chat carries no tags). */}
+                <ChatListItemTags chat={chat} />
             </Stack>
         </Box>
     );

@@ -18,7 +18,6 @@ import { ChatListItemProps } from "./ChatListItem.types";
 import { ChatListItemActions } from "./ChatListItemActions";
 import { ChatListItemAvatar } from "./ChatListItemAvatar";
 import { ChatListItemMessage } from "./ChatListItemMessage";
-import { ChatListItemTags } from "./ChatListItemTags";
 import { ChatListItemTitle } from "./ChatListItemTitle";
 
 export const ChatListItem = memo((props: ChatListItemProps) => {
@@ -223,10 +222,9 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
                         </Box>
                     </Stack>
 
-                    {/* Personal tag chips (GM rows only; renders null
-                        when the chat carries no tags). */}
-                    <ChatListItemTags chat={chat} />
-
+                    {/* GM personal tag chips render inside
+                        ChatListItemTitle as the sub-name line (the DM
+                        custom-status slot), not as an extra row here. */}
                     <ChatListItemMessage chat={chat} />
                 </Stack>
             </ListItemButton>
