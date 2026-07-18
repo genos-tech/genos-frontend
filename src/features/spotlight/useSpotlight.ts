@@ -57,6 +57,7 @@ import {
 } from "../agentQA";
 import { emitTasksBulkChanged, TASK_WRITE_TOOLS } from "../tasks/services/taskEvents";
 import {
+    agentEntityTypesForFilter,
     entityTypesForFilter,
     toggleFilterService,
     type SpotlightFilterService,
@@ -755,8 +756,11 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
             // Active filter chips scope the agent's workspace searches too
             // (server-side pin — see AskAgentArgs.entityTypes). Sent per
             // ask, so whatever chips are set when submitting apply to that
-            // turn; no chips = unscoped, identical to before.
-            const entityTypes = entityTypesForFilter(filterServices);
+            // turn; no chips = unscoped, identical to before. The agent
+            // variant drops search-only lanes ("Previous answers"), which
+            // the agent can't ground on — so an answers-only filter asks
+            // unscoped rather than pinning an empty grounding set.
+            const entityTypes = agentEntityTypesForFilter(filterServices);
 
             void askAgentStream({
                 query: trimmed,

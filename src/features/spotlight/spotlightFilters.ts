@@ -16,7 +16,7 @@
 
 import type { EntityType } from "./types";
 
-export const SPOTLIGHT_FILTER_SERVICES = ["chat", "task", "note", "todo"] as const;
+export const SPOTLIGHT_FILTER_SERVICES = ["chat", "task", "note", "todo", "answer"] as const;
 
 export type SpotlightFilterService = (typeof SPOTLIGHT_FILTER_SERVICES)[number];
 
@@ -27,6 +27,13 @@ const SERVICE_ENTITY_TYPES: Record<SpotlightFilterService, EntityType[]> = {
     task: ["task", "milestone"],
     note: ["note"],
     todo: ["todo"],
+    // "Previous answers" — the collected past-Genos-answer lane. SEARCH
+    // ONLY: filtering typeahead to (or including) prior answers is
+    // useful, but it must never scope the AGENT — feeding the
+    // spotlight_answer lane into grounding is the answer→grounding loop
+    // the backend forbids (and whitelists out server-side). See
+    // agentEntityTypesForFilter, which drops it.
+    answer: ["spotlight_answer"],
 };
 
 // Toggle one service in/out of the selection, preserving click order.
@@ -44,3 +51,21 @@ export const entityTypesForFilter = (
     services: SpotlightFilterService[]
 ): EntityType[] | undefined =>
     services.length === 0 ? undefined : services.flatMap((s) => SERVICE_ENTITY_TYPES[s]);
+
+// Entity types that are never a valid AGENT grounding scope — the
+// spotlight_answer lane is search-only (feeding a past answer back into
+// a new answer is the loop the backend guards against; it also
+// whitelists these out of /ask/). A set so future search-only lanes are
+// a one-line add.
+const AGENT_NON_GROUNDABLE: ReadonlySet<EntityType> = new Set(["spotlight_answer"]);
+
+// Agent variant of entityTypesForFilter: the ask pin with search-only
+// lanes stripped. A "Previous answers"-only selection therefore leaves
+// the agent UNSCOPED (undefined) rather than pinning it to a lane it
+// can't ground on — same effect as no chips.
+export const agentEntityTypesForFilter = (
+    services: SpotlightFilterService[]
+): EntityType[] | undefined => {
+    const all = (entityTypesForFilter(services) ?? []).filter((t) => !AGENT_NON_GROUNDABLE.has(t));
+    return all.length === 0 ? undefined : all;
+};

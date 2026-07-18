@@ -36,6 +36,9 @@ export const spotlight = {
         task: "Tasks",
         note: "Notes",
         todo: "Todos",
+        // Filters to the collected past-Genos-answer lane (entity type
+        // spotlight_answer); "Genos answers" is the user-facing branding.
+        answer: "Genos answers",
     },
     mentions: {
         ariaLabel: "Mention suggestions",

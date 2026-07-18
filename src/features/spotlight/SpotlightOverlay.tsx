@@ -184,6 +184,8 @@ const FILTER_CHIP_ICON: Record<SpotlightFilterService, React.ReactNode> = {
     task: <AssignmentRoundedIcon sx={{ fontSize: 14 }} />,
     note: <StickyNote2RoundedIcon sx={{ fontSize: 14 }} />,
     todo: <TaskAltRoundedIcon sx={{ fontSize: 14 }} />,
+    // Sparkle = "AI answer", matching the spotlight_answer result row.
+    answer: <AutoAwesomeRoundedIcon sx={{ fontSize: 14 }} />,
 };
 
 export const SpotlightOverlay = ({
