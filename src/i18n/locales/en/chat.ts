@@ -99,6 +99,16 @@ export const chat = {
         emptyDMSubtitle: "Start a conversation with someone",
         emptyGMTitle: "No group messages",
         emptyGMSubtitle: "Create or join a group to get started",
+        // Personal-tag filter row above the GM list (`GMTagFilterRow`).
+        // "GM filtered" empty state = a tag filter with zero matches —
+        // must not claim "No group messages".
+        emptyGMFilteredTitle: "No chats match these tags",
+        emptyGMFilteredSubtitle: "Try different tags or clear the tag filter",
+        gmTagFilterClear: "Clear tag filter",
+        gmTagFilterMenuLabel: "Tags",
+        gmTagManageMenu: "Manage tags…",
+        gmTagPinDefault: "Always show this chip",
+        gmTagUnpinDefault: "Stop always showing this chip",
         emptyPMTitle: "No project updates",
         emptyPMSubtitle: "Project conversations will appear here",
         emptyActivityTitle: "No activities yet",
@@ -123,8 +133,27 @@ export const chat = {
         messageDeleted: "Message deleted",
         unknown: "Unknown",
         addMembersMenu: "Add members",
+        manageTagsMenu: "Tags",
         openInSplitView: "Open in split view",
         threadChip: "Thread",
+    },
+    // Personal GM tags (private per-user labels) — the assign +
+    // manage modals opened from the GM row ⋮ menu / tag filter row.
+    gmTags: {
+        assignTitle: "Tags for {name}",
+        cancelButton: "Cancel",
+        createButton: "Add",
+        createFailed: "Couldn't create the tag. Try again.",
+        createPlaceholder: "New tag name",
+        deleteConfirm: "Delete?",
+        emptyAssign: "No tags yet — create your first below.",
+        emptyList: "No tags yet — create your first below.",
+        invalidName: "Enter a unique name (30 characters max).",
+        manageTitle: "Manage tags",
+        maxPerChatReached: "A chat can carry at most 20 tags.",
+        privateHint: "Tags are private — only you can see them.",
+        saveButton: "Save",
+        saveFailed: "Couldn't save tags. Try again.",
     },
     activity: {
         aggregatedEarlier: "+{count} earlier on this topic",
