@@ -19,6 +19,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { EMPTY_ASK_STATE } from "../features/agentQA/types";
 import { SpotlightOverlay } from "../features/spotlight/SpotlightOverlay";
 import { useSpotlight } from "../features/spotlight/useSpotlight";
+import { askAgentStream } from "../services/agentApi";
 import { searchSpotlight } from "../services/searchApi";
 
 vi.mock("../services/agentApi", async (importOriginal) => {
@@ -45,6 +46,7 @@ vi.mock("../hooks/common/useSpotlightPreferences", () => ({
 describe("useSpotlight service filter → entity_types wire field", () => {
     beforeEach(() => {
         vi.mocked(searchSpotlight).mockClear();
+        vi.mocked(askAgentStream).mockClear();
         localStorage.clear();
     });
 
@@ -88,6 +90,48 @@ describe("useSpotlight service filter → entity_types wire field", () => {
         for (const [args] of vi.mocked(searchSpotlight).mock.calls) {
             expect(args.entity_types).toBeUndefined();
         }
+    });
+
+    it("active chips scope the ask too (entityTypes on askAgentStream)", async () => {
+        vi.mocked(askAgentStream).mockImplementation(async (args) => {
+            args.onDone("sess-1", "run-1");
+        });
+        const { result } = renderHook(() =>
+            useSpotlight({ accessToken: "test-token", teamId: "team-1" })
+        );
+        act(() => {
+            result.current.open();
+            result.current.onToggleFilterService("task");
+        });
+        act(() => {
+            result.current.onAsk("which task first?");
+        });
+        await waitFor(() => {
+            expect(askAgentStream).toHaveBeenCalledTimes(1);
+        });
+        expect(vi.mocked(askAgentStream).mock.calls[0][0].entityTypes).toEqual([
+            "task",
+            "milestone",
+        ]);
+    });
+
+    it("asks without chips carry no entityTypes", async () => {
+        vi.mocked(askAgentStream).mockImplementation(async (args) => {
+            args.onDone("sess-1", "run-1");
+        });
+        const { result } = renderHook(() =>
+            useSpotlight({ accessToken: "test-token", teamId: "team-1" })
+        );
+        act(() => {
+            result.current.open();
+        });
+        act(() => {
+            result.current.onAsk("anything");
+        });
+        await waitFor(() => {
+            expect(askAgentStream).toHaveBeenCalledTimes(1);
+        });
+        expect(vi.mocked(askAgentStream).mock.calls[0][0].entityTypes).toBeUndefined();
     });
 
     it("resets the selection when the overlay closes", async () => {
