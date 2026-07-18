@@ -1007,6 +1007,7 @@ export const App = () => {
                                                     closeHistory={spotlight.closeHistory}
                                                     dailyUsage={spotlight.dailyUsage}
                                                     error={spotlight.error}
+                                                    filterServices={spotlight.filterServices}
                                                     historyDetail={spotlight.historyDetail}
                                                     historyIsLoading={spotlight.historyIsLoading}
                                                     historyMode={spotlight.historyMode}
@@ -1035,6 +1036,9 @@ export const App = () => {
                                                     onQueryChange={spotlight.setQuery}
                                                     onReject={spotlight.onReject}
                                                     onSelect={handleSpotlightSelect}
+                                                    onToggleFilterService={
+                                                        spotlight.onToggleFilterService
+                                                    }
                                                 />
                                             </HashMentionDataProvider>
                                             <SpotlightSettingsModal

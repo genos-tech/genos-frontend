@@ -1486,6 +1486,13 @@ export const ja: DeepPartial<Messages> = {
             initial: "入力を開始すると、チャット・タスク・ノートを横断検索します。",
             noMatches: "該当する結果はありません — 別のキーワードで試してください。",
         },
+        filter: {
+            ariaLabel: "サービスで結果を絞り込む",
+            chat: "チャット",
+            task: "タスク",
+            note: "ノート",
+            todo: "Todo",
+        },
         mentions: {
             ariaLabel: "メンション候補",
         },
