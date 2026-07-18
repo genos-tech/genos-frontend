@@ -1493,6 +1493,7 @@ export const ja: DeepPartial<Messages> = {
             task: "タスク",
             note: "ノート",
             todo: "Todo",
+            answer: "Genosの回答",
         },
         mentions: {
             ariaLabel: "メンション候補",

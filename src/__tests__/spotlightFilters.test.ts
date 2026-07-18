@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+    agentEntityTypesForFilter,
     entityTypesForFilter,
     SPOTLIGHT_FILTER_SERVICES,
     toggleFilterService,
@@ -44,6 +45,15 @@ describe("entityTypesForFilter", () => {
         expect(entityTypesForFilter(["task"])).toEqual(["task", "milestone"]);
     });
 
+    it("maps the answer service to the spotlight_answer lane (search side)", () => {
+        expect(entityTypesForFilter(["answer"])).toEqual(["spotlight_answer"]);
+        expect(entityTypesForFilter(["task", "answer"])).toEqual([
+            "task",
+            "milestone",
+            "spotlight_answer",
+        ]);
+    });
+
     it("flattens a multi-service selection in selection order", () => {
         expect(entityTypesForFilter(["chat", "task"])).toEqual(["chat", "task", "milestone"]);
     });
@@ -54,5 +64,24 @@ describe("entityTypesForFilter", () => {
         const all = entityTypesForFilter([...SPOTLIGHT_FILTER_SERVICES]);
         expect(all).toBeDefined();
         expect(all!.every((t) => typeof t === "string")).toBe(true);
+    });
+});
+
+describe("agentEntityTypesForFilter", () => {
+    it("strips the search-only answer lane (agent can't ground on it)", () => {
+        // "Previous answers"-only → unscoped, same as no chips.
+        expect(agentEntityTypesForFilter(["answer"])).toBeUndefined();
+        // Mixed → answer dropped, groundable types kept.
+        expect(agentEntityTypesForFilter(["task", "answer"])).toEqual(["task", "milestone"]);
+    });
+
+    it("passes groundable services through unchanged", () => {
+        expect(agentEntityTypesForFilter([])).toBeUndefined();
+        expect(agentEntityTypesForFilter(["chat"])).toEqual(["chat"]);
+        expect(agentEntityTypesForFilter(["chat", "note", "todo"])).toEqual([
+            "chat",
+            "note",
+            "todo",
+        ]);
     });
 });

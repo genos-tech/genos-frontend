@@ -115,6 +115,51 @@ describe("useSpotlight service filter → entity_types wire field", () => {
         ]);
     });
 
+    it("an answers-only filter leaves the ask unscoped (grounding guard)", async () => {
+        vi.mocked(askAgentStream).mockImplementation(async (args) => {
+            args.onDone("sess-1", "run-1");
+        });
+        const { result } = renderHook(() =>
+            useSpotlight({ accessToken: "test-token", teamId: "team-1" })
+        );
+        act(() => {
+            result.current.open();
+            result.current.onToggleFilterService("answer");
+        });
+        act(() => {
+            result.current.onAsk("summarize");
+        });
+        await waitFor(() => {
+            expect(askAgentStream).toHaveBeenCalledTimes(1);
+        });
+        // "Genos answers" is search-only — the agent never grounds on it.
+        expect(vi.mocked(askAgentStream).mock.calls[0][0].entityTypes).toBeUndefined();
+    });
+
+    it("a mixed filter sends only groundable types to the ask", async () => {
+        vi.mocked(askAgentStream).mockImplementation(async (args) => {
+            args.onDone("sess-1", "run-1");
+        });
+        const { result } = renderHook(() =>
+            useSpotlight({ accessToken: "test-token", teamId: "team-1" })
+        );
+        act(() => {
+            result.current.open();
+            result.current.onToggleFilterService("task");
+            result.current.onToggleFilterService("answer");
+        });
+        act(() => {
+            result.current.onAsk("which task?");
+        });
+        await waitFor(() => {
+            expect(askAgentStream).toHaveBeenCalledTimes(1);
+        });
+        expect(vi.mocked(askAgentStream).mock.calls[0][0].entityTypes).toEqual([
+            "task",
+            "milestone",
+        ]);
+    });
+
     it("asks without chips carry no entityTypes", async () => {
         vi.mocked(askAgentStream).mockImplementation(async (args) => {
             args.onDone("sess-1", "run-1");
@@ -208,11 +253,14 @@ describe("SpotlightOverlay filter chips", () => {
         expect(screen.getByRole("button", { name: "Chats" })).toBeTruthy();
         expect(screen.getByRole("button", { name: "Notes" })).toBeTruthy();
         expect(screen.getByRole("button", { name: "Todos" })).toBeTruthy();
+        expect(screen.getByRole("button", { name: "Genos answers" })).toBeTruthy();
 
         await user.click(screen.getByRole("button", { name: "Chats" }));
         expect(props.onToggleFilterService).toHaveBeenCalledWith("chat");
         await user.click(screen.getByRole("button", { name: "Tasks" }));
         expect(props.onToggleFilterService).toHaveBeenCalledWith("task");
+        await user.click(screen.getByRole("button", { name: "Genos answers" }));
+        expect(props.onToggleFilterService).toHaveBeenCalledWith("answer");
     });
 
     it("hides the chips the moment an ask starts (agent mode)", () => {
@@ -225,6 +273,7 @@ describe("SpotlightOverlay filter chips", () => {
         expect(screen.queryByText("Tasks")).toBeNull();
         expect(screen.queryByText("Notes")).toBeNull();
         expect(screen.queryByText("Todos")).toBeNull();
+        expect(screen.queryByText("Genos answers")).toBeNull();
     });
 
     it("marks active chips with aria-pressed", () => {
