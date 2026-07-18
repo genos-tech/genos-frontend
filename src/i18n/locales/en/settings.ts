@@ -73,6 +73,7 @@ export const settings = {
         plansHero: "Do more of your best work with Genos",
         plansHeroSub:
             "Start free and upgrade anytime. Every plan includes every feature — paid plans unlock more AI, unlimited history, and more room to create.",
+        startForFree: "Start for free",
         taglineFree: "Get your chat, tasks, and notes in one place",
         taglinePro: "Make AI part of your everyday work",
         taglineMax: "Full power for AI-heavy days",

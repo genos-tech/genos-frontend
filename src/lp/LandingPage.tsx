@@ -8,7 +8,7 @@ import {
     ClipboardList,
     Database,
     FileText,
-    Globe2,
+    HelpCircle,
     Layers3,
     Mail,
     MessageSquareText,
@@ -17,7 +17,6 @@ import {
     Sparkles,
     Sun,
     Target,
-    Users,
     Workflow,
 } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -41,46 +40,55 @@ const copy = {
             ai: "AI活用",
             contact: "お問い合わせ",
             faq: "FAQ",
+            plans: "料金",
             demo: "デモを試す",
         },
         hero: {
-            badge: "MVP公開中 / Software & Product teams向け",
-            title: "AIが仕事の流れを理解する、",
-            titleSub: "Context OS for product teams.",
-            lead: "Genosは、チャット・タスク・ドキュメントをAIが参照しやすい形でつなぐ、software / product team向けのワークスペースです。Slack、Jira、Notionに分断された議論・意思決定・タスクの経緯を、検索とGenos AIが活用できるチームのコンテキストとして蓄積します。",
+            badge: "MVP公開中 · すべてがつながるワークスペース",
+            title: "散らばったコンテキストを、もう見失わない。",
+            titleSub: "Slack・Notion・Jiraを、ひとつのワークスペースに。",
+            lead: "議論・ドキュメント・タスクが、それぞれ別のツールに分かれている。それらをまたいで探すのは、人にもAIにも大きな負担です。Genosは、会話・ドキュメント・タスクをひとつのつながったワークスペースにまとめ、コンテキストを散らばらせず、仕事の進行とともに自動的に蓄積します。",
             primary: "デモを試す",
             secondary: "仕組みを見る",
             footnote:
                 "ログインなしで体験できます。アカウント登録するとデータを継続保存できます。Webブラウザのみで利用可能です。",
         },
         socialProof: [
-            "AIが参照できるチームのコンテキストを蓄積",
-            "Software / Product teams向けに設計",
-            "Chat / Task / Note / Search / Genos AIを接続",
+            "チャット・ドキュメント・タスクをひとつのワークスペースに",
+            "仕事の進行とともにコンテキストが自動で蓄積",
+            "仕事のつながりを理解するAI",
         ],
         problem: {
             eyebrow: "The problem",
-            title: "AIを導入しても、チームの情報が分断されたままでは、本当に役立つ答えは返ってこない。",
-            body: "Software / Product teamでは、仕様の議論はSlack、実装タスクはJira、決定事項や仕様書はNotionに分かれがちです。人間はなんとか思い出せても、AIはツールをまたいだ経緯、決定理由、現在の状態を正しく理解できません。結果として、検索・要約・次アクション提案は表面的なものになってしまいます。",
+            title: "いまの仕事は、分断されている。",
+            body: "議論はチャットで交わされ、決定は別の場所に記録され、作業はまた別のツールで管理される。気づけば、こんな単純な問いに答えるためだけに、いくつものアプリを横断して探す羽目になります。",
+            questions: [
+                "なぜ、このタスクをやっているのか？",
+                "その決定は、どこでなされたのか？",
+                "最新のドキュメントはどれか？",
+                "この要件は、まだ有効なのか？",
+            ],
+            closing:
+                "情報が失われているわけではありません。ただ、散らばっているだけ。そして、その散らばったコンテキストこそ、いまのAIが読み解けないものです。",
             cards: [
                 {
-                    title: "議論がAIから見えない",
-                    body: "Slackに流れた背景や判断が、タスクやドキュメントから切り離される。",
+                    title: "議論が消えていく",
+                    body: "判断の背景やトレードオフがチャットに埋もれ、それが形づくったタスクやドキュメントから切り離される。",
                 },
                 {
                     title: "タスクが理由を失う",
-                    body: "Jiraのチケットだけでは、なぜその作業が必要なのかAIにも人にも伝わりにくい。",
+                    body: "チケットだけでは、背景の議論や決定は分からない。なぜその作業が重要なのか、人にもAIにも伝わらない。",
                 },
                 {
                     title: "ドキュメントが孤立する",
-                    body: "Notionに整理された情報が、実際の会話や進行中のタスクと同期されなくなる。",
+                    body: "仕様やメモが、それを生んだ会話や作業から離れ、いつの間にか古くなっていく。",
                 },
             ],
         },
         solution: {
-            eyebrow: "AI-native context layer",
-            title: "Genosは、チームの仕事をAIが読める構造に変える。",
-            body: "Genosでは、Chat、Task、Noteが単なる別機能ではなく、互いにリンクされたチームのコンテキストとして保存されます。Genos AIは、会話の経緯、タスクの状態、ドキュメントの内容を横断して参照し、検索・要約・Q&A・次アクション提案に活用できます。",
+            eyebrow: "A better way",
+            title: "別々のツールをつなぐのではなく、仕事そのものをつなぐ。",
+            body: "Genosは、連携（integration）ではなく関係性（relationship）を中心に設計されています。会話・ドキュメント・タスクはすべて同じプロジェクトに属し、後からコンテキストを組み立て直すのではなく、仕事が進むそばから自動的に蓄積されます。",
         },
         features: [
             {
@@ -121,38 +129,34 @@ const copy = {
             },
         ],
         context: {
-            eyebrow: "Context operating system",
-            title: "AIに必要なのは、ただのデータではなく、仕事のつながりです。",
-            body: "Genos AIが本当に役立つには、チームの会話、タスク、ドキュメントをバラバラの断片ではなく、つながったプロジェクト記憶として扱える必要があります。Genosは、software / product teamの日々の仕事を、AIが理解しやすいcontext graphとして蓄積します。",
+            eyebrow: "AI that understands context",
+            title: "AIはツールを検索できる。でも、あなたの仕事は理解できない。",
+            body: "AIをSlack・Notion・Jiraにつなげば、情報は取り出せます。でも、取り出すことと、理解することは違います。どの議論からこのタスクが生まれたのか。どの決定が、別の決定を無効にしたのか。そうした関係性は、人の頭の中にしかありません。Genosはそれをつながったコンテキストとして保存するので、AIは仕事のつながりを最初から把握しています。推測でも、再構築でもなく、設計としてつながっているのです。",
             points: [
-                "会話・タスク・ノートを横断検索",
-                "Genos AIがプロジェクトの経緯と現在の状態を参照",
-                "仕様変更、意思決定、未完了タスクの履歴を自然に蓄積",
-                "新メンバーが過去の議論と判断理由を追いやすい",
+                "会話・タスク・ノートをまとめて横断検索",
+                "Genos AIが元の議論・決定・現在の状態を参照",
+                "要件変更や未完了タスクが、その経緯とつながったまま残る",
+                "新メンバーが「何を」だけでなく「なぜ」まで追える",
             ],
         },
         audience: {
             eyebrow: "Who it is for",
-            title: "Software / Product teamsのための、AI-native workspace。",
-            cards: [
-                {
-                    title: "Product teams",
-                    body: "PRD、仕様変更、ユーザーフィードバック、優先順位の議論を、タスクやドキュメントとつなげて管理したいチームに。",
-                },
-                {
-                    title: "Engineering teams",
-                    body: "実装方針、バグ調査、スプリントタスク、技術メモを、AIが参照できる形で残したい開発チームに。",
-                },
-                {
-                    title: "Startup teams",
-                    body: "少人数で高速に動きながら、議論・意思決定・実行履歴を失わずに積み上げたいチームに。",
-                },
+            title: "ツールの間で、コンテキストを失っているチームへ。",
+            items: [
+                "古いメッセージを求めて、いつもSlackを検索している",
+                "議論を、手作業でドキュメントに書き写している",
+                "大事な決定を、チャットのどこかで見失う",
+                "一日中、5つのツールを行き来している",
+                "プロジェクトの文脈を本当に理解するAIが欲しい",
             ],
+            hookQuote: "あれ、どこで話したっけ？",
+            hookLine:
+                "そう思ったことがあるなら、役割やチームを問わず、このワークスペースはあなたのためのものです。",
         },
         ai: {
             eyebrow: "Genos AI",
             title: "チームの仕事について、Genosに何でも聞ける。",
-            body: "Genosは、チームのチャット・タスク・ノートを横断して読み取ります。だから普段の言葉で質問するだけで、根拠となった元の場所へのリンク付きで答えが返ってきます。長いスレッドや分厚い仕様書も、短時間で要点に。過去のやり取りをさかのぼる必要はありません。",
+            body: "「なぜ、この機能を作っているのか？」——そう尋ねれば、Genosはもう知っています。元の議論、仕様、関連する決定、タスク、そして現在の状況まで。チャット・タスク・ノートを横断して読み取り、根拠となった場所へのリンク付きで、普段の言葉で答えます。何週間分もの履歴をさかのぼる必要はありません。",
             agentTagline: "質問も、要約も、キャッチアップも。",
             capabilities: [
                 {
@@ -170,35 +174,25 @@ const copy = {
             ],
         },
         comparison: {
-            eyebrow: "Why Genos",
-            title: "All-in-oneではなく、AI-nativeなcontext layerへ。",
+            eyebrow: "Traditional vs. connected",
+            title: "もうひとつのall-in-oneではなく、つながったワークスペースへ。",
             rows: [
-                [
-                    "会話",
-                    "Slack/Teamsに流れていく",
-                    "タスク・ノートと接続され、AIが参照できる履歴になる",
-                ],
-                [
-                    "タスク",
-                    "Jira/Asanaで単独管理される",
-                    "背景の会話や関連ドキュメントと一緒に扱える",
-                ],
+                ["チャット", "Slackに流れていく", "タスク・ノートと接続され、組み込まれている"],
                 [
                     "ドキュメント",
-                    "Notionに後からまとめる",
-                    "実際の議論・タスクとリンクされたプロジェクト記憶になる",
+                    "後からNotionにまとめる",
+                    "背景の仕事とリンクして、組み込まれている",
                 ],
-                [
-                    "AI活用",
-                    "ツールごとに情報が分断される",
-                    "つながったcontext graphをもとに検索・要約・回答できる",
-                ],
+                ["タスク", "Jiraで単独管理される", "背景の議論や決定と一緒に、組み込まれている"],
+                ["コンテキスト", "アプリごとに散らばる", "仕事の進行とともに自動で蓄積される"],
+                ["AI", "複数のツールを検索する", "すべてのつながりを理解する"],
+                ["コスト", "複数のサブスクリプション", "ひとつのつながったワークスペース"],
             ],
-            headers: ["テーマ", "一般的な分断", "Genos"],
+            headers: ["", "散らばったツール", "Genos"],
         },
         cta: {
-            title: "AIがチームの仕事を理解する構造を、一緒に検証してください。",
-            body: "Genosは現在MVPとして公開中です。Genos AIはまだ発展途上ですが、Chat、Task、Noteをつなげてチームのコンテキストを蓄積する体験を、software / product teamのinitial usersと一緒に磨いていきたいと考えています。",
+            title: "バラバラのツールを管理するのは、もう終わりに。",
+            body: "多くのソフトウェアは、まず人間のために作られ、AIは後から付け足されました。だからAIは、分断されたツールからコンテキストを組み立て直すしかありません。Genosは、その逆から作られています。コンテキストが最初から存在するワークスペース——人もAIも、探す時間を減らし、つくる時間を増やせます。チームに必要なものをひとつに。ひとつの信頼できる情報源と、仕事を本当に理解するひとつのAIを。GenosはいまMVPとして公開中です。ぜひフィードバックをお寄せください。クレジットカードは不要です。",
             primary: "デモを試す",
             secondary: "フィードバックする",
         },
@@ -208,7 +202,7 @@ const copy = {
             items: [
                 {
                     q: "無料で使えますか？",
-                    a: "現在のMVPは無料で試せます。将来的には有料プランを追加予定ですが、initial usersには一定期間無料で提供する予定です。",
+                    a: "はい。すぐに使える無料プランがあり、クレジットカードは不要です。より多くの利用枠や機能が必要になったら、有料のProプラン・Maxプランもご用意しています。詳しくは料金ページで比較でき、プランはいつでも変更・解約できます。",
                 },
                 {
                     q: "ログインなしで試せますか？",
@@ -216,11 +210,11 @@ const copy = {
                 },
                 {
                     q: "誰向けのプロダクトですか？",
-                    a: "主な対象は、software team、product team、startup teamです。特に、Slack、Jira、Notionなどを使いながら、議論・タスク・ドキュメントの分断に課題を感じているチームを想定しています。",
+                    a: "会話・ドキュメント・タスクを別々のツール（Slack、Notion、Jira、Google Docsなど）に分けて持ち、その間でコンテキストが失われていると感じるすべてのチームのためのものです。「あれ、どこで決めたっけ？」と何度も思うなら、Genosはあなたのためのプロダクトです。役割や肩書きではなく、抱えている課題で選んでください。",
                 },
                 {
                     q: "Slack、Jira、Notionとは何が違いますか？",
-                    a: "Genosは、単にChat、Task、Noteを同じ画面に置くことではなく、それらをAIが参照できるチームのコンテキストとして接続することを重視しています。Genos AIが関連する会話、タスク、ドキュメントを横断して扱える構造を目指しています。",
+                    a: "これらのツールは、チャット・タスク・ドキュメントを別々に保存します。Genosはそれらをひとつのワークスペースにまとめ、さらに重要なこととして、互いにつなげます。だからGenos AIは、議論がどう決定になり、タスクになり、ドキュメントになったのかをたどれます。もうひとつのサイロではなく、つながったコンテキストレイヤーです。",
                 },
                 {
                     q: "Genos AIは何ができますか？",
@@ -230,7 +224,7 @@ const copy = {
         },
         footer: {
             product: "Genos",
-            line: "An AI-native context operating system for product teams.",
+            line: "コンテキストを失わない、ひとつのつながったワークスペース。",
             creator: "Created by Kentaro Kamiya",
             legal: "特定商取引法に基づく表記",
             privacy: "プライバシーポリシー",
@@ -245,46 +239,55 @@ const copy = {
             ai: "AI",
             contact: "Contact",
             faq: "FAQ",
+            plans: "Plans",
             demo: "Try the demo",
         },
         hero: {
-            badge: "MVP is live / Built for software & product teams",
-            title: "Context OS",
-            titleSub: "for AI-native teams.",
-            lead: "Genos connects chat, tasks, and docs into a context layer that Genos AI can use. Instead of leaving decisions scattered across Slack, Jira, and Notion, Genos turns your team’s work history into searchable, actionable context for AI.",
+            badge: "MVP is live · One connected workspace",
+            title: "Stop losing project context",
+            titleSub: "across Slack, Notion & Jira.",
+            lead: "Every discussion, document, and task lives in a different tool — and searching across them is draining, for people and for AI alike. Genos brings conversations, docs, and tasks into one connected workspace, so context is captured automatically as work happens, instead of scattered and lost.",
             primary: "Try the demo",
             secondary: "See how it works",
             footnote:
                 "You can try it without logging in. Create an account to keep your data permanently. Only available in a web browser.",
         },
         socialProof: [
-            "Build team context that AI can use",
-            "Designed for software & product teams",
-            "Connects Chat / Task / Note / Search / Genos AI",
+            "Chat, docs, and tasks in one workspace",
+            "Context preserved automatically as you work",
+            "AI that understands how your work connects",
         ],
         problem: {
             eyebrow: "The problem",
-            title: "AI cannot help your team deeply if your work context is scattered across tools.",
-            body: "Software and product teams discuss decisions in Slack, track execution in Jira, and document outcomes in Notion. Humans can sometimes reconstruct the story. AI usually cannot. When context is fragmented, search, summaries, and next-action suggestions stay shallow.",
+            title: "Modern work is fragmented.",
+            body: "Discussions happen in chat. Decisions get written down somewhere else. Work is tracked in a third tool. Before long, you're searching across apps just to answer simple questions:",
+            questions: [
+                "Why are we doing this task?",
+                "Where was this decision made?",
+                "Which document is the latest?",
+                "Is this requirement still valid?",
+            ],
+            closing:
+                "Nothing is actually missing — it's simply scattered. And scattered context is exactly what today's AI can't reason across.",
             cards: [
                 {
                     title: "Discussions disappear",
-                    body: "Decisions and tradeoffs get buried in chat, disconnected from tasks and docs.",
+                    body: "The background and tradeoffs behind a choice get buried in chat, disconnected from the tasks and docs they shaped.",
                 },
                 {
                     title: "Tasks lose the why",
-                    body: "A Jira ticket rarely explains the full discussion, decision, and product reasoning behind it.",
+                    body: "A ticket rarely explains the discussion and decision behind it — so neither a person nor an AI can tell why the work matters.",
                 },
                 {
-                    title: "Docs become detached",
-                    body: "Specs and notes drift away from the conversations and work that created them.",
+                    title: "Docs drift apart",
+                    body: "Specs and notes detach from the conversations and work that created them, and quietly fall out of date.",
                 },
             ],
         },
         solution: {
-            eyebrow: "AI-native context layer",
-            title: "Genos turns team work into context AI can understand.",
-            body: "In Genos, Chat, Task, and Note are not just three features placed side by side. They become connected records of how work actually happens. Genos AI can search across discussions, task status, and documentation to answer questions, summarize history, and suggest next actions.",
+            eyebrow: "A better way",
+            title: "Don't connect separate tools. Connect the work itself.",
+            body: "Genos is built around relationships, not integrations. Conversations, documents, and tasks all belong to the same project — so instead of reconstructing context later, it is captured automatically as work happens.",
         },
         features: [
             {
@@ -312,7 +315,7 @@ const copy = {
                 ],
             },
             {
-                icon: "Note",
+                icon: "note",
                 title: "Note",
                 subtitle: "Connect specs, decisions, and learnings",
                 image: "/lp-note.png",
@@ -325,38 +328,34 @@ const copy = {
             },
         ],
         context: {
-            eyebrow: "Context operating system",
-            title: "AI does not just need data. It needs the relationships between work.",
-            body: "To be useful, Genos AI needs more than isolated messages, tickets, or docs. It needs to understand how discussions led to decisions, how decisions became tasks, and how tasks changed the product. Genos stores everyday teamwork as a connected project memory.",
+            eyebrow: "AI that understands context",
+            title: "AI can search your tools. It still can't understand your work.",
+            body: "Connect AI to Slack, Notion, and Jira and it can retrieve information — but retrieving isn't understanding. Which discussion created this task? Which decision made another one obsolete? Those relationships only exist in people's heads. Genos stores them as connected context, so AI already knows how your work fits together — not inferred, not reconstructed, connected by design.",
             points: [
-                "Search across chats, tasks, and notes",
-                "Let Genos AI reference project history and current status",
-                "Capture decisions, tradeoffs, and open tasks as connected context",
-                "Help new teammates understand why work happened, not just what happened",
+                "Search across chats, tasks, and notes at once",
+                "Genos AI references the original discussion, decision, and current status",
+                "Requirement changes and open tasks stay linked to their history",
+                "New teammates see why work happened, not just what happened",
             ],
         },
         audience: {
             eyebrow: "Who it is for",
-            title: "Built for software and product teams moving fast.",
-            cards: [
-                {
-                    title: "Product teams",
-                    body: "For teams managing PRDs, user feedback, roadmap decisions, and prioritization discussions across too many tools.",
-                },
-                {
-                    title: "Engineering teams",
-                    body: "For teams that want implementation discussions, sprint tasks, bug investigations, and technical notes connected.",
-                },
-                {
-                    title: "Startup teams",
-                    body: "For small teams that move quickly but do not want to lose decisions, context, and execution history along the way.",
-                },
+            title: "Built for teams that lose context between tools.",
+            items: [
+                "Constantly search Slack for old messages",
+                "Copy discussions into documents by hand",
+                "Lose important decisions somewhere in chat",
+                "Switch between five productivity tools all day",
+                "Want AI that actually understands project context",
             ],
+            hookQuote: "Where was that discussed again?",
+            hookLine:
+                "If you've ever asked that, this workspace was built for you — whatever your role or team.",
         },
         ai: {
             eyebrow: "Genos AI",
-            title: "Ask Genos anything about your team’s work.",
-            body: "Genos reads across your team’s chats, tasks, and notes — so you can ask a question in plain words and get a real answer, with links to exactly where it came from. Long thread? Dense spec? Genos sums it up in seconds, so nobody has to scroll back through weeks of history.",
+            title: "Ask Genos anything about your team's work.",
+            body: 'Ask "Why are we building this feature?" and Genos already knows — the original discussion, the spec, the related decisions, the tasks, and where things stand. It reads across your chats, tasks, and notes and answers in plain language, with links to exactly where each answer came from. No scrolling back through weeks of history.',
             agentTagline: "Ask. Summarize. Catch up.",
             capabilities: [
                 {
@@ -374,35 +373,25 @@ const copy = {
             ],
         },
         comparison: {
-            eyebrow: "Why Genos",
-            title: "Not another all-in-one tool. An AI-native context layer.",
+            eyebrow: "Traditional vs. connected",
+            title: "Not another all-in-one tool. A connected workspace.",
             rows: [
-                [
-                    "Chat",
-                    "Lives in Slack/Teams",
-                    "Connected to tasks and notes as AI-readable history",
-                ],
+                ["Chat", "Lives in Slack", "Built in, linked to tasks and notes"],
+                ["Docs", "Written later in Notion", "Built in, linked to the work behind them"],
                 [
                     "Tasks",
-                    "Managed separately in Jira/Asana",
-                    "Managed with the discussion and background that created them",
+                    "Tracked alone in Jira",
+                    "Built in, carrying their discussion and decisions",
                 ],
-                [
-                    "Docs",
-                    "Summarized later in Notion",
-                    "Linked to the actual conversations and work behind them",
-                ],
-                [
-                    "AI",
-                    "Context is split across tools",
-                    "Can search, summarize, and answer from connected project memory",
-                ],
+                ["Context", "Spread across every app", "Preserved automatically as work happens"],
+                ["AI", "Searches multiple tools", "Understands how everything connects"],
+                ["Cost", "Multiple subscriptions", "One connected workspace"],
             ],
-            headers: ["Theme", "Common fragmentation", "Genos"],
+            headers: ["", "The scattered stack", "Genos"],
         },
         cta: {
-            title: "Help us test the context layer Genos AI should have.",
-            body: "Genos is currently available as an MVP. Genos AI is still in progress, but the core idea is clear: connect Chats, Tasks, and Notes so team context becomes usable by AI. We are looking for initial users from software and product teams to help shape the product.",
+            title: "Stop managing disconnected tools.",
+            body: "Most software was built for humans first, with AI added later — leaving AI to reconstruct context from disconnected tools. Genos is built the other way around: one workspace where context already exists, so people and AI both spend less time searching and more time building. Everything your team needs — one source of truth, one AI that actually understands your work. Genos is live as an MVP now, and we'd love your feedback. No credit card required.",
             primary: "Try the demo",
             secondary: "Send feedback",
         },
@@ -412,7 +401,7 @@ const copy = {
             items: [
                 {
                     q: "Is it free?",
-                    a: "The current MVP is free to try. Paid plans are planned for the future, and initial users will be offered access free for a limited period.",
+                    a: "Yes. Genos has a free plan you can start using right away, with no credit card required. When you need higher limits and more, paid Pro and Max plans are available — compare them on the Plans page, and change or cancel anytime.",
                 },
                 {
                     q: "Can I try it without logging in?",
@@ -420,21 +409,21 @@ const copy = {
                 },
                 {
                     q: "Who is Genos for?",
-                    a: "Genos is mainly designed for software teams, product teams, and startup teams that already use tools like Slack, Jira, and Notion but feel that work context is fragmented.",
+                    a: 'Any team that keeps its conversations, documents, and tasks in separate tools — Slack, Notion, Jira, Google Docs, and the like — and feels the context between them slipping away. If you regularly ask "where was that decided again?", Genos is for you. It is about the problem you have, not the job title you hold.',
                 },
                 {
                     q: "How is it different from Slack, Jira, and Notion?",
-                    a: "Genos does not simply place chat, tasks, and notes in the same UI. It connects them as context that Genos AI can search, summarize, and reason over. The goal is to make team work understandable to AI.",
+                    a: "Those tools store your chat, tasks, and docs separately. Genos keeps them in one workspace and, more importantly, connected — so Genos AI can follow how a discussion became a decision, a task, and a doc. It is a connected context layer, not another silo.",
                 },
                 {
                     q: "What can Genos AI do?",
-                    a: "Ask a question in plain language and Genos answers from across your team’s chats, tasks, and notes — with links to the source. You can also summarize any long thread or note in a click and ask follow-up questions about it. We keep improving it as teams use it every day.",
+                    a: "Ask a question in plain language and Genos answers from across your team's chats, tasks, and notes — with links to the source. You can also summarize any long thread or note in a click and ask follow-up questions about it. We keep improving it as teams use it every day.",
                 },
             ],
         },
         footer: {
             product: "Genos",
-            line: "An AI-native context operating system for product teams.",
+            line: "One connected workspace where context is never lost.",
             creator: "Created by Kentaro Kamiya",
             legal: "Legal Notice",
             privacy: "Privacy Policy",
@@ -723,6 +712,12 @@ export default function GenosLandingPage() {
                             >
                                 {t.nav.ai}
                             </a>
+                            <Link
+                                className="transition hover:text-violet-700 dark:hover:text-white"
+                                to="/plans"
+                            >
+                                {t.nav.plans}
+                            </Link>
                             <a
                                 className="transition hover:text-violet-700 dark:hover:text-white"
                                 href="#contact"
@@ -862,6 +857,20 @@ export default function GenosLandingPage() {
                                 </h2>
                                 <p className="mt-5 text-base leading-8 text-slate-600 dark:text-slate-300">
                                     {t.problem.body}
+                                </p>
+                                <ul className="mt-5 space-y-2.5">
+                                    {t.problem.questions.map((question) => (
+                                        <li
+                                            key={question}
+                                            className="flex items-start gap-3 text-base font-semibold leading-7 text-slate-800 dark:text-slate-100"
+                                        >
+                                            <HelpCircle className="mt-0.5 h-5 w-5 shrink-0 text-violet-600 dark:text-violet-300" />
+                                            {question}
+                                        </li>
+                                    ))}
+                                </ul>
+                                <p className="mt-6 text-base font-bold leading-8 text-slate-900 dark:text-white">
+                                    {t.problem.closing}
                                 </p>
                             </div>
                             <div className="grid gap-4 md:grid-cols-3">
@@ -1080,31 +1089,28 @@ export default function GenosLandingPage() {
                                 {t.audience.title}
                             </h2>
                         </div>
-                        <div className="mt-12 grid gap-5 lg:grid-cols-3">
-                            {t.audience.cards.map((card, index) => (
+                        <div className="mx-auto mt-12 grid max-w-3xl gap-3 sm:grid-cols-2">
+                            {t.audience.items.map((item) => (
                                 <motion.div
-                                    key={card.title}
-                                    className="rounded-[2rem] border border-violet-100 bg-white p-7 shadow-xl shadow-violet-900/5 dark:border-white/10 dark:bg-white/5"
-                                    initial={{ opacity: 0, y: 18 }}
-                                    transition={{ duration: 0.55, delay: index * 0.08 }}
-                                    viewport={{ once: true, amount: 0.35 }}
+                                    key={item}
+                                    className="flex items-start gap-3 rounded-2xl border border-violet-100 bg-white/80 p-4 text-sm font-semibold text-slate-700 shadow-sm dark:border-white/10 dark:bg-white/5 dark:text-slate-200"
+                                    initial={{ opacity: 0, y: 12 }}
+                                    transition={{ duration: 0.45 }}
+                                    viewport={{ once: true, amount: 0.4 }}
                                     whileInView={{ opacity: 1, y: 0 }}
                                 >
-                                    <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-50 text-violet-700 dark:bg-violet-500/15 dark:text-violet-200">
-                                        {index === 0 ? (
-                                            <Users className="h-6 w-6" />
-                                        ) : index === 1 ? (
-                                            <Database className="h-6 w-6" />
-                                        ) : (
-                                            <Globe2 className="h-6 w-6" />
-                                        )}
-                                    </div>
-                                    <h3 className="text-xl font-black">{card.title}</h3>
-                                    <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
-                                        {card.body}
-                                    </p>
+                                    <Check className="mt-0.5 h-5 w-5 shrink-0 text-violet-600" />
+                                    {item}
                                 </motion.div>
                             ))}
+                        </div>
+                        <div className="mx-auto mt-8 max-w-2xl rounded-[2rem] border border-violet-100 bg-gradient-to-br from-violet-50 to-white p-8 text-center shadow-lg shadow-violet-900/5 dark:border-white/10 dark:from-white/10 dark:to-white/5">
+                            <p className="text-2xl font-black tracking-tight text-slate-950 dark:text-white sm:text-3xl">
+                                “{t.audience.hookQuote}”
+                            </p>
+                            <p className="mt-4 text-base leading-7 text-slate-600 dark:text-slate-300">
+                                {t.audience.hookLine}
+                            </p>
                         </div>
                     </div>
                 </section>
@@ -1292,6 +1298,12 @@ export default function GenosLandingPage() {
                         </div>
                         <div className="flex flex-wrap items-center gap-4 text-sm font-semibold text-slate-500 dark:text-slate-400">
                             <span>© {year} Genos</span>
+                            <Link
+                                className="transition hover:text-violet-700 dark:hover:text-white"
+                                to="/plans"
+                            >
+                                {t.nav.plans}
+                            </Link>
                             <Link
                                 className="transition hover:text-violet-700 dark:hover:text-white"
                                 to="/legal"

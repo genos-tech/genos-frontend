@@ -269,6 +269,7 @@ export const ja: DeepPartial<Messages> = {
             plansHero: "Genos で、最高の仕事をもっと",
             plansHeroSub:
                 "無料で始めて、いつでもアップグレードできます。どのプランでも全機能が使えます — 有料プランでは AI の回数、メッセージ履歴、作成できる量が大きく広がります。",
+            startForFree: "無料で始める",
             taglineFree: "チャット・タスク・ノートを 1 か所に",
             taglinePro: "AI を毎日の仕事の相棒に",
             taglineMax: "上限を気にせず AI をフル活用",
