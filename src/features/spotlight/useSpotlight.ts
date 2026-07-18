@@ -752,12 +752,19 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
                 askedMentions: mentions?.length ? mentions : undefined,
             });
 
+            // Active filter chips scope the agent's workspace searches too
+            // (server-side pin — see AskAgentArgs.entityTypes). Sent per
+            // ask, so whatever chips are set when submitting apply to that
+            // turn; no chips = unscoped, identical to before.
+            const entityTypes = entityTypesForFilter(filterServices);
+
             void askAgentStream({
                 query: trimmed,
                 teamId,
                 accessToken,
                 sessionId: ask.sessionId ?? undefined,
                 signal: controller.signal,
+                ...(entityTypes ? { entityTypes } : {}),
                 ...(mentions?.length ? { mentions: toWireMentions(mentions) } : {}),
                 ...buildStreamHandlers(askedTurnId),
             });
@@ -782,6 +789,7 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
             ask.turnId,
             ask.sessionId,
             aiAnswers,
+            filterServices,
             t,
         ]
     );

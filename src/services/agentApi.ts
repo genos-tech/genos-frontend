@@ -23,7 +23,7 @@
 // as a ReadableStream in the browser. Native fetch + the body reader
 // gives us token-by-token streaming.
 
-import type { SpotlightResult } from "../features/spotlight/types";
+import type { EntityType, SpotlightResult } from "../features/spotlight/types";
 import { fmt, getMessages } from "../i18n";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL as string;
@@ -122,7 +122,11 @@ export interface AskAgentArgs extends BaseStreamHandlers {
     teamId: string;
     accessToken: string | null;
     sessionId?: string;
-    entityTypes?: Array<"chat" | "task" | "note" | "todo">;
+    // Spotlight filter chips at ask time — scopes the agent's workspace
+    // searches server-side (ToolContext.pinned_entity_types; the backend
+    // whitelists values, so the service expansion incl. "milestone" is
+    // fine to send). Omitted when no chips are active.
+    entityTypes?: EntityType[];
     // Structured @/# mentions the user picked in the input. Omitted
     // entirely when empty so older backends see an unchanged payload.
     mentions?: AgentMentionPayload[];
@@ -494,7 +498,7 @@ export async function askAgentStream(args: AskAgentArgs): Promise<void> {
         {
             query: args.query,
             team_id: args.teamId,
-            entity_types: args.entityTypes,
+            ...(args.entityTypes?.length ? { entity_types: args.entityTypes } : {}),
             ...(args.mentions?.length ? { mentions: args.mentions } : {}),
             ...(args.sessionId ? { session_id: args.sessionId } : {}),
             ...(args.threadContext
