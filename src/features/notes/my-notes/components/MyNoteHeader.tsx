@@ -3,32 +3,16 @@ import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
 import { Stack } from "@mui/joy";
 
-import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
-import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { useTranslation } from "../../../../i18n";
-import { UserProps } from "../../../../types/admin";
 import { buildFolderCrumbChain } from "../../../../utils/note";
 import { ContextCrumb, NoteBreadcrumbs } from "../../common/components/NoteBreadcrumbs";
-import { NoteHistoryChip } from "../../common/components/NoteHistoryChip";
 
 interface MyNoteHeaderProps {
     useNM: NoteManagementState;
-    myself: UserProps;
-    setMyself: (me: UserProps) => void;
-    socket: any;
-    useCM: ChatManagementState;
-    useUISM: UIStateManagementState;
 }
 
-export const MyNoteHeader = ({
-    useNM,
-    myself,
-    setMyself,
-    socket,
-    useCM,
-    useUISM,
-}: MyNoteHeaderProps) => {
+export const MyNoteHeader = ({ useNM }: MyNoteHeaderProps) => {
     const { t } = useTranslation();
 
     // Sidebar-folder ancestry of the open note, prepended to the note
@@ -59,16 +43,8 @@ export const MyNoteHeader = ({
                 noteChain={useNM.currentMyNoteChain}
                 onNodeClick={(noteId) => useNM.loadNote(1, noteId, -1)}
             />
-            <NoteHistoryChip
-                myself={myself}
-                noteId={useNM.currentMyNote?.noteId ?? 0}
-                noteType={1}
-                setMyself={setMyself}
-                socket={socket}
-                useCM={useCM}
-                useNM={useNM}
-                useUISM={useUISM}
-            />
+            {/* Version history moved to the header's ⋮ (More) menu — see
+                NoteHeaderActions. */}
         </Stack>
     );
 };

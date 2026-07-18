@@ -773,19 +773,14 @@ export const NoteHeaderActions = ({
                         },
                     },
                     {
-                        // Version history — the old header chip lived in
-                        // TaskNoteHeader, which only rendered in notes-home
-                        // mode (!isInTaskPage), so mirror that gate here.
+                        // Version history — replaces the header chip that
+                        // used to sit in each note header (my / task).
                         // Hidden until the note has at least one saved
                         // version (matches the chip's own guard).
                         id: "versionHistory",
                         label: t.notes.history.viewVersions,
                         icon: <HistoryRoundedIcon sx={{ fontSize: 18 }} />,
-                        visible:
-                            noteType === 2 &&
-                            !isInTaskPage &&
-                            activeNoteId != null &&
-                            useNM.currentNoteVersions.length > 0,
+                        visible: activeNoteId != null && useNM.currentNoteVersions.length > 0,
                         onClick: () => setHistoryOpen(true),
                     },
                     {
@@ -937,14 +932,14 @@ export const NoteHeaderActions = ({
                 </Tooltip>
             )}
 
-            {/* Version-history modal — opened from the ⋮ menu for task
-                notes (the chip that used to open it was removed from
-                TaskNoteHeader). */}
-            {noteType === 2 && activeNoteId != null && (
+            {/* Version-history modal — opened from the ⋮ menu (the chip
+                that used to open it was removed from the my / task note
+                headers). */}
+            {activeNoteId != null && (
                 <ModalNoteHistory
                     myself={myself}
                     noteId={activeNoteId}
-                    noteType={2}
+                    noteType={normalizedNoteType ?? noteType}
                     open={historyOpen}
                     setMyself={setMyself}
                     socket={socket}

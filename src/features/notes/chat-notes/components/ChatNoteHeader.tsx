@@ -7,6 +7,7 @@ import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import FileDownloadRoundedIcon from "@mui/icons-material/FileDownloadRounded";
 import FileUploadRoundedIcon from "@mui/icons-material/FileUploadRounded";
 import ForumRoundedIcon from "@mui/icons-material/ForumRounded";
+import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import LaunchRoundedIcon from "@mui/icons-material/LaunchRounded";
 import NotificationsActiveRoundedIcon from "@mui/icons-material/NotificationsActiveRounded";
 import NotificationsOffRoundedIcon from "@mui/icons-material/NotificationsOffRounded";
@@ -41,8 +42,8 @@ import {
     ImportMarkdownContext,
     ModalImportMarkdown,
 } from "../../common/components/ModalImportMarkdown";
+import { ModalNoteHistory } from "../../common/components/ModalNoteHistory";
 import { ContextCrumb, NoteBreadcrumbs } from "../../common/components/NoteBreadcrumbs";
-import { NoteHistoryChip } from "../../common/components/NoteHistoryChip";
 import { loadSpecificNote } from "../../common/services/loadSpecificNote";
 import { downloadMarkdown, noteBlocksToMarkdown } from "../../common/services/noteMarkdown";
 import { ACChatChildNotes } from "./autocompletes/ACChatChildNotes";
@@ -146,6 +147,10 @@ export const ChatNoteHeader = ({
         if (!askButtonAvailable || activeChatNoteId == null) return;
         noteAsk.open({ noteType: 3, noteId: activeChatNoteId });
     };
+
+    // Version-history modal, opened from the ⋮ menu (replaces the header
+    // chip that used to sit next to the breadcrumb).
+    const [historyOpen, setHistoryOpen] = useState(false);
 
     // ---- Markdown import / export (⋮ menu) ----
     // Import creates a NEW chat note anchored to the same chat/thread as
@@ -300,37 +305,11 @@ export const ChatNoteHeader = ({
                         noteChain={useNM.currentChatNoteChain}
                         onNodeClick={(noteId) => useNM.loadNote(3, noteId, -1)}
                     />
-                    <NoteHistoryChip
-                        myself={myself}
-                        noteId={useNM.currentChatNote?.noteId ?? 0}
-                        noteType={3}
-                        setMyself={setMyself}
-                        socket={socket}
-                        useCM={useCM}
-                        useNM={useNM}
-                        useUISM={useUISM}
-                    />
+                    {/* Version history moved to the ⋮ (More) menu below. */}
                 </Stack>
             )}
 
             <Stack alignItems="center" direction="row" spacing={1} sx={{ pb: 0.5 }}>
-                {/* History chip — in chat-page mode the breadcrumb is
-                    replaced by `ACChatChildNotes` on the left, so we
-                    keep the version chip with the other action buttons
-                    on the right instead of orphaning it. */}
-                {isInChatPage === true && useNM.currentChatNote && (
-                    <NoteHistoryChip
-                        myself={myself}
-                        noteId={useNM.currentChatNote?.noteId ?? 0}
-                        noteType={3}
-                        setMyself={setMyself}
-                        socket={socket}
-                        useCM={useCM}
-                        useNM={useNM}
-                        useUISM={useUISM}
-                    />
-                )}
-
                 {/* Chat Avatars with styled containers */}
                 {chat && chat.chatType === 1 && (
                     <Box sx={avatarContainerStyle}>
@@ -450,6 +429,16 @@ export const ChatNoteHeader = ({
                 {/* More Options Dropdown */}
                 {(() => {
                     const items: MoreMenuItem[] = [
+                        {
+                            // Version history — hidden until the note has a
+                            // saved version (matches the old chip's guard).
+                            id: "versionHistory",
+                            label: t.notes.history.viewVersions,
+                            icon: <HistoryRoundedIcon sx={{ fontSize: 18 }} />,
+                            visible:
+                                activeChatNoteId != null && useNM.currentNoteVersions.length > 0,
+                            onClick: () => setHistoryOpen(true),
+                        },
                         {
                             id: "copyNoteLink",
                             label: t.notes.header.copyNoteLink,
@@ -612,6 +601,22 @@ export const ChatNoteHeader = ({
                         openDeleteNote={openDeleteNote}
                         setOpenDeleteNote={setOpenDeleteNote}
                         useNM={useNM}
+                    />
+                )}
+
+                {/* Version-history modal — opened from the ⋮ menu. */}
+                {activeChatNoteId != null && (
+                    <ModalNoteHistory
+                        myself={myself}
+                        noteId={activeChatNoteId}
+                        noteType={3}
+                        open={historyOpen}
+                        setMyself={setMyself}
+                        socket={socket}
+                        useCM={useCM}
+                        useNM={useNM}
+                        useUISM={useUISM}
+                        onClose={() => setHistoryOpen(false)}
                     />
                 )}
 
