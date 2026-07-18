@@ -90,14 +90,16 @@ export const TaskHeader = ({
         (async () => {
             // Pass the current project id (falling back to -1 = "no filter"
             // when no project is selected) so the header search only surfaces
-            // tasks from the project the user is looking at.
+            // tasks from the project the user is looking at. Active work
+            // only: no Closed/Deleted tasks, and (via include_all=false) no
+            // tasks whose parent task / milestone is already closed.
             const loadedTeamTasks: SearchTeamTasksResponse[] = await loadTeamTaskList(
                 myself,
                 currentProjectId ?? -1,
-                "open,wip,pending",
+                "open,wip,blocked,pending",
                 -1,
                 accessToken,
-                true
+                false
             );
 
             if (active) {

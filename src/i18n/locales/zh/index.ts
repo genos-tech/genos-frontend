@@ -659,7 +659,7 @@ export const zh: DeepPartial<Messages> = {
             youSuffix: "（你）",
         },
         sidebar: {
-            searchPlaceholder: "搜索任务…",
+            searchPlaceholder: "搜索任务(不含已关闭和已删除)…",
             searchAriaLabel: "搜索任务",
             recents: "最近",
             projects: "项目",

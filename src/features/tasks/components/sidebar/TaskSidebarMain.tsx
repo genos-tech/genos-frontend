@@ -79,13 +79,17 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
         }
 
         (async () => {
+            // Search surfaces active work only: no Closed/Deleted tasks,
+            // and (via include_all=false) no tasks whose parent task /
+            // milestone is already closed — the backend walks the parent
+            // chain when include_all is off.
             const loadedTeamTasks: SearchTeamTasksResponse[] = await loadTeamTaskList(
                 myself,
                 -1,
-                "open,wip,pending",
+                "open,wip,blocked,pending",
                 -1,
                 accessToken,
-                true
+                false
             );
 
             if (active) {
