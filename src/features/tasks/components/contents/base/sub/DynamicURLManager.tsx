@@ -181,18 +181,20 @@ export const DynamicURLManager = (props: DynamicURLManagerProps) => {
 
             {/* Add new link form */}
             {isAddingNew ? (
+                // flexWrap so the fixed-ish inputs stack onto extra rows
+                // in a narrow pane instead of blowing past the frame.
                 <Stack
                     alignItems="center"
                     direction="row"
                     justifyContent="flex-start"
                     spacing={1}
-                    sx={{ mt: 1 }}
+                    sx={{ mt: 1, flexWrap: "wrap", rowGap: 1 }}
                 >
                     <LinkIcon sx={{ color: "text.secondary" }} />
                     <Input
                         placeholder={t.tasks.dynamicUrl.urlPlaceholder}
                         size="sm"
-                        sx={{ width: "250px", height: "30px" }}
+                        sx={{ width: "250px", maxWidth: "100%", height: "30px" }}
                         type="url"
                         value={newUrl}
                         onChange={(e) => setNewUrl(e.target.value)}
@@ -200,7 +202,7 @@ export const DynamicURLManager = (props: DynamicURLManagerProps) => {
                     <Input
                         placeholder={t.tasks.dynamicUrl.titlePlaceholder}
                         size="sm"
-                        sx={{ width: "200px", height: "30px" }}
+                        sx={{ width: "200px", maxWidth: "100%", height: "30px" }}
                         value={newTitle}
                         onChange={(e) => setNewTitle(e.target.value)}
                     />
@@ -319,18 +321,19 @@ const LinkDisplay = ({ link, editingId, onEdit, onSave, onDelete }: LinkDisplayP
 
     if (editingId === link.id) {
         return (
+            // flexWrap: same narrow-pane treatment as the add-new form.
             <Stack
                 alignItems="center"
                 direction="row"
                 justifyContent="flex-start"
                 spacing={1}
-                sx={{ mt: 1 }}
+                sx={{ mt: 1, flexWrap: "wrap", rowGap: 1 }}
             >
                 <LinkLeadIcon url={link.url} />
                 <Input
                     placeholder={t.tasks.dynamicUrl.urlPlaceholder}
                     size="sm"
-                    sx={{ width: "250px", height: "30px" }}
+                    sx={{ width: "250px", maxWidth: "100%", height: "30px" }}
                     type="url"
                     value={editUrl}
                     onChange={(e) => setEditUrl(e.target.value)}
@@ -338,7 +341,7 @@ const LinkDisplay = ({ link, editingId, onEdit, onSave, onDelete }: LinkDisplayP
                 <Input
                     placeholder={t.tasks.dynamicUrl.titlePlaceholderShort}
                     size="sm"
-                    sx={{ width: "200px", height: "30px" }}
+                    sx={{ width: "200px", maxWidth: "100%", height: "30px" }}
                     value={editTitle}
                     onChange={(e) => setEditTitle(e.target.value)}
                 />
@@ -358,14 +361,25 @@ const LinkDisplay = ({ link, editingId, onEdit, onSave, onDelete }: LinkDisplayP
     }
 
     return (
-        <Stack alignItems="center" direction="row" justifyContent="flex-start">
+        <Stack
+            alignItems="center"
+            direction="row"
+            justifyContent="flex-start"
+            sx={{ minWidth: 0 }}
+        >
             <LinkLeadIcon url={link.url} />
+            {/* minWidth: 0 lets the title actually shrink+ellipsize in a
+                narrow pane — without it a long URL/title pinned the row
+                at its content width and shoved the edit/delete buttons
+                past the pane edge. The 500px cap keeps icons adjacent
+                to the text on wide panes (no flex-grow on purpose). */}
             <Typography
                 sx={{
                     whiteSpace: "nowrap",
                     overflow: "hidden",
                     textOverflow: "ellipsis",
                     maxWidth: "500px",
+                    minWidth: 0,
                     marginLeft: "10px",
                 }}
             >
@@ -382,12 +396,22 @@ const LinkDisplay = ({ link, editingId, onEdit, onSave, onDelete }: LinkDisplayP
             {!link.isAutoLinked && (
                 <>
                     <AppTooltip title={t.tasks.dynamicUrl.editTooltip}>
-                        <IconButton color="neutral" size="sm" onClick={() => onEdit(link.id)}>
+                        <IconButton
+                            color="neutral"
+                            size="sm"
+                            sx={{ flexShrink: 0 }}
+                            onClick={() => onEdit(link.id)}
+                        >
                             <EditIcon />
                         </IconButton>
                     </AppTooltip>
                     <AppTooltip title={t.tasks.dynamicUrl.deleteTooltip}>
-                        <IconButton color="danger" size="sm" onClick={() => onDelete(link.id)}>
+                        <IconButton
+                            color="danger"
+                            size="sm"
+                            sx={{ flexShrink: 0 }}
+                            onClick={() => onDelete(link.id)}
+                        >
                             <DeleteIcon />
                         </IconButton>
                     </AppTooltip>

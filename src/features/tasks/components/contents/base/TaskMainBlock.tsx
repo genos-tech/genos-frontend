@@ -611,28 +611,48 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                     <Grid sm={6} xs={12}>
                         <ListItem sx={{ display: "flex", alignItems: "center", p: 0 }}>
                             <FieldLabel isDark={isDark}>{t.tasks.fields.project}</FieldLabel>
-                            <ACTeamProjects
-                                isOpenProjectList={isOpenProjectList}
-                                // Create mounts only (see the prop doc). Sub-task
-                                // creation is excluded: its parentTaskId comes from
-                                // `isCreatingTask`, not the milestone picker, and
-                                // must survive a project switch.
-                                resetMilestoneOnChange={!isPreviewMode && !isSubTask}
-                                setIsOpenProjectList={setIsOpenProjectList}
-                                setTaskContent={setTaskContent}
-                                setTaskUpdated={setTaskUpdated}
-                                taskContent={taskContent}
-                                usePM={usePM}
-                            />
+                            <Box sx={{ flex: 1, minWidth: 0 }}>
+                                <ACTeamProjects
+                                    isOpenProjectList={isOpenProjectList}
+                                    // Create mounts only (see the prop doc). Sub-task
+                                    // creation is excluded: its parentTaskId comes from
+                                    // `isCreatingTask`, not the milestone picker, and
+                                    // must survive a project switch.
+                                    resetMilestoneOnChange={!isPreviewMode && !isSubTask}
+                                    setIsOpenProjectList={setIsOpenProjectList}
+                                    setTaskContent={setTaskContent}
+                                    setTaskUpdated={setTaskUpdated}
+                                    taskContent={taskContent}
+                                    usePM={usePM}
+                                />
+                            </Box>
                         </ListItem>
                     </Grid>
                     <Grid sm={6} xs={12}>
                         <ListItem sx={{ display: "flex", alignItems: "center", p: 0 }}>
                             <FieldLabel isDark={isDark}>{t.tasks.fields.tags}</FieldLabel>
+                            {/* minWidth: 0 lets the autocomplete actually
+                                shrink inside the flex row — its own
+                                width:100% otherwise pins the row wider
+                                than a narrowed preview pane and pushes
+                                everything out of the block frame. */}
+                            <Box sx={{ flex: 1, minWidth: 0 }}>
+                                <ACProjectTags
+                                    isOpenTagList={isOpenTagList}
+                                    projectTags={projectTags}
+                                    setIsOpenTagList={setIsOpenTagList}
+                                    setTaskContent={setTaskContent}
+                                    setTaskUpdated={setTaskUpdated}
+                                    taskContent={taskContent}
+                                />
+                            </Box>
+                            {/* Create/Manage sit AFTER the autocomplete so
+                                they read as actions on it, and never
+                                shrink away. */}
                             <AppTooltip title={t.tasks.tooltips.createNewTag}>
                                 <IconButton
                                     size="sm"
-                                    sx={subtleIconButtonSx(isDark)}
+                                    sx={{ ...subtleIconButtonSx(isDark), flexShrink: 0, ml: 0.5 }}
                                     variant="plain"
                                     onClick={() => useTM.setOpenCreateTag(true)}
                                 >
@@ -642,7 +662,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             <AppTooltip title={t.tasks.tooltips.manageTags}>
                                 <IconButton
                                     size="sm"
-                                    sx={subtleIconButtonSx(isDark)}
+                                    sx={{ ...subtleIconButtonSx(isDark), flexShrink: 0 }}
                                     variant="plain"
                                     onClick={() => setOpenManageTags(true)}
                                 >
@@ -657,14 +677,6 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                 usePM={usePM}
                                 useTM={useTM}
                                 onClose={() => setOpenManageTags(false)}
-                            />
-                            <ACProjectTags
-                                isOpenTagList={isOpenTagList}
-                                projectTags={projectTags}
-                                setIsOpenTagList={setIsOpenTagList}
-                                setTaskContent={setTaskContent}
-                                setTaskUpdated={setTaskUpdated}
-                                taskContent={taskContent}
                             />
                         </ListItem>
                     </Grid>
@@ -743,21 +755,25 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                     <Grid sm={6} xs={12}>
                         <ListItem sx={{ display: "flex", alignItems: "center", p: 0 }}>
                             <FieldLabel isDark={isDark}>{t.tasks.fields.priority}</FieldLabel>
-                            <ACTaskPriority
-                                setTaskContent={setTaskContent}
-                                setTaskUpdated={setTaskUpdated}
-                                taskContent={taskContent}
-                            />
+                            <Box sx={{ flex: 1, minWidth: 0 }}>
+                                <ACTaskPriority
+                                    setTaskContent={setTaskContent}
+                                    setTaskUpdated={setTaskUpdated}
+                                    taskContent={taskContent}
+                                />
+                            </Box>
                         </ListItem>
                     </Grid>
                     <Grid sm={6} xs={12}>
                         <ListItem sx={{ display: "flex", alignItems: "center", p: 0 }}>
                             <FieldLabel isDark={isDark}>{t.tasks.fields.effortLevel}</FieldLabel>
-                            <ACTaskEffortLevel
-                                setTaskContent={setTaskContent}
-                                setTaskUpdated={setTaskUpdated}
-                                taskContent={taskContent}
-                            />
+                            <Box sx={{ flex: 1, minWidth: 0 }}>
+                                <ACTaskEffortLevel
+                                    setTaskContent={setTaskContent}
+                                    setTaskUpdated={setTaskUpdated}
+                                    taskContent={taskContent}
+                                />
+                            </Box>
                         </ListItem>
                     </Grid>
                 </Grid>
@@ -772,13 +788,15 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                         }}
                     >
                         <FieldLabel isDark={isDark}>{t.tasks.fields.status}</FieldLabel>
-                        <ACTaskStatus
-                            setTaskContent={setTaskContent}
-                            setTaskStatusUpdated={setTaskStatusUpdated}
-                            setTaskUpdated={setTaskUpdated}
-                            socket={socket}
-                            taskContent={taskContent}
-                        />
+                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                            <ACTaskStatus
+                                setTaskContent={setTaskContent}
+                                setTaskStatusUpdated={setTaskStatusUpdated}
+                                setTaskUpdated={setTaskUpdated}
+                                socket={socket}
+                                taskContent={taskContent}
+                            />
+                        </Box>
                     </ListItem>
                 )}
 
@@ -869,11 +887,16 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             </AppTooltip>
                         )} */}
                     </Stack>
-                    <DynamicURLManager
-                        setTaskContent={setTaskContent}
-                        setTaskUpdated={setTaskUpdated}
-                        taskContent={taskContent}
-                    />
+                    {/* minWidth: 0 so long link titles/URLs truncate
+                        inside the block instead of pushing the row (and
+                        the edit/delete icons) past the pane edge. */}
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <DynamicURLManager
+                            setTaskContent={setTaskContent}
+                            setTaskUpdated={setTaskUpdated}
+                            taskContent={taskContent}
+                        />
+                    </Box>
                 </ListItem>
 
                 {/* Linked branches — auto-discovered branches whose names
