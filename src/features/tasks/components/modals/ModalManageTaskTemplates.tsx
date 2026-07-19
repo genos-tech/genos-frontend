@@ -304,18 +304,16 @@ export const ModalManageTaskTemplates: React.FC<Props> = ({
                         <Typography level="body-xs" sx={{ color: "rgba(255,255,255,0.6)" }}>
                             {tt.bodyLabel}
                         </Typography>
+                        {/* The editor renders its own `bn-task-body-box`
+                            container (same surface as the task body), so this
+                            wrapper is just a rounded frame — no background of
+                            its own, or it'd show through as the grey gutter the
+                            old version had. */}
                         <Box
-                            className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                             sx={{
-                                backgroundColor: isDark
-                                    ? "rgba(255,255,255,0.03)"
-                                    : "rgba(255,255,255,0.9)",
                                 border: "1px solid rgba(255,255,255,0.08)",
                                 borderRadius: "10px",
-                                p: 1,
-                                minHeight: 340,
-                                maxHeight: "58vh",
-                                overflowY: "auto",
+                                overflow: "hidden",
                             }}
                         >
                             <BnLocalBodyEditor
@@ -372,7 +370,10 @@ export const ModalManageTaskTemplates: React.FC<Props> = ({
                     </Stack>
                 ) : (
                     // ---- List view ----------------------------------------
-                    <>
+                    // A real element, not a fragment: ModalDialog injects
+                    // `data-last-child` into its direct children, which a
+                    // React.Fragment can't accept (console warning).
+                    <Box sx={{ display: "flex", flexDirection: "column" }}>
                         <Button
                             size="sm"
                             startDecorator={<AddRoundedIcon sx={{ fontSize: 18 }} />}
@@ -529,7 +530,7 @@ export const ModalManageTaskTemplates: React.FC<Props> = ({
                                 {tt.close}
                             </Button>
                         </Stack>
-                    </>
+                    </Box>
                 )}
             </ModalDialog>
         </Modal>
