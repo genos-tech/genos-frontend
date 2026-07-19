@@ -48,6 +48,7 @@ import { createEmptyTask } from "../../services/createEmptyTask";
 import { loadProjectTaskTemplates } from "../../services/loadProjectTaskTemplates";
 import {
     loadProjectTemplateDefaults,
+    ProjectTemplateDefaults,
     saveProjectTemplateDefault,
 } from "../../services/projectTemplateDefaults";
 import {
@@ -59,6 +60,7 @@ import { sendMilestoneCreatedMessage } from "../../sprint-milestone/services";
 import { isNoMainPanelVisible } from "../../utils/mainPanelVisibility";
 import { getCreationKind } from "../../utils/taskKind";
 import {
+    CustomTaskTemplate,
     customTemplateValue,
     parseCustomTemplateValue,
     TASK_TEMPLATE_OPTIONS,
@@ -141,7 +143,15 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
     // Init task contents
     const [taskContent, setTaskContent] = useState<TaskProps>();
     const [taskTitle, setTaskTitle] = useState<string>("");
-    const [body, setBody] = useState<PartialBlock[]>(taskContentTemplate);
+    // Seed the body with the correct kind's built-in template on mount so a
+    // milestone form doesn't briefly show the task scaffold. The project
+    // default (possibly a custom template) is applied once the async load
+    // resolves; a restored draft overrides both.
+    const [body, setBody] = useState<PartialBlock[]>(
+        useTM.isCreatingTask.creationKind === "milestone"
+            ? TASK_TEMPLATES.milestone.blocks
+            : taskContentTemplate
+    );
     // New tasks/milestones/subtasks start unassigned by design — the
     // creator picks an assignee if/when they're ready. Reporter still
     // defaults to the creator (the form has no obvious other choice).
@@ -191,19 +201,18 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
         }
     };
 
-    const applyTemplate = (nextId: TaskTemplateId) => {
-        const next = TASK_TEMPLATES[nextId];
-        if (!next) return;
-        applyBlocks(nextId, next.blocks);
-    };
-
     // Resolve a picker value (built-in id or `custom:{id}`) to its blocks.
     // A `custom:{id}` whose template no longer exists (deleted after being
-    // set as a default) falls back to the current kind's built-in.
-    const resolveTemplateBlocks = (value: string): { value: string; blocks: PartialBlock[] } => {
+    // set as a default) falls back to the current kind's built-in. The
+    // `templates` list is a param so the load-callback path can resolve
+    // against freshly-fetched data before React state has committed.
+    const resolveTemplateBlocks = (
+        value: string,
+        templates: CustomTaskTemplate[] = useTM.projectTaskTemplates
+    ): { value: string; blocks: PartialBlock[] } => {
         const customId = parseCustomTemplateValue(value);
         if (customId !== null) {
-            const custom = useTM.projectTaskTemplates.find((tpl) => tpl.id === customId);
+            const custom = templates.find((tpl) => tpl.id === customId);
             if (custom) return { value, blocks: custom.body };
         } else {
             const builtin = TASK_TEMPLATES[value as TaskTemplateId];
@@ -216,13 +225,21 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
     // The project's saved default for a kind, or the built-in fallback.
     // Tasks and subtasks share the "task" default (milestone is the only
     // distinct kind).
-    const defaultValueForKind = (kind: string): string =>
-        kind === "milestone"
-            ? (useTM.templateDefaults.milestone ?? "milestone")
-            : (useTM.templateDefaults.task ?? "default");
+    const defaultValueForKind = (
+        kind: string,
+        defaults: ProjectTemplateDefaults = useTM.templateDefaults
+    ): string =>
+        kind === "milestone" ? (defaults.milestone ?? "milestone") : (defaults.task ?? "default");
 
-    const applyDefaultForKind = (kind: string) => {
-        const { value, blocks } = resolveTemplateBlocks(defaultValueForKind(kind));
+    const applyDefaultForKind = (
+        kind: string,
+        defaults?: ProjectTemplateDefaults,
+        templates?: CustomTaskTemplate[]
+    ) => {
+        const { value, blocks } = resolveTemplateBlocks(
+            defaultValueForKind(kind, defaults),
+            templates
+        );
         applyBlocks(value, blocks);
     };
 
@@ -243,9 +260,12 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
     // the current kind (task/subtask → "task"; milestone → "milestone").
     const [isSavingDefault, setIsSavingDefault] = useState(false);
     const defaultKind = creationKind === "milestone" ? "milestone" : "task";
+    // Filled star only when the project has actually pinned this exact
+    // template as the kind's default — NOT when the selection merely
+    // matches the built-in fallback (no default set yet).
     const isCurrentDefault =
-        (useTM.templateDefaults[defaultKind] ??
-            (defaultKind === "milestone" ? "milestone" : "default")) === templateId;
+        useTM.templateDefaults[defaultKind] != null &&
+        useTM.templateDefaults[defaultKind] === templateId;
     const handleSetAsDefault = async () => {
         const projectId = usePM.currentProject?.projectId;
         if (!projectId || templateId === TEMPLATE_MANAGE_ACTION) return;
@@ -259,6 +279,12 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
         if (updated) useTM.setTemplateDefaults(updated);
         setIsSavingDefault(false);
     };
+
+    // The project default is applied to the body exactly ONCE per form
+    // session — see the load effect. A ref (not state) so a `templatesDirty`
+    // refetch (user opened the manage modal mid-create) can't re-fire it
+    // and wipe the body they're typing.
+    const defaultAppliedRef = useRef(false);
 
     // Load this project's custom templates + defaults for the picker: on
     // mount, when the project changes, and after any create/edit/delete
@@ -276,6 +302,15 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
             useTM.setProjectTaskTemplates(templates);
             useTM.setTemplateDefaults(defaults);
             if (useTM.templatesDirty) useTM.setTemplatesDirty(false);
+            // Apply the project default to the body once, right after the
+            // first load — unless the user already picked a template or a
+            // draft was restored. Resolved against the freshly-fetched data
+            // (state hasn't committed yet). One-shot so later refetches
+            // never clobber an in-progress body.
+            if (!defaultAppliedRef.current && !userPickedTemplateRef.current) {
+                defaultAppliedRef.current = true;
+                applyDefaultForKind(creationKind, defaults, templates);
+            }
         })();
         return () => {
             cancelled = true;
@@ -283,24 +318,23 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [usePM.currentProject?.projectId, useTM.templatesDirty]);
 
-    // Toggling the creationKind chip is a fresh intent: apply that kind's
-    // project default and clear the manual-pick guard. (A restored draft
-    // re-sets the guard afterwards — its effect is defined below, so it
-    // runs after this one on mount and wins.)
+    // An EXPLICIT task↔milestone toggle is fresh intent: apply that kind's
+    // project default. Keyed on milestone-ness (via a ref), NOT the
+    // tri-state creationKind — `getCreationKind` flips "subtask"→"task" on
+    // its own as `allTasks` loads (both non-milestone, same default), and
+    // reacting to that would wipe a body the user had started. The initial
+    // mount apply is owned by the load effect above; a manual pick /
+    // restored draft is respected.
+    const prevIsMilestoneRef = useRef<boolean | null>(null);
     useEffect(() => {
-        userPickedTemplateRef.current = false;
-        applyDefaultForKind(creationKind);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [creationKind]);
-
-    // Defaults / custom templates often resolve AFTER the form has mounted
-    // (async fetch). Re-apply the kind's default once they land — unless
-    // the user has already chosen a template (or a draft was restored).
-    useEffect(() => {
+        const isMilestone = creationKind === "milestone";
+        const prev = prevIsMilestoneRef.current;
+        prevIsMilestoneRef.current = isMilestone;
+        if (prev === null || prev === isMilestone) return;
         if (userPickedTemplateRef.current) return;
         applyDefaultForKind(creationKind);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [useTM.templateDefaults, useTM.projectTaskTemplates]);
+    }, [creationKind]);
 
     const switchKind = (kind: "task" | "milestone") => {
         useTM.setIsCreatingTask({
@@ -822,19 +856,21 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
     // discarding?" The Cancel buttons short-circuit straight to teardown
     // when this is false, so an untouched form doesn't pop a modal.
     //
-    // Body comparison goes against ALL templates (not just the
-    // currently-selected one) because `applyTemplate` swaps the body
-    // wholesale to a different template's seed blocks — a user who's
-    // only browsing templates hasn't entered any content of their own.
+    // Body comparison goes against ALL templates — built-in AND this
+    // project's custom ones — not just the selected one: switching a
+    // template (or seeding the project default) swaps the body wholesale
+    // to that template's blocks, and a user who only browsed templates or
+    // landed on a custom default hasn't entered content of their own.
     const isDirty = useMemo(() => {
         if (taskTitle.trim() !== "") return true;
         if ((taskContent?.attachments?.length || 0) > 0) return true;
         const bodyStr = JSON.stringify(body);
-        const matchesAnyTemplate = TASK_TEMPLATE_OPTIONS.some(
-            (t) => JSON.stringify(t.blocks) === bodyStr
-        );
+        const matchesAnyTemplate =
+            TASK_TEMPLATE_OPTIONS.some((t) => JSON.stringify(t.blocks) === bodyStr) ||
+            useTM.projectTaskTemplates.some((t) => JSON.stringify(t.body) === bodyStr);
         return !matchesAnyTemplate;
-    }, [taskTitle, taskContent?.attachments, body]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [taskTitle, taskContent?.attachments, body, useTM.projectTaskTemplates]);
 
     // Separate state from TaskCreateFooter's modal because the milestone
     // Cancel button lives inline in this component (the footer is task-only).
