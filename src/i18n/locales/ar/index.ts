@@ -720,7 +720,7 @@ export const ar: DeepPartial<Messages> = {
             cancel: "إلغاء",
             download: "تنزيل",
             close: "إغلاق",
-            checkThread: "عرض الموضوع",
+            checkThread: "عرض الموضوع المصدر",
             dragToReorder: "اسحب لإعادة الترتيب",
             dragToResizeColumn: "اسحب لتغيير حجم العمود",
             resetFilters: "إعادة تعيين جميع عوامل التصفية إلى الإعداد الافتراضي",
@@ -1013,7 +1013,7 @@ export const ar: DeepPartial<Messages> = {
             milestoneBadge: "معلم",
             subTaskBadge: "مهمة فرعية",
             newTaskBadge: "مهمة جديدة",
-            checkThread: "عرض الموضوع",
+            checkThread: "عرض الموضوع المصدر",
             closeTooltip: "إغلاق",
             menu: {
                 copyTaskLink: "نسخ رابط المهمة",

@@ -77,7 +77,10 @@ export const UrlLinkModal = (props: UrlLinkModalProps) => {
     const renderBody = () => {
         if (!target) return null;
         if (target.kind === "chatMain" || target.kind === "chatThread") {
-            return <ModalChatView target={target} {...rest} />;
+            // `hostZIndex` lets the thread header lift its MoreMenu +
+            // ThreadAskModal above this dialog (they portal to body at
+            // layers below it otherwise).
+            return <ModalChatView hostZIndex={effectiveZIndex} target={target} {...rest} />;
         }
         if (target.kind === "task") {
             // `hostZIndex` tells the preview it's modal-hosted (header

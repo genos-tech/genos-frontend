@@ -723,7 +723,7 @@ export const hi: DeepPartial<Messages> = {
             cancel: "रद्द करें",
             download: "डाउनलोड करें",
             close: "बंद करें",
-            checkThread: "थ्रेड देखें",
+            checkThread: "स्रोत थ्रेड देखें",
             dragToReorder: "क्रम बदलने के लिए ड्रैग करें",
             dragToResizeColumn: "कॉलम का साइज़ बदलने के लिए ड्रैग करें",
             resetFilters: "सभी फ़िल्टर डिफ़ॉल्ट पर रीसेट करें",
@@ -1021,7 +1021,7 @@ export const hi: DeepPartial<Messages> = {
             milestoneBadge: "माइलस्टोन",
             subTaskBadge: "सब टास्क",
             newTaskBadge: "नया टास्क",
-            checkThread: "थ्रेड देखें",
+            checkThread: "स्रोत थ्रेड देखें",
             closeTooltip: "बंद करें",
             menu: {
                 copyTaskLink: "टास्क लिंक कॉपी करें",

@@ -185,13 +185,6 @@ export type TaskProps = {
     // inside the milestone.
     milestoneId?: number | null;
     sprintId?: number | null;
-    // Container-ancestry names for the Project → Milestone → (parent
-    // Task →) Task breadcrumb (thread header / task-note header). Only
-    // the task detail endpoints (getTask / getTaskByThreadId) emit
-    // them; list rows leave them undefined.
-    milestoneTitle?: string | null;
-    parentTaskTitle?: string | null;
-    parentTaskIsMilestone?: boolean | null;
 };
 
 export type TaskTableProps = {

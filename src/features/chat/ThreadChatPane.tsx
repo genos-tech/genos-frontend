@@ -44,6 +44,9 @@ type MessagesPaneProps = {
     setTodoFromMessageBubble: (
         todoFromMessageBubble: MessageProps | ThreadMessageProps | TaskCommentProps
     ) => void;
+    /** Host UrlLinkModal's z-index when this pane is modal-hosted; the
+     *  thread header lifts its MoreMenu / ThreadAskModal above it. */
+    hostZIndex?: number;
 };
 
 export const ThreadPane = (props: MessagesPaneProps) => {
@@ -59,6 +62,7 @@ export const ThreadPane = (props: MessagesPaneProps) => {
         useCM,
         useNM,
         setTodoFromMessageBubble,
+        hostZIndex,
     } = props;
 
     const { currentThreadTaskId, setCurrentThreadTaskId } = useChatContext();
@@ -199,6 +203,7 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                 />
 
                 <ThreadChatPaneHeader
+                    hostZIndex={hostZIndex}
                     myself={myself}
                     threadTaskMeta={threadTaskMeta}
                     useCM={useCM}

@@ -117,7 +117,7 @@ export const tasks = {
         cancel: "Cancel",
         download: "Download",
         close: "Close",
-        checkThread: "Check Thread",
+        checkThread: "Check source thread",
         dragToReorder: "Drag to reorder",
         dragToResizeColumn: "Drag to resize column",
         resetFilters: "Reset all filters to default",
@@ -526,7 +526,7 @@ export const tasks = {
         milestoneBadge: "Milestone",
         subTaskBadge: "Sub Task",
         newTaskBadge: "New Task",
-        checkThread: "Check Thread",
+        checkThread: "Check source thread",
         closeTooltip: "Close",
         menu: {
             copyTaskLink: "Copy task link",

@@ -57,6 +57,12 @@ interface ThreadAskModalProps {
     // close the modal as it sees fit — this component stays routing-
     // agnostic so it can sit anywhere in the tree.
     onSelectSource?: (source: SpotlightResult) => void;
+    // Stacking override. Joy's Modal defaults to the theme modal layer
+    // (~1300); when this modal is opened from inside the UrlLinkModal
+    // (the thread opened via "Check thread", z ≥ 10020) it would render
+    // BEHIND it. Callers on that surface pass a value above the host.
+    // Undefined → Joy default (correct on the chat page).
+    zIndex?: number;
 }
 
 // Build the agentQA labels prop from the thread-specific i18n namespace.
@@ -120,6 +126,7 @@ export const ThreadAskModal = ({
     myself,
     accessToken,
     chatName,
+    zIndex,
     onSelectSource,
 }: ThreadAskModalProps) => {
     const { mode } = useColorScheme();
@@ -187,7 +194,27 @@ export const ThreadAskModal = ({
         ask.pendingApproval !== null;
 
     return (
-        <Modal open={state.isOpen} onClose={state.close}>
+        <Modal
+            open={state.isOpen}
+            sx={
+                zIndex != null
+                    ? {
+                          zIndex,
+                          // Joy pins Select/Autocomplete listboxes to
+                          // calc(theme.zIndex.modal + 1) and does NOT track
+                          // this raised `zIndex`, so the mentions autocomplete
+                          // would open behind the dialog. Re-stamp the popup
+                          // var on the modal root and sibling portaled
+                          // listboxes (same fix as UrlLinkModal).
+                          "--unstable_popup-zIndex": zIndex + 10,
+                          '& ~ [role="listbox"]': {
+                              "--unstable_popup-zIndex": zIndex + 10,
+                          },
+                      }
+                    : undefined
+            }
+            onClose={state.close}
+        >
             <ModalDialog
                 className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                 size="lg"

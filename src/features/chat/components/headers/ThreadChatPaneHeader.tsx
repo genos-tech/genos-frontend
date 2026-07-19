@@ -24,7 +24,6 @@ import {
     Typography,
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
-import { alpha } from "@mui/system";
 import { useNavigate } from "react-router-dom";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
@@ -42,12 +41,10 @@ import { UserProps } from "../../../../types/admin";
 import { ThreadProps } from "../../../../types/chat";
 import { TaskProps } from "../../../../types/tasks";
 import { CHAT_TYPE_CODE, SpotlightResult } from "../../../spotlight/types";
-import { CopyableTaskIdText } from "../../../tasks/components/CopyableTaskId";
-import { formatTaskDisplayId } from "../../../tasks/utils/taskDisplayId";
+import { TaskInfoPill } from "../../../tasks/components/TaskInfoPill";
 import { ThreadAskModal } from "../../../threadAsk/ThreadAskModal";
 import { useThreadAsk } from "../../../threadAsk/useThreadAsk";
 import { useChatContext } from "../../context/ChatContext";
-import { ThreadTaskBreadcrumbs } from "./ThreadTaskBreadcrumbs";
 
 type ThreadChatPaneHeaderProps = {
     myself: UserProps;
@@ -55,14 +52,21 @@ type ThreadChatPaneHeaderProps = {
     useNM: NoteManagementState;
     useTM: TaskManagementState;
     /** Full task behind this thread, resolved by `useThreadTaskMeta` in
-     *  ThreadPane. Renders the task-info breadcrumb; null while
-     *  unresolved (the legacy pill covers the id-known/meta-missing
-     *  gap). */
+     *  ThreadPane. Renders the task-info pill; null while unresolved. */
     threadTaskMeta?: TaskProps | null;
+    /** Set when this header renders inside the UrlLinkModal (the thread
+     *  opened via "Check thread"). The MoreMenu portals to document.body
+     *  at z 9999 and ThreadAskModal is a Joy Modal at the default modal
+     *  layer (~1300) — both sit BEHIND the host modal (≥10020). Pass the
+     *  host's z so their popups lift above it. Mirrors NoteHeaderActions /
+     *  TaskTitleBlock. Undefined on the chat page → default layers. */
+    hostZIndex?: number;
 };
 
 export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
-    const { myself, useCM, useNM, useTM, threadTaskMeta } = props;
+    const { myself, useCM, useNM, useTM, threadTaskMeta, hostZIndex } = props;
+    // Layer for popups spawned by this header when it's modal-hosted.
+    const popupZIndex = hostZIndex != null ? hostZIndex + 1 : undefined;
     const { mode } = useColorScheme();
     const { t } = useTranslation();
     const isDark = mode === "dark";
@@ -382,7 +386,11 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                     >
                         <MoreVertRoundedIcon sx={{ fontSize: 20 }} />
                     </MenuButton>
-                    <Menu size="sm" placement="bottom-end" sx={{ minWidth: 200 }}>
+                    <Menu
+                        size="sm"
+                        placement="bottom-end"
+                        sx={{ minWidth: 200, zIndex: popupZIndex }}
+                    >
                         <MenuItem onClick={openThreadAsk}>
                             <AutoAwesomeRoundedIcon
                                 sx={{ fontSize: 18, color: styles.accentColor }}
@@ -418,6 +426,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                     myself={myself}
                     accessToken={accessToken}
                     chatName={useCM.currentThreadChat?.chatName || ""}
+                    zIndex={popupZIndex}
                     onSelectSource={onCitationSelect}
                 />
             </Stack>
@@ -437,12 +446,8 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                 minHeight: "64px",
             }}
         >
-            {/* Left section: Thread badge + Avatar + Name + task info */}
-            <Stack
-                direction="row"
-                spacing={1.5}
-                sx={{ alignItems: "center", flex: 1, minWidth: 0, overflow: "hidden" }}
-            >
+            {/* Left section: Thread badge + Avatar + Name */}
+            <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", minWidth: 0 }}>
                 {/* Thread badge */}
                 <Box
                     sx={{
@@ -529,17 +534,6 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                             : useCM.currentThreadChat?.chatName}
                     </Typography>
                 )}
-
-                {/* Task info — the thread's task rendered with the same
-                    breadcrumb component the task-note header uses
-                    (Project → Milestone → parent → Task, task node
-                    clickable). Shown for every thread flavor that
-                    carries a task: DM/GM/MDM once a task was created
-                    from the thread, PM always (a PM thread IS a task
-                    thread). */}
-                {threadTaskMeta && currentThreadTaskId !== -1 && (
-                    <ThreadTaskBreadcrumbs task={threadTaskMeta} onOpen={openTaskFromMeta} />
-                )}
             </Stack>
 
             {/* Right section: Task info + Actions */}
@@ -557,224 +551,21 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                     />
                 )}
 
-                {/*
-                    Task pill — read-only "Open Task #N" affordance with
-                    optional status dot. FALLBACK ONLY: once the full
-                    task meta resolves, the left section's
-                    ThreadTaskBreadcrumbs is the task affordance and the
-                    pill stands down. It still covers the gap where a
-                    task id is known (thread messages carry the marker)
-                    but the meta fetch hasn't landed or can't (legacy
-                    rows with unrepaired linkage).
-                */}
-                {(() => {
-                    const hasTask = currentThreadTaskId !== -1;
-                    const chatType = useCM.currentThreadChat?.chatType;
-                    if (threadTaskMeta) return null;
-
-                    if (hasTask) {
-                        // Original chip-visibility rule: only show status
-                        // info when we trust it — PM/MDM threads always
-                        // have a real task; other types only after the
-                        // preview is loaded with taskExist === true.
-                        const showStatus =
-                            chatType === 3 ||
-                            chatType === 4 ||
-                            (!!useTM.currentPreviewTask &&
-                                useCM.currentThreadChat?.taskExist === true);
-                        const status = useTM.currentPreviewTask?.status;
-                        const statusColor = status?.color || styles.accentColor;
-
-                        // `currentThreadChat.displayId` isn't reliably
-                        // populated by every `setCurrentThreadChat` call
-                        // site, so the chip would fall back to "#<id>"
-                        // for fresh thread loads. Pick the freshest
-                        // record we can find — the loaded preview task
-                        // when it matches this thread's task, otherwise
-                        // the row from `allTasks` (carries displayId via
-                        // fetchProjectTasks). Falls back to the thread
-                        // chat itself when no other source is loaded.
-                        const taskForDisplay =
-                            (useTM.currentPreviewTask &&
-                            useTM.currentPreviewTask.id === currentThreadTaskId
-                                ? useTM.currentPreviewTask
-                                : null) ??
-                            useTM.allTasks.find((row) => row.id === String(currentThreadTaskId)) ??
-                            useCM.currentThreadChat;
-
-                        return (
-                            <Tooltip
-                                size="sm"
-                                title={t.chat.headers.openTask}
-                                variant="outlined"
-                                sx={{ borderRadius: "8px" }}
-                            >
-                                <Box
-                                    component="button"
-                                    type="button"
-                                    aria-label={`Open Task ${formatTaskDisplayId(taskForDisplay) || "N/A"}`}
-                                    onClick={() => {
-                                        useCM.setIsMainChatVisible(false);
-                                        useCM.setIsThreadVisible(true);
-                                        // Ensure the project is set so the
-                                        // App-level auto-loader fetches
-                                        // currentPreviewTask from the id below.
-                                        // NOTE: `currentThreadChat.project` is
-                                        // ALWAYS undefined — the v3 message
-                                        // adapter (v3MessageToLegacy) never
-                                        // populates a message `.project`, so the
-                                        // thread built from those messages has
-                                        // none. The reliable sources are: the
-                                        // host channel's project (set for PM
-                                        // channels by the channel adapter — and
-                                        // a PM thread's task belongs to that
-                                        // project), falling back to the task
-                                        // row's projectId from `allTasks` (the
-                                        // current project's loaded tasks). For a
-                                        // DM/GM task thread whose project isn't
-                                        // the current one, neither resolves —
-                                        // the auto-loader then never fires and
-                                        // chatHome's id-match gate renders
-                                        // NOTHING (never the wrong task). The
-                                        // user is already on chat, so the
-                                        // setIsTaskPreviewVisible(true) below is
-                                        // observed directly by chatHome's
-                                        // sticky-flag effect (no remount).
-                                        const taskRow = useTM.allTasks.find(
-                                            (row) => String(row.id) === String(currentThreadTaskId)
-                                        );
-                                        if (useCM.currentMainChat?.project) {
-                                            usePM.setCurrentProject(useCM.currentMainChat.project);
-                                        } else if (
-                                            taskRow?.projectId != null &&
-                                            usePM.currentProject?.projectId !== taskRow.projectId
-                                        ) {
-                                            // `allTasks` is scoped to
-                                            // currentProject, so finding the row
-                                            // here means currentProject is
-                                            // already this project (and fully
-                                            // populated). Only set when it would
-                                            // actually CHANGE — a minimal
-                                            // {projectId} ProjectProps would
-                                            // otherwise strip name/tags app-wide.
-                                            usePM.setCurrentProject({
-                                                projectId: taskRow.projectId,
-                                                projectName: "",
-                                                projectTags: [],
-                                            });
-                                        }
-                                        useTM.setCurrentPreviewTaskId(currentThreadTaskId);
-                                        useTM.setIsTaskPreviewVisible(true);
-                                        useTM.setIsCreatingTask({
-                                            flag: false,
-                                            parentTaskId: null,
-                                            rootTaskId: null,
-                                            creationKind: "task",
-                                            milestoneId: null,
-                                        });
-                                    }}
-                                    sx={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: 0.75,
-                                        height: 32,
-                                        px: 1.25,
-                                        borderRadius: "10px",
-                                        border: `1px solid ${styles.chipBorder}`,
-                                        background: styles.chipBg,
-                                        cursor: "pointer",
-                                        font: "inherit",
-                                        color: styles.textColor,
-                                        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                                        "&:hover": {
-                                            background: styles.buttonHover,
-                                            transform: "translateY(-1px)",
-                                            boxShadow: `0 4px 12px ${styles.glowColor}`,
-                                        },
-                                        "&:focus-visible": {
-                                            outline: `2px solid ${styles.accentColor}`,
-                                            outlineOffset: 2,
-                                        },
-                                    }}
-                                >
-                                    <AssignmentRoundedIcon
-                                        sx={{
-                                            fontSize: 16,
-                                            color: styles.accentColor,
-                                        }}
-                                    />
-                                    <CopyableTaskIdText
-                                        task={taskForDisplay}
-                                        fallback="N/A"
-                                        prefix="Task "
-                                        level="body-xs"
-                                        sx={{
-                                            fontWeight: 700,
-                                            color: styles.textColor,
-                                            letterSpacing: "-0.01em",
-                                        }}
-                                    />
-
-                                    {showStatus && status && (
-                                        <>
-                                            <Box
-                                                sx={{
-                                                    width: "1px",
-                                                    height: 14,
-                                                    bgcolor: styles.chipBorder,
-                                                    mx: 0.25,
-                                                }}
-                                            />
-                                            <Box
-                                                sx={{
-                                                    display: "flex",
-                                                    alignItems: "center",
-                                                    gap: 0.5,
-                                                    px: 0.75,
-                                                    py: 0.125,
-                                                    borderRadius: "6px",
-                                                    background: status.color
-                                                        ? alpha(status.color, isDark ? 0.4 : 0.6)
-                                                        : "transparent",
-                                                    color: status.textColor,
-                                                }}
-                                            >
-                                                <Box
-                                                    sx={{
-                                                        width: 6,
-                                                        height: 6,
-                                                        borderRadius: "50%",
-                                                        background: statusColor,
-                                                        boxShadow: `0 0 0 2px ${alpha(
-                                                            statusColor,
-                                                            isDark ? 0.25 : 0.18
-                                                        )}`,
-                                                    }}
-                                                />
-                                                <Typography
-                                                    level="body-xs"
-                                                    sx={{
-                                                        fontWeight: 700,
-                                                        color: "inherit",
-                                                        fontSize: "11px",
-                                                        textTransform: "uppercase",
-                                                        letterSpacing: "0.04em",
-                                                    }}
-                                                >
-                                                    {status.status || "N/A"}
-                                                </Typography>
-                                            </Box>
-                                        </>
-                                    )}
-                                </Box>
-                            </Tooltip>
-                        );
-                    }
-
-                    // No task yet → no inline pill; the Create Task
-                    // action lives in the MoreMenu below.
-                    return null;
-                })()}
+                {/* Task info — the thread's task rendered with the SAME
+                    unified pill (Task #<id> │ Title │ Status) the
+                    task-note header uses. Right-aligned in the actions
+                    cluster. Shown for every thread flavor that carries a
+                    task: DM/GM/MDM once a task was created from the
+                    thread, PM always (a PM thread IS a task thread).
+                    Clicking opens the task preview. */}
+                {threadTaskMeta && currentThreadTaskId !== -1 && (
+                    <TaskInfoPill
+                        isDark={isDark}
+                        styles={styles}
+                        task={threadTaskMeta}
+                        onOpen={openTaskFromMeta}
+                    />
+                )}
 
                 {/* Ask about this thread — opens the AI Q&A modal. Always
                     visible (no chatType guard) because the summary +
@@ -816,6 +607,9 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                         <MoreMenu
                             placement="bottom-end"
                             triggerSize={36}
+                            // Modal-hosted: lift the dropdown above the
+                            // UrlLinkModal (default 9999 renders behind it).
+                            zIndex={popupZIndex}
                             triggerSx={{
                                 borderRadius: "10px",
                                 background: styles.buttonBg,
@@ -878,6 +672,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                 myself={myself}
                 accessToken={accessToken}
                 chatName={useCM.currentThreadChat?.chatName || ""}
+                zIndex={popupZIndex}
                 onSelectSource={onCitationSelect}
             />
         </Stack>

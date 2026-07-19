@@ -724,7 +724,7 @@ export const es: DeepPartial<Messages> = {
             cancel: "Cancelar",
             download: "Descargar",
             close: "Cerrar",
-            checkThread: "Ver hilo",
+            checkThread: "Ver hilo de origen",
             dragToReorder: "Arrastra para reordenar",
             dragToResizeColumn: "Arrastra para redimensionar la columna",
             resetFilters: "Restablecer todos los filtros",
@@ -1019,7 +1019,7 @@ export const es: DeepPartial<Messages> = {
             milestoneBadge: "Hito",
             subTaskBadge: "Subtarea",
             newTaskBadge: "Nueva tarea",
-            checkThread: "Ver hilo",
+            checkThread: "Ver hilo de origen",
             closeTooltip: "Cerrar",
             menu: {
                 copyTaskLink: "Copiar enlace de la tarea",

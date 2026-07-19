@@ -32,6 +32,10 @@ type ModalChatViewProps = {
     useTM: TaskManagementState;
     usePM: ProjectManagementState;
     useNM: NoteManagementState;
+    /** Stacking level of the hosting UrlLinkModal, forwarded to
+     *  ThreadPane so the thread header's MoreMenu / ThreadAskModal
+     *  render above this dialog. */
+    hostZIndex?: number;
 };
 
 // The modal never renders ToDoPane, so we pass placeholder/no-op
@@ -70,6 +74,7 @@ export const ModalChatView = (props: ModalChatViewProps) => {
         useTM,
         usePM,
         useNM,
+        hostZIndex,
     } = props;
 
     const { t } = useTranslation();
@@ -327,6 +332,7 @@ export const ModalChatView = (props: ModalChatViewProps) => {
                     <ThreadPane
                         currentThreadChatId={target.threadId}
                         currentWindowHeight={modalWindowHeight}
+                        hostZIndex={hostZIndex}
                         myself={myself}
                         setMyself={setMyself}
                         setTodoFromMessageBubble={NOOP_TODOS_PROPS.setTodoFromMessageBubble}

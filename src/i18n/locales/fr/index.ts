@@ -729,7 +729,7 @@ export const fr: DeepPartial<Messages> = {
             cancel: "Annuler",
             download: "Télécharger",
             close: "Fermer",
-            checkThread: "Voir le fil",
+            checkThread: "Voir le fil d'origine",
             dragToReorder: "Glisser pour réorganiser",
             dragToResizeColumn: "Glisser pour redimensionner la colonne",
             resetFilters: "Réinitialiser tous les filtres",
@@ -1027,7 +1027,7 @@ export const fr: DeepPartial<Messages> = {
             milestoneBadge: "Jalon",
             subTaskBadge: "Sous-tâche",
             newTaskBadge: "Nouvelle tâche",
-            checkThread: "Voir le fil",
+            checkThread: "Voir le fil d'origine",
             closeTooltip: "Fermer",
             menu: {
                 copyTaskLink: "Copier le lien de la tâche",

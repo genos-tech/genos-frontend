@@ -702,7 +702,7 @@ export const zh: DeepPartial<Messages> = {
             cancel: "取消",
             download: "下载",
             close: "关闭",
-            checkThread: "查看话题",
+            checkThread: "查看来源话题",
             dragToReorder: "拖动以重新排序",
             dragToResizeColumn: "拖动以调整列宽",
             resetFilters: "重置所有筛选条件为默认",
@@ -995,7 +995,7 @@ export const zh: DeepPartial<Messages> = {
             milestoneBadge: "里程碑",
             subTaskBadge: "子任务",
             newTaskBadge: "新任务",
-            checkThread: "查看话题",
+            checkThread: "查看来源话题",
             closeTooltip: "关闭",
             menu: {
                 copyTaskLink: "复制任务链接",

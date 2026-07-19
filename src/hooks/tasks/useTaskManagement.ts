@@ -545,6 +545,12 @@ export const useTaskManagement = (
             if (isNewTaskCreated === true || isTaskUpdatedBySomeone === true) {
                 const nextRow: TaskTableProps = {
                     id: String(loadedTask[0].id) || null,
+                    // Carry the backend displayId ("TP-1110") onto the
+                    // table row. Without it the freshly-created task (this
+                    // upsert IS the row the table renders right after
+                    // create) falls back to "#<id>" in `formatTaskDisplayId`
+                    // until the next full project-tasks reload replaces it.
+                    displayId: loadedTask[0].displayId ?? null,
                     title: loadedTask[0].title || "",
                     priority: loadedTask[0].priority.priority || null,
                     effortLevel: loadedTask[0].effortLevel.level || null,
