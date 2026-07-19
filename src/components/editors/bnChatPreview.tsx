@@ -63,46 +63,55 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
         : `bn-message-bubble-box-${mode}`;
     const bnBoxClassName = customClassName ? `${customClassName}-${mode}` : _bnBoxClassName;
 
-    // Disable the Audio and Image blocks from the built-in schema
-    // This is done by picking out the blocks you want to disable
-    const { audio, video, ...remainingBlockSpecs } = defaultBlockSpecs;
-
     // Our schema with inline content specs, which contain the configs and
     // implementations for inline content  that we want our editor to use.
     // `mentionGroup` is registered here for read-only rendering of saved
     // messages — no menu wiring needed since the preview can't be typed
     // into. Without this, BlockNote rejects any historical message that
     // contains a `mentionGroup` token with "node type not found in schema".
-    const schema = BlockNoteSchema.create({
-        inlineContentSpecs: {
-            // Adds all default inline content.
-            ...defaultInlineContentSpecs,
-            // Adds the mention tag.
-            mention: CreateMentionSpec(
-                useTEM.teamMemberProfiles,
-                socket,
-                myself,
-                setMyself,
-                useUISM,
-                useCM
-            ),
-            mentionGroup: CreateMentionGroupSpec(),
-            customEmoji: CreateCustomEmojiSpec(),
-            hashTask: CreateHashTaskSpec(),
-            hashNote: CreateHashNoteSpec(),
-            hashChat: CreateHashChatSpec(),
-            hashProject: CreateHashProjectSpec(),
-        },
-        blockSpecs: {
-            // remainingBlockSpecs contains all the other blocks
-            ...remainingBlockSpecs,
-            // BlockNote 0.49 moved the code-block options out of
-            // `useCreateBlockNote` and into the schema. We override
-            // the default plain-text codeBlock with the syntax-
-            // highlighted one shipped by `@blocknote/code-block`.
-            codeBlock: createCodeBlockSpec(codeBlockOptions),
-        },
-    });
+    //
+    // Memoized with empty deps on purpose: `useCreateBlockNote` below
+    // builds the editor once per mount and keeps its first schema
+    // forever, so re-creating the schema on later renders was pure
+    // waste — one full spec build per visible bubble per re-render,
+    // with the result thrown away. The mount-time closures (team
+    // profiles etc.) are exactly what the editor captured before.
+    const schema = useMemo(() => {
+        // Disable the Audio and Image blocks from the built-in schema
+        // This is done by picking out the blocks you want to disable
+        const { audio, video, ...remainingBlockSpecs } = defaultBlockSpecs;
+        return BlockNoteSchema.create({
+            inlineContentSpecs: {
+                // Adds all default inline content.
+                ...defaultInlineContentSpecs,
+                // Adds the mention tag.
+                mention: CreateMentionSpec(
+                    useTEM.teamMemberProfiles,
+                    socket,
+                    myself,
+                    setMyself,
+                    useUISM,
+                    useCM
+                ),
+                mentionGroup: CreateMentionGroupSpec(),
+                customEmoji: CreateCustomEmojiSpec(),
+                hashTask: CreateHashTaskSpec(),
+                hashNote: CreateHashNoteSpec(),
+                hashChat: CreateHashChatSpec(),
+                hashProject: CreateHashProjectSpec(),
+            },
+            blockSpecs: {
+                // remainingBlockSpecs contains all the other blocks
+                ...remainingBlockSpecs,
+                // BlockNote 0.49 moved the code-block options out of
+                // `useCreateBlockNote` and into the schema. We override
+                // the default plain-text codeBlock with the syntax-
+                // highlighted one shipped by `@blocknote/code-block`.
+                codeBlock: createCodeBlockSpec(codeBlockOptions),
+            },
+        });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const editor = useCreateBlockNote({
         schema,

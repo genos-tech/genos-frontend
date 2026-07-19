@@ -1,26 +1,44 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { VirtuosoHandle } from "react-virtuoso";
 
 import { ChatProps, ThreadProps } from "../../../types/chat";
 import { resolveJumpScroll } from "../utils/resolveJumpScroll";
 
+export type VisibleRange = { startIndex: number; endIndex: number };
+
 interface UseScrollManagementProps {
     currentChat: ChatProps | ThreadProps;
     indexMap?: { [k: string]: any };
     isThread?: boolean;
+    /** Invoked on every Virtuoso `rangeChanged` tick with the fresh range.
+     * Callers hang side effects here (read-status advance) instead of
+     * watching a state value — see the note on `visibleRangeRef`. */
+    onRangeChange?: (range: VisibleRange) => void;
 }
 
 export const useScrollManagement = ({
     currentChat,
     indexMap,
     isThread = false,
+    onRangeChange,
 }: UseScrollManagementProps) => {
     const virtuosoRef = useRef<VirtuosoHandle | null>(null);
-    const [visibleRange, setVisibleRange] = useState({
-        startIndex: 0,
-        endIndex: 0,
-    });
-    const [isScrolling, setIsScrolling] = useState(false);
+    // The visible range is tracked in a ref, NOT state. Virtuoso's
+    // `rangeChanged` fires continuously while the user scrolls, and a
+    // state write here re-rendered the whole pane (header, BlockNote
+    // input editor, every visible row wrapper) on every tick — the main
+    // source of scroll jank on long chats. Nothing renders the range:
+    // auto-follow reads it on demand when its effect fires, and read
+    // status is forwarded through `onRangeChange` with its own throttle.
+    const visibleRangeRef = useRef<VisibleRange>({ startIndex: 0, endIndex: 0 });
+    // Latest-ref so `handleRangeChanged` stays referentially stable even
+    // though callers rebuild `onRangeChange` every render.
+    const onRangeChangeRef = useRef(onRangeChange);
+    onRangeChangeRef.current = onRangeChange;
+    const handleRangeChanged = useCallback((range: VisibleRange) => {
+        visibleRangeRef.current = range;
+        onRangeChangeRef.current?.(range);
+    }, []);
 
     // Coalesce rapid chat / index-map changes into a single delayed scroll.
     // Without this ref, every dep change schedules a fresh 300 ms timer
@@ -86,16 +104,14 @@ export const useScrollManagement = ({
                 scrollTimerRef.current = null;
             }
         };
-        // `visibleRange` is deliberately not a dep (and no longer read):
-        // the jump decision is driven by `lastHandledJumpRef`, not by
-        // whether the target looks on-screen. See `resolveJumpScroll`.
+        // The visible range is deliberately not read here: the jump
+        // decision is driven by `lastHandledJumpRef`, not by whether the
+        // target looks on-screen. See `resolveJumpScroll`.
     }, [currentChat, indexMap, isThread]);
 
     return {
         virtuosoRef,
-        visibleRange,
-        setVisibleRange,
-        isScrolling,
-        setIsScrolling,
+        visibleRangeRef,
+        handleRangeChanged,
     };
 };

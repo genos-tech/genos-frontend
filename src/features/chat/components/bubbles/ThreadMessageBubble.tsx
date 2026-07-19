@@ -41,7 +41,6 @@ type threadMessageBubbleProps = {
     thread: ThreadProps;
     variant: "sent" | "received";
     message: ThreadMessageProps;
-    isScrolling: boolean;
     isFocused: "focused" | "threadActive" | false;
     isSimpleBubble: boolean;
     useUISM: UIStateManagementState;
@@ -64,7 +63,6 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
         thread,
         variant,
         message,
-        isScrolling,
         isFocused,
         isSimpleBubble,
         useUISM,
@@ -259,31 +257,32 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
                 pl: 1,
             }}
         >
-            {/* Quick emoji reaction - kept visible for fast access */}
-            {isScrolling !== true && (
-                <Box
-                    sx={{
-                        display: "flex",
-                        alignItems: "center",
-                    }}
-                >
-                    <EmojiReaction
-                        chatName={thread.chatName}
-                        chatType={thread.chatType}
-                        dmPartnerUser={thread.dmPartnerUser}
-                        isThread={true}
-                        message={message}
-                        myself={myself}
-                        numReplies={0}
-                        reactions={reactions}
-                        setReactions={setReactions}
-                        setShowEmojiPicker={setShowEmojiPicker}
-                        setUniqueReactionEmojiCount={setUniqueReactionEmojiCount}
-                        showUnderBarOption={showUnderBarOption}
-                        socket={socket}
-                    />
-                </Box>
-            )}
+            {/* Quick emoji reaction - kept visible for fast access.
+                (The old `isScrolling !== true` gate is gone: the list
+                suppresses pointer events on rows while scrolling, so
+                the hover that summons this toolbar can't fire then.) */}
+            <Box
+                sx={{
+                    display: "flex",
+                    alignItems: "center",
+                }}
+            >
+                <EmojiReaction
+                    chatName={thread.chatName}
+                    chatType={thread.chatType}
+                    dmPartnerUser={thread.dmPartnerUser}
+                    isThread={true}
+                    message={message}
+                    myself={myself}
+                    numReplies={0}
+                    reactions={reactions}
+                    setReactions={setReactions}
+                    setShowEmojiPicker={setShowEmojiPicker}
+                    setUniqueReactionEmojiCount={setUniqueReactionEmojiCount}
+                    showUnderBarOption={showUnderBarOption}
+                    socket={socket}
+                />
+            </Box>
 
             {/* Consolidated "More" menu with all other actions */}
             <BubbleThreadMoreMenu
@@ -675,7 +674,6 @@ const areEqual = (prev: threadMessageBubbleProps, next: threadMessageBubbleProps
     prev.thread === next.thread &&
     prev.variant === next.variant &&
     prev.isFocused === next.isFocused &&
-    prev.isScrolling === next.isScrolling &&
     prev.isSimpleBubble === next.isSimpleBubble &&
     prev.currentMessageIndex === next.currentMessageIndex &&
     prev.myself.userId === next.myself.userId;

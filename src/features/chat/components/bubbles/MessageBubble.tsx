@@ -49,7 +49,6 @@ type MessageBubbleProps = {
     variant: "sent" | "received";
     chat: ChatProps;
     message: MessageProps;
-    isScrolling: boolean;
     isFocused: "focused" | "threadActive" | false;
     isSimpleBubble: boolean;
     socket: Socket | null;
@@ -68,7 +67,6 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
     const {
         chat,
         isFocused,
-        isScrolling,
         isSimpleBubble,
         message,
         myself,
@@ -469,31 +467,32 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
                 pl: 1,
             }}
         >
-            {/* Quick emoji reaction - kept visible for fast access */}
-            {isScrolling !== true && (
-                <Box
-                    sx={{
-                        display: "flex",
-                        alignItems: "center",
-                    }}
-                >
-                    <EmojiReaction
-                        chatName={chat.chatName}
-                        chatType={chat.chatType}
-                        dmPartnerUser={chat.dmPartnerUser}
-                        isThread={false}
-                        message={message}
-                        myself={myself}
-                        numReplies={message.numReplies}
-                        reactions={reactions}
-                        setReactions={setReactions}
-                        setShowEmojiPicker={setShowEmojiPicker}
-                        setUniqueReactionEmojiCount={setUniqueReactionEmojiCount}
-                        showUnderBarOption={showUnderBarOption}
-                        socket={socket}
-                    />
-                </Box>
-            )}
+            {/* Quick emoji reaction - kept visible for fast access.
+                (The old `isScrolling !== true` gate is gone: the list
+                suppresses pointer events on rows while scrolling, so
+                the hover that summons this toolbar can't fire then.) */}
+            <Box
+                sx={{
+                    display: "flex",
+                    alignItems: "center",
+                }}
+            >
+                <EmojiReaction
+                    chatName={chat.chatName}
+                    chatType={chat.chatType}
+                    dmPartnerUser={chat.dmPartnerUser}
+                    isThread={false}
+                    message={message}
+                    myself={myself}
+                    numReplies={message.numReplies}
+                    reactions={reactions}
+                    setReactions={setReactions}
+                    setShowEmojiPicker={setShowEmojiPicker}
+                    setUniqueReactionEmojiCount={setUniqueReactionEmojiCount}
+                    showUnderBarOption={showUnderBarOption}
+                    socket={socket}
+                />
+            </Box>
 
             {/* Consolidated "More" menu with all other actions */}
             <BubbleMoreMenu
@@ -962,14 +961,16 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
 // `message` and `chat` are compared by reference — they're cloned via
 // `{...prev, ...next}` everywhere they're mutated in chat state, so any
 // real content change produces a new reference. Primitives (`variant`,
-// `isFocused`, `isScrolling`, `isSimpleBubble`) and `myself.userId` cover
-// the remaining render-affecting state.
+// `isFocused`, `isSimpleBubble`) and `myself.userId` cover the remaining
+// render-affecting state. `isScrolling` is deliberately NOT a prop
+// anymore: it flipped on every scroll start/stop and re-rendered every
+// visible bubble twice per gesture — scroll-time hover suppression now
+// lives on the row wrapper in `MessageListRenderer`.
 const areEqual = (prev: MessageBubbleProps, next: MessageBubbleProps): boolean =>
     prev.message === next.message &&
     prev.chat === next.chat &&
     prev.variant === next.variant &&
     prev.isFocused === next.isFocused &&
-    prev.isScrolling === next.isScrolling &&
     prev.isSimpleBubble === next.isSimpleBubble &&
     prev.myself.userId === next.myself.userId;
 

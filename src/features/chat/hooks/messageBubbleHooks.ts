@@ -35,15 +35,15 @@ export const useScrollToBottomOnNewMessage = (
  * owns that. The two used to race, both firing `scrollToIndex` on a 300ms
  * timer against the same Virtuoso.
  *
- * `visibleRangeStart` is unused but kept: the params are positional and all
- * three range/index args are `number`, so dropping a middle one would
- * silently shift the rest past the type-checker.
+ * The visible range arrives as a REF (see `useScrollManagement`): range
+ * ticks don't re-render anything anymore, so a plain number param would
+ * be frozen at whatever the last real render saw. Reading the ref when
+ * the effect fires always sees the live scroll position.
  */
 export const useScrollToBottomOnChatChange = (
     virtuosoRef: React.RefObject<VirtuosoHandle>,
     currentMainChatId: number,
-    visibleRangeStart: number,
-    visibleRangeEnd: number,
+    visibleRangeRef: React.RefObject<{ startIndex: number; endIndex: number }>,
     maxIndex: number,
     indexMap?: { [k: string]: any },
     moveToSpecificIndex?: string,
@@ -51,6 +51,7 @@ export const useScrollToBottomOnChatChange = (
 ) => {
     useEffect(() => {
         const virtuoso = virtuosoRef.current;
+        const visibleRangeEnd = visibleRangeRef.current?.endIndex ?? 0;
         // `notMove === true && visibleRangeEnd < maxIndex - 3`: Even if `notMove===true`,
         // scrolling to the LAST when an user is around in the last/latest message.
         if (virtuoso === null || (notMove === true && visibleRangeEnd < maxIndex - 3)) {

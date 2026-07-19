@@ -96,6 +96,12 @@ export const MessagesPane = (props: MessagesPaneProps) => {
         currentChat: useCM.currentMainChat as ChatProps | ThreadProps,
         indexMap: messageManagement.indexMap,
         isThread: false,
+        // Fed straight from Virtuoso's `rangeChanged` (throttling lives
+        // inside `handlePeriodicReadStatusUpdate`). This used to be an
+        // effect watching a `visibleRange` state value, which re-rendered
+        // this whole pane on every scroll tick.
+        onRangeChange: (range) =>
+            readStatusManagement.handlePeriodicReadStatusUpdate(range.endIndex),
     });
 
     // Handle read status updates
@@ -133,15 +139,6 @@ export const MessagesPane = (props: MessagesPaneProps) => {
         // or double-update when the chat reference changes.
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [messageManagement.indexMap]);
-
-    useEffect(() => {
-        readStatusManagement.handlePeriodicReadStatusUpdate(
-            scrollManagement.visibleRange.endIndex
-        );
-        // Periodic update is keyed to scroll movement; the throttling lives
-        // inside `handlePeriodicReadStatusUpdate`.
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [scrollManagement.visibleRange]);
 
     useEffect(() => {
         setTimeout(() => {
@@ -249,27 +246,25 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                                 currentChatId={currentMainChatId}
                                 height={0}
                                 indexMap={messageManagement.indexMap}
-                                isScrolling={scrollManagement.isScrolling}
                                 isThread={false}
                                 messages={messageManagement.messages}
                                 myself={myself}
                                 setEditTargetMessage={messageManagement.setEditTargetMessage}
                                 setIsInEdit={messageManagement.setIsInEdit}
-                                setIsScrolling={scrollManagement.setIsScrolling}
                                 setMyself={setMyself}
                                 setTodoFromMessageBubble={setTodoFromMessageBubble}
-                                setVisibleRange={scrollManagement.setVisibleRange}
                                 socket={socket}
                                 useCM={useCM}
                                 usePM={usePM}
                                 useTEM={useTEM}
                                 useTM={useTM}
                                 useUISM={useUISM}
-                                visibleRange={scrollManagement.visibleRange}
+                                visibleRangeRef={scrollManagement.visibleRangeRef}
                                 virtuosoRef={
                                     scrollManagement.virtuosoRef as React.RefObject<VirtuosoHandle>
                                 }
                                 fillContainer
+                                onRangeChanged={scrollManagement.handleRangeChanged}
                             />
 
                             {useCM.currentMainChat?.chatType !== 3 && (
