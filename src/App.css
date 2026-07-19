@@ -1082,6 +1082,21 @@ html,
     z-index: 1400 !important;
 }
 
+/* Project-template body editor (ModalManageTaskTemplates). BlockNote's
+   default editor reserves a wide horizontal gutter (~54px each side) for
+   the drag handle; in this compact modal that reads as dead space on the
+   left and right. Trim it — a small left gutter still clears the drag
+   handle. */
+.bn-template-body .bn-editor {
+    padding-inline: 16px;
+    padding-block: 10px;
+}
+.bn-template-body .bn-editor .bn-block-outer {
+    /* BlockNote pads each block for the side menu; keep just enough for
+       the handle without the big empty margin. */
+    padding-inline-start: 0;
+}
+
 /* Tablet optimizations */
 @media (min-width: 768px) and (max-width: 1023px) {
     .bn-chat-editor-box-light .bn-editor,

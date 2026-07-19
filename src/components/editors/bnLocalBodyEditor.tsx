@@ -102,6 +102,7 @@ export const BnLocalBodyEditor = (props: BnLocalBodyEditorProps) => {
 
     return (
         <BlockNoteView
+            className="bn-template-body"
             editor={editor}
             theme={mode === "dark" ? "dark" : "light"}
             editable

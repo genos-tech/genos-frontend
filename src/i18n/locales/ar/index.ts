@@ -953,6 +953,9 @@ export const ar: DeepPartial<Messages> = {
             templates: {
                 projectGroup: "قوالب المشروع",
                 manageAction: "إدارة القوالب…",
+                setDefaultTask: "تعيين كافتراضي للمهام",
+                setDefaultMilestone: "تعيين كافتراضي للمعالم",
+                isDefault: "الافتراضي للمشروع",
                 defaultLabel: "مهمة قياسية",
                 defaultDescription: "الهدف والسياق ومعايير القبول.",
                 bugLabel: "تقرير خطأ",

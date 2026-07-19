@@ -932,6 +932,9 @@ export const zh: DeepPartial<Messages> = {
             templates: {
                 projectGroup: "项目模板",
                 manageAction: "管理模板…",
+                setDefaultTask: "设为任务默认模板",
+                setDefaultMilestone: "设为里程碑默认模板",
+                isDefault: "项目默认",
                 defaultLabel: "标准任务",
                 defaultDescription: "目标、背景与验收标准。",
                 bugLabel: "缺陷报告",

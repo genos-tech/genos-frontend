@@ -958,6 +958,9 @@ export const hi: DeepPartial<Messages> = {
             templates: {
                 projectGroup: "प्रोजेक्ट टेम्पलेट",
                 manageAction: "टेम्पलेट प्रबंधित करें…",
+                setDefaultTask: "कार्यों के लिए डिफ़ॉल्ट बनाएँ",
+                setDefaultMilestone: "माइलस्टोन के लिए डिफ़ॉल्ट बनाएँ",
+                isDefault: "प्रोजेक्ट डिफ़ॉल्ट",
                 defaultLabel: "स्टैंडर्ड टास्क",
                 defaultDescription: "लक्ष्य, संदर्भ और स्वीकार्यता मानदंड।",
                 bugLabel: "बग रिपोर्ट",

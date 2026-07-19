@@ -959,6 +959,9 @@ export const es: DeepPartial<Messages> = {
             templates: {
                 projectGroup: "Plantillas del proyecto",
                 manageAction: "Gestionar plantillas…",
+                setDefaultTask: "Predeterminada para tareas",
+                setDefaultMilestone: "Predeterminada para hitos",
+                isDefault: "Predeterminada del proyecto",
                 defaultLabel: "Tarea estándar",
                 defaultDescription: "Objetivo, contexto y criterios de aceptación.",
                 bugLabel: "Reporte de error",

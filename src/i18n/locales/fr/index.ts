@@ -966,6 +966,9 @@ export const fr: DeepPartial<Messages> = {
             templates: {
                 projectGroup: "Modèles du projet",
                 manageAction: "Gérer les modèles…",
+                setDefaultTask: "Définir par défaut pour les tâches",
+                setDefaultMilestone: "Définir par défaut pour les jalons",
+                isDefault: "Modèle par défaut du projet",
                 defaultLabel: "Tâche standard",
                 defaultDescription: "Objectif, contexte et critères d'acceptation.",
                 bugLabel: "Rapport de bug",

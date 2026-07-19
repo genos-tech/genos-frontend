@@ -20,6 +20,7 @@ import {
     loadTaskDependenciesForTasks,
 } from "../../features/tasks/services/loadTaskDependencies";
 import { popSpecificProjectTasks } from "../../features/tasks/services/popSpecificProjectTasks";
+import { ProjectTemplateDefaults } from "../../features/tasks/services/projectTemplateDefaults";
 import { buildTaskTree } from "../../features/tasks/utils/buildTaskTree";
 import { CustomTaskTemplate } from "../../features/tasks/utils/taskTemplates";
 import { UserProps } from "../../types/admin";
@@ -172,6 +173,9 @@ export interface TaskManagementState {
     // Bumped after any create/edit/delete so the create form refetches.
     templatesDirty: boolean;
     setTemplatesDirty: (dirty: boolean) => void;
+    // Per-project default template applied to new tasks/milestones.
+    templateDefaults: ProjectTemplateDefaults;
+    setTemplateDefaults: (defaults: ProjectTemplateDefaults) => void;
 
     // Initial empty task
     initialEmptyTaskId: number | undefined;
@@ -383,6 +387,10 @@ export const useTaskManagement = (
     const [projectTaskTemplates, setProjectTaskTemplates] = useState<CustomTaskTemplate[]>([]);
     const [openManageTemplates, setOpenManageTemplates] = useState(false);
     const [templatesDirty, setTemplatesDirty] = useState(false);
+    const [templateDefaults, setTemplateDefaults] = useState<ProjectTemplateDefaults>({
+        task: null,
+        milestone: null,
+    });
 
     // Initial empty task
     const [initialEmptyTaskId, setInitialEmptyTaskId] = useState<number | undefined>(undefined);
@@ -842,6 +850,8 @@ export const useTaskManagement = (
         setOpenManageTemplates,
         templatesDirty,
         setTemplatesDirty,
+        templateDefaults,
+        setTemplateDefaults,
 
         // Initial empty task
         initialEmptyTaskId,

@@ -5,6 +5,8 @@ import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import DescriptionRoundedIcon from "@mui/icons-material/DescriptionRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
+import StarOutlineRoundedIcon from "@mui/icons-material/StarOutlineRounded";
+import StarRoundedIcon from "@mui/icons-material/StarRounded";
 import WarningRoundedIcon from "@mui/icons-material/WarningRounded";
 import {
     Box,
@@ -13,6 +15,7 @@ import {
     DialogContent,
     DialogTitle,
     Divider,
+    IconButton,
     ListDivider,
     Modal,
     ModalDialog,
@@ -43,6 +46,10 @@ import { LinkedPrCard } from "../../../integrations/components/LinkedPrCard";
 import { parsePrUrl } from "../../../integrations/utils/parsePrUrl";
 import { createEmptyTask } from "../../services/createEmptyTask";
 import { loadProjectTaskTemplates } from "../../services/loadProjectTaskTemplates";
+import {
+    loadProjectTemplateDefaults,
+    saveProjectTemplateDefault,
+} from "../../services/projectTemplateDefaults";
 import {
     updateProjectOptions,
     updateTagOptions,
@@ -190,28 +197,84 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
         applyBlocks(nextId, next.blocks);
     };
 
-    // Picker `onChange`: a `custom:{id}` value resolves against the loaded
-    // project templates; anything else is a built-in id.
-    const handleTemplateChange = (value: string) => {
+    // Resolve a picker value (built-in id or `custom:{id}`) to its blocks.
+    // A `custom:{id}` whose template no longer exists (deleted after being
+    // set as a default) falls back to the current kind's built-in.
+    const resolveTemplateBlocks = (value: string): { value: string; blocks: PartialBlock[] } => {
         const customId = parseCustomTemplateValue(value);
         if (customId !== null) {
             const custom = useTM.projectTaskTemplates.find((tpl) => tpl.id === customId);
-            if (custom) applyBlocks(value, custom.body);
-            return;
+            if (custom) return { value, blocks: custom.body };
+        } else {
+            const builtin = TASK_TEMPLATES[value as TaskTemplateId];
+            if (builtin) return { value, blocks: builtin.blocks };
         }
-        applyTemplate(value as TaskTemplateId);
+        const fallback = creationKind === "milestone" ? "milestone" : "default";
+        return { value: fallback, blocks: TASK_TEMPLATES[fallback].blocks };
     };
 
-    // Load this project's custom templates for the picker: on mount, when
-    // the project changes, and after any create/edit/delete (the manage
-    // modal flips `templatesDirty`).
+    // The project's saved default for a kind, or the built-in fallback.
+    // Tasks and subtasks share the "task" default (milestone is the only
+    // distinct kind).
+    const defaultValueForKind = (kind: string): string =>
+        kind === "milestone"
+            ? (useTM.templateDefaults.milestone ?? "milestone")
+            : (useTM.templateDefaults.task ?? "default");
+
+    const applyDefaultForKind = (kind: string) => {
+        const { value, blocks } = resolveTemplateBlocks(defaultValueForKind(kind));
+        applyBlocks(value, blocks);
+    };
+
+    // Set once the user picks a template themselves (or a draft is
+    // restored). Guards the "apply the project default" effects from
+    // clobbering a deliberate choice when defaults/templates load late.
+    const userPickedTemplateRef = useRef(false);
+
+    // Picker `onChange`: a `custom:{id}` value resolves against the loaded
+    // project templates; anything else is a built-in id.
+    const handleTemplateChange = (value: string) => {
+        userPickedTemplateRef.current = true;
+        const resolved = resolveTemplateBlocks(value);
+        applyBlocks(resolved.value, resolved.blocks);
+    };
+
+    // Persist the currently-selected template as this project's default for
+    // the current kind (task/subtask → "task"; milestone → "milestone").
+    const [isSavingDefault, setIsSavingDefault] = useState(false);
+    const defaultKind = creationKind === "milestone" ? "milestone" : "task";
+    const isCurrentDefault =
+        (useTM.templateDefaults[defaultKind] ??
+            (defaultKind === "milestone" ? "milestone" : "default")) === templateId;
+    const handleSetAsDefault = async () => {
+        const projectId = usePM.currentProject?.projectId;
+        if (!projectId || templateId === TEMPLATE_MANAGE_ACTION) return;
+        setIsSavingDefault(true);
+        const updated = await saveProjectTemplateDefault(
+            projectId,
+            defaultKind,
+            templateId,
+            accessToken
+        );
+        if (updated) useTM.setTemplateDefaults(updated);
+        setIsSavingDefault(false);
+    };
+
+    // Load this project's custom templates + defaults for the picker: on
+    // mount, when the project changes, and after any create/edit/delete
+    // (the manage modal flips `templatesDirty`).
     useEffect(() => {
         const projectId = usePM.currentProject?.projectId;
         if (!projectId) return;
         let cancelled = false;
         (async () => {
-            const templates = await loadProjectTaskTemplates(myself, projectId, accessToken);
-            if (!cancelled) useTM.setProjectTaskTemplates(templates);
+            const [templates, defaults] = await Promise.all([
+                loadProjectTaskTemplates(myself, projectId, accessToken),
+                loadProjectTemplateDefaults(myself, projectId, accessToken),
+            ]);
+            if (cancelled) return;
+            useTM.setProjectTaskTemplates(templates);
+            useTM.setTemplateDefaults(defaults);
             if (useTM.templatesDirty) useTM.setTemplatesDirty(false);
         })();
         return () => {
@@ -220,18 +283,24 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [usePM.currentProject?.projectId, useTM.templatesDirty]);
 
-    // When the user toggles the creationKind chip (task ↔ milestone) we
-    // surface a sensible default template, but only if they haven't picked
-    // a different one themselves yet — if they're already on a non-default
-    // (or custom) template, leave their choice alone.
+    // Toggling the creationKind chip is a fresh intent: apply that kind's
+    // project default and clear the manual-pick guard. (A restored draft
+    // re-sets the guard afterwards — its effect is defined below, so it
+    // runs after this one on mount and wins.)
     useEffect(() => {
-        if (creationKind === "milestone" && templateId === "default") {
-            applyTemplate("milestone");
-        } else if (creationKind === "task" && templateId === "milestone") {
-            applyTemplate("default");
-        }
+        userPickedTemplateRef.current = false;
+        applyDefaultForKind(creationKind);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [creationKind]);
+
+    // Defaults / custom templates often resolve AFTER the form has mounted
+    // (async fetch). Re-apply the kind's default once they land — unless
+    // the user has already chosen a template (or a draft was restored).
+    useEffect(() => {
+        if (userPickedTemplateRef.current) return;
+        applyDefaultForKind(creationKind);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [useTM.templateDefaults, useTM.projectTaskTemplates]);
 
     const switchKind = (kind: "task" | "milestone") => {
         useTM.setIsCreatingTask({
@@ -435,6 +504,10 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
             // reusable. Attachments are dropped (see TaskDraft docstring).
             const draft = useTM.getTaskDraft();
             if (draft) {
+                // A restored draft is a deliberate prior choice — pin it so
+                // the "apply project default" effects don't overwrite the
+                // restored body/template when defaults resolve.
+                userPickedTemplateRef.current = true;
                 setTaskTitle(draft.taskTitle);
                 setBody(draft.body);
                 setAssignee(draft.assignee ?? myself);
@@ -1025,111 +1098,162 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                             <SectionHeader isDark={isDark}>
                                 {t.tasks.createForm.description}
                             </SectionHeader>
-                            <Select
-                                size="sm"
-                                startDecorator={<DescriptionRoundedIcon sx={{ fontSize: 16 }} />}
-                                value={templateId}
-                                renderValue={(opt) => {
-                                    if (!opt) return null;
-                                    const builtin = TASK_TEMPLATES[opt.value as TaskTemplateId];
-                                    const customId = parseCustomTemplateValue(opt.value);
-                                    const tplLabel = builtin
-                                        ? t.tasks.createForm.templates[builtin.labelKey]
-                                        : customId !== null
-                                          ? (useTM.projectTaskTemplates.find(
-                                                (tpl) => tpl.id === customId
-                                            )?.templateName ??
-                                            t.tasks.createForm.templates.defaultLabel)
-                                          : t.tasks.createForm.templates.defaultLabel;
-                                    return (
-                                        <Typography level="body-xs" sx={{ fontWeight: 600 }}>
-                                            {t.tasks.createForm.templatePrefix}
-                                            {tplLabel}
-                                        </Typography>
-                                    );
-                                }}
-                                slotProps={{
-                                    listbox: { sx: { maxWidth: 320 } },
-                                }}
-                                sx={{
-                                    minWidth: 220,
-                                    fontSize: 12,
-                                    "--Select-paddingInline": "10px",
-                                    background: isDark
-                                        ? "rgba(255,255,255,0.04)"
-                                        : "rgba(0,0,0,0.025)",
-                                }}
-                                onChange={(_e, value) => {
-                                    if (!value) return;
-                                    if (value === TEMPLATE_MANAGE_ACTION) {
-                                        useTM.setOpenManageTemplates(true);
-                                        return;
+                            <Stack alignItems="center" direction="row" spacing={0.5}>
+                                {/* Pin the current template as this project's
+                                    default for the current kind (task/subtask
+                                    vs milestone). Filled star = already the
+                                    default. */}
+                                <AppTooltip
+                                    title={
+                                        isCurrentDefault
+                                            ? t.tasks.createForm.templates.isDefault
+                                            : defaultKind === "milestone"
+                                              ? t.tasks.createForm.templates.setDefaultMilestone
+                                              : t.tasks.createForm.templates.setDefaultTask
                                     }
-                                    handleTemplateChange(value);
-                                }}
-                            >
-                                {TASK_TEMPLATE_OPTIONS.map((tpl) => (
-                                    <Option key={tpl.id} value={tpl.id}>
-                                        <Stack spacing={0.25} sx={{ minWidth: 0 }}>
-                                            <Typography level="body-sm" sx={{ fontWeight: 600 }}>
-                                                {t.tasks.createForm.templates[tpl.labelKey]}
-                                            </Typography>
-                                            <Typography
-                                                level="body-xs"
-                                                sx={{
-                                                    color: isDark
-                                                        ? "rgba(255,255,255,0.6)"
-                                                        : "rgba(0,0,0,0.6)",
-                                                }}
-                                            >
-                                                {t.tasks.createForm.templates[tpl.descriptionKey]}
-                                            </Typography>
-                                        </Stack>
-                                    </Option>
-                                ))}
-
-                                {/* Project-scoped custom templates, when any
-                                    exist for the current project. */}
-                                {useTM.projectTaskTemplates.length > 0 && (
-                                    <ListDivider role="none" />
-                                )}
-                                {useTM.projectTaskTemplates.length > 0 && (
-                                    <Typography
-                                        level="body-xs"
+                                >
+                                    <IconButton
+                                        aria-label={t.tasks.createForm.templates.setDefaultTask}
+                                        disabled={
+                                            isSavingDefault ||
+                                            isCurrentDefault ||
+                                            templateId === TEMPLATE_MANAGE_ACTION
+                                        }
+                                        size="sm"
+                                        variant="plain"
                                         sx={{
-                                            px: 1.5,
-                                            py: 0.5,
-                                            fontWeight: 600,
-                                            textTransform: "uppercase",
-                                            letterSpacing: "0.06em",
-                                            fontSize: 10,
-                                            color: isDark
-                                                ? "rgba(255,255,255,0.4)"
-                                                : "rgba(0,0,0,0.4)",
+                                            "--IconButton-size": "28px",
+                                            color: isCurrentDefault
+                                                ? "#f5c518"
+                                                : isDark
+                                                  ? "rgba(255,255,255,0.5)"
+                                                  : "rgba(0,0,0,0.45)",
                                         }}
+                                        onClick={handleSetAsDefault}
                                     >
-                                        {t.tasks.createForm.templates.projectGroup}
-                                    </Typography>
-                                )}
-                                {useTM.projectTaskTemplates.map((tpl) => (
-                                    <Option
-                                        key={customTemplateValue(tpl.id)}
-                                        value={customTemplateValue(tpl.id)}
-                                    >
-                                        <Typography level="body-sm" sx={{ fontWeight: 600 }}>
-                                            {tpl.templateName}
+                                        {isCurrentDefault ? (
+                                            <StarRoundedIcon sx={{ fontSize: 18 }} />
+                                        ) : (
+                                            <StarOutlineRoundedIcon sx={{ fontSize: 18 }} />
+                                        )}
+                                    </IconButton>
+                                </AppTooltip>
+                                <Select
+                                    size="sm"
+                                    startDecorator={
+                                        <DescriptionRoundedIcon sx={{ fontSize: 16 }} />
+                                    }
+                                    value={templateId}
+                                    renderValue={(opt) => {
+                                        if (!opt) return null;
+                                        const builtin =
+                                            TASK_TEMPLATES[opt.value as TaskTemplateId];
+                                        const customId = parseCustomTemplateValue(opt.value);
+                                        const tplLabel = builtin
+                                            ? t.tasks.createForm.templates[builtin.labelKey]
+                                            : customId !== null
+                                              ? (useTM.projectTaskTemplates.find(
+                                                    (tpl) => tpl.id === customId
+                                                )?.templateName ??
+                                                t.tasks.createForm.templates.defaultLabel)
+                                              : t.tasks.createForm.templates.defaultLabel;
+                                        return (
+                                            <Typography level="body-xs" sx={{ fontWeight: 600 }}>
+                                                {t.tasks.createForm.templatePrefix}
+                                                {tplLabel}
+                                            </Typography>
+                                        );
+                                    }}
+                                    slotProps={{
+                                        listbox: { sx: { maxWidth: 320 } },
+                                    }}
+                                    sx={{
+                                        minWidth: 220,
+                                        fontSize: 12,
+                                        "--Select-paddingInline": "10px",
+                                        background: isDark
+                                            ? "rgba(255,255,255,0.04)"
+                                            : "rgba(0,0,0,0.025)",
+                                    }}
+                                    onChange={(_e, value) => {
+                                        if (!value) return;
+                                        if (value === TEMPLATE_MANAGE_ACTION) {
+                                            useTM.setOpenManageTemplates(true);
+                                            return;
+                                        }
+                                        handleTemplateChange(value);
+                                    }}
+                                >
+                                    {TASK_TEMPLATE_OPTIONS.map((tpl) => (
+                                        <Option key={tpl.id} value={tpl.id}>
+                                            <Stack spacing={0.25} sx={{ minWidth: 0 }}>
+                                                <Typography
+                                                    level="body-sm"
+                                                    sx={{ fontWeight: 600 }}
+                                                >
+                                                    {t.tasks.createForm.templates[tpl.labelKey]}
+                                                </Typography>
+                                                <Typography
+                                                    level="body-xs"
+                                                    sx={{
+                                                        color: isDark
+                                                            ? "rgba(255,255,255,0.6)"
+                                                            : "rgba(0,0,0,0.6)",
+                                                    }}
+                                                >
+                                                    {
+                                                        t.tasks.createForm.templates[
+                                                            tpl.descriptionKey
+                                                        ]
+                                                    }
+                                                </Typography>
+                                            </Stack>
+                                        </Option>
+                                    ))}
+
+                                    {/* Project-scoped custom templates, when any
+                                    exist for the current project. */}
+                                    {useTM.projectTaskTemplates.length > 0 && (
+                                        <ListDivider role="none" />
+                                    )}
+                                    {useTM.projectTaskTemplates.length > 0 && (
+                                        <Typography
+                                            level="body-xs"
+                                            sx={{
+                                                px: 1.5,
+                                                py: 0.5,
+                                                fontWeight: 600,
+                                                textTransform: "uppercase",
+                                                letterSpacing: "0.06em",
+                                                fontSize: 10,
+                                                color: isDark
+                                                    ? "rgba(255,255,255,0.4)"
+                                                    : "rgba(0,0,0,0.4)",
+                                            }}
+                                        >
+                                            {t.tasks.createForm.templates.projectGroup}
+                                        </Typography>
+                                    )}
+                                    {useTM.projectTaskTemplates.map((tpl) => (
+                                        <Option
+                                            key={customTemplateValue(tpl.id)}
+                                            value={customTemplateValue(tpl.id)}
+                                        >
+                                            <Typography level="body-sm" sx={{ fontWeight: 600 }}>
+                                                {tpl.templateName}
+                                            </Typography>
+                                        </Option>
+                                    ))}
+
+                                    <ListDivider role="none" />
+                                    <Option value={TEMPLATE_MANAGE_ACTION}>
+                                        <SettingsRoundedIcon sx={{ fontSize: 15, mr: 0.75 }} />
+                                        <Typography level="body-sm">
+                                            {t.tasks.createForm.templates.manageAction}
                                         </Typography>
                                     </Option>
-                                ))}
-
-                                <ListDivider role="none" />
-                                <Option value={TEMPLATE_MANAGE_ACTION}>
-                                    <SettingsRoundedIcon sx={{ fontSize: 15, mr: 0.75 }} />
-                                    <Typography level="body-sm">
-                                        {t.tasks.createForm.templates.manageAction}
-                                    </Typography>
-                                </Option>
-                            </Select>
+                                </Select>
+                            </Stack>
                         </Stack>
                         <Box
                             sx={{

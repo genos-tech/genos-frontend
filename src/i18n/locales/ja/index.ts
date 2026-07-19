@@ -1008,6 +1008,9 @@ export const ja: DeepPartial<Messages> = {
             templates: {
                 projectGroup: "プロジェクトテンプレート",
                 manageAction: "テンプレートを管理…",
+                setDefaultTask: "タスクの既定に設定",
+                setDefaultMilestone: "マイルストーンの既定に設定",
+                isDefault: "プロジェクトの既定",
                 defaultLabel: "標準タスク",
                 defaultDescription: "目的、背景、受け入れ条件。",
                 bugLabel: "バグ報告",

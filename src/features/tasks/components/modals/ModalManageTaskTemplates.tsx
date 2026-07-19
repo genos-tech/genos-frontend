@@ -188,7 +188,14 @@ export const ModalManageTaskTemplates: React.FC<Props> = ({
         <Modal
             open={open}
             sx={{
-                zIndex: 10010,
+                // Deliberately NOT the 10010 the tag modals use: this modal
+                // hosts a BlockNote editor, and BlockNote's floating menus
+                // (slash / formatting / link) are lifted to z-index 1400 by
+                // a global App.css override tuned for the 1300-family Joy
+                // modals. Sitting at Joy's default modal z-index keeps those
+                // menus above the dialog instead of trapped behind it. Same
+                // reason ModalTaskView / ModalNoteView host their editors at
+                // the default z-index.
                 backdropFilter: "blur(4px)",
                 // Transparent: Joy's own Backdrop slot already paints the
                 // backdrop + blur; a second layer here reads as near-black.
@@ -207,9 +214,11 @@ export const ModalManageTaskTemplates: React.FC<Props> = ({
                     boxShadow:
                         "0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(124,58,237,0.1)",
                     width: { xs: "calc(100vw - 24px)", md: "auto" },
-                    minWidth: { xs: 0, md: "560px" },
-                    maxWidth: { xs: "100vw", md: "680px" },
-                    maxHeight: { xs: "calc(100dvh - 32px)", md: "80vh" },
+                    // The author/edit view carries the body editor, so it
+                    // wants noticeably more room than the plain list view.
+                    minWidth: { xs: 0, md: draft ? "760px" : "560px" },
+                    maxWidth: { xs: "100vw", md: draft ? "920px" : "680px" },
+                    maxHeight: { xs: "calc(100dvh - 32px)", md: "88vh" },
                     p: { xs: 2, md: 3 },
                     overflow: "auto",
                 }}
@@ -304,8 +313,8 @@ export const ModalManageTaskTemplates: React.FC<Props> = ({
                                 border: "1px solid rgba(255,255,255,0.08)",
                                 borderRadius: "10px",
                                 p: 1,
-                                minHeight: 220,
-                                maxHeight: "40vh",
+                                minHeight: 340,
+                                maxHeight: "58vh",
                                 overflowY: "auto",
                             }}
                         >
@@ -329,7 +338,19 @@ export const ModalManageTaskTemplates: React.FC<Props> = ({
                             sx={{ justifyContent: "flex-end", mt: 0.5 }}
                         >
                             <Button
-                                sx={{ color: "rgba(255,255,255,0.6)", borderRadius: "10px" }}
+                                sx={{
+                                    borderRadius: "10px",
+                                    // Override the Joy variant CSS vars, not
+                                    // an sx `&:hover` — Joy's own
+                                    // `&:not(.selected):hover` rule outspecifies
+                                    // it and would paint the default light
+                                    // neutral hover bg, leaving white text on a
+                                    // near-white background (invisible).
+                                    "--variant-plainColor": "rgba(255,255,255,0.7)",
+                                    "--variant-plainHoverColor": "#ffffff",
+                                    "--variant-plainHoverBg": "rgba(255,255,255,0.1)",
+                                    "--variant-plainActiveBg": "rgba(255,255,255,0.16)",
+                                }}
                                 variant="plain"
                                 onClick={() => setDraft(null)}
                             >
@@ -493,9 +514,15 @@ export const ModalManageTaskTemplates: React.FC<Props> = ({
                             <Button
                                 variant="plain"
                                 sx={{
-                                    color: "rgba(255,255,255,0.6)",
                                     borderRadius: "10px",
                                     px: 2.5,
+                                    // See the Cancel button: override the Joy
+                                    // variant vars so hover doesn't paint white
+                                    // text on the default light neutral bg.
+                                    "--variant-plainColor": "rgba(255,255,255,0.7)",
+                                    "--variant-plainHoverColor": "#ffffff",
+                                    "--variant-plainHoverBg": "rgba(255,255,255,0.1)",
+                                    "--variant-plainActiveBg": "rgba(255,255,255,0.16)",
                                 }}
                                 onClick={onClose}
                             >
