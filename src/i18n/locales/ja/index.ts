@@ -551,6 +551,8 @@ export const ja: DeepPartial<Messages> = {
             newTaskTooltip: "このスレッドに紐づく新規タスク",
             newTaskAria: "このスレッドに紐づく新規タスクを作成",
             threadTaskBadge: "タスク",
+            threadTaskMenuItem: "スレッドタスク",
+            threadNoteMenuItem: "スレッドノート",
             threadMilestoneBadge: "マイルストーン",
             openNoteTooltip: "このスレッドに紐づくノートを開く",
             online: "オンライン",

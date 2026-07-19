@@ -512,6 +512,8 @@ export const fr: DeepPartial<Messages> = {
             newTaskTooltip: "Nouvelle tâche liée à ce fil",
             newTaskAria: "Créer une nouvelle tâche liée à ce fil",
             threadTaskBadge: "Tâche",
+            threadTaskMenuItem: "Tâche du fil",
+            threadNoteMenuItem: "Note du fil",
             threadMilestoneBadge: "Jalon",
             openNoteTooltip: "Ouvrir la note liée à ce fil",
             online: "En ligne",

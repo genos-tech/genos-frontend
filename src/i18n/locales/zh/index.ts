@@ -491,6 +491,8 @@ export const zh: DeepPartial<Messages> = {
             newTaskTooltip: "新建与此话题关联的任务",
             newTaskAria: "创建与此话题关联的新任务",
             threadTaskBadge: "任务",
+            threadTaskMenuItem: "话题任务",
+            threadNoteMenuItem: "话题笔记",
             threadMilestoneBadge: "里程碑",
             openNoteTooltip: "打开与此话题关联的笔记",
             online: "在线",

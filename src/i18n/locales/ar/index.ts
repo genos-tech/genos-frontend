@@ -506,6 +506,8 @@ export const ar: DeepPartial<Messages> = {
             newTaskTooltip: "مهمة جديدة مرتبطة بهذا الموضوع",
             newTaskAria: "إنشاء مهمة جديدة مرتبطة بهذا الموضوع",
             threadTaskBadge: "مهمة",
+            threadTaskMenuItem: "مهمة الموضوع",
+            threadNoteMenuItem: "ملاحظة الموضوع",
             threadMilestoneBadge: "مرحلة",
             openNoteTooltip: "فتح الملاحظة المرتبطة بهذا الموضوع",
             online: "متصل",

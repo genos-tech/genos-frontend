@@ -509,6 +509,8 @@ export const es: DeepPartial<Messages> = {
             newTaskTooltip: "Nueva tarea vinculada a este hilo",
             newTaskAria: "Crear una nueva tarea vinculada a este hilo",
             threadTaskBadge: "Tarea",
+            threadTaskMenuItem: "Tarea del hilo",
+            threadNoteMenuItem: "Nota del hilo",
             threadMilestoneBadge: "Hito",
             openNoteTooltip: "Abrir nota vinculada a este hilo",
             online: "En línea",

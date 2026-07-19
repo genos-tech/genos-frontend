@@ -408,7 +408,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                         {!hasTask && chatType !== 3 && (
                             <MenuItem onClick={createTaskHandler}>
                                 <AddTaskRoundedIcon sx={{ fontSize: 18, color: "#fff" }} />
-                                {t.chat.headers.newTaskTooltip}
+                                {t.chat.headers.threadTaskMenuItem}
                             </MenuItem>
                         )}
                         {chatType !== 3 && (
@@ -416,7 +416,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                                 <NoteAltRoundedIcon
                                     sx={{ fontSize: 18, color: styles.accentColor }}
                                 />
-                                {t.chat.headers.openNoteTooltip}
+                                {t.chat.headers.threadNoteMenuItem}
                             </MenuItem>
                         )}
                     </Menu>
@@ -617,19 +617,8 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                             }}
                             items={[
                                 {
-                                    id: "open-note",
-                                    label: t.chat.headers.openNoteTooltip,
-                                    icon: (
-                                        <NoteAltRoundedIcon
-                                            sx={{ fontSize: 18, color: styles.accentColor }}
-                                        />
-                                    ),
-                                    visible: showOpenNote,
-                                    onClick: openNoteHandler,
-                                },
-                                {
                                     id: "create-task",
-                                    label: t.chat.headers.newTaskTooltip,
+                                    label: t.chat.headers.threadTaskMenuItem,
                                     icon: (
                                         <AddTaskRoundedIcon
                                             sx={{ fontSize: 18, color: styles.accentColor }}
@@ -637,6 +626,17 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                                     ),
                                     visible: showCreateTask,
                                     onClick: createTaskHandler,
+                                },
+                                {
+                                    id: "open-note",
+                                    label: t.chat.headers.threadNoteMenuItem,
+                                    icon: (
+                                        <NoteAltRoundedIcon
+                                            sx={{ fontSize: 18, color: styles.accentColor }}
+                                        />
+                                    ),
+                                    visible: showOpenNote,
+                                    onClick: openNoteHandler,
                                 },
                             ]}
                         />
