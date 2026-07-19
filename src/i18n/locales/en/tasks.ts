@@ -661,6 +661,16 @@ export const tasks = {
             sprint: "Sprint",
             updatedAt: "Last Updated",
             createdDate: "Created Date",
+            weight: "Weight",
+        },
+        // "Task Weight" = priority × urgency (1..25), shown on the derived
+        // Weight column and the dashboard's Top-by-Weight / Up Next chips.
+        weightTooltip: "Task Weight {weight}/{max}",
+        weightBands: {
+            low: "Low",
+            medium: "Medium",
+            high: "High",
+            critical: "Critical",
         },
     },
 
@@ -675,6 +685,28 @@ export const tasks = {
 
     // Dashboard table headers / labels.
     dashboard: {
+        // Task Weight (priority × urgency) — short chip prefix, e.g. "Wt 20".
+        weightShort: "Wt",
+        // Team Capacity: Σ effort of a member's active tasks, bucketed by
+        // due-window, answering "who's busy today vs. later".
+        capacity: {
+            title: "Team Capacity",
+            subtitle: "Active effort load by member — who's busy now vs. later",
+            overdue: "Overdue",
+            today: "Today",
+            week: "This week",
+            later: "Later",
+            none: "No date",
+            nearTerm: "Near-term load (overdue + this week)",
+            empty: "No active tasks assigned yet.",
+            tasksCount: "{count} tasks",
+            effortTooltip: "{label}: {points} effort pts",
+        },
+        // Top by Weight: the highest priority × urgency active tasks.
+        topWeight: {
+            title: "Top by Weight",
+            subtitle: "Highest priority × urgency right now",
+        },
         velocity: {
             title: "Velocity",
             subtitle: "Tasks created, started, closed & updated over time",

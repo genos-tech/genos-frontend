@@ -32,13 +32,14 @@ import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
-import { useTranslation } from "../../../../i18n";
+import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TaskTableProps } from "../../../../types/tasks";
 import { stripOwnerState } from "../../../../utils/joyAutocomplete";
 import { PrStatusCell } from "../../../integrations/components/PrStatusCell";
 import { formatTaskDisplayId } from "../../utils/taskDisplayId";
 import { effortLevels, priorities } from "../../utils/taskMeta";
+import { computeTaskWeight, MAX_TASK_WEIGHT, weightBand } from "../../utils/taskWeight";
 import { ColumnDef, LEADING_GUTTER_WIDTH, statusOptions } from "./DraggableTaskTable";
 
 // Depth-based background colors for nested task rows. Exported (along
@@ -1210,6 +1211,49 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                         onClick={() => handleStartEdit("effortLevel", value as string)}
                     />
                 ) : null;
+
+            case "weight": {
+                // Derived Task Weight (priority × urgency). Read-only; it
+                // tracks the priority + due-date cells rather than a stored
+                // value. When BOTH are unset the number is just the floor
+                // (1) with no real signal, so render a muted dash instead —
+                // mirrors the "no due date" dash on the daysLeft cell.
+                if (!task.priority && !task.dueDate) {
+                    return (
+                        <Typography
+                            level="body-sm"
+                            sx={{
+                                fontStyle: "italic",
+                                color: mode === "dark" ? "#888" : "#999",
+                            }}
+                        >
+                            —
+                        </Typography>
+                    );
+                }
+                const weight = computeTaskWeight(task);
+                const { band, color } = weightBand(weight);
+                return (
+                    <AppTooltip
+                        title={`${fmt(t.tasks.table.weightTooltip, {
+                            weight,
+                            max: MAX_TASK_WEIGHT,
+                        })} · ${t.tasks.table.weightBands[band]}`}
+                    >
+                        <Chip
+                            label={weight}
+                            size="small"
+                            sx={{
+                                backgroundColor: alpha(color, mode === "dark" ? 0.5 : 0.75),
+                                color: "white",
+                                fontWeight: "bold",
+                                borderRadius: "6px",
+                                minWidth: 30,
+                            }}
+                        />
+                    </AppTooltip>
+                );
+            }
 
             case "daysLeft":
                 // A task with no due date can't be "expired" — guard the

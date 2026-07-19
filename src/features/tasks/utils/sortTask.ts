@@ -1,6 +1,7 @@
 import dayjs from "dayjs";
 
 import { TaskTableProps } from "../../../types/tasks";
+import { computeTaskWeight } from "./taskWeight";
 
 /**
  * Shared sort helpers consumed by both the task table (column header
@@ -112,6 +113,10 @@ export const fieldValue = (task: TaskTableProps, field: string): number | string
             return PRIORITY_RANK[task.priority ?? ""] ?? null;
         case "effortLevel":
             return EFFORT_RANK[task.effortLevel ?? ""] ?? null;
+        case "weight":
+            // Derived Task Weight (priority × urgency, 1..25). Recomputed
+            // per sort so "Weight desc" always reflects today's urgency.
+            return computeTaskWeight(task);
         case "status":
             return STATUS_RANK[task.status ?? ""] ?? null;
         case "tags":
@@ -328,12 +333,14 @@ export const SORT_FIELD_OPTIONS: ReadonlyArray<{
         | "status"
         | "priority"
         | "effortLevel"
+        | "weight"
         | "dueDate"
         | "assignee"
         | "updatedAt"
         | "createdDate";
 }> = [
     { value: "priority", labelKey: "priority" },
+    { value: "weight", labelKey: "weight" },
     { value: "dueDate", labelKey: "dueDate" },
     { value: "status", labelKey: "status" },
     { value: "effortLevel", labelKey: "effortLevel" },
