@@ -6,6 +6,12 @@ import { MilestoneResponse } from "../types";
 export type CreateMilestoneInput = {
     projectId: number;
     title: string;
+    // Chat-thread origin when the milestone is created from a DM/GM/MDM
+    // thread — stored on the backing task row server-side (same columns
+    // as task creation). Omit / null for every other entry point.
+    chatType?: number | null;
+    chatId?: string | null;
+    threadId?: string | null;
     sprintId?: number | null;
     description?: unknown;
     status?: string;
@@ -33,6 +39,9 @@ export const createMilestone = async (
             const res = await api.post("/milestone/", {
                 project_id: input.projectId,
                 title: input.title,
+                chat_type: input.chatType ?? null,
+                chat_id: input.chatId ?? null,
+                thread_id: input.threadId ?? null,
                 sprint_id: input.sprintId ?? null,
                 description: input.description ?? null,
                 status: input.status ?? "Open",

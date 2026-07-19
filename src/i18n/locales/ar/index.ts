@@ -505,6 +505,8 @@ export const ar: DeepPartial<Messages> = {
             openTask: "فتح المهمة",
             newTaskTooltip: "مهمة جديدة مرتبطة بهذا الموضوع",
             newTaskAria: "إنشاء مهمة جديدة مرتبطة بهذا الموضوع",
+            threadTaskBadge: "مهمة",
+            threadMilestoneBadge: "مرحلة",
             openNoteTooltip: "فتح الملاحظة المرتبطة بهذا الموضوع",
             online: "متصل",
             offline: "غير متصل",
@@ -651,6 +653,8 @@ export const ar: DeepPartial<Messages> = {
         },
         errors: {
             createTaskFailed: "تعذّر إنشاء المهمة",
+            threadAlreadyHasTask:
+                "هذا الموضوع مرتبط بمهمة بالفعل — لا يمكن ربط الموضوع إلا بمهمة واحدة.",
             taskLimitReached:
                 "لقد استخدمت {used} من أصل {limit} من إنشاءات المهام الشهرية في خطتك. قم بترقية خطتك لإنشاء المزيد من المهام.",
             deleteEmptyTaskFailed: "تعذّر حذف المهمة الفارغة",

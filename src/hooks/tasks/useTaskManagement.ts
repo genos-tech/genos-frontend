@@ -75,6 +75,20 @@ export interface TaskManagementState {
         // "Create as Milestone" toggle (milestones can't have child
         // milestones).
         milestoneId: number | null;
+        // Chat-thread origin, captured AT CLICK TIME by the thread
+        // header's "Create task" action — the ONLY entry point that may
+        // set it. Every other opener leaves it absent, which is what
+        // makes the linkage trustworthy: the create submit reads this
+        // (via the form's taskContent seed) instead of sniffing
+        // useCM.currentThreadChat at submit time, which still holds the
+        // LAST thread after the pane closes (the close handler writes a
+        // dummy that keeps the ids) and silently linked tasks created
+        // from the tasks page / PM header to an unrelated thread.
+        fromThread?: {
+            chatType: number;
+            chatId: string;
+            threadId: string;
+        } | null;
     };
     // Widened to `Dispatch<SetStateAction<...>>` so callers can patch a
     // single field via functional updates (`(prev) => ({ ...prev, flag: false })`)
@@ -89,6 +103,11 @@ export interface TaskManagementState {
             rootTaskId: number | null;
             creationKind: "task" | "milestone";
             milestoneId: number | null;
+            fromThread?: {
+                chatType: number;
+                chatId: string;
+                threadId: string;
+            } | null;
         }>
     >;
 
@@ -251,6 +270,14 @@ export const useTaskManagement = (
         rootTaskId: number | null;
         creationKind: "task" | "milestone";
         milestoneId: number | null;
+        // See TaskManagementState.isCreatingTask — optional so the many
+        // full-object writers (open/teardown sites) reset it to absent
+        // just by omitting the key.
+        fromThread?: {
+            chatType: number;
+            chatId: string;
+            threadId: string;
+        } | null;
     }>({
         flag: false,
         parentTaskId: null,

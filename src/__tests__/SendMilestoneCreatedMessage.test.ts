@@ -36,7 +36,6 @@ const makeProject = (over = {}) =>
 const makeMilestone = (over = {}) =>
     ({ taskId: 42, status: "Open", title: "M1", milestoneId: 1, ...over }) as any;
 const USER = { userId: "u1", userName: "Me", teamId: "t1", teamName: "T" } as any;
-const useCM = { isThreadVisible: false } as any;
 
 const baseInput = () => ({
     myself: USER,
@@ -45,7 +44,9 @@ const baseInput = () => ({
     sprintName: "Sprint 1",
     reporter: USER,
     assignees: [USER],
-    useCM,
+    // No thread origin by default — the thread cross-post is opt-in via
+    // the explicit context captured at create-intent time.
+    fromThread: null,
 });
 
 describe("sendMilestoneCreatedMessage", () => {
@@ -119,5 +120,30 @@ describe("sendMilestoneCreatedMessage", () => {
             milestone: makeMilestone({ taskId: null }),
         });
         expect(channelService.send).not.toHaveBeenCalled();
+    });
+
+    it("cross-posts into the captured origin thread (not ambient chat state)", async () => {
+        await sendMilestoneCreatedMessage({
+            ...baseInput(),
+            fromThread: { chatType: 1, chatId: "dm-uuid", threadId: "root-uuid" },
+        });
+
+        const send = channelService.send as unknown as ReturnType<typeof vi.fn>;
+        expect(send).toHaveBeenCalledTimes(2);
+        const threadSend = send.mock.calls.find(([chanId]) => chanId === "dm-uuid");
+        expect(threadSend).toBeDefined();
+        expect(threadSend![2]?.parentId).toBe("root-uuid");
+        expect(threadSend![2]?.metadata.taskId).toBe(42);
+    });
+
+    it("does NOT cross-post for a PM-thread origin", async () => {
+        await sendMilestoneCreatedMessage({
+            ...baseInput(),
+            fromThread: { chatType: 3, chatId: "pm-uuid", threadId: "card-uuid" },
+        });
+
+        const send = channelService.send as unknown as ReturnType<typeof vi.fn>;
+        const parented = send.mock.calls.filter(([, , opts]) => opts?.parentId);
+        expect(parented).toHaveLength(0);
     });
 });

@@ -508,6 +508,8 @@ export const es: DeepPartial<Messages> = {
             openTask: "Abrir tarea",
             newTaskTooltip: "Nueva tarea vinculada a este hilo",
             newTaskAria: "Crear una nueva tarea vinculada a este hilo",
+            threadTaskBadge: "Tarea",
+            threadMilestoneBadge: "Hito",
             openNoteTooltip: "Abrir nota vinculada a este hilo",
             online: "En línea",
             offline: "Desconectado",
@@ -655,6 +657,8 @@ export const es: DeepPartial<Messages> = {
         },
         errors: {
             createTaskFailed: "No se pudo crear la tarea",
+            threadAlreadyHasTask:
+                "Este hilo ya tiene una tarea: un hilo solo puede vincularse a una tarea.",
             taskLimitReached:
                 "Has usado {used} de las {limit} creaciones de tareas mensuales de tu plan. Mejora tu plan para crear más tareas.",
             deleteEmptyTaskFailed: "No se pudo eliminar la tarea vacía",

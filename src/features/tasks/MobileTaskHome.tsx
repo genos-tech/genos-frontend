@@ -389,7 +389,6 @@ export const MobileTaskHome = (props: MobileTaskHomeProps) => {
                 >
                     <Box sx={{ p: 1, height: "100%", overflow: "auto" }}>
                         <CreateTaskForm
-                            chatType={-1}
                             myself={myself}
                             setMyself={setMyself}
                             socket={socket}

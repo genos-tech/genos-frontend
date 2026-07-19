@@ -114,10 +114,33 @@ describe("uploadNewTask → PM channel", () => {
         }
     });
 
-    it("still cross-posts into an open DM thread (a parented send that must keep working)", async () => {
+    it("still cross-posts into the origin DM thread (a parented send that must keep working)", async () => {
         // Regression guard for the removal itself: this OTHER parented
         // send is a different feature (trail back to the task from the
-        // conversation it came from) and must survive.
+        // conversation it came from) and must survive. The target now
+        // comes from taskContent's captured linkage (`fromThread` →
+        // chatType/chatId/threadId), NOT from whatever chat state is
+        // open at submit time — a task created from a thread must post
+        // there even if the pane was closed before submitting.
+        await uploadNewTask({
+            ...baseInput(),
+            taskContent: makeTaskContent({
+                chatType: 1,
+                chatId: "dm-uuid",
+                threadId: "thread-uuid",
+            }),
+        });
+
+        const send = channelService.send as unknown as ReturnType<typeof vi.fn>;
+        const dmSends = send.mock.calls.filter(([chanId]) => chanId === "dm-uuid");
+        expect(dmSends).toHaveLength(1);
+        expect(dmSends[0][2].parentId).toBe("thread-uuid");
+    });
+
+    it("does NOT cross-post from ambient chat state when taskContent has no linkage", async () => {
+        // The pre-fix behavior: an open-but-unrelated thread leaked its
+        // ids into the create. With no captured linkage there must be no
+        // parented send, regardless of what useCM holds.
         await uploadNewTask({
             ...baseInput(),
             useCM: {
@@ -130,7 +153,6 @@ describe("uploadNewTask → PM channel", () => {
 
         const send = channelService.send as unknown as ReturnType<typeof vi.fn>;
         const dmSends = send.mock.calls.filter(([chanId]) => chanId === "dm-uuid");
-        expect(dmSends).toHaveLength(1);
-        expect(dmSends[0][2].parentId).toBe("thread-uuid");
+        expect(dmSends).toHaveLength(0);
     });
 });

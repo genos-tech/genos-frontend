@@ -40,22 +40,29 @@ import { useTranslation } from "../../../../i18n";
 import { MuteTargetButton } from "../../../../services/notifications/MuteTargetButton";
 import { UserProps } from "../../../../types/admin";
 import { ThreadProps } from "../../../../types/chat";
+import { TaskProps } from "../../../../types/tasks";
 import { CHAT_TYPE_CODE, SpotlightResult } from "../../../spotlight/types";
 import { CopyableTaskIdText } from "../../../tasks/components/CopyableTaskId";
 import { formatTaskDisplayId } from "../../../tasks/utils/taskDisplayId";
 import { ThreadAskModal } from "../../../threadAsk/ThreadAskModal";
 import { useThreadAsk } from "../../../threadAsk/useThreadAsk";
 import { useChatContext } from "../../context/ChatContext";
+import { ThreadTaskBreadcrumbs } from "./ThreadTaskBreadcrumbs";
 
 type ThreadChatPaneHeaderProps = {
     myself: UserProps;
     useCM: ChatManagementState;
     useNM: NoteManagementState;
     useTM: TaskManagementState;
+    /** Full task behind this thread, resolved by `useThreadTaskMeta` in
+     *  ThreadPane. Renders the task-info breadcrumb; null while
+     *  unresolved (the legacy pill covers the id-known/meta-missing
+     *  gap). */
+    threadTaskMeta?: TaskProps | null;
 };
 
 export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
-    const { myself, useCM, useNM, useTM } = props;
+    const { myself, useCM, useNM, useTM, threadTaskMeta } = props;
     const { mode } = useColorScheme();
     const { t } = useTranslation();
     const isDark = mode === "dark";
@@ -219,16 +226,65 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
         });
     };
 
+    // Open the thread's task from the breadcrumb tail. Same panel flips
+    // as the legacy pill, but the project seed comes from the resolved
+    // meta — which carries the task's REAL project even when the thread
+    // lives outside the currently-loaded one (DM/GM cross-project
+    // threads, where neither the host channel nor `allTasks` can help).
+    const openTaskFromMeta = () => {
+        const meta = threadTaskMeta;
+        useCM.setIsMainChatVisible(false);
+        useCM.setIsThreadVisible(true);
+        if (
+            meta?.project?.projectId != null &&
+            usePM.currentProject?.projectId !== meta.project.projectId
+        ) {
+            // Only when it actually CHANGES — re-setting the current
+            // project with a tag-less copy would strip its tags
+            // app-wide. The API's task payload omits projectTags at
+            // runtime despite the type, hence the default.
+            usePM.setCurrentProject({
+                ...meta.project,
+                projectTags: meta.project.projectTags ?? [],
+            });
+        }
+        const targetId = Number(meta?.id ?? currentThreadTaskId);
+        useTM.setCurrentPreviewTaskId(
+            Number.isFinite(targetId) && targetId > 0 ? targetId : currentThreadTaskId
+        );
+        useTM.setIsTaskPreviewVisible(true);
+        useTM.setIsCreatingTask({
+            flag: false,
+            parentTaskId: null,
+            rootTaskId: null,
+            creationKind: "task",
+            milestoneId: null,
+        });
+    };
+
     const createTaskHandler = () => {
         useCM.setIsMainChatVisible(true);
         useCM.setIsThreadVisible(true);
         useTM.setIsTaskPreviewVisible(false);
+        // Capture the thread origin AT CLICK TIME. This is the only
+        // entry point allowed to set `fromThread` — the create submit
+        // links the task to exactly these ids instead of re-reading
+        // useCM at submit time (which may point at a different — or
+        // long-closed — thread by then).
+        const chatType = useCM.currentThreadChat?.chatType;
+        const chatId = useCM.currentThreadChat?.chatId;
+        const threadId = useCM.currentThreadChat?.threadId;
+        const fromThread =
+            chatType !== undefined && chatType !== 3 && chatId != null && threadId != null
+                ? { chatType, chatId: String(chatId), threadId: String(threadId) }
+                : null;
         useTM.setIsCreatingTask({
             flag: true,
             parentTaskId: null,
             rootTaskId: null,
             creationKind: "task",
             milestoneId: null,
+            fromThread,
         });
     };
 
@@ -381,8 +437,12 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                 minHeight: "64px",
             }}
         >
-            {/* Left section: Thread badge + Avatar + Name */}
-            <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", minWidth: 0 }}>
+            {/* Left section: Thread badge + Avatar + Name + task info */}
+            <Stack
+                direction="row"
+                spacing={1.5}
+                sx={{ alignItems: "center", flex: 1, minWidth: 0, overflow: "hidden" }}
+            >
                 {/* Thread badge */}
                 <Box
                     sx={{
@@ -469,6 +529,17 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                             : useCM.currentThreadChat?.chatName}
                     </Typography>
                 )}
+
+                {/* Task info — the thread's task rendered with the same
+                    breadcrumb component the task-note header uses
+                    (Project → Milestone → parent → Task, task node
+                    clickable). Shown for every thread flavor that
+                    carries a task: DM/GM/MDM once a task was created
+                    from the thread, PM always (a PM thread IS a task
+                    thread). */}
+                {threadTaskMeta && currentThreadTaskId !== -1 && (
+                    <ThreadTaskBreadcrumbs task={threadTaskMeta} onOpen={openTaskFromMeta} />
+                )}
             </Stack>
 
             {/* Right section: Task info + Actions */}
@@ -488,15 +559,18 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
 
                 {/*
                     Task pill — read-only "Open Task #N" affordance with
-                    optional status dot. Only renders when a task exists
-                    for this thread. The Create Task action has moved
-                    into the MoreMenu (below) — having it both inline AND
-                    in the menu would re-introduce the "two ways to do
-                    one thing" confusion the unified pill solved.
+                    optional status dot. FALLBACK ONLY: once the full
+                    task meta resolves, the left section's
+                    ThreadTaskBreadcrumbs is the task affordance and the
+                    pill stands down. It still covers the gap where a
+                    task id is known (thread messages carry the marker)
+                    but the meta fetch hasn't landed or can't (legacy
+                    rows with unrepaired linkage).
                 */}
                 {(() => {
                     const hasTask = currentThreadTaskId !== -1;
                     const chatType = useCM.currentThreadChat?.chatType;
+                    if (threadTaskMeta) return null;
 
                     if (hasTask) {
                         // Original chip-visibility rule: only show status

@@ -179,6 +179,9 @@ export const chat = {
         openTask: "Open Task",
         newTaskTooltip: "New task linked to this thread",
         newTaskAria: "Create a new task linked to this thread",
+        // Breadcrumb badge fallbacks when the task has no displayId.
+        threadTaskBadge: "Task",
+        threadMilestoneBadge: "Milestone",
         openNoteTooltip: "Open Note linked to this thread",
         online: "Online",
         offline: "Offline",

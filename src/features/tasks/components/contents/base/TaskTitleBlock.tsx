@@ -41,6 +41,7 @@ import { MoreMenu, MoreMenuItem } from "../../../../../components/ui/MoreMenu";
 import { TaskHeaderStyles } from "../../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
+import { useUrlLinkModal } from "../../../../../hooks/common/UrlLinkModalContext";
 import { ProjectManagementState } from "../../../../../hooks/common/useProjectManagement";
 import { UIStateManagementState } from "../../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../../hooks/notes/useNoteManagement";
@@ -144,6 +145,46 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
     // regardless of what URL the modal was opened over.
     const isModalHosted = hostZIndex != null;
     const showHeaderActions = isModalHosted || !location.pathname.includes("/workspace/chat");
+    // "Check thread" opens the origin thread in the UrlLinkModal (the
+    // clicked-link→modal convention) instead of navigating the whole
+    // app to the chat page — the user stays on the task they were
+    // reading. Inside a modal-hosted preview the same call re-targets
+    // the open modal to the thread view.
+    const urlLinkModal = useUrlLinkModal();
+    const THREAD_CHAT_TYPE_TO_PATH: Record<number, string> = {
+        1: "dm",
+        2: "gm",
+        3: "pm",
+        4: "mdm",
+    };
+    const openTaskThread = () => {
+        const { chatType, chatId, threadId } = taskContent;
+        if (chatType == null || chatId == null || threadId == null) return;
+        const typePath = THREAD_CHAT_TYPE_TO_PATH[chatType];
+        if (!typePath) return;
+        const href = `/workspace/chat/${typePath}/${chatId}/thread/${threadId}`;
+        if (urlLinkModal) {
+            urlLinkModal.openModalByHref(href);
+            return;
+        }
+        // Outside the modal provider (shouldn't happen in the workspace
+        // shell) — legacy full-page navigation, with the project seeded
+        // so the chat page's auto-loader can hydrate the preview task.
+        if (taskContent.project) {
+            usePM.setCurrentProject(taskContent.project);
+        }
+        useCM.moveToSpecificChat(
+            chatType,
+            chatId,
+            threadId,
+            false,
+            true,
+            useTM.setCurrentPreviewTaskId,
+            usePM.setCurrentProject,
+            undefined,
+            true
+        );
+    };
     const [openDeleteTask, setOpenDeleteTask] = useState<boolean>(false);
     const [showCloseDiscardConfirm, setShowCloseDiscardConfirm] = useState(false);
     // Opens the React Flow task-graph modal anchored on this task.
@@ -497,35 +538,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                             transform: "translateY(-1px)",
                                         },
                                     }}
-                                    onClick={() => {
-                                        // Ensure the project is set so the
-                                        // App-level auto-loader can fetch the
-                                        // preview task on the chat page. The
-                                        // thread's own project may be null for
-                                        // DM/GM threads (no message carries a
-                                        // project); taskContent.project is the
-                                        // reliable source here.
-                                        if (taskContent.project) {
-                                            usePM.setCurrentProject(taskContent.project);
-                                        }
-                                        useCM.moveToSpecificChat(
-                                            taskContent.chatType!,
-                                            taskContent.chatId!,
-                                            taskContent.threadId!,
-                                            false,
-                                            true,
-                                            useTM.setCurrentPreviewTaskId,
-                                            usePM.setCurrentProject,
-                                            undefined,
-                                            // Open the task preview ON THE CHAT
-                                            // PAGE — this entry point is the one
-                                            // the bug names. Distinct from the
-                                            // legacy flag above (deep-link
-                                            // callers pass that true and must
-                                            // not open the chat-page preview).
-                                            true
-                                        );
-                                    }}
+                                    onClick={openTaskThread}
                                 >
                                     <QuestionAnswerRoundedIcon
                                         sx={{ fontSize: 20, color: styles.textColor }}
@@ -596,40 +609,10 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                         taskContent.threadId !== null &&
                                         taskContent.chatType !== null &&
                                         taskContent.chatId !== null,
-                                    onClick: () => {
-                                        // Modal-hosted: close the dialog first —
-                                        // the navigation below lands on the chat
-                                        // page, which the modal would otherwise
-                                        // keep covered. (ModalTaskView overrides
-                                        // setIsTaskPreviewVisible(false) to close.)
-                                        if (isModalHosted) {
-                                            useTM.setIsTaskPreviewVisible(false);
-                                        }
-                                        // See the "Check Thread" button above:
-                                        // seed the project so the chat-page
-                                        // auto-loader can fetch the preview task
-                                        // even for DM/GM threads whose own
-                                        // project is null.
-                                        if (taskContent.project) {
-                                            usePM.setCurrentProject(taskContent.project);
-                                        }
-                                        useCM.moveToSpecificChat(
-                                            taskContent.chatType!,
-                                            taskContent.chatId!,
-                                            taskContent.threadId!,
-                                            false,
-                                            true,
-                                            useTM.setCurrentPreviewTaskId,
-                                            usePM.setCurrentProject,
-                                            undefined,
-                                            // Open the task preview ON THE CHAT
-                                            // PAGE (see the "Check Thread"
-                                            // button above for why this is a
-                                            // dedicated flag, not the legacy
-                                            // openThreadTaskPreview).
-                                            true
-                                        );
-                                    },
+                                    // Opens the thread in the UrlLinkModal (an
+                                    // already-open modal re-targets itself), so
+                                    // no close-first / navigation dance needed.
+                                    onClick: openTaskThread,
                                 },
                                 // The items below drive surfaces the modal
                                 // covers (task-page create form, notes page,

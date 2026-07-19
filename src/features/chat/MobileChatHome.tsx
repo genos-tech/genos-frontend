@@ -221,7 +221,6 @@ export const MobileChatHome = (props: MobileChatHomeProps) => {
                 >
                     <Box sx={{ p: 1, pt: 6, height: "100%", overflow: "auto" }}>
                         <CreateTaskForm
-                            chatType={useCM.currentThreadChat?.chatType || -1}
                             myself={myself}
                             setMyself={setMyself}
                             socket={socket}

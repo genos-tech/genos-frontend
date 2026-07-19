@@ -509,6 +509,8 @@ export const hi: DeepPartial<Messages> = {
             openTask: "टास्क खोलें",
             newTaskTooltip: "इस थ्रेड से जुड़ा नया टास्क",
             newTaskAria: "इस थ्रेड से जुड़ा एक नया टास्क बनाएँ",
+            threadTaskBadge: "टास्क",
+            threadMilestoneBadge: "माइलस्टोन",
             openNoteTooltip: "इस थ्रेड से जुड़ा नोट खोलें",
             online: "ऑनलाइन",
             offline: "ऑफलाइन",
@@ -654,6 +656,8 @@ export const hi: DeepPartial<Messages> = {
         },
         errors: {
             createTaskFailed: "टास्क नहीं बनाया जा सका",
+            threadAlreadyHasTask:
+                "इस थ्रेड में पहले से एक टास्क है — एक थ्रेड केवल एक टास्क से जुड़ सकता है।",
             taskLimitReached:
                 "आपने अपनी योजना की {limit} मासिक कार्य-सीमा में से {used} का उपयोग कर लिया है। और कार्य बनाने के लिए प्लान अपग्रेड करें।",
             deleteEmptyTaskFailed: "खाली टास्क नहीं हटाया जा सका",

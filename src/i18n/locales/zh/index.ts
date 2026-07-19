@@ -490,6 +490,8 @@ export const zh: DeepPartial<Messages> = {
             openTask: "打开任务",
             newTaskTooltip: "新建与此话题关联的任务",
             newTaskAria: "创建与此话题关联的新任务",
+            threadTaskBadge: "任务",
+            threadMilestoneBadge: "里程碑",
             openNoteTooltip: "打开与此话题关联的笔记",
             online: "在线",
             offline: "离线",
@@ -634,6 +636,7 @@ export const zh: DeepPartial<Messages> = {
         },
         errors: {
             createTaskFailed: "创建任务失败",
+            threadAlreadyHasTask: "此话题已关联任务——一个话题只能关联一个任务。",
             taskLimitReached:
                 "您已使用本套餐每月 {limit} 次任务创建中的 {used} 次。升级套餐以创建更多任务。",
             deleteEmptyTaskFailed: "删除空任务失败",

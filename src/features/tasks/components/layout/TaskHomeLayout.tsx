@@ -157,7 +157,6 @@ export const TaskHomeLayout = ({
             <Panel id={"4"} maxSize={80} minSize={30} order={4}>
                 <Box sx={ls.mainPanel}>
                     <CreateTaskForm
-                        chatType={-1}
                         myself={myself}
                         setMyself={setMyself}
                         socket={socket}

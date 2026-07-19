@@ -10,6 +10,7 @@ import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import LocalOfferRoundedIcon from "@mui/icons-material/LocalOfferRounded";
 import NoteAltRoundedIcon from "@mui/icons-material/NoteAltRounded";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
+import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
 import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
 import { Box, Button, Chip, Divider, IconButton, Input, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
@@ -23,6 +24,7 @@ import { MoreMenu, MoreMenuItem } from "../../../../components/ui/MoreMenu";
 import { TaskHeaderStyles } from "../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { useUrlLinkModal } from "../../../../hooks/common/UrlLinkModalContext";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
@@ -1067,9 +1069,12 @@ const milestoneToTaskProps = (
         body: (m.description as PartialBlock[]) ?? [],
         assignee: assignee ?? fallbackUser,
         reporter: reporter ?? fallbackUser,
-        chatType: null,
-        chatId: null,
-        threadId: null,
+        // Thread origin off the backing task (serialized on the
+        // milestone payload) — v3 UUID strings riding the legacy
+        // number-typed slots, same cast as everywhere else.
+        chatType: m.chatType ?? null,
+        chatId: (m.chatId ?? null) as unknown as number | null,
+        threadId: (m.threadId ?? null) as unknown as number | null,
         startDate: m.startDate ?? null,
         dueDate: m.dueDate ?? "",
         status: {
@@ -1183,6 +1188,10 @@ const MilestonePreviewInner = ({
     const isDark = mode === "dark";
     const styles = isDark ? TaskHeaderStyles.dark : TaskHeaderStyles.light;
     const { t } = useTranslation();
+    // "Check thread" — a milestone created from a DM/GM/MDM thread
+    // carries the thread linkage on its backing task; open that thread
+    // in the UrlLinkModal (same behavior as the task header's button).
+    const urlLinkModal = useUrlLinkModal();
 
     const milestone: Milestone | null = useMemo(() => {
         const projectId = usePM.currentProject?.projectId;
@@ -2032,6 +2041,49 @@ const MilestonePreviewInner = ({
                             {milestone.status}
                         </Chip>
                         <Box sx={{ flex: 1 }} />
+                        {/* Check thread — only for milestones created from
+                            a chat thread (linkage lives on the backing
+                            task row). Opens the origin thread in the
+                            UrlLinkModal; mirrors TaskTitleBlock's button
+                            for regular tasks. */}
+                        {milestone.chatType != null &&
+                            milestone.chatId != null &&
+                            milestone.threadId != null && (
+                                <AppTooltip title={t.tasks.titleBlock.checkThread}>
+                                    <IconButton
+                                        size="sm"
+                                        variant="plain"
+                                        sx={{
+                                            background: styles.buttonBg,
+                                            border: `1px solid ${styles.buttonBorder}`,
+                                            borderRadius: "10px",
+                                            width: "36px",
+                                            height: "36px",
+                                            transition: "all 0.2s ease",
+                                            "&:hover": {
+                                                background: styles.buttonHover,
+                                                transform: "translateY(-1px)",
+                                            },
+                                        }}
+                                        onClick={() => {
+                                            const typePath = {
+                                                1: "dm",
+                                                2: "gm",
+                                                3: "pm",
+                                                4: "mdm",
+                                            }[milestone.chatType as number];
+                                            if (!typePath) return;
+                                            urlLinkModal?.openModalByHref(
+                                                `/workspace/chat/${typePath}/${milestone.chatId}/thread/${milestone.threadId}`
+                                            );
+                                        }}
+                                    >
+                                        <QuestionAnswerRoundedIcon
+                                            sx={{ fontSize: 20, color: styles.textColor }}
+                                        />
+                                    </IconButton>
+                                </AppTooltip>
+                            )}
                         {/* Diagram trigger — opens the React Flow task
                             graph anchored on this milestone. Gated on
                             `taskId` (the backing TaskMaster row) because

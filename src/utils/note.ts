@@ -172,6 +172,60 @@ export function buildTaskNoteContextCrumbs(
     return crumbs;
 }
 
+// Same Project → Milestone → (parent Task →) Task ancestry as
+// `buildTaskNoteContextCrumbs`, but sourced from a full task payload
+// (the task detail endpoints) instead of a task-note meta row. Used by
+// the chat thread header, which renders the task behind the thread with
+// the same breadcrumb component the task-note header uses. The final
+// task itself is NOT part of the returned context — the caller renders
+// it as the clickable tail node.
+export function buildTaskContextCrumbs(
+    task: {
+        id?: number;
+        title?: string;
+        displayId?: string | null;
+        project?: { projectId: number; projectName?: string } | null;
+        isMilestone?: boolean | null;
+        milestoneId?: number | null;
+        milestoneTitle?: string | null;
+        parentTaskId?: number | null;
+        parentTaskTitle?: string | null;
+        parentTaskIsMilestone?: boolean | null;
+    } | null
+): TaskNoteCrumb[] {
+    if (!task) return [];
+    const crumbs: TaskNoteCrumb[] = [];
+    if (task.project?.projectId != null) {
+        crumbs.push({
+            key: `proj-${task.project.projectId}`,
+            label: task.project.projectName || `#${task.project.projectId}`,
+            kind: "project",
+        });
+    }
+    // A milestone-backing task sits AT the milestone level — the caller's
+    // tail node already represents it, so no milestone context crumb.
+    if (task.isMilestone === true) {
+        return crumbs;
+    }
+    if (task.milestoneId != null) {
+        crumbs.push({
+            key: `mile-${task.milestoneId}`,
+            label: task.milestoneTitle || `#${task.milestoneId}`,
+            kind: "milestone",
+        });
+    }
+    // A subtask nests under its immediate parent — unless that parent IS
+    // the milestone's backing task (already the milestone crumb).
+    if (task.parentTaskId != null && task.parentTaskIsMilestone !== true) {
+        crumbs.push({
+            key: `ptask-${task.parentTaskId}`,
+            label: task.parentTaskTitle || `#${task.parentTaskId}`,
+            kind: "task",
+        });
+    }
+    return crumbs;
+}
+
 // All folder ids inside `folderId`'s subtree, itself included. The
 // move-to-folder picker disables these as targets (cycle prevention).
 // Tolerates cycle-corrupt input via the visited set.

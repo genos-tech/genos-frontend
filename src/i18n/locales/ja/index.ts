@@ -550,6 +550,8 @@ export const ja: DeepPartial<Messages> = {
             openTask: "タスクを開く",
             newTaskTooltip: "このスレッドに紐づく新規タスク",
             newTaskAria: "このスレッドに紐づく新規タスクを作成",
+            threadTaskBadge: "タスク",
+            threadMilestoneBadge: "マイルストーン",
             openNoteTooltip: "このスレッドに紐づくノートを開く",
             online: "オンライン",
             offline: "オフライン",
@@ -694,6 +696,8 @@ export const ja: DeepPartial<Messages> = {
         },
         errors: {
             createTaskFailed: "タスクの作成に失敗しました",
+            threadAlreadyHasTask:
+                "このスレッドには既にタスクがあります。1つのスレッドに紐づけられるタスクは1件のみです。",
             taskLimitReached:
                 "今月のタスク作成数がプラン上限に達しました（{used}/{limit}）。さらに作成するにはプランをアップグレードしてください。",
             deleteEmptyTaskFailed: "空のタスクの削除に失敗しました",
