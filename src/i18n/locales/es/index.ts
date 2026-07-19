@@ -508,6 +508,11 @@ export const es: DeepPartial<Messages> = {
             openTask: "Abrir tarea",
             newTaskTooltip: "Nueva tarea vinculada a este hilo",
             newTaskAria: "Crear una nueva tarea vinculada a este hilo",
+            threadTaskBadge: "Tarea",
+            threadTaskMenuItem: "Tarea del hilo",
+            threadNoteMenuItem: "Nota del hilo",
+            copyThreadLink: "Copiar enlace del hilo",
+            threadMilestoneBadge: "Hito",
             openNoteTooltip: "Abrir nota vinculada a este hilo",
             online: "En línea",
             offline: "Desconectado",
@@ -655,6 +660,8 @@ export const es: DeepPartial<Messages> = {
         },
         errors: {
             createTaskFailed: "No se pudo crear la tarea",
+            threadAlreadyHasTask:
+                "Este hilo ya tiene una tarea: un hilo solo puede vincularse a una tarea.",
             taskLimitReached:
                 "Has usado {used} de las {limit} creaciones de tareas mensuales de tu plan. Mejora tu plan para crear más tareas.",
             deleteEmptyTaskFailed: "No se pudo eliminar la tarea vacía",
@@ -720,7 +727,7 @@ export const es: DeepPartial<Messages> = {
             cancel: "Cancelar",
             download: "Descargar",
             close: "Cerrar",
-            checkThread: "Ver hilo",
+            checkThread: "Ver hilo de origen",
             dragToReorder: "Arrastra para reordenar",
             dragToResizeColumn: "Arrastra para redimensionar la columna",
             resetFilters: "Restablecer todos los filtros",
@@ -1015,7 +1022,7 @@ export const es: DeepPartial<Messages> = {
             milestoneBadge: "Hito",
             subTaskBadge: "Subtarea",
             newTaskBadge: "Nueva tarea",
-            checkThread: "Ver hilo",
+            checkThread: "Ver hilo de origen",
             closeTooltip: "Cerrar",
             menu: {
                 copyTaskLink: "Copiar enlace de la tarea",

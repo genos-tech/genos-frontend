@@ -509,6 +509,11 @@ export const hi: DeepPartial<Messages> = {
             openTask: "टास्क खोलें",
             newTaskTooltip: "इस थ्रेड से जुड़ा नया टास्क",
             newTaskAria: "इस थ्रेड से जुड़ा एक नया टास्क बनाएँ",
+            threadTaskBadge: "टास्क",
+            threadTaskMenuItem: "थ्रेड टास्क",
+            threadNoteMenuItem: "थ्रेड नोट",
+            copyThreadLink: "थ्रेड लिंक कॉपी करें",
+            threadMilestoneBadge: "माइलस्टोन",
             openNoteTooltip: "इस थ्रेड से जुड़ा नोट खोलें",
             online: "ऑनलाइन",
             offline: "ऑफलाइन",
@@ -654,6 +659,8 @@ export const hi: DeepPartial<Messages> = {
         },
         errors: {
             createTaskFailed: "टास्क नहीं बनाया जा सका",
+            threadAlreadyHasTask:
+                "इस थ्रेड में पहले से एक टास्क है — एक थ्रेड केवल एक टास्क से जुड़ सकता है।",
             taskLimitReached:
                 "आपने अपनी योजना की {limit} मासिक कार्य-सीमा में से {used} का उपयोग कर लिया है। और कार्य बनाने के लिए प्लान अपग्रेड करें।",
             deleteEmptyTaskFailed: "खाली टास्क नहीं हटाया जा सका",
@@ -719,7 +726,7 @@ export const hi: DeepPartial<Messages> = {
             cancel: "रद्द करें",
             download: "डाउनलोड करें",
             close: "बंद करें",
-            checkThread: "थ्रेड देखें",
+            checkThread: "स्रोत थ्रेड देखें",
             dragToReorder: "क्रम बदलने के लिए ड्रैग करें",
             dragToResizeColumn: "कॉलम का साइज़ बदलने के लिए ड्रैग करें",
             resetFilters: "सभी फ़िल्टर डिफ़ॉल्ट पर रीसेट करें",
@@ -1017,7 +1024,7 @@ export const hi: DeepPartial<Messages> = {
             milestoneBadge: "माइलस्टोन",
             subTaskBadge: "सब टास्क",
             newTaskBadge: "नया टास्क",
-            checkThread: "थ्रेड देखें",
+            checkThread: "स्रोत थ्रेड देखें",
             closeTooltip: "बंद करें",
             menu: {
                 copyTaskLink: "टास्क लिंक कॉपी करें",

@@ -42,6 +42,8 @@ export const tasks = {
     // Error strings thrown from service / hook modules.
     errors: {
         createTaskFailed: "Failed to create a task",
+        threadAlreadyHasTask:
+            "This thread already has a task — a thread can only be linked to one task.",
         taskLimitReached:
             "You've used {used} of your plan's {limit} monthly task creations. Upgrade your plan to create more tasks.",
         deleteEmptyTaskFailed: "Failed to delete the empty task",
@@ -115,7 +117,7 @@ export const tasks = {
         cancel: "Cancel",
         download: "Download",
         close: "Close",
-        checkThread: "Check Thread",
+        checkThread: "Check source thread",
         dragToReorder: "Drag to reorder",
         dragToResizeColumn: "Drag to resize column",
         resetFilters: "Reset all filters to default",
@@ -524,7 +526,7 @@ export const tasks = {
         milestoneBadge: "Milestone",
         subTaskBadge: "Sub Task",
         newTaskBadge: "New Task",
-        checkThread: "Check Thread",
+        checkThread: "Check source thread",
         closeTooltip: "Close",
         menu: {
             copyTaskLink: "Copy task link",

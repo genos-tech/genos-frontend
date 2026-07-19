@@ -27,10 +27,9 @@ import { UserProps } from "../../../../types/admin";
 import { ChannelKind } from "../../../../types/channel";
 import { ChatProps, MessageProps, ThreadMessageProps, ThreadProps } from "../../../../types/chat";
 import { ReactionProps } from "../../../../types/common";
-import { TaskCommentProps, TaskProps } from "../../../../types/tasks";
+import { TaskCommentProps } from "../../../../types/tasks";
 import { extractYYYYMMDDHHMM, getLocalCurrentTimestamp } from "../../../../utils/dateUtils";
 import { isMac } from "../../../../utils/platform";
-import { loadSpecificTaskByThreadId } from "../../../tasks/services/loadSpecificTaskByThreadId";
 import { loadV3SpecificThreadMessages } from "../../services/loadV3SpecificThreadMessages";
 import { BubbleAttachmentSheet } from "./BubbleAttachmentSheet";
 import { BubbleMoreMenu } from "./BubbleMoreMenu";
@@ -185,34 +184,15 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
         setTodoFromMessageBubble(message);
     };
 
-    // Load the thread task if exists
-    // PUNCH LIST (v3 chatId migration): `chat.chatId` is `string` post-
-    // flip; `loadSpecificTaskByThreadId` and `ThreadMessageProps.chatId`
-    // are still `number` (legacy task/thread schema). Cast once at the
-    // boundary; used by `loadTask` below and the optimistic
-    // `newThreadMessage` insert in `replayHandler`.
-    const legacyChatId = chat.chatId as unknown as number;
-
-    const loadTask = (threadId: number) => {
-        (async () => {
-            const loadedTask: TaskProps[] = await loadSpecificTaskByThreadId(
-                myself,
-                chat.chatType,
-                legacyChatId,
-                threadId,
-                accessToken
-            );
-            if (loadedTask.length > 0) {
-                useTM.setCurrentPreviewTask(loadedTask[0]);
-            }
-        })();
-    };
-
     const replayHandler = (e?: React.MouseEvent) => {
         // Stop propagation to prevent handleMessageClick from being called
         e?.stopPropagation();
 
-        loadTask(message.messageId);
+        // (The legacy `loadSpecificTaskByThreadId(message.messageId)`
+        // pre-load is gone: it queried with the parent's SEQ where the
+        // task rows store the v3 root UUID, so it never matched — the
+        // thread pane's `useThreadTaskMeta` hook now resolves the
+        // thread's task against the server once the thread opens.)
 
         // Show thread pane on the right side.
         useCM.setIsMainChatVisible(true);
@@ -247,6 +227,15 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
                 threadRootUuid,
                 chat.chatType
             );
+            // A thread's task linkage rides on whichever message carries
+            // the task metadata — for DM/GM/MDM that's the task-created
+            // CARD REPLY, not the root. Reading only the root (the old
+            // `threadMessages[0].taskExist`) made every reopened task
+            // thread look task-less: the header re-offered "Create task"
+            // on threads that already had one. Same scan
+            // `moveToSpecificThreadChat` uses.
+            const taskMsg = threadMessages.find((m) => m.taskExist && m.taskId != null);
+            const threadTaskId = taskMsg?.taskId ?? message.taskId ?? null;
             const newThread: ThreadProps = {
                 chatId: v3ChannelId as unknown as number,
                 chatName: chat.chatName,
@@ -257,19 +246,18 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
                 threadId: threadRootUuid as unknown as number,
                 chatType: chat.chatType,
                 dmPartnerUser: chat.dmPartnerUser,
-                taskId: message.taskId || null,
+                taskId: threadTaskId,
                 messages: threadMessages,
-                project: message.project,
+                project: taskMsg?.project ?? message.project,
                 TSLastMessage: getLocalCurrentTimestamp(),
-                taskExist:
-                    threadMessages.length > 0 ? threadMessages[0].taskExist : !!message.taskId,
+                taskExist: threadTaskId != null,
             };
             if (message.project && message.project.projectId) {
                 usePM.setCurrentProject(message.project);
             }
             useCM.setCurrentThreadChat(newThread);
-            if (newThread.taskExist === true && message.taskId) {
-                useTM.setCurrentPreviewTaskId(message.taskId);
+            if (newThread.taskExist === true && threadTaskId) {
+                useTM.setCurrentPreviewTaskId(threadTaskId);
             }
 
             // Navigate to thread URL for consistency with URL routing.

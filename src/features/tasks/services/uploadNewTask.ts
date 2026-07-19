@@ -106,9 +106,18 @@ export const uploadNewTask = async (props: uploadTaskProps): Promise<UploadNewTa
                     start_date: taskContent.startDate ?? null,
                     links: taskContent.links,
                     tags: taskContent.tags,
+                    // Chat linkage comes from taskContent ONLY — seeded
+                    // from the create intent's `fromThread` context
+                    // captured at click time. Reading useCM here (the
+                    // old behavior) sniffed whatever chat/thread state
+                    // was left over at SUBMIT time: chat_id from the
+                    // current main chat but thread_id from the last
+                    // open thread — which survives the thread pane
+                    // closing — so tasks created from the tasks page or
+                    // the PM header inherited an unrelated thread's ids.
                     chat_type: taskContent.chatType,
-                    chat_id: useCM.currentMainChat?.chatId || null,
-                    thread_id: useCM.currentThreadChat?.threadId || null,
+                    chat_id: taskContent.chatId != null ? String(taskContent.chatId) : null,
+                    thread_id: taskContent.threadId != null ? String(taskContent.threadId) : null,
                     parent_task_id: taskContent.parentTaskId,
                     root_task_id: taskContent.rootTaskId,
                     is_init_task: false,
@@ -137,7 +146,14 @@ export const uploadNewTask = async (props: uploadTaskProps): Promise<UploadNewTa
                     taskCreateResponse.status,
                     taskCreateData
                 );
-                return fail(errMsgs.createTaskFailed);
+                // Server-side one-task-per-thread guard: this thread got a
+                // task since the menu was rendered (another member, another
+                // session). Tell the user why instead of the generic line.
+                return fail(
+                    taskCreateData?.code === "thread_already_has_task"
+                        ? errMsgs.threadAlreadyHasTask
+                        : errMsgs.createTaskFailed
+                );
             } else {
                 const newly_mentioned_user_ids: string[] =
                     taskCreateData.newly_mentioned_user_ids ?? [];
@@ -168,7 +184,16 @@ export const uploadNewTask = async (props: uploadTaskProps): Promise<UploadNewTa
                     });
                 }
 
-                if (useCM.currentThreadChat) {
+                // Mark the ORIGIN thread as having a task — but only when
+                // the currently-open thread IS that thread. currentThreadChat
+                // can point at a different (or long-closed) thread by submit
+                // time; stamping it unconditionally mislabeled that thread
+                // as task-linked and hid its "Create task" action.
+                if (
+                    useCM.currentThreadChat &&
+                    taskContent.threadId != null &&
+                    String(useCM.currentThreadChat.threadId) === String(taskContent.threadId)
+                ) {
                     useCM.setCurrentThreadChat({
                         ...useCM.currentThreadChat,
                         taskId: taskCreateData.task.task_id,
@@ -323,38 +348,36 @@ export const uploadNewTask = async (props: uploadTaskProps): Promise<UploadNewTa
                     }
                 }
 
-                // When the user creates a task FROM an open thread in a
-                // DM/GM/MDM, also post the task summary as a reply in
-                // that thread so the conversation has a trail back to
-                // the task. `currentMainChat.chatId` / `currentThreadChat.
-                // threadId` already carry v3 UUIDs post-migration.
+                // When the task was created FROM a DM/GM/MDM thread, post
+                // the task summary as a reply in THAT thread so the
+                // conversation has a trail back to the task. The target
+                // comes from taskContent's captured linkage — this card is
+                // also what marks the thread as task-linked for everyone
+                // else (the thread-side `taskExist` scan reads its
+                // metadata), so it must land in the origin thread even if
+                // the user closed the pane or switched chats before
+                // submitting (the old ambient-state gate skipped or
+                // misrouted it in those cases).
                 if (
-                    useCM.isThreadVisible === true &&
-                    useCM.currentMainChat &&
-                    useCM.currentThreadChat &&
-                    (useCM.currentMainChat.chatType === 1 ||
-                        useCM.currentMainChat.chatType === 2 ||
-                        useCM.currentMainChat.chatType === 4) &&
-                    useCM.currentThreadChat.threadId !== null &&
-                    useCM.currentThreadChat.threadId !== 0 &&
+                    taskContent.chatId != null &&
+                    taskContent.threadId != null &&
+                    (taskContent.chatType === 1 ||
+                        taskContent.chatType === 2 ||
+                        taskContent.chatType === 4) &&
                     taskContent.project &&
                     createTaskMessage
                 ) {
                     try {
-                        await channelService.send(
-                            String(useCM.currentMainChat.chatId),
-                            createTaskMessage,
-                            {
-                                bodyText: taskContent.title,
-                                parentId: String(useCM.currentThreadChat.threadId),
-                                metadata: {
-                                    taskId: taskCreateData.task.task_id,
-                                    displayId: taskCreateData.task.displayId,
-                                    taskStatus: taskCreateData.task.status,
-                                    systemUserId: taskContent.project.systemUserId,
-                                },
-                            }
-                        );
+                        await channelService.send(String(taskContent.chatId), createTaskMessage, {
+                            bodyText: taskContent.title,
+                            parentId: String(taskContent.threadId),
+                            metadata: {
+                                taskId: taskCreateData.task.task_id,
+                                displayId: taskCreateData.task.displayId,
+                                taskStatus: taskCreateData.task.status,
+                                systemUserId: taskContent.project.systemUserId,
+                            },
+                        });
                     } catch (e) {
                         console.error(
                             "uploadNewTask: failed to post task summary into open thread",

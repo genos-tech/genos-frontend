@@ -490,6 +490,11 @@ export const zh: DeepPartial<Messages> = {
             openTask: "打开任务",
             newTaskTooltip: "新建与此话题关联的任务",
             newTaskAria: "创建与此话题关联的新任务",
+            threadTaskBadge: "任务",
+            threadTaskMenuItem: "话题任务",
+            threadNoteMenuItem: "话题笔记",
+            copyThreadLink: "复制话题链接",
+            threadMilestoneBadge: "里程碑",
             openNoteTooltip: "打开与此话题关联的笔记",
             online: "在线",
             offline: "离线",
@@ -634,6 +639,7 @@ export const zh: DeepPartial<Messages> = {
         },
         errors: {
             createTaskFailed: "创建任务失败",
+            threadAlreadyHasTask: "此话题已关联任务——一个话题只能关联一个任务。",
             taskLimitReached:
                 "您已使用本套餐每月 {limit} 次任务创建中的 {used} 次。升级套餐以创建更多任务。",
             deleteEmptyTaskFailed: "删除空任务失败",
@@ -699,7 +705,7 @@ export const zh: DeepPartial<Messages> = {
             cancel: "取消",
             download: "下载",
             close: "关闭",
-            checkThread: "查看话题",
+            checkThread: "查看来源话题",
             dragToReorder: "拖动以重新排序",
             dragToResizeColumn: "拖动以调整列宽",
             resetFilters: "重置所有筛选条件为默认",
@@ -992,7 +998,7 @@ export const zh: DeepPartial<Messages> = {
             milestoneBadge: "里程碑",
             subTaskBadge: "子任务",
             newTaskBadge: "新任务",
-            checkThread: "查看话题",
+            checkThread: "查看来源话题",
             closeTooltip: "关闭",
             menu: {
                 copyTaskLink: "复制任务链接",

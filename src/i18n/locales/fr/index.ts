@@ -511,6 +511,11 @@ export const fr: DeepPartial<Messages> = {
             openTask: "Ouvrir la tâche",
             newTaskTooltip: "Nouvelle tâche liée à ce fil",
             newTaskAria: "Créer une nouvelle tâche liée à ce fil",
+            threadTaskBadge: "Tâche",
+            threadTaskMenuItem: "Tâche du fil",
+            threadNoteMenuItem: "Note du fil",
+            copyThreadLink: "Copier le lien du fil",
+            threadMilestoneBadge: "Jalon",
             openNoteTooltip: "Ouvrir la note liée à ce fil",
             online: "En ligne",
             offline: "Hors ligne",
@@ -660,6 +665,8 @@ export const fr: DeepPartial<Messages> = {
         },
         errors: {
             createTaskFailed: "Échec de la création de la tâche",
+            threadAlreadyHasTask:
+                "Ce fil a déjà une tâche — un fil ne peut être lié qu'à une seule tâche.",
             taskLimitReached:
                 "Vous avez utilisé {used} des {limit} créations de tâches mensuelles de votre forfait. Passez à un forfait supérieur pour créer plus de tâches.",
             deleteEmptyTaskFailed: "Échec de la suppression de la tâche vide",
@@ -725,7 +732,7 @@ export const fr: DeepPartial<Messages> = {
             cancel: "Annuler",
             download: "Télécharger",
             close: "Fermer",
-            checkThread: "Voir le fil",
+            checkThread: "Voir le fil d'origine",
             dragToReorder: "Glisser pour réorganiser",
             dragToResizeColumn: "Glisser pour redimensionner la colonne",
             resetFilters: "Réinitialiser tous les filtres",
@@ -1023,7 +1030,7 @@ export const fr: DeepPartial<Messages> = {
             milestoneBadge: "Jalon",
             subTaskBadge: "Sous-tâche",
             newTaskBadge: "Nouvelle tâche",
-            checkThread: "Voir le fil",
+            checkThread: "Voir le fil d'origine",
             closeTooltip: "Fermer",
             menu: {
                 copyTaskLink: "Copier le lien de la tâche",

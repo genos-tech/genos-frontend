@@ -9,6 +9,7 @@ import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRound
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import MoreVertRoundedIcon from "@mui/icons-material/MoreVertRounded";
 import NoteAltRoundedIcon from "@mui/icons-material/NoteAltRounded";
 import ReplyRoundedIcon from "@mui/icons-material/ReplyRounded";
@@ -24,7 +25,6 @@ import {
     Typography,
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
-import { alpha } from "@mui/system";
 import { useNavigate } from "react-router-dom";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
@@ -40,22 +40,38 @@ import { useTranslation } from "../../../../i18n";
 import { MuteTargetButton } from "../../../../services/notifications/MuteTargetButton";
 import { UserProps } from "../../../../types/admin";
 import { ThreadProps } from "../../../../types/chat";
+import { TaskProps } from "../../../../types/tasks";
 import { CHAT_TYPE_CODE, SpotlightResult } from "../../../spotlight/types";
-import { CopyableTaskIdText } from "../../../tasks/components/CopyableTaskId";
-import { formatTaskDisplayId } from "../../../tasks/utils/taskDisplayId";
+import { TaskInfoPill } from "../../../tasks/components/TaskInfoPill";
 import { ThreadAskModal } from "../../../threadAsk/ThreadAskModal";
 import { useThreadAsk } from "../../../threadAsk/useThreadAsk";
 import { useChatContext } from "../../context/ChatContext";
+
+// chatType → URL segment for building a thread deep-link
+// (/workspace/chat/{path}/{chatId}/thread/{threadId}).
+const THREAD_LINK_TYPE_PATH: Record<number, string> = { 1: "dm", 2: "gm", 3: "pm", 4: "mdm" };
 
 type ThreadChatPaneHeaderProps = {
     myself: UserProps;
     useCM: ChatManagementState;
     useNM: NoteManagementState;
     useTM: TaskManagementState;
+    /** Full task behind this thread, resolved by `useThreadTaskMeta` in
+     *  ThreadPane. Renders the task-info pill; null while unresolved. */
+    threadTaskMeta?: TaskProps | null;
+    /** Set when this header renders inside the UrlLinkModal (the thread
+     *  opened via "Check thread"). The MoreMenu portals to document.body
+     *  at z 9999 and ThreadAskModal is a Joy Modal at the default modal
+     *  layer (~1300) — both sit BEHIND the host modal (≥10020). Pass the
+     *  host's z so their popups lift above it. Mirrors NoteHeaderActions /
+     *  TaskTitleBlock. Undefined on the chat page → default layers. */
+    hostZIndex?: number;
 };
 
 export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
-    const { myself, useCM, useNM, useTM } = props;
+    const { myself, useCM, useNM, useTM, threadTaskMeta, hostZIndex } = props;
+    // Layer for popups spawned by this header when it's modal-hosted.
+    const popupZIndex = hostZIndex != null ? hostZIndex + 1 : undefined;
     const { mode } = useColorScheme();
     const { t } = useTranslation();
     const isDark = mode === "dark";
@@ -219,17 +235,86 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
         });
     };
 
+    // Open the thread's task from the breadcrumb tail. Same panel flips
+    // as the legacy pill, but the project seed comes from the resolved
+    // meta — which carries the task's REAL project even when the thread
+    // lives outside the currently-loaded one (DM/GM cross-project
+    // threads, where neither the host channel nor `allTasks` can help).
+    const openTaskFromMeta = () => {
+        const meta = threadTaskMeta;
+        useCM.setIsMainChatVisible(false);
+        useCM.setIsThreadVisible(true);
+        if (
+            meta?.project?.projectId != null &&
+            usePM.currentProject?.projectId !== meta.project.projectId
+        ) {
+            // Only when it actually CHANGES — re-setting the current
+            // project with a tag-less copy would strip its tags
+            // app-wide. The API's task payload omits projectTags at
+            // runtime despite the type, hence the default.
+            usePM.setCurrentProject({
+                ...meta.project,
+                projectTags: meta.project.projectTags ?? [],
+            });
+        }
+        const targetId = Number(meta?.id ?? currentThreadTaskId);
+        useTM.setCurrentPreviewTaskId(
+            Number.isFinite(targetId) && targetId > 0 ? targetId : currentThreadTaskId
+        );
+        useTM.setIsTaskPreviewVisible(true);
+        useTM.setIsCreatingTask({
+            flag: false,
+            parentTaskId: null,
+            rootTaskId: null,
+            creationKind: "task",
+            milestoneId: null,
+        });
+    };
+
     const createTaskHandler = () => {
         useCM.setIsMainChatVisible(true);
         useCM.setIsThreadVisible(true);
         useTM.setIsTaskPreviewVisible(false);
+        // Capture the thread origin AT CLICK TIME. This is the only
+        // entry point allowed to set `fromThread` — the create submit
+        // links the task to exactly these ids instead of re-reading
+        // useCM at submit time (which may point at a different — or
+        // long-closed — thread by then).
+        const chatType = useCM.currentThreadChat?.chatType;
+        const chatId = useCM.currentThreadChat?.chatId;
+        const threadId = useCM.currentThreadChat?.threadId;
+        const fromThread =
+            chatType !== undefined && chatType !== 3 && chatId != null && threadId != null
+                ? { chatType, chatId: String(chatId), threadId: String(threadId) }
+                : null;
         useTM.setIsCreatingTask({
             flag: true,
             parentTaskId: null,
             rootTaskId: null,
             creationKind: "task",
             milestoneId: null,
+            fromThread,
         });
+    };
+
+    // Copy the thread's deep-link to the clipboard. Same URL shape the
+    // app navigates to (and "Check thread" opens): the v3 chatId /
+    // threadId ride their `number`-typed slots as UUID strings, so the
+    // template renders them verbatim. Silent on success, matching the
+    // copy-task-link / copy-note-link convention elsewhere.
+    const copyThreadLink = async () => {
+        const chatType = useCM.currentThreadChat?.chatType;
+        const chatId = useCM.currentThreadChat?.chatId;
+        const threadId = useCM.currentThreadChat?.threadId;
+        if (chatType === undefined || chatId == null || threadId == null) return;
+        const typePath = THREAD_LINK_TYPE_PATH[chatType];
+        if (!typePath) return;
+        const url = `${window.location.origin}/workspace/chat/${typePath}/${chatId}/thread/${threadId}`;
+        try {
+            await navigator.clipboard.writeText(url);
+        } catch (err) {
+            console.error("Failed to copy thread link:", err);
+        }
     };
 
     const openNoteHandler = () => {
@@ -326,13 +411,25 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                     >
                         <MoreVertRoundedIcon sx={{ fontSize: 20 }} />
                     </MenuButton>
-                    <Menu size="sm" placement="bottom-end" sx={{ minWidth: 200 }}>
+                    <Menu
+                        size="sm"
+                        placement="bottom-end"
+                        sx={{ minWidth: 200, zIndex: popupZIndex }}
+                    >
                         <MenuItem onClick={openThreadAsk}>
                             <AutoAwesomeRoundedIcon
                                 sx={{ fontSize: 18, color: styles.accentColor }}
                             />
                             {t.threadAsk.headerButton.label}
                         </MenuItem>
+                        {chatType !== 3 && (
+                            <MenuItem onClick={copyThreadLink}>
+                                <ContentCopyRoundedIcon
+                                    sx={{ fontSize: 18, color: styles.accentColor }}
+                                />
+                                {t.chat.headers.copyThreadLink}
+                            </MenuItem>
+                        )}
                         {hasTask && (
                             <MenuItem onClick={openTaskHandler}>
                                 <AssignmentRoundedIcon
@@ -344,7 +441,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                         {!hasTask && chatType !== 3 && (
                             <MenuItem onClick={createTaskHandler}>
                                 <AddTaskRoundedIcon sx={{ fontSize: 18, color: "#fff" }} />
-                                {t.chat.headers.newTaskTooltip}
+                                {t.chat.headers.threadTaskMenuItem}
                             </MenuItem>
                         )}
                         {chatType !== 3 && (
@@ -352,7 +449,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                                 <NoteAltRoundedIcon
                                     sx={{ fontSize: 18, color: styles.accentColor }}
                                 />
-                                {t.chat.headers.openNoteTooltip}
+                                {t.chat.headers.threadNoteMenuItem}
                             </MenuItem>
                         )}
                     </Menu>
@@ -362,6 +459,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                     myself={myself}
                     accessToken={accessToken}
                     chatName={useCM.currentThreadChat?.chatName || ""}
+                    zIndex={popupZIndex}
                     onSelectSource={onCitationSelect}
                 />
             </Stack>
@@ -486,221 +584,21 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                     />
                 )}
 
-                {/*
-                    Task pill — read-only "Open Task #N" affordance with
-                    optional status dot. Only renders when a task exists
-                    for this thread. The Create Task action has moved
-                    into the MoreMenu (below) — having it both inline AND
-                    in the menu would re-introduce the "two ways to do
-                    one thing" confusion the unified pill solved.
-                */}
-                {(() => {
-                    const hasTask = currentThreadTaskId !== -1;
-                    const chatType = useCM.currentThreadChat?.chatType;
-
-                    if (hasTask) {
-                        // Original chip-visibility rule: only show status
-                        // info when we trust it — PM/MDM threads always
-                        // have a real task; other types only after the
-                        // preview is loaded with taskExist === true.
-                        const showStatus =
-                            chatType === 3 ||
-                            chatType === 4 ||
-                            (!!useTM.currentPreviewTask &&
-                                useCM.currentThreadChat?.taskExist === true);
-                        const status = useTM.currentPreviewTask?.status;
-                        const statusColor = status?.color || styles.accentColor;
-
-                        // `currentThreadChat.displayId` isn't reliably
-                        // populated by every `setCurrentThreadChat` call
-                        // site, so the chip would fall back to "#<id>"
-                        // for fresh thread loads. Pick the freshest
-                        // record we can find — the loaded preview task
-                        // when it matches this thread's task, otherwise
-                        // the row from `allTasks` (carries displayId via
-                        // fetchProjectTasks). Falls back to the thread
-                        // chat itself when no other source is loaded.
-                        const taskForDisplay =
-                            (useTM.currentPreviewTask &&
-                            useTM.currentPreviewTask.id === currentThreadTaskId
-                                ? useTM.currentPreviewTask
-                                : null) ??
-                            useTM.allTasks.find((row) => row.id === String(currentThreadTaskId)) ??
-                            useCM.currentThreadChat;
-
-                        return (
-                            <Tooltip
-                                size="sm"
-                                title={t.chat.headers.openTask}
-                                variant="outlined"
-                                sx={{ borderRadius: "8px" }}
-                            >
-                                <Box
-                                    component="button"
-                                    type="button"
-                                    aria-label={`Open Task ${formatTaskDisplayId(taskForDisplay) || "N/A"}`}
-                                    onClick={() => {
-                                        useCM.setIsMainChatVisible(false);
-                                        useCM.setIsThreadVisible(true);
-                                        // Ensure the project is set so the
-                                        // App-level auto-loader fetches
-                                        // currentPreviewTask from the id below.
-                                        // NOTE: `currentThreadChat.project` is
-                                        // ALWAYS undefined — the v3 message
-                                        // adapter (v3MessageToLegacy) never
-                                        // populates a message `.project`, so the
-                                        // thread built from those messages has
-                                        // none. The reliable sources are: the
-                                        // host channel's project (set for PM
-                                        // channels by the channel adapter — and
-                                        // a PM thread's task belongs to that
-                                        // project), falling back to the task
-                                        // row's projectId from `allTasks` (the
-                                        // current project's loaded tasks). For a
-                                        // DM/GM task thread whose project isn't
-                                        // the current one, neither resolves —
-                                        // the auto-loader then never fires and
-                                        // chatHome's id-match gate renders
-                                        // NOTHING (never the wrong task). The
-                                        // user is already on chat, so the
-                                        // setIsTaskPreviewVisible(true) below is
-                                        // observed directly by chatHome's
-                                        // sticky-flag effect (no remount).
-                                        const taskRow = useTM.allTasks.find(
-                                            (row) => String(row.id) === String(currentThreadTaskId)
-                                        );
-                                        if (useCM.currentMainChat?.project) {
-                                            usePM.setCurrentProject(useCM.currentMainChat.project);
-                                        } else if (
-                                            taskRow?.projectId != null &&
-                                            usePM.currentProject?.projectId !== taskRow.projectId
-                                        ) {
-                                            // `allTasks` is scoped to
-                                            // currentProject, so finding the row
-                                            // here means currentProject is
-                                            // already this project (and fully
-                                            // populated). Only set when it would
-                                            // actually CHANGE — a minimal
-                                            // {projectId} ProjectProps would
-                                            // otherwise strip name/tags app-wide.
-                                            usePM.setCurrentProject({
-                                                projectId: taskRow.projectId,
-                                                projectName: "",
-                                                projectTags: [],
-                                            });
-                                        }
-                                        useTM.setCurrentPreviewTaskId(currentThreadTaskId);
-                                        useTM.setIsTaskPreviewVisible(true);
-                                        useTM.setIsCreatingTask({
-                                            flag: false,
-                                            parentTaskId: null,
-                                            rootTaskId: null,
-                                            creationKind: "task",
-                                            milestoneId: null,
-                                        });
-                                    }}
-                                    sx={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: 0.75,
-                                        height: 32,
-                                        px: 1.25,
-                                        borderRadius: "10px",
-                                        border: `1px solid ${styles.chipBorder}`,
-                                        background: styles.chipBg,
-                                        cursor: "pointer",
-                                        font: "inherit",
-                                        color: styles.textColor,
-                                        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                                        "&:hover": {
-                                            background: styles.buttonHover,
-                                            transform: "translateY(-1px)",
-                                            boxShadow: `0 4px 12px ${styles.glowColor}`,
-                                        },
-                                        "&:focus-visible": {
-                                            outline: `2px solid ${styles.accentColor}`,
-                                            outlineOffset: 2,
-                                        },
-                                    }}
-                                >
-                                    <AssignmentRoundedIcon
-                                        sx={{
-                                            fontSize: 16,
-                                            color: styles.accentColor,
-                                        }}
-                                    />
-                                    <CopyableTaskIdText
-                                        task={taskForDisplay}
-                                        fallback="N/A"
-                                        prefix="Task "
-                                        level="body-xs"
-                                        sx={{
-                                            fontWeight: 700,
-                                            color: styles.textColor,
-                                            letterSpacing: "-0.01em",
-                                        }}
-                                    />
-
-                                    {showStatus && status && (
-                                        <>
-                                            <Box
-                                                sx={{
-                                                    width: "1px",
-                                                    height: 14,
-                                                    bgcolor: styles.chipBorder,
-                                                    mx: 0.25,
-                                                }}
-                                            />
-                                            <Box
-                                                sx={{
-                                                    display: "flex",
-                                                    alignItems: "center",
-                                                    gap: 0.5,
-                                                    px: 0.75,
-                                                    py: 0.125,
-                                                    borderRadius: "6px",
-                                                    background: status.color
-                                                        ? alpha(status.color, isDark ? 0.4 : 0.6)
-                                                        : "transparent",
-                                                    color: status.textColor,
-                                                }}
-                                            >
-                                                <Box
-                                                    sx={{
-                                                        width: 6,
-                                                        height: 6,
-                                                        borderRadius: "50%",
-                                                        background: statusColor,
-                                                        boxShadow: `0 0 0 2px ${alpha(
-                                                            statusColor,
-                                                            isDark ? 0.25 : 0.18
-                                                        )}`,
-                                                    }}
-                                                />
-                                                <Typography
-                                                    level="body-xs"
-                                                    sx={{
-                                                        fontWeight: 700,
-                                                        color: "inherit",
-                                                        fontSize: "11px",
-                                                        textTransform: "uppercase",
-                                                        letterSpacing: "0.04em",
-                                                    }}
-                                                >
-                                                    {status.status || "N/A"}
-                                                </Typography>
-                                            </Box>
-                                        </>
-                                    )}
-                                </Box>
-                            </Tooltip>
-                        );
-                    }
-
-                    // No task yet → no inline pill; the Create Task
-                    // action lives in the MoreMenu below.
-                    return null;
-                })()}
+                {/* Task info — the thread's task rendered with the SAME
+                    unified pill (Task #<id> │ Title │ Status) the
+                    task-note header uses. Right-aligned in the actions
+                    cluster. Shown for every thread flavor that carries a
+                    task: DM/GM/MDM once a task was created from the
+                    thread, PM always (a PM thread IS a task thread).
+                    Clicking opens the task preview. */}
+                {threadTaskMeta && currentThreadTaskId !== -1 && (
+                    <TaskInfoPill
+                        isDark={isDark}
+                        styles={styles}
+                        task={threadTaskMeta}
+                        onOpen={openTaskFromMeta}
+                    />
+                )}
 
                 {/* Ask about this thread — opens the AI Q&A modal. Always
                     visible (no chatType guard) because the summary +
@@ -737,11 +635,18 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                     const chatType = useCM.currentThreadChat?.chatType;
                     const showOpenNote = chatType !== 3;
                     const showCreateTask = !hasTask && chatType !== 3;
-                    if (!showOpenNote && !showCreateTask) return null;
+                    // Copy-link is offered on DM/GM/MDM threads (PM threads
+                    // are addressed by task and carry their own copy-task-
+                    // link on the preview).
+                    const showCopyLink = chatType !== 3;
+                    if (!showOpenNote && !showCreateTask && !showCopyLink) return null;
                     return (
                         <MoreMenu
                             placement="bottom-end"
                             triggerSize={36}
+                            // Modal-hosted: lift the dropdown above the
+                            // UrlLinkModal (default 9999 renders behind it).
+                            zIndex={popupZIndex}
                             triggerSx={{
                                 borderRadius: "10px",
                                 background: styles.buttonBg,
@@ -749,19 +654,19 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                             }}
                             items={[
                                 {
-                                    id: "open-note",
-                                    label: t.chat.headers.openNoteTooltip,
+                                    id: "copy-thread-link",
+                                    label: t.chat.headers.copyThreadLink,
                                     icon: (
-                                        <NoteAltRoundedIcon
+                                        <ContentCopyRoundedIcon
                                             sx={{ fontSize: 18, color: styles.accentColor }}
                                         />
                                     ),
-                                    visible: showOpenNote,
-                                    onClick: openNoteHandler,
+                                    visible: showCopyLink,
+                                    onClick: copyThreadLink,
                                 },
                                 {
                                     id: "create-task",
-                                    label: t.chat.headers.newTaskTooltip,
+                                    label: t.chat.headers.threadTaskMenuItem,
                                     icon: (
                                         <AddTaskRoundedIcon
                                             sx={{ fontSize: 18, color: styles.accentColor }}
@@ -769,6 +674,17 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                                     ),
                                     visible: showCreateTask,
                                     onClick: createTaskHandler,
+                                },
+                                {
+                                    id: "open-note",
+                                    label: t.chat.headers.threadNoteMenuItem,
+                                    icon: (
+                                        <NoteAltRoundedIcon
+                                            sx={{ fontSize: 18, color: styles.accentColor }}
+                                        />
+                                    ),
+                                    visible: showOpenNote,
+                                    onClick: openNoteHandler,
                                 },
                             ]}
                         />
@@ -804,6 +720,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                 myself={myself}
                 accessToken={accessToken}
                 chatName={useCM.currentThreadChat?.chatName || ""}
+                zIndex={popupZIndex}
                 onSelectSource={onCitationSelect}
             />
         </Stack>

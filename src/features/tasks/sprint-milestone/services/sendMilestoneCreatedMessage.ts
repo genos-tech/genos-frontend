@@ -1,4 +1,3 @@
-import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { channelService } from "../../../../services/channel/channelService";
 import { UserProps } from "../../../../types/admin";
 import { ProjectProps } from "../../../../types/tasks";
@@ -13,7 +12,12 @@ type SendMilestoneCreatedMessageInput = {
     sprintName: string;
     reporter: UserProps;
     assignees: UserProps[];
-    useCM: ChatManagementState;
+    // Chat-thread origin captured at create-intent time (the thread
+    // header's "Create task" action). Replaces the old sniffing of
+    // useCM.currentThreadChat at send time, which pointed at whatever
+    // thread was open LAST — not necessarily the one this milestone
+    // was created from.
+    fromThread: { chatType: number; chatId: string; threadId: string } | null;
 };
 
 /**
@@ -39,7 +43,7 @@ export const sendMilestoneCreatedMessage = async ({
     sprintName,
     reporter,
     assignees,
-    useCM,
+    fromThread,
 }: SendMilestoneCreatedMessageInput): Promise<void> => {
     if (!project.systemUserId) {
         console.error(
@@ -116,29 +120,22 @@ export const sendMilestoneCreatedMessage = async ({
         console.error("[sendMilestoneCreatedMessage] failed to post PM milestone message", e);
     }
 
-    // 2. If the user created the milestone from inside an open DM/GM/MDM
-    //    thread, surface the bubble there too — same parity uploadNewTask
-    //    keeps for tasks.
+    // 2. If the milestone was created from a DM/GM/MDM thread, surface
+    //    the bubble there too — same parity uploadNewTask keeps for
+    //    tasks. This card is also what marks the thread as task-linked
+    //    for other members (their `taskExist` scan reads its metadata),
+    //    so it targets the CAPTURED origin thread, not whatever pane
+    //    happens to be open when the create finishes.
     if (
-        useCM.isThreadVisible === true &&
-        useCM.currentMainChat &&
-        useCM.currentThreadChat &&
-        (useCM.currentMainChat.chatType === 1 ||
-            useCM.currentMainChat.chatType === 2 ||
-            useCM.currentMainChat.chatType === 4) &&
-        useCM.currentThreadChat.threadId !== null &&
-        useCM.currentThreadChat.threadId !== 0
+        fromThread &&
+        (fromThread.chatType === 1 || fromThread.chatType === 2 || fromThread.chatType === 4)
     ) {
         try {
-            await channelService.send(
-                String(useCM.currentMainChat.chatId),
-                createMilestoneMessage,
-                {
-                    bodyText: milestone.title,
-                    parentId: String(useCM.currentThreadChat.threadId),
-                    metadata,
-                }
-            );
+            await channelService.send(fromThread.chatId, createMilestoneMessage, {
+                bodyText: milestone.title,
+                parentId: fromThread.threadId,
+                metadata,
+            });
         } catch (e) {
             console.error(
                 "[sendMilestoneCreatedMessage] failed to post milestone into open thread",

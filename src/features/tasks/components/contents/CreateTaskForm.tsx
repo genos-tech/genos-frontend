@@ -104,7 +104,6 @@ type CreateTaskProps = {
     socket: Socket | null;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
-    chatType: number;
     useUISM: UIStateManagementState;
     usePM: ProjectManagementState;
     useTM: TaskManagementState;
@@ -114,19 +113,8 @@ type CreateTaskProps = {
 };
 
 export const CreateTaskForm = (props: CreateTaskProps) => {
-    const {
-        useTEM,
-        socket,
-        myself,
-        setMyself,
-        chatType,
-        useCM,
-        useUISM,
-        usePM,
-        useTM,
-        useSM,
-        useNM,
-    } = props;
+    const { useTEM, socket, myself, setMyself, useCM, useUISM, usePM, useTM, useSM, useNM } =
+        props;
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
@@ -368,6 +356,20 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
         return "";
     };
 
+    // Chat-thread origin of this create, captured at click time by the
+    // thread header (the only setter of `fromThread`). This is the SOLE
+    // source of the task's chat linkage — reading useCM.currentThreadChat
+    // here instead (the old behavior) picked up whatever thread was open
+    // LAST, even on the tasks page, and wrote its ids onto unrelated
+    // tasks. TaskProps' chat slots are `number`-typed but carry the v3
+    // UUID strings via the same legacy-slot cast the adapters use.
+    const fromThread = useTM.isCreatingTask.fromThread ?? null;
+    const threadLinkage = {
+        chatType: fromThread?.chatType ?? null,
+        chatId: (fromThread?.chatId ?? null) as unknown as number | null,
+        threadId: (fromThread?.threadId ?? null) as unknown as number | null,
+    };
+
     useEffect(() => {
         // Only seed `taskContent` once the global id matches the one we
         // created in this mount; see the bootstrap effect above for why
@@ -392,6 +394,11 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                     ...draft.taskContent,
                     id: useTM.initialEmptyTaskId,
                     attachments: [],
+                    // Thread linkage follows THIS create intent, never
+                    // the draft's — a draft typed in one thread and
+                    // resumed from another (or from no thread) must not
+                    // resurrect the old linkage.
+                    ...threadLinkage,
                 } as TaskProps);
                 // BlockNote seeded itself from `body` on mount; if a draft
                 // restores a different body, we have to push it through
@@ -415,9 +422,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                 // New tasks start unassigned; reporter is the creator.
                 assignee: null,
                 reporter: myself,
-                chatType: chatType,
-                chatId: useCM.currentMainChat?.chatId || null,
-                threadId: useCM.currentThreadChat?.threadId || null,
+                ...threadLinkage,
                 dueDate: computeInheritedDueDate(),
                 status: {
                     code: 0,
@@ -540,6 +545,12 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
             projectId,
             title: taskTitle.trim(),
             description: body,
+            // Thread origin (milestone created from a DM/GM/MDM thread).
+            // Persisted on the backing task row server-side; drives the
+            // milestone preview's "Check thread" button.
+            chatType: fromThread?.chatType ?? null,
+            chatId: fromThread?.chatId ?? null,
+            threadId: fromThread?.threadId ?? null,
             sprintId: (taskContent as any)?.sprintId ?? null,
             dueDate: taskContent.dueDate || null,
             priority: taskContent.priority?.priority || null,
@@ -625,7 +636,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                                 : assignee
                                   ? [assignee]
                                   : [myself],
-                        useCM,
+                        fromThread,
                     });
                 }
             } catch (err) {

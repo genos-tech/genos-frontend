@@ -14,6 +14,7 @@ import { ThreadTabId, ThreadTabStrip } from "./components/shared/ThreadTabStrip"
 import { useMessageManagement } from "./hooks/useMessageManagement";
 import { useReadStatusManagement } from "./hooks/useReadStatusManagement";
 import { useScrollManagement } from "./hooks/useScrollManagement";
+import { useThreadTaskMeta } from "./hooks/useThreadTaskMeta";
 import { createFileDropHandler } from "./services/handleFileDrop";
 
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
@@ -43,6 +44,9 @@ type MessagesPaneProps = {
     setTodoFromMessageBubble: (
         todoFromMessageBubble: MessageProps | ThreadMessageProps | TaskCommentProps
     ) => void;
+    /** Host UrlLinkModal's z-index when this pane is modal-hosted; the
+     *  thread header lifts its MoreMenu / ThreadAskModal above it. */
+    hostZIndex?: number;
 };
 
 export const ThreadPane = (props: MessagesPaneProps) => {
@@ -58,11 +62,25 @@ export const ThreadPane = (props: MessagesPaneProps) => {
         useCM,
         useNM,
         setTodoFromMessageBubble,
+        hostZIndex,
     } = props;
 
-    const { setCurrentThreadTaskId } = useChatContext();
+    const { currentThreadTaskId, setCurrentThreadTaskId } = useChatContext();
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
+
+    // Full task/milestone meta behind this thread — feeds the header's
+    // task-info breadcrumb, and (for DM/GM/MDM threads whose messages
+    // carry no task marker) verifies against the server's task↔thread
+    // linkage so the "Create task" action reliably disappears once the
+    // thread has a task.
+    const threadTaskMeta = useThreadTaskMeta({
+        myself,
+        useCM,
+        useTM,
+        currentThreadTaskId,
+        setCurrentThreadTaskId,
+    });
 
     // File drag-and-drop state. Used by the non-PM thread editor
     // (DM/group reply); PM threads route file drops through their
@@ -184,7 +202,14 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                     setErrorOpen={messageManagement.setErrorOpen}
                 />
 
-                <ThreadChatPaneHeader myself={myself} useCM={useCM} useNM={useNM} useTM={useTM} />
+                <ThreadChatPaneHeader
+                    hostZIndex={hostZIndex}
+                    myself={myself}
+                    threadTaskMeta={threadTaskMeta}
+                    useCM={useCM}
+                    useNM={useNM}
+                    useTM={useTM}
+                />
 
                 {showThreadTabStrip && (
                     <ThreadTabStrip value={threadTabValue} onChange={setThreadTabValue} />

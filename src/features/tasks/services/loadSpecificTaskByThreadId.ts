@@ -2,30 +2,36 @@ import axios from "axios";
 
 import { authApi } from "../../../services/api";
 import { UserProps } from "../../../types/admin";
-import { isLegacyNumericId } from "../../../utils/legacyId";
+import { TaskProps } from "../../../types/tasks";
 
+/**
+ * Resolve the task a chat thread was the origin of, by the linkage the
+ * task row stores (`chat_type` / `chat_id` / `thread_id`).
+ *
+ * `chatId` / `threadId` are v3 UUIDs post-migration (the backend's
+ * columns are opaque CharFields and match by exact string), but legacy
+ * numeric ids still resolve for pre-v3 rows — pass through whichever
+ * the caller holds. Returns [] when the thread has no live task.
+ */
 export const loadSpecificTaskByThreadId = async (
     myself: UserProps,
     chatType: number,
-    chatId: number,
-    threadId: number,
+    chatId: string | number,
+    threadId: string | number,
     accessToken: string | null
-) => {
-    // PUNCH LIST (v3 chatId migration): `/task/getTaskByThreadId/`
-    // binds `chat_id` to an integer field. Short-circuit when the id
-    // is a v3 UUID — v3 thread → task resolution belongs in the v3
-    // channel sync path.
-    if (!isLegacyNumericId(chatId)) {
-        return [];
-    }
+): Promise<TaskProps[]> => {
     try {
         const api = authApi(accessToken);
         if (api) {
-            const query: string = `team_id=${myself.teamId}&chat_type=${chatType}&chat_id=${chatId}&thread_id=${threadId}`;
+            const query =
+                `team_id=${myself.teamId}&chat_type=${chatType}` +
+                `&chat_id=${encodeURIComponent(String(chatId))}` +
+                `&thread_id=${encodeURIComponent(String(threadId))}` +
+                `&attachments=meta`;
             const res = await api.get(`/task/getTaskByThreadId/?${query}`);
-            return res.data;
+            return Array.isArray(res.data) ? res.data : [];
         } else {
-            console.error("Unauthorized. Auth toke is not found.");
+            console.error("Unauthorized. Auth token is not found.");
         }
     } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
@@ -34,4 +40,5 @@ export const loadSpecificTaskByThreadId = async (
             console.error("Unexpected error:", error);
         }
     }
+    return [];
 };

@@ -505,6 +505,11 @@ export const ar: DeepPartial<Messages> = {
             openTask: "فتح المهمة",
             newTaskTooltip: "مهمة جديدة مرتبطة بهذا الموضوع",
             newTaskAria: "إنشاء مهمة جديدة مرتبطة بهذا الموضوع",
+            threadTaskBadge: "مهمة",
+            threadTaskMenuItem: "مهمة الموضوع",
+            threadNoteMenuItem: "ملاحظة الموضوع",
+            copyThreadLink: "نسخ رابط الموضوع",
+            threadMilestoneBadge: "مرحلة",
             openNoteTooltip: "فتح الملاحظة المرتبطة بهذا الموضوع",
             online: "متصل",
             offline: "غير متصل",
@@ -651,6 +656,8 @@ export const ar: DeepPartial<Messages> = {
         },
         errors: {
             createTaskFailed: "تعذّر إنشاء المهمة",
+            threadAlreadyHasTask:
+                "هذا الموضوع مرتبط بمهمة بالفعل — لا يمكن ربط الموضوع إلا بمهمة واحدة.",
             taskLimitReached:
                 "لقد استخدمت {used} من أصل {limit} من إنشاءات المهام الشهرية في خطتك. قم بترقية خطتك لإنشاء المزيد من المهام.",
             deleteEmptyTaskFailed: "تعذّر حذف المهمة الفارغة",
@@ -716,7 +723,7 @@ export const ar: DeepPartial<Messages> = {
             cancel: "إلغاء",
             download: "تنزيل",
             close: "إغلاق",
-            checkThread: "عرض الموضوع",
+            checkThread: "عرض الموضوع المصدر",
             dragToReorder: "اسحب لإعادة الترتيب",
             dragToResizeColumn: "اسحب لتغيير حجم العمود",
             resetFilters: "إعادة تعيين جميع عوامل التصفية إلى الإعداد الافتراضي",
@@ -1009,7 +1016,7 @@ export const ar: DeepPartial<Messages> = {
             milestoneBadge: "معلم",
             subTaskBadge: "مهمة فرعية",
             newTaskBadge: "مهمة جديدة",
-            checkThread: "عرض الموضوع",
+            checkThread: "عرض الموضوع المصدر",
             closeTooltip: "إغلاق",
             menu: {
                 copyTaskLink: "نسخ رابط المهمة",

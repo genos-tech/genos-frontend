@@ -56,6 +56,13 @@ export type Milestone = {
     // friendly id without an extra lookup. Null for legacy
     // milestones whose backing task hasn't been backfilled yet.
     displayId?: string | null;
+    // Chat-thread origin (set when the milestone was created from a
+    // DM/GM/MDM thread), read off the backing task row. Drives the
+    // milestone preview's "Check thread" button. chatId/threadId are
+    // v3 UUIDs (strings); legacy rows may carry numeric strings.
+    chatType?: number | null;
+    chatId?: string | null;
+    threadId?: string | null;
     projectId: number;
     teamId: number | string | null;
     sprintId: number | null;
