@@ -3634,6 +3634,9 @@ export const TaskHomeContent = ({
                                                                                 setMyself={
                                                                                     setMyself
                                                                                 }
+                                                                                showPulseDot={
+                                                                                    false
+                                                                                }
                                                                             />
                                                                         ) : (
                                                                             <Avatar
