@@ -182,6 +182,40 @@ export const TASK_TEMPLATE_OPTIONS: TaskTemplate[] = [
     TASK_TEMPLATES.milestone,
 ];
 
+// ---------------------------------------------------------------------------
+// Custom (project-scoped) templates
+// ---------------------------------------------------------------------------
+//
+// Members author these under a project (see the manage-templates modal +
+// `/project/task-template/`). They appear in the create-form picker
+// alongside — never replacing — the built-in `TASK_TEMPLATES` above, and
+// are usable for both tasks and milestones.
+
+export interface CustomTaskTemplate {
+    id: number;
+    templateName: string;
+    body: PartialBlock[];
+}
+
+// The picker's `<Select>` value is a string. Built-ins use their
+// `TaskTemplateId` verbatim; customs are namespaced so they can never
+// collide with a built-in id (and so `applyTemplate` can branch on the
+// prefix). Keep the encode/decode pair together.
+const CUSTOM_TEMPLATE_PREFIX = "custom:";
+
+export const customTemplateValue = (id: number): string => `${CUSTOM_TEMPLATE_PREFIX}${id}`;
+
+export const parseCustomTemplateValue = (value: string): number | null => {
+    if (!value.startsWith(CUSTOM_TEMPLATE_PREFIX)) return null;
+    const raw = value.slice(CUSTOM_TEMPLATE_PREFIX.length);
+    // Guard the empty suffix explicitly: `Number("")` is `0`, not `NaN`,
+    // so without this `"custom:"` would decode to a bogus id 0. Ids are
+    // integer PKs, so reject non-integers too.
+    if (raw === "") return null;
+    const id = Number(raw);
+    return Number.isInteger(id) ? id : null;
+};
+
 // Initial body used by the rich CreateTaskForm and by the title-only
 // createQuickTask service — both want a fresh task to land with the same
 // scaffold so the body editor never feels empty on first open.

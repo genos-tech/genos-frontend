@@ -4,6 +4,7 @@ import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import DescriptionRoundedIcon from "@mui/icons-material/DescriptionRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
+import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import WarningRoundedIcon from "@mui/icons-material/WarningRounded";
 import {
     Box,
@@ -12,6 +13,7 @@ import {
     DialogContent,
     DialogTitle,
     Divider,
+    ListDivider,
     Modal,
     ModalDialog,
     Option,
@@ -40,6 +42,7 @@ import { isMac } from "../../../../utils/platform";
 import { LinkedPrCard } from "../../../integrations/components/LinkedPrCard";
 import { parsePrUrl } from "../../../integrations/utils/parsePrUrl";
 import { createEmptyTask } from "../../services/createEmptyTask";
+import { loadProjectTaskTemplates } from "../../services/loadProjectTaskTemplates";
 import {
     updateProjectOptions,
     updateTagOptions,
@@ -49,11 +52,14 @@ import { sendMilestoneCreatedMessage } from "../../sprint-milestone/services";
 import { isNoMainPanelVisible } from "../../utils/mainPanelVisibility";
 import { getCreationKind } from "../../utils/taskKind";
 import {
+    customTemplateValue,
+    parseCustomTemplateValue,
     TASK_TEMPLATE_OPTIONS,
     TASK_TEMPLATES,
     taskContentTemplate,
     TaskTemplateId,
 } from "../../utils/taskTemplates";
+import { ModalManageTaskTemplates } from "../modals/ModalManageTaskTemplates";
 import { TaskCreateAttachmentBlock } from "./base/TaskCreateAttachmentBlock";
 import { TaskCreateBodyBlock } from "./base/TaskCreateBodyBlock";
 import { TaskCreateFooter, type TaskCreateFooterHandle } from "./base/TaskCreateFooter";
@@ -67,6 +73,11 @@ import { TaskTitleBlock } from "./base/TaskTitleBlock";
 // settles (which no try/catch can see), not a latency budget — a cold
 // create legitimately takes a second or two.
 const BOOTSTRAP_TIMEOUT_MS = 25_000;
+
+// Sentinel picker value for the "Manage templates…" action row. Never a
+// real template id — selecting it opens the manage modal instead of
+// applying a body.
+const TEMPLATE_MANAGE_ACTION = "__manage_templates__";
 
 // Section divider component
 const SectionDivider = ({ isDark }: { isDark: boolean }) => (
@@ -140,9 +151,12 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
     // table — see `getCreationKind` for the rules.
     const creationKind = getCreationKind(useTM.isCreatingTask, useTM.allTasks);
 
-    // Body template picker. Default to the milestone template when the user
-    // is creating a milestone; otherwise use the standard task template.
-    const [templateId, setTemplateId] = useState<TaskTemplateId>(
+    // Body template picker. The value is a string: built-ins use their
+    // `TaskTemplateId` verbatim, custom project templates use the
+    // namespaced `custom:{id}` value (see `taskTemplates.ts`). Default to
+    // the milestone template when creating a milestone, else the standard
+    // task template.
+    const [templateId, setTemplateId] = useState<string>(
         creationKind === "milestone" ? "milestone" : "default"
     );
     // The BlockNote editor seeds itself once from `body` and afterwards
@@ -154,15 +168,15 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
         editorRef.current = editor;
     }, []);
 
-    const applyTemplate = (nextId: TaskTemplateId) => {
-        const next = TASK_TEMPLATES[nextId];
-        if (!next) return;
-        setTemplateId(nextId);
-        setBody(next.blocks);
+    // Seed the editor's body with `blocks` and remember which picker option
+    // is active. Shared by the built-in and custom-template paths.
+    const applyBlocks = (value: string, blocks: PartialBlock[]) => {
+        setTemplateId(value);
+        setBody(blocks);
         const editor = editorRef.current;
         if (editor) {
             try {
-                editor.replaceBlocks(editor.document, next.blocks);
+                editor.replaceBlocks(editor.document, blocks);
             } catch {
                 // Editor not ready yet — the next render's seed will pick
                 // up the new body via `initialBody`.
@@ -170,10 +184,46 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
         }
     };
 
+    const applyTemplate = (nextId: TaskTemplateId) => {
+        const next = TASK_TEMPLATES[nextId];
+        if (!next) return;
+        applyBlocks(nextId, next.blocks);
+    };
+
+    // Picker `onChange`: a `custom:{id}` value resolves against the loaded
+    // project templates; anything else is a built-in id.
+    const handleTemplateChange = (value: string) => {
+        const customId = parseCustomTemplateValue(value);
+        if (customId !== null) {
+            const custom = useTM.projectTaskTemplates.find((tpl) => tpl.id === customId);
+            if (custom) applyBlocks(value, custom.body);
+            return;
+        }
+        applyTemplate(value as TaskTemplateId);
+    };
+
+    // Load this project's custom templates for the picker: on mount, when
+    // the project changes, and after any create/edit/delete (the manage
+    // modal flips `templatesDirty`).
+    useEffect(() => {
+        const projectId = usePM.currentProject?.projectId;
+        if (!projectId) return;
+        let cancelled = false;
+        (async () => {
+            const templates = await loadProjectTaskTemplates(myself, projectId, accessToken);
+            if (!cancelled) useTM.setProjectTaskTemplates(templates);
+            if (useTM.templatesDirty) useTM.setTemplatesDirty(false);
+        })();
+        return () => {
+            cancelled = true;
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [usePM.currentProject?.projectId, useTM.templatesDirty]);
+
     // When the user toggles the creationKind chip (task ↔ milestone) we
     // surface a sensible default template, but only if they haven't picked
     // a different one themselves yet — if they're already on a non-default
-    // template, leave their choice alone.
+    // (or custom) template, leave their choice alone.
     useEffect(() => {
         if (creationKind === "milestone" && templateId === "default") {
             applyTemplate("milestone");
@@ -980,12 +1030,17 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                                 startDecorator={<DescriptionRoundedIcon sx={{ fontSize: 16 }} />}
                                 value={templateId}
                                 renderValue={(opt) => {
-                                    const tpl = opt
-                                        ? TASK_TEMPLATES[opt.value as TaskTemplateId]
-                                        : null;
-                                    const tplLabel = tpl
-                                        ? t.tasks.createForm.templates[tpl.labelKey]
-                                        : t.tasks.createForm.templates.defaultLabel;
+                                    if (!opt) return null;
+                                    const builtin = TASK_TEMPLATES[opt.value as TaskTemplateId];
+                                    const customId = parseCustomTemplateValue(opt.value);
+                                    const tplLabel = builtin
+                                        ? t.tasks.createForm.templates[builtin.labelKey]
+                                        : customId !== null
+                                          ? (useTM.projectTaskTemplates.find(
+                                                (tpl) => tpl.id === customId
+                                            )?.templateName ??
+                                            t.tasks.createForm.templates.defaultLabel)
+                                          : t.tasks.createForm.templates.defaultLabel;
                                     return (
                                         <Typography level="body-xs" sx={{ fontWeight: 600 }}>
                                             {t.tasks.createForm.templatePrefix}
@@ -1005,7 +1060,12 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                                         : "rgba(0,0,0,0.025)",
                                 }}
                                 onChange={(_e, value) => {
-                                    if (value) applyTemplate(value as TaskTemplateId);
+                                    if (!value) return;
+                                    if (value === TEMPLATE_MANAGE_ACTION) {
+                                        useTM.setOpenManageTemplates(true);
+                                        return;
+                                    }
+                                    handleTemplateChange(value);
                                 }}
                             >
                                 {TASK_TEMPLATE_OPTIONS.map((tpl) => (
@@ -1027,6 +1087,48 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                                         </Stack>
                                     </Option>
                                 ))}
+
+                                {/* Project-scoped custom templates, when any
+                                    exist for the current project. */}
+                                {useTM.projectTaskTemplates.length > 0 && (
+                                    <ListDivider role="none" />
+                                )}
+                                {useTM.projectTaskTemplates.length > 0 && (
+                                    <Typography
+                                        level="body-xs"
+                                        sx={{
+                                            px: 1.5,
+                                            py: 0.5,
+                                            fontWeight: 600,
+                                            textTransform: "uppercase",
+                                            letterSpacing: "0.06em",
+                                            fontSize: 10,
+                                            color: isDark
+                                                ? "rgba(255,255,255,0.4)"
+                                                : "rgba(0,0,0,0.4)",
+                                        }}
+                                    >
+                                        {t.tasks.createForm.templates.projectGroup}
+                                    </Typography>
+                                )}
+                                {useTM.projectTaskTemplates.map((tpl) => (
+                                    <Option
+                                        key={customTemplateValue(tpl.id)}
+                                        value={customTemplateValue(tpl.id)}
+                                    >
+                                        <Typography level="body-sm" sx={{ fontWeight: 600 }}>
+                                            {tpl.templateName}
+                                        </Typography>
+                                    </Option>
+                                ))}
+
+                                <ListDivider role="none" />
+                                <Option value={TEMPLATE_MANAGE_ACTION}>
+                                    <SettingsRoundedIcon sx={{ fontSize: 15, mr: 0.75 }} />
+                                    <Typography level="body-sm">
+                                        {t.tasks.createForm.templates.manageAction}
+                                    </Typography>
+                                </Option>
                             </Select>
                         </Stack>
                         <Box
@@ -1231,6 +1333,19 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
             ) : (
                 <TaskPaneLoading isDark={isDark} label={t.tasks.createForm.preparing} />
             )}
+
+            <ModalManageTaskTemplates
+                myself={myself}
+                open={useTM.openManageTemplates}
+                setMyself={setMyself}
+                socket={socket}
+                useCM={useCM}
+                usePM={usePM}
+                useTEM={useTEM}
+                useTM={useTM}
+                useUISM={useUISM}
+                onClose={() => useTM.setOpenManageTemplates(false)}
+            />
         </>
     );
 };
