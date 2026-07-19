@@ -7,6 +7,7 @@ import CancelIcon from "@mui/icons-material/Cancel";
 import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import FolderOpenRoundedIcon from "@mui/icons-material/FolderOpenRounded";
+import HelpOutlineRoundedIcon from "@mui/icons-material/HelpOutlineRounded";
 import KeyboardArrowDownRoundedIcon from "@mui/icons-material/KeyboardArrowDownRounded";
 import LocalOfferRoundedIcon from "@mui/icons-material/LocalOfferRounded";
 import PendingActionsRoundedIcon from "@mui/icons-material/PendingActionsRounded";
@@ -44,6 +45,7 @@ import { Socket } from "socket.io-client";
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
 import { ProjectAvatar } from "../../../../components/ui/avatars/ProjectAvatar";
+import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
 import { TaskHeaderStyles } from "../../../../components/ui/styles/commonStyle";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
@@ -59,6 +61,14 @@ import { SprintManagerDialog } from "../../sprint-milestone/components/SprintMan
 import { SprintMilestonesSection } from "../../sprint-milestone/components/SprintMilestonesSection";
 import { Milestone, Sprint } from "../../sprint-milestone/types";
 import { predefinedPriorityFilters } from "../../types/TaskTableTypes";
+import {
+    computeTaskWeight,
+    dueBucket,
+    DueBucket,
+    effortPoints,
+    MAX_TASK_WEIGHT,
+    weightBand,
+} from "../../utils/taskWeight";
 import { CopyableTaskIdText } from "../CopyableTaskId";
 import { TaskVelocitySection } from "./TaskVelocitySection";
 
@@ -207,6 +217,11 @@ export const TaskHomeContent = ({
     const [sprintConfigOpen, setSprintConfigOpen] = useState(false);
     const [sprintManagerOpen, setSprintManagerOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<"overall" | "sprint" | "mytasks">("overall");
+    // How the My Tasks "Up Next" list is ordered. Default "weight" so the
+    // most pressing task (priority × urgency) surfaces first — the whole
+    // point of the pointing system. "urgency" keeps the older overdue →
+    // priority → due-date rule for users who prefer a deadline-first view.
+    const [upNextSort, setUpNextSort] = useState<"weight" | "urgency">("weight");
 
     useEffect(() => {
         if (usePM.currentProject?.projectId) {
@@ -566,6 +581,82 @@ export const TaskHomeContent = ({
         return counts;
     }, [effectiveTasks]);
 
+    // ── Team Capacity (effort load by member, bucketed by due-window) ──
+    // Effort points (Σ) over each person's ACTIVE, non-milestone tasks are
+    // the currency for "who's busy" — priority is irrelevant to load, a
+    // low-priority task still eats a day. Milestone-backing rows are
+    // excluded because their child tasks already carry the effort (same
+    // no-double-count rule as sprintStats). Splitting by `dueBucket` turns
+    // one number into a load *curve* — busy today vs. later — which is what
+    // answers "who can take on this task?".
+    const teamCapacity = useMemo(() => {
+        type Buckets = Record<DueBucket, number>;
+        const zero = (): Buckets => ({ overdue: 0, today: 0, week: 0, later: 0, none: 0 });
+        const map = new Map<
+            string,
+            {
+                id: string;
+                name: string;
+                imgPath: string | null;
+                buckets: Buckets;
+                total: number;
+                nearTerm: number;
+                count: number;
+            }
+        >();
+        for (const t of effectiveTasks) {
+            if (t.effectiveStatus === "Closed") continue;
+            if (t.isMilestone === true) continue;
+            const id = t.assigneeId || "__unassigned__";
+            const entry = map.get(id) || {
+                id,
+                name: t.assigneeName || "Unassigned",
+                imgPath: t.assigneeImgPath || null,
+                buckets: zero(),
+                total: 0,
+                nearTerm: 0,
+                count: 0,
+            };
+            const pts = effortPoints(t.effortLevel);
+            const bucket = dueBucket(t.dueDate);
+            entry.buckets[bucket] += pts;
+            entry.total += pts;
+            entry.count += 1;
+            if (bucket === "overdue" || bucket === "today" || bucket === "week") {
+                entry.nearTerm += pts;
+            }
+            map.set(id, entry);
+        }
+        // Busiest-in-the-near-term first — that's the manager's triage order.
+        return Array.from(map.values()).sort(
+            (a, b) => b.nearTerm - a.nearTerm || b.total - a.total
+        );
+    }, [effectiveTasks]);
+
+    // Largest single-member near-term load, so every capacity bar can be
+    // drawn to a shared scale (a bar's fill = this member's load vs. the
+    // busiest member) instead of each bar self-normalizing.
+    const maxCapacityTotal = useMemo(
+        () => teamCapacity.reduce((mx, m) => Math.max(mx, m.total), 0),
+        [teamCapacity]
+    );
+
+    // ── Top by Weight (importance ranking, team-wide) ──
+    // Highest Task Weight (priority × urgency) among ACTIVE tasks — the
+    // "what should we look at first today" companion to the capacity view.
+    // Milestones are included (a due-soon critical milestone is legitimately
+    // top of mind). Tasks with neither a priority nor a due date carry no
+    // real signal (weight === floor), so they're dropped to keep the list
+    // meaningful.
+    const topByWeight = useMemo(() => {
+        return effectiveTasks
+            .filter((t) => t.effectiveStatus !== "Closed")
+            .filter((t) => t.priority || t.dueDate)
+            .map((t) => ({ task: t, weight: computeTaskWeight(t) }))
+            .sort((a, b) => b.weight - a.weight)
+            .slice(0, 10);
+    }, [effectiveTasks]);
+
     // ── Overdue & upcoming ──
     // Filtering on effectiveStatus !== "Closed" ensures sub-tasks of a closed
     // parent never appear in Overdue or Due-This-Week.
@@ -665,28 +756,38 @@ export const TaskHomeContent = ({
             Minimal: 4,
         };
         const active = myTasks.filter((t) => t.effectiveStatus !== "Closed");
+        // Deadline-first rule: overdue → priority → soonest due → recent.
+        const byUrgency = (a: EffectiveTask, b: EffectiveTask): number => {
+            const da = a.dueDate ? new Date(a.dueDate).getTime() : Infinity;
+            const db = b.dueDate ? new Date(b.dueDate).getTime() : Infinity;
+            const aOver = a.dueDate != null && da < todayMs;
+            const bOver = b.dueDate != null && db < todayMs;
+            if (aOver !== bOver) return aOver ? -1 : 1;
+            if (aOver && bOver) return da - db;
+
+            const pa = priorityRank[a.priority ?? ""] ?? 5;
+            const pb = priorityRank[b.priority ?? ""] ?? 5;
+            if (pa !== pb) return pa - pb;
+
+            if (da !== db) return da - db;
+
+            const ua = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+            const ub = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+            return ub - ua;
+        };
+        // Weight-first: highest Task Weight (priority × urgency) first, with
+        // the deadline rule breaking ties so equal-weight rows stay stable.
+        const byWeight = (a: EffectiveTask, b: EffectiveTask): number => {
+            const wa = computeTaskWeight(a);
+            const wb = computeTaskWeight(b);
+            if (wa !== wb) return wb - wa;
+            return byUrgency(a, b);
+        };
         return active
             .slice()
-            .sort((a, b) => {
-                const da = a.dueDate ? new Date(a.dueDate).getTime() : Infinity;
-                const db = b.dueDate ? new Date(b.dueDate).getTime() : Infinity;
-                const aOver = a.dueDate != null && da < todayMs;
-                const bOver = b.dueDate != null && db < todayMs;
-                if (aOver !== bOver) return aOver ? -1 : 1;
-                if (aOver && bOver) return da - db;
-
-                const pa = priorityRank[a.priority ?? ""] ?? 5;
-                const pb = priorityRank[b.priority ?? ""] ?? 5;
-                if (pa !== pb) return pa - pb;
-
-                if (da !== db) return da - db;
-
-                const ua = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
-                const ub = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
-                return ub - ua;
-            })
+            .sort(upNextSort === "weight" ? byWeight : byUrgency)
             .slice(0, 10);
-    }, [myTasks]);
+    }, [myTasks, upNextSort]);
 
     // ── Handlers ──
     const projectCount = usePM.teamProjects?.length || 0;
@@ -859,6 +960,21 @@ export const TaskHomeContent = ({
         Minimal: "#9CA3AF",
         None: "#94a3b8",
     };
+
+    // Due-window segments for the Team Capacity bars, in "soonest first"
+    // order so a member's bar reads left-to-right as overdue → later. Same
+    // red→amber→blue→gray heat language as the rest of the dashboard.
+    const capacityBuckets: { key: DueBucket; color: string; label: string }[] = [
+        { key: "overdue", color: "#ef4444", label: t.tasks.dashboard.capacity.overdue },
+        { key: "today", color: "#f59e0b", label: t.tasks.dashboard.capacity.today },
+        { key: "week", color: "#3b82f6", label: t.tasks.dashboard.capacity.week },
+        { key: "later", color: "#94a3b8", label: t.tasks.dashboard.capacity.later },
+        {
+            key: "none",
+            color: isDark ? "#4b5563" : "#cbd5e1",
+            label: t.tasks.dashboard.capacity.none,
+        },
+    ];
 
     // Sprint completion percentage — closed vs total across the selected
     // sprint's milestones. Same numerator/denominator as the "{closed} /
@@ -2109,6 +2225,7 @@ export const TaskHomeContent = ({
                                                 <Stack
                                                     alignItems="center"
                                                     direction="row"
+                                                    flexWrap="wrap"
                                                     spacing={1}
                                                     sx={{ mb: 1 }}
                                                 >
@@ -2121,12 +2238,89 @@ export const TaskHomeContent = ({
                                                     >
                                                         Up Next
                                                     </Typography>
-                                                    <Typography
-                                                        level="body-xs"
-                                                        sx={{ color: textMuted }}
+                                                    <AppTooltip
+                                                        title={
+                                                            <Box sx={{ maxWidth: 260 }}>
+                                                                <b>
+                                                                    {
+                                                                        t.tasks.dashboard.upNext
+                                                                            .help.title
+                                                                    }
+                                                                </b>
+                                                                <br />
+                                                                {
+                                                                    t.tasks.dashboard.upNext.help
+                                                                        .body
+                                                                }
+                                                            </Box>
+                                                        }
                                                     >
-                                                        ranked by overdue → priority → due date
-                                                    </Typography>
+                                                        <HelpOutlineRoundedIcon
+                                                            sx={{
+                                                                fontSize: 15,
+                                                                color: textMuted,
+                                                                cursor: "help",
+                                                            }}
+                                                        />
+                                                    </AppTooltip>
+                                                    {/* Sort selector — order the list by Task
+                                                        Weight (default) or by the deadline rule. */}
+                                                    <Stack
+                                                        direction="row"
+                                                        spacing={0.5}
+                                                        sx={{ ml: { sm: "auto" } }}
+                                                    >
+                                                        {(
+                                                            [
+                                                                {
+                                                                    key: "weight" as const,
+                                                                    label: t.tasks.dashboard.upNext
+                                                                        .byWeight,
+                                                                },
+                                                                {
+                                                                    key: "urgency" as const,
+                                                                    label: t.tasks.dashboard.upNext
+                                                                        .byUrgency,
+                                                                },
+                                                            ] as const
+                                                        ).map((opt) => {
+                                                            const active = upNextSort === opt.key;
+                                                            return (
+                                                                <Chip
+                                                                    key={opt.key}
+                                                                    size="sm"
+                                                                    sx={{
+                                                                        cursor: "pointer",
+                                                                        fontSize: "0.7rem",
+                                                                        fontWeight: 600,
+                                                                        backgroundColor: active
+                                                                            ? "#7c3aed"
+                                                                            : isDark
+                                                                              ? "rgba(255,255,255,0.06)"
+                                                                              : "rgba(0,0,0,0.05)",
+                                                                        color: active
+                                                                            ? "white"
+                                                                            : textSecondary,
+                                                                        "&:hover": {
+                                                                            backgroundColor: active
+                                                                                ? "#6d28d9"
+                                                                                : isDark
+                                                                                  ? "rgba(255,255,255,0.1)"
+                                                                                  : "rgba(0,0,0,0.08)",
+                                                                        },
+                                                                    }}
+                                                                    variant={
+                                                                        active ? "solid" : "soft"
+                                                                    }
+                                                                    onClick={() =>
+                                                                        setUpNextSort(opt.key)
+                                                                    }
+                                                                >
+                                                                    {opt.label}
+                                                                </Chip>
+                                                            );
+                                                        })}
+                                                    </Stack>
                                                 </Stack>
                                                 {myUpNext.length === 0 ? (
                                                     <Card
@@ -2163,6 +2357,8 @@ export const TaskHomeContent = ({
                                                                     ? pSwatch.dark
                                                                     : pSwatch.light
                                                                 : textMuted;
+                                                            const weight = computeTaskWeight(task);
+                                                            const wb = weightBand(weight);
                                                             const due = formatDueLabel(
                                                                 task.dueDate
                                                             );
@@ -2202,17 +2398,44 @@ export const TaskHomeContent = ({
                                                                         direction="row"
                                                                         spacing={1.5}
                                                                     >
-                                                                        <Box
-                                                                            sx={{
-                                                                                width: 8,
-                                                                                height: 8,
-                                                                                borderRadius:
-                                                                                    "50%",
-                                                                                backgroundColor:
-                                                                                    pColor,
-                                                                                flexShrink: 0,
-                                                                            }}
-                                                                        />
+                                                                        {/* Task Weight badge,
+                                                                            leftmost — same squared
+                                                                            heat chip as the Top by
+                                                                            Weight section. */}
+                                                                        <AppTooltip
+                                                                            title={`${fmt(
+                                                                                t.tasks.table
+                                                                                    .weightTooltip,
+                                                                                {
+                                                                                    weight,
+                                                                                    max: MAX_TASK_WEIGHT,
+                                                                                }
+                                                                            )} · ${t.tasks.table.weightBands[wb.band]}`}
+                                                                        >
+                                                                            <Box
+                                                                                sx={{
+                                                                                    width: 30,
+                                                                                    height: 30,
+                                                                                    borderRadius:
+                                                                                        "8px",
+                                                                                    flexShrink: 0,
+                                                                                    display:
+                                                                                        "flex",
+                                                                                    alignItems:
+                                                                                        "center",
+                                                                                    justifyContent:
+                                                                                        "center",
+                                                                                    fontWeight: 700,
+                                                                                    fontSize:
+                                                                                        "0.8rem",
+                                                                                    color: "white",
+                                                                                    backgroundColor:
+                                                                                        wb.color,
+                                                                                }}
+                                                                            >
+                                                                                {weight}
+                                                                            </Box>
+                                                                        </AppTooltip>
                                                                         <Stack
                                                                             alignItems="center"
                                                                             direction="row"
@@ -2812,6 +3035,492 @@ export const TaskHomeContent = ({
                                             effortColors
                                         )}
                                     </Stack>
+
+                                    {/* ════════ Section F: Top by Weight ════════ */}
+                                    {topByWeight.length > 0 && (
+                                        <Box>
+                                            <Typography
+                                                level="title-sm"
+                                                sx={{
+                                                    fontWeight: 600,
+                                                    mb: 0.5,
+                                                    color: sectionHeaderColor,
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    gap: 1,
+                                                }}
+                                            >
+                                                <WarningAmberRoundedIcon
+                                                    sx={{ fontSize: 16, color: "#ef4444" }}
+                                                />
+                                                {t.tasks.dashboard.topWeight.title}
+                                                <AppTooltip
+                                                    title={
+                                                        <Box sx={{ maxWidth: 260 }}>
+                                                            <b>
+                                                                {
+                                                                    t.tasks.dashboard.topWeight
+                                                                        .help.title
+                                                                }
+                                                            </b>
+                                                            <br />
+                                                            {t.tasks.dashboard.topWeight.help.body}
+                                                        </Box>
+                                                    }
+                                                >
+                                                    <HelpOutlineRoundedIcon
+                                                        sx={{
+                                                            fontSize: 15,
+                                                            color: textMuted,
+                                                            cursor: "help",
+                                                        }}
+                                                    />
+                                                </AppTooltip>
+                                            </Typography>
+                                            <Typography
+                                                level="body-xs"
+                                                sx={{ color: textMuted, mb: 1.5 }}
+                                            >
+                                                {t.tasks.dashboard.topWeight.subtitle}
+                                            </Typography>
+                                            <Stack spacing={0.75}>
+                                                {topByWeight.map(({ task, weight }) => {
+                                                    const wb = weightBand(weight);
+                                                    const due = formatDueLabel(task.dueDate);
+                                                    const dueColor =
+                                                        due.tone === "overdue"
+                                                            ? "#ef4444"
+                                                            : due.tone === "today" ||
+                                                                due.tone === "soon"
+                                                              ? "#f59e0b"
+                                                              : textMuted;
+                                                    const sc =
+                                                        STATUS_COLORS[task.effectiveStatus] ||
+                                                        STATUS_COLORS.Open;
+                                                    return (
+                                                        <Card
+                                                            key={task.id}
+                                                            variant="outlined"
+                                                            sx={{
+                                                                p: 1.25,
+                                                                cursor: "pointer",
+                                                                background: cardBg,
+                                                                borderColor: cardBorder,
+                                                                transition: "all 0.2s ease",
+                                                                "&:hover": {
+                                                                    borderColor: wb.color,
+                                                                    background: isDark
+                                                                        ? "rgba(255,255,255,0.04)"
+                                                                        : "rgba(255,255,255,0.9)",
+                                                                },
+                                                            }}
+                                                            onClick={() =>
+                                                                handleTaskClick(Number(task.id))
+                                                            }
+                                                        >
+                                                            <Stack
+                                                                alignItems="center"
+                                                                direction="row"
+                                                                spacing={1.5}
+                                                            >
+                                                                <AppTooltip
+                                                                    title={`${fmt(
+                                                                        t.tasks.table
+                                                                            .weightTooltip,
+                                                                        {
+                                                                            weight,
+                                                                            max: MAX_TASK_WEIGHT,
+                                                                        }
+                                                                    )} · ${t.tasks.table.weightBands[wb.band]}`}
+                                                                >
+                                                                    <Box
+                                                                        sx={{
+                                                                            width: 30,
+                                                                            height: 30,
+                                                                            borderRadius: "8px",
+                                                                            flexShrink: 0,
+                                                                            display: "flex",
+                                                                            alignItems: "center",
+                                                                            justifyContent:
+                                                                                "center",
+                                                                            fontWeight: 700,
+                                                                            fontSize: "0.8rem",
+                                                                            color: "white",
+                                                                            backgroundColor:
+                                                                                wb.color,
+                                                                        }}
+                                                                    >
+                                                                        {weight}
+                                                                    </Box>
+                                                                </AppTooltip>
+                                                                <Stack
+                                                                    alignItems="center"
+                                                                    direction="row"
+                                                                    spacing={0.75}
+                                                                    sx={{ flex: 1, minWidth: 0 }}
+                                                                >
+                                                                    <CopyableTaskIdText
+                                                                        level="body-xs"
+                                                                        task={task}
+                                                                        sx={{
+                                                                            fontWeight: 600,
+                                                                            color: textMuted,
+                                                                            flexShrink: 0,
+                                                                        }}
+                                                                    />
+                                                                    {task.isMilestone === true && (
+                                                                        <FlagRoundedIcon
+                                                                            sx={{
+                                                                                fontSize: 12,
+                                                                                color: "#f97316",
+                                                                                flexShrink: 0,
+                                                                            }}
+                                                                        />
+                                                                    )}
+                                                                    <Typography
+                                                                        level="body-sm"
+                                                                        sx={{
+                                                                            fontWeight: 500,
+                                                                            color: textPrimary,
+                                                                            overflow: "hidden",
+                                                                            textOverflow:
+                                                                                "ellipsis",
+                                                                            whiteSpace: "nowrap",
+                                                                        }}
+                                                                    >
+                                                                        {task.title ||
+                                                                            t.tasks.dashboard
+                                                                                .untitledTask}
+                                                                    </Typography>
+                                                                </Stack>
+                                                                {task.assigneeName && (
+                                                                    <Typography
+                                                                        level="body-xs"
+                                                                        sx={{
+                                                                            color: textSecondary,
+                                                                            flexShrink: 0,
+                                                                            maxWidth: 120,
+                                                                            overflow: "hidden",
+                                                                            textOverflow:
+                                                                                "ellipsis",
+                                                                            whiteSpace: "nowrap",
+                                                                            display: {
+                                                                                xs: "none",
+                                                                                sm: "block",
+                                                                            },
+                                                                        }}
+                                                                    >
+                                                                        {task.assigneeName}
+                                                                    </Typography>
+                                                                )}
+                                                                <Chip
+                                                                    size="sm"
+                                                                    variant="soft"
+                                                                    startDecorator={getStatusIcon(
+                                                                        task.effectiveStatus,
+                                                                        12
+                                                                    )}
+                                                                    sx={{
+                                                                        fontSize: "0.65rem",
+                                                                        backgroundColor: sc.bg,
+                                                                        color: sc.text,
+                                                                        flexShrink: 0,
+                                                                        display: {
+                                                                            xs: "none",
+                                                                            sm: "inline-flex",
+                                                                        },
+                                                                    }}
+                                                                >
+                                                                    {task.effectiveStatus}
+                                                                </Chip>
+                                                                <Typography
+                                                                    level="body-xs"
+                                                                    sx={{
+                                                                        color: dueColor,
+                                                                        fontWeight:
+                                                                            due.tone === "overdue"
+                                                                                ? 700
+                                                                                : 500,
+                                                                        flexShrink: 0,
+                                                                        minWidth: 90,
+                                                                        textAlign: "right",
+                                                                    }}
+                                                                >
+                                                                    {due.text}
+                                                                </Typography>
+                                                            </Stack>
+                                                        </Card>
+                                                    );
+                                                })}
+                                            </Stack>
+                                        </Box>
+                                    )}
+
+                                    {/* ════════ Section G: Team Capacity ════════ */}
+                                    <Box>
+                                        <Typography
+                                            level="title-sm"
+                                            sx={{
+                                                fontWeight: 600,
+                                                mb: 0.5,
+                                                color: sectionHeaderColor,
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: 1,
+                                            }}
+                                        >
+                                            <WorkRoundedIcon sx={{ fontSize: 16 }} />
+                                            {t.tasks.dashboard.capacity.title}
+                                            <AppTooltip
+                                                title={
+                                                    <Box sx={{ maxWidth: 260 }}>
+                                                        <b>
+                                                            {t.tasks.dashboard.capacity.help.title}
+                                                        </b>
+                                                        <br />
+                                                        {t.tasks.dashboard.capacity.help.body}
+                                                    </Box>
+                                                }
+                                            >
+                                                <HelpOutlineRoundedIcon
+                                                    sx={{
+                                                        fontSize: 15,
+                                                        color: textMuted,
+                                                        cursor: "help",
+                                                    }}
+                                                />
+                                            </AppTooltip>
+                                        </Typography>
+                                        <Typography
+                                            level="body-xs"
+                                            sx={{ color: textMuted, mb: 1.5 }}
+                                        >
+                                            {t.tasks.dashboard.capacity.subtitle}
+                                        </Typography>
+                                        <Card
+                                            variant="outlined"
+                                            sx={{
+                                                p: 2,
+                                                background: cardBg,
+                                                borderColor: cardBorder,
+                                            }}
+                                        >
+                                            {teamCapacity.length === 0 ? (
+                                                <Typography
+                                                    level="body-sm"
+                                                    sx={{
+                                                        color: textMuted,
+                                                        textAlign: "center",
+                                                        py: 1,
+                                                    }}
+                                                >
+                                                    {t.tasks.dashboard.capacity.empty}
+                                                </Typography>
+                                            ) : (
+                                                <Stack spacing={2}>
+                                                    {/* Legend */}
+                                                    <Stack
+                                                        direction="row"
+                                                        flexWrap="wrap"
+                                                        gap={1.5}
+                                                    >
+                                                        {capacityBuckets.map((b) => (
+                                                            <Stack
+                                                                key={b.key}
+                                                                alignItems="center"
+                                                                direction="row"
+                                                                spacing={0.5}
+                                                            >
+                                                                <Box
+                                                                    sx={{
+                                                                        width: 8,
+                                                                        height: 8,
+                                                                        borderRadius: "2px",
+                                                                        backgroundColor: b.color,
+                                                                    }}
+                                                                />
+                                                                <Typography
+                                                                    level="body-xs"
+                                                                    sx={{ color: textSecondary }}
+                                                                >
+                                                                    {b.label}
+                                                                </Typography>
+                                                            </Stack>
+                                                        ))}
+                                                    </Stack>
+                                                    {/* Per-member load rows (shared scale) */}
+                                                    <Stack spacing={1.25}>
+                                                        {teamCapacity.map((m) => (
+                                                            <Stack
+                                                                key={m.id}
+                                                                alignItems="center"
+                                                                direction="row"
+                                                                spacing={1.5}
+                                                            >
+                                                                <Stack
+                                                                    alignItems="center"
+                                                                    direction="row"
+                                                                    spacing={1}
+                                                                    sx={{
+                                                                        width: { xs: 90, sm: 150 },
+                                                                        flexShrink: 0,
+                                                                        minWidth: 0,
+                                                                    }}
+                                                                >
+                                                                    <UserAvatar
+                                                                        showPulseDot={false}
+                                                                        size={26}
+                                                                        clickable={
+                                                                            m.id !==
+                                                                            "__unassigned__"
+                                                                        }
+                                                                        fallbackInitial={m.name
+                                                                            .charAt(0)
+                                                                            .toUpperCase()}
+                                                                        userId={
+                                                                            m.id ===
+                                                                            "__unassigned__"
+                                                                                ? null
+                                                                                : m.id
+                                                                        }
+                                                                    />
+                                                                    <Typography
+                                                                        level="body-xs"
+                                                                        sx={{
+                                                                            color: textPrimary,
+                                                                            fontWeight: 500,
+                                                                            overflow: "hidden",
+                                                                            textOverflow:
+                                                                                "ellipsis",
+                                                                            whiteSpace: "nowrap",
+                                                                        }}
+                                                                    >
+                                                                        {m.name}
+                                                                    </Typography>
+                                                                </Stack>
+                                                                <Box sx={{ flex: 1, minWidth: 0 }}>
+                                                                    <Box
+                                                                        sx={{
+                                                                            display: "flex",
+                                                                            height: 12,
+                                                                            borderRadius: 6,
+                                                                            overflow: "hidden",
+                                                                            backgroundColor: isDark
+                                                                                ? "rgba(255,255,255,0.08)"
+                                                                                : "rgba(0,0,0,0.06)",
+                                                                        }}
+                                                                    >
+                                                                        <Box
+                                                                            sx={{
+                                                                                display: "flex",
+                                                                                height: "100%",
+                                                                                minWidth:
+                                                                                    m.total > 0
+                                                                                        ? 6
+                                                                                        : 0,
+                                                                                width: `${
+                                                                                    maxCapacityTotal >
+                                                                                    0
+                                                                                        ? (m.total /
+                                                                                              maxCapacityTotal) *
+                                                                                          100
+                                                                                        : 0
+                                                                                }%`,
+                                                                            }}
+                                                                        >
+                                                                            {capacityBuckets.map(
+                                                                                (b) => {
+                                                                                    const v =
+                                                                                        m.buckets[
+                                                                                            b.key
+                                                                                        ];
+                                                                                    return v >
+                                                                                        0 ? (
+                                                                                        <AppTooltip
+                                                                                            key={
+                                                                                                b.key
+                                                                                            }
+                                                                                            title={fmt(
+                                                                                                t
+                                                                                                    .tasks
+                                                                                                    .dashboard
+                                                                                                    .capacity
+                                                                                                    .effortTooltip,
+                                                                                                {
+                                                                                                    label: b.label,
+                                                                                                    points: v,
+                                                                                                }
+                                                                                            )}
+                                                                                        >
+                                                                                            <Box
+                                                                                                sx={{
+                                                                                                    width: `${(v / m.total) * 100}%`,
+                                                                                                    backgroundColor:
+                                                                                                        b.color,
+                                                                                                }}
+                                                                                            />
+                                                                                        </AppTooltip>
+                                                                                    ) : null;
+                                                                                }
+                                                                            )}
+                                                                        </Box>
+                                                                    </Box>
+                                                                </Box>
+                                                                <Stack
+                                                                    alignItems="center"
+                                                                    direction="row"
+                                                                    spacing={0.75}
+                                                                    sx={{ flexShrink: 0 }}
+                                                                >
+                                                                    <AppTooltip
+                                                                        title={
+                                                                            t.tasks.dashboard
+                                                                                .capacity.nearTerm
+                                                                        }
+                                                                    >
+                                                                        <Chip
+                                                                            size="sm"
+                                                                            variant="soft"
+                                                                            sx={{
+                                                                                fontWeight: 700,
+                                                                                fontSize: "0.7rem",
+                                                                                minWidth: 34,
+                                                                                backgroundColor:
+                                                                                    m.nearTerm > 0
+                                                                                        ? "rgba(239,68,68,0.14)"
+                                                                                        : "rgba(148,163,184,0.14)",
+                                                                                color:
+                                                                                    m.nearTerm > 0
+                                                                                        ? "#ef4444"
+                                                                                        : textMuted,
+                                                                            }}
+                                                                        >
+                                                                            {m.nearTerm}
+                                                                        </Chip>
+                                                                    </AppTooltip>
+                                                                    <Typography
+                                                                        level="body-xs"
+                                                                        sx={{
+                                                                            color: textMuted,
+                                                                            minWidth: 54,
+                                                                            textAlign: "right",
+                                                                        }}
+                                                                    >
+                                                                        {fmt(
+                                                                            t.tasks.dashboard
+                                                                                .capacity
+                                                                                .tasksCount,
+                                                                            { count: m.count }
+                                                                        )}
+                                                                    </Typography>
+                                                                </Stack>
+                                                            </Stack>
+                                                        ))}
+                                                    </Stack>
+                                                </Stack>
+                                            )}
+                                        </Card>
+                                    </Box>
 
                                     {/* ════════ Section C: Assignee Workload ════════ */}
                                     {assigneeWorkload.length > 0 && (

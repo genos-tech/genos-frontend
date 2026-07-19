@@ -661,6 +661,16 @@ export const tasks = {
             sprint: "Sprint",
             updatedAt: "Last Updated",
             createdDate: "Created Date",
+            weight: "Weight",
+        },
+        // "Task Weight" = priority × urgency (1..25), shown on the derived
+        // Weight column and the dashboard's Top-by-Weight / Up Next chips.
+        weightTooltip: "Task Weight {weight}/{max}",
+        weightBands: {
+            low: "Low",
+            medium: "Medium",
+            high: "High",
+            critical: "Critical",
         },
     },
 
@@ -675,6 +685,43 @@ export const tasks = {
 
     // Dashboard table headers / labels.
     dashboard: {
+        // My Tasks "Up Next" — sort selector + plain-language help.
+        upNext: {
+            byWeight: "By weight",
+            byUrgency: "By urgency",
+            help: {
+                title: "How your tasks are ordered",
+                body: "“By weight” shows the most pressing tasks first — Task Weight (1–25) = priority × how close the due date is, so a bigger number means handle it sooner. “By urgency” orders by overdue → priority → due date.",
+            },
+        },
+        // Team Capacity: Σ effort of a member's active tasks, bucketed by
+        // due-window, answering "who's busy today vs. later".
+        capacity: {
+            title: "Team Capacity",
+            subtitle: "Active effort load by member — who's busy now vs. later",
+            overdue: "Overdue",
+            today: "Today",
+            week: "This week",
+            later: "Later",
+            none: "No date",
+            nearTerm: "Near-term load (overdue + this week)",
+            empty: "No active tasks assigned yet.",
+            tasksCount: "{count} tasks",
+            effortTooltip: "{label}: {points} effort pts",
+            help: {
+                title: "What is Team Capacity?",
+                body: "How much active work each person is carrying, in effort points, split by when it's due. A longer, redder bar = busier right now — so pick someone with a shorter bar to take on new work.",
+            },
+        },
+        // Top by Weight: the highest priority × urgency active tasks.
+        topWeight: {
+            title: "Top by Weight",
+            subtitle: "Highest priority × urgency right now",
+            help: {
+                title: "What is Task Weight?",
+                body: "A 1–25 score of how much a task needs attention now. Weight = priority × time pressure (how close the due date is). The bigger the number, the sooner it should be handled.",
+            },
+        },
         velocity: {
             title: "Velocity",
             subtitle: "Tasks created, started, closed & updated over time",

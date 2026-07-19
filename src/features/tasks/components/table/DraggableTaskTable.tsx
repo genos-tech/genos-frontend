@@ -149,6 +149,18 @@ export const defaultColumns: ColumnDef[] = [
         resizable: true,
     },
     {
+        // Derived "Task Weight" = priority × urgency (1..25). Read-only —
+        // it recomputes from the row's priority + due date (no persisted
+        // value), so editing those two cells is how you change it.
+        field: "weight",
+        headerName: "Weight",
+        headerLabelKey: "weight",
+        width: 90,
+        minWidth: 70,
+        align: "center",
+        resizable: true,
+    },
+    {
         field: "daysLeft",
         headerName: "Days Left",
         headerLabelKey: "daysLeft",
