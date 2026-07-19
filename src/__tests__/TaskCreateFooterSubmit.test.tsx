@@ -30,7 +30,7 @@ const taskContent = {
     attachments: [],
 } as any;
 
-const renderFooter = () => {
+const renderFooter = (extraProps: { missingRequiredFields?: string[] } = {}) => {
     const setIsSubmitted = vi.fn();
     const setTitleError = vi.fn();
     const setTitleErrorOpen = vi.fn();
@@ -59,6 +59,7 @@ const renderFooter = () => {
                 useCM={{} as any}
                 usePM={usePM}
                 useTM={useTM}
+                {...extraProps}
             />
         </CssVarsProvider>
     );
@@ -118,5 +119,13 @@ describe("TaskCreateFooter submit", () => {
         // form would be visibly stuck at "Creating…" with no way forward.
         await waitFor(() => expect(uploadNewTaskMock).toHaveBeenCalled());
         await waitFor(() => expect(getByText("Create Task").closest("button")).not.toBeDisabled());
+    });
+
+    it("stays disabled and never submits while project-rule required fields are missing", () => {
+        const { getByText } = renderFooter({ missingRequiredFields: ["Effort Level", "Tags"] });
+
+        expect(getByText("Create Task").closest("button")).toBeDisabled();
+        clickCreate(getByText);
+        expect(uploadNewTaskMock).not.toHaveBeenCalled();
     });
 });

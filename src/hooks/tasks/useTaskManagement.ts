@@ -22,6 +22,7 @@ import {
 import { popSpecificProjectTasks } from "../../features/tasks/services/popSpecificProjectTasks";
 import { ProjectTemplateDefaults } from "../../features/tasks/services/projectTemplateDefaults";
 import { buildTaskTree } from "../../features/tasks/utils/buildTaskTree";
+import { ProjectTaskFieldRules } from "../../features/tasks/utils/taskFieldRules";
 import { CustomTaskTemplate } from "../../features/tasks/utils/taskTemplates";
 import { UserProps } from "../../types/admin";
 import {
@@ -176,6 +177,14 @@ export interface TaskManagementState {
     // Per-project default template applied to new tasks/milestones.
     templateDefaults: ProjectTemplateDefaults;
     setTemplateDefaults: (defaults: ProjectTemplateDefaults) => void;
+
+    // Owner-configured per-project field rules (required metadata +
+    // default values for task/milestone creation). Tagged with the
+    // projectId they belong to so consumers detect staleness; null
+    // until first load. No dirty flag: the customize modal writes the
+    // PUT response straight back into this slot.
+    taskFieldRules: ProjectTaskFieldRules | null;
+    setTaskFieldRules: (value: ProjectTaskFieldRules | null) => void;
 
     // Initial empty task
     initialEmptyTaskId: number | undefined;
@@ -391,6 +400,9 @@ export const useTaskManagement = (
         task: null,
         milestone: null,
     });
+
+    // Owner-configured per-project field rules (see interface note).
+    const [taskFieldRules, setTaskFieldRules] = useState<ProjectTaskFieldRules | null>(null);
 
     // Initial empty task
     const [initialEmptyTaskId, setInitialEmptyTaskId] = useState<number | undefined>(undefined);
@@ -852,6 +864,8 @@ export const useTaskManagement = (
         setTemplatesDirty,
         templateDefaults,
         setTemplateDefaults,
+        taskFieldRules,
+        setTaskFieldRules,
 
         // Initial empty task
         initialEmptyTaskId,

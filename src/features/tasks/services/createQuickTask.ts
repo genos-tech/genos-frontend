@@ -1,6 +1,7 @@
 import { fmt, getMessages } from "../../../i18n";
 import { LimitReachedError, parseLimitReached } from "../../../services/limitErrors";
 import { UserProps } from "../../../types/admin";
+import { TagListProps } from "../../../types/tasks";
 import { taskContentTemplate } from "../utils/taskTemplates";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
@@ -23,6 +24,8 @@ type CreateQuickTaskProps = {
     effortLevel?: string | null;
     // "YYYY-MM-DD"
     dueDate?: string | null;
+    // Full tag objects, same shape uploadNewTask sends.
+    tags?: TagListProps[];
 };
 
 export type CreateQuickTaskResult = {
@@ -75,7 +78,7 @@ export const createQuickTask = async (
         content: taskContentTemplate,
         due_date: props.dueDate ?? null,
         links: null,
-        tags: [],
+        tags: props.tags ?? [],
         chat_type: null,
         chat_id: null,
         thread_id: null,

@@ -37,7 +37,7 @@ import { UIStateManagementState } from "../../../../hooks/common/useUIStateManag
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
-import { useTranslation } from "../../../../i18n";
+import { fmt, useTranslation } from "../../../../i18n";
 import { LimitReachedError } from "../../../../services/limitErrors";
 import { UserProps } from "../../../../types/admin";
 import { TagListProps, TaskProps } from "../../../../types/tasks";
@@ -46,6 +46,7 @@ import { LinkedPrCard } from "../../../integrations/components/LinkedPrCard";
 import { parsePrUrl } from "../../../integrations/utils/parsePrUrl";
 import { createEmptyTask } from "../../services/createEmptyTask";
 import { loadProjectTaskTemplates } from "../../services/loadProjectTaskTemplates";
+import { loadProjectTaskFieldRules } from "../../services/projectTaskFieldRules";
 import {
     loadProjectTemplateDefaults,
     ProjectTemplateDefaults,
@@ -58,7 +59,14 @@ import {
 } from "../../services/updateTaskAutoCompleteOptions";
 import { sendMilestoneCreatedMessage } from "../../sprint-milestone/services";
 import { isNoMainPanelVisible } from "../../utils/mainPanelVisibility";
+import {
+    applyRuleDefaults,
+    getActiveRequiredFields,
+    getMissingRequiredFields,
+    TaskFieldRules,
+} from "../../utils/taskFieldRules";
 import { getCreationKind } from "../../utils/taskKind";
+import { effortLevels, priorities, statuses } from "../../utils/taskMeta";
 import {
     CustomTaskTemplate,
     customTemplateValue,
@@ -286,6 +294,19 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
     // and wipe the body they're typing.
     const defaultAppliedRef = useRef(false);
 
+    // Same one-shot discipline for the owner-configured FIELD-RULE
+    // defaults (status/priority/effort/dueDate/tags/assignee/reporter):
+    // applied once per form session, never re-fired by refetches, kind
+    // flips, or a mid-create project switch.
+    const fieldDefaultsAppliedRef = useRef(false);
+    // Default TAGS get their own one-shot: they can only resolve once the
+    // project tags fetch lands, which may be after the main apply.
+    const tagDefaultsAppliedRef = useRef(false);
+    // Set when the seed watcher hydrates from a restored draft — those
+    // values are deliberate prior choices, so rule defaults are skipped
+    // for the whole session (the required GATE still applies).
+    const seededFromDraftRef = useRef(false);
+
     // Load this project's custom templates + defaults for the picker: on
     // mount, when the project changes, and after any create/edit/delete
     // (the manage modal flips `templatesDirty`).
@@ -294,13 +315,19 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
         if (!projectId) return;
         let cancelled = false;
         (async () => {
-            const [templates, defaults] = await Promise.all([
+            const [templates, defaults, fieldRules] = await Promise.all([
                 loadProjectTaskTemplates(myself, projectId, accessToken),
                 loadProjectTemplateDefaults(myself, projectId, accessToken),
+                // Field rules ride the same load: the form can mount from
+                // chat (CreateTaskPanel) where taskHome's cache effect
+                // never ran, and this effect already re-keys on the
+                // project, covering a mid-create project switch.
+                loadProjectTaskFieldRules(myself, projectId, accessToken),
             ]);
             if (cancelled) return;
             useTM.setProjectTaskTemplates(templates);
             useTM.setTemplateDefaults(defaults);
+            if (fieldRules) useTM.setTaskFieldRules(fieldRules);
             if (useTM.templatesDirty) useTM.setTemplatesDirty(false);
             // Apply the project default to the body once, right after the
             // first load — unless the user already picked a template or a
@@ -342,6 +369,175 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
             creationKind: kind,
         });
     };
+
+    // Get Project tags. Keyed on the project as well as the open toggle
+    // so the tags-required liveness check and default-tag resolution
+    // below track the selected project without the user having to open
+    // the tag list first. (Declared up here — before the field-rule
+    // memos and the milestone submit gate that read it.)
+    const [projectTags, setProjectTags] = useState<TagListProps[]>([]);
+    const [isOpenTagList, setIsOpenTagList] = useState(false);
+    useEffect(() => {
+        if (usePM.currentProject) {
+            updateTagOptions({
+                myself: myself,
+                accessToken: accessToken,
+                projectId: usePM.currentProject.projectId,
+                setProjectTags: setProjectTags,
+            });
+        }
+    }, [isOpenTagList, usePM.currentProject?.projectId]);
+
+    // ---- Owner-configured field rules (required metadata + defaults) ----
+
+    // Rules apply only when the cached slot belongs to the SELECTED
+    // project. After a mid-create project switch the slot briefly holds
+    // the previous project's rules; the gate fails OPEN ({}) until the
+    // load effect's refetch lands — acceptable, enforcement is UI-only.
+    const selectedProjectId =
+        taskContent?.project?.projectId ?? usePM.currentProject?.projectId ?? null;
+    const activeFieldRules: TaskFieldRules = useMemo(
+        () =>
+            useTM.taskFieldRules != null &&
+            selectedProjectId != null &&
+            useTM.taskFieldRules.projectId === selectedProjectId
+                ? useTM.taskFieldRules.rules
+                : {},
+        [useTM.taskFieldRules, selectedProjectId]
+    );
+
+    // Rule-required fields ACTIVE for this project (a tags-required rule
+    // with zero project tags is inactive) — drives the row asterisks.
+    // "project" is the baseline always-required field.
+    const activeRequiredFields = useMemo(
+        () => ["project", ...getActiveRequiredFields(activeFieldRules, projectTags)],
+        [activeFieldRules, projectTags]
+    );
+
+    // Required-by-rule fields still unset. Non-empty disables BOTH submit
+    // paths (task footer + milestone button, and their shared shortcut)
+    // and renders the "Required: …" hint beside the footer.
+    const missingRequiredFields = useMemo(
+        () =>
+            getMissingRequiredFields(
+                {
+                    projectId: taskContent?.project?.projectId ?? null,
+                    dueDate: taskContent?.dueDate || null,
+                    status: taskContent?.status?.status || null,
+                    priority: taskContent?.priority?.priority || null,
+                    effortLevel: taskContent?.effortLevel?.level || null,
+                    tags: taskContent?.tags ?? [],
+                    assigneeId: assignee?.userId ?? null,
+                    reporterId: reporter?.userId ?? null,
+                },
+                activeFieldRules,
+                { kind: creationKind, projectTags }
+            ),
+        [taskContent, assignee, reporter, activeFieldRules, creationKind, projectTags]
+    );
+    const missingFieldLabels = missingRequiredFields.map((field) => t.tasks.fields[field]);
+
+    // Apply the configured DEFAULT VALUES exactly once per form session,
+    // as soon as both the seeded taskContent and this project's rules
+    // are available (either may resolve first — the effect refires when
+    // the missing one lands). Skipped wholesale for a restored draft.
+    // The ref flips BEFORE the write-back so nothing can re-fire it.
+    useEffect(() => {
+        if (fieldDefaultsAppliedRef.current) return;
+        if (!taskContent?.id) return;
+        if (seededFromDraftRef.current) {
+            fieldDefaultsAppliedRef.current = true;
+            return;
+        }
+        const pid = taskContent.project?.projectId ?? usePM.currentProject?.projectId ?? null;
+        const slot = useTM.taskFieldRules;
+        if (pid == null || !slot || slot.projectId !== pid) return;
+        fieldDefaultsAppliedRef.current = true;
+        const seeded = applyRuleDefaults(
+            {
+                projectId: pid,
+                // An inherited (parent/milestone) due date is non-empty
+                // here and therefore wins over the offset default.
+                dueDate: taskContent.dueDate || null,
+                // The seed auto-fills status ("Open") and reporter (the
+                // creator). Neither is user input at this point, so
+                // present them as EMPTY — otherwise a configured status
+                // or reporter default could never take effect. With no
+                // default configured they simply stay as seeded.
+                status: null,
+                reporterId: null,
+                priority: taskContent.priority?.priority || null,
+                effortLevel: taskContent.effortLevel?.level || null,
+                tags: taskContent.tags ?? [],
+                assigneeId: assignee?.userId ?? null,
+            },
+            slot.rules,
+            {
+                creatorUserId: myself.userId,
+                teamMemberIds: useTEM.teamMembers.map((m) => m.userId),
+                projectTags,
+            }
+        );
+        // Tag defaults count as handled unless they exist but couldn't
+        // resolve yet (project tags fetch still in flight) — the
+        // follow-up effect below finishes that case.
+        if ((slot.rules.tags?.defaultTagNames?.length ?? 0) === 0 || seeded.tags.length > 0) {
+            tagDefaultsAppliedRef.current = true;
+        }
+        const statusObj = seeded.status
+            ? statuses.find((s) => s.status === seeded.status)
+            : undefined;
+        const priorityObj = seeded.priority
+            ? priorities.find((p) => p.priority === seeded.priority)
+            : undefined;
+        const effortObj = seeded.effortLevel
+            ? effortLevels.find((e) => e.level === seeded.effortLevel)
+            : undefined;
+        const defaultAssignee = seeded.assigneeId
+            ? useTEM.teamMembers.find((m) => m.userId === seeded.assigneeId)
+            : undefined;
+        const defaultReporter = seeded.reporterId
+            ? useTEM.teamMembers.find((m) => m.userId === seeded.reporterId)
+            : undefined;
+        if (defaultAssignee) setAssignee(defaultAssignee);
+        if (defaultReporter && defaultReporter.userId !== reporter.userId) {
+            setReporter(defaultReporter);
+        }
+        setTaskContent((prev) =>
+            prev
+                ? {
+                      ...prev,
+                      dueDate: seeded.dueDate ?? prev.dueDate,
+                      status: statusObj ?? prev.status,
+                      priority: priorityObj ?? prev.priority,
+                      effortLevel: effortObj ?? prev.effortLevel,
+                      tags: seeded.tags.length > 0 ? seeded.tags : prev.tags,
+                      assignee: defaultAssignee ?? prev.assignee,
+                      reporter: defaultReporter ?? prev.reporter,
+                  }
+                : prev
+        );
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [taskContent?.id, useTM.taskFieldRules, projectTags]);
+
+    // Late tag defaults: the project tags fetch can land after the main
+    // apply above, in which case `defaultTagNames` couldn't resolve yet.
+    // One-shot; never touches tags the user (or the main apply) set.
+    useEffect(() => {
+        if (tagDefaultsAppliedRef.current || !fieldDefaultsAppliedRef.current) return;
+        if (projectTags.length === 0) return;
+        tagDefaultsAppliedRef.current = true;
+        const names = useTM.taskFieldRules?.rules.tags?.defaultTagNames ?? [];
+        if (names.length === 0) return;
+        const resolved = names
+            .map((name) => projectTags.find((tag) => tag.tagName === name))
+            .filter((tag): tag is TagListProps => tag != null);
+        if (resolved.length === 0) return;
+        setTaskContent((prev) =>
+            prev && (prev.tags?.length ?? 0) === 0 ? { ...prev, tags: resolved } : prev
+        );
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [projectTags]);
 
     // Track the empty-task id created during THIS mount of the form.
     //
@@ -540,8 +736,11 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
             if (draft) {
                 // A restored draft is a deliberate prior choice — pin it so
                 // the "apply project default" effects don't overwrite the
-                // restored body/template when defaults resolve.
+                // restored body/template when defaults resolve. Field-rule
+                // defaults are skipped for the same reason.
                 userPickedTemplateRef.current = true;
+                seededFromDraftRef.current = true;
+                tagDefaultsAppliedRef.current = true;
                 setTaskTitle(draft.taskTitle);
                 setBody(draft.body);
                 setAssignee(draft.assignee ?? myself);
@@ -696,6 +895,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
     const handleCreateMilestone = async () => {
         if (!useSM || !taskContent || !taskContent.project?.projectId) return;
         if (!taskTitle.trim()) return;
+        if (missingRequiredFields.length > 0) return;
         setIsCreatingMilestone(true);
         const projectId = taskContent.project.projectId;
         const created = await useSM.createNewMilestone({
@@ -826,7 +1026,10 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
     const taskFooterRef = useRef<TaskCreateFooterHandle>(null);
     const shortcutLabel = isMac() ? "⌘ + Enter" : "Ctrl + Enter";
     const isMilestoneSubmitDisabled =
-        isCreatingMilestone || !taskTitle.trim() || !taskContent?.project?.projectId;
+        isCreatingMilestone ||
+        !taskTitle.trim() ||
+        !taskContent?.project?.projectId ||
+        missingRequiredFields.length > 0;
     const shortcutHandlerRef = useRef<() => void>(() => {});
     shortcutHandlerRef.current = () => {
         // Suppress while any confirmation dialog is open — the user is
@@ -869,7 +1072,6 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
             TASK_TEMPLATE_OPTIONS.some((t) => JSON.stringify(t.blocks) === bodyStr) ||
             useTM.projectTaskTemplates.some((t) => JSON.stringify(t.body) === bodyStr);
         return !matchesAnyTemplate;
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [taskTitle, taskContent?.attachments, body, useTM.projectTaskTemplates]);
 
     // Separate state from TaskCreateFooter's modal because the milestone
@@ -914,20 +1116,6 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
             setTeamProjects: usePM.setTeamProjects,
         });
     }, [isOpenProjectList]);
-
-    // Get Project tags
-    const [projectTags, setProjectTags] = useState<TagListProps[]>([]);
-    const [isOpenTagList, setIsOpenTagList] = useState(false);
-    useEffect(() => {
-        if (usePM.currentProject) {
-            updateTagOptions({
-                myself: myself,
-                accessToken: accessToken,
-                projectId: usePM.currentProject.projectId,
-                setProjectTags: setProjectTags,
-            });
-        }
-    }, [isOpenTagList]);
 
     return (
         <>
@@ -1075,6 +1263,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                                 myself={myself}
                                 projectTags={projectTags}
                                 reporter={reporter}
+                                requiredFields={activeRequiredFields}
                                 setAssignee={setAssignee}
                                 setIsOpenProjectList={setIsOpenProjectList}
                                 setIsOpenTagList={setIsOpenTagList}
@@ -1150,13 +1339,13 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                                 >
                                     <IconButton
                                         aria-label={t.tasks.createForm.templates.setDefaultTask}
+                                        size="sm"
+                                        variant="plain"
                                         disabled={
                                             isSavingDefault ||
                                             isCurrentDefault ||
                                             templateId === TEMPLATE_MANAGE_ACTION
                                         }
-                                        size="sm"
-                                        variant="plain"
                                         sx={{
                                             "--IconButton-size": "28px",
                                             color: isCurrentDefault
@@ -1176,9 +1365,6 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                                 </AppTooltip>
                                 <Select
                                     size="sm"
-                                    startDecorator={
-                                        <DescriptionRoundedIcon sx={{ fontSize: 16 }} />
-                                    }
                                     value={templateId}
                                     renderValue={(opt) => {
                                         if (!opt) return null;
@@ -1203,6 +1389,9 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                                     slotProps={{
                                         listbox: { sx: { maxWidth: 320 } },
                                     }}
+                                    startDecorator={
+                                        <DescriptionRoundedIcon sx={{ fontSize: 16 }} />
+                                    }
                                     sx={{
                                         minWidth: 220,
                                         fontSize: 12,
@@ -1341,6 +1530,31 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                             background: isDark ? "rgba(255,255,255,0.01)" : "rgba(0,0,0,0.01)",
                         }}
                     >
+                        {/* Project-rule gate: name the still-missing
+                            required fields right where the disabled
+                            Create button is, so the block is explicable. */}
+                        {missingRequiredFields.length > 0 && (
+                            <Stack
+                                alignItems="center"
+                                direction="row"
+                                spacing={0.75}
+                                sx={{ mb: 1.25, justifyContent: "flex-end" }}
+                            >
+                                <WarningRoundedIcon sx={{ fontSize: 15, color: "#f59e0b" }} />
+                                <Typography
+                                    level="body-xs"
+                                    sx={{
+                                        color: isDark
+                                            ? "rgba(255,255,255,0.6)"
+                                            : "rgba(0,0,0,0.55)",
+                                    }}
+                                >
+                                    {fmt(t.tasks.createForm.missingRequired, {
+                                        fields: missingFieldLabels.join(", "),
+                                    })}
+                                </Typography>
+                            </Stack>
+                        )}
                         {creationKind === "milestone" ? (
                             <Stack direction="row" sx={{ justifyContent: "flex-end", gap: 1.5 }}>
                                 <Button
@@ -1427,6 +1641,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                                 accessToken={accessToken}
                                 isCreatingTask={isCreatingTask}
                                 isDirty={isDirty}
+                                missingRequiredFields={missingFieldLabels}
                                 myself={myself}
                                 setIsCreatingTask={setIsCreatingTask}
                                 setIsSubmitted={setIsSubmitted}

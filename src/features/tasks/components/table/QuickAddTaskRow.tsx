@@ -17,10 +17,15 @@ import {
 import { alpha } from "@mui/system";
 
 import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
-import { useTranslation } from "../../../../i18n";
+import { fmt, useTranslation } from "../../../../i18n";
 import { LimitReachedError } from "../../../../services/limitErrors";
 import { UserProps } from "../../../../types/admin";
-import { TaskTableProps } from "../../../../types/tasks";
+import { TagListProps, TaskTableProps } from "../../../../types/tasks";
+import {
+    applyRuleDefaults,
+    getMissingRequiredFields,
+    TaskFieldRules,
+} from "../../utils/taskFieldRules";
 import { effortLevels, priorities } from "../../utils/taskMeta";
 import {
     DEPTH_BORDER_COLORS,
@@ -31,8 +36,9 @@ import {
 import { ColumnDef, LEADING_GUTTER_WIDTH, statusOptions } from "./DraggableTaskTable";
 
 // Draft the quick-add row hands back on submit. Every field the table
-// can edit inline is here; tags/sprint are intentionally absent (they
-// aren't table-editable today either).
+// can edit inline is here plus tags (quick-add grew its own tag editor
+// for the project field-rules feature); sprint remains absent (not
+// table-editable, and a child inherits it from the parent chain anyway).
 export type QuickAddDraft = {
     title: string;
     assigneeId: string | null;
@@ -41,6 +47,7 @@ export type QuickAddDraft = {
     effortLevel: string | null;
     // "YYYY-MM-DD"
     dueDate: string | null;
+    tags: TagListProps[];
 };
 
 type QuickAddTaskRowProps = {
@@ -52,6 +59,14 @@ type QuickAddTaskRowProps = {
     columns: ColumnDef[];
     mode: "light" | "dark" | undefined;
     teamMembers: UserProps[];
+    // The focused project's tags — options for the tags cell and the
+    // "tags-required is inactive with zero tags" liveness check.
+    projectTags: TagListProps[];
+    // Owner-configured field rules for the parent's project (null when
+    // none / not loaded — the gate then fails open). Defaults seed the
+    // row's initial state; required fields block submit inline.
+    fieldRules: TaskFieldRules | null;
+    creatorUserId: string;
     // The table owns the actual create call (createQuickTask + optimistic
     // allTasks insert). Rejections surface here as an inline error.
     onSubmit: (draft: QuickAddDraft) => Promise<void>;
@@ -72,17 +87,53 @@ type QuickAddTaskRowProps = {
 // instance is mounted at a time, and it must not consume a Draggable
 // index (the table's drag-end math is based on displayRows positions).
 export const QuickAddTaskRow = (props: QuickAddTaskRowProps) => {
-    const { depth, columns, mode, teamMembers, onSubmit, onClose, onDirtyChange } = props;
+    const {
+        parentTask,
+        depth,
+        columns,
+        mode,
+        teamMembers,
+        projectTags,
+        fieldRules,
+        creatorUserId,
+        onSubmit,
+        onClose,
+        onDirtyChange,
+    } = props;
     const { t } = useTranslation();
 
+    // Seed the row's initial state from the project's configured field
+    // defaults, computed once on mount (lazy initializer — the row is
+    // transient, remounting per open). Status stays "Open" unless a
+    // default overrides it; assignee stays unassigned unless defaulted.
+    const [seed] = useState(() =>
+        applyRuleDefaults(
+            {
+                projectId: parentTask.projectId != null ? Number(parentTask.projectId) : null,
+                dueDate: null,
+                status: null,
+                priority: null,
+                effortLevel: null,
+                tags: [],
+                assigneeId: null,
+                reporterId: null,
+            },
+            fieldRules ?? {},
+            {
+                creatorUserId,
+                teamMemberIds: teamMembers.map((member) => member.userId),
+                projectTags,
+            }
+        )
+    );
+
     const [title, setTitle] = useState("");
-    // New tasks start unassigned by design — the user picks an assignee
-    // only if/when they want one (matches CreateTaskForm's default).
-    const [assigneeId, setAssigneeId] = useState<string | null>(null);
-    const [status, setStatus] = useState("Open");
-    const [priority, setPriority] = useState<string | null>(null);
-    const [effortLevel, setEffortLevel] = useState<string | null>(null);
-    const [dueDate, setDueDate] = useState<string | null>(null);
+    const [assigneeId, setAssigneeId] = useState<string | null>(seed.assigneeId);
+    const [status, setStatus] = useState(seed.status ?? "Open");
+    const [priority, setPriority] = useState<string | null>(seed.priority);
+    const [effortLevel, setEffortLevel] = useState<string | null>(seed.effortLevel);
+    const [dueDate, setDueDate] = useState<string | null>(seed.dueDate);
+    const [tags, setTags] = useState<TagListProps[]>(seed.tags);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -134,11 +185,45 @@ export const QuickAddTaskRow = (props: QuickAddTaskRowProps) => {
         // In-flight guard: a second Enter while the first POST is out
         // must not create a duplicate task.
         if (trimmed === "" || isSubmittingRef.current) return;
+        // Project field-rules gate — same evaluator as the full create
+        // form. Reporter/status/project are auto-satisfied on this path
+        // (createQuickTask pins reporter to the creator, status is always
+        // set, the project is the parent's).
+        const missing = getMissingRequiredFields(
+            {
+                projectId: parentTask.projectId != null ? Number(parentTask.projectId) : null,
+                dueDate,
+                status,
+                priority,
+                effortLevel,
+                tags,
+                assigneeId,
+                reporterId: creatorUserId,
+            },
+            fieldRules ?? {},
+            { kind: "subtask", projectTags }
+        );
+        if (missing.length > 0) {
+            setError(
+                fmt(t.tasks.table.quickAddMissingRequired, {
+                    fields: missing.map((field) => t.tasks.fields[field]).join(", "),
+                })
+            );
+            return;
+        }
         isSubmittingRef.current = true;
         setIsSubmitting(true);
         setError(null);
         try {
-            await onSubmit({ title: trimmed, assigneeId, status, priority, effortLevel, dueDate });
+            await onSubmit({
+                title: trimmed,
+                assigneeId,
+                status,
+                priority,
+                effortLevel,
+                dueDate,
+                tags,
+            });
             // Close the row once the task is created — it should disappear
             // on create rather than persist for rapid consecutive adds
             // (re-opening is one hover-"+" click away). The finally below
@@ -228,10 +313,10 @@ export const QuickAddTaskRow = (props: QuickAddTaskRowProps) => {
                 return (
                     <Select
                         disabled={isSubmitting}
+                        MenuProps={{ PaperProps: { sx: menuPaperSx } }}
                         size="small"
                         sx={compactSelectSx}
                         value={status}
-                        MenuProps={{ PaperProps: { sx: menuPaperSx } }}
                         renderValue={(selected) => {
                             const opt = statusOptions.find((o) => o.value === selected);
                             return opt ? (
@@ -316,8 +401,10 @@ export const QuickAddTaskRow = (props: QuickAddTaskRowProps) => {
                     <Autocomplete
                         disabled={isSubmitting}
                         getOptionLabel={(option) => `${option.userName} ${option.userEmail}`}
+                        isOptionEqualToValue={(option, value) => option.userId === value?.userId}
                         options={teamMembers}
                         size="small"
+                        sx={{ width: "100%" }}
                         value={currentAssignee}
                         filterOptions={(options, { inputValue }) => {
                             const searchTerm = inputValue.toLowerCase();
@@ -327,7 +414,6 @@ export const QuickAddTaskRow = (props: QuickAddTaskRowProps) => {
                                     option.userEmail.toLowerCase().includes(searchTerm)
                             );
                         }}
-                        isOptionEqualToValue={(option, value) => option.userId === value?.userId}
                         PaperComponent={({ children, ...paperProps }) => (
                             <Paper
                                 {...paperProps}
@@ -396,7 +482,6 @@ export const QuickAddTaskRow = (props: QuickAddTaskRowProps) => {
                                 </Box>
                             );
                         }}
-                        sx={{ width: "100%" }}
                         onChange={(_, newValue) => setAssigneeId(newValue?.userId ?? null)}
                     />
                 );
@@ -406,10 +491,10 @@ export const QuickAddTaskRow = (props: QuickAddTaskRowProps) => {
                 return (
                     <Select
                         disabled={isSubmitting}
+                        MenuProps={{ PaperProps: { sx: menuPaperSx } }}
                         size="small"
                         sx={compactSelectSx}
                         value={priority ?? ""}
-                        MenuProps={{ PaperProps: { sx: menuPaperSx } }}
                         renderValue={(selected) => {
                             const opt = priorities.find((p) => p.priority === selected);
                             return opt ? (
@@ -462,10 +547,10 @@ export const QuickAddTaskRow = (props: QuickAddTaskRowProps) => {
                 return (
                     <Select
                         disabled={isSubmitting}
+                        MenuProps={{ PaperProps: { sx: menuPaperSx } }}
                         size="small"
                         sx={compactSelectSx}
                         value={effortLevel ?? ""}
-                        MenuProps={{ PaperProps: { sx: menuPaperSx } }}
                         renderValue={(selected) => {
                             const opt = effortLevels.find((e) => e.level === selected);
                             return opt ? (
@@ -533,9 +618,88 @@ export const QuickAddTaskRow = (props: QuickAddTaskRowProps) => {
                     />
                 );
 
+            case "tags":
+                return (
+                    <Autocomplete
+                        disabled={isSubmitting}
+                        getOptionLabel={(option: TagListProps) => option.tagName}
+                        isOptionEqualToValue={(option, value) => option.tagName === value?.tagName}
+                        options={projectTags}
+                        size="small"
+                        sx={{ width: "100%" }}
+                        value={tags}
+                        PaperComponent={({ children, ...paperProps }) => (
+                            <Paper
+                                {...paperProps}
+                                sx={{
+                                    backgroundColor: mode === "dark" ? "#1a1a2e" : "#ffffff",
+                                    borderRadius: "10px",
+                                    border:
+                                        mode === "dark"
+                                            ? "1px solid rgba(255, 255, 255, 0.1)"
+                                            : "1px solid rgba(0, 0, 0, 0.08)",
+                                    boxShadow:
+                                        mode === "dark"
+                                            ? "0 8px 32px rgba(0, 0, 0, 0.5)"
+                                            : "0 8px 32px rgba(0, 0, 0, 0.12)",
+                                    mt: 0.5,
+                                    overflow: "hidden",
+                                }}
+                            >
+                                {children}
+                            </Paper>
+                        )}
+                        renderInput={(params) => (
+                            <TextField
+                                {...params}
+                                sx={{
+                                    "& .MuiOutlinedInput-root": {
+                                        borderRadius: "6px",
+                                        fontSize: "0.8rem",
+                                        padding: "2px 6px",
+                                        "&:hover fieldset": { borderColor: accent },
+                                        "&.Mui-focused fieldset": {
+                                            borderColor: accent,
+                                            borderWidth: "1.5px",
+                                        },
+                                    },
+                                }}
+                            />
+                        )}
+                        renderTags={(value, getTagProps) =>
+                            value.map((tag, index) => {
+                                // Pull `key` out of the spread — React 19
+                                // warns when a spread object carries it.
+                                const { key, ...tagProps } = getTagProps({ index });
+                                return (
+                                    <Chip
+                                        key={key ?? tag.tagName}
+                                        {...tagProps}
+                                        label={tag.tagName}
+                                        size="small"
+                                        sx={{
+                                            backgroundColor: alpha(tag.tagColor || "#888", 0.75),
+                                            color: tag.tagTextColor || "white",
+                                            fontWeight: "bold",
+                                            borderRadius: "5px",
+                                            height: 20,
+                                            fontSize: "0.7rem",
+                                        }}
+                                    />
+                                );
+                            })
+                        }
+                        multiple
+                        onChange={(_, newValue) => {
+                            setTags(newValue);
+                            if (error) setError(null);
+                        }}
+                    />
+                );
+
             default:
-                // Columns the quick row can't fill (tags, pr, daysLeft,
-                // sprint, updatedAt, createdDate, ...) — dim placeholder.
+                // Columns the quick row can't fill (pr, daysLeft, sprint,
+                // updatedAt, createdDate, ...) — dim placeholder.
                 return (
                     <Typography level="body-sm" sx={{ color: dimText, fontStyle: "italic" }}>
                         —

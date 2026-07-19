@@ -718,6 +718,7 @@ export const hi: DeepPartial<Messages> = {
             newProjectMenuItem: "नया प्रोजेक्ट",
             newMilestoneMenuItem: "नया माइलस्टोन",
             deleteProjectMenuItem: "प्रोजेक्ट हटाएँ",
+            customizeFieldsMenuItem: "टास्क फ़ील्ड कस्टमाइज़ करें",
         },
         tooltips: {
             edit: "एडिट करें",
@@ -817,6 +818,25 @@ export const hi: DeepPartial<Messages> = {
                 no: "नहीं",
                 editTooltip: "संपादित करें",
                 deleteTooltip: "हटाएँ",
+            },
+            customizeFields: {
+                heading: "टास्क फ़ील्ड कस्टमाइज़ करें",
+                description:
+                    "इस प्रोजेक्ट में नए टास्क और माइलस्टोन के लिए फ़ील्ड आवश्यक बनाएं और डिफ़ॉल्ट मान सेट करें। इन्हें केवल प्रोजेक्ट स्वामी बदल सकते हैं।",
+                requiredLabel: "आवश्यक",
+                defaultLabel: "डिफ़ॉल्ट मान",
+                alwaysRequired: "हमेशा आवश्यक",
+                autoSetShort: "स्वतः",
+                autoSetHint: "टास्क बनाते समय स्थिति स्वतः सेट होती है",
+                noTagsHint: "इस फ़ील्ड को आवश्यक बनाने के लिए पहले प्रोजेक्ट टैग जोड़ें",
+                creatorOption: "निर्माता",
+                noneOption: "कोई नहीं",
+                dueOffsetPrefix: "आज +",
+                dueOffsetSuffix: "दिन",
+                dueOffsetLabel: "बनाने के बाद के दिन",
+                save: "सहेजें",
+                cancel: "रद्द करें",
+                saveFailed: "सहेज नहीं सके — केवल प्रोजेक्ट स्वामी ही ये सेटिंग बदल सकते हैं।",
             },
             manageTags: {
                 heading: "टैग मैनेज करें",
@@ -971,6 +991,7 @@ export const hi: DeepPartial<Messages> = {
                 milestoneDescription: "लक्ष्य, दायरा, सफलता मानदंड, जोखिम।",
             },
             templatePrefix: "टेम्पलेट: ",
+            missingRequired: "आवश्यक: {fields}",
             sprintFallback: "कोई स्प्रिंट नहीं",
         },
         board: {
@@ -1086,6 +1107,7 @@ export const hi: DeepPartial<Messages> = {
             quickAddTooltip: "सब-टास्क जोड़ें",
             quickAddTitlePlaceholder: "शीर्षक लिखें, Enter से बनाएँ…",
             quickAddConfirm: "बनाएँ",
+            quickAddMissingRequired: "आवश्यक: {fields}",
             quickAddError: "नहीं बन सका — फिर से कोशिश करें",
             columnSettings: {
                 heading: "कॉलम कस्टमाइज़ करें",

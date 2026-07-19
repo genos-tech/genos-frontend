@@ -49,7 +49,17 @@ import { isCurrentlyBlocked, TaskDependenciesBlock } from "./TaskDependenciesBlo
 // without competing with the value next to it.
 const FIELD_LABEL_MIN_WIDTH = 96;
 
-const FieldLabel = ({ children, isDark }: { children: React.ReactNode; isDark: boolean }) => (
+const FieldLabel = ({
+    children,
+    isDark,
+    required = false,
+}: {
+    children: React.ReactNode;
+    isDark: boolean;
+    // Project-owner rule marks this field required at creation — render
+    // the conventional asterisk. Preview mounts never set it.
+    required?: boolean;
+}) => (
     <Typography
         level="body-sm"
         sx={{
@@ -61,6 +71,11 @@ const FieldLabel = ({ children, isDark }: { children: React.ReactNode; isDark: b
         }}
     >
         {children}
+        {required && (
+            <Typography component="span" sx={{ color: "#ef4444", ml: 0.25 }}>
+                *
+            </Typography>
+        )}
     </Typography>
 );
 
@@ -150,6 +165,11 @@ type TaskMainBlockProps = {
     // preview state — which the modal ignores, so without this the
     // clicks silently did nothing.
     hostZIndex?: number;
+    // Create-form only: field keys the project owner marked required
+    // (already filtered to the rules ACTIVE for this project — e.g. a
+    // tags-required rule with zero project tags is excluded). Renders
+    // the asterisk on the matching row labels. Preview mounts omit it.
+    requiredFields?: string[];
 };
 
 export const TaskMainBlock = (props: TaskMainBlockProps) => {
@@ -183,12 +203,14 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
         isMilestone,
         isSubTask,
         hostZIndex,
+        requiredFields,
     } = props;
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const { t } = useTranslation();
     const urlLinkModal = useUrlLinkModal();
+    const isRequired = (field: string) => requiredFields?.includes(field) === true;
 
     const [openManageTags, setOpenManageTags] = useState(false);
     const [parentTask, setParentTask] = useState<TaskProps>();
@@ -513,7 +535,9 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
             >
                 {/* Assignee */}
                 <ListItem sx={{ display: "flex", alignItems: "center" }}>
-                    <FieldLabel isDark={isDark}>{t.tasks.fields.assignee}</FieldLabel>
+                    <FieldLabel isDark={isDark} required={isRequired("assignee")}>
+                        {t.tasks.fields.assignee}
+                    </FieldLabel>
                     <Box
                         sx={{
                             display: "flex",
@@ -560,7 +584,9 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
 
                 {/* Reporter */}
                 <ListItem sx={{ display: "flex", alignItems: "center" }}>
-                    <FieldLabel isDark={isDark}>{t.tasks.fields.reporter}</FieldLabel>
+                    <FieldLabel isDark={isDark} required={isRequired("reporter")}>
+                        {t.tasks.fields.reporter}
+                    </FieldLabel>
                     <Box
                         sx={{
                             display: "flex",
@@ -610,7 +636,9 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                 <Grid spacing={1} sx={{ mt: 0.5 }} container>
                     <Grid sm={6} xs={12}>
                         <ListItem sx={{ display: "flex", alignItems: "center", p: 0 }}>
-                            <FieldLabel isDark={isDark}>{t.tasks.fields.project}</FieldLabel>
+                            <FieldLabel isDark={isDark} required={isRequired("project")}>
+                                {t.tasks.fields.project}
+                            </FieldLabel>
                             <Box sx={{ flex: 1, minWidth: 0 }}>
                                 <ACTeamProjects
                                     isOpenProjectList={isOpenProjectList}
@@ -630,7 +658,9 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                     </Grid>
                     <Grid sm={6} xs={12}>
                         <ListItem sx={{ display: "flex", alignItems: "center", p: 0 }}>
-                            <FieldLabel isDark={isDark}>{t.tasks.fields.tags}</FieldLabel>
+                            <FieldLabel isDark={isDark} required={isRequired("tags")}>
+                                {t.tasks.fields.tags}
+                            </FieldLabel>
                             {/* minWidth: 0 lets the autocomplete actually
                                 shrink inside the flex row — its own
                                 width:100% otherwise pins the row wider
@@ -754,7 +784,9 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                 <Grid spacing={1} container>
                     <Grid sm={6} xs={12}>
                         <ListItem sx={{ display: "flex", alignItems: "center", p: 0 }}>
-                            <FieldLabel isDark={isDark}>{t.tasks.fields.priority}</FieldLabel>
+                            <FieldLabel isDark={isDark} required={isRequired("priority")}>
+                                {t.tasks.fields.priority}
+                            </FieldLabel>
                             <Box sx={{ flex: 1, minWidth: 0 }}>
                                 <ACTaskPriority
                                     setTaskContent={setTaskContent}
@@ -766,7 +798,9 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                     </Grid>
                     <Grid sm={6} xs={12}>
                         <ListItem sx={{ display: "flex", alignItems: "center", p: 0 }}>
-                            <FieldLabel isDark={isDark}>{t.tasks.fields.effortLevel}</FieldLabel>
+                            <FieldLabel isDark={isDark} required={isRequired("effortLevel")}>
+                                {t.tasks.fields.effortLevel}
+                            </FieldLabel>
                             <Box sx={{ flex: 1, minWidth: 0 }}>
                                 <ACTaskEffortLevel
                                     setTaskContent={setTaskContent}
@@ -811,7 +845,9 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                     important than Due Date, so it didn't deserve its
                     own labelled slot in every task. */}
                 <ListItem sx={{ display: "flex", alignItems: "center" }}>
-                    <FieldLabel isDark={isDark}>{t.tasks.fields.dueDate}</FieldLabel>
+                    <FieldLabel isDark={isDark} required={isRequired("dueDate")}>
+                        {t.tasks.fields.dueDate}
+                    </FieldLabel>
                     <Stack
                         alignItems="center"
                         direction="row"

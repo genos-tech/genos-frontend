@@ -1042,6 +1042,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
             priority: draft.priority,
             effortLevel: draft.effortLevel,
             dueDate: draft.dueDate,
+            tags: draft.tags,
         });
 
         if (taskId != null) {
@@ -1070,8 +1071,9 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                 parentTaskId: String(parent.id),
                 rootTaskId: parent.rootTaskId ?? Number(parent.id),
                 threadId: null,
-                tags: [],
-                concatTags: null,
+                tags: draft.tags,
+                concatTags:
+                    draft.tags.length > 0 ? draft.tags.map((tag) => tag.tagName).join(",") : null,
                 teamId: myself.teamId ?? null,
                 projectId: Number(projectId),
                 isMilestone: false,
@@ -1495,12 +1497,22 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                             {quickAddParentId === String(task.id) && (
                                                 <QuickAddTaskRow
                                                     columns={columnsWithWidths}
-                                                    depth={
-                                                        (depthMap.get(String(task.id)) ?? 0) + 1
-                                                    }
+                                                    creatorUserId={myself.userId}
                                                     mode={mode}
                                                     parentTask={task}
                                                     teamMembers={teamMembers}
+                                                    depth={
+                                                        (depthMap.get(String(task.id)) ?? 0) + 1
+                                                    }
+                                                    fieldRules={
+                                                        useTM.taskFieldRules?.projectId ===
+                                                        usePM.currentProject?.projectId
+                                                            ? (useTM.taskFieldRules?.rules ?? null)
+                                                            : null
+                                                    }
+                                                    projectTags={
+                                                        usePM.currentProject?.projectTags ?? []
+                                                    }
                                                     onClose={closeQuickAdd}
                                                     onDirtyChange={(dirty) => {
                                                         quickAddDirtyRef.current = dirty;
@@ -1593,14 +1605,14 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                     <ModalTaskDiagram
                         myself={myself}
                         open={true}
-                        projectId={Number(
-                            diagramTask.projectId ?? usePM.currentProject?.projectId
-                        )}
                         rootLabel={`${formatTaskDisplayId(diagramTask)} · ${diagramTask.title || "Untitled"}`}
                         rootTaskId={Number(diagramTask.rootTaskId ?? diagramTask.id)}
                         usePM={usePM}
                         useSM={useSM}
                         useTM={useTM}
+                        projectId={Number(
+                            diagramTask.projectId ?? usePM.currentProject?.projectId
+                        )}
                         onClose={() => setDiagramTask(null)}
                     />
                 )}

@@ -55,6 +55,10 @@ type TaskCreateFooterProps = {
      *  Cancel on an untouched form proceeds straight to teardown so we
      *  don't pester the user with a modal for a no-op. */
     isDirty?: boolean;
+    /** Display labels of project-rule-required fields still unset (from
+     *  `getMissingRequiredFields`). Non-empty disables Create — the
+     *  form renders the matching "Required: …" hint beside this footer. */
+    missingRequiredFields?: string[];
 };
 
 export const TaskCreateFooter = forwardRef<TaskCreateFooterHandle, TaskCreateFooterProps>(
@@ -74,6 +78,7 @@ export const TaskCreateFooter = forwardRef<TaskCreateFooterHandle, TaskCreateFoo
             setTitleErrorOpen,
             usePM,
             isDirty = false,
+            missingRequiredFields = [],
         } = props;
 
         const { mode } = useColorScheme();
@@ -81,7 +86,10 @@ export const TaskCreateFooter = forwardRef<TaskCreateFooterHandle, TaskCreateFoo
         const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
 
         const isDisabled =
-            isCreatingTask || taskTitle === "" || taskContent.project?.projectId === null;
+            isCreatingTask ||
+            taskTitle === "" ||
+            taskContent.project?.projectId === null ||
+            missingRequiredFields.length > 0;
 
         const DoUploadNewTask = async () => {
             // Guard against a double-click sending two creates in parallel

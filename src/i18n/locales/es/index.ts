@@ -719,6 +719,7 @@ export const es: DeepPartial<Messages> = {
             newProjectMenuItem: "Nuevo proyecto",
             newMilestoneMenuItem: "Nuevo hito",
             deleteProjectMenuItem: "Eliminar proyecto",
+            customizeFieldsMenuItem: "Personalizar campos de tareas",
         },
         tooltips: {
             edit: "Editar",
@@ -818,6 +819,26 @@ export const es: DeepPartial<Messages> = {
                 no: "No",
                 editTooltip: "Editar",
                 deleteTooltip: "Eliminar",
+            },
+            customizeFields: {
+                heading: "Personalizar campos de tareas",
+                description:
+                    "Haz que ciertos campos sean obligatorios y define valores predeterminados para las nuevas tareas e hitos de este proyecto. Solo el propietario del proyecto puede cambiarlos.",
+                requiredLabel: "Obligatorio",
+                defaultLabel: "Valor predeterminado",
+                alwaysRequired: "Siempre obligatorio",
+                autoSetShort: "Auto",
+                autoSetHint: "El estado se establece automáticamente al crear una tarea",
+                noTagsHint: "Añade etiquetas al proyecto para poder hacer obligatorio este campo",
+                creatorOption: "Creador",
+                noneOption: "Ninguno",
+                dueOffsetPrefix: "Hoy +",
+                dueOffsetSuffix: "días",
+                dueOffsetLabel: "Días tras la creación",
+                save: "Guardar",
+                cancel: "Cancelar",
+                saveFailed:
+                    "No se pudo guardar: solo el propietario del proyecto puede cambiar esta configuración.",
             },
             manageTags: {
                 heading: "Gestionar etiquetas",
@@ -972,6 +993,7 @@ export const es: DeepPartial<Messages> = {
                 milestoneDescription: "Objetivo, alcance, criterios de éxito, riesgos.",
             },
             templatePrefix: "Plantilla: ",
+            missingRequired: "Obligatorio: {fields}",
             sprintFallback: "Sin sprint",
         },
         board: {

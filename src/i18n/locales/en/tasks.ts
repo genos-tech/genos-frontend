@@ -106,6 +106,7 @@ export const tasks = {
         newTagMenuItem: "New Tag",
         newProjectMenuItem: "New Project",
         newMilestoneMenuItem: "New Milestone",
+        customizeFieldsMenuItem: "Customize Task Fields",
         deleteProjectMenuItem: "Delete Project",
     },
 
@@ -255,6 +256,25 @@ export const tasks = {
             no: "No",
             editTooltip: "Edit",
             deleteTooltip: "Delete",
+        },
+        customizeFields: {
+            heading: "Customize Task Fields",
+            description:
+                "Make fields required and set default values for new tasks and milestones in this project. Only the project owner can change these.",
+            requiredLabel: "Required",
+            defaultLabel: "Default value",
+            alwaysRequired: "Always required",
+            autoSetShort: "Auto",
+            autoSetHint: "Status is set automatically when a task is created",
+            noTagsHint: "Add project tags to make this field required",
+            creatorOption: "Creator",
+            noneOption: "None",
+            dueOffsetPrefix: "Today +",
+            dueOffsetSuffix: "days",
+            dueOffsetLabel: "Days after creation",
+            save: "Save",
+            cancel: "Cancel",
+            saveFailed: "Couldn't save — only the project owner can change these settings.",
         },
     },
 
@@ -408,6 +428,7 @@ export const tasks = {
         },
         templatePrefix: "Template: ",
         sprintFallback: "No sprint",
+        missingRequired: "Required: {fields}",
     },
 
     // Sprint board.
@@ -618,6 +639,7 @@ export const tasks = {
         quickAddTitlePlaceholder: "Type a title, Enter to create…",
         quickAddConfirm: "Create",
         quickAddError: "Couldn't create — try again",
+        quickAddMissingRequired: "Required: {fields}",
         columnSettings: {
             heading: "Customize columns",
             description:
