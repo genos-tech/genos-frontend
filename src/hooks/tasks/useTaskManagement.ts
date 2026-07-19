@@ -20,7 +20,9 @@ import {
     loadTaskDependenciesForTasks,
 } from "../../features/tasks/services/loadTaskDependencies";
 import { popSpecificProjectTasks } from "../../features/tasks/services/popSpecificProjectTasks";
+import { ProjectTemplateDefaults } from "../../features/tasks/services/projectTemplateDefaults";
 import { buildTaskTree } from "../../features/tasks/utils/buildTaskTree";
+import { CustomTaskTemplate } from "../../features/tasks/utils/taskTemplates";
 import { UserProps } from "../../types/admin";
 import {
     TaskCommentProps,
@@ -46,7 +48,8 @@ export type TaskDraft = {
     body: any[];
     assignee: UserProps | null;
     reporter: UserProps;
-    templateId: "default" | "bug" | "spike" | "milestone";
+    // A built-in TaskTemplateId or a namespaced `custom:{id}` value.
+    templateId: string;
     savedAt: string;
 };
 
@@ -161,6 +164,18 @@ export interface TaskManagementState {
     setOpenCreateTag: (open: boolean) => void;
     isNewTagCreated: boolean;
     setIsNewTagCreated: (created: boolean) => void;
+
+    // Custom project body templates (create-form picker + manage modal)
+    projectTaskTemplates: CustomTaskTemplate[];
+    setProjectTaskTemplates: (templates: CustomTaskTemplate[]) => void;
+    openManageTemplates: boolean;
+    setOpenManageTemplates: (open: boolean) => void;
+    // Bumped after any create/edit/delete so the create form refetches.
+    templatesDirty: boolean;
+    setTemplatesDirty: (dirty: boolean) => void;
+    // Per-project default template applied to new tasks/milestones.
+    templateDefaults: ProjectTemplateDefaults;
+    setTemplateDefaults: (defaults: ProjectTemplateDefaults) => void;
 
     // Initial empty task
     initialEmptyTaskId: number | undefined;
@@ -367,6 +382,15 @@ export const useTaskManagement = (
     // Tag and project creation
     const [openCreateTag, setOpenCreateTag] = useState(false);
     const [isNewTagCreated, setIsNewTagCreated] = useState(false);
+
+    // Custom project body templates
+    const [projectTaskTemplates, setProjectTaskTemplates] = useState<CustomTaskTemplate[]>([]);
+    const [openManageTemplates, setOpenManageTemplates] = useState(false);
+    const [templatesDirty, setTemplatesDirty] = useState(false);
+    const [templateDefaults, setTemplateDefaults] = useState<ProjectTemplateDefaults>({
+        task: null,
+        milestone: null,
+    });
 
     // Initial empty task
     const [initialEmptyTaskId, setInitialEmptyTaskId] = useState<number | undefined>(undefined);
@@ -818,6 +842,16 @@ export const useTaskManagement = (
         setOpenCreateTag,
         isNewTagCreated,
         setIsNewTagCreated,
+
+        // Custom project body templates
+        projectTaskTemplates,
+        setProjectTaskTemplates,
+        openManageTemplates,
+        setOpenManageTemplates,
+        templatesDirty,
+        setTemplatesDirty,
+        templateDefaults,
+        setTemplateDefaults,
 
         // Initial empty task
         initialEmptyTaskId,
