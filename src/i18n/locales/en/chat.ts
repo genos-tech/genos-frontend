@@ -182,6 +182,7 @@ export const chat = {
         // Short labels for the thread header's ⋮ (More) menu items.
         threadTaskMenuItem: "Thread task",
         threadNoteMenuItem: "Thread note",
+        copyThreadLink: "Copy thread link",
         // Breadcrumb badge fallbacks when the task has no displayId.
         threadTaskBadge: "Task",
         threadMilestoneBadge: "Milestone",

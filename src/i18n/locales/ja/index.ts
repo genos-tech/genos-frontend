@@ -553,6 +553,7 @@ export const ja: DeepPartial<Messages> = {
             threadTaskBadge: "タスク",
             threadTaskMenuItem: "スレッドタスク",
             threadNoteMenuItem: "スレッドノート",
+            copyThreadLink: "スレッドリンクをコピー",
             threadMilestoneBadge: "マイルストーン",
             openNoteTooltip: "このスレッドに紐づくノートを開く",
             online: "オンライン",

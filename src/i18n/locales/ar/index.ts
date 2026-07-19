@@ -508,6 +508,7 @@ export const ar: DeepPartial<Messages> = {
             threadTaskBadge: "مهمة",
             threadTaskMenuItem: "مهمة الموضوع",
             threadNoteMenuItem: "ملاحظة الموضوع",
+            copyThreadLink: "نسخ رابط الموضوع",
             threadMilestoneBadge: "مرحلة",
             openNoteTooltip: "فتح الملاحظة المرتبطة بهذا الموضوع",
             online: "متصل",

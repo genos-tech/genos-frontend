@@ -493,6 +493,7 @@ export const zh: DeepPartial<Messages> = {
             threadTaskBadge: "任务",
             threadTaskMenuItem: "话题任务",
             threadNoteMenuItem: "话题笔记",
+            copyThreadLink: "复制话题链接",
             threadMilestoneBadge: "里程碑",
             openNoteTooltip: "打开与此话题关联的笔记",
             online: "在线",

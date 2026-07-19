@@ -9,6 +9,7 @@ import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRound
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import MoreVertRoundedIcon from "@mui/icons-material/MoreVertRounded";
 import NoteAltRoundedIcon from "@mui/icons-material/NoteAltRounded";
 import ReplyRoundedIcon from "@mui/icons-material/ReplyRounded";
@@ -45,6 +46,10 @@ import { TaskInfoPill } from "../../../tasks/components/TaskInfoPill";
 import { ThreadAskModal } from "../../../threadAsk/ThreadAskModal";
 import { useThreadAsk } from "../../../threadAsk/useThreadAsk";
 import { useChatContext } from "../../context/ChatContext";
+
+// chatType → URL segment for building a thread deep-link
+// (/workspace/chat/{path}/{chatId}/thread/{threadId}).
+const THREAD_LINK_TYPE_PATH: Record<number, string> = { 1: "dm", 2: "gm", 3: "pm", 4: "mdm" };
 
 type ThreadChatPaneHeaderProps = {
     myself: UserProps;
@@ -292,6 +297,26 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
         });
     };
 
+    // Copy the thread's deep-link to the clipboard. Same URL shape the
+    // app navigates to (and "Check thread" opens): the v3 chatId /
+    // threadId ride their `number`-typed slots as UUID strings, so the
+    // template renders them verbatim. Silent on success, matching the
+    // copy-task-link / copy-note-link convention elsewhere.
+    const copyThreadLink = async () => {
+        const chatType = useCM.currentThreadChat?.chatType;
+        const chatId = useCM.currentThreadChat?.chatId;
+        const threadId = useCM.currentThreadChat?.threadId;
+        if (chatType === undefined || chatId == null || threadId == null) return;
+        const typePath = THREAD_LINK_TYPE_PATH[chatType];
+        if (!typePath) return;
+        const url = `${window.location.origin}/workspace/chat/${typePath}/${chatId}/thread/${threadId}`;
+        try {
+            await navigator.clipboard.writeText(url);
+        } catch (err) {
+            console.error("Failed to copy thread link:", err);
+        }
+    };
+
     const openNoteHandler = () => {
         const chatType = useCM.currentThreadChat?.chatType;
         const chatId = useCM.currentThreadChat?.chatId;
@@ -417,6 +442,14 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                                     sx={{ fontSize: 18, color: styles.accentColor }}
                                 />
                                 {t.chat.headers.threadNoteMenuItem}
+                            </MenuItem>
+                        )}
+                        {chatType !== 3 && (
+                            <MenuItem onClick={copyThreadLink}>
+                                <ContentCopyRoundedIcon
+                                    sx={{ fontSize: 18, color: styles.accentColor }}
+                                />
+                                {t.chat.headers.copyThreadLink}
                             </MenuItem>
                         )}
                     </Menu>
@@ -602,7 +635,11 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                     const chatType = useCM.currentThreadChat?.chatType;
                     const showOpenNote = chatType !== 3;
                     const showCreateTask = !hasTask && chatType !== 3;
-                    if (!showOpenNote && !showCreateTask) return null;
+                    // Copy-link is offered on DM/GM/MDM threads (PM threads
+                    // are addressed by task and carry their own copy-task-
+                    // link on the preview).
+                    const showCopyLink = chatType !== 3;
+                    if (!showOpenNote && !showCreateTask && !showCopyLink) return null;
                     return (
                         <MoreMenu
                             placement="bottom-end"
@@ -637,6 +674,17 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                                     ),
                                     visible: showOpenNote,
                                     onClick: openNoteHandler,
+                                },
+                                {
+                                    id: "copy-thread-link",
+                                    label: t.chat.headers.copyThreadLink,
+                                    icon: (
+                                        <ContentCopyRoundedIcon
+                                            sx={{ fontSize: 18, color: styles.accentColor }}
+                                        />
+                                    ),
+                                    visible: showCopyLink,
+                                    onClick: copyThreadLink,
                                 },
                             ]}
                         />

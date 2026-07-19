@@ -511,6 +511,7 @@ export const es: DeepPartial<Messages> = {
             threadTaskBadge: "Tarea",
             threadTaskMenuItem: "Tarea del hilo",
             threadNoteMenuItem: "Nota del hilo",
+            copyThreadLink: "Copiar enlace del hilo",
             threadMilestoneBadge: "Hito",
             openNoteTooltip: "Abrir nota vinculada a este hilo",
             online: "En línea",

@@ -206,7 +206,14 @@ export const ModalChatView = (props: ModalChatViewProps) => {
                         chatId: target.chatId,
                         chatName: summary.chatName,
                         chatType: target.chatType,
-                        dmPartnerUser: myself,
+                        // The DM partner, NOT `myself`. The header's
+                        // `isYou` test compares `dmPartnerUser.userId`
+                        // against `myself.userId`; hardcoding `myself`
+                        // made every DM thread opened in the modal read
+                        // "(you)", even a thread with someone else. The
+                        // real ThreadPane path uses the channel's actual
+                        // partner (moveToSpecificThreadChat), so match it.
+                        dmPartnerUser: summary.dmPartnerUser,
                         messages: threadMessages,
                         moveToSpecificIndex: threadMoveIndex,
                         project: firstMessage.project,

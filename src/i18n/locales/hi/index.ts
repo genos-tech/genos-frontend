@@ -512,6 +512,7 @@ export const hi: DeepPartial<Messages> = {
             threadTaskBadge: "टास्क",
             threadTaskMenuItem: "थ्रेड टास्क",
             threadNoteMenuItem: "थ्रेड नोट",
+            copyThreadLink: "थ्रेड लिंक कॉपी करें",
             threadMilestoneBadge: "माइलस्टोन",
             openNoteTooltip: "इस थ्रेड से जुड़ा नोट खोलें",
             online: "ऑनलाइन",
