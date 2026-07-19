@@ -67,25 +67,37 @@ describe("ModalCustomizeTaskFields", () => {
         loadProjectTagsMock.mockResolvedValue([debugTag]);
     });
 
-    it("renders a row for every configurable field with Project locked", async () => {
+    it("renders one row per field in order, with Project and Status locked", async () => {
         renderModal(makeTM());
 
-        for (const label of [
+        // Product order: Project, Reporter, Assignee, Due Date, Tags,
+        // Effort Level, Priority, Status.
+        const order = [
             "Project",
-            "Due Date",
-            "Status",
-            "Priority",
-            "Effort Level",
-            "Tags",
-            "Assignee",
             "Reporter",
-        ]) {
-            expect(screen.getByText(label)).toBeInTheDocument();
+            "Assignee",
+            "Due Date",
+            "Tags",
+            "Effort Level",
+            "Priority",
+            "Status",
+        ];
+        const nodes = order.map((label) => screen.getByText(label));
+        nodes.forEach((node) => expect(node).toBeInTheDocument());
+        // Assert actual DOM order, not just presence: each label must
+        // precede the next in document order.
+        for (let i = 0; i < nodes.length - 1; i++) {
+            expect(
+                nodes[i].compareDocumentPosition(nodes[i + 1]) & Node.DOCUMENT_POSITION_FOLLOWING
+            ).toBeTruthy();
         }
-        // Project row carries no switch — just the locked hint.
+
+        // Project + Status are locked (no switch): each shows a muted
+        // auto marker.
         expect(screen.getByText("Always required")).toBeInTheDocument();
-        // 6 Required switches: dueDate/priority/effortLevel/tags/assignee/
-        // reporter (project locked, status auto-set).
+        expect(screen.getByText("Set automatically at creation")).toBeInTheDocument();
+        // 6 Required switches: reporter/assignee/dueDate/tags/effortLevel/
+        // priority (project + status locked).
         await waitFor(() => expect(screen.getAllByRole("switch")).toHaveLength(6));
     });
 

@@ -41,7 +41,6 @@ describe("applyRuleDefaults", () => {
     it("fills every empty slot from the configured defaults", () => {
         const rules: TaskFieldRules = {
             dueDate: { defaultOffsetDays: 7 },
-            status: { default: "WIP" },
             priority: { default: "High" },
             effortLevel: { default: "Moderate" },
             tags: { defaultTagNames: ["debug"] },
@@ -50,7 +49,6 @@ describe("applyRuleDefaults", () => {
         };
         const next = applyRuleDefaults(emptyDraft(), rules, ctx());
         expect(next.dueDate).toBe("2026-07-26");
-        expect(next.status).toBe("WIP");
         expect(next.priority).toBe("High");
         expect(next.effortLevel).toBe("Moderate");
         expect(next.tags).toEqual([debugTag]);
@@ -97,7 +95,6 @@ describe("applyRuleDefaults", () => {
         const rules: TaskFieldRules = {
             tags: { defaultTagNames: ["deleted-tag", "debug"] },
             assignee: { default: "departed-user" },
-            status: { default: "NotAStatus" },
             priority: { default: "Urgent" },
             effortLevel: { default: "Huge" },
         };
@@ -105,7 +102,6 @@ describe("applyRuleDefaults", () => {
         // Stale tag name dropped; the surviving one still resolves.
         expect(next.tags).toEqual([debugTag]);
         expect(next.assigneeId).toBeNull();
-        expect(next.status).toBeNull();
         expect(next.priority).toBeNull();
         expect(next.effortLevel).toBeNull();
     });
@@ -160,13 +156,6 @@ describe("getMissingRequiredFields", () => {
             getMissingRequiredFields(emptyDraft(), rules, { kind: "task", projectTags: [] })
         ).toEqual([]);
         expect(getMissingRequiredFields(emptyDraft(), rules, gateCtx)).toEqual(["tags"]);
-    });
-
-    it("never blocks on status (create surfaces always seed it)", () => {
-        const rules: TaskFieldRules = { status: { required: true } };
-        expect(getMissingRequiredFields(emptyDraft({ status: "Open" }), rules, gateCtx)).toEqual(
-            []
-        );
     });
 
     it("lists project when the draft has none, independent of rules", () => {

@@ -66,7 +66,7 @@ import {
     TaskFieldRules,
 } from "../../utils/taskFieldRules";
 import { getCreationKind } from "../../utils/taskKind";
-import { effortLevels, priorities, statuses } from "../../utils/taskMeta";
+import { effortLevels, priorities } from "../../utils/taskMeta";
 import {
     CustomTaskTemplate,
     customTemplateValue,
@@ -459,11 +459,10 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                 // An inherited (parent/milestone) due date is non-empty
                 // here and therefore wins over the offset default.
                 dueDate: taskContent.dueDate || null,
-                // The seed auto-fills status ("Open") and reporter (the
-                // creator). Neither is user input at this point, so
-                // present them as EMPTY — otherwise a configured status
-                // or reporter default could never take effect. With no
-                // default configured they simply stay as seeded.
+                // The seed auto-fills reporter (the creator), which isn't
+                // user input at this point — present it as EMPTY so a
+                // configured reporter default can take effect; with none
+                // configured it stays as seeded (the creator).
                 status: null,
                 reporterId: null,
                 priority: taskContent.priority?.priority || null,
@@ -484,9 +483,6 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
         if ((slot.rules.tags?.defaultTagNames?.length ?? 0) === 0 || seeded.tags.length > 0) {
             tagDefaultsAppliedRef.current = true;
         }
-        const statusObj = seeded.status
-            ? statuses.find((s) => s.status === seeded.status)
-            : undefined;
         const priorityObj = seeded.priority
             ? priorities.find((p) => p.priority === seeded.priority)
             : undefined;
@@ -508,7 +504,6 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                 ? {
                       ...prev,
                       dueDate: seeded.dueDate ?? prev.dueDate,
-                      status: statusObj ?? prev.status,
                       priority: priorityObj ?? prev.priority,
                       effortLevel: effortObj ?? prev.effortLevel,
                       tags: seeded.tags.length > 0 ? seeded.tags : prev.tags,

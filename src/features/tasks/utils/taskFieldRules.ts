@@ -1,6 +1,6 @@
 import { TagListProps } from "../../../types/tasks";
 import { TaskKind } from "./taskKind";
-import { effortLevels, priorities, statuses } from "./taskMeta";
+import { effortLevels, priorities } from "./taskMeta";
 
 // ---------------------------------------------------------------------------
 // Project-owner-configured creation rules for task/milestone metadata
@@ -11,11 +11,11 @@ import { effortLevels, priorities, statuses } from "./taskMeta";
 // creation paths must stay unaffected).
 // ---------------------------------------------------------------------------
 
-// "sprint" is deliberately absent (dropped from the feature) and
-// "project" is always required and never stored.
+// "sprint" is absent (dropped from the feature), "status" is always
+// auto-set at creation (never customizable), and "project" is always
+// required and never stored.
 export type ConfigurableTaskField =
     | "dueDate"
-    | "status"
     | "effortLevel"
     | "priority"
     | "tags"
@@ -110,10 +110,6 @@ export const applyRuleDefaults = (
         next.dueDate = formatOffsetDate(offset, ctx.today);
     }
 
-    const statusDefault = rules.status?.default;
-    if (!isSet(next.status) && isSet(statusDefault)) {
-        if (statuses.some((s) => s.status === statusDefault)) next.status = statusDefault;
-    }
     const priorityDefault = rules.priority?.default;
     if (!isSet(next.priority) && isSet(priorityDefault)) {
         if (priorities.some((p) => p.priority === priorityDefault)) {
@@ -150,7 +146,6 @@ export const applyRuleDefaults = (
  *   - "project" is listed when the draft has no project — the baseline
  *     always-required field, independent of rules (keeps the missing-
  *     fields hint complete).
- *   - status never blocks: every create surface seeds it ("Open").
  *   - tags: the rule is INACTIVE while the project has no tags at all
  *     ("a field with no options can't be required").
  *   - `kind` doesn't currently change the outcome (sprint was dropped
@@ -171,7 +166,6 @@ export const getMissingRequiredFields = (
     }
     if (rules.priority?.required && !isSet(draft.priority)) missing.push("priority");
     if (rules.effortLevel?.required && !isSet(draft.effortLevel)) missing.push("effortLevel");
-    if (rules.status?.required && !isSet(draft.status)) missing.push("status");
     if (rules.dueDate?.required && !isSet(draft.dueDate)) missing.push("dueDate");
     return missing;
 };
