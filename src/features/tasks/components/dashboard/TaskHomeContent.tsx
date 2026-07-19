@@ -7,6 +7,7 @@ import CancelIcon from "@mui/icons-material/Cancel";
 import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import FolderOpenRoundedIcon from "@mui/icons-material/FolderOpenRounded";
+import HelpOutlineRoundedIcon from "@mui/icons-material/HelpOutlineRounded";
 import KeyboardArrowDownRoundedIcon from "@mui/icons-material/KeyboardArrowDownRounded";
 import LocalOfferRoundedIcon from "@mui/icons-material/LocalOfferRounded";
 import PendingActionsRoundedIcon from "@mui/icons-material/PendingActionsRounded";
@@ -44,6 +45,7 @@ import { Socket } from "socket.io-client";
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
 import { ProjectAvatar } from "../../../../components/ui/avatars/ProjectAvatar";
+import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
 import { TaskHeaderStyles } from "../../../../components/ui/styles/commonStyle";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
@@ -215,6 +217,11 @@ export const TaskHomeContent = ({
     const [sprintConfigOpen, setSprintConfigOpen] = useState(false);
     const [sprintManagerOpen, setSprintManagerOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<"overall" | "sprint" | "mytasks">("overall");
+    // How the My Tasks "Up Next" list is ordered. Default "weight" so the
+    // most pressing task (priority × urgency) surfaces first — the whole
+    // point of the pointing system. "urgency" keeps the older overdue →
+    // priority → due-date rule for users who prefer a deadline-first view.
+    const [upNextSort, setUpNextSort] = useState<"weight" | "urgency">("weight");
 
     useEffect(() => {
         if (usePM.currentProject?.projectId) {
@@ -749,28 +756,38 @@ export const TaskHomeContent = ({
             Minimal: 4,
         };
         const active = myTasks.filter((t) => t.effectiveStatus !== "Closed");
+        // Deadline-first rule: overdue → priority → soonest due → recent.
+        const byUrgency = (a: EffectiveTask, b: EffectiveTask): number => {
+            const da = a.dueDate ? new Date(a.dueDate).getTime() : Infinity;
+            const db = b.dueDate ? new Date(b.dueDate).getTime() : Infinity;
+            const aOver = a.dueDate != null && da < todayMs;
+            const bOver = b.dueDate != null && db < todayMs;
+            if (aOver !== bOver) return aOver ? -1 : 1;
+            if (aOver && bOver) return da - db;
+
+            const pa = priorityRank[a.priority ?? ""] ?? 5;
+            const pb = priorityRank[b.priority ?? ""] ?? 5;
+            if (pa !== pb) return pa - pb;
+
+            if (da !== db) return da - db;
+
+            const ua = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+            const ub = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+            return ub - ua;
+        };
+        // Weight-first: highest Task Weight (priority × urgency) first, with
+        // the deadline rule breaking ties so equal-weight rows stay stable.
+        const byWeight = (a: EffectiveTask, b: EffectiveTask): number => {
+            const wa = computeTaskWeight(a);
+            const wb = computeTaskWeight(b);
+            if (wa !== wb) return wb - wa;
+            return byUrgency(a, b);
+        };
         return active
             .slice()
-            .sort((a, b) => {
-                const da = a.dueDate ? new Date(a.dueDate).getTime() : Infinity;
-                const db = b.dueDate ? new Date(b.dueDate).getTime() : Infinity;
-                const aOver = a.dueDate != null && da < todayMs;
-                const bOver = b.dueDate != null && db < todayMs;
-                if (aOver !== bOver) return aOver ? -1 : 1;
-                if (aOver && bOver) return da - db;
-
-                const pa = priorityRank[a.priority ?? ""] ?? 5;
-                const pb = priorityRank[b.priority ?? ""] ?? 5;
-                if (pa !== pb) return pa - pb;
-
-                if (da !== db) return da - db;
-
-                const ua = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
-                const ub = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
-                return ub - ua;
-            })
+            .sort(upNextSort === "weight" ? byWeight : byUrgency)
             .slice(0, 10);
-    }, [myTasks]);
+    }, [myTasks, upNextSort]);
 
     // ── Handlers ──
     const projectCount = usePM.teamProjects?.length || 0;
@@ -2208,6 +2225,7 @@ export const TaskHomeContent = ({
                                                 <Stack
                                                     alignItems="center"
                                                     direction="row"
+                                                    flexWrap="wrap"
                                                     spacing={1}
                                                     sx={{ mb: 1 }}
                                                 >
@@ -2220,12 +2238,89 @@ export const TaskHomeContent = ({
                                                     >
                                                         Up Next
                                                     </Typography>
-                                                    <Typography
-                                                        level="body-xs"
-                                                        sx={{ color: textMuted }}
+                                                    <AppTooltip
+                                                        title={
+                                                            <Box sx={{ maxWidth: 260 }}>
+                                                                <b>
+                                                                    {
+                                                                        t.tasks.dashboard.upNext
+                                                                            .help.title
+                                                                    }
+                                                                </b>
+                                                                <br />
+                                                                {
+                                                                    t.tasks.dashboard.upNext.help
+                                                                        .body
+                                                                }
+                                                            </Box>
+                                                        }
                                                     >
-                                                        ranked by overdue → priority → due date
-                                                    </Typography>
+                                                        <HelpOutlineRoundedIcon
+                                                            sx={{
+                                                                fontSize: 15,
+                                                                color: textMuted,
+                                                                cursor: "help",
+                                                            }}
+                                                        />
+                                                    </AppTooltip>
+                                                    {/* Sort selector — order the list by Task
+                                                        Weight (default) or by the deadline rule. */}
+                                                    <Stack
+                                                        direction="row"
+                                                        spacing={0.5}
+                                                        sx={{ ml: { sm: "auto" } }}
+                                                    >
+                                                        {(
+                                                            [
+                                                                {
+                                                                    key: "weight" as const,
+                                                                    label: t.tasks.dashboard.upNext
+                                                                        .byWeight,
+                                                                },
+                                                                {
+                                                                    key: "urgency" as const,
+                                                                    label: t.tasks.dashboard.upNext
+                                                                        .byUrgency,
+                                                                },
+                                                            ] as const
+                                                        ).map((opt) => {
+                                                            const active = upNextSort === opt.key;
+                                                            return (
+                                                                <Chip
+                                                                    key={opt.key}
+                                                                    size="sm"
+                                                                    sx={{
+                                                                        cursor: "pointer",
+                                                                        fontSize: "0.7rem",
+                                                                        fontWeight: 600,
+                                                                        backgroundColor: active
+                                                                            ? "#7c3aed"
+                                                                            : isDark
+                                                                              ? "rgba(255,255,255,0.06)"
+                                                                              : "rgba(0,0,0,0.05)",
+                                                                        color: active
+                                                                            ? "white"
+                                                                            : textSecondary,
+                                                                        "&:hover": {
+                                                                            backgroundColor: active
+                                                                                ? "#6d28d9"
+                                                                                : isDark
+                                                                                  ? "rgba(255,255,255,0.1)"
+                                                                                  : "rgba(0,0,0,0.08)",
+                                                                        },
+                                                                    }}
+                                                                    variant={
+                                                                        active ? "solid" : "soft"
+                                                                    }
+                                                                    onClick={() =>
+                                                                        setUpNextSort(opt.key)
+                                                                    }
+                                                                >
+                                                                    {opt.label}
+                                                                </Chip>
+                                                            );
+                                                        })}
+                                                    </Stack>
                                                 </Stack>
                                                 {myUpNext.length === 0 ? (
                                                     <Card
@@ -2303,17 +2398,44 @@ export const TaskHomeContent = ({
                                                                         direction="row"
                                                                         spacing={1.5}
                                                                     >
-                                                                        <Box
-                                                                            sx={{
-                                                                                width: 8,
-                                                                                height: 8,
-                                                                                borderRadius:
-                                                                                    "50%",
-                                                                                backgroundColor:
-                                                                                    pColor,
-                                                                                flexShrink: 0,
-                                                                            }}
-                                                                        />
+                                                                        {/* Task Weight badge,
+                                                                            leftmost — same squared
+                                                                            heat chip as the Top by
+                                                                            Weight section. */}
+                                                                        <AppTooltip
+                                                                            title={`${fmt(
+                                                                                t.tasks.table
+                                                                                    .weightTooltip,
+                                                                                {
+                                                                                    weight,
+                                                                                    max: MAX_TASK_WEIGHT,
+                                                                                }
+                                                                            )} · ${t.tasks.table.weightBands[wb.band]}`}
+                                                                        >
+                                                                            <Box
+                                                                                sx={{
+                                                                                    width: 30,
+                                                                                    height: 30,
+                                                                                    borderRadius:
+                                                                                        "8px",
+                                                                                    flexShrink: 0,
+                                                                                    display:
+                                                                                        "flex",
+                                                                                    alignItems:
+                                                                                        "center",
+                                                                                    justifyContent:
+                                                                                        "center",
+                                                                                    fontWeight: 700,
+                                                                                    fontSize:
+                                                                                        "0.8rem",
+                                                                                    color: "white",
+                                                                                    backgroundColor:
+                                                                                        wb.color,
+                                                                                }}
+                                                                            >
+                                                                                {weight}
+                                                                            </Box>
+                                                                        </AppTooltip>
                                                                         <Stack
                                                                             alignItems="center"
                                                                             direction="row"
@@ -2361,31 +2483,6 @@ export const TaskHomeContent = ({
                                                                                         .untitledTask}
                                                                             </Typography>
                                                                         </Stack>
-                                                                        <AppTooltip
-                                                                            title={`${fmt(
-                                                                                t.tasks.table
-                                                                                    .weightTooltip,
-                                                                                {
-                                                                                    weight,
-                                                                                    max: MAX_TASK_WEIGHT,
-                                                                                }
-                                                                            )} · ${t.tasks.table.weightBands[wb.band]}`}
-                                                                        >
-                                                                            <Chip
-                                                                                size="sm"
-                                                                                variant="soft"
-                                                                                sx={{
-                                                                                    fontSize:
-                                                                                        "0.65rem",
-                                                                                    fontWeight: 700,
-                                                                                    backgroundColor: `${wb.color}1F`,
-                                                                                    color: wb.color,
-                                                                                    flexShrink: 0,
-                                                                                }}
-                                                                            >
-                                                                                {`${t.tasks.dashboard.weightShort} ${weight}`}
-                                                                            </Chip>
-                                                                        </AppTooltip>
                                                                         {task.priority && (
                                                                             <Chip
                                                                                 size="sm"
@@ -2957,6 +3054,28 @@ export const TaskHomeContent = ({
                                                     sx={{ fontSize: 16, color: "#ef4444" }}
                                                 />
                                                 {t.tasks.dashboard.topWeight.title}
+                                                <AppTooltip
+                                                    title={
+                                                        <Box sx={{ maxWidth: 260 }}>
+                                                            <b>
+                                                                {
+                                                                    t.tasks.dashboard.topWeight
+                                                                        .help.title
+                                                                }
+                                                            </b>
+                                                            <br />
+                                                            {t.tasks.dashboard.topWeight.help.body}
+                                                        </Box>
+                                                    }
+                                                >
+                                                    <HelpOutlineRoundedIcon
+                                                        sx={{
+                                                            fontSize: 15,
+                                                            color: textMuted,
+                                                            cursor: "help",
+                                                        }}
+                                                    />
+                                                </AppTooltip>
                                             </Typography>
                                             <Typography
                                                 level="body-xs"
@@ -3152,6 +3271,25 @@ export const TaskHomeContent = ({
                                         >
                                             <WorkRoundedIcon sx={{ fontSize: 16 }} />
                                             {t.tasks.dashboard.capacity.title}
+                                            <AppTooltip
+                                                title={
+                                                    <Box sx={{ maxWidth: 260 }}>
+                                                        <b>
+                                                            {t.tasks.dashboard.capacity.help.title}
+                                                        </b>
+                                                        <br />
+                                                        {t.tasks.dashboard.capacity.help.body}
+                                                    </Box>
+                                                }
+                                            >
+                                                <HelpOutlineRoundedIcon
+                                                    sx={{
+                                                        fontSize: 15,
+                                                        color: textMuted,
+                                                        cursor: "help",
+                                                    }}
+                                                />
+                                            </AppTooltip>
                                         </Typography>
                                         <Typography
                                             level="body-xs"
@@ -3229,20 +3367,23 @@ export const TaskHomeContent = ({
                                                                         minWidth: 0,
                                                                     }}
                                                                 >
-                                                                    <Avatar
-                                                                        size="sm"
-                                                                        src={
-                                                                            m.imgPath || undefined
+                                                                    <UserAvatar
+                                                                        showPulseDot={false}
+                                                                        size={26}
+                                                                        clickable={
+                                                                            m.id !==
+                                                                            "__unassigned__"
                                                                         }
-                                                                        sx={{
-                                                                            "--Avatar-size":
-                                                                                "26px",
-                                                                        }}
-                                                                    >
-                                                                        {m.name
+                                                                        fallbackInitial={m.name
                                                                             .charAt(0)
                                                                             .toUpperCase()}
-                                                                    </Avatar>
+                                                                        userId={
+                                                                            m.id ===
+                                                                            "__unassigned__"
+                                                                                ? null
+                                                                                : m.id
+                                                                        }
+                                                                    />
                                                                     <Typography
                                                                         level="body-xs"
                                                                         sx={{

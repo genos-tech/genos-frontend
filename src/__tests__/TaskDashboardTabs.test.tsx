@@ -3,6 +3,7 @@ import { createTheme, THEME_ID, ThemeProvider } from "@mui/material/styles";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
+import { AvatarContextProvider } from "../components/ui/avatars/AvatarContext";
 import { TaskDashboard } from "../features/tasks/components/dashboard/TaskDashboard";
 import { UserProps } from "../types/admin";
 import { TaskTableProps } from "../types/tasks";
@@ -74,11 +75,27 @@ const baseProps = {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
 } as unknown as any;
 
+// The Team Capacity section renders <UserAvatar>, which subscribes to the
+// AvatarContext that the authenticated shell (App.tsx) always provides.
+// Mirror that here so the dashboard mounts as it does in production.
+const avatarContextValue = {
+    myself,
+    setMyself: vi.fn(),
+    teamMemberProfiles: {},
+    setTeamMemberProfiles: vi.fn(),
+    socket: null,
+    useCM: { allChats: [] },
+    useUISM: {},
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+} as unknown as any;
+
 const renderDashboard = () =>
     render(
         <CssVarsProvider>
             <ThemeProvider theme={{ [THEME_ID]: materialTheme }}>
-                <TaskDashboard {...baseProps} />
+                <AvatarContextProvider value={avatarContextValue}>
+                    <TaskDashboard {...baseProps} />
+                </AvatarContextProvider>
             </ThemeProvider>
         </CssVarsProvider>
     );
