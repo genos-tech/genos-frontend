@@ -308,10 +308,24 @@ export const MessageListRenderer = ({
         ? { flex: 1, minHeight: 0 }
         : { height };
 
+    // Remount Virtuoso whenever the rendered chat (or thread) changes.
+    // `initialTopMostItemIndex` only applies at MOUNT, so a reused
+    // instance switching from a short chat to a long one kept the old
+    // scroll offset — which lands near the TOP of the longer list —
+    // until the 300ms jump/auto-follow timers dragged it down. A per-
+    // chat key makes every switch paint at the latest message on the
+    // first frame, and drops the previous chat's per-item height cache
+    // (meaningless for the new one) instead of correcting against it.
+    // Same-chat updates (arrivals, edits, reactions) don't change the
+    // key, so the reader's scroll position is preserved for those.
+    const chatIdentityKey = isThread
+        ? `${chat.chatId}:${(chat as ThreadProps).threadId}`
+        : `${chat.chatId}`;
+
     return (
         <Box sx={wrapperSx}>
             <Virtuoso
-                key={bubbleStyle}
+                key={`${bubbleStyle}:${chatIdentityKey}`}
                 ref={virtuosoRef}
                 atBottomThreshold={128}
                 atTopStateChange={handleAtTop}
@@ -319,7 +333,7 @@ export const MessageListRenderer = ({
                 className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                 context={listContext}
                 increaseViewportBy={{ bottom: OVERSCAN_PX, top: OVERSCAN_PX }}
-                initialTopMostItemIndex={messages.length - 1}
+                initialTopMostItemIndex={{ align: "end", index: "LAST" }}
                 isScrolling={setIsScrolling}
                 itemContent={itemContent}
                 rangeChanged={onRangeChanged}
