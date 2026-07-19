@@ -144,6 +144,11 @@ export const ThreadPane = (props: MessagesPaneProps) => {
         currentChat: useCM.currentThreadChat as ThreadProps,
         indexMap: messageManagement.indexMap,
         isThread: true,
+        // Fed straight from Virtuoso's `rangeChanged` (throttling lives
+        // inside `handlePeriodicReadStatusUpdate`); replaces the old
+        // per-scroll-tick `visibleRange` state effect.
+        onRangeChange: (range) =>
+            readStatusManagement.handlePeriodicReadStatusUpdate(range.endIndex),
     });
 
     // Handle read status updates
@@ -171,12 +176,6 @@ export const ThreadPane = (props: MessagesPaneProps) => {
             }
         }, 1000);
     }, [messageManagement.indexMap]);
-
-    useEffect(() => {
-        readStatusManagement.handlePeriodicReadStatusUpdate(
-            scrollManagement.visibleRange.endIndex
-        );
-    }, [scrollManagement.visibleRange]);
 
     return (
         <div
@@ -269,27 +268,25 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                         currentChatId={currentThreadChatId}
                         height={0}
                         indexMap={messageManagement.indexMap}
-                        isScrolling={scrollManagement.isScrolling}
                         isThread={true}
                         messages={messageManagement.messages}
                         myself={myself}
                         setEditTargetMessage={messageManagement.setEditTargetMessage}
                         setIsInEdit={messageManagement.setIsInEdit}
-                        setIsScrolling={scrollManagement.setIsScrolling}
                         setMyself={setMyself}
                         setTodoFromMessageBubble={setTodoFromMessageBubble}
-                        setVisibleRange={scrollManagement.setVisibleRange}
                         socket={socket}
                         useCM={useCM}
                         usePM={usePM}
                         useTEM={useTEM}
                         useTM={useTM}
                         useUISM={useUISM}
-                        visibleRange={scrollManagement.visibleRange}
+                        visibleRangeRef={scrollManagement.visibleRangeRef}
                         virtuosoRef={
                             scrollManagement.virtuosoRef as React.RefObject<VirtuosoHandle>
                         }
                         fillContainer
+                        onRangeChanged={scrollManagement.handleRangeChanged}
                     />
                 ) : (
                     // Non-PM thread (DM / group chat reply). Virtuoso
@@ -302,27 +299,25 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                             currentChatId={currentThreadChatId}
                             height={0}
                             indexMap={messageManagement.indexMap}
-                            isScrolling={scrollManagement.isScrolling}
                             isThread={true}
                             messages={messageManagement.messages}
                             myself={myself}
                             setEditTargetMessage={messageManagement.setEditTargetMessage}
                             setIsInEdit={messageManagement.setIsInEdit}
-                            setIsScrolling={scrollManagement.setIsScrolling}
                             setMyself={setMyself}
                             setTodoFromMessageBubble={setTodoFromMessageBubble}
-                            setVisibleRange={scrollManagement.setVisibleRange}
                             socket={socket}
                             useCM={useCM}
                             usePM={usePM}
                             useTEM={useTEM}
                             useTM={useTM}
                             useUISM={useUISM}
-                            visibleRange={scrollManagement.visibleRange}
+                            visibleRangeRef={scrollManagement.visibleRangeRef}
                             virtuosoRef={
                                 scrollManagement.virtuosoRef as React.RefObject<VirtuosoHandle>
                             }
                             fillContainer
+                            onRangeChanged={scrollManagement.handleRangeChanged}
                         />
 
                         <ChatEditorSection
