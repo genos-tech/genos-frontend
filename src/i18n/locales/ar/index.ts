@@ -715,6 +715,7 @@ export const ar: DeepPartial<Messages> = {
             newProjectMenuItem: "مشروع جديد",
             newMilestoneMenuItem: "معلم جديد",
             deleteProjectMenuItem: "حذف المشروع",
+            customizeFieldsMenuItem: "تخصيص حقول المهام",
         },
         tooltips: {
             edit: "تعديل",
@@ -814,6 +815,24 @@ export const ar: DeepPartial<Messages> = {
                 no: "لا",
                 editTooltip: "تعديل",
                 deleteTooltip: "حذف",
+            },
+            customizeFields: {
+                heading: "تخصيص حقول المهام",
+                description:
+                    "اجعل الحقول إلزامية وحدد قيمًا افتراضية للمهام والمعالم الجديدة في هذا المشروع. لا يمكن تغيير هذه الإعدادات إلا لمالك المشروع.",
+                requiredLabel: "إلزامي",
+                defaultLabel: "القيمة الافتراضية",
+                alwaysRequired: "إلزامي دائمًا",
+                statusAuto: "يُعيَّن تلقائيًا عند الإنشاء",
+                noTagsHint: "أضف وسوم المشروع أولًا لجعل هذا الحقل إلزاميًا",
+                creatorOption: "المنشئ",
+                noneOption: "بدون",
+                dueOffsetPrefix: "اليوم +",
+                dueOffsetSuffix: "يومًا",
+                dueOffsetLabel: "عدد الأيام بعد الإنشاء",
+                save: "حفظ",
+                cancel: "إلغاء",
+                saveFailed: "تعذّر الحفظ — لا يمكن تغيير هذه الإعدادات إلا لمالك المشروع.",
             },
             manageTags: {
                 heading: "إدارة الوسوم",
@@ -966,6 +985,7 @@ export const ar: DeepPartial<Messages> = {
                 milestoneDescription: "الهدف والنطاق ومعايير النجاح والمخاطر.",
             },
             templatePrefix: "القالب: ",
+            missingRequired: "إلزامي: {fields}",
             sprintFallback: "بدون سبرنت",
         },
         board: {

@@ -758,6 +758,7 @@ export const ja: DeepPartial<Messages> = {
             newProjectMenuItem: "新規プロジェクト",
             newMilestoneMenuItem: "新規マイルストーン",
             deleteProjectMenuItem: "プロジェクトを削除",
+            customizeFieldsMenuItem: "タスク項目をカスタマイズ",
         },
         tooltips: {
             edit: "編集",
@@ -864,6 +865,25 @@ export const ja: DeepPartial<Messages> = {
                 no: "いいえ",
                 editTooltip: "編集",
                 deleteTooltip: "削除",
+            },
+            customizeFields: {
+                heading: "タスク項目のカスタマイズ",
+                description:
+                    "このプロジェクトで新しく作成するタスク／マイルストーンの必須項目とデフォルト値を設定します。変更できるのはプロジェクトオーナーのみです。",
+                requiredLabel: "必須",
+                defaultLabel: "デフォルト値",
+                alwaysRequired: "常に必須",
+                statusAuto: "作成時に自動設定",
+                noTagsHint: "必須にするには先にプロジェクトタグを追加してください",
+                creatorOption: "作成者",
+                noneOption: "なし",
+                dueOffsetPrefix: "今日 +",
+                dueOffsetSuffix: "日",
+                dueOffsetLabel: "作成日からの日数",
+                save: "保存",
+                cancel: "キャンセル",
+                saveFailed:
+                    "保存できませんでした。この設定を変更できるのはプロジェクトオーナーのみです。",
             },
             manageTags: {
                 heading: "タグを管理",
@@ -1021,6 +1041,7 @@ export const ja: DeepPartial<Messages> = {
                 milestoneDescription: "目的、スコープ、成功条件、リスク。",
             },
             templatePrefix: "テンプレート：",
+            missingRequired: "必須: {fields}",
             sprintFallback: "スプリントなし",
         },
         board: {
@@ -1142,6 +1163,7 @@ export const ja: DeepPartial<Messages> = {
             quickAddTooltip: "サブタスクを追加",
             quickAddTitlePlaceholder: "タイトルを入力して Enter で作成…",
             quickAddConfirm: "作成",
+            quickAddMissingRequired: "必須: {fields}",
             quickAddError: "作成できませんでした。もう一度お試しください",
             columnSettings: {
                 heading: "列のカスタマイズ",

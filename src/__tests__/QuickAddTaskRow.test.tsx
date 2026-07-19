@@ -45,9 +45,12 @@ const renderRow = (overrides: Partial<Parameters<typeof QuickAddTaskRow>[0]> = {
             <ThemeProvider theme={{ [THEME_ID]: materialTheme }}>
                 <QuickAddTaskRow
                     columns={defaultColumns}
+                    creatorUserId={myself.userId}
                     depth={1}
+                    fieldRules={null}
                     mode="light"
                     parentTask={parentTask}
+                    projectTags={[]}
                     teamMembers={[myself]}
                     onClose={onClose}
                     onDirtyChange={onDirtyChange}
@@ -77,6 +80,7 @@ describe("QuickAddTaskRow", () => {
             priority: null,
             effortLevel: null,
             dueDate: null,
+            tags: [],
         });
         // The row disappears once the task is created.
         await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
@@ -174,5 +178,64 @@ describe("QuickAddTaskRow", () => {
 
         await waitFor(() => expect(getByText("Couldn't create — try again")).toBeInTheDocument());
         expect(titleInput.value).toBe("Doomed task");
+    });
+
+    // ---- Project field rules (required metadata + defaults) ----
+
+    const debugTag = { tagName: "debug", tagColor: "#111111", tagTextColor: "#ffffff" };
+
+    it("seeds its initial state from the project's configured defaults", async () => {
+        const { onSubmit, titleInput, getByText } = renderRow({
+            projectTags: [debugTag],
+            fieldRules: {
+                priority: { default: "High" },
+                effortLevel: { default: "Moderate" },
+                tags: { defaultTagNames: ["debug"] },
+                assignee: { default: "creator" },
+            },
+        });
+
+        // The default tag renders as a chip in the tags cell right away.
+        expect(getByText("debug")).toBeInTheDocument();
+
+        fireEvent.change(titleInput, { target: { value: "Seeded task" } });
+        fireEvent.keyDown(titleInput, { key: "Enter" });
+
+        await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+        expect(onSubmit).toHaveBeenCalledWith({
+            title: "Seeded task",
+            assigneeId: myself.userId,
+            status: "Open",
+            priority: "High",
+            effortLevel: "Moderate",
+            dueDate: null,
+            tags: [debugTag],
+        });
+    });
+
+    it("refuses to create while a required field is missing, naming it inline", async () => {
+        const { onSubmit, titleInput, getByText } = renderRow({
+            fieldRules: { effortLevel: { required: true } },
+        });
+
+        fireEvent.change(titleInput, { target: { value: "Blocked task" } });
+        fireEvent.keyDown(titleInput, { key: "Enter" });
+
+        await waitFor(() => expect(getByText("Required: Effort Level")).toBeInTheDocument());
+        expect(onSubmit).not.toHaveBeenCalled();
+        expect(titleInput.value).toBe("Blocked task");
+    });
+
+    it("passes the gate when a required field is satisfied by its default", async () => {
+        const { onSubmit, titleInput } = renderRow({
+            projectTags: [debugTag],
+            fieldRules: { tags: { required: true, defaultTagNames: ["debug"] } },
+        });
+
+        fireEvent.change(titleInput, { target: { value: "Tagged task" } });
+        fireEvent.keyDown(titleInput, { key: "Enter" });
+
+        await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+        expect(onSubmit.mock.calls[0][0].tags).toEqual([debugTag]);
     });
 });

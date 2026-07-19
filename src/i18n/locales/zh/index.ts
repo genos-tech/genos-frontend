@@ -697,6 +697,7 @@ export const zh: DeepPartial<Messages> = {
             newProjectMenuItem: "新建项目",
             newMilestoneMenuItem: "新建里程碑",
             deleteProjectMenuItem: "删除项目",
+            customizeFieldsMenuItem: "自定义任务字段",
         },
         tooltips: {
             edit: "编辑",
@@ -796,6 +797,24 @@ export const zh: DeepPartial<Messages> = {
                 no: "否",
                 editTooltip: "编辑",
                 deleteTooltip: "删除",
+            },
+            customizeFields: {
+                heading: "自定义任务字段",
+                description:
+                    "为此项目中新建的任务和里程碑设置必填字段和默认值。仅项目所有者可以修改。",
+                requiredLabel: "必填",
+                defaultLabel: "默认值",
+                alwaysRequired: "始终必填",
+                statusAuto: "创建时自动设置",
+                noTagsHint: "请先添加项目标签才能将此字段设为必填",
+                creatorOption: "创建者",
+                noneOption: "无",
+                dueOffsetPrefix: "今天 +",
+                dueOffsetSuffix: "天",
+                dueOffsetLabel: "创建后的天数",
+                save: "保存",
+                cancel: "取消",
+                saveFailed: "保存失败——仅项目所有者可以修改这些设置。",
             },
             manageTags: {
                 heading: "管理标签",
@@ -945,6 +964,7 @@ export const zh: DeepPartial<Messages> = {
                 milestoneDescription: "目标、范围、成功标准与风险。",
             },
             templatePrefix: "模板：",
+            missingRequired: "必填: {fields}",
             sprintFallback: "无迭代",
         },
         board: {
@@ -1060,6 +1080,7 @@ export const zh: DeepPartial<Messages> = {
             quickAddTooltip: "添加子任务",
             quickAddTitlePlaceholder: "输入标题，按 Enter 创建…",
             quickAddConfirm: "创建",
+            quickAddMissingRequired: "必填: {fields}",
             quickAddError: "创建失败，请重试",
             columnSettings: {
                 heading: "自定义列",

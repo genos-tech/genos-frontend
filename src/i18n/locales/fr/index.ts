@@ -724,6 +724,7 @@ export const fr: DeepPartial<Messages> = {
             newProjectMenuItem: "Nouveau projet",
             newMilestoneMenuItem: "Nouveau jalon",
             deleteProjectMenuItem: "Supprimer le projet",
+            customizeFieldsMenuItem: "Personnaliser les champs de tâche",
         },
         tooltips: {
             edit: "Modifier",
@@ -823,6 +824,25 @@ export const fr: DeepPartial<Messages> = {
                 no: "Non",
                 editTooltip: "Modifier",
                 deleteTooltip: "Supprimer",
+            },
+            customizeFields: {
+                heading: "Personnaliser les champs de tâche",
+                description:
+                    "Rendez des champs obligatoires et définissez des valeurs par défaut pour les nouvelles tâches et jalons de ce projet. Seul le propriétaire du projet peut les modifier.",
+                requiredLabel: "Obligatoire",
+                defaultLabel: "Valeur par défaut",
+                alwaysRequired: "Toujours obligatoire",
+                statusAuto: "Défini automatiquement à la création",
+                noTagsHint: "Ajoutez des étiquettes au projet pour rendre ce champ obligatoire",
+                creatorOption: "Créateur",
+                noneOption: "Aucun",
+                dueOffsetPrefix: "Aujourd'hui +",
+                dueOffsetSuffix: "jours",
+                dueOffsetLabel: "Jours après la création",
+                save: "Enregistrer",
+                cancel: "Annuler",
+                saveFailed:
+                    "Échec de l'enregistrement — seul le propriétaire du projet peut modifier ces paramètres.",
             },
             manageTags: {
                 heading: "Gérer les tags",
@@ -980,6 +1000,7 @@ export const fr: DeepPartial<Messages> = {
                 milestoneDescription: "Objectif, périmètre, critères de réussite, risques.",
             },
             templatePrefix: "Modèle : ",
+            missingRequired: "Obligatoire : {fields}",
             sprintFallback: "Aucun sprint",
         },
         board: {

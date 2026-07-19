@@ -1,13 +1,15 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Box, Sheet } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { TaskHomeLayout } from "./components/layout/TaskHomeLayout";
 import { TaskHomeModals } from "./components/modals/TaskHomeModals";
 import { useTaskRouting } from "./hooks/useTaskRouting";
+import { loadProjectTaskFieldRules } from "./services/projectTaskFieldRules";
 import { TaskHomeProps } from "./types/TaskHomeTypes";
 
 import { LayoutStyles } from "../../components/ui/styles/commonStyle";
+import { useAuth } from "../../context/AuthContext";
 import { useIsMobile } from "../../hooks/common/useIsMobile";
 import { MobileTaskHome } from "./MobileTaskHome";
 
@@ -28,6 +30,30 @@ export const TaskHome = (props: TaskHomeProps) => {
 
     // URL-based routing for tasks
     useTaskRouting({ usePM, useTM, isActiveRoute });
+
+    // Keep the focused project's task-field rules (owner-configured
+    // required metadata + defaults) cached in useTM for the header's
+    // customize entry and the table's quick-add gate. CreateTaskForm
+    // fetches on its own too (it can mount from chat without TaskHome),
+    // so this only skips when the cache already matches.
+    const { accessToken } = useAuth();
+    const rulesProjectId = usePM.currentProject?.projectId;
+    const cachedRulesProjectId = useTM.taskFieldRules?.projectId;
+    useEffect(() => {
+        if (!rulesProjectId || !accessToken) return undefined;
+        if (cachedRulesProjectId === rulesProjectId) return undefined;
+        let cancelled = false;
+        (async () => {
+            const rules = await loadProjectTaskFieldRules(myself, rulesProjectId, accessToken);
+            if (!cancelled && rules) {
+                useTM.setTaskFieldRules(rules);
+            }
+        })();
+        return () => {
+            cancelled = true;
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [rulesProjectId, cachedRulesProjectId, accessToken]);
 
     // Task Related State
     const [openJoinProject, setOpenJoinProject] = useState({
