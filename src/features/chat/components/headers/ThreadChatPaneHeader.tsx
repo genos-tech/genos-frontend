@@ -422,6 +422,14 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                             />
                             {t.threadAsk.headerButton.label}
                         </MenuItem>
+                        {chatType !== 3 && (
+                            <MenuItem onClick={copyThreadLink}>
+                                <ContentCopyRoundedIcon
+                                    sx={{ fontSize: 18, color: styles.accentColor }}
+                                />
+                                {t.chat.headers.copyThreadLink}
+                            </MenuItem>
+                        )}
                         {hasTask && (
                             <MenuItem onClick={openTaskHandler}>
                                 <AssignmentRoundedIcon
@@ -442,14 +450,6 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                                     sx={{ fontSize: 18, color: styles.accentColor }}
                                 />
                                 {t.chat.headers.threadNoteMenuItem}
-                            </MenuItem>
-                        )}
-                        {chatType !== 3 && (
-                            <MenuItem onClick={copyThreadLink}>
-                                <ContentCopyRoundedIcon
-                                    sx={{ fontSize: 18, color: styles.accentColor }}
-                                />
-                                {t.chat.headers.copyThreadLink}
                             </MenuItem>
                         )}
                     </Menu>
@@ -654,6 +654,17 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                             }}
                             items={[
                                 {
+                                    id: "copy-thread-link",
+                                    label: t.chat.headers.copyThreadLink,
+                                    icon: (
+                                        <ContentCopyRoundedIcon
+                                            sx={{ fontSize: 18, color: styles.accentColor }}
+                                        />
+                                    ),
+                                    visible: showCopyLink,
+                                    onClick: copyThreadLink,
+                                },
+                                {
                                     id: "create-task",
                                     label: t.chat.headers.threadTaskMenuItem,
                                     icon: (
@@ -674,17 +685,6 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                                     ),
                                     visible: showOpenNote,
                                     onClick: openNoteHandler,
-                                },
-                                {
-                                    id: "copy-thread-link",
-                                    label: t.chat.headers.copyThreadLink,
-                                    icon: (
-                                        <ContentCopyRoundedIcon
-                                            sx={{ fontSize: 18, color: styles.accentColor }}
-                                        />
-                                    ),
-                                    visible: showCopyLink,
-                                    onClick: copyThreadLink,
                                 },
                             ]}
                         />
