@@ -21,6 +21,7 @@ import { analytics } from "./services/analytics";
 import { startLongTaskObserver } from "./services/perfObserver";
 
 import { App } from "./App";
+import { bootI18n, resolveInitialLocale } from "./i18n";
 
 // The public marketing pages are code-split away from the app entry.
 // They are the only consumers of framer-motion, and nobody who opens
@@ -78,7 +79,7 @@ const publicPage = (Page: ComponentType) => (
     </Suspense>
 );
 
-createRoot(document.getElementById("root")!).render(
+const tree = (
     <Router>
         <Routes>
             {/* Public company / marketing page. Fully isolated from the auth
@@ -174,3 +175,27 @@ createRoot(document.getElementById("root")!).render(
         </Routes>
     </Router>
 );
+
+const mount = () => createRoot(document.getElementById("root")!).render(tree);
+
+// Gate the mount on the initial locale's catalog.
+//
+// The six non-English catalogs are lazy-loaded (`i18n/localeLoaders.ts`).
+// Two things depend on one being resolved before any app code runs:
+// `getMessages()` is synchronous and read by ~30 service modules, and a
+// render-first approach would show every non-English user a frame of
+// English before flipping.
+//
+// English needs no fetch, so English users mount synchronously exactly as
+// before — no added latency, not even a microtask. `bootI18n` swallows and
+// logs its own failures; the `.catch` here is a belt-and-braces guarantee
+// that a broken catalog chunk can never leave a white screen. It swallows
+// rather than mounting, so `.then(mount)` runs exactly once either way.
+const initialLocale = resolveInitialLocale();
+if (initialLocale === "en") {
+    mount();
+} else {
+    void bootI18n(initialLocale)
+        .catch(() => {})
+        .then(mount);
+}

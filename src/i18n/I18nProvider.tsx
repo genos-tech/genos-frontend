@@ -1,21 +1,9 @@
-import {
-    createContext,
-    ReactNode,
-    useCallback,
-    useContext,
-    useEffect,
-    useMemo,
-    useState,
-} from "react";
+import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from "react";
 
-import { ar } from "./locales/ar";
+import { getLoadedMessages, loadLocale } from "./localeLoaders";
 import { en } from "./locales/en";
-import { es } from "./locales/es";
-import { fr } from "./locales/fr";
-import { hi } from "./locales/hi";
-import { ja } from "./locales/ja";
-import { zh } from "./locales/zh";
-import { deepMerge, DeepPartial, Locale, Messages, RTL_LOCALES } from "./types";
+import { persistLocale, resolveInitialLocale } from "./localeSource";
+import { Locale, Messages, RTL_LOCALES } from "./types";
 
 /**
  * Centralized i18n layer. Mirrors the manual `ja` / `en` `Copy` pattern that
@@ -28,45 +16,15 @@ import { deepMerge, DeepPartial, Locale, Messages, RTL_LOCALES } from "./types";
  * NOT supported; they would defeat the type system.
  *
  * For non-React contexts (service errors, websocket handlers) use the
- * standalone `getMessages()` helper which reads localStorage directly.
+ * standalone `getMessages()` helper.
  *
  * Non-English dictionaries are `DeepPartial<Messages>` — missing keys
  * deep-merge-fall-back to the English value so translators can ship
- * incrementally without breaking the build.
+ * incrementally without breaking the build. They are also lazy-loaded
+ * (`localeLoaders.ts`); main.tsx awaits the initial one before mounting, so
+ * the first render already has the right catalog and no user sees English
+ * flash past.
  */
-
-const STORAGE_KEY = "genos-locale";
-
-const NON_EN_DICTIONARIES: Record<Exclude<Locale, "en">, DeepPartial<Messages>> = {
-    ja,
-    es,
-    fr,
-    zh,
-    ar,
-    hi,
-};
-
-const isLocale = (v: string | null): v is Locale =>
-    v === "en" || v === "ja" || v === "es" || v === "fr" || v === "zh" || v === "ar" || v === "hi";
-
-const navigatorLocale = (): Locale => {
-    if (typeof navigator === "undefined") return "en";
-    const lang = navigator.language.toLowerCase();
-    if (lang.startsWith("ja")) return "ja";
-    if (lang.startsWith("es")) return "es";
-    if (lang.startsWith("fr")) return "fr";
-    if (lang.startsWith("zh")) return "zh";
-    if (lang.startsWith("ar")) return "ar";
-    if (lang.startsWith("hi")) return "hi";
-    return "en";
-};
-
-const readInitialLocale = (): Locale => {
-    if (typeof window === "undefined") return "en";
-    const stored = window.localStorage.getItem(STORAGE_KEY);
-    if (isLocale(stored)) return stored;
-    return navigatorLocale();
-};
 
 interface I18nContextValue {
     t: Messages;
@@ -77,18 +35,34 @@ interface I18nContextValue {
 const I18nContext = createContext<I18nContextValue | null>(null);
 
 export const I18nProvider = ({ children }: { children: ReactNode }) => {
-    const [locale, setLocaleState] = useState<Locale>(readInitialLocale);
+    const [locale, setLocaleState] = useState<Locale>(resolveInitialLocale);
+    // Seeded from the cache, which main.tsx's boot gate has already filled
+    // for the initial locale. The effect below covers the paths the gate
+    // can't: a provider mounted under a locale that was never booted (the
+    // marketing pages mount their own provider), or a failed initial load.
+    const [t, setT] = useState<Messages>(() => getLoadedMessages(locale));
 
-    const t = useMemo<Messages>(() => {
-        if (locale === "en") return en;
-        return deepMerge(en, NON_EN_DICTIONARIES[locale]);
+    useEffect(() => {
+        let alive = true;
+        void loadLocale(locale).then((messages) => {
+            if (alive) setT(messages);
+        });
+        return () => {
+            alive = false;
+        };
     }, [locale]);
 
+    // Load BEFORE committing the switch so `locale` and `t` flip together.
+    // Setting the locale first would render the new language's direction and
+    // <html lang> against the old language's strings for a frame or two.
+    // Already-loaded locales resolve from cache in a microtask, so switching
+    // back to a previously used language stays instant.
     const setLocale = useCallback((l: Locale) => {
-        setLocaleState(l);
-        if (typeof window !== "undefined") {
-            window.localStorage.setItem(STORAGE_KEY, l);
-        }
+        void loadLocale(l).then((messages) => {
+            setT(messages);
+            setLocaleState(l);
+            persistLocale(l);
+        });
     }, []);
 
     // Reflect the locale on <html lang> + <html dir> so screen readers,
