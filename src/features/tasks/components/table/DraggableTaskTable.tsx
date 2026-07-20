@@ -786,6 +786,24 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
             prev.map((t) => (String(t.id) === String(dragged.id) ? updated : t))
         );
 
+        // Mirror the move onto the open preview's task object, the same
+        // way `handleRowUpdate` mirrors an inline cell edit. Without
+        // this the preview keeps the PRE-drag `parentTaskId` /
+        // `milestoneId` in its working copy, and the next metadata save
+        // from the preview (a tag edit, a status flip, ...) PUTs those
+        // stale values back — `sendUpdatedSpecificTask` always sends
+        // `parent_task_id` + `milestone` — silently reverting the drag.
+        if (useTM.currentPreviewTask && String(useTM.currentPreviewTask.id) === draggedId) {
+            useTM.setCurrentPreviewTask({
+                ...useTM.currentPreviewTask,
+                parentTaskId: Number(target.id),
+                milestoneId: target.milestoneId ?? null,
+                // Not part of the PUT (the backend re-derives it), but the
+                // subtask badge / diagram anchor read it locally.
+                rootTaskId: Number(target.rootTaskId ?? target.id),
+            });
+        }
+
         // Auto-expand the new parent so the reparented row stays
         // visible — otherwise it disappears into a collapsed subtree.
         setExpandedRows((prev) => {
