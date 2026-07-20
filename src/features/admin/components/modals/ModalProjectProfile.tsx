@@ -57,12 +57,15 @@ import { purplePalette } from "../../../../theme/purplePalette";
 import { ProjectProfileProps, UserProps } from "../../../../types/admin";
 import { ChannelKind } from "../../../../types/channel";
 import { AllChatProps } from "../../../../types/chat";
+import { ProjectLabelProps } from "../../../../types/tasks";
 import { buildAvatarSrc } from "../../../../utils/avatarSrc";
 import { extractYYYYMMDD } from "../../../../utils/dateUtils";
 import { ModalAddMembers } from "../../../chat/components/modals/ModalAddMembers";
 import { resolveLegacyChatId } from "../../../chat/utils/channelIdResolvers";
 import { leaveProject } from "../../services/leaveProject";
 import { updateProjectProfile } from "../../services/updateProjectProfile";
+import { ModalManageProjectLabels } from "../projectLabels/ModalManageProjectLabels";
+import { ProjectLabelChips } from "../projectLabels/ProjectLabelChips";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
@@ -399,6 +402,17 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
         );
         setProjectProfile(projectProfile);
     };
+
+    // Team-scoped labels on THIS project (the chips also shown in the
+    // task sidebar). Owner-only to manage, same gate as rename/transfer,
+    // and re-checked server-side. Held in local state rather than read
+    // straight off `projectProfile` so an assignment change re-renders
+    // without refetching the whole profile.
+    const [openManageLabels, setOpenManageLabels] = useState(false);
+    const [projectLabels, setProjectLabels] = useState<ProjectLabelProps[]>([]);
+    useEffect(() => {
+        setProjectLabels(projectProfile?.projectLabels ?? []);
+    }, [projectProfile?.projectLabels]);
 
     // Add-teammates flow. Open to ANY project member, not just the owner
     // (unlike rename / transfer above) — that was the ask, and the
@@ -1083,7 +1097,81 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                 </Box>
                                             </FormControl>
 
-                                            <Stack direction="row" spacing={4} sx={{ mt: 1 }}>
+                                            {/* Metadata row. `flexWrap` because this row now
+                                                carries four fields and the Tags chips are
+                                                variable-width — without it a heavily tagged
+                                                project pushes Created Date off the card. */}
+                                            <Stack
+                                                direction="row"
+                                                spacing={4}
+                                                sx={{ mt: 1, flexWrap: "wrap", rowGap: 2 }}
+                                            >
+                                                {/* Project tags — team-scoped labels used to
+                                                    organize the project list. Chips are visible
+                                                    to every member; only the owner gets the
+                                                    edit affordance, which mirrors the pencil on
+                                                    Code rather than shouting with its own
+                                                    button. */}
+                                                <FormControl>
+                                                    <FormLabel
+                                                        sx={{
+                                                            color: styles.labelColor,
+                                                            fontSize: "0.75rem",
+                                                            fontWeight: 600,
+                                                            textTransform: "uppercase",
+                                                            letterSpacing: "0.05em",
+                                                            mb: 0.5,
+                                                        }}
+                                                    >
+                                                        {t.admin.projectLabels.sectionLabel}
+                                                    </FormLabel>
+                                                    <Stack
+                                                        direction="row"
+                                                        spacing={0.5}
+                                                        alignItems="center"
+                                                    >
+                                                        {projectLabels.length > 0 ? (
+                                                            <ProjectLabelChips
+                                                                labels={projectLabels}
+                                                                size="md"
+                                                            />
+                                                        ) : (
+                                                            // Same em-dash placeholder Code
+                                                            // uses for an unset value, so the
+                                                            // row reads consistently.
+                                                            <Typography
+                                                                fontWeight={600}
+                                                                sx={{ color: styles.valueColor }}
+                                                            >
+                                                                —
+                                                            </Typography>
+                                                        )}
+                                                        {isProjectOwner && (
+                                                            <AppTooltip
+                                                                size="sm"
+                                                                title={
+                                                                    t.admin.projectLabels
+                                                                        .manageTooltip
+                                                                }
+                                                            >
+                                                                <IconButton
+                                                                    disabled={
+                                                                        !projectProfile?.projectId
+                                                                    }
+                                                                    size="sm"
+                                                                    variant="plain"
+                                                                    onClick={() =>
+                                                                        setOpenManageLabels(true)
+                                                                    }
+                                                                >
+                                                                    <EditIcon
+                                                                        sx={{ fontSize: 16 }}
+                                                                    />
+                                                                </IconButton>
+                                                            </AppTooltip>
+                                                        )}
+                                                    </Stack>
+                                                </FormControl>
                                                 <FormControl>
                                                     <FormLabel
                                                         sx={{
@@ -1354,6 +1442,18 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                 onConfirm={handleLeaveProject}
                 onCancel={() => setOpenLeaveConfirm(false)}
             />
+            {/* Owner-only. Mounted only once the profile has loaded so
+                `projectId` is real — every write is keyed on it. */}
+            {isProjectOwner && projectProfile?.projectId != null && (
+                <ModalManageProjectLabels
+                    assignedLabels={projectLabels}
+                    open={openManageLabels}
+                    projectId={projectProfile.projectId}
+                    teamId={myself.teamId}
+                    onAssignedChange={setProjectLabels}
+                    onClose={() => setOpenManageLabels(false)}
+                />
+            )}
             <ModalTransferOwner
                 open={openTransfer}
                 title={t.common.profileEdit.transferTitle}

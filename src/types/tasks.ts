@@ -28,6 +28,29 @@ export type TagListProps = {
     tagTextColor: string;
 };
 
+// A TEAM-scoped label applied to whole PROJECTS, used to organize a
+// long project list ("Client Work", "Q3", "Internal").
+//
+// Read the name carefully against `TagListProps` above — the two are
+// opposite relations and sit side by side on `ProjectProps`:
+//   • `projectTags`   — tags belonging to ONE project, applied to the
+//                       TASKS inside it. Identified by `tagName`.
+//   • `projectLabels` — labels from a team-wide catalog, applied to the
+//                       PROJECT itself. Identified by `labelId`.
+// Labels are addressed by id everywhere (assign, rename, delete) so a
+// rename is one server-side UPDATE instead of a rewrite of every
+// referencing row — the trap `projectTags` still lives with.
+export type ProjectLabelProps = {
+    labelId: number;
+    name: string;
+    color: string;
+    textColor: string;
+    // Only present on the catalog listing (`GET /project/label/`), where
+    // it powers the "used by N projects" blast-radius hint before a
+    // delete. Absent on the per-project payloads.
+    projectCount?: number;
+};
+
 export type ProjectProps = {
     projectId: number;
     projectName: string;
@@ -36,6 +59,8 @@ export type ProjectProps = {
     // editable from project settings.
     projectCode?: string | null;
     projectTags: TagListProps[];
+    // See ProjectLabelProps — NOT the same thing as projectTags.
+    projectLabels?: ProjectLabelProps[];
     isPrivate?: boolean;
     isJoined?: boolean;
     systemUserId?: string;
