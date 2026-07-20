@@ -43,7 +43,7 @@ import { SpotlightOverlay } from "./features/spotlight/SpotlightOverlay";
 import { SpotlightSettingsModal } from "./features/spotlight/SpotlightSettingsModal";
 import { CHAT_TYPE_CODE, SpotlightResult } from "./features/spotlight/types";
 import { useSpotlight } from "./features/spotlight/useSpotlight";
-import { ModalTaskDiagram } from "./features/tasks/diagram/components/ModalTaskDiagram";
+import { LazyTaskDiagram } from "./features/tasks/diagram/components/LazyTaskDiagram";
 import { UrlLinkModalProvider } from "./hooks/common/UrlLinkModalContext";
 import { useAnalyticsIdentity } from "./hooks/common/useAnalyticsIdentity";
 import { useAnalyticsPageviews } from "./hooks/common/useAnalyticsPageviews";
@@ -1244,7 +1244,7 @@ export const App = () => {
                                                                                 milestone. */}
                                                                                     {taskDiagramOpen &&
                                                                                         taskDiagramTarget && (
-                                                                                            <ModalTaskDiagram
+                                                                                            <LazyTaskDiagram
                                                                                                 myself={
                                                                                                     myself
                                                                                                 }

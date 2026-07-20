@@ -47,7 +47,7 @@ import { getServiceShortcutModifierKeys } from "../../../../utils/platform";
 import { LinkedPrCard } from "../../../integrations/components/LinkedPrCard";
 import { parsePrUrl } from "../../../integrations/utils/parsePrUrl";
 import { loadTaskNotes } from "../../../notes/task-notes/services/loadTaskNotes";
-import { ModalTaskDiagram } from "../../diagram/components/ModalTaskDiagram";
+import { LazyTaskDiagram } from "../../diagram/components/LazyTaskDiagram";
 import { DIAGRAM_LIFT } from "../../diagram/diagramZIndex";
 import { loadSpecificTask } from "../../services/loadSpecificTask";
 import { loadTaskActivities } from "../../services/loadTaskActivities";
@@ -2551,7 +2551,7 @@ const MilestonePreviewInner = ({
         <>
             {previewLayout}
             {milestone.taskId != null && milestone.projectId != null && (
-                <ModalTaskDiagram
+                <LazyTaskDiagram
                     myself={myself}
                     open={openTaskDiagram}
                     projectId={milestone.projectId}

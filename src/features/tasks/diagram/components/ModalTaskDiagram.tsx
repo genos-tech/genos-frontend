@@ -33,7 +33,9 @@ import { HEALTH_JOY_COLOR, HEALTH_TONE_COLOR } from "../utils/scheduleStatus";
 import { BurndownSparkline } from "./BurndownSparkline";
 import { TaskFlowCanvas } from "./TaskFlowCanvas";
 
-type Props = {
+// Exported so LazyTaskDiagram can mirror this signature without a value
+// import (a value import there would defeat the whole point).
+export type ModalTaskDiagramProps = {
     open: boolean;
     onClose: () => void;
     myself: UserProps;
@@ -79,7 +81,7 @@ export const ModalTaskDiagram = ({
     usePM,
     useSM,
     zIndex,
-}: Props) => {
+}: ModalTaskDiagramProps) => {
     const { mode } = useColorScheme();
     const { t } = useTranslation();
     const isDark = mode === "dark";

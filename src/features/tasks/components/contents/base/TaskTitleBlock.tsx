@@ -52,7 +52,7 @@ import { useNotificationsContext } from "../../../../../services/notifications/N
 import { UserProps } from "../../../../../types/admin";
 import { TaskNoteProps } from "../../../../../types/notes";
 import { TaskProps } from "../../../../../types/tasks";
-import { ModalTaskDiagram } from "../../../diagram/components/ModalTaskDiagram";
+import { LazyTaskDiagram } from "../../../diagram/components/LazyTaskDiagram";
 import { DIAGRAM_LIFT } from "../../../diagram/diagramZIndex";
 import { deleteEmptyTask } from "../../../services/deleteEmptyTask";
 import { isNoMainPanelVisible } from "../../../utils/mainPanelVisibility";
@@ -927,7 +927,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
             />
 
             {taskContent.id != null && taskContent.project?.projectId != null && (
-                <ModalTaskDiagram
+                <LazyTaskDiagram
                     open={openTaskDiagram}
                     projectId={Number(taskContent.project.projectId)}
                     myself={myself}
