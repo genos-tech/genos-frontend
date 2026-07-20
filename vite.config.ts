@@ -3,9 +3,15 @@ import react from "@vitejs/plugin-react-swc";
 import { visualizer } from "rollup-plugin-visualizer";
 import { defineConfig } from "vitest/config";
 
+import { bundleGuard } from "./scripts/bundleGuard";
+
 // https://vite.dev/config/
 export default defineConfig({
-    plugins: [react(), tailwindcss()],
+    // `bundleGuard` is build-only (it no-ops in dev/test) and fails the build
+    // if a chunk that must stay lazy becomes statically reachable from the
+    // entry. See scripts/bundleGuard.ts for why that check earns a hard
+    // failure while the size budget is only a warning.
+    plugins: [react(), tailwindcss(), bundleGuard()],
     server: {
         port: 3000,
         strictPort: true,
