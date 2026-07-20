@@ -31,7 +31,15 @@ export const activityHandlers: HandlerMap<ActivityRequests> = {
 
     loadActivityHistory: async ({ myself, accessToken }) => {
         await syncWithCheckpoint({
-            // Bumped to "activity-v5": chat-note (surface 8) activity meta
+            // Bumped to "activity-v6": the adapter now stores
+            // `firstLineMediaKind` so a media-only message (a GIF posts
+            // an image block and NO body_text) can be labelled instead
+            // of rendering an empty row. The field is written at adapt
+            // time, so rows already in IDB don't have it and an
+            // incremental sync never re-fetches them — same situation
+            // as the v3 bump below, same fix.
+            //
+            // Previous bump (activity-v5): chat-note (surface 8) activity meta
             // (chatType/chatId/threadId) was being DROPPED on the backend —
             // the Flask note_mention handler int()-parsed the thread-root
             // UUID, threw, and nulled chat_type in the same except, so
@@ -49,7 +57,7 @@ export const activityHandlers: HandlerMap<ActivityRequests> = {
             //   insufficient alone, the meta was never stored to re-adapt.
             // Previous bump (activity-v3): picked up `mentionedViaGroups`.
             // Previous bump (activity-v2): de-duped live-push vs REST ids.
-            key: "activity-v5",
+            key: "activity-v6",
             fetcher: async (since) => {
                 const response = await loadActivityHistory(myself, accessToken, since);
                 if (!response) {
