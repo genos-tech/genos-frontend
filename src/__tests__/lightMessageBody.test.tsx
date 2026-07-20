@@ -208,6 +208,94 @@ describe("LightMessageBody fidelity vs BlockNote", () => {
     });
 });
 
+describe("inline content stays valid inside <p>", () => {
+    // jsdom does NOT enforce HTML nesting rules, so a `<div>`/`<p>` inside
+    // the block's `<p class="bn-inline-content">` renders happily in tests
+    // and only shows up as a React console error in a real browser —
+    // which is exactly how it shipped once. Assert on the structure
+    // instead of trusting the renderer.
+    const BLOCK_LEVEL = "p, div, h1, h2, h3, ul, ol, li, section, article, blockquote";
+
+    const expectNoBlockLevelInside = (container: HTMLElement) => {
+        const offenders: string[] = [];
+        container.querySelectorAll("p.bn-inline-content").forEach((p) => {
+            p.querySelectorAll(BLOCK_LEVEL).forEach((el) => {
+                offenders.push(`${el.tagName.toLowerCase()}.${el.className || "(no class)"}`);
+            });
+        });
+        expect(offenders).toEqual([]);
+    };
+
+    it("renders a user mention with only inline elements", () => {
+        const content = [
+            {
+                type: "paragraph",
+                content: [
+                    { type: "text", text: "hi ", styles: {} },
+                    { type: "mention", props: { userId: "u2", userName: "Ada" } },
+                ],
+            },
+            { type: "paragraph", content: [] },
+        ];
+        const { container } = render(<LightMessageBody content={content} {...ctx} />);
+        expect(container.textContent).toContain("@Ada");
+        expectNoBlockLevelInside(container);
+    });
+
+    it("renders a group mention with only inline elements", () => {
+        const content = [
+            {
+                type: "paragraph",
+                content: [
+                    {
+                        type: "mentionGroup",
+                        props: { groupId: "3", groupName: "devs", memberCount: "4" },
+                    },
+                ],
+            },
+            { type: "paragraph", content: [] },
+        ];
+        const { container } = render(<LightMessageBody content={content} {...ctx} />);
+        expect(container.textContent).toContain("@devs");
+        expectNoBlockLevelInside(container);
+    });
+
+    it("renders a custom emoji with only inline elements", () => {
+        const content = [
+            {
+                type: "paragraph",
+                content: [
+                    {
+                        type: "customEmoji",
+                        props: { name: "party", url: "https://example.com/p.png" },
+                    },
+                ],
+            },
+            { type: "paragraph", content: [] },
+        ];
+        const { container } = render(<LightMessageBody content={content} {...ctx} />);
+        expectNoBlockLevelInside(container);
+    });
+
+    it("renders a link with only inline elements", () => {
+        const content = [
+            {
+                type: "paragraph",
+                content: [
+                    {
+                        type: "link",
+                        href: "https://example.com",
+                        content: [{ type: "text", text: "site", styles: { bold: true } }],
+                    },
+                ],
+            },
+            { type: "paragraph", content: [] },
+        ];
+        const { container } = render(<LightMessageBody content={content} {...ctx} />);
+        expectNoBlockLevelInside(container);
+    });
+});
+
 describe("canRenderLight routing", () => {
     const wrap = (blocks: any[]) => [...blocks, { type: "paragraph", content: [] }];
 

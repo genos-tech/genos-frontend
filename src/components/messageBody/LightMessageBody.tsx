@@ -63,8 +63,23 @@ export type LightMessageBodyProps = {
 /* Inline                                                              */
 /* ------------------------------------------------------------------ */
 
-/** User mention chip. Mirrors `CreateMentionSpec`'s render — same
- *  palette objects, same chip style, same click-to-open-profile. */
+/**
+ * User mention chip. Mirrors `CreateMentionSpec`'s render — same palette
+ * objects, same chip style, same click-to-open-profile.
+ *
+ * EVERY element a chip renders must be inline (`component="span"`).
+ * Inline content lives inside the block's `<p class="bn-inline-content">`,
+ * and Joy defaults would emit `<div>` (Box) and `<p>` (Typography), which
+ * are both illegal inside a `<p>` — React logs "cannot be a descendant of
+ * <p>" and the browser's parser would close the paragraph early.
+ *
+ * The BlockNote path gets away with the same Joy defaults only because
+ * ProseMirror mounts custom inline specs into a detached container, so
+ * the invalid nesting is assembled by DOM APIs rather than by parsing.
+ * Rendering one contiguous React tree here removes that accident, so the
+ * markup has to actually be valid. See the nesting test in
+ * `lightMessageBody.test.tsx`.
+ */
 const MentionChip = ({
     userId,
     userName,
@@ -84,22 +99,38 @@ const MentionChip = ({
 
     return (
         <>
-            <Box sx={mentionChipSx(palette)} onClick={() => setOpenUserProfile(true)}>
-                <Typography fontWeight="bold" level="body-sm" sx={{ color: palette.text }}>
+            <Box
+                component="span"
+                sx={mentionChipSx(palette)}
+                onClick={() => setOpenUserProfile(true)}
+            >
+                <Typography
+                    component="span"
+                    fontWeight="bold"
+                    level="body-sm"
+                    sx={{ color: palette.text }}
+                >
                     @{displayName}
                 </Typography>
             </Box>
-            <UserProfile
-                isYou={myself.userId === userId}
-                myself={myself}
-                openUserProfile={openUserProfile}
-                setMyself={setMyself}
-                setOpenUserProfile={setOpenUserProfile}
-                socket={socket}
-                useCM={useCM}
-                user={useTEM.teamMemberProfiles[userId]}
-                useUISM={useUISM}
-            />
+            {/* Mounted only once opened. The BlockNote spec renders this
+                unconditionally, which means one whole modal component tree
+                per mention in the viewport — pure waste for a dialog that
+                is closed ~always, and the reason a mention used to drag
+                AuthProvider into places that only wanted to show text. */}
+            {openUserProfile && (
+                <UserProfile
+                    isYou={myself.userId === userId}
+                    myself={myself}
+                    openUserProfile={openUserProfile}
+                    setMyself={setMyself}
+                    setOpenUserProfile={setOpenUserProfile}
+                    socket={socket}
+                    useCM={useCM}
+                    user={useTEM.teamMemberProfiles[userId]}
+                    useUISM={useUISM}
+                />
+            )}
         </>
     );
 };
@@ -122,9 +153,14 @@ const MentionGroupChip = ({
         if (Number.isFinite(parsed) && parsed > 0) openGroupModal(parsed);
     };
     return (
-        <Box sx={mentionChipSx(GROUP_PALETTE)} onClick={handleClick}>
+        <Box component="span" sx={mentionChipSx(GROUP_PALETTE)} onClick={handleClick}>
             <GroupRoundedIcon sx={{ fontSize: 14, color: GROUP_PALETTE.text, mr: 0.25 }} />
-            <Typography fontWeight="bold" level="body-sm" sx={{ color: GROUP_PALETTE.text }}>
+            <Typography
+                component="span"
+                fontWeight="bold"
+                level="body-sm"
+                sx={{ color: GROUP_PALETTE.text }}
+            >
                 @{groupName}
                 {Number(memberCount) > 0 ? ` (${memberCount})` : ""}
             </Typography>
