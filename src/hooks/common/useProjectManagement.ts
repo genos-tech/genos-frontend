@@ -98,6 +98,7 @@ export const useProjectManagement = (
                                 projectId: pickedProjectId,
                                 projectName: loadedTeamProjects[i].projectName,
                                 projectTags: loadedTeamProjects[i].projectTags,
+                                projectLabels: loadedTeamProjects[i].projectLabels,
                                 isPrivate: loadedTeamProjects[i].isPrivate,
                                 systemUserId: loadedTeamProjects[i].systemUserId,
                             });
@@ -118,6 +119,7 @@ export const useProjectManagement = (
                                     projectId: pickedProjectId,
                                     projectName: loadedTeamProjects[i].projectName,
                                     projectTags: loadedTeamProjects[i].projectTags,
+                                    projectLabels: loadedTeamProjects[i].projectLabels,
                                     isPrivate: loadedTeamProjects[i].isPrivate,
                                     systemUserId: loadedTeamProjects[i].systemUserId,
                                 });
@@ -138,6 +140,7 @@ export const useProjectManagement = (
                                 projectId: pickedProjectId,
                                 projectName: loadedTeamProjects[i].projectName,
                                 projectTags: loadedTeamProjects[i].projectTags,
+                                projectLabels: loadedTeamProjects[i].projectLabels,
                                 isPrivate: loadedTeamProjects[i].isPrivate,
                                 systemUserId: loadedTeamProjects[i].systemUserId,
                             });
