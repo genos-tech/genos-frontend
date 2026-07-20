@@ -1020,11 +1020,11 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                                     >
                                                                         <MemberRoleControl
                                                                             canManage={canManage}
+                                                                            userId={member.userId}
                                                                             isSelf={
                                                                                 member.userId ===
                                                                                 myself.userId
                                                                             }
-                                                                            userId={member.userId}
                                                                             memberRole={
                                                                                 member.memberRole
                                                                             }
