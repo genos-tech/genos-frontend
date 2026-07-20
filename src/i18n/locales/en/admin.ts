@@ -245,8 +245,7 @@ export const admin = {
     // per-project tags applied to tasks.
     projectLabels: {
         sectionLabel: "Tags",
-        none: "No tags yet",
-        manageButton: "Manage",
+        manageTooltip: "Edit tags",
         manageHeading: "Project tags",
         manageDescription:
             "Tags are shared across the team. Tick a tag to put it on this project; editing or deleting one changes it for every project that uses it.",

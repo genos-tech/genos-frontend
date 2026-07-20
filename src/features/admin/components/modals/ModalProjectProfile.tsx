@@ -11,7 +11,6 @@ import AssignmentIcon from "@mui/icons-material/Assignment";
 import CloseIcon from "@mui/icons-material/Close";
 import EditIcon from "@mui/icons-material/Edit";
 import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
-import LocalOfferRoundedIcon from "@mui/icons-material/LocalOfferRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import PersonAddAltRoundedIcon from "@mui/icons-material/PersonAddAltRounded";
 import SearchIcon from "@mui/icons-material/Search";
@@ -916,68 +915,6 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                 )}
                                             </FormControl>
 
-                                            {/* Project tags — team-scoped labels used to
-                                                organize the project list. Chips are visible
-                                                to every member; only the owner gets the
-                                                Manage affordance. */}
-                                            <FormControl>
-                                                <FormLabel
-                                                    sx={{
-                                                        color: styles.labelColor,
-                                                        fontSize: "0.75rem",
-                                                        fontWeight: 600,
-                                                        textTransform: "uppercase",
-                                                        letterSpacing: "0.05em",
-                                                        mb: 0.5,
-                                                    }}
-                                                >
-                                                    {t.admin.projectLabels.sectionLabel}
-                                                </FormLabel>
-                                                <Stack
-                                                    direction="row"
-                                                    spacing={1}
-                                                    alignItems="center"
-                                                    sx={{ flexWrap: "wrap", rowGap: 0.5 }}
-                                                >
-                                                    {projectLabels.length > 0 ? (
-                                                        <ProjectLabelChips
-                                                            labels={projectLabels}
-                                                            size="md"
-                                                        />
-                                                    ) : (
-                                                        <Typography
-                                                            level="body-sm"
-                                                            sx={{ color: styles.labelColor }}
-                                                        >
-                                                            {t.admin.projectLabels.none}
-                                                        </Typography>
-                                                    )}
-                                                    {isProjectOwner && (
-                                                        <Button
-                                                            size="sm"
-                                                            variant="soft"
-                                                            disabled={!projectProfile?.projectId}
-                                                            startDecorator={
-                                                                <LocalOfferRoundedIcon
-                                                                    sx={{ fontSize: 14 }}
-                                                                />
-                                                            }
-                                                            sx={{
-                                                                borderRadius: "8px",
-                                                                fontSize: "12px",
-                                                                fontWeight: 600,
-                                                                flexShrink: 0,
-                                                            }}
-                                                            onClick={() =>
-                                                                setOpenManageLabels(true)
-                                                            }
-                                                        >
-                                                            {t.admin.projectLabels.manageButton}
-                                                        </Button>
-                                                    )}
-                                                </Stack>
-                                            </FormControl>
-
                                             <FormControl>
                                                 <Stack
                                                     direction={{ xs: "column", sm: "row" }}
@@ -1160,7 +1097,81 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                 </Box>
                                             </FormControl>
 
-                                            <Stack direction="row" spacing={4} sx={{ mt: 1 }}>
+                                            {/* Metadata row. `flexWrap` because this row now
+                                                carries four fields and the Tags chips are
+                                                variable-width — without it a heavily tagged
+                                                project pushes Created Date off the card. */}
+                                            <Stack
+                                                direction="row"
+                                                spacing={4}
+                                                sx={{ mt: 1, flexWrap: "wrap", rowGap: 2 }}
+                                            >
+                                                {/* Project tags — team-scoped labels used to
+                                                    organize the project list. Chips are visible
+                                                    to every member; only the owner gets the
+                                                    edit affordance, which mirrors the pencil on
+                                                    Code rather than shouting with its own
+                                                    button. */}
+                                                <FormControl>
+                                                    <FormLabel
+                                                        sx={{
+                                                            color: styles.labelColor,
+                                                            fontSize: "0.75rem",
+                                                            fontWeight: 600,
+                                                            textTransform: "uppercase",
+                                                            letterSpacing: "0.05em",
+                                                            mb: 0.5,
+                                                        }}
+                                                    >
+                                                        {t.admin.projectLabels.sectionLabel}
+                                                    </FormLabel>
+                                                    <Stack
+                                                        direction="row"
+                                                        spacing={0.5}
+                                                        alignItems="center"
+                                                    >
+                                                        {projectLabels.length > 0 ? (
+                                                            <ProjectLabelChips
+                                                                labels={projectLabels}
+                                                                size="md"
+                                                            />
+                                                        ) : (
+                                                            // Same em-dash placeholder Code
+                                                            // uses for an unset value, so the
+                                                            // row reads consistently.
+                                                            <Typography
+                                                                fontWeight={600}
+                                                                sx={{ color: styles.valueColor }}
+                                                            >
+                                                                —
+                                                            </Typography>
+                                                        )}
+                                                        {isProjectOwner && (
+                                                            <AppTooltip
+                                                                size="sm"
+                                                                title={
+                                                                    t.admin.projectLabels
+                                                                        .manageTooltip
+                                                                }
+                                                            >
+                                                                <IconButton
+                                                                    disabled={
+                                                                        !projectProfile?.projectId
+                                                                    }
+                                                                    size="sm"
+                                                                    variant="plain"
+                                                                    onClick={() =>
+                                                                        setOpenManageLabels(true)
+                                                                    }
+                                                                >
+                                                                    <EditIcon
+                                                                        sx={{ fontSize: 16 }}
+                                                                    />
+                                                                </IconButton>
+                                                            </AppTooltip>
+                                                        )}
+                                                    </Stack>
+                                                </FormControl>
                                                 <FormControl>
                                                     <FormLabel
                                                         sx={{
