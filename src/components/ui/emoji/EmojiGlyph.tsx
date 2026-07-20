@@ -5,7 +5,7 @@ import {
     getTeamEmojiSnapshot,
     subscribeTeamEmoji,
 } from "../../../services/teamEmojiStore";
-import { CUSTOM_EMOJI_SHORTCODE_RE, CustomEmojiImg } from "../../editors/CustomEmoji";
+import { CUSTOM_EMOJI_SHORTCODE_RE, CustomEmojiImg } from "../../editors/CustomEmojiImg";
 
 // Renders a reaction emoji string: unicode glyphs pass through as text;
 // a ":name:" shortcode resolves against the team catalog to an image.

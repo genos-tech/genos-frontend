@@ -8,10 +8,13 @@ import { loadChatNoteMeta } from "../../features/notes/chat-notes/services/loadC
 import { loadChatNotesByChatId } from "../../features/notes/chat-notes/services/loadChatNotesByChatId";
 import { moveChatNote as moveChatNoteApi } from "../../features/notes/chat-notes/services/moveChatNote";
 import { addNote } from "../../features/notes/common/services/addNote";
-import {
-    applyNoteBodyToYjs,
-    noteDocumentName,
-} from "../../features/notes/common/services/applyNoteBodyToYjs";
+// NOTE: `applyNoteBodyToYjs` is imported DYNAMICALLY at its single call
+// site below, not here. Its module statically pulls @blocknote/core,
+// @blocknote/core/yjs, @hocuspocus/provider and yjs — i.e. the whole
+// ~724 kB gzip vendor-editor chunk — and this hook is reachable from
+// App.tsx through useServiceInitialization, so a static import puts
+// that chunk in the entry's critical path for every page load,
+// including signin. See vite.config.ts' manualChunks comments.
 import { deleteNoteRole } from "../../features/notes/common/services/deleteNoteRole";
 import { loadNoteRoles } from "../../features/notes/common/services/loadNoteRoles";
 import { loadNoteVersions } from "../../features/notes/common/services/loadNoteVersions";
@@ -789,6 +792,12 @@ export const useNoteManagement = (
             if (typeCode === 1) setCurrentMyNote(fetched as MyNoteProps);
             else setCurrentTaskNote(fetched as TaskNoteProps);
         }
+        // Loaded on demand — this is a rare, already-async path (an
+        // approved agent note write), so paying a chunk fetch here is
+        // free next to keeping the editor stack out of every page load.
+        const { applyNoteBodyToYjs, noteDocumentName } = await import(
+            "../../features/notes/common/services/applyNoteBodyToYjs"
+        );
         const status = await applyNoteBodyToYjs({
             documentName: noteDocumentName(ref.note_type, ref.note_id),
             blocks: fetched.body ?? [],

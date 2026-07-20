@@ -7,7 +7,7 @@ import { useColorScheme } from "@mui/joy/styles";
 
 import { useTeamEmojiContext } from "../../context/TeamEmojiContext";
 import { UserProps } from "../../types/admin";
-import { CustomEmojiImg } from "../editors/CustomEmoji";
+import { CustomEmojiImg } from "../editors/CustomEmojiImg";
 import { AppTooltip } from "../ui/AppTooltip";
 
 type Props = {
