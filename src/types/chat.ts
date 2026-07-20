@@ -4,6 +4,11 @@ import { UserProps } from "./admin";
 import { ReactionProps } from "./common";
 import { ProjectProps } from "./tasks";
 
+// Media a message body can carry that produces NO preview text of its
+// own, so a list row has to be labelled from the blocks instead. See
+// `derivePreviewMediaKind` in `features/chat/utils/common.ts`.
+export type PreviewMediaKind = "gif" | "image" | "video" | "audio" | "file" | "table";
+
 // Chat Props
 export type MDMMemberProps = {
     userId: string;
@@ -112,6 +117,12 @@ export type ActivityMessageProps = {
     projectId?: number;
     projectName?: string;
     firstLineContent: string;
+    // Set when the activity's message is media-only, so the feed can
+    // label a row that has no `firstLineContent` at all (a GIF message
+    // stores no preview text — see `derivePreviewMediaKind`). Absent on
+    // rows cached before this field existed; they re-populate on the
+    // next activity fetch.
+    firstLineMediaKind?: PreviewMediaKind;
     latestReaction: {
         emoji: string;
         sender: UserProps;

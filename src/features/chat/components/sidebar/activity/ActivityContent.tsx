@@ -2,9 +2,12 @@ import React from "react";
 import { Box, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { EmojiText } from "../../../../../components/ui/emoji/EmojiText";
+import { useTranslation } from "../../../../../i18n";
 import { UserProps } from "../../../../../types/admin";
 import { ActivityMessageProps } from "../../../../../types/chat";
 import { GroupedReactionProps } from "../../../../../types/common";
+import { MEDIA_LABEL_KEYS } from "../../../utils/common";
 import { ActivityReactions } from "./ActivityReactions";
 
 interface ActivityContentProps {
@@ -19,7 +22,18 @@ export const ActivityContent: React.FC<ActivityContentProps> = ({
     groupedReactions,
 }) => {
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
+
+    // A media-only message (GIF, image) has no preview text, so the row
+    // would render an empty box. Label it from the media kind the
+    // adapter carried over instead.
+    const mediaKind = activity.firstLineContent ? undefined : activity.firstLineMediaKind;
+    const preview = mediaKind ? (
+        t.chat.sidebar[MEDIA_LABEL_KEYS[mediaKind]]
+    ) : (
+        <EmojiText text={activity.firstLineContent} />
+    );
 
     // For non-reaction activities, show the first line content
     if (activity.activityType !== 2) {
@@ -49,10 +63,12 @@ export const ActivityContent: React.FC<ActivityContentProps> = ({
                             WebkitBoxOrient: "vertical",
                             overflow: "hidden",
                             textOverflow: "ellipsis",
+                            fontStyle: mediaKind ? "italic" : "normal",
+                            opacity: mediaKind ? 0.75 : 1,
                             wordBreak: "break-word",
                         }}
                     >
-                        {activity.firstLineContent}
+                        {preview}
                     </Typography>
                 </Box>
             </Stack>
@@ -95,7 +111,7 @@ export const ActivityContent: React.FC<ActivityContentProps> = ({
                         wordBreak: "break-word",
                     }}
                 >
-                    {activity.firstLineContent}
+                    {preview}
                 </Typography>
             </Box>
         </Box>

@@ -21,6 +21,7 @@ import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithSt
 import { GMAvatar } from "../../../../components/ui/avatars/GMAvatar";
 import { MDMAvatar } from "../../../../components/ui/avatars/MDMAvatar";
 import { ProjectAvatar } from "../../../../components/ui/avatars/ProjectAvatar";
+import { EmojiText } from "../../../../components/ui/emoji/EmojiText";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
@@ -949,7 +950,7 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                                     WebkitLineClamp: 2,
                                 }}
                             >
-                                {flaggedMessage.contentText}
+                                <EmojiText text={flaggedMessage.contentText} />
                             </Typography>
                         </Box>
                     </Stack>
