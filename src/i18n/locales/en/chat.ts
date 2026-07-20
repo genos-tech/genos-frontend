@@ -55,6 +55,15 @@ export const chat = {
         navActivity: "Recent Activities (last 30 days)",
         navActivityShort: "Activity",
         currentSectionFallback: "Messages",
+        // Placeholder labels for a list row whose message is media-only
+        // and so has no preview text of its own (a GIF, an image, a
+        // table). Rendered italic + muted, not as message text.
+        previewGif: "GIF",
+        previewImage: "Image",
+        previewVideo: "Video",
+        previewAudio: "Audio",
+        previewFile: "File",
+        previewTable: "Table",
         unreadCount: "{count, plural, one {# unread message} other {# unread messages}}",
         allCaughtUp: "All caught up",
         newGroupMessageMenu: "New Group Message",

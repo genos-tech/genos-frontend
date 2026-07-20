@@ -2,6 +2,7 @@ import React from "react";
 import { Box, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { EmojiText } from "../../../../../components/ui/emoji/EmojiText";
 import { UserProps } from "../../../../../types/admin";
 import { ActivityMessageProps } from "../../../../../types/chat";
 import { GroupedReactionProps } from "../../../../../types/common";
@@ -52,7 +53,7 @@ export const ActivityContent: React.FC<ActivityContentProps> = ({
                             wordBreak: "break-word",
                         }}
                     >
-                        {activity.firstLineContent}
+                        <EmojiText text={activity.firstLineContent} />
                     </Typography>
                 </Box>
             </Stack>
@@ -95,7 +96,7 @@ export const ActivityContent: React.FC<ActivityContentProps> = ({
                         wordBreak: "break-word",
                     }}
                 >
-                    {activity.firstLineContent}
+                    <EmojiText text={activity.firstLineContent} />
                 </Typography>
             </Box>
         </Box>

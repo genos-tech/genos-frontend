@@ -20,6 +20,14 @@ import { upgradeInsecureUrl } from "../../utils/downloadUtils";
 // Matches the server-side name rule (view regex + CharField(50)).
 export const CUSTOM_EMOJI_SHORTCODE_RE = /^:([a-z0-9_+-]{1,50}):$/;
 
+// Same pattern UNANCHORED, for splitting a mixed line of text into
+// alternating literal / shortcode parts (`EmojiText`). Reactions store
+// exactly one shortcode so they use the anchored form above; preview
+// lines ("hi :parrot: bye") need this one. Deliberately not `/g` — it's
+// used with `String.split`, which ignores the flag but where a shared
+// global regex's `lastIndex` state would be a footgun.
+export const CUSTOM_EMOJI_SHORTCODE_SPLIT_RE = /:([a-z0-9_+-]{1,50}):/;
+
 export const CustomEmojiImg = ({
     name,
     url,
