@@ -5,7 +5,7 @@ import { init, SearchIndex } from "emoji-mart";
 
 import { getMessages } from "../../i18n";
 import { getTeamEmojiSnapshot } from "../../services/teamEmojiStore";
-import { CustomEmojiImg } from "./CustomEmoji";
+import { CustomEmojiImg } from "./CustomEmojiImg";
 
 // Initialize emoji-mart's SearchIndex once at module load. The Promise is
 // intentionally not awaited; subsequent search() calls will start working as
