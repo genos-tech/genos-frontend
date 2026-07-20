@@ -29,6 +29,7 @@ import {
 import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
 
+import { derivePreviewMediaKind, MEDIA_LABEL_KEYS } from "../../features/chat/utils/common";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import {
     ChatHistoryEntry,
@@ -46,6 +47,7 @@ import { useTranslation } from "../../i18n";
 import { AllChatProps } from "../../types/chat";
 import { useAvatarContext } from "../ui/avatars/AvatarContext";
 import { UserAvatar } from "../ui/avatars/UserAvatar";
+import { EmojiText } from "../ui/emoji/EmojiText";
 
 const MEDIA_URL = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
@@ -323,7 +325,15 @@ const HistoryRow = ({
                         color: isDark ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.45)",
                     }}
                 >
-                    {subtitle}
+                    {/* Message-preview subtitles carry custom emoji as
+                        their `:name:` shortcode (see `EmojiText`). Every
+                        row kind funnels through here, so resolving at
+                        this one site covers chat / thread rows without
+                        touching the string-typed prop; subtitles that
+                        are plain labels (project name, chat name) have
+                        no shortcodes and take the component's fast
+                        path. */}
+                    <EmojiText text={subtitle} />
                 </Typography>
             ) : null}
         </Box>
@@ -462,6 +472,14 @@ export const HistoryModal = ({
     const findChat = (chatType: number, chatId: number): AllChatProps | undefined =>
         useCM.allChats.find((c) => c.chatType === chatType && c.chatId === String(chatId));
 
+    // "GIF" / "Image" / … for a chat whose latest message is media-only
+    // and so has no preview text at all. `undefined` (not "") so the
+    // subtitle line stays absent when there's nothing to say.
+    const chatMediaLabel = (chat: AllChatProps | undefined): string | undefined => {
+        const kind = derivePreviewMediaKind(chat?.latestMessage?.content);
+        return kind ? t.chat.sidebar[MEDIA_LABEL_KEYS[kind]] : undefined;
+    };
+
     const renderEntry = (entry: HistoryEntry) => {
         switch (entry.kind) {
             case "chat": {
@@ -473,11 +491,16 @@ export const HistoryModal = ({
                 // to a "Message #id" stub so the row still reads as
                 // distinct from neighboring rows in the same chat.
                 // Plain chat rows mirror the sidebar's
-                // `ChatListItemMessage` and show `latestMessageText`.
+                // `ChatListItemMessage` and show `latestMessageText` —
+                // including its media fallback, so a chat whose latest
+                // message is a GIF gets the same label there and here
+                // instead of losing its subtitle line. (Per-message rows
+                // can't do this: a `HistoryEntry` persists only text, no
+                // blocks — they fall back to the "Message #id" stub.)
                 const subtitle =
                     entry.messageId != null
                         ? entry.messageText || `Message #${entry.messageId}`
-                        : chat?.latestMessageText || undefined;
+                        : chat?.latestMessageText || chatMediaLabel(chat);
                 return (
                     <HistoryRow
                         key={`chat-${entry.chatType}-${entry.chatId}-${entry.messageId ?? 0}-${entry.openedAt}`}
