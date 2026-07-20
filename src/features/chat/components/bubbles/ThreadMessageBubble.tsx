@@ -4,7 +4,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { useNavigate } from "react-router-dom";
 import { Socket } from "socket.io-client";
 
-import { BnChatPreview } from "../../../../components/editors/bnChatPreview";
+import { MessageBody } from "../../../../components/messageBody/MessageBody";
 import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
 import { EmojiPicker } from "../../../../components/ui/emoji/EmojiPicker";
 import { EmojiReaction } from "../../../../components/ui/emoji/EmojiReaction";
@@ -321,7 +321,7 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
                 className={previewWrapClassName || undefined}
                 sx={{ mt: isSimpleBubble ? 0 : 0.25 }}
             >
-                <BnChatPreview
+                <MessageBody
                     key={`${thread.chatId}-${thread.threadId}-${message.messageId}-${thread.chatType}-${message.tsUpdated}`}
                     content={message.content}
                     isSent={isSent}
@@ -629,7 +629,7 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
                                     className={previewWrapClassName || undefined}
                                     sx={{ mt: isSimpleBubble ? 0 : 0.5 }}
                                 >
-                                    <BnChatPreview
+                                    <MessageBody
                                         key={`${thread.chatId}-${thread.threadId}-${message.messageId}-${thread.chatType}-${message.tsUpdated}`}
                                         content={message.content}
                                         isSent={isSent}

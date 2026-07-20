@@ -8,7 +8,7 @@ import { Box, IconButton, Sheet, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
-import { BnChatPreview } from "../../../../../../components/editors/bnChatPreview";
+import { MessageBody } from "../../../../../../components/messageBody/MessageBody";
 import { AppTooltip } from "../../../../../../components/ui/AppTooltip";
 import { useResolvedUserName } from "../../../../../../components/ui/avatars/AvatarContext";
 import { UserAvatar } from "../../../../../../components/ui/avatars/UserAvatar";
@@ -401,7 +401,7 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
 
     const commentBody = (
         <Box className={previewWrapClassName || undefined}>
-            <BnChatPreview
+            <MessageBody
                 key={`${comment.taskId}-${comment.commentId}-${comment.tsSent}`}
                 content={comment.commentBody}
                 customClassName="task-comment-preview"
