@@ -18,6 +18,7 @@ import { ModalAssignGMTags } from "../modals/ModalAssignGMTags";
 import { ChatListItemProps } from "./ChatListItem.types";
 import { ChatListItemActions } from "./ChatListItemActions";
 import { ChatListItemAvatar } from "./ChatListItemAvatar";
+import { chatListItemPropsAreEqual } from "./chatListItemEquality";
 import { ChatListItemMessage } from "./ChatListItemMessage";
 import { ChatListItemTitle } from "./ChatListItemTitle";
 
@@ -39,7 +40,9 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
         socket,
         useTEM,
         useCM,
+        liveRef,
         useTM,
+        selected,
     } = props;
 
     const { accessToken } = useAuth();
@@ -60,34 +63,28 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
         []
     );
 
-    const {
-        isPinned,
-        setIsPinned,
-        selected,
-        isYou,
-        onClickHandler,
-        splitOpenHandler,
-        pinChatHandler,
-    } = useChatListItem({
-        chat,
-        myself,
-        useCM,
-        useTM,
-        isPinnedChat,
-    });
+    const { isPinned, setIsPinned, isYou, onClickHandler, splitOpenHandler, pinChatHandler } =
+        useChatListItem({ chat, myself, isPinnedChat });
 
     const handlePinClick = (event: React.MouseEvent) => {
         event.stopPropagation();
         // v3 pin/unpin. The args are vestigial — `pinChatHandler`
         // reads `chat.chatId` / `chat.isPinned` from the closure now,
         // not from the call args. Kept for prop-shape compatibility.
-        pinChatHandler(chat.chatId as unknown as number, chat.chatType, useCM.funcSetAllChats);
+        pinChatHandler(
+            chat.chatId as unknown as number,
+            chat.chatType,
+            liveRef.current.useCM.funcSetAllChats
+        );
         setIsPinned(!isPinned);
     };
 
     const handleSplitClick = (event: React.MouseEvent) => {
         event.stopPropagation();
-        splitOpenHandler(useCM);
+        // `liveRef.current`, not the captured props: this row is memoized,
+        // so the captured prop can be several notifies stale and the
+        // handler guards on live `isSubChatVisible` / `currentSubChat`.
+        splitOpenHandler(liveRef.current);
     };
 
     const handleAddMembersClick = (event: React.MouseEvent) => {
@@ -176,7 +173,9 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
                     },
                 }}
                 onClick={() => {
-                    onClickHandler(useCM);
+                    // See `handleSplitClick` — live read, not the
+                    // possibly-stale captured prop.
+                    onClickHandler(liveRef.current);
                 }}
             >
                 {/* Unread indicator line */}
@@ -284,4 +283,4 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
             )}
         </ListItem>
     );
-});
+}, chatListItemPropsAreEqual);

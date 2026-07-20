@@ -905,13 +905,13 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                                     the active and past views. */}
                                 <AppTooltip size="sm" title={t.chat.listItem.unflag}>
                                     <IconButton
+                                        size="sm"
+                                        variant="plain"
                                         color={
                                             viewMode === "active" && tmpIsFlagged
                                                 ? "danger"
                                                 : "neutral"
                                         }
-                                        size="sm"
-                                        variant="plain"
                                         sx={{
                                             transition: "all 0.2s ease",
                                             "&:hover": {
