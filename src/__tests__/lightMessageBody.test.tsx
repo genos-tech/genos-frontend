@@ -19,11 +19,30 @@ import {
 } from "@blocknote/core";
 import { BlockNoteView } from "@blocknote/mantine";
 import { useCreateBlockNote } from "@blocknote/react";
-import { render } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { CssVarsProvider } from "@mui/joy";
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { canRenderLight } from "../components/messageBody/lightBodySupport";
 import { LightMessageBody } from "../components/messageBody/LightMessageBody";
+import { UrlLinkModalProvider } from "../hooks/common/UrlLinkModalContext";
+
+// The body renders PR unfurls, which read the access token. Keep the
+// rest of AuthContext real so the surrounding module graph is unchanged.
+const authState = vi.hoisted(() => ({ accessToken: null as string | null }));
+vi.mock("../context/AuthContext", async (importOriginal) => ({
+    ...(await importOriginal<Record<string, unknown>>()),
+    useAuth: () => ({ accessToken: authState.accessToken }),
+}));
+
+// Stand in for the real card, which fetches from GitHub and renders
+// nothing when the integration isn't connected. What's under test here
+// is the wiring — that the body finds PR urls and asks for a card — not
+// the card's own behaviour.
+vi.mock("../features/integrations/components/LinkedPrCard", () => ({
+    LinkedPrCard: ({ url }: { url: string }) => <div data-testid="pr-card">{url}</div>,
+}));
 
 const ctx = {
     myself: { userId: "u1" } as any,
@@ -293,6 +312,112 @@ describe("inline content stays valid inside <p>", () => {
         ];
         const { container } = render(<LightMessageBody content={content} {...ctx} />);
         expectNoBlockLevelInside(container);
+    });
+});
+
+describe("link and PR-unfurl behaviour carries over from BnChatPreview", () => {
+    // Both of these are things the BlockNote path did that the light path
+    // must keep doing — a message with a link, or with a PR URL sitting in
+    // plain text, still qualifies for the light path, so losing them would
+    // be a silent regression for a whole class of ordinary messages.
+    afterEach(() => {
+        authState.accessToken = null;
+    });
+
+    const linkContent = [
+        {
+            type: "paragraph",
+            content: [
+                {
+                    type: "link",
+                    href: "https://example.com/page",
+                    content: [{ type: "text", text: "click me", styles: {} }],
+                },
+            ],
+        },
+        { type: "paragraph", content: [] },
+    ];
+
+    it("routes anchor clicks through the URL-link modal instead of navigating", async () => {
+        const openModalByHref = vi.fn(() => "opened" as const);
+        const user = userEvent.setup();
+
+        render(
+            <UrlLinkModalProvider value={{ openModalByHref }}>
+                <LightMessageBody content={linkContent} {...ctx} />
+            </UrlLinkModalProvider>
+        );
+
+        await user.click(screen.getByText("click me"));
+        expect(openModalByHref).toHaveBeenCalledWith("https://example.com/page");
+    });
+
+    it("still renders the anchor when no modal provider is mounted", () => {
+        const { container } = render(<LightMessageBody content={linkContent} {...ctx} />);
+        const anchor = container.querySelector("a");
+        expect(anchor?.getAttribute("href")).toBe("https://example.com/page");
+    });
+
+    it("unfurls a GitHub PR url found in plain text", () => {
+        authState.accessToken = "token";
+        const content = [
+            {
+                type: "paragraph",
+                content: [
+                    {
+                        type: "text",
+                        text: "see https://github.com/acme/repo/pull/42 please",
+                        styles: {},
+                    },
+                ],
+            },
+            { type: "paragraph", content: [] },
+        ];
+        // The message itself must still qualify for the light path —
+        // otherwise this would silently be testing the fallback.
+        expect(canRenderLight(content)).toBe(true);
+
+        render(
+            <CssVarsProvider>
+                <LightMessageBody content={content} {...ctx} />
+            </CssVarsProvider>
+        );
+        expect(screen.getByTestId("pr-card").textContent).toBe(
+            "https://github.com/acme/repo/pull/42"
+        );
+    });
+
+    it("renders no unfurl when there is no PR url", () => {
+        authState.accessToken = "token";
+        render(
+            <CssVarsProvider>
+                <LightMessageBody content={linkContent} {...ctx} />
+            </CssVarsProvider>
+        );
+        expect(screen.queryByTestId("pr-card")).toBeNull();
+    });
+
+    it("renders no unfurl when signed out", () => {
+        authState.accessToken = null;
+        const content = [
+            {
+                type: "paragraph",
+                content: [
+                    {
+                        type: "text",
+                        text: "https://github.com/acme/repo/pull/42",
+                        styles: {},
+                    },
+                ],
+            },
+            { type: "paragraph", content: [] },
+        ];
+        render(
+            <CssVarsProvider>
+                <LightMessageBody content={content} {...ctx} />
+            </CssVarsProvider>
+        );
+        expect(screen.queryByTestId("pr-card")).toBeNull();
     });
 });
 

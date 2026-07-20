@@ -15,8 +15,12 @@ import { UserProps } from "../types/admin";
 import { TaskCommentProps } from "../types/tasks";
 
 // BnChatPreview transitively imports the BlockNote stack — stub it.
-vi.mock("../components/editors/bnChatPreview", () => ({
-    BnChatPreview: () => <div data-testid="bn-preview" />,
+// The comment body renders through `MessageBody` now (light DOM path,
+// BlockNote only as a fallback). Stubbed here for the same reason the
+// old `BnChatPreview` mock existed: this file is about the ⋮ menu, and
+// the real body pulls in auth + URL-modal context it has no use for.
+vi.mock("../components/messageBody/MessageBody", () => ({
+    MessageBody: () => <div data-testid="message-body" />,
 }));
 
 // Socket-driven reaction strip and the emoji picker aren't under test.

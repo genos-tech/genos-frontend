@@ -27,14 +27,19 @@
  * `lightBodySupport.ts`.
  */
 
-import { Fragment, useState } from "react";
+import { Fragment, useMemo, useRef, useState } from "react";
 import GroupRoundedIcon from "@mui/icons-material/GroupRounded";
-import { Box, Typography } from "@mui/joy";
+import { Box, Stack, Typography } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
+import { useAuth } from "../../context/AuthContext";
 import { useMentionGroupModal } from "../../context/MentionGroupModalContext";
 import { UserProfile } from "../../features/admin/components/modals/ModalUserProfile";
+import { LinkedPrCard } from "../../features/integrations/components/LinkedPrCard";
+import { extractPrUrlsFromBlocks } from "../../features/integrations/utils/extractPrUrls";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
+import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
+import { useAnchorClickIntercept } from "../../hooks/common/useAnchorClickIntercept";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
@@ -48,6 +53,10 @@ import {
 import { useResolvedUserName } from "../ui/avatars/AvatarContext";
 
 type AnyBlock = Record<string, any>;
+
+// Same cap `BnChatPreview` uses — anyone pasting more PR links than this
+// is abusing the channel; the rest are silently dropped.
+const MAX_PR_UNFURLS = 4;
 
 export type LightMessageBodyProps = {
     content: AnyBlock[];
@@ -353,13 +362,48 @@ export const LightMessageBody = ({ content, ...ctx }: LightMessageBodyProps) => 
     // that exactly or every bubble gains a trailing gap.
     const blocks = content.slice(0, -1);
 
+    // Anchor clicks open the in-app URL modal instead of navigating away.
+    // This has to live here rather than in `MessageBody`, whose fallback
+    // branch returns before the light path — hooks there would be
+    // conditional. The ref sits on the `.bn-editor` root below, an
+    // ancestor of every `<a>` this renders. Null provider (signin/signup)
+    // degrades to normal link behaviour, same as the editor path.
+    const urlLinkModal = useUrlLinkModal();
+    const editorBoxRef = useRef<HTMLDivElement>(null);
+    useAnchorClickIntercept(editorBoxRef, urlLinkModal);
+
+    // GitHub PR links unfurl to a card under the body. Mirrors
+    // `BnChatPreview`; `extractPrUrlsFromBlocks` reads both link nodes
+    // and raw URLs sitting in plain text, so a message that is otherwise
+    // pure text still unfurls.
+    const { accessToken } = useAuth();
+    const prUrls = useMemo(
+        () => extractPrUrlsFromBlocks(content).slice(0, MAX_PR_UNFURLS),
+        [content]
+    );
+
     return (
-        <div className="bn-editor bn-default-styles">
-            <div className="bn-block-group" data-node-type="blockGroup">
-                {blocks.map((block, i) => (
-                    <BlockNode key={i} block={block} ctx={ctx} />
-                ))}
+        <div ref={editorBoxRef}>
+            <div className="bn-editor bn-default-styles">
+                <div className="bn-block-group" data-node-type="blockGroup">
+                    {blocks.map((block, i) => (
+                        <BlockNode key={i} block={block} ctx={ctx} />
+                    ))}
+                </div>
             </div>
+
+            {prUrls.length > 0 && accessToken && (
+                <Stack spacing={0.75} sx={{ mt: 0.75, mb: 0.5 }}>
+                    {prUrls.map((url) => (
+                        <LinkedPrCard
+                            key={url}
+                            accessToken={accessToken}
+                            url={url}
+                            hideOnNotConnected
+                        />
+                    ))}
+                </Stack>
+            )}
         </div>
     );
 };
