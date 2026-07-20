@@ -957,122 +957,147 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                 )}
                                             </FormControl>
 
-                                            <FormControl>
-                                                <Stack
-                                                    direction={{ xs: "column", sm: "row" }}
-                                                    alignItems={{
-                                                        xs: "stretch",
-                                                        sm: "center",
-                                                    }}
-                                                    justifyContent="space-between"
-                                                    spacing={{ xs: 1, sm: 0 }}
-                                                    sx={{ mb: 1 }}
-                                                >
+                                            {/* The member list is a SIBLING of the FormControl,
+                                                not a child. Joy allows only one control component
+                                                per FormControl, and the list now holds a role
+                                                <Select> per row — with the search <Input> that
+                                                was two controls in one instance. */}
+                                            <Box sx={{ display: "flex", flexDirection: "column" }}>
+                                                <FormControl>
                                                     <Stack
-                                                        alignItems="center"
-                                                        direction="row"
-                                                        spacing={1}
+                                                        direction={{ xs: "column", sm: "row" }}
+                                                        alignItems={{
+                                                            xs: "stretch",
+                                                            sm: "center",
+                                                        }}
+                                                        justifyContent="space-between"
+                                                        spacing={{ xs: 1, sm: 0 }}
+                                                        sx={{ mb: 1 }}
                                                     >
-                                                        <FormLabel
-                                                            sx={{
-                                                                color: styles.labelColor,
-                                                                fontSize: "0.75rem",
-                                                                fontWeight: 600,
-                                                                textTransform: "uppercase",
-                                                                letterSpacing: "0.05em",
-                                                                mb: 0,
-                                                            }}
+                                                        <Stack
+                                                            alignItems="center"
+                                                            direction="row"
+                                                            spacing={1}
                                                         >
-                                                            {fmt(t.admin.projectProfile.members, {
-                                                                filtered: filteredMembers.length,
-                                                                total:
-                                                                    projectProfile?.projectMembers
-                                                                        ?.length || 0,
-                                                            })}
-                                                        </FormLabel>
-                                                        {/* Any member can add teammates — no
+                                                            <FormLabel
+                                                                sx={{
+                                                                    color: styles.labelColor,
+                                                                    fontSize: "0.75rem",
+                                                                    fontWeight: 600,
+                                                                    textTransform: "uppercase",
+                                                                    letterSpacing: "0.05em",
+                                                                    mb: 0,
+                                                                }}
+                                                            >
+                                                                {fmt(
+                                                                    t.admin.projectProfile.members,
+                                                                    {
+                                                                        filtered:
+                                                                            filteredMembers.length,
+                                                                        total:
+                                                                            projectProfile
+                                                                                ?.projectMembers
+                                                                                ?.length || 0,
+                                                                    }
+                                                                )}
+                                                            </FormLabel>
+                                                            {/* Any member can add teammates — no
                                                             owner gate. Disabled until the
                                                             profile (and so the project id)
                                                             has loaded. */}
-                                                        <Button
-                                                            disabled={!projectProfile?.projectId}
-                                                            size="sm"
-                                                            variant="soft"
+                                                            <Button
+                                                                disabled={
+                                                                    !projectProfile?.projectId
+                                                                }
+                                                                size="sm"
+                                                                variant="soft"
+                                                                startDecorator={
+                                                                    <PersonAddAltRoundedIcon
+                                                                        sx={{ fontSize: 14 }}
+                                                                    />
+                                                                }
+                                                                sx={{
+                                                                    borderRadius: "8px",
+                                                                    fontSize: "12px",
+                                                                    fontWeight: 600,
+                                                                    flexShrink: 0,
+                                                                }}
+                                                                onClick={() =>
+                                                                    setOpenAddMembers(true)
+                                                                }
+                                                            >
+                                                                {t.common.addMembers.openButton}
+                                                            </Button>
+                                                        </Stack>
+                                                        <Input
+                                                            placeholder={
+                                                                t.admin.projectProfile
+                                                                    .searchMembers
+                                                            }
+                                                            value={memberSearchQuery}
+                                                            onChange={(e) =>
+                                                                setMemberSearchQuery(
+                                                                    e.target.value
+                                                                )
+                                                            }
                                                             startDecorator={
-                                                                <PersonAddAltRoundedIcon
-                                                                    sx={{ fontSize: 14 }}
+                                                                <SearchIcon
+                                                                    sx={{
+                                                                        color: styles.accentColor,
+                                                                        fontSize: "18px",
+                                                                    }}
                                                                 />
                                                             }
+                                                            endDecorator={
+                                                                memberSearchQuery && (
+                                                                    <IconButton
+                                                                        size="sm"
+                                                                        variant="plain"
+                                                                        onClick={() =>
+                                                                            setMemberSearchQuery(
+                                                                                ""
+                                                                            )
+                                                                        }
+                                                                        sx={{
+                                                                            minWidth: "24px",
+                                                                            minHeight: "24px",
+                                                                            borderRadius: "50%",
+                                                                        }}
+                                                                    >
+                                                                        <CloseIcon
+                                                                            sx={{
+                                                                                fontSize: "16px",
+                                                                            }}
+                                                                        />
+                                                                    </IconButton>
+                                                                )
+                                                            }
                                                             sx={{
-                                                                borderRadius: "8px",
-                                                                fontSize: "12px",
-                                                                fontWeight: 600,
-                                                                flexShrink: 0,
+                                                                width: { xs: "100%", sm: "220px" },
+                                                                maxWidth: "100%",
+                                                                "--Input-focusedThickness": "1px",
+                                                                "--Input-radius": "8px",
+                                                                background: isDark
+                                                                    ? "rgba(0,0,0,0.3)"
+                                                                    : "rgba(255,255,255,0.8)",
+                                                                border: `1px solid ${styles.border}`,
+                                                                fontSize: "14px",
+                                                                transition: "all 0.2s ease",
+                                                                "&:hover": {
+                                                                    borderColor:
+                                                                        styles.accentColor,
+                                                                },
+                                                                "&:focus-within": {
+                                                                    borderColor:
+                                                                        styles.accentColor,
+                                                                    boxShadow: isDark
+                                                                        ? "0 0 0 2px rgba(124,58,237,0.2)"
+                                                                        : "0 0 0 2px rgba(124,58,237,0.1)",
+                                                                },
                                                             }}
-                                                            onClick={() => setOpenAddMembers(true)}
-                                                        >
-                                                            {t.common.addMembers.openButton}
-                                                        </Button>
+                                                        />
                                                     </Stack>
-                                                    <Input
-                                                        placeholder={
-                                                            t.admin.projectProfile.searchMembers
-                                                        }
-                                                        value={memberSearchQuery}
-                                                        onChange={(e) =>
-                                                            setMemberSearchQuery(e.target.value)
-                                                        }
-                                                        startDecorator={
-                                                            <SearchIcon
-                                                                sx={{
-                                                                    color: styles.accentColor,
-                                                                    fontSize: "18px",
-                                                                }}
-                                                            />
-                                                        }
-                                                        endDecorator={
-                                                            memberSearchQuery && (
-                                                                <IconButton
-                                                                    size="sm"
-                                                                    variant="plain"
-                                                                    onClick={() =>
-                                                                        setMemberSearchQuery("")
-                                                                    }
-                                                                    sx={{
-                                                                        minWidth: "24px",
-                                                                        minHeight: "24px",
-                                                                        borderRadius: "50%",
-                                                                    }}
-                                                                >
-                                                                    <CloseIcon
-                                                                        sx={{ fontSize: "16px" }}
-                                                                    />
-                                                                </IconButton>
-                                                            )
-                                                        }
-                                                        sx={{
-                                                            width: { xs: "100%", sm: "220px" },
-                                                            maxWidth: "100%",
-                                                            "--Input-focusedThickness": "1px",
-                                                            "--Input-radius": "8px",
-                                                            background: isDark
-                                                                ? "rgba(0,0,0,0.3)"
-                                                                : "rgba(255,255,255,0.8)",
-                                                            border: `1px solid ${styles.border}`,
-                                                            fontSize: "14px",
-                                                            transition: "all 0.2s ease",
-                                                            "&:hover": {
-                                                                borderColor: styles.accentColor,
-                                                            },
-                                                            "&:focus-within": {
-                                                                borderColor: styles.accentColor,
-                                                                boxShadow: isDark
-                                                                    ? "0 0 0 2px rgba(124,58,237,0.2)"
-                                                                    : "0 0 0 2px rgba(124,58,237,0.1)",
-                                                            },
-                                                        }}
-                                                    />
-                                                </Stack>
+                                                </FormControl>
                                                 <Box
                                                     className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                                                     sx={{
@@ -1160,7 +1185,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                         </Box>
                                                     )}
                                                 </Box>
-                                            </FormControl>
+                                            </Box>
 
                                             {/* Metadata row. `flexWrap` because this row now
                                                 carries four fields and the Tags chips are
