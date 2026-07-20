@@ -846,100 +846,122 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                             </FormControl>
 
                                             {teamProfile.teamMembers.length > 0 && (
-                                                <FormControl>
-                                                    <Stack
-                                                        direction={{ xs: "column", sm: "row" }}
-                                                        justifyContent="space-between"
-                                                        spacing={{ xs: 1, sm: 0 }}
-                                                        sx={{ mb: 1 }}
-                                                        alignItems={{
-                                                            xs: "stretch",
-                                                            sm: "center",
-                                                        }}
-                                                    >
-                                                        <FormLabel
-                                                            sx={{
-                                                                color: styles.labelColor,
-                                                                fontSize: "0.75rem",
-                                                                fontWeight: 600,
-                                                                textTransform: "uppercase",
-                                                                letterSpacing: "0.05em",
-                                                                mb: 0,
+                                                // The member list is a SIBLING of the
+                                                // FormControl, not a child. Joy allows only one
+                                                // control component per FormControl, and the
+                                                // list now holds a role <Select> per row — with
+                                                // the search <Input> that was two controls in
+                                                // one instance ("A FormControl can contain only
+                                                // one control component" in the console).
+                                                <Box
+                                                    sx={{
+                                                        display: "flex",
+                                                        flexDirection: "column",
+                                                    }}
+                                                >
+                                                    <FormControl>
+                                                        <Stack
+                                                            direction={{ xs: "column", sm: "row" }}
+                                                            justifyContent="space-between"
+                                                            spacing={{ xs: 1, sm: 0 }}
+                                                            sx={{ mb: 1 }}
+                                                            alignItems={{
+                                                                xs: "stretch",
+                                                                sm: "center",
                                                             }}
                                                         >
-                                                            {fmt(t.admin.teamProfile.members, {
-                                                                filtered: filteredMembers.length,
-                                                                total: teamProfile.teamMembers
-                                                                    .length,
-                                                            })}
-                                                        </FormLabel>
-                                                        <Input
-                                                            value={memberSearchQuery}
-                                                            endDecorator={
-                                                                memberSearchQuery && (
-                                                                    <IconButton
-                                                                        size="sm"
-                                                                        variant="plain"
-                                                                        sx={{
-                                                                            minWidth: "24px",
-                                                                            minHeight: "24px",
-                                                                            borderRadius: "50%",
-                                                                        }}
-                                                                        onClick={() =>
-                                                                            setMemberSearchQuery(
-                                                                                ""
-                                                                            )
-                                                                        }
-                                                                    >
-                                                                        <CloseIcon
+                                                            <FormLabel
+                                                                sx={{
+                                                                    color: styles.labelColor,
+                                                                    fontSize: "0.75rem",
+                                                                    fontWeight: 600,
+                                                                    textTransform: "uppercase",
+                                                                    letterSpacing: "0.05em",
+                                                                    mb: 0,
+                                                                }}
+                                                            >
+                                                                {fmt(t.admin.teamProfile.members, {
+                                                                    filtered:
+                                                                        filteredMembers.length,
+                                                                    total: teamProfile.teamMembers
+                                                                        .length,
+                                                                })}
+                                                            </FormLabel>
+                                                            <Input
+                                                                value={memberSearchQuery}
+                                                                endDecorator={
+                                                                    memberSearchQuery && (
+                                                                        <IconButton
+                                                                            size="sm"
+                                                                            variant="plain"
                                                                             sx={{
-                                                                                fontSize: "16px",
+                                                                                minWidth: "24px",
+                                                                                minHeight: "24px",
+                                                                                borderRadius:
+                                                                                    "50%",
                                                                             }}
-                                                                        />
-                                                                    </IconButton>
-                                                                )
-                                                            }
-                                                            placeholder={
-                                                                t.admin.teamProfile.searchMembers
-                                                            }
-                                                            startDecorator={
-                                                                <SearchIcon
-                                                                    sx={{
-                                                                        color: styles.accentColor,
-                                                                        fontSize: "18px",
-                                                                    }}
-                                                                />
-                                                            }
-                                                            sx={{
-                                                                width: { xs: "100%", sm: "220px" },
-                                                                maxWidth: "100%",
-                                                                "--Input-focusedThickness": "1px",
-                                                                "--Input-radius": "8px",
-                                                                background: isDark
-                                                                    ? "rgba(0,0,0,0.3)"
-                                                                    : "rgba(255,255,255,0.8)",
-                                                                border: `1px solid ${styles.border}`,
-                                                                fontSize: "14px",
-                                                                transition: "all 0.2s ease",
-                                                                "&:hover": {
-                                                                    borderColor:
-                                                                        styles.accentColor,
-                                                                },
-                                                                "&:focus-within": {
-                                                                    borderColor:
-                                                                        styles.accentColor,
-                                                                    boxShadow: isDark
-                                                                        ? "0 0 0 2px rgba(124,58,237,0.2)"
-                                                                        : "0 0 0 2px rgba(124,58,237,0.1)",
-                                                                },
-                                                            }}
-                                                            onChange={(e) =>
-                                                                setMemberSearchQuery(
-                                                                    e.target.value
-                                                                )
-                                                            }
-                                                        />
-                                                    </Stack>
+                                                                            onClick={() =>
+                                                                                setMemberSearchQuery(
+                                                                                    ""
+                                                                                )
+                                                                            }
+                                                                        >
+                                                                            <CloseIcon
+                                                                                sx={{
+                                                                                    fontSize:
+                                                                                        "16px",
+                                                                                }}
+                                                                            />
+                                                                        </IconButton>
+                                                                    )
+                                                                }
+                                                                placeholder={
+                                                                    t.admin.teamProfile
+                                                                        .searchMembers
+                                                                }
+                                                                startDecorator={
+                                                                    <SearchIcon
+                                                                        sx={{
+                                                                            color: styles.accentColor,
+                                                                            fontSize: "18px",
+                                                                        }}
+                                                                    />
+                                                                }
+                                                                sx={{
+                                                                    width: {
+                                                                        xs: "100%",
+                                                                        sm: "220px",
+                                                                    },
+                                                                    maxWidth: "100%",
+                                                                    "--Input-focusedThickness":
+                                                                        "1px",
+                                                                    "--Input-radius": "8px",
+                                                                    background: isDark
+                                                                        ? "rgba(0,0,0,0.3)"
+                                                                        : "rgba(255,255,255,0.8)",
+                                                                    border: `1px solid ${styles.border}`,
+                                                                    fontSize: "14px",
+                                                                    transition: "all 0.2s ease",
+                                                                    "&:hover": {
+                                                                        borderColor:
+                                                                            styles.accentColor,
+                                                                    },
+                                                                    "&:focus-within": {
+                                                                        borderColor:
+                                                                            styles.accentColor,
+                                                                        boxShadow: isDark
+                                                                            ? "0 0 0 2px rgba(124,58,237,0.2)"
+                                                                            : "0 0 0 2px rgba(124,58,237,0.1)",
+                                                                    },
+                                                                }}
+                                                                onChange={(e) =>
+                                                                    setMemberSearchQuery(
+                                                                        e.target.value
+                                                                    )
+                                                                }
+                                                            />
+                                                        </Stack>
+                                                    </FormControl>
                                                     <Box
                                                         className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                                                         sx={{
@@ -998,11 +1020,11 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                                     >
                                                                         <MemberRoleControl
                                                                             canManage={canManage}
+                                                                            userId={member.userId}
                                                                             isSelf={
                                                                                 member.userId ===
                                                                                 myself.userId
                                                                             }
-                                                                            userId={member.userId}
                                                                             memberRole={
                                                                                 member.memberRole
                                                                             }
@@ -1042,7 +1064,7 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                             </Box>
                                                         )}
                                                     </Box>
-                                                </FormControl>
+                                                </Box>
                                             )}
 
                                             <FormControl sx={{ mt: 1 }}>
