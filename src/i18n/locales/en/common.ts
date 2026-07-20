@@ -53,6 +53,15 @@ export const common = {
         headingProject: "Add members to {projectName}",
         headingGM: "Add members to {gmName}",
     },
+    // Permission roles shared by Team / Project / GM. Distinct from
+    // `admin.role.*`, which labels the user's job title.
+    memberRoles: {
+        owner: "Owner",
+        editor: "Editor",
+        viewer: "Viewer",
+        sectionLabel: "Role",
+        changeFailed: "Couldn't change that member's role.",
+    },
     profileEdit: {
         rename: "Rename",
         save: "Save",

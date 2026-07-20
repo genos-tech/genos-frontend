@@ -31,9 +31,13 @@ import { Socket } from "socket.io-client";
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
 import { FileSizeRejectionSnackbar } from "../../../../components/ui/feedback/FileSizeRejectionSnackbar";
 import { useFileSizeGuard } from "../../../../components/ui/feedback/useFileSizeGuard";
+import { MemberRoleControl } from "../../../../components/ui/memberRoles/MemberRoleControl";
 import { ModalLeaveConfirm } from "../../../../components/ui/misc/ModalLeaveConfirm";
 import { ModalTransferOwner } from "../../../../components/ui/misc/ModalTransferOwner";
-import { ProfileModalStyles } from "../../../../components/ui/styles/commonStyle";
+import {
+    PROFILE_MODAL_Z_INDEX,
+    ProfileModalStyles,
+} from "../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
@@ -42,7 +46,9 @@ import { fmt, useTranslation } from "../../../../i18n";
 import { TeamProfileProps, UserProps } from "../../../../types/admin";
 import { buildAvatarSrc } from "../../../../utils/avatarSrc";
 import { extractYYYYMMDD } from "../../../../utils/dateUtils";
+import { canManageMembers, MemberRole, resolveMyRole } from "../../../../utils/memberRoles";
 import { leaveTeam } from "../../services/leaveTeam";
+import { setTeamMemberRole } from "../../services/setTeamMemberRole";
 import { updateTeamProfile } from "../../services/updateTeamProfile";
 import { ModalInviteMembers } from "./ModalInviteMembers";
 
@@ -95,6 +101,33 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
     // which lists the user's remaining teams plus create/join forms.
     const [openLeaveConfirm, setOpenLeaveConfirm] = useState(false);
     const isTeamOwner = myself.userId === teamProfile.teamOwnerId;
+
+    // Owner OR editor may manage: invite, rename, change the image, and
+    // set other members' roles. Only the owner may transfer ownership.
+    //
+    // `resolveMyRole` overlays `owner` from `teamOwnerId` — the server
+    // never stores "owner" on a member row, so reading `memberRole`
+    // directly here would deny the actual owner.
+    const myRole = resolveMyRole(myself.userId, teamProfile.teamOwnerId, teamProfile.teamMembers);
+    const canManage = canManageMembers(myRole);
+
+    // Role edits are written straight to the server; mirror the result
+    // into `teamProfile` so the chip/picker re-renders without refetching
+    // the whole team.
+    const handleMemberRoleChange = async (
+        userId: string,
+        nextRole: MemberRole
+    ): Promise<boolean> => {
+        const ok = await setTeamMemberRole(teamProfile.teamId, userId, nextRole, accessToken);
+        if (!ok) return false;
+        setTeamProfile({
+            ...teamProfile,
+            teamMembers: teamProfile.teamMembers.map((m) =>
+                String(m.userId) === String(userId) ? { ...m, memberRole: nextRole } : m
+            ),
+        });
+        return true;
+    };
 
     // Inline rename + transfer-ownership flow (owner-only). Both PUT
     // through the same endpoint (`updateTeamProfile`). Renames update
@@ -406,7 +439,7 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                             <AssignmentIcon sx={{ fontSize: 100 }} />
                                         </Avatar>
 
-                                        {myself.userId === teamProfile.teamOwnerId && (
+                                        {canManage && (
                                             <Box
                                                 sx={{
                                                     position: "absolute",
@@ -577,7 +610,7 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                                     {teamProfile.teamName}
                                                                 </Typography>
                                                             </Box>
-                                                            {isTeamOwner && (
+                                                            {canManage && (
                                                                 <Tooltip
                                                                     size="sm"
                                                                     variant="outlined"
@@ -750,7 +783,11 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                         }
                                                     </Typography>
                                                 </Stack>
-                                                {isTeamOwner && (
+                                                {/* Invite is ordinary management (this was THE
+                                                    bottleneck — one person for every new hire),
+                                                    so editors get it. Transferring ownership is
+                                                    ownership itself and stays with the owner. */}
+                                                {canManage && (
                                                     <Box
                                                         sx={{
                                                             display: "flex",
@@ -783,20 +820,27 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                         >
                                                             {t.admin.inviteMembers.openButton}
                                                         </Button>
-                                                        <Button
-                                                            color="neutral"
-                                                            size="sm"
-                                                            sx={{ borderRadius: "8px" }}
-                                                            variant="outlined"
-                                                            startDecorator={
-                                                                <SwapHorizRoundedIcon
-                                                                    sx={{ fontSize: 16 }}
-                                                                />
-                                                            }
-                                                            onClick={() => setOpenTransfer(true)}
-                                                        >
-                                                            {t.common.profileEdit.transferOwner}
-                                                        </Button>
+                                                        {isTeamOwner && (
+                                                            <Button
+                                                                color="neutral"
+                                                                size="sm"
+                                                                sx={{ borderRadius: "8px" }}
+                                                                variant="outlined"
+                                                                startDecorator={
+                                                                    <SwapHorizRoundedIcon
+                                                                        sx={{ fontSize: 16 }}
+                                                                    />
+                                                                }
+                                                                onClick={() =>
+                                                                    setOpenTransfer(true)
+                                                                }
+                                                            >
+                                                                {
+                                                                    t.common.profileEdit
+                                                                        .transferOwner
+                                                                }
+                                                            </Button>
+                                                        )}
                                                     </Box>
                                                 )}
                                             </FormControl>
@@ -942,6 +986,34 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                                         useCM={useCM}
                                                                         useUISM={useUISM}
                                                                     />
+                                                                    {/* Role sits at the row's
+                                                                        trailing edge: a chip for
+                                                                        everyone, a picker for
+                                                                        managers. The owner always
+                                                                        renders as a chip — their
+                                                                        role changes by transfer,
+                                                                        not by this control. */}
+                                                                    <Box
+                                                                        sx={{ ml: "auto", pl: 1 }}
+                                                                    >
+                                                                        <MemberRoleControl
+                                                                            canManage={canManage}
+                                                                            userId={member.userId}
+                                                                            memberRole={
+                                                                                member.memberRole
+                                                                            }
+                                                                            ownerUserId={
+                                                                                teamProfile.teamOwnerId
+                                                                            }
+                                                                            popupZIndex={
+                                                                                PROFILE_MODAL_Z_INDEX +
+                                                                                2
+                                                                            }
+                                                                            onChange={
+                                                                                handleMemberRoleChange
+                                                                            }
+                                                                        />
+                                                                    </Box>
                                                                 </ListItemButton>
                                                             ))
                                                         ) : (
