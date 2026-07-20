@@ -29,7 +29,15 @@ export interface UserLite {
 export interface ChannelMember {
     id: string;
     userId: string;
+    /** Channel-native vocabulary, load-bearing for messaging. For the
+     *  shared permission axis use `memberRole` below — do NOT read this
+     *  to decide what a user may do. */
     role: "owner" | "admin" | "member" | "system";
+    /** Shared permission role (editor/viewer), derived server-side from
+     *  `role` ("admin" -> editor, "member" -> viewer). The OWNER is not
+     *  encoded here — `Channel.ownerId` is authoritative — so always
+     *  render/gate through `resolveDisplayRole` (utils/memberRoles.ts). */
+    memberRole?: string;
     tsJoined: string;
     /** Denormalized user display info. Present on every member row so
      *  the FE sidebar avatar/name rendering doesn't need a parallel
