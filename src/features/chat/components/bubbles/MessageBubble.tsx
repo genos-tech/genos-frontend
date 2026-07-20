@@ -4,7 +4,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { useNavigate } from "react-router-dom";
 import { Socket } from "socket.io-client";
 
-import { BnChatPreview } from "../../../../components/editors/bnChatPreview";
+import { MessageBody } from "../../../../components/messageBody/MessageBody";
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { useResolvedUserName } from "../../../../components/ui/avatars/AvatarContext";
 import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
@@ -547,7 +547,7 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
                         mt: isSimpleBubble ? 0 : 0.25,
                     }}
                 >
-                    <BnChatPreview
+                    <MessageBody
                         key={`${chat.chatId}-${message.messageId}-${chat.chatType}-${message.tsUpdated}`}
                         content={message.content}
                         isSent={isSent}
@@ -900,7 +900,7 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
                                             }
                                         }}
                                     >
-                                        <BnChatPreview
+                                        <MessageBody
                                             key={`${chat.chatId}-${message.messageId}-${chat.chatType}-${message.tsUpdated}`}
                                             content={message.content}
                                             isSent={isSent}

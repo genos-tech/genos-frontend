@@ -50,17 +50,22 @@ export const mentionChipSx = (palette: MentionPalette) =>
 // it's a useful UX signal — when *you* are the one being mentioned, the
 // chip pops with a different colour so the eye lands on it during a
 // scan of a long message list.
-const USER_SELF_PALETTE: MentionPalette = {
+// Exported so the light message-body renderer (`LightMessageBody`) can
+// paint identical chips without instantiating a BlockNote editor. Both
+// paths must read the SAME palette objects — a mention rendered by the
+// fast path and one rendered by the BlockNote fallback appear in the
+// same message list and any drift would be visible side by side.
+export const USER_SELF_PALETTE: MentionPalette = {
     bg: "rgba(245, 158, 11, 0.18)",
     bgHover: "rgba(245, 158, 11, 0.32)",
     text: "#d97706",
 };
-const USER_OTHER_PALETTE: MentionPalette = {
+export const USER_OTHER_PALETTE: MentionPalette = {
     bg: "rgba(236, 72, 153, 0.15)",
     bgHover: "rgba(236, 72, 153, 0.28)",
     text: "#db2777",
 };
-const GROUP_PALETTE: MentionPalette = {
+export const GROUP_PALETTE: MentionPalette = {
     bg: "rgba(34, 197, 94, 0.15)",
     bgHover: "rgba(34, 197, 94, 0.28)",
     text: "#16a34a",
