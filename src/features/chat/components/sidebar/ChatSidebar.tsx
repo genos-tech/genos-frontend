@@ -40,6 +40,7 @@ import { UserProps } from "../../../../types/admin";
 import { isMac } from "../../../../utils/platform";
 import { useChatRouting } from "../../hooks/useChatRouting";
 import { useMarkFilteredActivityRead } from "../../hooks/useMarkFilteredActivityRead";
+import { useWarmRecentChannels } from "../../hooks/useWarmRecentChannels";
 import {
     ChipId,
     EMPTY_CHIP_SET,
@@ -231,6 +232,10 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
     }, [selectedActivityChipIds, selectedActivityMentionGroupIds.size]);
 
     const { markFilteredAsRead } = useMarkFilteredActivityRead({ useCM });
+
+    // Pre-sync the most recent channels so switching to one of them
+    // paints from cache instead of blanking for a cold round-trip.
+    useWarmRecentChannels(useCM.allChats);
 
     // Mark every activity currently visible in the feed as read. Recomputes
     // the visible set at click time from the live filter state so it always

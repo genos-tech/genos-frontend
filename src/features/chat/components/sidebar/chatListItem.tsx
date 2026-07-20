@@ -5,12 +5,13 @@
 // the v3 channel sidebar.
 /* eslint-disable react/jsx-sort-props */
 import * as React from "react";
-import { memo, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { Box, ListItem, Stack } from "@mui/joy";
 import ListItemButton from "@mui/joy/ListItemButton";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { useAuth } from "../../../../context/AuthContext";
+import { prefetchChannel } from "../../../../services/channel/channelPrefetch";
 import { useChatListItem } from "../../hooks/useChatListItem";
 import { ModalAddMembers } from "../modals/ModalAddMembers";
 import { ModalAssignGMTags } from "../modals/ModalAssignGMTags";
@@ -19,6 +20,11 @@ import { ChatListItemActions } from "./ChatListItemActions";
 import { ChatListItemAvatar } from "./ChatListItemAvatar";
 import { ChatListItemMessage } from "./ChatListItemMessage";
 import { ChatListItemTitle } from "./ChatListItemTitle";
+
+// Hover has to persist this long before we spend a sync on the channel,
+// so dragging the cursor across the list doesn't prefetch every row it
+// passes over. Short enough that a deliberate hover→click still wins.
+const HOVER_PREFETCH_DELAY_MS = 120;
 
 export const ChatListItem = memo((props: ChatListItemProps) => {
     const {
@@ -42,6 +48,17 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
     const [isHovered, setIsHovered] = useState(false);
     const [openAddMembers, setOpenAddMembers] = useState(false);
     const [openAssignTags, setOpenAssignTags] = useState(false);
+
+    // Pending hover-prefetch timer (see the `onMouseEnter` below).
+    const prefetchTimerRef = useRef<number | undefined>(undefined);
+    useEffect(
+        () => () => {
+            if (prefetchTimerRef.current !== undefined) {
+                clearTimeout(prefetchTimerRef.current);
+            }
+        },
+        []
+    );
 
     const {
         isPinned,
@@ -100,8 +117,25 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
             }}
         >
             <ListItemButton
-                onMouseEnter={() => setIsHovered(true)}
-                onMouseLeave={() => setIsHovered(false)}
+                onMouseEnter={() => {
+                    setIsHovered(true);
+                    // Warm this channel's messages while the pointer is
+                    // still travelling to the click. A cold channel
+                    // otherwise blanks the pane for the whole sync
+                    // round-trip (see `channelPrefetch`). Delayed so
+                    // sweeping the cursor down the list doesn't fire a
+                    // sync per row it crosses.
+                    prefetchTimerRef.current = window.setTimeout(() => {
+                        prefetchChannel(chat.chatId);
+                    }, HOVER_PREFETCH_DELAY_MS);
+                }}
+                onMouseLeave={() => {
+                    setIsHovered(false);
+                    if (prefetchTimerRef.current !== undefined) {
+                        clearTimeout(prefetchTimerRef.current);
+                        prefetchTimerRef.current = undefined;
+                    }
+                }}
                 color="neutral"
                 selected={selected}
                 sx={{

@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Box, Chip, Stack, useColorScheme } from "@mui/joy";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
@@ -9,6 +9,7 @@ import { ProjectManagementState } from "../../../../hooks/common/useProjectManag
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
+import { channelService } from "../../../../services/channel/channelService";
 import { UserProps } from "../../../../types/admin";
 import { ChatProps, MessageProps, ThreadMessageProps, ThreadProps } from "../../../../types/chat";
 import { TaskCommentProps } from "../../../../types/tasks";
@@ -18,6 +19,7 @@ import { handleAtTop } from "../../services/handleBubblePositionAction";
 import { computeMessageItemMetas } from "../../utils/messageItemMetas";
 import { MessageBubble } from "../bubbles/MessageBubble";
 import { ThreadMessageBubble } from "../bubbles/ThreadMessageBubble";
+import { MessageListSkeleton } from "./MessageListSkeleton";
 
 interface MessageListRendererProps {
     chat: ChatProps | ThreadProps;
@@ -59,7 +61,20 @@ type ListContext = { isScrolling: boolean };
 // row mounts a full read-only BlockNote view (see `BnChatPreview`), so
 // mounting it while it's still off-screen — instead of the frame it
 // scrolls into view — is what keeps wheel scrolling smooth.
+// It is ALSO what anchors the initial paint: `initialTopMostItemIndex`
+// resolves "the bottom" against estimated row heights, and BlockNote rows
+// measure taller once they mount. The overscan gives Virtuoso enough real
+// rows above LAST to correct against. Ramping it up from 0 after mount
+// (tried, reverted) saved mount work but left switches landing part-way
+// up the history instead of at the newest message — don't reintroduce it
+// without checking the landing position in a real browser.
 const OVERSCAN_PX = 600;
+
+// Upper bound on how long the cold-load skeleton may stay up. The normal
+// exit is messages arriving; this only catches a sync that fails, or one
+// that resolves for a genuinely empty channel (which writes nothing, so
+// it notifies nothing, so nothing else would re-render this component).
+const SKELETON_MAX_MS = 2000;
 
 export const MessageListRenderer = ({
     chat,
@@ -107,6 +122,33 @@ export const MessageListRenderer = ({
     // Nothing outside this list ever read it.
     const [isScrolling, setIsScrolling] = useState(false);
     const listContext = useMemo<ListContext>(() => ({ isScrolling }), [isScrolling]);
+
+    // Identity of the chat (or thread) currently rendered. Drives the
+    // Virtuoso remount key below.
+    const chatIdentityKey = isThread
+        ? `${chat.chatId}:${(chat as ThreadProps).threadId}`
+        : `${chat.chatId}`;
+
+    // A cold channel (never synced this session, nothing in IDB) has no
+    // messages to paint until its sync lands, so the pane would sit
+    // blank for the whole round-trip. Show placeholder rows instead —
+    // but only while the sync is genuinely in flight, so a chat that is
+    // really empty still falls through to the normal empty scroller.
+    // The timer is a backstop: if the sync fails or resolves without
+    // ever bumping the store version (an empty channel notifies
+    // nothing), nothing else would re-render us to clear the skeleton.
+    const [skeletonExpired, setSkeletonExpired] = useState(false);
+    useEffect(() => {
+        setSkeletonExpired(false);
+        const t = setTimeout(() => setSkeletonExpired(true), SKELETON_MAX_MS);
+        return () => clearTimeout(t);
+    }, [chatIdentityKey]);
+    const showSkeleton =
+        messages.length === 0 &&
+        !skeletonExpired &&
+        // `chatId` is still typed `string | number` mid-v3-migration;
+        // the runtime value is the channel UUID string.
+        channelService.isSyncingChannel(String(chat.chatId));
 
     // Every per-row datum, pre-computed in one O(N) pass — see the util
     // for why this must not happen inside `itemContent`.
@@ -318,9 +360,15 @@ export const MessageListRenderer = ({
     // (meaningless for the new one) instead of correcting against it.
     // Same-chat updates (arrivals, edits, reactions) don't change the
     // key, so the reader's scroll position is preserved for those.
-    const chatIdentityKey = isThread
-        ? `${chat.chatId}:${(chat as ThreadProps).threadId}`
-        : `${chat.chatId}`;
+    // (`chatIdentityKey` is computed above, next to the overscan ramp.)
+
+    if (showSkeleton) {
+        return (
+            <Box sx={wrapperSx}>
+                <MessageListSkeleton />
+            </Box>
+        );
+    }
 
     return (
         <Box sx={wrapperSx}>

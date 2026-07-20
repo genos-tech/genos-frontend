@@ -878,6 +878,17 @@ export class ChannelService {
      * that care about "did the sync land?" should `.catch` and surface it;
      * passive callers (e.g. mount effects) can fire-and-forget.
      */
+    /**
+     * True while a `syncChannel` for this channel is still in flight.
+     * Lets the message pane tell "this chat's history hasn't arrived
+     * yet" (show a loading skeleton) apart from "this chat really has no
+     * messages" (show the empty state) — indistinguishable from the
+     * message array alone, which is `[]` in both cases.
+     */
+    isSyncingChannel(channelId: string): boolean {
+        return this._inflightSyncByChannel.has(channelId);
+    }
+
     syncChannel(channelId: string): Promise<void> {
         const existing = this._inflightSyncByChannel.get(channelId);
         if (existing) return existing;
