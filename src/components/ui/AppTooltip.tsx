@@ -1,4 +1,4 @@
-import { ReactElement, ReactNode } from "react";
+import { ReactElement, ReactNode, useState } from "react";
 import { Tooltip } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
@@ -30,6 +30,20 @@ export type AppTooltipProps = {
     size?: "sm" | "md" | "lg";
     /** Forwarded to Joy. Default `false` — most tooltips are interactive-on-hover only. */
     open?: boolean;
+    /**
+     * Force the tooltip shut while another surface owns the user's
+     * attention (an open menu, say) WITHOUT giving up normal hover
+     * behaviour the rest of the time.
+     *
+     * Use this instead of `open={someCondition ? false : undefined}`.
+     * That idiom flips the tooltip between controlled (`false`) and
+     * uncontrolled (`undefined`) as the condition changes, which is
+     * exactly what MUI warns about: "A component is changing the
+     * uncontrolled open state of Tooltip to be controlled." Passing a
+     * boolean here keeps `open` defined for the component's whole
+     * lifetime, so control never switches.
+     */
+    suppressed?: boolean;
     /** ms before the tooltip opens on hover. Forwarded to Joy. */
     enterDelay?: number;
     /** Skip the hover listener entirely (useful when `title` may be empty). */
@@ -53,18 +67,34 @@ export const AppTooltip = ({
     arrow = true,
     size = "sm",
     open,
+    suppressed,
     enterDelay,
     disableHoverListener,
 }: AppTooltipProps) => {
     const { mode } = useColorScheme();
     const P = mode === "dark" ? purplePalette.dark : purplePalette.light;
 
+    // Hover state is only tracked when the caller opted into
+    // suppression; otherwise Joy manages its own and this stays unused.
+    const [hoverOpen, setHoverOpen] = useState(false);
+
+    // A caller passes `open` OR `suppressed` OR neither, and which one it
+    // is doesn't change over a mount — so `resolvedOpen` is defined for
+    // the whole lifetime in the first two cases and undefined in the
+    // third. That stability is the entire point: see `suppressed`.
+    const resolvedOpen =
+        open !== undefined
+            ? open
+            : suppressed !== undefined
+              ? !suppressed && hoverOpen
+              : undefined;
+
     return (
         <Tooltip
             arrow={arrow}
             disableHoverListener={disableHoverListener}
             enterDelay={enterDelay}
-            open={open}
+            open={resolvedOpen}
             placement={placement}
             size={size}
             title={title}
@@ -74,6 +104,8 @@ export const AppTooltip = ({
                 border: `1px solid ${P.menuBorder}`,
                 borderRadius: "8px",
             }}
+            onClose={() => setHoverOpen(false)}
+            onOpen={() => setHoverOpen(true)}
         >
             {children}
         </Tooltip>

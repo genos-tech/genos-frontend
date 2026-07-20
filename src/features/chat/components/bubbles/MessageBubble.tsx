@@ -531,7 +531,7 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
         const messageBody = message.content && message.content.length > 0 && (
             <AppTooltip
                 enterDelay={1000}
-                open={isMoreMenuOpen ? false : undefined}
+                suppressed={isMoreMenuOpen}
                 placement="right"
                 title={
                     <>
@@ -738,7 +738,7 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
                     )}
                     <AppTooltip
                         enterDelay={1000}
-                        open={isMoreMenuOpen ? false : undefined}
+                        suppressed={isMoreMenuOpen}
                         placement="right"
                         title={
                             <>
