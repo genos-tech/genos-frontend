@@ -39,6 +39,7 @@ import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
 import { FileSizeRejectionSnackbar } from "../../../../components/ui/feedback/FileSizeRejectionSnackbar";
 import { useFileSizeGuard } from "../../../../components/ui/feedback/useFileSizeGuard";
+import { MemberRoleControl } from "../../../../components/ui/memberRoles/MemberRoleControl";
 import { ModalLeaveConfirm } from "../../../../components/ui/misc/ModalLeaveConfirm";
 import { ModalTransferOwner } from "../../../../components/ui/misc/ModalTransferOwner";
 import {
@@ -60,9 +61,11 @@ import { AllChatProps } from "../../../../types/chat";
 import { ProjectLabelProps } from "../../../../types/tasks";
 import { buildAvatarSrc } from "../../../../utils/avatarSrc";
 import { extractYYYYMMDD } from "../../../../utils/dateUtils";
+import { canManageMembers, MemberRole, resolveMyRole } from "../../../../utils/memberRoles";
 import { ModalAddMembers } from "../../../chat/components/modals/ModalAddMembers";
 import { resolveLegacyChatId } from "../../../chat/utils/channelIdResolvers";
 import { leaveProject } from "../../services/leaveProject";
+import { setProjectMemberRole } from "../../services/setProjectMemberRole";
 import { updateProjectProfile } from "../../services/updateProjectProfile";
 import { ModalManageProjectLabels } from "../projectLabels/ModalManageProjectLabels";
 import { ProjectLabelChips } from "../projectLabels/ProjectLabelChips";
@@ -146,6 +149,40 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
     const [openLeaveConfirm, setOpenLeaveConfirm] = useState(false);
     const isProjectOwner = !!projectProfile && myself.userId === projectProfile.ownerUserId;
     const canShowLeave = !!projectProfile && !isProjectOwner;
+
+    // Owner OR editor may manage: rename, image, code, labels, and other
+    // members' roles. Only the owner may delete or transfer.
+    //
+    // `resolveMyRole` overlays `owner` from `ownerUserId` — the server
+    // never stores "owner" on a member row, so reading `memberRole`
+    // directly would deny the actual owner.
+    const myRole = resolveMyRole(
+        myself.userId,
+        projectProfile?.ownerUserId,
+        projectProfile?.projectMembers
+    );
+    const canManage = !!projectProfile && canManageMembers(myRole);
+
+    const handleMemberRoleChange = async (
+        userId: string,
+        nextRole: MemberRole
+    ): Promise<boolean> => {
+        if (!projectProfile?.projectId) return false;
+        const ok = await setProjectMemberRole(
+            projectProfile.projectId,
+            userId,
+            nextRole,
+            accessToken
+        );
+        if (!ok) return false;
+        setProjectProfile({
+            ...projectProfile,
+            projectMembers: projectProfile.projectMembers.map((m) =>
+                String(m.userId) === String(userId) ? { ...m, memberRole: nextRole } : m
+            ),
+        });
+        return true;
+    };
 
     // Inline rename + transfer-ownership flow (owner-only). Rename goes
     // over the v3 socket rail (see handleNameSave) so every member's
@@ -604,59 +641,64 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                             <AssignmentIcon sx={{ fontSize: 100 }} />
                                         </Avatar>
 
-                                        <Box
-                                            sx={{
-                                                position: "absolute",
-                                                top: 150,
-                                                right: 30,
-                                            }}
-                                        >
-                                            <input
-                                                ref={inputRef}
-                                                accept=".jpg,.jpeg,.png,image/jpeg,image/png"
-                                                multiple={false}
-                                                style={{ display: "none" }}
-                                                type="file"
-                                                onChange={handleSelectedFiles}
-                                            />
-                                            <Tooltip
-                                                size="sm"
-                                                sx={{ zIndex: 9000 }}
-                                                title={t.admin.projectProfile.editProfileImage}
-                                                variant="outlined"
+                                        {/* Image upload is owner/editor now — the
+                                            endpoint had no gate at all before, and
+                                            this button was shown to everyone. */}
+                                        {canManage && (
+                                            <Box
+                                                sx={{
+                                                    position: "absolute",
+                                                    top: 150,
+                                                    right: 30,
+                                                }}
                                             >
-                                                <IconButton
-                                                    variant="soft"
-                                                    sx={{
-                                                        background: isDark
-                                                            ? "linear-gradient(135deg, rgba(124,58,237,0.3) 0%, rgba(139,92,246,0.3) 100%)"
-                                                            : "linear-gradient(135deg, rgba(124,58,237,0.15) 0%, rgba(139,92,246,0.15) 100%)",
-                                                        border: `1px solid ${styles.border}`,
-                                                        transition: "all 0.2s ease",
-                                                        "&:hover": {
-                                                            background: isDark
-                                                                ? "linear-gradient(135deg, rgba(124,58,237,0.5) 0%, rgba(139,92,246,0.5) 100%)"
-                                                                : "linear-gradient(135deg, rgba(124,58,237,0.25) 0%, rgba(139,92,246,0.25) 100%)",
-                                                            transform: "scale(1.1)",
-                                                        },
-                                                    }}
-                                                    onClick={() => {
-                                                        if (pmChat.project) {
-                                                            handleButtonClick();
-                                                        } else {
-                                                            console.error("Project not found");
-                                                        }
-                                                    }}
+                                                <input
+                                                    ref={inputRef}
+                                                    accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+                                                    multiple={false}
+                                                    style={{ display: "none" }}
+                                                    type="file"
+                                                    onChange={handleSelectedFiles}
+                                                />
+                                                <Tooltip
+                                                    size="sm"
+                                                    sx={{ zIndex: 9000 }}
+                                                    title={t.admin.projectProfile.editProfileImage}
+                                                    variant="outlined"
                                                 >
-                                                    <EditIcon
+                                                    <IconButton
+                                                        variant="soft"
                                                         sx={{
-                                                            fontSize: "30px",
-                                                            color: styles.accentColor,
+                                                            background: isDark
+                                                                ? "linear-gradient(135deg, rgba(124,58,237,0.3) 0%, rgba(139,92,246,0.3) 100%)"
+                                                                : "linear-gradient(135deg, rgba(124,58,237,0.15) 0%, rgba(139,92,246,0.15) 100%)",
+                                                            border: `1px solid ${styles.border}`,
+                                                            transition: "all 0.2s ease",
+                                                            "&:hover": {
+                                                                background: isDark
+                                                                    ? "linear-gradient(135deg, rgba(124,58,237,0.5) 0%, rgba(139,92,246,0.5) 100%)"
+                                                                    : "linear-gradient(135deg, rgba(124,58,237,0.25) 0%, rgba(139,92,246,0.25) 100%)",
+                                                                transform: "scale(1.1)",
+                                                            },
                                                         }}
-                                                    />
-                                                </IconButton>
-                                            </Tooltip>
-                                        </Box>
+                                                        onClick={() => {
+                                                            if (pmChat.project) {
+                                                                handleButtonClick();
+                                                            } else {
+                                                                console.error("Project not found");
+                                                            }
+                                                        }}
+                                                    >
+                                                        <EditIcon
+                                                            sx={{
+                                                                fontSize: "30px",
+                                                                color: styles.accentColor,
+                                                            }}
+                                                        />
+                                                    </IconButton>
+                                                </Tooltip>
+                                            </Box>
+                                        )}
                                     </Box>
 
                                     <Stack
@@ -755,7 +797,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                             {projectProfile?.projectName ??
                                                                 pmChat.chatName}
                                                         </Typography>
-                                                        {isProjectOwner && (
+                                                        {canManage && (
                                                             <AppTooltip
                                                                 title={t.common.profileEdit.rename}
                                                                 size="sm"
@@ -1073,6 +1115,29 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                                     socket={socket}
                                                                     useUISM={useUISM}
                                                                 />
+                                                                <Box sx={{ ml: "auto", pl: 1 }}>
+                                                                    <MemberRoleControl
+                                                                        canManage={canManage}
+                                                                        isSelf={
+                                                                            member.userId ===
+                                                                            myself.userId
+                                                                        }
+                                                                        memberRole={
+                                                                            member.memberRole
+                                                                        }
+                                                                        ownerUserId={
+                                                                            projectProfile?.ownerUserId
+                                                                        }
+                                                                        popupZIndex={
+                                                                            PROFILE_MODAL_Z_INDEX +
+                                                                            2
+                                                                        }
+                                                                        userId={member.userId}
+                                                                        onChange={
+                                                                            handleMemberRoleChange
+                                                                        }
+                                                                    />
+                                                                </Box>
                                                             </ListItemButton>
                                                         ))
                                                     ) : (
@@ -1146,7 +1211,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                                 —
                                                             </Typography>
                                                         )}
-                                                        {isProjectOwner && (
+                                                        {canManage && (
                                                             <AppTooltip
                                                                 size="sm"
                                                                 title={
@@ -1272,27 +1337,33 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                                     {projectProfile?.code || "—"}
                                                                 </Typography>
                                                             </Box>
-                                                            <AppTooltip
-                                                                title="Edit code"
-                                                                size="sm"
-                                                            >
-                                                                <IconButton
+                                                            {/* The code pencil used to show for
+                                                                everyone (the endpoint was open to
+                                                                any caller). Now owner/editor,
+                                                                matching the backend. */}
+                                                            {canManage && (
+                                                                <AppTooltip
+                                                                    title="Edit code"
                                                                     size="sm"
-                                                                    variant="plain"
-                                                                    onClick={() => {
-                                                                        setCodeDraft(
-                                                                            projectProfile?.code ||
-                                                                                ""
-                                                                        );
-                                                                        setCodeError(null);
-                                                                        setCodeEditMode(true);
-                                                                    }}
                                                                 >
-                                                                    <EditIcon
-                                                                        sx={{ fontSize: 16 }}
-                                                                    />
-                                                                </IconButton>
-                                                            </AppTooltip>
+                                                                    <IconButton
+                                                                        size="sm"
+                                                                        variant="plain"
+                                                                        onClick={() => {
+                                                                            setCodeDraft(
+                                                                                projectProfile?.code ||
+                                                                                    ""
+                                                                            );
+                                                                            setCodeError(null);
+                                                                            setCodeEditMode(true);
+                                                                        }}
+                                                                    >
+                                                                        <EditIcon
+                                                                            sx={{ fontSize: 16 }}
+                                                                        />
+                                                                    </IconButton>
+                                                                </AppTooltip>
+                                                            )}
                                                         </Stack>
                                                     )}
                                                     {codeError && (
@@ -1444,7 +1515,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
             />
             {/* Owner-only. Mounted only once the profile has loaded so
                 `projectId` is real — every write is keyed on it. */}
-            {isProjectOwner && projectProfile?.projectId != null && (
+            {canManage && projectProfile?.projectId != null && (
                 <ModalManageProjectLabels
                     assignedLabels={projectLabels}
                     open={openManageLabels}
