@@ -24,7 +24,7 @@ import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TagListProps, TaskTableProps } from "../../../../types/tasks";
 import { popTeamMembers } from "../../../admin/services/popTeamMembers";
-import { ModalTaskDiagram } from "../../diagram/components/ModalTaskDiagram";
+import { LazyTaskDiagram } from "../../diagram/components/LazyTaskDiagram";
 import { createQuickTask } from "../../services/createQuickTask";
 import { emitTaskTouched } from "../../services/taskEvents";
 import { updateTaskFromTable } from "../../services/updateTaskFromTable";
@@ -1632,7 +1632,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
             {diagramTask != null &&
                 diagramTask.id != null &&
                 (diagramTask.projectId ?? usePM.currentProject?.projectId) != null && (
-                    <ModalTaskDiagram
+                    <LazyTaskDiagram
                         myself={myself}
                         open={true}
                         rootLabel={`${formatTaskDisplayId(diagramTask)} · ${diagramTask.title || "Untitled"}`}

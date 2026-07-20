@@ -15,7 +15,7 @@ import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TagListProps, TaskTableProps } from "../../../../types/tasks";
-import { ModalTaskDiagram } from "../../diagram/components/ModalTaskDiagram";
+import { LazyTaskDiagram } from "../../diagram/components/LazyTaskDiagram";
 import { updateTaskFromTable } from "../../services/updateTaskFromTable";
 import { FilterProps } from "../../types/TaskTableTypes";
 import { buildComparator } from "../../utils/sortTask";
@@ -623,7 +623,7 @@ export const SprintBoard = (props: SprintBoardProps) => {
             {diagramTask != null &&
                 diagramTask.id != null &&
                 (diagramTask.projectId ?? usePM.currentProject?.projectId) != null && (
-                    <ModalTaskDiagram
+                    <LazyTaskDiagram
                         myself={myself}
                         open={true}
                         projectId={Number(
