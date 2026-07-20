@@ -9,6 +9,7 @@ import { ProjectManagementState } from "../../../../hooks/common/useProjectManag
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
+import { channelService } from "../../../../services/channel/channelService";
 import { UserProps } from "../../../../types/admin";
 import { ChatProps, MessageProps, ThreadMessageProps, ThreadProps } from "../../../../types/chat";
 import { TaskCommentProps } from "../../../../types/tasks";
@@ -18,6 +19,7 @@ import { handleAtTop } from "../../services/handleBubblePositionAction";
 import { computeMessageItemMetas } from "../../utils/messageItemMetas";
 import { MessageBubble } from "../bubbles/MessageBubble";
 import { ThreadMessageBubble } from "../bubbles/ThreadMessageBubble";
+import { MessageListSkeleton } from "./MessageListSkeleton";
 
 interface MessageListRendererProps {
     chat: ChatProps | ThreadProps;
@@ -73,6 +75,12 @@ const OVERSCAN_PX = 600;
 // off the critical path. Scrolling still gets the full 600px cushion;
 // it's just no longer paid before the chat is visible.
 const INITIAL_OVERSCAN_PX = 0;
+
+// Upper bound on how long the cold-load skeleton may stay up. The normal
+// exit is messages arriving; this only catches a sync that fails, or one
+// that resolves for a genuinely empty channel (which writes nothing, so
+// it notifies nothing, so nothing else would re-render this component).
+const SKELETON_MAX_MS = 2000;
 
 export const MessageListRenderer = ({
     chat,
@@ -139,6 +147,28 @@ export const MessageListRenderer = ({
         setRenderedChatKey(chatIdentityKey);
         setOverscanPx(INITIAL_OVERSCAN_PX);
     }
+
+    // A cold channel (never synced this session, nothing in IDB) has no
+    // messages to paint until its sync lands, so the pane would sit
+    // blank for the whole round-trip. Show placeholder rows instead —
+    // but only while the sync is genuinely in flight, so a chat that is
+    // really empty still falls through to the normal empty scroller.
+    // The timer is a backstop: if the sync fails or resolves without
+    // ever bumping the store version (an empty channel notifies
+    // nothing), nothing else would re-render us to clear the skeleton.
+    const [skeletonExpired, setSkeletonExpired] = useState(false);
+    useEffect(() => {
+        setSkeletonExpired(false);
+        const t = setTimeout(() => setSkeletonExpired(true), SKELETON_MAX_MS);
+        return () => clearTimeout(t);
+    }, [chatIdentityKey]);
+    const showSkeleton =
+        messages.length === 0 &&
+        !skeletonExpired &&
+        renderedChatKey === chatIdentityKey &&
+        // `chatId` is still typed `string | number` mid-v3-migration;
+        // the runtime value is the channel UUID string.
+        channelService.isSyncingChannel(String(chat.chatId));
 
     // Restore the scroll cushion once the switch has painted. Two rAFs:
     // the first fires before paint, the second after it — so the extra
@@ -365,6 +395,14 @@ export const MessageListRenderer = ({
     // Same-chat updates (arrivals, edits, reactions) don't change the
     // key, so the reader's scroll position is preserved for those.
     // (`chatIdentityKey` is computed above, next to the overscan ramp.)
+
+    if (showSkeleton) {
+        return (
+            <Box sx={wrapperSx}>
+                <MessageListSkeleton />
+            </Box>
+        );
+    }
 
     return (
         <Box sx={wrapperSx}>
