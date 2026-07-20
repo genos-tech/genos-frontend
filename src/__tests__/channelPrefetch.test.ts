@@ -10,13 +10,13 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { channelService } from "../services/channel/channelService";
 import {
     __resetChannelPrefetchForTests,
     isChannelWarm,
     prefetchChannel,
     warmRecentChannels,
 } from "../services/channel/channelPrefetch";
+import { channelService } from "../services/channel/channelService";
 
 vi.mock("../db/config/schema", () => ({
     initDB: vi.fn().mockRejectedValue(new Error("IDB stubbed off in tests")),
