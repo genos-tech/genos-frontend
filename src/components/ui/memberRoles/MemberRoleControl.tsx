@@ -21,6 +21,10 @@ type MemberRoleControlProps = {
     memberRole: string | null | undefined;
     /** Whether the VIEWING user may change roles (owner or editor). */
     canManage: boolean;
+    /** True when this row IS the viewing user. Managers get a read-only
+     *  chip on their own row: an editor could otherwise self-demote to
+     *  viewer and instantly lose the ability to undo it. */
+    isSelf?: boolean;
     /** Persist a new role. Resolve `true` on success; on `false` the
      *  control snaps back to the previous value. */
     onChange: (userId: string, next: MemberRole) => Promise<boolean>;
@@ -41,15 +45,18 @@ const ROLE_CHIP_COLOR: Record<MemberRole, "primary" | "success" | "neutral"> = {
  * Shared by the Team / Project / GM profile modals so the three surfaces
  * can't drift on vocabulary or on the owner-overlay rule.
  *
- * The OWNER's row always renders as a read-only chip even for managers:
- * ownership is transferred through its own owner-only flow, never by
- * editing a role here (the backend rejects it too).
+ * Two rows always render as a read-only chip even for managers:
+ *   * the OWNER's — ownership is transferred through its own owner-only
+ *     flow, never by editing a role here (the backend rejects it too);
+ *   * the viewing user's OWN — an editor could otherwise self-demote to
+ *     viewer and immediately lose the ability to undo it.
  */
 export const MemberRoleControl = ({
     userId,
     ownerUserId,
     memberRole,
     canManage,
+    isSelf,
     onChange,
     popupZIndex,
 }: MemberRoleControlProps) => {
@@ -83,7 +90,7 @@ export const MemberRoleControl = ({
         </Chip>
     );
 
-    if (!canManage || current === MEMBER_ROLE.owner) return chip;
+    if (!canManage || isSelf || current === MEMBER_ROLE.owner) return chip;
 
     return (
         <Select
