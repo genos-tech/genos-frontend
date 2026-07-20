@@ -101,6 +101,15 @@ jobs:
             # rollup-plugin-visualizer does not try to open a browser (see
             # vite.config.ts). Confirm Railway's Nixpacks Node major == 22 or
             # this green build does not guarantee a green Railway build.
+            #
+            # This step also runs `bundleGuard` (scripts/bundleGuard.ts), which
+            # FAILS the build if a chunk that must stay lazy — vendor-editor
+            # above all — becomes statically reachable from the entry. That has
+            # regressed twice. Because this job is report-only, a violation
+            # shows up red here but does not block the merge; it does block the
+            # Railway/Cloud Run deploy build, which is the harder stop. Marking
+            # `frontend-build` required in branch protection is what would turn
+            # it into a merge blocker.
             - name: Build (tsc -b && vite build)
               run: npm run build
               env:
