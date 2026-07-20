@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Box, Chip, Stack, useColorScheme } from "@mui/joy";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
@@ -61,6 +61,19 @@ type ListContext = { isScrolling: boolean };
 // scrolls into view — is what keeps wheel scrolling smooth.
 const OVERSCAN_PX = 600;
 
+// ...but that same overscan is pure latency on the frame a chat SWITCH
+// paints, because the per-chat Virtuoso key remounts every row at once.
+// A BlockNote view costs ~50x a plain node to mount (measured: ~5ms vs
+// ~0.1ms in jsdom, before real layout/paint), so 600px of extra rows
+// above AND below roughly triples the number of editors built before the
+// user sees anything.
+//
+// So overscan starts at zero for the first paint of a newly-opened chat
+// — only what's actually on screen — and is restored two frames later,
+// off the critical path. Scrolling still gets the full 600px cushion;
+// it's just no longer paid before the chat is visible.
+const INITIAL_OVERSCAN_PX = 0;
+
 export const MessageListRenderer = ({
     chat,
     currentChatId,
@@ -107,6 +120,39 @@ export const MessageListRenderer = ({
     // Nothing outside this list ever read it.
     const [isScrolling, setIsScrolling] = useState(false);
     const listContext = useMemo<ListContext>(() => ({ isScrolling }), [isScrolling]);
+
+    // Identity of the chat (or thread) currently rendered. Drives both the
+    // Virtuoso remount key below and the overscan ramp immediately after.
+    const chatIdentityKey = isThread
+        ? `${chat.chatId}:${(chat as ThreadProps).threadId}`
+        : `${chat.chatId}`;
+
+    // Overscan ramp — see `INITIAL_OVERSCAN_PX`. The reset has to happen
+    // during render, not in an effect: an effect runs after Virtuoso has
+    // already mounted, which is exactly the frame we're trying to keep
+    // cheap. This is React's documented "adjust state when a prop
+    // changes" pattern (render-phase set on the previous-value guard),
+    // so the re-render happens before anything is committed.
+    const [overscanPx, setOverscanPx] = useState(INITIAL_OVERSCAN_PX);
+    const [renderedChatKey, setRenderedChatKey] = useState(chatIdentityKey);
+    if (renderedChatKey !== chatIdentityKey) {
+        setRenderedChatKey(chatIdentityKey);
+        setOverscanPx(INITIAL_OVERSCAN_PX);
+    }
+
+    // Restore the scroll cushion once the switch has painted. Two rAFs:
+    // the first fires before paint, the second after it — so the extra
+    // rows mount on a later frame than the one the user is waiting on.
+    useEffect(() => {
+        let inner = 0;
+        const outer = requestAnimationFrame(() => {
+            inner = requestAnimationFrame(() => setOverscanPx(OVERSCAN_PX));
+        });
+        return () => {
+            cancelAnimationFrame(outer);
+            cancelAnimationFrame(inner);
+        };
+    }, [chatIdentityKey]);
 
     // Every per-row datum, pre-computed in one O(N) pass — see the util
     // for why this must not happen inside `itemContent`.
@@ -318,9 +364,7 @@ export const MessageListRenderer = ({
     // (meaningless for the new one) instead of correcting against it.
     // Same-chat updates (arrivals, edits, reactions) don't change the
     // key, so the reader's scroll position is preserved for those.
-    const chatIdentityKey = isThread
-        ? `${chat.chatId}:${(chat as ThreadProps).threadId}`
-        : `${chat.chatId}`;
+    // (`chatIdentityKey` is computed above, next to the overscan ramp.)
 
     return (
         <Box sx={wrapperSx}>
@@ -332,7 +376,7 @@ export const MessageListRenderer = ({
                 atTopThreshold={64}
                 className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                 context={listContext}
-                increaseViewportBy={{ bottom: OVERSCAN_PX, top: OVERSCAN_PX }}
+                increaseViewportBy={{ bottom: overscanPx, top: overscanPx }}
                 initialTopMostItemIndex={{ align: "end", index: "LAST" }}
                 isScrolling={setIsScrolling}
                 itemContent={itemContent}
