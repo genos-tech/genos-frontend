@@ -1,6 +1,7 @@
 import "@fontsource-variable/noto-sans-jp/index.css";
 import "./index.css";
 
+import { ComponentType, lazy, Suspense } from "react";
 import { createRoot } from "react-dom/client";
 import { Outlet, Route, BrowserRouter as Router, Routes } from "react-router-dom";
 
@@ -20,12 +21,24 @@ import { analytics } from "./services/analytics";
 import { startLongTaskObserver } from "./services/perfObserver";
 
 import { App } from "./App";
-import GenosDemoPage from "./lp/DemoPage";
-import GenosFeaturesPage from "./lp/FeaturesPage";
-import GenosLandingPage from "./lp/LandingPage";
-import GenosLegalPage from "./lp/LegalPage";
-import GenosPlansPage from "./lp/PlansPage";
-import GenosPrivacyPage from "./lp/PrivacyPage";
+
+// The public marketing pages are code-split away from the app entry.
+// They are the only consumers of framer-motion, and nobody who opens
+// /signin or /workspace ever renders one — statically importing them put
+// `src/lp` plus the whole framer-motion / motion-dom tree into the entry
+// chunk that every app session downloads.
+//
+// The trade runs the other way for marketing visitors, who now wait one
+// extra round-trip for the page chunk after the entry evaluates. That is
+// an acceptable price here because app sessions vastly outnumber
+// marketing hits — but the real fix for /home is a separate Vite entry
+// so it stops downloading the app shell at all. See the PR for that.
+const GenosDemoPage = lazy(() => import("./lp/DemoPage"));
+const GenosFeaturesPage = lazy(() => import("./lp/FeaturesPage"));
+const GenosLandingPage = lazy(() => import("./lp/LandingPage"));
+const GenosLegalPage = lazy(() => import("./lp/LegalPage"));
+const GenosPlansPage = lazy(() => import("./lp/PlansPage"));
+const GenosPrivacyPage = lazy(() => import("./lp/PrivacyPage"));
 
 // Initialize PostHog once, before React mounts. No-ops when
 // VITE_POSTHOG_KEY / VITE_POSTHOG_HOST are unset, so leaving them blank
@@ -51,39 +64,53 @@ const AuthLayout = () => (
     </AuthProvider>
 );
 
+// Suspense boundary for the lazy marketing pages. Deliberately wrapped
+// per-route rather than around the whole <Routes>: an outer boundary
+// would also catch suspensions from App.tsx's own lazy route homes and
+// blank the workspace instead of letting their local fallbacks render.
+//
+// `fallback={null}` on purpose — these pages mount their own theme and
+// i18n providers, so any spinner rendered here would be unthemed and
+// flash the wrong colors before the real page swaps in.
+const publicPage = (Page: ComponentType) => (
+    <Suspense fallback={null}>
+        <Page />
+    </Suspense>
+);
+
 createRoot(document.getElementById("root")!).render(
     <Router>
         <Routes>
             {/* Public company / marketing page. Fully isolated from the auth
                 stack: no AuthProvider, no guards, no redirects. */}
-            <Route element={<GenosLandingPage />} path="/home" />
+            <Route element={publicPage(GenosLandingPage)} path="/home" />
 
             {/* Public product guide (features, how-to, shortcuts). Linked from
                 the landing page and, like /home, fully isolated from the auth
                 stack: it renders its own I18nProvider internally. */}
-            <Route element={<GenosFeaturesPage />} path="/features-guide" />
+            <Route element={publicPage(GenosFeaturesPage)} path="/features-guide" />
 
             {/* Public demo walkthrough (how to sign in as a demo user, what
                 the sample workspace contains, and copy-paste Spotlight
                 prompts). Same isolation as /features-guide: renders its own
                 I18nProvider internally, no auth stack. */}
-            <Route element={<GenosDemoPage />} path="/demo-guide" />
+            <Route element={publicPage(GenosDemoPage)} path="/demo-guide" />
 
             {/* Public pricing / plans comparison. Reachable from the landing
                 page without signing in: renders its own I18nProvider and reads
                 the public billing/plans endpoint (no auth stack, no guards). */}
-            <Route element={<GenosPlansPage />} path="/plans" />
+            <Route element={publicPage(GenosPlansPage)} path="/plans" />
 
             {/* 特定商取引法に基づく表記 — the legal disclosure Japanese law
                 requires of paid online services, incl. the cancellation /
                 refund policy the Stripe portal and checkout link to. Static
                 legal text (ja + en summary), so no I18nProvider. */}
-            <Route element={<GenosLegalPage />} path="/legal" />
+            <Route element={publicPage(GenosLegalPage)} path="/legal" />
 
             {/* プライバシーポリシー — same conventions as /legal (static
                 ja + en legal text, no I18nProvider). Linked from the Stripe
                 customer portal's privacy link and the landing footer. */}
-            <Route element={<GenosPrivacyPage />} path="/privacy" />
+            <Route element={publicPage(GenosPrivacyPage)} path="/privacy" />
 
             {/* All routes that need authentication context. */}
             <Route element={<AuthLayout />}>
