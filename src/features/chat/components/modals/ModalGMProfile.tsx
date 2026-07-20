@@ -864,120 +864,137 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                 )}
                                             </FormControl>
 
-                                            {/* Members with Search */}
-                                            <FormControl>
-                                                <Stack
-                                                    alignItems="center"
-                                                    direction="row"
-                                                    justifyContent="space-between"
-                                                    sx={{ mb: 1 }}
-                                                >
+                                            {/* Members with Search.
+                                                The list is a SIBLING of the FormControl, not a
+                                                child: Joy allows only one control component per
+                                                FormControl, and the list now holds a role
+                                                <Select> per row — with the search <Input> that
+                                                was two controls in one instance. */}
+                                            <Box sx={{ display: "flex", flexDirection: "column" }}>
+                                                <FormControl>
                                                     <Stack
                                                         alignItems="center"
                                                         direction="row"
-                                                        spacing={1}
+                                                        justifyContent="space-between"
+                                                        sx={{ mb: 1 }}
                                                     >
-                                                        <FormLabel
-                                                            sx={{
-                                                                color: styles.labelColor,
-                                                                fontSize: "0.75rem",
-                                                                fontWeight: 600,
-                                                                textTransform: "uppercase",
-                                                                letterSpacing: "0.05em",
-                                                                mb: 0,
-                                                            }}
+                                                        <Stack
+                                                            alignItems="center"
+                                                            direction="row"
+                                                            spacing={1}
                                                         >
-                                                            {fmt(
-                                                                t.chat.modals.gmProfile
-                                                                    .membersCount,
-                                                                {
-                                                                    filtered:
-                                                                        filteredMembers.length,
-                                                                    total:
-                                                                        gmProfile?.gmMembers
-                                                                            ?.length || 0,
-                                                                }
-                                                            )}
-                                                        </FormLabel>
-                                                        {/* Any member can add teammates — no
+                                                            <FormLabel
+                                                                sx={{
+                                                                    color: styles.labelColor,
+                                                                    fontSize: "0.75rem",
+                                                                    fontWeight: 600,
+                                                                    textTransform: "uppercase",
+                                                                    letterSpacing: "0.05em",
+                                                                    mb: 0,
+                                                                }}
+                                                            >
+                                                                {fmt(
+                                                                    t.chat.modals.gmProfile
+                                                                        .membersCount,
+                                                                    {
+                                                                        filtered:
+                                                                            filteredMembers.length,
+                                                                        total:
+                                                                            gmProfile?.gmMembers
+                                                                                ?.length || 0,
+                                                                    }
+                                                                )}
+                                                            </FormLabel>
+                                                            {/* Any member can add teammates — no
                                                             owner gate. */}
-                                                        <Button
-                                                            disabled={!gmProfile}
-                                                            size="sm"
-                                                            variant="soft"
+                                                            <Button
+                                                                disabled={!gmProfile}
+                                                                size="sm"
+                                                                variant="soft"
+                                                                startDecorator={
+                                                                    <PersonAddAltRoundedIcon
+                                                                        sx={{ fontSize: 14 }}
+                                                                    />
+                                                                }
+                                                                sx={{
+                                                                    borderRadius: "8px",
+                                                                    fontSize: "12px",
+                                                                    fontWeight: 600,
+                                                                    flexShrink: 0,
+                                                                }}
+                                                                onClick={() =>
+                                                                    setOpenAddMembers(true)
+                                                                }
+                                                            >
+                                                                {t.common.addMembers.openButton}
+                                                            </Button>
+                                                        </Stack>
+                                                        <Input
+                                                            value={memberSearchQuery}
+                                                            endDecorator={
+                                                                memberSearchQuery && (
+                                                                    <IconButton
+                                                                        size="sm"
+                                                                        variant="plain"
+                                                                        sx={{
+                                                                            minWidth: "24px",
+                                                                            minHeight: "24px",
+                                                                            borderRadius: "50%",
+                                                                        }}
+                                                                        onClick={() =>
+                                                                            setMemberSearchQuery(
+                                                                                ""
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        <CloseIcon
+                                                                            sx={{
+                                                                                fontSize: "16px",
+                                                                            }}
+                                                                        />
+                                                                    </IconButton>
+                                                                )
+                                                            }
+                                                            placeholder={
+                                                                t.chat.modals.gmProfile
+                                                                    .searchMembersPlaceholder
+                                                            }
                                                             startDecorator={
-                                                                <PersonAddAltRoundedIcon
-                                                                    sx={{ fontSize: 14 }}
+                                                                <SearchIcon
+                                                                    sx={{
+                                                                        color: styles.accentColor,
+                                                                        fontSize: "18px",
+                                                                    }}
                                                                 />
                                                             }
                                                             sx={{
-                                                                borderRadius: "8px",
-                                                                fontSize: "12px",
-                                                                fontWeight: 600,
-                                                                flexShrink: 0,
+                                                                width: "220px",
+                                                                "--Input-focusedThickness": "1px",
+                                                                "--Input-radius": "8px",
+                                                                background: styles.inputBg,
+                                                                border: `1px solid ${styles.border}`,
+                                                                fontSize: "14px",
+                                                                transition: "all 0.2s ease",
+                                                                "&:hover": {
+                                                                    borderColor:
+                                                                        styles.accentColor,
+                                                                },
+                                                                "&:focus-within": {
+                                                                    borderColor:
+                                                                        styles.accentColor,
+                                                                    boxShadow: isDark
+                                                                        ? "0 0 0 2px rgba(124,58,237,0.2)"
+                                                                        : "0 0 0 2px rgba(124,58,237,0.1)",
+                                                                },
                                                             }}
-                                                            onClick={() => setOpenAddMembers(true)}
-                                                        >
-                                                            {t.common.addMembers.openButton}
-                                                        </Button>
+                                                            onChange={(e) =>
+                                                                setMemberSearchQuery(
+                                                                    e.target.value
+                                                                )
+                                                            }
+                                                        />
                                                     </Stack>
-                                                    <Input
-                                                        value={memberSearchQuery}
-                                                        endDecorator={
-                                                            memberSearchQuery && (
-                                                                <IconButton
-                                                                    size="sm"
-                                                                    variant="plain"
-                                                                    sx={{
-                                                                        minWidth: "24px",
-                                                                        minHeight: "24px",
-                                                                        borderRadius: "50%",
-                                                                    }}
-                                                                    onClick={() =>
-                                                                        setMemberSearchQuery("")
-                                                                    }
-                                                                >
-                                                                    <CloseIcon
-                                                                        sx={{ fontSize: "16px" }}
-                                                                    />
-                                                                </IconButton>
-                                                            )
-                                                        }
-                                                        placeholder={
-                                                            t.chat.modals.gmProfile
-                                                                .searchMembersPlaceholder
-                                                        }
-                                                        startDecorator={
-                                                            <SearchIcon
-                                                                sx={{
-                                                                    color: styles.accentColor,
-                                                                    fontSize: "18px",
-                                                                }}
-                                                            />
-                                                        }
-                                                        sx={{
-                                                            width: "220px",
-                                                            "--Input-focusedThickness": "1px",
-                                                            "--Input-radius": "8px",
-                                                            background: styles.inputBg,
-                                                            border: `1px solid ${styles.border}`,
-                                                            fontSize: "14px",
-                                                            transition: "all 0.2s ease",
-                                                            "&:hover": {
-                                                                borderColor: styles.accentColor,
-                                                            },
-                                                            "&:focus-within": {
-                                                                borderColor: styles.accentColor,
-                                                                boxShadow: isDark
-                                                                    ? "0 0 0 2px rgba(124,58,237,0.2)"
-                                                                    : "0 0 0 2px rgba(124,58,237,0.1)",
-                                                            },
-                                                        }}
-                                                        onChange={(e) =>
-                                                            setMemberSearchQuery(e.target.value)
-                                                        }
-                                                    />
-                                                </Stack>
+                                                </FormControl>
                                                 <Box
                                                     className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                                                     sx={{
@@ -1065,7 +1082,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                         </Box>
                                                     )}
                                                 </Box>
-                                            </FormControl>
+                                            </Box>
 
                                             {/* Is Private & Created Date */}
                                             <Stack direction="row" spacing={4} sx={{ mt: 1 }}>
