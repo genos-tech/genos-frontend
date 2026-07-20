@@ -13,7 +13,18 @@ export type UserProps = {
     tsJoined: string;
     customStatus?: string;
     isOfflineForced?: string;
+    // The user's self-declared JOB TITLE ("Engineer"), set via the
+    // UserProfileRole picker. NOT a permission — see `memberRole` below.
     role?: string;
+    // Permission role within the entity this payload came from:
+    // "editor" or "viewer". Absent on payloads that don't carry
+    // membership context (and on any pre-feature cached response), which
+    // `resolveDisplayRole` treats as viewer.
+    //
+    // The OWNER is never encoded here — ownership lives in the entity's
+    // owner id, so an owner's row reads "viewer". Always render through
+    // `resolveDisplayRole` (utils/memberRoles.ts), never raw.
+    memberRole?: string;
     baseCountry?: string;
     isSystemUser?: boolean;
 };

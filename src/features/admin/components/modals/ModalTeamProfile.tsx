@@ -31,9 +31,13 @@ import { Socket } from "socket.io-client";
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
 import { FileSizeRejectionSnackbar } from "../../../../components/ui/feedback/FileSizeRejectionSnackbar";
 import { useFileSizeGuard } from "../../../../components/ui/feedback/useFileSizeGuard";
+import { MemberRoleControl } from "../../../../components/ui/memberRoles/MemberRoleControl";
 import { ModalLeaveConfirm } from "../../../../components/ui/misc/ModalLeaveConfirm";
 import { ModalTransferOwner } from "../../../../components/ui/misc/ModalTransferOwner";
-import { ProfileModalStyles } from "../../../../components/ui/styles/commonStyle";
+import {
+    PROFILE_MODAL_Z_INDEX,
+    ProfileModalStyles,
+} from "../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
@@ -42,7 +46,9 @@ import { fmt, useTranslation } from "../../../../i18n";
 import { TeamProfileProps, UserProps } from "../../../../types/admin";
 import { buildAvatarSrc } from "../../../../utils/avatarSrc";
 import { extractYYYYMMDD } from "../../../../utils/dateUtils";
+import { canManageMembers, MemberRole, resolveMyRole } from "../../../../utils/memberRoles";
 import { leaveTeam } from "../../services/leaveTeam";
+import { setTeamMemberRole } from "../../services/setTeamMemberRole";
 import { updateTeamProfile } from "../../services/updateTeamProfile";
 import { ModalInviteMembers } from "./ModalInviteMembers";
 
@@ -95,6 +101,33 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
     // which lists the user's remaining teams plus create/join forms.
     const [openLeaveConfirm, setOpenLeaveConfirm] = useState(false);
     const isTeamOwner = myself.userId === teamProfile.teamOwnerId;
+
+    // Owner OR editor may manage: invite, rename, change the image, and
+    // set other members' roles. Only the owner may transfer ownership.
+    //
+    // `resolveMyRole` overlays `owner` from `teamOwnerId` — the server
+    // never stores "owner" on a member row, so reading `memberRole`
+    // directly here would deny the actual owner.
+    const myRole = resolveMyRole(myself.userId, teamProfile.teamOwnerId, teamProfile.teamMembers);
+    const canManage = canManageMembers(myRole);
+
+    // Role edits are written straight to the server; mirror the result
+    // into `teamProfile` so the chip/picker re-renders without refetching
+    // the whole team.
+    const handleMemberRoleChange = async (
+        userId: string,
+        nextRole: MemberRole
+    ): Promise<boolean> => {
+        const ok = await setTeamMemberRole(teamProfile.teamId, userId, nextRole, accessToken);
+        if (!ok) return false;
+        setTeamProfile({
+            ...teamProfile,
+            teamMembers: teamProfile.teamMembers.map((m) =>
+                String(m.userId) === String(userId) ? { ...m, memberRole: nextRole } : m
+            ),
+        });
+        return true;
+    };
 
     // Inline rename + transfer-ownership flow (owner-only). Both PUT
     // through the same endpoint (`updateTeamProfile`). Renames update
@@ -406,7 +439,7 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                             <AssignmentIcon sx={{ fontSize: 100 }} />
                                         </Avatar>
 
-                                        {myself.userId === teamProfile.teamOwnerId && (
+                                        {canManage && (
                                             <Box
                                                 sx={{
                                                     position: "absolute",
@@ -577,7 +610,7 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                                     {teamProfile.teamName}
                                                                 </Typography>
                                                             </Box>
-                                                            {isTeamOwner && (
+                                                            {canManage && (
                                                                 <Tooltip
                                                                     size="sm"
                                                                     variant="outlined"
@@ -750,7 +783,11 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                         }
                                                     </Typography>
                                                 </Stack>
-                                                {isTeamOwner && (
+                                                {/* Invite is ordinary management (this was THE
+                                                    bottleneck — one person for every new hire),
+                                                    so editors get it. Transferring ownership is
+                                                    ownership itself and stays with the owner. */}
+                                                {canManage && (
                                                     <Box
                                                         sx={{
                                                             display: "flex",
@@ -783,119 +820,148 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                         >
                                                             {t.admin.inviteMembers.openButton}
                                                         </Button>
-                                                        <Button
-                                                            color="neutral"
-                                                            size="sm"
-                                                            sx={{ borderRadius: "8px" }}
-                                                            variant="outlined"
-                                                            startDecorator={
-                                                                <SwapHorizRoundedIcon
-                                                                    sx={{ fontSize: 16 }}
-                                                                />
-                                                            }
-                                                            onClick={() => setOpenTransfer(true)}
-                                                        >
-                                                            {t.common.profileEdit.transferOwner}
-                                                        </Button>
+                                                        {isTeamOwner && (
+                                                            <Button
+                                                                color="neutral"
+                                                                size="sm"
+                                                                sx={{ borderRadius: "8px" }}
+                                                                variant="outlined"
+                                                                startDecorator={
+                                                                    <SwapHorizRoundedIcon
+                                                                        sx={{ fontSize: 16 }}
+                                                                    />
+                                                                }
+                                                                onClick={() =>
+                                                                    setOpenTransfer(true)
+                                                                }
+                                                            >
+                                                                {
+                                                                    t.common.profileEdit
+                                                                        .transferOwner
+                                                                }
+                                                            </Button>
+                                                        )}
                                                     </Box>
                                                 )}
                                             </FormControl>
 
                                             {teamProfile.teamMembers.length > 0 && (
-                                                <FormControl>
-                                                    <Stack
-                                                        direction={{ xs: "column", sm: "row" }}
-                                                        justifyContent="space-between"
-                                                        spacing={{ xs: 1, sm: 0 }}
-                                                        sx={{ mb: 1 }}
-                                                        alignItems={{
-                                                            xs: "stretch",
-                                                            sm: "center",
-                                                        }}
-                                                    >
-                                                        <FormLabel
-                                                            sx={{
-                                                                color: styles.labelColor,
-                                                                fontSize: "0.75rem",
-                                                                fontWeight: 600,
-                                                                textTransform: "uppercase",
-                                                                letterSpacing: "0.05em",
-                                                                mb: 0,
+                                                // The member list is a SIBLING of the
+                                                // FormControl, not a child. Joy allows only one
+                                                // control component per FormControl, and the
+                                                // list now holds a role <Select> per row — with
+                                                // the search <Input> that was two controls in
+                                                // one instance ("A FormControl can contain only
+                                                // one control component" in the console).
+                                                <Box
+                                                    sx={{
+                                                        display: "flex",
+                                                        flexDirection: "column",
+                                                    }}
+                                                >
+                                                    <FormControl>
+                                                        <Stack
+                                                            direction={{ xs: "column", sm: "row" }}
+                                                            justifyContent="space-between"
+                                                            spacing={{ xs: 1, sm: 0 }}
+                                                            sx={{ mb: 1 }}
+                                                            alignItems={{
+                                                                xs: "stretch",
+                                                                sm: "center",
                                                             }}
                                                         >
-                                                            {fmt(t.admin.teamProfile.members, {
-                                                                filtered: filteredMembers.length,
-                                                                total: teamProfile.teamMembers
-                                                                    .length,
-                                                            })}
-                                                        </FormLabel>
-                                                        <Input
-                                                            value={memberSearchQuery}
-                                                            endDecorator={
-                                                                memberSearchQuery && (
-                                                                    <IconButton
-                                                                        size="sm"
-                                                                        variant="plain"
-                                                                        sx={{
-                                                                            minWidth: "24px",
-                                                                            minHeight: "24px",
-                                                                            borderRadius: "50%",
-                                                                        }}
-                                                                        onClick={() =>
-                                                                            setMemberSearchQuery(
-                                                                                ""
-                                                                            )
-                                                                        }
-                                                                    >
-                                                                        <CloseIcon
+                                                            <FormLabel
+                                                                sx={{
+                                                                    color: styles.labelColor,
+                                                                    fontSize: "0.75rem",
+                                                                    fontWeight: 600,
+                                                                    textTransform: "uppercase",
+                                                                    letterSpacing: "0.05em",
+                                                                    mb: 0,
+                                                                }}
+                                                            >
+                                                                {fmt(t.admin.teamProfile.members, {
+                                                                    filtered:
+                                                                        filteredMembers.length,
+                                                                    total: teamProfile.teamMembers
+                                                                        .length,
+                                                                })}
+                                                            </FormLabel>
+                                                            <Input
+                                                                value={memberSearchQuery}
+                                                                endDecorator={
+                                                                    memberSearchQuery && (
+                                                                        <IconButton
+                                                                            size="sm"
+                                                                            variant="plain"
                                                                             sx={{
-                                                                                fontSize: "16px",
+                                                                                minWidth: "24px",
+                                                                                minHeight: "24px",
+                                                                                borderRadius:
+                                                                                    "50%",
                                                                             }}
-                                                                        />
-                                                                    </IconButton>
-                                                                )
-                                                            }
-                                                            placeholder={
-                                                                t.admin.teamProfile.searchMembers
-                                                            }
-                                                            startDecorator={
-                                                                <SearchIcon
-                                                                    sx={{
-                                                                        color: styles.accentColor,
-                                                                        fontSize: "18px",
-                                                                    }}
-                                                                />
-                                                            }
-                                                            sx={{
-                                                                width: { xs: "100%", sm: "220px" },
-                                                                maxWidth: "100%",
-                                                                "--Input-focusedThickness": "1px",
-                                                                "--Input-radius": "8px",
-                                                                background: isDark
-                                                                    ? "rgba(0,0,0,0.3)"
-                                                                    : "rgba(255,255,255,0.8)",
-                                                                border: `1px solid ${styles.border}`,
-                                                                fontSize: "14px",
-                                                                transition: "all 0.2s ease",
-                                                                "&:hover": {
-                                                                    borderColor:
-                                                                        styles.accentColor,
-                                                                },
-                                                                "&:focus-within": {
-                                                                    borderColor:
-                                                                        styles.accentColor,
-                                                                    boxShadow: isDark
-                                                                        ? "0 0 0 2px rgba(124,58,237,0.2)"
-                                                                        : "0 0 0 2px rgba(124,58,237,0.1)",
-                                                                },
-                                                            }}
-                                                            onChange={(e) =>
-                                                                setMemberSearchQuery(
-                                                                    e.target.value
-                                                                )
-                                                            }
-                                                        />
-                                                    </Stack>
+                                                                            onClick={() =>
+                                                                                setMemberSearchQuery(
+                                                                                    ""
+                                                                                )
+                                                                            }
+                                                                        >
+                                                                            <CloseIcon
+                                                                                sx={{
+                                                                                    fontSize:
+                                                                                        "16px",
+                                                                                }}
+                                                                            />
+                                                                        </IconButton>
+                                                                    )
+                                                                }
+                                                                placeholder={
+                                                                    t.admin.teamProfile
+                                                                        .searchMembers
+                                                                }
+                                                                startDecorator={
+                                                                    <SearchIcon
+                                                                        sx={{
+                                                                            color: styles.accentColor,
+                                                                            fontSize: "18px",
+                                                                        }}
+                                                                    />
+                                                                }
+                                                                sx={{
+                                                                    width: {
+                                                                        xs: "100%",
+                                                                        sm: "220px",
+                                                                    },
+                                                                    maxWidth: "100%",
+                                                                    "--Input-focusedThickness":
+                                                                        "1px",
+                                                                    "--Input-radius": "8px",
+                                                                    background: isDark
+                                                                        ? "rgba(0,0,0,0.3)"
+                                                                        : "rgba(255,255,255,0.8)",
+                                                                    border: `1px solid ${styles.border}`,
+                                                                    fontSize: "14px",
+                                                                    transition: "all 0.2s ease",
+                                                                    "&:hover": {
+                                                                        borderColor:
+                                                                            styles.accentColor,
+                                                                    },
+                                                                    "&:focus-within": {
+                                                                        borderColor:
+                                                                            styles.accentColor,
+                                                                        boxShadow: isDark
+                                                                            ? "0 0 0 2px rgba(124,58,237,0.2)"
+                                                                            : "0 0 0 2px rgba(124,58,237,0.1)",
+                                                                    },
+                                                                }}
+                                                                onChange={(e) =>
+                                                                    setMemberSearchQuery(
+                                                                        e.target.value
+                                                                    )
+                                                                }
+                                                            />
+                                                        </Stack>
+                                                    </FormControl>
                                                     <Box
                                                         className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                                                         sx={{
@@ -942,6 +1008,38 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                                         useCM={useCM}
                                                                         useUISM={useUISM}
                                                                     />
+                                                                    {/* Role sits at the row's
+                                                                        trailing edge: a chip for
+                                                                        everyone, a picker for
+                                                                        managers. The owner always
+                                                                        renders as a chip — their
+                                                                        role changes by transfer,
+                                                                        not by this control. */}
+                                                                    <Box
+                                                                        sx={{ ml: "auto", pl: 1 }}
+                                                                    >
+                                                                        <MemberRoleControl
+                                                                            canManage={canManage}
+                                                                            userId={member.userId}
+                                                                            isSelf={
+                                                                                member.userId ===
+                                                                                myself.userId
+                                                                            }
+                                                                            memberRole={
+                                                                                member.memberRole
+                                                                            }
+                                                                            ownerUserId={
+                                                                                teamProfile.teamOwnerId
+                                                                            }
+                                                                            popupZIndex={
+                                                                                PROFILE_MODAL_Z_INDEX +
+                                                                                2
+                                                                            }
+                                                                            onChange={
+                                                                                handleMemberRoleChange
+                                                                            }
+                                                                        />
+                                                                    </Box>
                                                                 </ListItemButton>
                                                             ))
                                                         ) : (
@@ -966,7 +1064,7 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                             </Box>
                                                         )}
                                                     </Box>
-                                                </FormControl>
+                                                </Box>
                                             )}
 
                                             <FormControl sx={{ mt: 1 }}>
