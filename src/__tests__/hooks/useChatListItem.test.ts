@@ -60,8 +60,6 @@ describe("useChatListItem.onClickHandler", () => {
             useChatListItem({
                 chat: makeChat(),
                 myself: { userId: "u1" } as never,
-                useCM: makeUseCM(),
-                useTM,
                 isPinnedChat: false,
             })
         );
@@ -71,8 +69,10 @@ describe("useChatListItem.onClickHandler", () => {
             setIsMainChatVisible: ReturnType<typeof vi.fn>;
         };
 
-        // Single synchronous call — no `await`.
-        result.current.onClickHandler(useCM as never);
+        // Single synchronous call — no `await`. The managers are handed
+        // in at CALL time (not captured at render) so a memoized row
+        // can't act on a stale snapshot of them.
+        result.current.onClickHandler({ useCM, useTM } as never);
 
         // The pane is switched IMMEDIATELY, from the cached snapshot,
         // even though `syncChannel` never resolves. This is the guard

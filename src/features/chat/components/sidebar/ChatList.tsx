@@ -23,6 +23,7 @@ import { UserProps } from "../../../../types/admin";
 import { ActivityMessageProps, AllChatProps, FlaggedMessageProps } from "../../../../types/chat";
 import { isMac } from "../../../../utils/platform";
 import { useScrollToBottomOnNewActivity } from "../../hooks/messageBubbleHooks";
+import { ChatListItemLive } from "../../hooks/useChatListItem";
 import { useChatRouting } from "../../hooks/useChatRouting";
 import { ChipId, selectVisibleActivityMessages } from "../../utils/activityChipFilters";
 import { ChatListItemForActivity } from "./activity/chatListItemForActivity";
@@ -355,49 +356,69 @@ const ChatListRenderer = ({
     useCM: ChatManagementState;
     useTM: TaskManagementState;
     isDark: boolean;
-}) => (
-    <Virtuoso
-        ref={virtuosoRef}
-        atBottomThreshold={128}
-        atTopThreshold={64}
-        className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
-        initialTopMostItemIndex={0}
-        style={{ height: "100%", flex: 1 }}
-        totalCount={targetChats.length}
-        itemContent={(index) => {
-            const chat = targetChats[index];
-            return (
-                <Box
-                    sx={{
-                        animation: "fadeSlideIn 0.25s ease-out forwards",
-                        animationDelay: `${Math.min(index * 0.03, 0.15)}s`,
-                        opacity: 0,
-                        "@keyframes fadeSlideIn": {
-                            from: { opacity: 0, transform: "translateX(-4px)" },
-                            to: { opacity: 1, transform: "translateX(0)" },
-                        },
-                    }}
-                >
-                    <ChatListItem
-                        key={`${chat.chatId}-${chat.chatType}-${chat.chatName}`}
-                        chat={chat}
-                        incompleteTodoCount={state.incompleteTodoCount}
-                        isPinnedChat={false}
-                        isToDoVisible={state.isToDoVisible}
-                        myself={data.myself}
-                        setIsToDoVisible={actions.setIsToDoVisible}
-                        setMyself={data.setMyself}
-                        socket={socket}
-                        useCM={useCM}
-                        useTEM={useTEM}
-                        useTM={useTM}
-                        useUISM={useUISM}
-                    />
-                </Box>
-            );
-        }}
-    />
-);
+}) => {
+    // Live managers for the rows' click handlers. The rows are memoized,
+    // so their captured props go stale; a stable ref lets a handler read
+    // the current values at click time. See `ChatListItemProps.liveRef`.
+    const liveRef = useRef<ChatListItemLive>({ useCM, useTM });
+    liveRef.current = { useCM, useTM };
+
+    // Selection is derived HERE, not in the row, because it depends on
+    // live `useCM` state. Computing it once per render and passing a
+    // boolean is what lets the row memoize against everything else.
+    const rowKey = (c: { chatType: number; chatName: string; chatId: string }) =>
+        `${c.chatType}-${c.chatName}-${c.chatId}`;
+    const mainKey = useCM.currentMainChat ? rowKey(useCM.currentMainChat) : null;
+    const subKey =
+        useCM.isSubChatVisible && useCM.currentSubChat ? rowKey(useCM.currentSubChat) : null;
+
+    return (
+        <Virtuoso
+            ref={virtuosoRef}
+            atBottomThreshold={128}
+            atTopThreshold={64}
+            className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
+            initialTopMostItemIndex={0}
+            style={{ height: "100%", flex: 1 }}
+            totalCount={targetChats.length}
+            itemContent={(index) => {
+                const chat = targetChats[index];
+                const key = rowKey(chat);
+                return (
+                    <Box
+                        sx={{
+                            animation: "fadeSlideIn 0.25s ease-out forwards",
+                            animationDelay: `${Math.min(index * 0.03, 0.15)}s`,
+                            opacity: 0,
+                            "@keyframes fadeSlideIn": {
+                                from: { opacity: 0, transform: "translateX(-4px)" },
+                                to: { opacity: 1, transform: "translateX(0)" },
+                            },
+                        }}
+                    >
+                        <ChatListItem
+                            key={`${chat.chatId}-${chat.chatType}-${chat.chatName}`}
+                            chat={chat}
+                            incompleteTodoCount={state.incompleteTodoCount}
+                            isPinnedChat={false}
+                            isToDoVisible={state.isToDoVisible}
+                            liveRef={liveRef}
+                            myself={data.myself}
+                            selected={key === mainKey || (subKey !== null && key === subKey)}
+                            setIsToDoVisible={actions.setIsToDoVisible}
+                            setMyself={data.setMyself}
+                            socket={socket}
+                            useCM={useCM}
+                            useTEM={useTEM}
+                            useTM={useTM}
+                            useUISM={useUISM}
+                        />
+                    </Box>
+                );
+            }}
+        />
+    );
+};
 
 // Component for rendering activity messages
 const ActivityListRenderer = ({

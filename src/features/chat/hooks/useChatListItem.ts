@@ -8,29 +8,33 @@ import { AllChatProps, ChatProps, MessageProps } from "../../../types/chat";
 import { toggleMessagesPane } from "../../../utils/sidebarUtils";
 import { readV3CachedMessages } from "../services/loadV3SpecificMessages";
 
+/**
+ * The manager state a click handler reads LIVE, handed in at call time.
+ *
+ * The row is memoized (see `chatListItemEquality.ts`), so anything these
+ * handlers capture from the render closure can be several channelService
+ * notifies out of date. They guard on `isSubChatVisible` /
+ * `currentSubChat` / `isCreatingTask` — a stale read there makes a
+ * legitimate click silently do nothing. So the caller passes the current
+ * managers through a ref at click time rather than the handlers closing
+ * over them.
+ *
+ * Setters are exempt from this concern (stable identity), but they ride
+ * along in the same object for simplicity.
+ */
+export type ChatListItemLive = {
+    useCM: ChatManagementState;
+    useTM: TaskManagementState;
+};
+
 interface UseChatListItemProps {
     chat: AllChatProps;
     myself: UserProps;
-    useCM: ChatManagementState;
-    useTM: TaskManagementState;
     isPinnedChat: boolean;
 }
 
-export const useChatListItem = ({
-    chat,
-    myself,
-    useCM,
-    useTM,
-    isPinnedChat,
-}: UseChatListItemProps) => {
+export const useChatListItem = ({ chat, myself, isPinnedChat }: UseChatListItemProps) => {
     const [isPinned, setIsPinned] = useState(chat.isPinned);
-
-    const selected =
-        `${useCM.currentMainChat?.chatType}-${useCM.currentMainChat?.chatName}-${useCM.currentMainChat?.chatId}` ===
-            `${chat.chatType}-${chat.chatName}-${chat.chatId}` ||
-        (useCM.isSubChatVisible &&
-            `${useCM.currentSubChat?.chatType}-${useCM.currentSubChat?.chatName}-${useCM.currentSubChat?.chatId}` ===
-                `${chat.chatType}-${chat.chatName}-${chat.chatId}`);
 
     const isYou = myself.userId === chat.dmPartnerUser.userId;
 
@@ -61,7 +65,7 @@ export const useChatListItem = ({
         };
     };
 
-    const onClickHandler = (useCM: ChatManagementState) => {
+    const onClickHandler = ({ useCM, useTM }: ChatListItemLive) => {
         if (
             useCM.isSubChatVisible === false ||
             `${useCM.currentSubChat?.chatType}-${useCM.currentSubChat?.chatId}-${useCM.currentSubChat?.chatName}` !==
@@ -106,7 +110,7 @@ export const useChatListItem = ({
         }
     };
 
-    const splitOpenHandler = (useCM: ChatManagementState) => {
+    const splitOpenHandler = ({ useCM, useTM }: ChatListItemLive) => {
         if (
             `${useCM.currentMainChat?.chatType}-${useCM.currentMainChat?.chatId}-${useCM.currentMainChat?.chatName}` !==
             `${chat.chatType}-${chat.chatId}-${chat.chatName}`
@@ -151,13 +155,15 @@ export const useChatListItem = ({
         }
     };
 
-    // Keys sorted alphabetically per `sort-keys`.
+    // Keys sorted alphabetically per `sort-keys`. `selected` is no longer
+    // returned — it derives from live `useCM` state and is computed by
+    // the list instead, so the row can be memoized. See
+    // `ChatListItemProps.selected`.
     return {
         isPinned,
         isYou,
         onClickHandler,
         pinChatHandler,
-        selected,
         setIsPinned,
         splitOpenHandler,
     };
