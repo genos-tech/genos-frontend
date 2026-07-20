@@ -17,6 +17,7 @@ import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { buildAvatarSrc } from "../../../../utils/avatarSrc";
+import { ProjectLabelChips } from "../../../admin/components/projectLabels/ProjectLabelChips";
 import { popSpecificProjectTasks } from "../../services/popSpecificProjectTasks";
 import { Toggler } from "./common";
 import { JoinProjectListItem } from "./projects_subs/JoinProjectListItem";
@@ -151,6 +152,7 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                                 projectId,
                                 projectName,
                                 projectTags,
+                                projectLabels,
                                 isPrivate,
                                 systemUserId,
                                 isJoined,
@@ -295,6 +297,7 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                                                                 projectId: projectId,
                                                                 projectName: projectName,
                                                                 projectTags: projectTags,
+                                                                projectLabels: projectLabels,
                                                                 isPrivate: isPrivate,
                                                                 systemUserId: systemUserId,
                                                             });
@@ -324,6 +327,19 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                                                         }}
                                                     />
                                                 </Avatar>
+
+                                                {/* Team-scoped project labels, right after
+                                                    the avatar. Capped at ONE chip + a `+N`
+                                                    pill: the row is narrow and the project
+                                                    NAME is what users scan for, so a second
+                                                    chip would eat its truncation budget.
+                                                    Full list is on the chip's tooltip.
+                                                    Renders nothing when unlabelled, so those
+                                                    rows keep their previous layout. */}
+                                                <ProjectLabelChips
+                                                    labels={projectLabels ?? []}
+                                                    max={1}
+                                                />
 
                                                 {isPrivate === true && (
                                                     <LockOutlineIcon

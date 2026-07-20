@@ -1,3 +1,5 @@
+import { ProjectLabelProps } from "./tasks";
+
 // User Props
 export type UserProps = {
     teamId: string;
@@ -93,6 +95,10 @@ export type ProjectProfileProps = {
     // display IDs (the "GEN" in "GEN-42"). Editable from the project
     // profile modal; auto-derived on project create.
     code?: string | null;
+    // Team-scoped labels currently assigned to this project. See
+    // `ProjectLabelProps` in types/tasks.ts — these tag the PROJECT,
+    // unlike the per-project tags that tag its tasks.
+    projectLabels?: ProjectLabelProps[];
 };
 
 export type TeamProfileProps = {

@@ -11,6 +11,7 @@ import AssignmentIcon from "@mui/icons-material/Assignment";
 import CloseIcon from "@mui/icons-material/Close";
 import EditIcon from "@mui/icons-material/Edit";
 import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
+import LocalOfferRoundedIcon from "@mui/icons-material/LocalOfferRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import PersonAddAltRoundedIcon from "@mui/icons-material/PersonAddAltRounded";
 import SearchIcon from "@mui/icons-material/Search";
@@ -57,12 +58,15 @@ import { purplePalette } from "../../../../theme/purplePalette";
 import { ProjectProfileProps, UserProps } from "../../../../types/admin";
 import { ChannelKind } from "../../../../types/channel";
 import { AllChatProps } from "../../../../types/chat";
+import { ProjectLabelProps } from "../../../../types/tasks";
 import { buildAvatarSrc } from "../../../../utils/avatarSrc";
 import { extractYYYYMMDD } from "../../../../utils/dateUtils";
 import { ModalAddMembers } from "../../../chat/components/modals/ModalAddMembers";
 import { resolveLegacyChatId } from "../../../chat/utils/channelIdResolvers";
 import { leaveProject } from "../../services/leaveProject";
 import { updateProjectProfile } from "../../services/updateProjectProfile";
+import { ModalManageProjectLabels } from "../projectLabels/ModalManageProjectLabels";
+import { ProjectLabelChips } from "../projectLabels/ProjectLabelChips";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
@@ -399,6 +403,17 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
         );
         setProjectProfile(projectProfile);
     };
+
+    // Team-scoped labels on THIS project (the chips also shown in the
+    // task sidebar). Owner-only to manage, same gate as rename/transfer,
+    // and re-checked server-side. Held in local state rather than read
+    // straight off `projectProfile` so an assignment change re-renders
+    // without refetching the whole profile.
+    const [openManageLabels, setOpenManageLabels] = useState(false);
+    const [projectLabels, setProjectLabels] = useState<ProjectLabelProps[]>([]);
+    useEffect(() => {
+        setProjectLabels(projectProfile?.projectLabels ?? []);
+    }, [projectProfile?.projectLabels]);
 
     // Add-teammates flow. Open to ANY project member, not just the owner
     // (unlike rename / transfer above) — that was the ask, and the
@@ -901,6 +916,68 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                 )}
                                             </FormControl>
 
+                                            {/* Project tags — team-scoped labels used to
+                                                organize the project list. Chips are visible
+                                                to every member; only the owner gets the
+                                                Manage affordance. */}
+                                            <FormControl>
+                                                <FormLabel
+                                                    sx={{
+                                                        color: styles.labelColor,
+                                                        fontSize: "0.75rem",
+                                                        fontWeight: 600,
+                                                        textTransform: "uppercase",
+                                                        letterSpacing: "0.05em",
+                                                        mb: 0.5,
+                                                    }}
+                                                >
+                                                    {t.admin.projectLabels.sectionLabel}
+                                                </FormLabel>
+                                                <Stack
+                                                    direction="row"
+                                                    spacing={1}
+                                                    alignItems="center"
+                                                    sx={{ flexWrap: "wrap", rowGap: 0.5 }}
+                                                >
+                                                    {projectLabels.length > 0 ? (
+                                                        <ProjectLabelChips
+                                                            labels={projectLabels}
+                                                            size="md"
+                                                        />
+                                                    ) : (
+                                                        <Typography
+                                                            level="body-sm"
+                                                            sx={{ color: styles.labelColor }}
+                                                        >
+                                                            {t.admin.projectLabels.none}
+                                                        </Typography>
+                                                    )}
+                                                    {isProjectOwner && (
+                                                        <Button
+                                                            size="sm"
+                                                            variant="soft"
+                                                            disabled={!projectProfile?.projectId}
+                                                            startDecorator={
+                                                                <LocalOfferRoundedIcon
+                                                                    sx={{ fontSize: 14 }}
+                                                                />
+                                                            }
+                                                            sx={{
+                                                                borderRadius: "8px",
+                                                                fontSize: "12px",
+                                                                fontWeight: 600,
+                                                                flexShrink: 0,
+                                                            }}
+                                                            onClick={() =>
+                                                                setOpenManageLabels(true)
+                                                            }
+                                                        >
+                                                            {t.admin.projectLabels.manageButton}
+                                                        </Button>
+                                                    )}
+                                                </Stack>
+                                            </FormControl>
+
                                             <FormControl>
                                                 <Stack
                                                     direction={{ xs: "column", sm: "row" }}
@@ -1354,6 +1431,18 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                 onConfirm={handleLeaveProject}
                 onCancel={() => setOpenLeaveConfirm(false)}
             />
+            {/* Owner-only. Mounted only once the profile has loaded so
+                `projectId` is real — every write is keyed on it. */}
+            {isProjectOwner && projectProfile?.projectId != null && (
+                <ModalManageProjectLabels
+                    assignedLabels={projectLabels}
+                    open={openManageLabels}
+                    projectId={projectProfile.projectId}
+                    teamId={myself.teamId}
+                    onAssignedChange={setProjectLabels}
+                    onClose={() => setOpenManageLabels(false)}
+                />
+            )}
             <ModalTransferOwner
                 open={openTransfer}
                 title={t.common.profileEdit.transferTitle}

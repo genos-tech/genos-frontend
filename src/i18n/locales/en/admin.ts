@@ -240,6 +240,27 @@ export const admin = {
         uploadFailed: "Failed to upload user profile image.",
         notAvailable: "N/A",
     },
+    // Team-scoped tags applied to whole PROJECTS, to organize the
+    // project list. Distinct from `tasks.*.tags`, which are the
+    // per-project tags applied to tasks.
+    projectLabels: {
+        sectionLabel: "Tags",
+        none: "No tags yet",
+        manageButton: "Manage",
+        manageHeading: "Project tags",
+        manageDescription:
+            "Tags are shared across the team. Tick a tag to put it on this project; editing or deleting one changes it for every project that uses it.",
+        newLabelPlaceholder: "New tag name",
+        newLabelPreview: "Preview",
+        add: "Add",
+        empty: "No tags in this team yet. Create the first one above.",
+        usedByProjects: "{count, plural, one {Used by # project} other {Used by # projects}}",
+        editLabel: "Edit tag",
+        deleteLabel: "Delete tag",
+        deleteConfirm: "Remove from all projects?",
+        assignFailed: "Couldn't update this project's tags.",
+        deleteFailed: "Couldn't delete the tag.",
+    },
     createTeamModal: {
         title: "Create New Team",
         teamNamePlaceholder: "Unique team name",
