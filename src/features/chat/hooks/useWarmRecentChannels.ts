@@ -23,24 +23,36 @@ import { AllChatProps } from "../../../types/chat";
 const WARM_LIMIT = 10;
 
 export function useWarmRecentChannels(allChats: AllChatProps[], enabled = true): void {
-    // One warm-up per mount. `allChats` re-derives on every channelService
-    // notify (unread counts, pins, live messages), so keying the effect on
-    // it directly would re-run the warm-up constantly.
-    const hasRunRef = useRef(false);
+    // `allChats` is re-derived into a NEW array on every channelService
+    // notify — including the ones caused by this warm-up's own syncs
+    // landing. So it must NOT be an effect dependency: React would run
+    // the previous effect's cleanup on each churn, and that cleanup is
+    // the queue's canceller, killing the warm-up after its first batch.
+    // Read it through a ref instead, and key the effect on booleans that
+    // only change when there's a genuine reason to start or stop.
+    const chatsRef = useRef(allChats);
+    useEffect(() => {
+        chatsRef.current = allChats;
+    }, [allChats]);
+
+    // Flips false -> true once, when the sidebar first has chats. Declared
+    // after the ref-sync effect above so that effect has already run by
+    // the time this one fires on the same commit.
+    const hasChats = allChats.length > 0;
 
     useEffect(() => {
-        if (!enabled || hasRunRef.current) return;
-        if (allChats.length === 0) return;
-        hasRunRef.current = true;
+        if (!enabled || !hasChats) return;
 
         // Most recently active first — that's the set someone switching
         // between DM/GM/PM is most likely to open next. `TSLastMessage`
         // is the same field the sidebar orders on.
-        const orderedIds = [...allChats]
+        const orderedIds = [...chatsRef.current]
             .sort((a, b) => (b.TSLastMessage ?? "").localeCompare(a.TSLastMessage ?? ""))
             .map((c) => c.chatId)
             .filter(Boolean);
 
+        // Cleanup now only runs on unmount (or sign-out emptying the
+        // list), which is exactly when abandoning the queue is right.
         return warmRecentChannels(orderedIds, { limit: WARM_LIMIT });
-    }, [allChats, enabled]);
+    }, [enabled, hasChats]);
 }
