@@ -17,6 +17,7 @@
 import { channelService } from "../../../services/channel/channelService";
 import type { UserProps } from "../../../types/admin";
 import type { ActivityMessageProps } from "../../../types/chat";
+import { derivePreviewMediaKind } from "../utils/common";
 
 interface V3ActivityWire {
     id: string;
@@ -50,6 +51,11 @@ interface V3ActivityWire {
             isSystemUser?: boolean;
         } | null;
         seq?: number;
+        // Full BlockNote block array — the activity endpoint embeds the
+        // message with the SAME `MessageSerializer` the channel list
+        // uses, so the blocks really are on the wire. Needed because a
+        // media-only message carries no `bodyText` at all.
+        body?: unknown;
         bodyText?: string;
         parentId?: string | null;
         isThreadReply: boolean;
@@ -212,6 +218,12 @@ export function v3ActivityToLegacy(a: V3ActivityWire, myself: UserProps): Activi
         projectId: undefined,
         projectName: undefined,
         firstLineContent: msg.bodyText ?? "",
+        // A GIF / image message stores no preview text, so the feed row
+        // would render empty. Carry the media kind so it can be
+        // labelled instead — `msg.body` is on the wire (see above).
+        ...(msg.bodyText
+            ? {}
+            : { firstLineMediaKind: derivePreviewMediaKind(msg.body) ?? undefined }),
         latestReaction,
         senderId: msg.sender?.userId ?? "",
         receiver: myself,

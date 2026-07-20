@@ -19,6 +19,7 @@ import { render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { EmojiText } from "../components/ui/emoji/EmojiText";
+import { v3ActivityToLegacy } from "../features/chat/adapters/v3ActivityToLegacy";
 import { ChatListItemMessage } from "../features/chat/components/sidebar/ChatListItemMessage";
 import { derivePreviewMediaKind } from "../features/chat/utils/common";
 import { TeamEmoji } from "../services/teamEmojiApi";
@@ -77,6 +78,68 @@ describe("EmojiText", () => {
         setTeamEmojiList([partyBlob]);
         render(<EmojiText text="no shortcodes here" />);
         expect(screen.getByText("no shortcodes here")).toBeInTheDocument();
+    });
+});
+
+describe("v3ActivityToLegacy media kind", () => {
+    // The activity endpoint embeds the message with the SAME
+    // `MessageSerializer` the channel list uses, so `body` is on the
+    // wire — this is what makes the feed's GIF label possible without a
+    // server change. If that ever regresses to a lite serializer, this
+    // test still passes but the feed goes blank again, so the adapter
+    // comment points at the serializer.
+    const activityWire = (message: Record<string, unknown>) => ({
+        id: "a1",
+        activityType: 5,
+        recipientUserId: "u2",
+        channelId: "c1",
+        channelKind: 2,
+        messageId: "m1",
+        actor: null,
+        message: {
+            id: "m1",
+            channelId: "c1",
+            channelKind: 2,
+            sender: null,
+            isThreadReply: false,
+            ...message,
+        },
+        isRead: false,
+        tsCreated: "2026-07-20T00:00:00Z",
+    });
+
+    it("carries the media kind when the message has no preview text", () => {
+        const out = v3ActivityToLegacy(
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            activityWire({
+                bodyText: "",
+                body: [
+                    { type: "paragraph", content: [] },
+                    {
+                        type: "image",
+                        props: { url: "https://media1.giphy.com/media/abc/giphy.gif" },
+                    },
+                ],
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            }) as any,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            { userId: "u2" } as any
+        );
+        expect(out.firstLineContent).toBe("");
+        expect(out.firstLineMediaKind).toBe("gif");
+    });
+
+    it("leaves it unset when the message has real text", () => {
+        const out = v3ActivityToLegacy(
+            activityWire({
+                bodyText: "hello",
+                body: [{ type: "image", props: { url: "https://x/y.gif" } }],
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            }) as any,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            { userId: "u2" } as any
+        );
+        expect(out.firstLineMediaKind).toBeUndefined();
     });
 });
 

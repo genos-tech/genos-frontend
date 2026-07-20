@@ -5,28 +5,11 @@ import { useColorScheme } from "@mui/joy/styles";
 import { EmojiText } from "../../../../components/ui/emoji/EmojiText";
 import { useTranslation } from "../../../../i18n";
 import { AllChatProps } from "../../../../types/chat";
-import { derivePreviewMediaKind, PreviewMediaKind } from "../../utils/common";
+import { derivePreviewMediaKind, MEDIA_LABEL_KEYS } from "../../utils/common";
 
 interface ChatListItemMessageProps {
     chat: AllChatProps;
 }
-
-const MEDIA_LABEL_KEYS: Record<
-    PreviewMediaKind,
-    | "previewGif"
-    | "previewImage"
-    | "previewVideo"
-    | "previewAudio"
-    | "previewFile"
-    | "previewTable"
-> = {
-    gif: "previewGif",
-    image: "previewImage",
-    video: "previewVideo",
-    audio: "previewAudio",
-    file: "previewFile",
-    table: "previewTable",
-};
 
 export const ChatListItemMessage: React.FC<ChatListItemMessageProps> = ({ chat }) => {
     const { mode } = useColorScheme();

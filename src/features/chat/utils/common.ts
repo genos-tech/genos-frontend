@@ -1,5 +1,23 @@
-// Media a message body can carry that produces NO preview text.
-export type PreviewMediaKind = "gif" | "image" | "video" | "audio" | "file" | "table";
+import { PreviewMediaKind } from "../../../types/chat";
+
+// `t.chat.sidebar` key per media kind — shared so the chat list and the
+// activity feed label a text-less row identically.
+export const MEDIA_LABEL_KEYS: Record<
+    PreviewMediaKind,
+    | "previewGif"
+    | "previewImage"
+    | "previewVideo"
+    | "previewAudio"
+    | "previewFile"
+    | "previewTable"
+> = {
+    gif: "previewGif",
+    image: "previewImage",
+    video: "previewVideo",
+    audio: "previewAudio",
+    file: "previewFile",
+    table: "previewTable",
+};
 
 const MEDIA_BLOCK_KINDS: Record<string, PreviewMediaKind> = {
     image: "image",
