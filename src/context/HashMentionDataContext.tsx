@@ -47,6 +47,18 @@ export type HashMentionData = {
     // live status (`loadSpecificTask` needs `myself.teamId`). Null outside
     // the provider; the hover card degrades to a static label.
     myself: UserProps | null;
+    /**
+     * Re-pull the lists above from the server. Note metadata and the
+     * project list are otherwise fetched ONCE per page load, so anything
+     * created elsewhere (a teammate's note, another tab, another device)
+     * stayed missing from the `#` menu until a reload — the staleness
+     * this exists to fix.
+     *
+     * Fire-and-forget and throttled app-wide (see `hashMentionRefresh`),
+     * so hot call sites — one per `#` keystroke, per window focus, per
+     * mounted editor — collapse to at most one round of fetches.
+     */
+    refresh: () => void;
 };
 
 const EMPTY: HashMentionData = {
@@ -57,6 +69,7 @@ const EMPTY: HashMentionData = {
     projects: [],
     todoGroups: [],
     myself: null,
+    refresh: () => {},
 };
 
 const HashMentionDataContext = createContext<HashMentionData | null>(null);

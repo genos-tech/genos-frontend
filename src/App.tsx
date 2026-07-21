@@ -11,6 +11,7 @@ import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-
 
 import { CalendarModalProvider, useCalendarModalState } from "./context/CalendarModalContext";
 import { HashMentionDataProvider } from "./context/HashMentionDataContext";
+import { createThrottledRefresh } from "./context/hashMentionRefresh";
 import {
     MentionGroupModalProvider,
     useMentionGroupModalState,
@@ -44,6 +45,7 @@ import { SpotlightSettingsModal } from "./features/spotlight/SpotlightSettingsMo
 import { CHAT_TYPE_CODE, SpotlightResult } from "./features/spotlight/types";
 import { useSpotlight } from "./features/spotlight/useSpotlight";
 import { LazyTaskDiagram } from "./features/tasks/diagram/components/LazyTaskDiagram";
+import { loadTeamProjects } from "./features/tasks/services/loadTeamProjects";
 import { UrlLinkModalProvider } from "./hooks/common/UrlLinkModalContext";
 import { useAnalyticsIdentity } from "./hooks/common/useAnalyticsIdentity";
 import { useAnalyticsPageviews } from "./hooks/common/useAnalyticsPageviews";
@@ -239,6 +241,48 @@ export const App = () => {
     // mention picker (via HashMentionDataContext) share it.
     const useTG = useTodoGroups(myself, accessToken);
 
+    // Re-pull for the "#" mention lists. Note metadata and the project
+    // list are fetched ONCE at service init and only patched by this
+    // user's own writes, so a note or project created by a teammate (or
+    // in another tab) stayed missing from the `#` menu until a page
+    // reload. Tasks ride along via the same project-tasks refresh the
+    // window-focus handler uses. Chats are left out on purpose — the v3
+    // channel service keeps `allChats` live over the socket.
+    //
+    // The body is held in a ref so the throttled wrapper below can stay
+    // referentially stable (it goes into the context value) while always
+    // running the CURRENT loaders rather than a stale render's closure.
+    const refreshHashMentionImplRef = useRef<() => void>(() => {});
+    refreshHashMentionImplRef.current = () => {
+        void useNM.getMyNoteMeta();
+        void useNM.getTaskNoteMeta();
+        void useNM.getChatNoteMeta();
+        void useNM.getSharedNoteMeta();
+        // The project LIST only. Deliberately NOT `loadProjectsAndTasks`,
+        // which calls `setCurrentProject` when it finds a joined project —
+        // a background refresh must never yank the user's open project out
+        // from under them.
+        void (async () => {
+            const projects = await loadTeamProjects(myself, accessToken);
+            if (projects) usePM.setTeamProjects([...projects]);
+        })();
+        const projectId = usePM.currentProject?.projectId;
+        if (projectId) void usePM.refreshProjectTasks(projectId);
+    };
+    const refreshHashMentionData = useMemo(
+        () => createThrottledRefresh(() => refreshHashMentionImplRef.current()),
+        []
+    );
+
+    // Returning to the tab is the cheapest signal that "things may have
+    // happened elsewhere", and it's already the trigger for the task-list
+    // refresh in `useProjectTaskManagement`. Throttled, so a burst of
+    // focus events costs one round of fetches at most.
+    useEffect(() => {
+        window.addEventListener("focus", refreshHashMentionData);
+        return () => window.removeEventListener("focus", refreshHashMentionData);
+    }, [refreshHashMentionData]);
+
     // Backing data for the "#" mention menu (tasks / notes / GM chats /
     // projects), fed to every editor's `HashSuggestionMenuController` via
     // `HashMentionDataProvider`. Memoized so the four arrays keep stable
@@ -261,6 +305,7 @@ export const App = () => {
             projects: usePM.teamProjects,
             todoGroups: useTG.groups,
             myself,
+            refresh: refreshHashMentionData,
         }),
         [
             useTM.allTasks,
@@ -272,6 +317,7 @@ export const App = () => {
             usePM.teamProjects,
             useTG.groups,
             myself,
+            refreshHashMentionData,
         ]
     );
 
