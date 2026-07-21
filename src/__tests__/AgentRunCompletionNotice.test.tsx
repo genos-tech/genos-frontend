@@ -255,6 +255,21 @@ describe("notifyAgentRunComplete", () => {
         }
     });
 
+    it("carries the Genos mark as the card icon", () => {
+        // An agent run has no human actor, so there's no avatar to show.
+        // Must be the same public URL the service worker falls back to
+        // (`public/sw.js`), or the page card and the push card for one
+        // feature would render with different icons.
+        const { manager, notify } = makeManager();
+        notifyAgentRunComplete(manager, {
+            surface: "spotlight",
+            askedQuery: "anything",
+            runId: "run-1",
+            turnId: 1,
+        });
+        expect(notify.mock.calls[0][0].icon).toBe("/genos_tech.png");
+    });
+
     it("truncates a long question rather than dumping it into the card", () => {
         const { manager, notify } = makeManager();
         notifyAgentRunComplete(manager, {

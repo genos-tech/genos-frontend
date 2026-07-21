@@ -48,6 +48,17 @@ export interface AgentRunNotice {
     onOpen?: () => void;
 }
 
+// Card / toast icon. Every other notification shows the person who
+// caused it, but an agent run has no human actor — the Genos mark is the
+// meaningful identity here.
+//
+// Deliberately the PUBLIC path rather than a bundled `assets/` import:
+// the service worker hardcodes this same URL as its push-card fallback
+// (`public/sw.js`), and a run can be announced by either side. A hashed
+// bundle URL would render the two paths differently for one feature.
+// Keep in sync with `sw.js` if the file is ever renamed.
+const APP_ICON_URL = "/genos_tech.png";
+
 /** Notification bodies are a glance, not a transcript. */
 const QUERY_PREVIEW_MAX = 120;
 
@@ -102,6 +113,9 @@ export const notifyAgentRunComplete = (
         category: "agent_run_done",
         title: `${notice.error ? t.failedTitle : t.doneTitle} • ${surfaceLabel(notice.surface)}`,
         body: query ? fmt(t.body, { query }) : t.bodyNoQuery,
+        // Without this the toast falls back to a letter avatar ("Y" for
+        // "Your AI answer…") and the OS card to the browser default.
+        icon: APP_ICON_URL,
         // NB: `senderId` is deliberately unset. The manager drops any
         // intent whose sender is the current user, and the person who
         // asked the question *is* the recipient — stamping it would
