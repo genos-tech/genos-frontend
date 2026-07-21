@@ -17,11 +17,18 @@ import { HashMentionData, HashMentionDataProvider } from "../context/HashMention
 
 // Capture the props BlockNote's controller would receive; rendering the
 // real one needs a live editor instance, which this test doesn't need.
-const captured: { getItems?: (query: string) => Promise<unknown[]> } = {};
+const captured: {
+    getItems?: (query: string) => Promise<unknown[]>;
+    minQueryLength?: number;
+} = {};
 vi.mock("@blocknote/react", async (importOriginal) => ({
     ...(await importOriginal<Record<string, unknown>>()),
-    SuggestionMenuController: (props: { getItems: (q: string) => Promise<unknown[]> }) => {
+    SuggestionMenuController: (props: {
+        getItems: (q: string) => Promise<unknown[]>;
+        minQueryLength?: number;
+    }) => {
         captured.getItems = props.getItems;
+        captured.minQueryLength = props.minQueryLength;
         return null;
     },
 }));
@@ -64,6 +71,19 @@ describe("HashSuggestionMenuController", () => {
         // The refresh is fire-and-forget: this call answers off the data
         // already in hand rather than waiting on the network.
         expect(items).toHaveLength(1);
+    });
+
+    it("waits for two query characters before showing anything", () => {
+        // "#a" matches most of a workspace — the menu is noise until the
+        // second character. Also keeps the Markdown "# " heading shortcut
+        // working, which a threshold of 0 would break.
+        render(
+            <HashMentionDataProvider value={dataWith(vi.fn())}>
+                <HashSuggestionMenuController editor={editorStub} />
+            </HashMentionDataProvider>
+        );
+
+        expect(captured.minQueryLength).toBe(2);
     });
 
     it("fires the refresh on every query, leaving the throttling to the refresh itself", async () => {

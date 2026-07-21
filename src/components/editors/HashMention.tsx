@@ -461,16 +461,18 @@ export const HashMentionMenuItems = (
 
 // Drop-in `#` suggestion controller. Reads the entity lists from context
 // (so editors don't prop-drill them) and reuses the `@` menu's custom
-// popup. `minQueryLength={1}` keeps the popup hidden for a bare "#"/"# ",
-// so BlockNote's Markdown heading shortcut ("# " → H1 at line start) keeps
-// working; the menu only appears once a non-space query character follows.
+// popup. `minQueryLength={2}` keeps the popup hidden for a bare "#"/"# "
+// — so BlockNote's Markdown heading shortcut ("# " → H1 at line start)
+// keeps working — and for a single character, where one letter matches
+// most of the workspace and the menu is noise rather than help. Matches
+// the `:` emoji menu's threshold.
 // `filterAndRankSuggestionItems` strictly narrows to substring matches and
 // floats the exact match to the top.
 export const HashSuggestionMenuController = ({ editor }: { editor: any }) => {
     const data = useHashMentionData();
     return (
         <SuggestionMenuController
-            minQueryLength={1}
+            minQueryLength={2}
             suggestionMenuComponent={MentionSuggestionMenu}
             triggerCharacter={"#"}
             getItems={async (query) => {
