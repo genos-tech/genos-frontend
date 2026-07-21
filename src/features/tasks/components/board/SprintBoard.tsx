@@ -521,7 +521,6 @@ export const SprintBoard = (props: SprintBoardProps) => {
         <ThemeProvider theme={{ [THEME_ID]: materialTheme }}>
             <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
                 <TaskFilterMenu
-                    isTaskUpdated={useTM.isTaskUpdated}
                     predefinedTagsFilters={predefinedTagsFilters}
                     setCurrentDisplayingTasks={setFilteredTasks}
                     setIsMilestoneFilterActive={setIsMilestoneFilterActive}
