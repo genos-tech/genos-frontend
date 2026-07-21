@@ -69,6 +69,12 @@ import {
     MAX_TASK_WEIGHT,
     weightBand,
 } from "../../utils/taskWeight";
+import {
+    nextTopWeightSort,
+    sortTopWeightRows,
+    TopWeightSort,
+    TopWeightSortField,
+} from "../../utils/topWeightSort";
 import { CopyableTaskIdText } from "../CopyableTaskId";
 import { TaskVelocitySection } from "./TaskVelocitySection";
 
@@ -222,6 +228,15 @@ export const TaskHomeContent = ({
     // point of the pointing system. "urgency" keeps the older overdue →
     // priority → due-date rule for users who prefer a deadline-first view.
     const [upNextSort, setUpNextSort] = useState<"weight" | "urgency">("weight");
+    // How the "Top by Weight" shortlist is ordered (not which tasks are in
+    // it — see TopWeightSortField).
+    const [topWeightSort, setTopWeightSort] = useState<TopWeightSort>({
+        field: "weight",
+        dir: "desc",
+    });
+
+    const handleTopWeightSort = (field: TopWeightSortField) =>
+        setTopWeightSort((prev) => nextTopWeightSort(prev, field));
 
     useEffect(() => {
         if (usePM.currentProject?.projectId) {
@@ -656,6 +671,15 @@ export const TaskHomeContent = ({
             .sort((a, b) => b.weight - a.weight)
             .slice(0, 10);
     }, [effectiveTasks]);
+
+    // Display order for that shortlist. Deliberately a SECOND pass over the
+    // already-sliced top 10: the panel always shows the heaviest tasks, and
+    // this only decides how they're read (by deadline, by status). Sorting
+    // before the slice would silently turn it into a different panel.
+    const topByWeightRows = useMemo(
+        () => sortTopWeightRows(topByWeight, topWeightSort),
+        [topByWeight, topWeightSort]
+    );
 
     // ── Overdue & upcoming ──
     // Filtering on effectiveStatus !== "Closed" ensures sub-tasks of a closed
@@ -3039,44 +3063,132 @@ export const TaskHomeContent = ({
                                     {/* ════════ Section F: Top by Weight ════════ */}
                                     {topByWeight.length > 0 && (
                                         <Box>
-                                            <Typography
-                                                level="title-sm"
-                                                sx={{
-                                                    fontWeight: 600,
-                                                    mb: 0.5,
-                                                    color: sectionHeaderColor,
-                                                    display: "flex",
-                                                    alignItems: "center",
-                                                    gap: 1,
-                                                }}
+                                            {/* Title and sort chips are siblings inside a
+                                                flex row: the chip Stack renders a <div>,
+                                                which can't live inside the <p> a Joy
+                                                Typography renders. */}
+                                            <Stack
+                                                alignItems="center"
+                                                direction="row"
+                                                sx={{ gap: 1, mb: 0.5 }}
                                             >
-                                                <WarningAmberRoundedIcon
-                                                    sx={{ fontSize: 16, color: "#ef4444" }}
-                                                />
-                                                {t.tasks.dashboard.topWeight.title}
-                                                <AppTooltip
-                                                    title={
-                                                        <Box sx={{ maxWidth: 260 }}>
-                                                            <b>
+                                                <Typography
+                                                    level="title-sm"
+                                                    sx={{
+                                                        fontWeight: 600,
+                                                        color: sectionHeaderColor,
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        gap: 1,
+                                                    }}
+                                                >
+                                                    <WarningAmberRoundedIcon
+                                                        sx={{ fontSize: 16, color: "#ef4444" }}
+                                                    />
+                                                    {t.tasks.dashboard.topWeight.title}
+                                                    <AppTooltip
+                                                        title={
+                                                            <Box sx={{ maxWidth: 260 }}>
+                                                                <b>
+                                                                    {
+                                                                        t.tasks.dashboard.topWeight
+                                                                            .help.title
+                                                                    }
+                                                                </b>
+                                                                <br />
                                                                 {
                                                                     t.tasks.dashboard.topWeight
-                                                                        .help.title
+                                                                        .help.body
                                                                 }
-                                                            </b>
-                                                            <br />
-                                                            {t.tasks.dashboard.topWeight.help.body}
-                                                        </Box>
-                                                    }
+                                                            </Box>
+                                                        }
+                                                    >
+                                                        <HelpOutlineRoundedIcon
+                                                            sx={{
+                                                                fontSize: 15,
+                                                                color: textMuted,
+                                                                cursor: "help",
+                                                            }}
+                                                        />
+                                                    </AppTooltip>
+                                                </Typography>
+                                                {/* Sort selector — reorders the
+                                                    shortlist; clicking the active
+                                                    chip flips the direction. */}
+                                                <Stack
+                                                    direction="row"
+                                                    spacing={0.5}
+                                                    sx={{ ml: { sm: "auto" } }}
                                                 >
-                                                    <HelpOutlineRoundedIcon
-                                                        sx={{
-                                                            fontSize: 15,
-                                                            color: textMuted,
-                                                            cursor: "help",
-                                                        }}
-                                                    />
-                                                </AppTooltip>
-                                            </Typography>
+                                                    {(
+                                                        [
+                                                            {
+                                                                key: "weight" as const,
+                                                                label: t.tasks.table.columns
+                                                                    .weight,
+                                                            },
+                                                            {
+                                                                key: "dueDate" as const,
+                                                                label: t.tasks.table.columns
+                                                                    .dueDate,
+                                                            },
+                                                            {
+                                                                key: "status" as const,
+                                                                label: t.tasks.table.columns
+                                                                    .status,
+                                                            },
+                                                        ] as const
+                                                    ).map((opt) => {
+                                                        const active =
+                                                            topWeightSort.field === opt.key;
+                                                        return (
+                                                            <Chip
+                                                                key={opt.key}
+                                                                size="sm"
+                                                                title={
+                                                                    active
+                                                                        ? t.tasks.dashboard
+                                                                              .topWeight.sortFlip
+                                                                        : undefined
+                                                                }
+                                                                sx={{
+                                                                    cursor: "pointer",
+                                                                    fontSize: "0.7rem",
+                                                                    fontWeight: 600,
+                                                                    backgroundColor: active
+                                                                        ? "#7c3aed"
+                                                                        : isDark
+                                                                          ? "rgba(255,255,255,0.06)"
+                                                                          : "rgba(0,0,0,0.05)",
+                                                                    color: active
+                                                                        ? "white"
+                                                                        : textSecondary,
+                                                                    "&:hover": {
+                                                                        backgroundColor: active
+                                                                            ? "#6d28d9"
+                                                                            : isDark
+                                                                              ? "rgba(255,255,255,0.1)"
+                                                                              : "rgba(0,0,0,0.08)",
+                                                                    },
+                                                                }}
+                                                                variant={active ? "solid" : "soft"}
+                                                                onClick={() =>
+                                                                    handleTopWeightSort(opt.key)
+                                                                }
+                                                            >
+                                                                {active
+                                                                    ? `${opt.label} ${
+                                                                          topWeightSort.dir ===
+                                                                          "asc"
+                                                                              ? "↑"
+                                                                              : "↓"
+                                                                      }`
+                                                                    : opt.label}
+                                                            </Chip>
+                                                        );
+                                                    })}
+                                                </Stack>
+                                            </Stack>
                                             <Typography
                                                 level="body-xs"
                                                 sx={{ color: textMuted, mb: 1.5 }}
@@ -3084,7 +3196,7 @@ export const TaskHomeContent = ({
                                                 {t.tasks.dashboard.topWeight.subtitle}
                                             </Typography>
                                             <Stack spacing={0.75}>
-                                                {topByWeight.map(({ task, weight }) => {
+                                                {topByWeightRows.map(({ task, weight }) => {
                                                     const wb = weightBand(weight);
                                                     const due = formatDueLabel(task.dueDate);
                                                     const dueColor =
