@@ -108,7 +108,14 @@ export const ModalImportMarkdown = ({
     const [importing, setImporting] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    // Fresh state per open.
+    // Fresh state per open, seeded from `context`.
+    //
+    // `open` is the ONLY dependency on purpose. The note header mounts
+    // this dialog continuously and rebuilds its `context` object literal
+    // every render, so listing it here would re-run this reset on any
+    // unrelated parent re-render — wiping the file and title the user had
+    // already chosen, mid-dialog. The effect body still reads the current
+    // context: React runs the latest render's callback when `open` flips.
     useEffect(() => {
         if (open) {
             setFileName(null);
@@ -130,7 +137,7 @@ export const ModalImportMarkdown = ({
             setImporting(false);
             setError(null);
         }
-    }, [open, context]);
+    }, [open]);
 
     // Destination controls are only offered on the note-header path.
     // Opened from a sidebar folder row, the row IS the destination — for
