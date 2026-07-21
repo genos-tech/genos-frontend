@@ -1,0 +1,131 @@
+/**
+ * `#` task suggestions span every project, not just the open one.
+ *
+ * `useTM.allTasks` is the OPEN project's table data, so before the team
+ * list was merged in, a task in any other project was unmentionable — and
+ * unlike the note/project staleness, reloading didn't help (the reload
+ * restores the same `lastProjectId`).
+ *
+ * Covered here: the union, the dedupe when a task is in both sources, and
+ * the project name on the row — the only thing telling two same-named
+ * tasks in different projects apart now that the menu is team-wide.
+ */
+
+import { describe, expect, it, vi } from "vitest";
+
+import { HashMentionMenuItems } from "../components/editors/HashMention";
+import { HashMentionData } from "../context/HashMentionDataContext";
+import { SearchTeamTasksResponse, TaskTableProps } from "../types/tasks";
+
+const openProjectTask = (over: Partial<TaskTableProps>): TaskTableProps =>
+    ({
+        id: "1",
+        projectId: 1,
+        displayId: "GEN-1",
+        title: "Open project task",
+        ...over,
+    }) as unknown as TaskTableProps;
+
+const teamTask = (over: Partial<SearchTeamTasksResponse>): SearchTeamTasksResponse =>
+    ({
+        projectId: 2,
+        projectName: "Marketing",
+        taskId: 9,
+        displayId: "MKT-9",
+        title: "Launch post",
+        ...over,
+    }) as unknown as SearchTeamTasksResponse;
+
+const dataWith = (over: Partial<HashMentionData>): HashMentionData => ({
+    tasks: [],
+    teamTasks: [],
+    notes: [],
+    chats: [],
+    allChats: [],
+    projects: [],
+    todoGroups: [],
+    myself: null,
+    refresh: () => {},
+    ...over,
+});
+
+// A fresh object per call — the builder caches per editor identity.
+const newEditor = () => ({ insertInlineContent: vi.fn() });
+
+/** The row label the menu renders lives in `icon`; read its props tree. */
+const subtitleOf = (item: { icon?: unknown }): string => {
+    const json = JSON.stringify(item.icon ?? {});
+    const match = json.match(/"Task · [^"]*"/);
+    return match ? match[0].slice(1, -1) : "";
+};
+
+describe("HashMentionMenuItems — task sources", () => {
+    it("offers tasks from other projects, not just the open one", () => {
+        const items = HashMentionMenuItems(
+            newEditor(),
+            dataWith({
+                tasks: [openProjectTask({})],
+                teamTasks: [teamTask({})],
+            })
+        );
+
+        expect(items.map((i) => i.title)).toEqual(["GEN-1", "MKT-9"]);
+    });
+
+    it("lists a task once when it appears in both sources", () => {
+        // The open project's rows are in the team list too — the same task
+        // must not show up twice.
+        const items = HashMentionMenuItems(
+            newEditor(),
+            dataWith({
+                tasks: [openProjectTask({ id: "1", projectId: 1 })],
+                teamTasks: [
+                    teamTask({ projectId: 1, taskId: 1, displayId: "GEN-1", title: "stale copy" }),
+                    teamTask({}),
+                ],
+            })
+        );
+
+        expect(items).toHaveLength(2);
+        // The open-project copy wins: it's the fresher of the two.
+        expect(items[0].aliases).toEqual(["Open project task"]);
+    });
+
+    it("does not confuse tasks with the same id in different projects", () => {
+        const items = HashMentionMenuItems(
+            newEditor(),
+            dataWith({
+                tasks: [openProjectTask({ id: "5", projectId: 1, displayId: "GEN-5" })],
+                teamTasks: [teamTask({ projectId: 2, taskId: 5, displayId: "MKT-5" })],
+            })
+        );
+
+        expect(items.map((i) => i.title)).toEqual(["GEN-5", "MKT-5"]);
+    });
+
+    it("names the project on each row", () => {
+        const items = HashMentionMenuItems(
+            newEditor(),
+            dataWith({
+                teamTasks: [teamTask({})],
+                projects: [
+                    {
+                        projectId: 2,
+                        projectName: "Marketing",
+                    } as unknown as HashMentionData["projects"][number],
+                ],
+            })
+        );
+
+        expect(subtitleOf(items[0])).toBe("Task · MKT-9 · Marketing");
+    });
+
+    it("falls back to the name on the search row when the project list lacks it", () => {
+        const items = HashMentionMenuItems(
+            newEditor(),
+            dataWith({ teamTasks: [teamTask({})], projects: [] })
+        );
+
+        expect(subtitleOf(items[0])).toBe("Task · MKT-9 · Marketing");
+    });
+});

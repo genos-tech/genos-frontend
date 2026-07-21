@@ -8,7 +8,7 @@ import {
     SharedNoteMetaProps,
     TaskNoteMetaProps,
 } from "../types/notes";
-import { ProjectProps, TaskTableProps } from "../types/tasks";
+import { ProjectProps, SearchTeamTasksResponse, TaskTableProps } from "../types/tasks";
 
 // One note row for the "#" mention menu, tagged with its note kind so the
 // chip can rebuild the correct deep-link URL (the four note kinds use
@@ -27,7 +27,16 @@ export type HashNoteEntry =
 // mirrors how `MentionGroupsContext` feeds the `@group` menu, avoiding a
 // four-list prop-drill through a dozen editors.
 export type HashMentionData = {
+    // The OPEN project's task rows, in full table shape. Instant and
+    // always current (optimistic creates land here first), but one
+    // project only — `teamTasks` is what makes the menu team-wide.
     tasks: TaskTableProps[];
+    // Every active task in the team, across all projects, from
+    // `/search/teamTasks/` — the same list the task search bars use.
+    // Fetched lazily on the first `#` query (see `refresh`) rather than at
+    // boot, since most sessions never open the menu. The `#` menu merges
+    // it with `tasks` above, deduped by project+task id.
+    teamTasks: SearchTeamTasksResponse[];
     notes: HashNoteEntry[];
     // Already filtered to GM (chatType === 2) by the provider. The
     // editors' "#" menu keeps this GM-only scope deliberately (notes
@@ -63,6 +72,7 @@ export type HashMentionData = {
 
 const EMPTY: HashMentionData = {
     tasks: [],
+    teamTasks: [],
     notes: [],
     chats: [],
     allChats: [],

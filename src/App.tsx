@@ -45,6 +45,7 @@ import { SpotlightSettingsModal } from "./features/spotlight/SpotlightSettingsMo
 import { CHAT_TYPE_CODE, SpotlightResult } from "./features/spotlight/types";
 import { useSpotlight } from "./features/spotlight/useSpotlight";
 import { LazyTaskDiagram } from "./features/tasks/diagram/components/LazyTaskDiagram";
+import { loadTeamTaskList } from "./features/tasks/services/loadTaskSearchList";
 import { loadTeamProjects } from "./features/tasks/services/loadTeamProjects";
 import { UrlLinkModalProvider } from "./hooks/common/UrlLinkModalContext";
 import { useAnalyticsIdentity } from "./hooks/common/useAnalyticsIdentity";
@@ -78,6 +79,7 @@ import { PermissionBanner } from "./services/notifications/PermissionBanner";
 import { NotificationIntent } from "./services/notifications/types";
 import { refreshAllData } from "./services/refreshAllData";
 import { useRuntimeConfigBootstrap } from "./services/runtimeConfig/useRuntimeConfig";
+import { SearchTeamTasksResponse } from "./types/tasks";
 import { canonicalSpotlightHref, milestoneIdFromEntityId } from "./utils/canonicalSpotlightHref";
 import { parseInternalUrl } from "./utils/parseInternalUrl";
 
@@ -252,6 +254,12 @@ export const App = () => {
     // The body is held in a ref so the throttled wrapper below can stay
     // referentially stable (it goes into the context value) while always
     // running the CURRENT loaders rather than a stale render's closure.
+    //
+    // The team-wide task list lives here rather than in `useTaskManagement`
+    // because it belongs to the `#` menu alone: `useTM.allTasks` is the
+    // OPEN project's table data, and widening that would change what every
+    // table / dashboard / sort reads.
+    const [hashTeamTasks, setHashTeamTasks] = useState<SearchTeamTasksResponse[]>([]);
     const refreshHashMentionImplRef = useRef<() => void>(() => {});
     refreshHashMentionImplRef.current = () => {
         void useNM.getMyNoteMeta();
@@ -268,6 +276,22 @@ export const App = () => {
         })();
         const projectId = usePM.currentProject?.projectId;
         if (projectId) void usePM.refreshProjectTasks(projectId);
+        // Team-wide task list — the only source that spans projects.
+        // `project_id=-1` + `top_n=-1` is the same call the task search
+        // bars make, including their active-work scope
+        // (`include_all=false` hides tasks under a closed parent or
+        // milestone), so `#` offers exactly what task search offers.
+        void (async () => {
+            const teamTasks: SearchTeamTasksResponse[] = await loadTeamTaskList(
+                myself,
+                -1,
+                "open,wip,blocked,pending",
+                -1,
+                accessToken,
+                false
+            );
+            if (Array.isArray(teamTasks)) setHashTeamTasks(teamTasks);
+        })();
     };
     const refreshHashMentionData = useMemo(
         () => createThrottledRefresh(() => refreshHashMentionImplRef.current()),
@@ -294,6 +318,7 @@ export const App = () => {
     const hashMentionData = useMemo(
         () => ({
             tasks: useTM.allTasks,
+            teamTasks: hashTeamTasks,
             notes: [
                 ...useNM.myNoteMeta.map((m) => ({ kind: "my" as const, ...m })),
                 ...useNM.taskNoteMeta.map((m) => ({ kind: "task" as const, ...m })),
@@ -309,6 +334,7 @@ export const App = () => {
         }),
         [
             useTM.allTasks,
+            hashTeamTasks,
             useNM.myNoteMeta,
             useNM.taskNoteMeta,
             useNM.chatNoteMeta,
