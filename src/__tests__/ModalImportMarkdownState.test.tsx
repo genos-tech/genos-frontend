@@ -13,6 +13,7 @@
 
 import { CssVarsProvider } from "@mui/joy/styles";
 import { fireEvent, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -85,8 +86,10 @@ const rerenderModal = (
         </CssVarsProvider>
     );
 
-// The only free-text field in the dialog.
+// The title is the dialog's only plain text field; the destination picker
+// is an Autocomplete, so it carries the combobox role.
 const titleInput = () => screen.getByRole("textbox") as HTMLInputElement;
+const destinationInput = () => screen.getByRole("combobox") as HTMLInputElement;
 
 describe("ModalImportMarkdown", () => {
     it("keeps the typed title when the parent re-renders with a fresh context object", () => {
@@ -102,19 +105,29 @@ describe("ModalImportMarkdown", () => {
         expect(titleInput().value).toBe("Release plan");
     });
 
-    it("offers task destinations on the header path", () => {
+    it("seeds the destination from the surface it was opened on", () => {
         renderModal({ kind: "task", projectId: 7, taskId: 42 }, true);
 
-        // Seeded to the surface the dialog was opened from. (The label
-        // shows on both the Select's own button and its option row.)
-        expect(screen.getAllByText("Genos › Fix login GEN-42").length).toBeGreaterThan(0);
-        expect(screen.getAllByText("Genos › Ship it GEN-43").length).toBeGreaterThan(0);
+        expect(destinationInput().value).toBe("Genos › Fix login GEN-42");
+    });
+
+    it("filters destinations by what the user types", async () => {
+        const user = userEvent.setup();
+        renderModal({ kind: "task", projectId: 7, taskId: 42 }, true);
+
+        const input = destinationInput();
+        await user.click(input);
+        await user.clear(input);
+        await user.type(input, "Ship");
+
+        const options = screen.getAllByRole("option").map((o) => o.textContent);
+        expect(options).toEqual(["Genos › Ship it GEN-43"]);
     });
 
     it("shows no destination control when opened from a sidebar folder row", () => {
         renderModal({ kind: "task", projectId: 7, taskId: 42 }, false);
 
+        expect(screen.queryByRole("combobox")).toBeNull();
         expect(screen.queryByText("Folder")).toBeNull();
-        expect(screen.queryByText("Genos › Fix login GEN-42")).toBeNull();
     });
 });

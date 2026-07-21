@@ -7,11 +7,10 @@ import {
     Input,
     Modal,
     ModalDialog,
-    Option,
-    Select,
     Stack,
     Typography,
 } from "@mui/joy";
+import Autocomplete, { createFilterOptions } from "@mui/joy/Autocomplete";
 
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { useTranslation } from "../../../../i18n";
@@ -52,10 +51,17 @@ interface Props {
     allowDestinationChange?: boolean;
 }
 
-// Flatten the folder list into indented select rows (name-sorted per
-// level) — same presentation as ModalMoveToFolder's list.
-type FolderRow = { folderId: number; label: string; depth: number };
-const flattenFolders = (folders: MyNoteFolderProps[]): FolderRow[] => {
+/** One searchable row in the destination picker. */
+type DestinationOption = { key: string; label: string };
+
+/** Value of the my-notes "unfiled" row. */
+const MY_ROOT_KEY = "root";
+
+// Flatten the folder forest into full-path rows ("Work › Clients › Acme"),
+// name-sorted per level. Paths rather than the indentation ModalMoveToFolder
+// uses, because these rows are SEARCHED: typing a parent folder's name has
+// to surface everything under it.
+const flattenFolders = (folders: MyNoteFolderProps[]): DestinationOption[] => {
     const byParent = new Map<number | null, MyNoteFolderProps[]>();
     for (const f of folders) {
         const key = f.parentFolderId ?? null;
@@ -63,19 +69,28 @@ const flattenFolders = (folders: MyNoteFolderProps[]): FolderRow[] => {
         bucket.push(f);
         byParent.set(key, bucket);
     }
-    const rows: FolderRow[] = [];
-    const walk = (parentId: number | null, depth: number) => {
+    const rows: DestinationOption[] = [];
+    const walk = (parentId: number | null, prefix: string) => {
         const kids = [...(byParent.get(parentId) ?? [])].sort((a, b) =>
             a.name.localeCompare(b.name, undefined, { sensitivity: "base" })
         );
         for (const f of kids) {
-            rows.push({ folderId: f.folderId, label: f.name, depth });
-            walk(f.folderId, depth + 1);
+            const label = prefix ? `${prefix} › ${f.name}` : f.name;
+            rows.push({ key: String(f.folderId), label });
+            walk(f.folderId, label);
         }
     };
-    walk(null, 0);
+    walk(null, "");
     return rows;
 };
+
+// Cap the rendered rows — the popper has no virtualization, and a big
+// workspace can have thousands of tasks. Typing narrows it; the cap only
+// bites on an empty/very broad query.
+const filterDestinations = createFilterOptions<DestinationOption>({
+    limit: 100,
+    stringify: (option) => option.label,
+});
 
 /**
  * "Import Markdown…" dialog: pick a local .md file, confirm the note
@@ -100,9 +115,9 @@ export const ModalImportMarkdown = ({
     const [fileName, setFileName] = useState<string | null>(null);
     const [fileText, setFileText] = useState<string | null>(null);
     const [title, setTitle] = useState("");
-    const [folderId, setFolderId] = useState<number | null>(null);
-    // Selected task / chat destination, as the picker's option key. Seeded
-    // from `context` on open, so confirming without touching the picker
+    // Selected destination as the picker's option key — a folder id (or
+    // `root`) on my-notes, a task/chat anchor key elsewhere. Seeded from
+    // `context` on open, so confirming without touching the picker
     // imports into the surface the dialog was opened from.
     const [destinationKey, setDestinationKey] = useState<string | null>(null);
     const [importing, setImporting] = useState(false);
@@ -121,7 +136,6 @@ export const ModalImportMarkdown = ({
             setFileName(null);
             setFileText(null);
             setTitle("");
-            setFolderId(context.kind === "my" ? (context.folderId ?? null) : null);
             setDestinationKey(
                 context.kind === "task"
                     ? taskDestinationKey(context.projectId, context.taskId)
@@ -132,41 +146,49 @@ export const ModalImportMarkdown = ({
                             context.isThread,
                             context.threadId
                         )
-                      : null
+                      : context.folderId != null
+                        ? String(context.folderId)
+                        : MY_ROOT_KEY
             );
             setImporting(false);
             setError(null);
         }
     }, [open]);
 
-    // Destination controls are only offered on the note-header path.
-    // Opened from a sidebar folder row, the row IS the destination — for
-    // every kind, so my-notes doesn't get a picker there either.
-    const folderRows = useMemo(
-        () =>
-            allowDestinationChange && context.kind === "my"
-                ? flattenFolders(useNM.myNoteFolders)
-                : [],
-        [allowDestinationChange, context.kind, useNM.myNoteFolders]
-    );
-
-    // Task / chat destinations. Only real tasks and real chats can hold a
-    // note, so these lists carry no project or chat-type root rows —
-    // see `noteImportDestinations`.
+    // Task / chat destinations, keyed by their anchor. Only real tasks and
+    // real chats can hold a note, so these lists carry no project or
+    // chat-type root rows — see `noteImportDestinations`.
     const taskDestinations = useMemo(
-        () =>
-            allowDestinationChange && context.kind === "task"
-                ? buildTaskNoteDestinations(useNM.taskNoteMeta, t)
-                : [],
-        [allowDestinationChange, context.kind, useNM.taskNoteMeta, t]
+        () => (context.kind === "task" ? buildTaskNoteDestinations(useNM.taskNoteMeta, t) : []),
+        [context.kind, useNM.taskNoteMeta, t]
     );
     const chatDestinations = useMemo(
-        () =>
-            allowDestinationChange && context.kind === "chat"
-                ? buildChatNoteDestinations(useNM.chatNoteMeta, t)
-                : [],
-        [allowDestinationChange, context.kind, useNM.chatNoteMeta, t]
+        () => (context.kind === "chat" ? buildChatNoteDestinations(useNM.chatNoteMeta, t) : []),
+        [context.kind, useNM.chatNoteMeta, t]
     );
+
+    // Rows for the picker. Only offered on the note-header path — opened
+    // from a sidebar folder row the row IS the destination, for every
+    // kind, so my-notes doesn't get a picker there either.
+    const destinationOptions = useMemo<DestinationOption[]>(() => {
+        if (!allowDestinationChange) return [];
+        if (context.kind === "my") {
+            return [
+                { key: MY_ROOT_KEY, label: t.notes.importMd.rootFolder },
+                ...flattenFolders(useNM.myNoteFolders),
+            ];
+        }
+        return context.kind === "task" ? taskDestinations : chatDestinations;
+    }, [
+        allowDestinationChange,
+        context.kind,
+        useNM.myNoteFolders,
+        taskDestinations,
+        chatDestinations,
+        t,
+    ]);
+
+    const selectedDestination = destinationOptions.find((o) => o.key === destinationKey) ?? null;
 
     const handleFilePicked = async (file: File) => {
         setError(null);
@@ -190,6 +212,13 @@ export const ModalImportMarkdown = ({
             const body = await markdownToNoteBlocks(fileText);
             const opts = { title: title.trim(), body };
             if (context.kind === "my") {
+                // `destinationKey` holds a folder id, or MY_ROOT_KEY for
+                // unfiled. It was seeded from `context.folderId`, so an
+                // untouched picker keeps the folder we were opened on.
+                const folderId =
+                    destinationKey && destinationKey !== MY_ROOT_KEY
+                        ? Number(destinationKey)
+                        : null;
                 await useNM.handleCreateNewMyNote(null, folderId, opts);
             } else if (context.kind === "task") {
                 // The picked destination when the user changed it, else
@@ -267,54 +296,26 @@ export const ModalImportMarkdown = ({
                         <Input value={title} onChange={(e) => setTitle(e.target.value)} />
                     </FormControl>
 
-                    {context.kind === "my" && allowDestinationChange && (
+                    {/* Destination, type-to-search. Every option is a real
+                        folder, task or chat — a note can't live on a
+                        project or on a "DM" / "GM" bucket, so those rows
+                        have no entry here. Clearing the field is ignored
+                        (a note always lands somewhere): the previous pick
+                        stays selected. */}
+                    {destinationOptions.length > 0 && (
                         <FormControl>
                             <FormLabel>{t.notes.importMd.folderLabel}</FormLabel>
-                            <Select value={folderId} onChange={(_e, v) => setFolderId(v ?? null)}>
-                                <Option value={null}>{t.notes.importMd.rootFolder}</Option>
-                                {folderRows.map((row) => (
-                                    <Option key={row.folderId} value={row.folderId}>
-                                        {`${" ".repeat(row.depth * 3)}${row.label}`}
-                                    </Option>
-                                ))}
-                            </Select>
-                        </FormControl>
-                    )}
-
-                    {/* Task / chat destination. Every option is a real
-                        task or chat — a note can't live on a project or
-                        on a "DM" / "GM" bucket, so those rows have no
-                        entry here, and there is no "none" option for the
-                        same reason. */}
-                    {context.kind === "task" && taskDestinations.length > 0 && (
-                        <FormControl>
-                            <FormLabel>{t.notes.importMd.folderLabel}</FormLabel>
-                            <Select
-                                value={destinationKey}
-                                onChange={(_e, v) => setDestinationKey(v ?? destinationKey)}
-                            >
-                                {taskDestinations.map((row) => (
-                                    <Option key={row.key} value={row.key}>
-                                        {row.label}
-                                    </Option>
-                                ))}
-                            </Select>
-                        </FormControl>
-                    )}
-
-                    {context.kind === "chat" && chatDestinations.length > 0 && (
-                        <FormControl>
-                            <FormLabel>{t.notes.importMd.folderLabel}</FormLabel>
-                            <Select
-                                value={destinationKey}
-                                onChange={(_e, v) => setDestinationKey(v ?? destinationKey)}
-                            >
-                                {chatDestinations.map((row) => (
-                                    <Option key={row.key} value={row.key}>
-                                        {row.label}
-                                    </Option>
-                                ))}
-                            </Select>
+                            <Autocomplete
+                                autoHighlight
+                                filterOptions={filterDestinations}
+                                getOptionLabel={(option) => option.label}
+                                isOptionEqualToValue={(option, value) => option.key === value.key}
+                                options={destinationOptions}
+                                value={selectedDestination}
+                                onChange={(_e, v) => {
+                                    if (v) setDestinationKey(v.key);
+                                }}
+                            />
                         </FormControl>
                     )}
 
