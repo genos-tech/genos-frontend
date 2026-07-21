@@ -18,7 +18,7 @@ import {
 import { TaskMentionHoverCard } from "../../features/tasks/components/TaskMentionHoverCard";
 import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
 import { AllChatProps } from "../../types/chat";
-import { ProjectProps, TaskTableProps } from "../../types/tasks";
+import { ProjectProps, SearchTeamTasksResponse, TaskTableProps } from "../../types/tasks";
 import { chatTypeCodeToSlug, entityRefToHref, HashEntityRef } from "../../utils/entityHref";
 import { filterAndRankSuggestionItems } from "../../utils/suggestionRanking";
 import { MentionPalette, MentionSuggestionMenu } from "./Mention";
@@ -313,8 +313,18 @@ const menuRow = (
 // `editor` (WeakMap auto-frees on gc); a hit requires all four source
 // arrays to be reference-equal, which holds in steady state because the
 // App-level provider value is memoized. Same pattern as `Mention.tsx`.
+/** What a task needs to become a `#` row, from either source. */
+type MentionableTask = {
+    projectId: string;
+    taskId: string;
+    displayId: string;
+    title: string;
+    projectName: string;
+};
+
 interface HashMenuCacheEntry {
     tasks: TaskTableProps[];
+    teamTasks: SearchTeamTasksResponse[];
     notes: HashNoteEntry[];
     chats: AllChatProps[];
     projects: ProjectProps[];
@@ -334,6 +344,7 @@ export const HashMentionMenuItems = (
     if (
         cached &&
         cached.tasks === data.tasks &&
+        cached.teamTasks === data.teamTasks &&
         cached.notes === data.notes &&
         cached.chats === data.chats &&
         cached.projects === data.projects
@@ -341,13 +352,53 @@ export const HashMentionMenuItems = (
         return cached.items;
     }
 
-    const taskItems: DefaultReactSuggestionItem[] = data.tasks
-        .filter((t) => t.id != null && t.projectId != null)
+    // Two task sources, deduped by project+task id: the OPEN project's
+    // table rows (instant — an optimistic create shows before any refetch)
+    // and the team-wide search list (every project, so `#` isn't confined
+    // to whichever project happens to be open). Open-project rows win the
+    // dedupe: same task, but that copy is the fresher of the two.
+    //
+    // The row's project name comes from the project list where possible
+    // (one lookup, always current) and from the search row otherwise. Now
+    // that the menu spans projects, it's the only thing separating two
+    // same-named tasks in different projects.
+    const projectNameById = new Map<string, string>(
+        data.projects
+            .filter((p) => p.projectId != null)
+            .map((p) => [String(p.projectId), p.projectName || ""])
+    );
+    const taskRows: MentionableTask[] = [
+        ...data.tasks
+            .filter((t) => t.id != null && t.projectId != null)
+            .map((t) => ({
+                projectId: String(t.projectId),
+                taskId: String(t.id),
+                displayId: t.displayId || "",
+                title: t.title || "",
+                projectName: projectNameById.get(String(t.projectId)) || "",
+            })),
+        ...data.teamTasks
+            .filter((t) => t.taskId != null && t.projectId != null)
+            .map((t) => ({
+                projectId: String(t.projectId),
+                taskId: String(t.taskId),
+                displayId: t.displayId || "",
+                title: t.title || "",
+                projectName: projectNameById.get(String(t.projectId)) || t.projectName || "",
+            })),
+    ];
+    const seenTaskKeys = new Set<string>();
+    const taskItems: DefaultReactSuggestionItem[] = taskRows
+        .filter((t) => {
+            const key = `${t.projectId}-${t.taskId}`;
+            if (seenTaskKeys.has(key)) return false;
+            seenTaskKeys.add(key);
+            return true;
+        })
         .map((t) => {
-            const projectId = String(t.projectId);
-            const taskId = String(t.id);
+            const { projectId, taskId } = t;
             const displayId = t.displayId || taskId;
-            const title = t.title || "";
+            const title = t.title;
             return {
                 title: displayId,
                 aliases: title ? [title] : [],
@@ -355,7 +406,7 @@ export const HashMentionMenuItems = (
                     editor.insertInlineContent([
                         {
                             type: "hashTask",
-                            props: { projectId, taskId, displayId: t.displayId || "", title },
+                            props: { projectId, taskId, displayId: t.displayId, title },
                         },
                         " ",
                     ]);
@@ -364,7 +415,9 @@ export const HashMentionMenuItems = (
                     TaskAltRoundedIcon,
                     TASK_PALETTE,
                     title || displayId,
-                    `Task · ${displayId}`
+                    t.projectName
+                        ? `Task · ${displayId} · ${t.projectName}`
+                        : `Task · ${displayId}`
                 ),
             };
         });
@@ -451,6 +504,7 @@ export const HashMentionMenuItems = (
     const items = [...taskItems, ...noteItems, ...chatItems, ...projectItems];
     _hashMenuCache.set(editor, {
         tasks: data.tasks,
+        teamTasks: data.teamTasks,
         notes: data.notes,
         chats: data.chats,
         projects: data.projects,
