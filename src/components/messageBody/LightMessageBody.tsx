@@ -51,6 +51,7 @@ import {
     USER_SELF_PALETTE,
 } from "../editors/Mention";
 import { useResolvedUserName } from "../ui/avatars/AvatarContext";
+import { isJumboEmojiBody } from "./emojiOnlyBody";
 
 type AnyBlock = Record<string, any>;
 
@@ -360,7 +361,9 @@ export const LightMessageBody = ({ content, ...ctx }: LightMessageBodyProps) => 
     // appends a trailing empty paragraph when saving, and dropping it is
     // what keeps a message from carrying a blank line at the end. Match
     // that exactly or every bubble gains a trailing gap.
-    const blocks = content.slice(0, -1);
+    // Memoized so it keeps a stable identity for the emoji-only check
+    // below (a fresh slice every render would defeat that memo).
+    const blocks = useMemo(() => content.slice(0, -1), [content]);
 
     // Anchor clicks open the in-app URL modal instead of navigating away.
     // This has to live here rather than in `MessageBody`, whose fallback
@@ -382,8 +385,17 @@ export const LightMessageBody = ({ content, ...ctx }: LightMessageBodyProps) => 
         [content]
     );
 
+    // A message that is nothing but emoji renders enlarged (Slack-style).
+    // The class goes on THIS wrapper, not on `.bn-editor`, because
+    // everything from `.bn-editor` down is the mirrored-BlockNote markup
+    // this file promises to keep identical — the wrapper is ours. The
+    // scaling itself is a single `font-size` bump in App.css: unicode
+    // emoji are text, and `CustomEmojiImg` sizes itself in `em`, so both
+    // grow from the one rule.
+    const isJumboEmoji = useMemo(() => isJumboEmojiBody(blocks), [blocks]);
+
     return (
-        <div ref={editorBoxRef}>
+        <div ref={editorBoxRef} className={isJumboEmoji ? "bn-emoji-only-body" : undefined}>
             <div className="bn-editor bn-default-styles">
                 <div className="bn-block-group" data-node-type="blockGroup">
                     {blocks.map((block, i) => (

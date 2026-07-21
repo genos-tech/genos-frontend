@@ -279,6 +279,28 @@ describe("inline content stays valid inside <p>", () => {
         expectNoBlockLevelInside(container);
     });
 
+    // The enlarged-emoji rendering is a CSS class on the body's own
+    // wrapper (see emojiOnlyBody.test.ts for what counts as emoji-only);
+    // these pin the wiring — that the class lands on an element, and only
+    // for the right messages.
+    it("marks an emoji-only message for enlarged rendering", () => {
+        const content = [
+            { type: "paragraph", content: [{ type: "text", text: "🎉 🎉", styles: {} }] },
+            { type: "paragraph", content: [] },
+        ];
+        const { container } = render(<LightMessageBody content={content} {...ctx} />);
+        expect(container.querySelector(".bn-emoji-only-body")).not.toBeNull();
+    });
+
+    it("leaves a message with text alongside the emoji at normal size", () => {
+        const content = [
+            { type: "paragraph", content: [{ type: "text", text: "nice 🎉", styles: {} }] },
+            { type: "paragraph", content: [] },
+        ];
+        const { container } = render(<LightMessageBody content={content} {...ctx} />);
+        expect(container.querySelector(".bn-emoji-only-body")).toBeNull();
+    });
+
     it("renders a custom emoji with only inline elements", () => {
         const content = [
             {
