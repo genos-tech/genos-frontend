@@ -56,6 +56,7 @@ import { ModalDeleteNote } from "./ModalDeleteNote";
 import { NoteTreeRenderer } from "./NoteTreeRenderer";
 import { NoteTypeSection } from "./NoteTypeSection";
 import { RecentNoteItem } from "./RecentNoteItem";
+import { SidebarProjectAvatar } from "./SidebarProjectAvatar";
 
 // Types for grouped task notes (Project → Milestone → Task → Subtask).
 // `directNotes` on a milestone are notes attached to the milestone's own
@@ -723,6 +724,17 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         />
     );
 
+    // A project's PM channel, which carries the project avatar. Same join
+    // key as `TaskNoteMain`: post-v3-flip a PM chat's `chatId` is the
+    // channel UUID, so match on the numeric `project.projectId` and keep
+    // the legacy id compare as a fallback for pre-migration rows.
+    const findPmChat = (projectId: number) =>
+        allChats.find(
+            (chat) =>
+                chat.chatType === 3 &&
+                (chat.project?.projectId === projectId || chat.chatId === String(projectId))
+        );
+
     // Grouped task notes by project and task
     const groupedTaskNotes = useMemo(
         () => groupTaskNotes(taskNoteState.tmpMetaTree as TaskNoteMetaTreeNode[], t),
@@ -833,6 +845,12 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                     defaultExpanded={projectGroupContainsNote(projectGroup, activeNoteId)}
                     groupKey={projectKey}
                     groupLabel={projectGroup.projectName}
+                    // The project's own avatar in place of the generic
+                    // folder glyph, so a project root reads the same here
+                    // as it does in the task-note header.
+                    leadingIcon={
+                        <SidebarProjectAvatar pmChat={findPmChat(projectGroup.projectId)} />
+                    }
                 >
                     {projectGroup.milestones.map((milestoneGroup) => {
                         const milestoneKey = `${projectKey}-milestone-${milestoneGroup.milestoneId}`;
