@@ -57,7 +57,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
     // The BlockNote editor + autosave hook now lives in
     // `TaskNoteEditorPanel`, one instance per live tab. This Main owns
     // only the active-tab-bound chrome: header, modal, task-preview link.
-    const { currentTask } = useTaskPreview({
+    const { currentTask, setPreviewTask } = useTaskPreview({
         currentTaskNote: useNM.currentTaskNote,
         myself,
         accessToken: accessToken || "",
@@ -88,9 +88,29 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
         }
     }, [useNM]);
 
+    // Opening the task preview from the note header needs BOTH gates the
+    // preview panel checks: `useNM.isTaskVisibleInNote` AND
+    // `useTM.currentPreviewTask`. Closing the preview clears the latter —
+    // `TaskTitleBlock.performClose` calls `setCurrentPreviewTaskId(-1)`,
+    // whose setter deliberately drops the loaded task object — while
+    // `useTaskPreview`'s loader only re-publishes it when the note (or
+    // route/token) changes. So a second open flipped the flag onto a
+    // `currentPreviewTask` that was still undefined and nothing rendered,
+    // until the user switched notes and back. Re-run the same load the
+    // first open used, which republishes the task object.
+    // The already-loaded copy is republished synchronously so the panel
+    // paints immediately (as it does on first open); the refetch behind
+    // it just refreshes the task.
     const handleOpenTask = useCallback(() => {
+        const note = useNM.currentTaskNote;
+        if (currentTask) {
+            useTM.setCurrentPreviewTask(currentTask);
+        }
+        if (note) {
+            void setPreviewTask(note.projectId, note.taskId);
+        }
         useNM.setIsTaskVisibleInNote(true);
-    }, [useNM]);
+    }, [useNM, useTM, currentTask, setPreviewTask]);
 
     const handleDeleteNote = useCallback(() => {
         setOpenDeleteNote(true);
