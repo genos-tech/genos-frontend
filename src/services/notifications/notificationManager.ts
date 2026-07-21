@@ -46,11 +46,20 @@ const isPageHidden = (): boolean =>
 const PUSH_COVERED_CATEGORIES: ReadonlySet<NotificationCategory> = new Set([
     "mention_chat",
     "mention_thread",
-    // Backgrounded agent run finished. The server fires this from the
-    // run-close path in `agent_views._stream_ndjson`; a hidden tab that
-    // can receive push must not ALSO raise its own card.
-    "agent_run_done",
 ]);
+// NOT listed above, deliberately: `agent_run_done`. The server does push
+// it, so listing it looks right — but the server applies two gates this
+// code can't see (a minimum run duration, and presence, which counts a
+// hidden tab as visible for up to 90s after the user switches away).
+// Deferring would mean a hidden tab inside either gate gets NOTHING,
+// which is the one outcome the feature exists to prevent. So the page
+// always raises its own card, and the two are kept from stacking by
+// sharing a notification `tag` (`agent_run_done:<run_id>`, set on both
+// sides) — a same-tag notification REPLACES rather than adds, so a
+// server push that also lands collapses into the one card.
+// This works because an agent run only completes while the tab is alive:
+// the stream stops draining when the tab closes, so the page is always
+// there to notice. Revisit if run completion ever moves fully server-side.
 
 // Synchronous "can this browser receive Web Push?" check — i.e. will the
 // service worker deliver a covered category, so the page shouldn't also

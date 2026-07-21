@@ -76,7 +76,9 @@ describe("agent run completion notice — Spotlight", () => {
         await waitFor(() => expect(notify).toHaveBeenCalledTimes(1));
         const intent = notify.mock.calls[0][0];
         expect(intent.category).toBe("agent_run_done");
-        expect(intent.id).toBe("agent-run:spotlight:run-7");
+        // Must match genos-api's push tag byte-for-byte — that shared
+        // string is what collapses a page card and a server push.
+        expect(intent.id).toBe("agent_run_done:run-7");
         expect(intent.body).toContain("why did the deploy fail?");
         // Stamping the asker as sender would make the manager drop this
         // as a self-notification — the asker IS the recipient here.
@@ -215,6 +217,8 @@ describe("notifyAgentRunComplete", () => {
     });
 
     it("falls back to the turn id when the run never reported one", () => {
+        // The server never pushes for a run that died before reporting an
+        // id, so there is nothing for this key to collide with.
         const { manager, notify } = makeManager();
         notifyAgentRunComplete(manager, {
             surface: "note",
@@ -222,7 +226,33 @@ describe("notifyAgentRunComplete", () => {
             runId: null,
             turnId: 3,
         });
-        expect(notify.mock.calls[0][0].id).toBe("agent-run:note:3");
+        expect(notify.mock.calls[0][0].id).toBe("agent_run_done:note:3");
+    });
+
+    it("does not defer to Web Push on a hidden tab", () => {
+        // The regression this guards: adding `agent_run_done` to
+        // PUSH_COVERED_CATEGORIES makes the page yield to the server —
+        // but the server also applies a duration floor and a presence
+        // gate (a hidden tab still counts as visible for up to 90s).
+        // Inside either gate, deferring means NOBODY notifies. The two
+        // are de-duplicated by the shared tag instead, so the page must
+        // always raise its own card.
+        const managerWithPush = new NotificationManager({ currentUserId: "me" });
+        managerWithPush.setPushActive(true);
+        const hidden = vi
+            .spyOn(document, "visibilityState", "get")
+            .mockReturnValue("hidden" as DocumentVisibilityState);
+        try {
+            const dispatch = notifyAgentRunComplete(managerWithPush, {
+                surface: "spotlight",
+                askedQuery: "did the backfill finish?",
+                runId: "run-99",
+                turnId: 1,
+            });
+            expect(dispatch).not.toBe("ignored-push-owned");
+        } finally {
+            hidden.mockRestore();
+        }
     });
 
     it("truncates a long question rather than dumping it into the card", () => {

@@ -14,11 +14,15 @@
 //                      for this browser, in which case the service worker
 //                      owns the OS card and the page suppresses its own.
 //
-// That last branch is why `agent_run_done` must stay listed in the
-// manager's `PUSH_COVERED_CATEGORIES` in lockstep with the server firing
-// the push (genos-api `agent_views._push_run_complete`) — listed but not
-// pushed means a hidden tab gets nothing at all; pushed but not listed
-// means the user gets two cards for one answer.
+// `agent_run_done` is deliberately NOT in the manager's
+// `PUSH_COVERED_CATEGORIES`: the server push (genos-api
+// `_push_run_complete`) applies a duration floor and a presence gate that
+// this code can't observe, so deferring to it would leave a hidden tab
+// with nothing whenever either gate bites. Instead the page always raises
+// its own card, and the intent `id` is aligned with the server's push
+// `tag` (`agent_run_done:<run_id>`) so a push that also arrives REPLACES
+// the page's card instead of stacking a second one. Keep the two formats
+// identical — that shared string is the entire de-duplication mechanism.
 
 import { fmt, getMessages } from "../../i18n";
 import type { NotificationManager } from "./notificationManager";
@@ -86,9 +90,15 @@ export const notifyAgentRunComplete = (
     const t = getMessages().services.notifications.agentRun;
     const query = truncate(notice.askedQuery);
     return manager.notify({
-        // Stable per run so a `done` arriving after an `error` (or a
-        // double-invoked effect) collapses into one card.
-        id: `agent-run:${notice.surface}:${notice.runId || notice.turnId}`,
+        // Doubles as the browser notification `tag`, so this MUST match
+        // the server's push tag byte-for-byte when a run id is known —
+        // that's what collapses a page card and a server push into one.
+        // Runs that ended before reporting a run id (a transport failure
+        // mid-stream) fall back to the client turn id; the server never
+        // pushes for those, so there is nothing to collide with.
+        id: notice.runId
+            ? `agent_run_done:${notice.runId}`
+            : `agent_run_done:${notice.surface}:${notice.turnId}`,
         category: "agent_run_done",
         title: `${notice.error ? t.failedTitle : t.doneTitle} • ${surfaceLabel(notice.surface)}`,
         body: query ? fmt(t.body, { query }) : t.bodyNoQuery,
