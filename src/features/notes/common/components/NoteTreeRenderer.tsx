@@ -99,10 +99,10 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
         // Opening a note clears its unread @mentions (chat-style read).
         if (hasUnread) markRead(noteType, node.noteId);
 
-        // If the node has children and we're clicking it, expand it
-        if (hasChildren && !open) {
-            useNM.expandNode(noteType, node.noteId);
-        }
+        // Deliberately does NOT expand this node: opening a note should
+        // reveal the note, not unfold its child notes. The chevron is the
+        // control for that (and the ancestor chain still auto-expands in
+        // `useNoteManagement`, so the row itself stays visible).
     };
 
     const handleChevronClick = (e: React.MouseEvent) => {

@@ -139,7 +139,15 @@ export const NoteHome = (props: NoteHomeProps) => {
                         <PanelGroup direction="horizontal" style={{ flex: 1 }}>
                             <Panel id={"1"} maxSize={25} minSize={10} order={1}>
                                 <Box sx={ls.sidebarPanel}>
-                                    <NoteSidebar allChats={useCM.allChats} useNM={useNM} />
+                                    <NoteSidebar
+                                        myself={myself}
+                                        setMyself={setMyself}
+                                        socket={socket}
+                                        useCM={useCM}
+                                        useNM={useNM}
+                                        useTEM={useTEM}
+                                        useUISM={useUISM}
+                                    />
                                 </Box>
                             </Panel>
 
