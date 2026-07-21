@@ -1082,6 +1082,29 @@ html,
     z-index: 1400 !important;
 }
 
+/* …and the counterpart the block above creates.
+
+   BlockNote's comment popups — the reaction emoji picker and the
+   comment "⋯" menu — are Mantine popovers, and BlockNote's Mantine
+   adapter passes them no `zIndex`, so they land on Mantine's default
+   popover layer (300). Everything else here is positioned as
+   `calc(var(--bn-ui-base-z-index, 0) + <offset>)`, which the 1400 base
+   above lifts to 1400–1490 — the floating comment card itself is
+   offset 30, i.e. 1430. So the picker opened at 300, *behind* the very
+   comment it belongs to (they overlap: it drops out of the card's own
+   toolbar). Both share BlockNote's body-level portal, so this is a
+   plain within-portal ordering fight, not a portal-escape problem.
+
+   Fixed here rather than at the call site because the adapter accepts
+   no z-index prop — the class is the only handle. `+ 100` clears every
+   BlockNote offset (they top out at +90) and tracks the base variable,
+   so it keeps working if that base is ever re-tuned. `!important`
+   because Mantine writes its z-index inline on this same node. */
+.bn-emoji-picker-popover,
+.bn-menu-dropdown {
+    z-index: calc(var(--bn-ui-base-z-index, 0) + 100) !important;
+}
+
 /* Tablet optimizations */
 @media (min-width: 768px) and (max-width: 1023px) {
     .bn-chat-editor-box-light .bn-editor,
