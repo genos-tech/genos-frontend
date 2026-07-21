@@ -436,6 +436,21 @@ input[type="checkbox"] {
    BlockNote Editor Styles
    ========================================================================== */
 
+/* Emoji-only messages render enlarged, the way Slack/iMessage do — a
+   lone 🎉 as body text reads as an afterthought rather than the reply it
+   is. `LightMessageBody` puts this class on its own wrapper when the
+   whole message is emoji (whitespace ignored); see `emojiOnlyBody.ts`
+   for what counts.
+
+   ONE `font-size` does the whole job: unicode emoji are text, and
+   `CustomEmojiImg` sizes itself in `em`, so team emoji scale with it and
+   a mixed 🎉 + :party: message stays visually even. `line-height`
+   tightens the taller line back toward the bubble's own rhythm. */
+.bn-emoji-only-body .bn-inline-content {
+    font-size: 2.2em;
+    line-height: 1.25;
+}
+
 /* Message bubble preview styles */
 /* Light mode - Received messages (white background) */
 .bn-message-bubble-box-light .bn-editor {
