@@ -46,6 +46,10 @@ const isPageHidden = (): boolean =>
 const PUSH_COVERED_CATEGORIES: ReadonlySet<NotificationCategory> = new Set([
     "mention_chat",
     "mention_thread",
+    // Backgrounded agent run finished. The server fires this from the
+    // run-close path in `agent_views._stream_ndjson`; a hidden tab that
+    // can receive push must not ALSO raise its own card.
+    "agent_run_done",
 ]);
 
 // Synchronous "can this browser receive Web Push?" check — i.e. will the

@@ -24,7 +24,14 @@ import {
     type NoteContext,
     type NoteSummaryResponse,
 } from "../../services/agentApi";
-import { useAgentQA, type CompletedTurn, type UseAgentQAReturn } from "../agentQA";
+import { notifyAgentRunComplete } from "../../services/notifications/agentRunNotice";
+import { useNotificationsContext } from "../../services/notifications/NotificationsContext";
+import {
+    useAgentQA,
+    type AgentRunResult,
+    type CompletedTurn,
+    type UseAgentQAReturn,
+} from "../agentQA";
 
 // Map a server-side AgentSessionTurn to the local CompletedTurn shape.
 // Same shape as the thread variant — both share the same backend session
@@ -104,6 +111,15 @@ export const useNoteAsk = ({ accessToken, teamId }: UseNoteAskArgs): UseNoteAskR
         noteContextRef.current = noteContext;
     }, [noteContext]);
 
+    // Completion notice for a run that finished after the modal closed —
+    // mirrors useThreadAsk; see its comment for why `isOpen` is read
+    // through a ref and why reopening is just `setIsOpen(true)`.
+    const notifications = useNotificationsContext();
+    const isOpenRef = useRef(isOpen);
+    useEffect(() => {
+        isOpenRef.current = isOpen;
+    }, [isOpen]);
+
     // The generic Q&A hook. `buildAskExtras` is called fresh on every
     // onAsk(), so reads via noteContextRef pick up the latest value
     // without invalidating the closure.
@@ -115,6 +131,20 @@ export const useNoteAsk = ({ accessToken, teamId }: UseNoteAskArgs): UseNoteAskR
                 noteContext: noteContextRef.current ?? undefined,
             }),
             []
+        ),
+        onRunComplete: useCallback(
+            (result: AgentRunResult) => {
+                if (isOpenRef.current) return; // user watched it finish
+                notifyAgentRunComplete(notifications?.manager, {
+                    surface: "note",
+                    askedQuery: result.askedQuery,
+                    runId: result.runId,
+                    turnId: result.turnId,
+                    error: result.error,
+                    onOpen: () => setIsOpen(true),
+                });
+            },
+            [notifications]
         ),
     });
 

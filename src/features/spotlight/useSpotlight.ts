@@ -45,6 +45,8 @@ import {
     type AgentUsage,
     type PendingApprovalPayload,
 } from "../../services/agentApi";
+import { notifyAgentRunComplete } from "../../services/notifications/agentRunNotice";
+import type { NotificationManager } from "../../services/notifications/notificationManager";
 import { searchSpotlight } from "../../services/searchApi";
 import { isMac } from "../../utils/platform";
 import {
@@ -100,6 +102,11 @@ const MAX_STORED_TURNS = 10; // lower cap than in-memory to limit storage size
 export interface UseSpotlightArgs {
     accessToken: string | null;
     teamId: string | null | undefined;
+    // Passed in rather than read from `useNotificationsContext` because
+    // this hook is called at the App root, ABOVE the provider that would
+    // supply it. Optional so the Spotlight tests (and any consumer that
+    // doesn't care) can leave it out — the notice is then skipped.
+    notificationManager?: NotificationManager | null;
 }
 
 // History feature (Phase ~4.6): read-only archive of past agent
@@ -166,7 +173,11 @@ const EMPTY_ASK_STATE: AskState = {
     turnId: 0,
 };
 
-export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpotlightReturn => {
+export const useSpotlight = ({
+    accessToken,
+    teamId,
+    notificationManager,
+}: UseSpotlightArgs): UseSpotlightReturn => {
     const { t } = useTranslation();
     const [isOpen, setIsOpen] = useState(false);
     const [query, setQuery] = useState("");
@@ -215,6 +226,43 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
     useEffect(() => {
         isOpenRef.current = isOpen;
     }, [isOpen]);
+
+    // ---- Backgrounded-run completion notice. ----
+    //
+    // Closing the overlay deliberately leaves an in-flight ask streaming
+    // (see the close effect below), so an answer can land minutes after
+    // the user has moved on. `liveRunRef` mirrors the in-flight turn
+    // because the stream handlers can't read fresh `ask` state — updaters
+    // run at commit time, so a handler closure only sees a stale
+    // snapshot. Mirrored fields are exactly what the notice needs.
+    const liveRunRef = useRef<{ turnId: number; askedQuery: string } | null>(null);
+    // At most one notice per turn. Kept separate from
+    // `promotedTurnIdsRef` because Cancel also promotes, and a run the
+    // user stopped on purpose must not announce itself.
+    const notifiedTurnIdsRef = useRef<Set<number>>(new Set());
+    const notificationManagerRef = useRef(notificationManager);
+    useEffect(() => {
+        notificationManagerRef.current = notificationManager;
+    }, [notificationManager]);
+
+    const notifyRunFinished = useCallback(
+        (turnId: number, runId: string | null, error: string | null) => {
+            const live = liveRunRef.current;
+            if (!live || live.turnId !== turnId) return;
+            if (isOpenRef.current) return; // user watched it finish
+            if (notifiedTurnIdsRef.current.has(turnId)) return;
+            notifiedTurnIdsRef.current.add(turnId);
+            notifyAgentRunComplete(notificationManagerRef.current, {
+                surface: "spotlight",
+                askedQuery: live.askedQuery,
+                runId,
+                turnId,
+                error,
+                onOpen: () => setIsOpen(true),
+            });
+        },
+        []
+    );
 
     // ---- Global keyboard shortcut: Cmd-K / Ctrl-K toggles. ----
     useEffect(() => {
@@ -558,6 +606,7 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
                             : prev
                     );
                     promoteCurrentTurn(askedTurnId);
+                    notifyRunFinished(askedTurnId, runId ?? null, null);
                 },
                 onError: (message: string) => {
                     setAsk((prev) =>
@@ -566,6 +615,7 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
                             : prev
                     );
                     promoteCurrentTurn(askedTurnId);
+                    notifyRunFinished(askedTurnId, null, message);
                 },
                 onToolStart: ({
                     step,
@@ -691,7 +741,7 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
                 },
             };
         },
-        [promoteCurrentTurn]
+        [promoteCurrentTurn, notifyRunFinished]
     );
 
     // ---- Enter / Ask button handler: stream the agent's answer. ----
@@ -751,6 +801,9 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
                 turnId: askedTurnId,
                 askedMentions: mentions?.length ? mentions : undefined,
             });
+
+            // Mirror for the completion notice (see `notifyRunFinished`).
+            liveRunRef.current = { turnId: askedTurnId, askedQuery: trimmed };
 
             // The Spotlight filter chips are a SEARCH-ONLY feature: they
             // scope the typeahead, never the agent. An ask is intentionally
@@ -846,6 +899,9 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
     const onCancel = useCallback(() => {
         askAbortRef.current?.abort();
         askAbortRef.current = null;
+        // The user stopped this on purpose — drop the mirror so no
+        // "your answer is ready" notice fires for it.
+        liveRunRef.current = null;
         setAsk((prev) => {
             if (!prev.isStreaming && prev.pendingApproval === null) return prev;
             const turnId = prev.turnId;
@@ -937,6 +993,11 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
     const onNewConversation = useCallback(() => {
         askAbortRef.current?.abort();
         askAbortRef.current = null;
+        // `turnId` restarts at 0 with EMPTY_ASK_STATE, so the notified
+        // set has to be cleared alongside the promoted one — a stale id
+        // would otherwise mute the first turn of the new conversation.
+        liveRunRef.current = null;
+        notifiedTurnIdsRef.current.clear();
         promotedTurnIdsRef.current.clear();
         setTurns([]);
         setAsk(EMPTY_ASK_STATE);

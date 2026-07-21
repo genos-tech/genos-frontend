@@ -28,6 +28,7 @@ export const services = {
             mentionNoteMy: "In My Notes",
             mentionNoteTask: "In a task note",
             mentionNoteChat: "In a chat note",
+            agentRunDone: "AI answer ready",
         },
         // Top banner (PermissionBanner.tsx) prompting the user to grant
         // browser-notification permission.
@@ -75,7 +76,21 @@ export const services = {
                 mentionNoteMy: "When someone @-mentions you in My Notes.",
                 mentionNoteTask: "When someone @-mentions you in a task note.",
                 mentionNoteChat: "When someone @-mentions you in a chat note.",
+                agentRunDone:
+                    "When an AI answer finishes after you've closed the Spotlight, thread, or note window.",
             },
+        },
+        // Completion notice for an agent run that finished while its
+        // surface was closed (`agentRunNotice.ts`). `{query}` is the
+        // user's own question, truncated client-side.
+        agentRun: {
+            doneTitle: "Your AI answer is ready",
+            failedTitle: "Your AI answer didn't finish",
+            body: "{query}",
+            bodyNoQuery: "Reopen to read the full answer.",
+            surfaceSpotlight: "Spotlight",
+            surfaceThread: "Ask about this thread",
+            surfaceNote: "Ask about this note",
         },
         // Display labels for chat-type integers. Two separate maps:
         //   * `routerChatType` is the short label embedded in a notification
