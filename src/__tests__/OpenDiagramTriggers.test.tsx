@@ -80,15 +80,14 @@ describe("DraggableTaskRow open-diagram trigger", () => {
         render(
             dnd(
                 <DraggableTaskRow
-                    childrenByParent={new Map()}
                     columns={[]}
                     depth={depth}
                     expandedRows={new Set()}
+                    hasChildren={false}
                     index={0}
+                    isSelected={false}
                     mode="light"
                     myself={myself}
-                    pendingMilestoneId={null}
-                    pendingTaskId={null}
                     setMyself={vi.fn()}
                     socket={null}
                     task={makeTask()}

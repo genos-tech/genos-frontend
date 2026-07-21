@@ -181,7 +181,7 @@ const getDragHandleStyles = (
         : "transparent",
 });
 
-type DraggableTaskRowProps = {
+export type DraggableTaskRowProps = {
     task: TaskTableProps;
     index: number;
     columns: ColumnDef[];
@@ -194,11 +194,17 @@ type DraggableTaskRowProps = {
     // rapid clicks so the heavy TaskPreview fetch cascade only fires
     // for the last row the user lands on.
     onRequestPreview: (task: TaskTableProps) => void;
-    // Local pending highlight from the parent: when set, the row should
-    // light up against these IDs (instant feedback) even though the
-    // real useTM.currentPreview* hasn't caught up yet.
-    pendingTaskId: number | null;
-    pendingMilestoneId: number | null;
+    // Whether this row is the currently selected/previewed one. Resolved
+    // by the parent (see `resolveIsSelected` in DraggableTaskTable) from
+    // the pending-click IDs and the real useTM.currentPreview* state.
+    //
+    // This is deliberately a per-row BOOLEAN rather than the global IDs
+    // it derives from: a selection change alters the booleans of only the
+    // two affected rows, so `areEqual` lets every other row bail out.
+    // Comparing the global IDs here instead made every preview switch
+    // re-render all N rows — the table's share of the task-switch jank.
+    // Mirrors the pattern SprintBoardCard already uses.
+    isSelected: boolean;
     useTM: TaskManagementState;
     useTEM: TeamManagementState;
     useCM: ChatManagementState;
@@ -207,7 +213,12 @@ type DraggableTaskRowProps = {
     setMyself: (value: UserProps) => void;
     expandedRows: Set<string>;
     toggleExpand: (id: string) => void;
-    childrenByParent: Map<string, TaskTableProps[]>;
+    // Whether this row has at least one child in the filtered tree. Passed
+    // as a boolean rather than the shared `childrenByParent` Map for the
+    // same reason as `isSelected`: the Map is rebuilt whenever `allTasks`
+    // identity changes (which happens on every task open), so comparing it
+    // by reference in `areEqual` defeated the memo for every row.
+    hasChildren: boolean;
     depth: number;
     // sprintId → sprint name lookup for the "Sprint" column. The column
     // is conditionally surfaced by DraggableTaskTable when a milestone
@@ -238,8 +249,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
         teamMembers,
         onRowUpdate,
         onRequestPreview,
-        pendingTaskId,
-        pendingMilestoneId,
+        isSelected,
         useTM,
         useTEM,
         useCM,
@@ -248,7 +258,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
         setMyself,
         expandedRows,
         toggleExpand,
-        childrenByParent,
+        hasChildren,
         depth,
         sprintNamesById,
         onQuickAddChild,
@@ -259,7 +269,6 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
     const { accessToken } = useAuth();
     const isChild = depth > 0;
     const taskIdStr = String(task.id);
-    const hasChildren = childrenByParent.has(taskIdStr);
     const isExpanded = expandedRows.has(taskIdStr);
 
     // Row DOM ref so we can pull the selected row into view when the
@@ -270,22 +279,11 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
     // path that's already centered.
     const rowRef = useRef<HTMLDivElement | null>(null);
 
-    // Check if this row is the currently selected/previewed task.
-    // Milestone rows are selected when the milestone preview is open
-    // for this task's milestoneId. While a click-debounce is in flight
-    // the parent passes pendingTaskId / pendingMilestoneId so the
-    // highlight tracks the latest click instantly even though
-    // useTM.currentPreview* hasn't switched yet.
+    // Whether this row is the currently selected/previewed task is
+    // resolved by the parent and arrives as the `isSelected` prop — see
+    // `resolveIsSelected` in DraggableTaskTable for the milestone /
+    // pending-click precedence rules.
     const isMilestoneRow = task.isMilestone === true;
-    const isSelected = isMilestoneRow
-        ? pendingMilestoneId != null
-            ? pendingMilestoneId === task.milestoneId
-            : useTM.isTaskPreviewVisible &&
-              useTM.currentPreviewKind === "milestone" &&
-              useTM.currentPreviewMilestoneId === task.milestoneId
-        : pendingTaskId != null
-          ? pendingTaskId === Number(task.id)
-          : useTM.isTaskPreviewVisible && useTM.currentPreviewTaskId === Number(task.id);
 
     // When this row becomes the selected/previewed one, nudge it into
     // view if the user can't already see it. Scoped to the false→true
@@ -1722,19 +1720,38 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
 // setState) since a memo-skipped render would otherwise keep invoking a
 // stale closure.
 //
-// The useTM fields that DO affect rendering — they drive the "this row
-// is selected" highlight — are compared explicitly so the row re-renders
-// when the preview pane opens/closes against a different task/milestone.
-// `pendingTaskId` and `pendingMilestoneId` are part of that same
-// highlight calculation (they take priority over the useTM values
-// during the click-debounce window) so they belong in the comparator
-// too — otherwise the in-flight click would not light the row up.
+// Every remaining prop is either per-row (so a change genuinely concerns
+// THIS row) or identity-stable across a preview switch. That is the whole
+// point: opening a task must not re-render rows it doesn't touch.
+//
+// Two props exist purely to keep that property, and must NOT be replaced
+// by the shared structures they're derived from:
+//
+//  * `isSelected` — previously the row compared the global
+//    `useTM.currentPreview{TaskId,MilestoneId,Kind}` + `isTaskPreviewVisible`
+//    and the parent's `pendingTaskId` / `pendingMilestoneId`. All six change
+//    on every preview switch, so every row failed equality and re-rendered.
+//    A single click flips them several times (pending set → debounced real
+//    setter → pending clear), so an N-row table paid N full row renders
+//    three times over per click.
+//
+//  * `hasChildren` — previously the `childrenByParent` Map, compared by
+//    reference. It is rebuilt whenever `useTM.allTasks` identity changes,
+//    and opening a task changes that identity (see the preview→row mirror
+//    in useTaskManagement), so this alone re-rendered every row per click
+//    even when the selection comparison was satisfied.
 //
 // `task` is compared by reference: useTaskManagement replaces a task via
 // `next[existingIdx] = nextRow` with a fresh object, so any real content
 // change produces a new reference. `columnsWithWidths` is memoized in
 // DraggableTaskTable for the same reason.
-const areEqual = (prev: DraggableTaskRowProps, next: DraggableTaskRowProps): boolean =>
+// Exported for direct unit testing — see TaskRowSelectionMemo.test.ts.
+// The row is far too heavy to assert this invariant by rendering N of
+// them, and the comparator IS the invariant.
+export const draggableTaskRowPropsAreEqual = (
+    prev: DraggableTaskRowProps,
+    next: DraggableTaskRowProps
+): boolean =>
     prev.task === next.task &&
     prev.index === next.index &&
     prev.columns === next.columns &&
@@ -1743,13 +1760,8 @@ const areEqual = (prev: DraggableTaskRowProps, next: DraggableTaskRowProps): boo
     prev.myself.userId === next.myself.userId &&
     prev.teamMembers === next.teamMembers &&
     prev.expandedRows === next.expandedRows &&
-    prev.childrenByParent === next.childrenByParent &&
+    prev.hasChildren === next.hasChildren &&
     prev.sprintNamesById === next.sprintNamesById &&
-    prev.pendingTaskId === next.pendingTaskId &&
-    prev.pendingMilestoneId === next.pendingMilestoneId &&
-    prev.useTM.isTaskPreviewVisible === next.useTM.isTaskPreviewVisible &&
-    prev.useTM.currentPreviewKind === next.useTM.currentPreviewKind &&
-    prev.useTM.currentPreviewTaskId === next.useTM.currentPreviewTaskId &&
-    prev.useTM.currentPreviewMilestoneId === next.useTM.currentPreviewMilestoneId;
+    prev.isSelected === next.isSelected;
 
-export const DraggableTaskRow = memo(DraggableTaskRowImpl, areEqual);
+export const DraggableTaskRow = memo(DraggableTaskRowImpl, draggableTaskRowPropsAreEqual);

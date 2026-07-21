@@ -57,7 +57,6 @@ const MILESTONE_ACCENT_BG_DARK = "rgba(249,115,22,0.35)";
 const MILESTONE_ACCENT_BG_LIGHT = "rgba(249,115,22,0.6)";
 
 type TaskFilterMenuProps = {
-    isTaskUpdated?: boolean;
     useTM: TaskManagementState;
     // Optional: when provided, the filter bar exposes a Milestone
     // multi-select drawn from the same visible/sorted set as the
@@ -92,7 +91,6 @@ type TaskFilterMenuProps = {
 
 export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
     const {
-        isTaskUpdated,
         useTM,
         useSM,
         predefinedTagsFilters,
@@ -583,17 +581,21 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         );
     }, [useTM.allTasks, useTM.tableMilestoneFilterId, selectedMilestoneKeys]);
 
-    useEffect(() => {
-        if (isTaskUpdated) {
-            applyFilters(
-                selectedStatus,
-                selectedTags,
-                selectedPriorities,
-                selectedEffortLevels,
-                selectedMilestoneKeys
-            );
-        }
-    }, [isTaskUpdated]);
+    // NOTE: there used to be a second `applyFilters` pass here, keyed on
+    // `[isTaskUpdated]`. It was redundant and expensive.
+    //
+    // Redundant because `applyFilters` derives entirely from
+    // `useTM.allTasks`, `useTM.tableMilestoneFilterId` and the selection
+    // state — every one of which already re-runs it, either through the
+    // effect above or through the handler that changes a selection. Any
+    // real task edit reaches the table by writing `allTasks`, so the
+    // effect above catches it.
+    //
+    // Expensive because `isTaskUpdated` flips on every task OPEN, not just
+    // on an edit — so simply clicking through tasks ran a second full O(N)
+    // walk plus an O(N log N) sort, on top of the one the `allTasks` pass
+    // was already doing. Both surfaces that host this menu (task table and
+    // sprint board) then rebuilt their derived structures a second time.
 
     // Modern filter button style generator
     const getFilterButtonStyle = (filter: FilterProps, isAllSelected: boolean) => ({

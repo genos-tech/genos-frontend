@@ -1206,6 +1206,39 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         ]
     );
 
+    // Resolve "is this row the selected/previewed one" HERE rather than
+    // inside the row. The inputs (pending click IDs + the real
+    // useTM.currentPreview* state) all change on every preview switch, so
+    // letting the row compare them meant every row failed its memo check
+    // and re-rendered — three times per click, once each for the pending
+    // set, the debounced real setter and the pending clear. Resolving to a
+    // per-row boolean here means only the two rows whose selection
+    // actually flipped re-render. Same precedence as before: a pending
+    // click wins over the settled useTM state so the highlight tracks the
+    // latest click instantly.
+    const resolveIsSelected = useCallback(
+        (task: TaskTableProps): boolean => {
+            if (task.isMilestone === true) {
+                if (pendingMilestoneId != null) return pendingMilestoneId === task.milestoneId;
+                return (
+                    useTM.isTaskPreviewVisible &&
+                    useTM.currentPreviewKind === "milestone" &&
+                    useTM.currentPreviewMilestoneId === task.milestoneId
+                );
+            }
+            if (pendingTaskId != null) return pendingTaskId === Number(task.id);
+            return useTM.isTaskPreviewVisible && useTM.currentPreviewTaskId === Number(task.id);
+        },
+        [
+            pendingTaskId,
+            pendingMilestoneId,
+            useTM.isTaskPreviewVisible,
+            useTM.currentPreviewKind,
+            useTM.currentPreviewTaskId,
+            useTM.currentPreviewMilestoneId,
+        ]
+    );
+
     // Show the "Sprint" column only when the filtered list actually
     // contains a milestone — for a pure task-only view the sprint linkage
     // adds noise (most tasks don't carry a sprint of their own; they
@@ -1321,7 +1354,6 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                 }}
             >
                 <TaskFilterMenu
-                    isTaskUpdated={useTM.isTaskUpdated}
                     predefinedTagsFilters={predefinedTagsFilters}
                     setCurrentDisplayingTasks={setCurrentDisplayingTasksSorted}
                     setVisibleChildTaskIds={setVisibleChildTaskIds}
@@ -1493,15 +1525,14 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                     {displayRows.map((task, index) => (
                                         <Fragment key={task.id}>
                                             <DraggableTaskRow
-                                                childrenByParent={childrenByParent}
                                                 columns={columnsWithWidths}
                                                 depth={depthMap.get(String(task.id)) ?? 0}
                                                 expandedRows={expandedRows}
+                                                hasChildren={childrenByParent.has(String(task.id))}
                                                 index={index}
+                                                isSelected={resolveIsSelected(task)}
                                                 mode={mode}
                                                 myself={myself}
-                                                pendingMilestoneId={pendingMilestoneId}
-                                                pendingTaskId={pendingTaskId}
                                                 setMyself={setMyself}
                                                 socket={socket}
                                                 sprintNamesById={sprintNamesById}
