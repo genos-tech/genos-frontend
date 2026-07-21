@@ -16,12 +16,18 @@ import {
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { useTranslation } from "../../../../i18n";
 import { MyNoteFolderProps } from "../../../../types/notes";
+import {
+    buildChatNoteDestinations,
+    buildTaskNoteDestinations,
+    chatDestinationKey,
+    taskDestinationKey,
+} from "../services/noteImportDestinations";
 import { markdownToNoteBlocks, titleFromFilename } from "../services/noteMarkdown";
 
 /** Where the imported note gets created — mirrors the surface the ⋮ menu
- *  was opened from. My-notes additionally pick a destination folder. */
+ *  was opened from, and seeds the destination picker. */
 export type ImportMarkdownContext =
-    | { kind: "my" }
+    | { kind: "my"; folderId?: number | null }
     | { kind: "task"; projectId: number; taskId: number }
     | {
           kind: "chat";
@@ -39,6 +45,11 @@ interface Props {
     /** Lift above the UrlLinkModal when the header is modal-hosted —
      *  same convention as every other note-header dialog. */
     hostZIndex?: number;
+    /** Show the destination picker (note headers, where "somewhere else"
+     *  is a reasonable ask). Opened from a sidebar folder row the
+     *  destination IS that folder, so the picker is suppressed and
+     *  `context` is used verbatim. */
+    allowDestinationChange?: boolean;
 }
 
 // Flatten the folder list into indented select rows (name-sorted per
@@ -75,7 +86,14 @@ const flattenFolders = (folders: MyNoteFolderProps[]): FolderRow[] => {
  * (with `opts.title` / `opts.body` overrides), so the new note opens in a
  * tab and lands in the sidebar exactly like a hand-created one.
  */
-export const ModalImportMarkdown = ({ open, onClose, context, useNM, hostZIndex }: Props) => {
+export const ModalImportMarkdown = ({
+    open,
+    onClose,
+    context,
+    useNM,
+    hostZIndex,
+    allowDestinationChange = false,
+}: Props) => {
     const { t } = useTranslation();
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -83,6 +101,10 @@ export const ModalImportMarkdown = ({ open, onClose, context, useNM, hostZIndex 
     const [fileText, setFileText] = useState<string | null>(null);
     const [title, setTitle] = useState("");
     const [folderId, setFolderId] = useState<number | null>(null);
+    // Selected task / chat destination, as the picker's option key. Seeded
+    // from `context` on open, so confirming without touching the picker
+    // imports into the surface the dialog was opened from.
+    const [destinationKey, setDestinationKey] = useState<string | null>(null);
     const [importing, setImporting] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -92,15 +114,51 @@ export const ModalImportMarkdown = ({ open, onClose, context, useNM, hostZIndex 
             setFileName(null);
             setFileText(null);
             setTitle("");
-            setFolderId(null);
+            setFolderId(context.kind === "my" ? (context.folderId ?? null) : null);
+            setDestinationKey(
+                context.kind === "task"
+                    ? taskDestinationKey(context.projectId, context.taskId)
+                    : context.kind === "chat"
+                      ? chatDestinationKey(
+                            context.chatType,
+                            context.chatId,
+                            context.isThread,
+                            context.threadId
+                        )
+                      : null
+            );
             setImporting(false);
             setError(null);
         }
-    }, [open]);
+    }, [open, context]);
 
+    // Destination controls are only offered on the note-header path.
+    // Opened from a sidebar folder row, the row IS the destination — for
+    // every kind, so my-notes doesn't get a picker there either.
     const folderRows = useMemo(
-        () => (context.kind === "my" ? flattenFolders(useNM.myNoteFolders) : []),
-        [context.kind, useNM.myNoteFolders]
+        () =>
+            allowDestinationChange && context.kind === "my"
+                ? flattenFolders(useNM.myNoteFolders)
+                : [],
+        [allowDestinationChange, context.kind, useNM.myNoteFolders]
+    );
+
+    // Task / chat destinations. Only real tasks and real chats can hold a
+    // note, so these lists carry no project or chat-type root rows —
+    // see `noteImportDestinations`.
+    const taskDestinations = useMemo(
+        () =>
+            allowDestinationChange && context.kind === "task"
+                ? buildTaskNoteDestinations(useNM.taskNoteMeta, t)
+                : [],
+        [allowDestinationChange, context.kind, useNM.taskNoteMeta, t]
+    );
+    const chatDestinations = useMemo(
+        () =>
+            allowDestinationChange && context.kind === "chat"
+                ? buildChatNoteDestinations(useNM.chatNoteMeta, t)
+                : [],
+        [allowDestinationChange, context.kind, useNM.chatNoteMeta, t]
     );
 
     const handleFilePicked = async (file: File) => {
@@ -127,20 +185,24 @@ export const ModalImportMarkdown = ({ open, onClose, context, useNM, hostZIndex 
             if (context.kind === "my") {
                 await useNM.handleCreateNewMyNote(null, folderId, opts);
             } else if (context.kind === "task") {
+                // The picked destination when the user changed it, else
+                // the surface this dialog was opened from.
+                const picked = taskDestinations.find((d) => d.key === destinationKey);
                 await useNM.handleCreateNewTaskNote(
                     null,
-                    context.projectId,
-                    context.taskId,
+                    picked?.projectId ?? context.projectId,
+                    picked?.taskId ?? context.taskId,
                     undefined,
                     opts
                 );
             } else {
+                const picked = chatDestinations.find((d) => d.key === destinationKey);
                 await useNM.handleCreateNewChatNote(
                     null,
-                    context.chatType,
-                    context.chatId,
-                    context.isThread,
-                    context.threadId,
+                    picked?.chatType ?? context.chatType,
+                    picked?.chatId ?? context.chatId,
+                    picked?.isThread ?? context.isThread,
+                    picked?.threadId ?? context.threadId,
                     undefined,
                     opts
                 );
@@ -198,7 +260,7 @@ export const ModalImportMarkdown = ({ open, onClose, context, useNM, hostZIndex 
                         <Input value={title} onChange={(e) => setTitle(e.target.value)} />
                     </FormControl>
 
-                    {context.kind === "my" && (
+                    {context.kind === "my" && allowDestinationChange && (
                         <FormControl>
                             <FormLabel>{t.notes.importMd.folderLabel}</FormLabel>
                             <Select value={folderId} onChange={(_e, v) => setFolderId(v ?? null)}>
@@ -206,6 +268,43 @@ export const ModalImportMarkdown = ({ open, onClose, context, useNM, hostZIndex 
                                 {folderRows.map((row) => (
                                     <Option key={row.folderId} value={row.folderId}>
                                         {`${" ".repeat(row.depth * 3)}${row.label}`}
+                                    </Option>
+                                ))}
+                            </Select>
+                        </FormControl>
+                    )}
+
+                    {/* Task / chat destination. Every option is a real
+                        task or chat — a note can't live on a project or
+                        on a "DM" / "GM" bucket, so those rows have no
+                        entry here, and there is no "none" option for the
+                        same reason. */}
+                    {context.kind === "task" && taskDestinations.length > 0 && (
+                        <FormControl>
+                            <FormLabel>{t.notes.importMd.folderLabel}</FormLabel>
+                            <Select
+                                value={destinationKey}
+                                onChange={(_e, v) => setDestinationKey(v ?? destinationKey)}
+                            >
+                                {taskDestinations.map((row) => (
+                                    <Option key={row.key} value={row.key}>
+                                        {row.label}
+                                    </Option>
+                                ))}
+                            </Select>
+                        </FormControl>
+                    )}
+
+                    {context.kind === "chat" && chatDestinations.length > 0 && (
+                        <FormControl>
+                            <FormLabel>{t.notes.importMd.folderLabel}</FormLabel>
+                            <Select
+                                value={destinationKey}
+                                onChange={(_e, v) => setDestinationKey(v ?? destinationKey)}
+                            >
+                                {chatDestinations.map((row) => (
+                                    <Option key={row.key} value={row.key}>
+                                        {row.label}
                                     </Option>
                                 ))}
                             </Select>

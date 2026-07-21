@@ -4,6 +4,7 @@ import CreateNewFolderRoundedIcon from "@mui/icons-material/CreateNewFolderRound
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import DriveFileMoveRoundedIcon from "@mui/icons-material/DriveFileMoveRounded";
 import DriveFileRenameOutlineRoundedIcon from "@mui/icons-material/DriveFileRenameOutlineRounded";
+import FileUploadRoundedIcon from "@mui/icons-material/FileUploadRounded";
 import FolderOpenRoundedIcon from "@mui/icons-material/FolderOpenRounded";
 import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
 import NoteAddRoundedIcon from "@mui/icons-material/NoteAddRounded";
@@ -25,6 +26,7 @@ import {
 // modal instance serves every folder row.
 export type FolderActionHandlers = {
     onCreateNoteHere: (folderId: number) => void;
+    onImportNoteHere: (folderId: number) => void;
     onCreateSubfolder: (folderId: number) => void;
     onRenameFolder: (folder: MyNoteFolderTreeNode) => void;
     onMoveFolder: (folder: MyNoteFolderTreeNode) => void;
@@ -153,6 +155,12 @@ function MyNoteFolderTreeComponent(props: MyNoteFolderTreeProps) {
                             label: t.notes.folders.newNoteHere,
                             icon: <NoteAddRoundedIcon sx={{ fontSize: 16 }} />,
                             onClick: () => actions.onCreateNoteHere(folder.folderId),
+                        },
+                        {
+                            id: "import-note-here",
+                            label: t.notes.header.importMarkdown,
+                            icon: <FileUploadRoundedIcon sx={{ fontSize: 16 }} />,
+                            onClick: () => actions.onImportNoteHere(folder.folderId),
                         },
                         {
                             id: "new-subfolder",
