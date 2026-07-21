@@ -1,4 +1,4 @@
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DragDropContext, Droppable, DropResult } from "@hello-pangea/dnd";
 import AutorenewIcon from "@mui/icons-material/Autorenew";
 import BlockIcon from "@mui/icons-material/Block";
@@ -32,12 +32,16 @@ import { FilterProps } from "../../types/TaskTableTypes";
 import { sortTableTasks, SortTier } from "../../utils/sortTask";
 import { formatTaskDisplayId } from "../../utils/taskDisplayId";
 import { effortLevels, priorities, statuses } from "../../utils/taskMeta";
-import { DraggableTaskRow } from "./DraggableTaskRow";
-import { QuickAddDraft, QuickAddTaskRow } from "./QuickAddTaskRow";
+import { QuickAddDraft } from "./QuickAddTaskRow";
 import { TaskFilterMenu } from "./TaskFilterMenu";
 import { TaskTableColumnSettings } from "./TaskTableColumnSettings";
+import { TaskTableRows } from "./TaskTableRows";
 
 const materialTheme = createTheme({ cssVariables: true });
+
+// Shared empty fallback so a project without tags doesn't mint a new array
+// identity on every render (see `quickAddProjectTags`).
+const EMPTY_PROJECT_TAGS: TagListProps[] = [];
 
 // Column definitions for the table
 export type ColumnDef = {
@@ -1239,6 +1243,28 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         ]
     );
 
+    // Inputs for the inline quick-add draft row, hoisted out of the row map
+    // so they keep a stable identity across renders. Both used to be built
+    // inline in the JSX; `?? []` in particular minted a fresh array on every
+    // render, which would defeat the TaskTableRows memo boundary below.
+    const quickAddProjectTags = useMemo(
+        () => usePM.currentProject?.projectTags ?? EMPTY_PROJECT_TAGS,
+        [usePM.currentProject?.projectTags]
+    );
+    const quickAddFieldRules = useMemo(
+        () =>
+            useTM.taskFieldRules?.projectId === usePM.currentProject?.projectId
+                ? (useTM.taskFieldRules?.rules ?? null)
+                : null,
+        [useTM.taskFieldRules, usePM.currentProject?.projectId]
+    );
+    // Identity-stable so TaskTableRows (which excludes callbacks from its
+    // comparator, same contract as DraggableTaskRow) never holds a closure
+    // over stale state — the ref it writes is the only state involved.
+    const handleQuickAddDirtyChange = useCallback((dirty: boolean) => {
+        quickAddDirtyRef.current = dirty;
+    }, []);
+
     // Show the "Sprint" column only when the filtered list actually
     // contains a milestone — for a pure task-only view the sprint linkage
     // adds noise (most tasks don't carry a sprint of their own; they
@@ -1522,69 +1548,35 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                         transition: "background-color 0.25s ease",
                                     }}
                                 >
-                                    {displayRows.map((task, index) => (
-                                        <Fragment key={task.id}>
-                                            <DraggableTaskRow
-                                                columns={columnsWithWidths}
-                                                depth={depthMap.get(String(task.id)) ?? 0}
-                                                expandedRows={expandedRows}
-                                                hasChildren={childrenByParent.has(String(task.id))}
-                                                index={index}
-                                                isSelected={resolveIsSelected(task)}
-                                                mode={mode}
-                                                myself={myself}
-                                                setMyself={setMyself}
-                                                socket={socket}
-                                                sprintNamesById={sprintNamesById}
-                                                task={task}
-                                                teamMembers={teamMembers}
-                                                toggleExpand={toggleExpand}
-                                                useCM={useCM}
-                                                useTEM={useTEM}
-                                                useTM={useTM}
-                                                useUISM={useUISM}
-                                                onOpenDiagram={openDiagram}
-                                                onQuickAddChild={openQuickAdd}
-                                                onRequestPreview={requestPreview}
-                                                onRowUpdate={handleRowUpdate}
-                                            />
-                                            {/* Inline quick-add draft row, anchored
-                                                directly beneath its parent row (above
-                                                any existing children). Deliberately
-                                                NOT a Draggable and consumes no dnd
-                                                index — `index` above still comes
-                                                straight from displayRows, so the
-                                                drag-end splice math is untouched. */}
-                                            {quickAddParentId === String(task.id) && (
-                                                <QuickAddTaskRow
-                                                    columns={columnsWithWidths}
-                                                    creatorUserId={myself.userId}
-                                                    mode={mode}
-                                                    parentTask={task}
-                                                    teamMembers={teamMembers}
-                                                    depth={
-                                                        (depthMap.get(String(task.id)) ?? 0) + 1
-                                                    }
-                                                    fieldRules={
-                                                        useTM.taskFieldRules?.projectId ===
-                                                        usePM.currentProject?.projectId
-                                                            ? (useTM.taskFieldRules?.rules ?? null)
-                                                            : null
-                                                    }
-                                                    projectTags={
-                                                        usePM.currentProject?.projectTags ?? []
-                                                    }
-                                                    onClose={closeQuickAdd}
-                                                    onDirtyChange={(dirty) => {
-                                                        quickAddDirtyRef.current = dirty;
-                                                    }}
-                                                    onSubmit={(draft) =>
-                                                        handleQuickAddSubmit(task, draft)
-                                                    }
-                                                />
-                                            )}
-                                        </Fragment>
-                                    ))}
+                                    <TaskTableRows
+                                        childrenByParent={childrenByParent}
+                                        columns={columnsWithWidths}
+                                        depthMap={depthMap}
+                                        displayRows={displayRows}
+                                        expandedRows={expandedRows}
+                                        mode={mode}
+                                        myself={myself}
+                                        quickAddFieldRules={quickAddFieldRules}
+                                        quickAddParentId={quickAddParentId}
+                                        quickAddProjectTags={quickAddProjectTags}
+                                        resolveIsSelected={resolveIsSelected}
+                                        setMyself={setMyself}
+                                        socket={socket}
+                                        sprintNamesById={sprintNamesById}
+                                        teamMembers={teamMembers}
+                                        toggleExpand={toggleExpand}
+                                        useCM={useCM}
+                                        useTEM={useTEM}
+                                        useTM={useTM}
+                                        useUISM={useUISM}
+                                        onOpenDiagram={openDiagram}
+                                        onQuickAddChild={openQuickAdd}
+                                        onQuickAddClose={closeQuickAdd}
+                                        onQuickAddDirtyChange={handleQuickAddDirtyChange}
+                                        onQuickAddSubmit={handleQuickAddSubmit}
+                                        onRequestPreview={requestPreview}
+                                        onRowUpdate={handleRowUpdate}
+                                    />
                                     {provided.placeholder}
                                 </div>
                             )}
