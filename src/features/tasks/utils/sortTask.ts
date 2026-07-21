@@ -114,8 +114,9 @@ export const fieldValue = (task: TaskTableProps, field: string): number | string
         case "effortLevel":
             return EFFORT_RANK[task.effortLevel ?? ""] ?? null;
         case "weight":
-            // Derived Task Weight (priority × urgency, 1..25). Recomputed
-            // per sort so "Weight desc" always reflects today's urgency.
+            // Derived Task Weight (priority × start-urgency, 1..25).
+            // Recomputed per sort so "Weight desc" always reflects today's
+            // time pressure.
             return computeTaskWeight(task);
         case "status":
             return STATUS_RANK[task.status ?? ""] ?? null;

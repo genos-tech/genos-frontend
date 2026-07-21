@@ -663,8 +663,10 @@ export const tasks = {
             createdDate: "Created Date",
             weight: "Weight",
         },
-        // "Task Weight" = priority × urgency (1..25), shown on the derived
-        // Weight column and the dashboard's Top-by-Weight / Up Next chips.
+        // "Task Weight" = priority × start-urgency (1..25), shown on the
+        // derived Weight column and the dashboard's Top-by-Weight / Up Next
+        // chips. Heavier effort gives a task a head start on the urgency
+        // ramp, so big jobs climb before their deadline.
         weightTooltip: "Task Weight {weight}/{max}",
         weightBands: {
             low: "Low",
@@ -691,7 +693,7 @@ export const tasks = {
             byUrgency: "By urgency",
             help: {
                 title: "How your tasks are ordered",
-                body: "“By weight” shows the most pressing tasks first — Task Weight (1–25) = priority × how close the due date is, so a bigger number means handle it sooner. “By urgency” orders by overdue → priority → due date.",
+                body: "“By weight” shows the most pressing tasks first — Task Weight (1–25) = priority × time pressure to get started. The heavier a task's effort level, the earlier before its due date it starts climbing, so big jobs surface while there's still room to work on them. “By urgency” orders by overdue → priority → due date.",
             },
         },
         // Team Capacity: Σ effort of a member's active tasks, bucketed by
@@ -713,13 +715,14 @@ export const tasks = {
                 body: "How much active work each person is carrying, in effort points, split by when it's due. A longer, redder bar = busier right now — so pick someone with a shorter bar to take on new work.",
             },
         },
-        // Top by Weight: the highest priority × urgency active tasks.
+        // Top by Weight: the active tasks with the highest
+        // priority × start-urgency.
         topWeight: {
             title: "Top by Weight",
-            subtitle: "Highest priority × urgency right now",
+            subtitle: "Start these now",
             help: {
                 title: "What is Task Weight?",
-                body: "A 1–25 score of how much a task needs attention now. Weight = priority × time pressure (how close the due date is). The bigger the number, the sooner it should be handled.",
+                body: "A 1–25 score of how much a task needs to be started now. Weight = priority × time pressure to get started. Heavier effort levels start building that pressure earlier — an extensive task begins climbing about a week before its due date, a quick one only in the last few days — so big jobs surface while there's still room to work on them. The bigger the number, the sooner it should be picked up.",
             },
         },
         velocity: {
