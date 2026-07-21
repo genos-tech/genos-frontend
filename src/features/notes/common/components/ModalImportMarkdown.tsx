@@ -255,7 +255,26 @@ export const ModalImportMarkdown = ({
     return (
         <Modal
             open={open}
-            sx={hostZIndex != null ? { zIndex: hostZIndex + 1 } : undefined}
+            sx={
+                hostZIndex != null
+                    ? {
+                          zIndex: hostZIndex + 1,
+                          // Joy pins Select/Autocomplete listbox popups to
+                          // `calc(theme.zIndex.modal + 1)` (≈1301) and does
+                          // NOT track the raised `zIndex` above — so inside
+                          // the UrlLinkModal-hosted note header the
+                          // destination dropdown would open BEHIND this
+                          // dialog and be unclickable. Re-stamp the var on
+                          // the modal root (inline listboxes inherit it) and
+                          // on sibling portaled listboxes. Same fix as
+                          // UrlLinkModal / SpotlightSettingsModal.
+                          "--unstable_popup-zIndex": hostZIndex + 10,
+                          '& ~ [role="listbox"]': {
+                              "--unstable_popup-zIndex": hostZIndex + 10,
+                          },
+                      }
+                    : undefined
+            }
             onClose={onClose}
         >
             <ModalDialog sx={{ minWidth: 380, maxWidth: 460 }}>
