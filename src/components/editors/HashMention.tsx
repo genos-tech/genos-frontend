@@ -473,9 +473,21 @@ export const HashSuggestionMenuController = ({ editor }: { editor: any }) => {
             minQueryLength={1}
             suggestionMenuComponent={MentionSuggestionMenu}
             triggerCharacter={"#"}
-            getItems={async (query) =>
-                filterAndRankSuggestionItems(HashMentionMenuItems(editor, data), query)
-            }
+            getItems={async (query) => {
+                // Kick a (throttled, app-wide) re-pull of the backing
+                // lists: note metadata and the project list are otherwise
+                // loaded once per page load, so a teammate's note was
+                // missing here until a reload.
+                //
+                // Deliberately NOT awaited. `data` is this render's
+                // closure, and BlockNote only re-runs `getItems` when the
+                // QUERY changes — awaiting would add a network beat to
+                // menu-open latency and still return the old list. Firing
+                // it here means the fetch lands while the user is still
+                // typing the name, so the next keystroke shows the item.
+                data.refresh();
+                return filterAndRankSuggestionItems(HashMentionMenuItems(editor, data), query);
+            }}
         />
     );
 };
