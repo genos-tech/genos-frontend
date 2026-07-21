@@ -3,10 +3,13 @@ import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import CreateNewFolderRoundedIcon from "@mui/icons-material/CreateNewFolderRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import DriveFileMoveRoundedIcon from "@mui/icons-material/DriveFileMoveRounded";
+import FileDownloadRoundedIcon from "@mui/icons-material/FileDownloadRounded";
+import FileUploadRoundedIcon from "@mui/icons-material/FileUploadRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import MarkChatUnreadRoundedIcon from "@mui/icons-material/MarkChatUnreadRounded";
+import NoteAddRoundedIcon from "@mui/icons-material/NoteAddRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
 import ShareRoundedIcon from "@mui/icons-material/ShareRounded";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
@@ -18,6 +21,7 @@ import { Socket } from "socket.io-client";
 
 import { ProjectAvatar } from "../../../../components/ui/avatars/ProjectAvatar";
 import { MoreMenuItem } from "../../../../components/ui/MoreMenu";
+import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
@@ -54,11 +58,13 @@ import {
     taskContainerId,
 } from "../dnd/sidebarNoteDnd";
 import { useNoteTreeState } from "../hooks/useNoteTreeState";
+import { exportNoteMarkdown } from "../services/exportNoteMarkdown";
 import { ChatNoteMetaTreeNode, TaskNoteMetaTreeNode } from "../types/noteTypes";
 import { FavoriteNoteItem } from "./FavoriteNoteItem";
 import { FavoriteNoteSection } from "./FavoriteNoteSection";
 import { GroupedNoteSection } from "./GroupedNoteSection";
 import { ModalDeleteNote } from "./ModalDeleteNote";
+import { ImportMarkdownContext, ModalImportMarkdown } from "./ModalImportMarkdown";
 import { NoteTreeRenderer } from "./NoteTreeRenderer";
 import { NoteTypeSection } from "./NoteTypeSection";
 import { RecentNoteItem } from "./RecentNoteItem";
@@ -112,6 +118,13 @@ interface ChatGroup {
     chatId: number;
     chatType: number;
     chatName: string;
+    // Anchor new notes created from this folder's "⋯" menu the way the
+    // folder's existing notes are anchored. A chat folder can mix
+    // channel-level and thread-level notes (the grouping keys on chatId
+    // alone), so prefer a channel-level one and fall back to the first
+    // note — see `groupChatNotes`.
+    isThread: boolean;
+    threadId?: number;
     notes: ChatNoteMetaTreeNode[];
 }
 
@@ -371,9 +384,16 @@ function groupChatNotes(
                 chatId: note.chatId,
                 chatType: note.chatType,
                 chatName: resolvedName,
+                isThread: note.isThread,
+                threadId: note.threadId,
                 notes: [],
             };
             chatTypeGroup.chats.push(chatGroup);
+        } else if (chatGroup.isThread && !note.isThread) {
+            // A channel-level note showed up later — prefer it as the
+            // folder's anchor (see ChatGroup).
+            chatGroup.isThread = false;
+            chatGroup.threadId = note.threadId;
         }
 
         chatGroup.notes.push(note);
@@ -398,11 +418,13 @@ function getChatTypeLabel(chatType: number, t: Messages): string {
 
 type NoteSidebarProps = {
     useNM: NoteManagementState;
+    // `myself` also backs the row menus' markdown export (note re-fetch).
+    //
     // The task-note project rows render the real `ProjectAvatar`, which
     // hosts the project-profile modal — hence the profile-modal props
-    // (myself / setMyself / socket / useTEM / useUISM) on a component
-    // that otherwise only needs `useNM`. Same set `ChatListItemAvatar`
-    // threads through the chat sidebar for the same reason.
+    // (setMyself / socket / useTEM / useUISM) on a component that
+    // otherwise only needs `useNM`. Same set `ChatListItemAvatar` threads
+    // through the chat sidebar for the same reason.
     myself: UserProps;
     setMyself: (me: UserProps) => void;
     socket: Socket | null;
@@ -417,6 +439,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const { t } = useTranslation();
+    const { accessToken } = useAuth();
     // Unread @mention state (from the activity feed). Drives the "Unread"
     // section here and the per-note dots inside the tree/recents/favorites.
     const { unreadNotes } = useNoteUnread();
@@ -535,6 +558,76 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         hasChildren: boolean;
     } | null>(null);
 
+    // "Import Markdown…" opened from a sidebar folder row: the folder IS
+    // the destination, so the dialog gets a fixed context and shows no
+    // destination picker (unlike the note-header path).
+    const [importModalContext, setImportModalContext] = useState<ImportMarkdownContext | null>(
+        null
+    );
+
+    // Builds the shared "Export as Markdown" row-menu item for any note
+    // row. noteType 4 (shared personal notes) is served by the personal
+    // endpoint, so it exports as type 1.
+    const buildExportMenuItem = (
+        noteType: number,
+        node: { noteId: number; title: string }
+    ): MoreMenuItem => ({
+        id: "export-note",
+        label: t.notes.header.exportMarkdown,
+        icon: <FileDownloadRoundedIcon sx={{ fontSize: 16 }} />,
+        onClick: () => {
+            void exportNoteMarkdown({
+                myself,
+                noteType: noteType === 4 ? 1 : (noteType as 1 | 2 | 3),
+                noteId: node.noteId,
+                accessToken,
+                fallbackTitle: node.title,
+            });
+        },
+    });
+
+    // Folder-row menu shared by the task and chat sections: create a note
+    // in this folder, or import one from a markdown file. `onCreate`
+    // carries the folder's own anchor, so the new note lands with the
+    // same metadata as its siblings.
+    const buildFolderMenuItems = (
+        onCreate: () => void,
+        importContext: ImportMarkdownContext
+    ): MoreMenuItem[] => [
+        {
+            id: "new-note-here",
+            label: t.notes.folders.newNoteHere,
+            icon: <NoteAddRoundedIcon sx={{ fontSize: 16 }} />,
+            onClick: onCreate,
+        },
+        {
+            id: "import-note-here",
+            label: t.notes.header.importMarkdown,
+            icon: <FileUploadRoundedIcon sx={{ fontSize: 16 }} />,
+            onClick: () => setImportModalContext(importContext),
+        },
+    ];
+
+    // Folder menu for one task (task / subtask / milestone-backing task).
+    const buildTaskFolderMenuItems = (projectId: number, taskId: number): MoreMenuItem[] =>
+        buildFolderMenuItems(() => void useNM.handleCreateNewTaskNote(null, projectId, taskId), {
+            kind: "task",
+            projectId,
+            taskId,
+        });
+
+    const buildChatFolderMenuItems = (chatGroup: ChatGroup): MoreMenuItem[] | undefined => {
+        const { chatType, chatId, isThread, threadId } = chatGroup;
+        // The tree node types `threadId` as optional even though the chat
+        // note meta always carries it. Rather than invent an anchor, drop
+        // the menu on the (unreachable) row that lacks one.
+        if (threadId == null) return undefined;
+        return buildFolderMenuItems(
+            () => void useNM.handleCreateNewChatNote(null, chatType, chatId, isThread, threadId),
+            { kind: "chat", chatType, chatId, isThread, threadId }
+        );
+    };
+
     // Builds the shared "Delete" row-menu item for any note row. Kept out
     // of the per-type render helpers so my / task / chat stay consistent.
     const buildDeleteMenuItem = (
@@ -558,6 +651,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         onCreateNoteHere: (folderId) => {
             void useNM.handleCreateNewMyNote(null, folderId);
         },
+        onImportNoteHere: (folderId) => setImportModalContext({ kind: "my", folderId }),
         onCreateSubfolder: (folderId) =>
             setFolderNameModal({ mode: "create", parentFolderId: folderId }),
         onRenameFolder: (folder) => setFolderNameModal({ mode: "rename", folder }),
@@ -602,6 +696,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                             isChild: node.parentNoteId != null,
                         }),
                 },
+                buildExportMenuItem(1, node),
                 buildDeleteMenuItem(1, node),
             ]}
         />
@@ -695,7 +790,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             currentChain={taskNoteState.tmpCurrentChain}
             node={node}
             noteType={2}
-            rowMenuItems={(node) => [buildDeleteMenuItem(2, node)]}
+            rowMenuItems={(node) => [buildExportMenuItem(2, node), buildDeleteMenuItem(2, node)]}
             timestamp={taskNoteState.timestamp}
             useNM={useNM}
             createChildNoteList={(node) => (
@@ -710,7 +805,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             currentChain={chatNoteState.tmpCurrentChain}
             node={node}
             noteType={3}
-            rowMenuItems={(node) => [buildDeleteMenuItem(3, node)]}
+            rowMenuItems={(node) => [buildExportMenuItem(3, node), buildDeleteMenuItem(3, node)]}
             timestamp={chatNoteState.timestamp}
             useNM={useNM}
             createChildNoteList={(node) => (
@@ -728,6 +823,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             currentChain={sharedNoteState.tmpCurrentChain}
             node={node}
             noteType={4}
+            rowMenuItems={(node) => [buildExportMenuItem(4, node)]}
             timestamp={sharedNoteState.timestamp}
             useNM={useNM}
             createChildNoteList={(node) => (
@@ -801,6 +897,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             droppableKind={2}
             groupKey={`${keyPrefix}-task-${taskGroup.taskId}`}
             groupLabel={taskGroup.taskTitle}
+            menuItems={buildTaskFolderMenuItems(projectId, taskGroup.taskId)}
             subLabel={formatTaskDisplayId({
                 taskId: taskGroup.taskId,
                 displayId: taskGroup.displayId,
@@ -826,6 +923,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                     droppableKind={2}
                     groupKey={`${keyPrefix}-task-${taskGroup.taskId}-sub-${subGroup.taskId}`}
                     groupLabel={subGroup.taskTitle}
+                    menuItems={buildTaskFolderMenuItems(projectId, subGroup.taskId)}
                     subLabel={formatTaskDisplayId({
                         taskId: subGroup.taskId,
                         displayId: subGroup.displayId,
@@ -907,6 +1005,18 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                                     taskId: milestoneGroup.backingTaskId,
                                     displayId: milestoneGroup.displayId,
                                 })}
+                                // A milestone folder IS a task (its backing
+                                // task), so it can hold notes — but only
+                                // once a child note has revealed which task
+                                // that is.
+                                menuItems={
+                                    milestoneGroup.backingTaskId != null
+                                        ? buildTaskFolderMenuItems(
+                                              projectGroup.projectId,
+                                              milestoneGroup.backingTaskId
+                                          )
+                                        : undefined
+                                }
                                 leadingIcon={
                                     <FlagRoundedIcon
                                         sx={{ color: "#f97316", flexShrink: 0, fontSize: 14 }}
@@ -996,6 +1106,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                         droppableKind={3}
                         groupKey={`chat-${chatGroup.chatType}-${chatGroup.chatId}`}
                         groupLabel={chatGroup.chatName}
+                        menuItems={buildChatFolderMenuItems(chatGroup)}
                         defaultExpanded={chatGroup.notes.some(
                             (note) => note.noteId === useNM.currentChatNote?.noteId
                         )}
@@ -1454,6 +1565,17 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                     }
                 }}
             />
+            {/* "Import Markdown…" from a folder row. The folder itself is
+                the destination, so no picker is shown — unlike the note
+                header's copy of this dialog. */}
+            {importModalContext && (
+                <ModalImportMarkdown
+                    context={importModalContext}
+                    open={importModalContext !== null}
+                    useNM={useNM}
+                    onClose={() => setImportModalContext(null)}
+                />
+            )}
             <ModalDeleteNote
                 hasChildren={deleteNoteModal?.hasChildren ?? false}
                 noteTitle={deleteNoteModal?.title ?? ""}

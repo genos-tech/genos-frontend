@@ -5,6 +5,7 @@ import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
 import { Box, List, ListItem, ListItemButton, ListItemContent, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { MoreMenu, MoreMenuItem } from "../../../../components/ui/MoreMenu";
 import { DroppableHeader, SidebarDndKind } from "../dnd/sidebarNoteDnd";
 
 interface GroupedNoteSectionProps {
@@ -24,6 +25,11 @@ interface GroupedNoteSectionProps {
     // DragDropContext.
     droppableId?: string;
     droppableKind?: SidebarDndKind;
+    // Hover-revealed "⋯" menu on the header row (new note / import here),
+    // mirroring the my-note folder rows. Omitted on rows that aren't a
+    // note destination — a project or a chat-type bucket can't hold a
+    // note, so they get no menu.
+    menuItems?: MoreMenuItem[];
 }
 
 function GroupedNoteSectionComponent({
@@ -35,10 +41,14 @@ function GroupedNoteSectionComponent({
     droppableId,
     droppableKind,
     leadingIcon,
+    menuItems,
 }: GroupedNoteSectionProps) {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+    // Keeps the "⋯" trigger visible while its portal menu is open, or the
+    // hover-reveal hides it as the pointer moves onto the menu.
+    const [menuOpen, setMenuOpen] = useState(false);
 
     // Sticky auto-reveal: callers pass `defaultExpanded` as "the active
     // note lives somewhere in this subtree", which they recompute as the
@@ -80,6 +90,9 @@ function GroupedNoteSectionComponent({
                 outlineColor: isDark ? "rgba(167,139,250,0.7)" : "rgba(124,58,237,0.5)",
                 "&:hover": {
                     backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
+                    "& .group-menu-btn": {
+                        opacity: 1,
+                    },
                 },
             }}
             onClick={() => setIsExpanded(!isExpanded)}
@@ -156,6 +169,25 @@ function GroupedNoteSectionComponent({
                     )}
                 </Box>
             </ListItemContent>
+
+            {menuItems && menuItems.length > 0 && (
+                <Box
+                    className="group-menu-btn"
+                    sx={{
+                        opacity: menuOpen ? 1 : 0,
+                        transition: "opacity 0.15s ease",
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    <MoreMenu
+                        iconFontSize={14}
+                        items={menuItems}
+                        placement="bottom-end"
+                        triggerSize={20}
+                        onOpenChange={setMenuOpen}
+                    />
+                </Box>
+            )}
         </ListItemButton>
     );
 

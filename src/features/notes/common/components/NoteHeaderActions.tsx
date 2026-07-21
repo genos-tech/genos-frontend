@@ -38,8 +38,7 @@ import { NoteAskModal, useNoteAsk } from "../../../noteAsk";
 import { SpotlightResult } from "../../../spotlight/types";
 import { TaskInfoPill } from "../../../tasks/components/TaskInfoPill";
 import { ModalMoveToFolder } from "../../my-notes/modals/ModalMoveToFolder";
-import { loadSpecificNote } from "../services/loadSpecificNote";
-import { downloadMarkdown, noteBlocksToMarkdown } from "../services/noteMarkdown";
+import { exportNoteMarkdown } from "../services/exportNoteMarkdown";
 import { getMyNoteRoleId, NOTE_ROLE_OWNER } from "../utils/noteRoles";
 import { ImportMarkdownContext, ModalImportMarkdown } from "./ModalImportMarkdown";
 import { ModalNoteHistory } from "./ModalNoteHistory";
@@ -146,6 +145,10 @@ export const NoteHeaderActions = ({
     // (incl. the shared-personal view, which is still "your" notes
     // sidebar) get a folder picker in the dialog; a task-note import is
     // anchored to the same project/task as the open note.
+    // A chat-note import is anchored to the same channel (or thread) as
+    // the open note. All three surfaces then let the user retarget the
+    // import from the dialog — to another folder on my-notes, to another
+    // task / chat elsewhere.
     const importContext: ImportMarkdownContext | null =
         noteType === 1 || noteType === 4
             ? { kind: "my" }
@@ -155,28 +158,28 @@ export const NoteHeaderActions = ({
                     projectId: useNM.currentTaskNote.projectId,
                     taskId: useNM.currentTaskNote.taskId,
                 }
-              : null;
+              : noteType === 3 && useNM.currentChatNote
+                ? {
+                      kind: "chat",
+                      chatType: useNM.currentChatNote.chatType,
+                      chatId: useNM.currentChatNote.chatId,
+                      isThread: useNM.currentChatNote.isThread,
+                      threadId: useNM.currentChatNote.threadId,
+                  }
+                : null;
 
-    // Export re-fetches the note so the file reflects the latest SAVED
-    // body (the in-memory note object can lag live edits; the editors
-    // autosave on a short debounce, so "saved" is at most ~a second
-    // behind typing). Custom blocks (mentions, alerts, #refs) are
-    // degraded to plain text by the serializer — see noteMarkdown.ts.
+    // Shared with the sidebar row menu — see `exportNoteMarkdown` for why
+    // the note is re-fetched first.
     const handleExportMarkdown = async () => {
         if (activeNoteId == null || normalizedNoteType === null) return;
-        try {
-            const fresh = await loadSpecificNote(
-                myself,
-                normalizedNoteType,
-                activeNoteId,
-                accessToken
-            );
-            const body = fresh && !fresh.error ? fresh.body : activeNote?.body;
-            const md = await noteBlocksToMarkdown(Array.isArray(body) ? body : []);
-            downloadMarkdown(fresh?.title || activeNoteTitle, md);
-        } catch (err) {
-            console.error("Markdown export failed:", err);
-        }
+        await exportNoteMarkdown({
+            myself,
+            noteType: normalizedNoteType,
+            noteId: activeNoteId,
+            accessToken,
+            fallbackTitle: activeNoteTitle,
+            fallbackBody: activeNote?.body,
+        });
     };
 
     // ---- "Ask about this note" wiring ----
@@ -721,6 +724,7 @@ export const NoteHeaderActions = ({
                     hostZIndex={hostZIndex}
                     open={importMdOpen}
                     useNM={useNM}
+                    allowDestinationChange
                     onClose={() => setImportMdOpen(false)}
                 />
             )}
