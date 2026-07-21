@@ -8,13 +8,18 @@ import { EFFORT_RANK, PRIORITY_RANK } from "./sortTask";
  * row, so nothing is persisted and the values recompute (day-relative) on
  * every render:
  *
- *   • **Task Weight** (importance / "what to work on next")
- *       = priorityPoints × urgencyPoints  → 1..25
- *     Effort is deliberately NOT a factor here: for *ranking* work, effort
- *     points the wrong way (a huge trivial task shouldn't outrank a small
- *     critical one — cf. WSJF / cost-of-delay). A multiplicative model
- *     (risk-matrix style) surfaces "critical AND due-now" (5×5=25) tasks to
- *     the very top.
+ *   • **Task Weight** (importance / "what to pick up now")
+ *       = priorityPoints × startUrgencyPoints  → 1..25
+ *     A multiplicative model (risk-matrix style) surfaces "critical AND
+ *     start-now" (5×5=25) tasks to the very top.
+ *
+ *     Effort is **not** a term of its own — a huge trivial task must never
+ *     outrank a small critical one (cf. WSJF / cost-of-delay). Instead
+ *     effort decides *how early a task starts demanding attention*: the
+ *     bigger the job, the sooner it should be on someone's radar before the
+ *     deadline, so effort shifts the urgency ramp earlier
+ *     (`EFFORT_HEAD_START_DAYS`). An Extensive task a week out is already
+ *     climbing; a Minimal one with the same week left is not.
  *
  *   • **Effort points** (the currency for *capacity* — "who's busy")
  *     roll up per assignee, bucketed by `dueBucket`, in the dashboard. That
@@ -40,6 +45,34 @@ export const priorityPoints = (priority: string | null | undefined): number =>
 export const effortPoints = (effortLevel: string | null | undefined): number =>
     EFFORT_RANK[effortLevel ?? ""] ?? 1;
 
+/**
+ * Effort label → how many days of head start it gets in the ranking, i.e.
+ * how much earlier than its due date the task begins climbing.
+ *
+ * Explicitly **NOT an estimate of how long the task takes**. Duration
+ * depends on who picks it up — an experienced member might finish in five
+ * days what takes a newcomer ten — and the board can't know that. This is
+ * just the "bigger jobs deserve earlier attention" bias, in the only unit
+ * the urgency ramp speaks: days.
+ *
+ * `Minimal` (and unknown/unset — the same floor `effortPoints` uses) gets
+ * no head start, so an un-triaged task's Weight is exactly what it was
+ * before effort entered the model.
+ *
+ * Retuning this table is the one knob that changes how hard effort pulls.
+ */
+export const EFFORT_HEAD_START_DAYS: Record<string, number> = {
+    Extensive: 7,
+    High: 4,
+    Moderate: 2,
+    Low: 1,
+    Minimal: 0,
+};
+
+/** Effort label → head-start days, flooring unknown/unset to 0. */
+export const effortHeadStart = (effortLevel: string | null | undefined): number =>
+    EFFORT_HEAD_START_DAYS[effortLevel ?? ""] ?? 0;
+
 // Whole-day difference from *today* to the due date, both normalized to
 // local midnight — matches the dashboard's `formatDueLabel` math so the
 // two never disagree on what "1 day left" means.
@@ -60,6 +93,10 @@ const clamp = (n: number, lo: number, hi: number): number => Math.min(hi, Math.m
  *
  * Derived from `dueDate`, NOT the row's `daysLeft`, because the table uses
  * `daysLeft === -1` as an "Expired" sentinel rather than a signed count.
+ *
+ * This is the deadline-only primitive: "how close is the finish line". Task
+ * Weight ranks by `startUrgencyPoints` below, which brings this same ramp
+ * forward by the task's effort head start.
  */
 export const urgencyPoints = (
     dueDate: string | null | undefined,
@@ -71,9 +108,33 @@ export const urgencyPoints = (
     return clamp(6 - diff, 1, 5);
 };
 
-/** Task Weight = priorityPoints × urgencyPoints → 1..25. */
+/**
+ * Time pressure to **get started**, → 1..5: the same ramp as
+ * `urgencyPoints`, brought forward by the task's effort head start.
+ *
+ *   `clamp(6 − (daysLeft − headStart), 1, 5)`
+ *
+ * So an Extensive task (7 days of head start) due in 7 days is already at
+ * 5 — it should be picked up now — while a Minimal one due in 7 days is
+ * still at 1. It says nothing about how long either will actually take.
+ *
+ * No due date → 1: with no deadline to work back from, effort has nothing
+ * to bring forward, however big the task.
+ */
+export const startUrgencyPoints = (
+    dueDate: string | null | undefined,
+    effortLevel: string | null | undefined,
+    now: Date = new Date()
+): number => {
+    if (!dueDate) return 1;
+    const diff = daysUntil(dueDate, now);
+    if (Number.isNaN(diff)) return 1;
+    return clamp(6 - (diff - effortHeadStart(effortLevel)), 1, 5);
+};
+
+/** Task Weight = priorityPoints × startUrgencyPoints → 1..25. */
 export const computeTaskWeight = (task: TaskTableProps, now: Date = new Date()): number =>
-    priorityPoints(task.priority) * urgencyPoints(task.dueDate, now);
+    priorityPoints(task.priority) * startUrgencyPoints(task.dueDate, task.effortLevel, now);
 
 export type WeightBand = "low" | "medium" | "high" | "critical";
 
