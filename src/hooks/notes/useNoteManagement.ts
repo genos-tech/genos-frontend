@@ -1510,6 +1510,11 @@ export const useNoteManagement = (
     // opening a new tab, etc.), make sure every ancestor is in the expanded
     // set. Never removes — matches the legacy "only auto-expand, don't
     // auto-collapse" rule the per-renderer useEffect enforced.
+    //
+    // ANCESTORS ONLY. A chain runs root → … → the open note, so its last
+    // element is the note itself; expanding that would unfold the open
+    // note's own child notes, which is not what "reveal the note I just
+    // opened" means. The user still opens them from the row's chevron.
     useEffect(() => {
         setExpandedNodeIds((prev) => {
             let changed = false;
@@ -1520,9 +1525,10 @@ export const useNoteManagement = (
                     changed = true;
                 }
             };
-            currentMyNoteChain?.forEach((n) => addKey(`1-${n.noteId}`));
-            currentTaskNoteChain?.forEach((n) => addKey(`2-${n.noteId}`));
-            currentChatNoteChain?.forEach((n) => addKey(`3-${n.noteId}`));
+            const ancestors = <T>(chain: T[] | undefined): T[] => chain?.slice(0, -1) ?? [];
+            ancestors(currentMyNoteChain).forEach((n) => addKey(`1-${n.noteId}`));
+            ancestors(currentTaskNoteChain).forEach((n) => addKey(`2-${n.noteId}`));
+            ancestors(currentChatNoteChain).forEach((n) => addKey(`3-${n.noteId}`));
             // Deep-link reveal for foldered notes: the note-ancestor
             // chain alone can't open the CONTAINING sidebar folders, so
             // a note deep inside collapsed folders would stay hidden.
@@ -1540,7 +1546,9 @@ export const useNoteManagement = (
                 const typePrefix = tabKey.slice(0, dash);
                 const ids = allNoteIdChains[tabKey];
                 if (!ids) continue;
-                for (const id of ids) addKey(`${typePrefix}-${id}`);
+                // Same ancestors-only rule: the last id is the tab's own
+                // note.
+                for (const id of ids.slice(0, -1)) addKey(`${typePrefix}-${id}`);
             }
             return changed ? next : prev;
         });

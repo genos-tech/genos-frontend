@@ -149,7 +149,15 @@ export const MobileNoteHome = (props: MobileNoteHomeProps) => {
         >
             {showSidebar && (
                 <Box sx={{ flex: 1, minHeight: 0, width: "100%" }}>
-                    <NoteSidebar allChats={useCM.allChats} useNM={useNM} />
+                    <NoteSidebar
+                        myself={myself}
+                        setMyself={setMyself}
+                        socket={socket}
+                        useCM={useCM}
+                        useNM={useNM}
+                        useTEM={useTEM}
+                        useUISM={useUISM}
+                    />
                 </Box>
             )}
 

@@ -1,4 +1,4 @@
-import { memo, ReactNode, useState } from "react";
+import { memo, ReactNode, useEffect, useRef, useState } from "react";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import StarOutlineRoundedIcon from "@mui/icons-material/StarOutlineRounded";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
@@ -71,6 +71,27 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
                       ? useNM.currentMyNote?.noteId
                       : 0);
 
+    // Bring the row for the newly-opened note into view. The folder rows
+    // above it auto-expand (GroupedNoteSection / the expanded-node set),
+    // but a revealed row can still sit outside the scrolled viewport —
+    // e.g. a note opened from a URL, a tab or the recents list.
+    // `block: "nearest"` scrolls the minimum needed, so a row that is
+    // already visible doesn't move the sidebar under the user.
+    // The scroll is deferred past the folder rows' expand transition
+    // (0.2s of `grid-template-rows`) — measured mid-animation the row is
+    // still collapsed to zero height and lands in the wrong place.
+    const rowRef = useRef<HTMLLIElement | null>(null);
+    const wasSelected = useRef(false);
+    useEffect(() => {
+        const justSelected = isSelected && !wasSelected.current;
+        wasSelected.current = isSelected;
+        if (!justSelected) return;
+        const timer = setTimeout(() => {
+            rowRef.current?.scrollIntoView({ block: "nearest" });
+        }, 260);
+        return () => clearTimeout(timer);
+    }, [isSelected]);
+
     const handleClick = () => {
         useNM.setCurrentNoteType(noteType);
         localStorage.setItem("lastOpenNoteType", String(noteType));
@@ -78,10 +99,10 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
         // Opening a note clears its unread @mentions (chat-style read).
         if (hasUnread) markRead(noteType, node.noteId);
 
-        // If the node has children and we're clicking it, expand it
-        if (hasChildren && !open) {
-            useNM.expandNode(noteType, node.noteId);
-        }
+        // Deliberately does NOT expand this node: opening a note should
+        // reveal the note, not unfold its child notes. The chevron is the
+        // control for that (and the ancestor chain still auto-expands in
+        // `useNoteManagement`, so the row itself stays visible).
     };
 
     const handleChevronClick = (e: React.MouseEvent) => {
@@ -114,6 +135,7 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
         >
             <ListItem
                 key={`note-${node.noteId}-${timestamp}`}
+                ref={rowRef}
                 sx={{
                     position: "relative",
                 }}

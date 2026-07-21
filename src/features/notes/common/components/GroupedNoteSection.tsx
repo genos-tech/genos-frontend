@@ -1,4 +1,4 @@
-import { memo, ReactNode, useState } from "react";
+import { memo, ReactNode, useEffect, useState } from "react";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import FolderOpenRoundedIcon from "@mui/icons-material/FolderOpenRounded";
 import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
@@ -39,6 +39,23 @@ function GroupedNoteSectionComponent({
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+
+    // Sticky auto-reveal: callers pass `defaultExpanded` as "the active
+    // note lives somewhere in this subtree", which they recompute as the
+    // open note changes. Seeding state on mount alone only revealed the
+    // note that happened to be open when the section first rendered —
+    // opening a note by URL, tab switch or search left its project /
+    // milestone / task folders collapsed, so the sidebar showed no trace
+    // of where the visible note lives. Every ancestor row runs this, so
+    // the whole path opens at once.
+    //
+    // Only ever opens (matching the note-tree rule in `useNoteManagement`):
+    // this fires on the false → true transition, so a folder the user
+    // collapses by hand stays collapsed until a different note re-reveals
+    // it.
+    useEffect(() => {
+        if (defaultExpanded) setIsExpanded(true);
+    }, [defaultExpanded]);
     // Match MyNoteFolderTree: open-folder icon when expanded, closed when not.
     const FolderIcon = isExpanded ? FolderOpenRoundedIcon : FolderRoundedIcon;
 

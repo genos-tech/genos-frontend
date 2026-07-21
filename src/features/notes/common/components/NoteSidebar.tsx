@@ -14,10 +14,16 @@ import WindowRoundedIcon from "@mui/icons-material/WindowRounded";
 import { Box, Divider, List, ListItem, ListItemContent, Sheet, Typography } from "@mui/joy";
 import ListItemButton from "@mui/joy/ListItemButton";
 import { useColorScheme } from "@mui/joy/styles";
+import { Socket } from "socket.io-client";
 
+import { ProjectAvatar } from "../../../../components/ui/avatars/ProjectAvatar";
 import { MoreMenuItem } from "../../../../components/ui/MoreMenu";
+import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
+import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { fmt, Messages, useTranslation } from "../../../../i18n";
+import { UserProps } from "../../../../types/admin";
 import { AllChatProps } from "../../../../types/chat";
 import {
     ChatNoteMetaProps,
@@ -392,11 +398,22 @@ function getChatTypeLabel(chatType: number, t: Messages): string {
 
 type NoteSidebarProps = {
     useNM: NoteManagementState;
-    allChats?: AllChatProps[];
+    // The task-note project rows render the real `ProjectAvatar`, which
+    // hosts the project-profile modal — hence the profile-modal props
+    // (myself / setMyself / socket / useTEM / useUISM) on a component
+    // that otherwise only needs `useNM`. Same set `ChatListItemAvatar`
+    // threads through the chat sidebar for the same reason.
+    myself: UserProps;
+    setMyself: (me: UserProps) => void;
+    socket: Socket | null;
+    useTEM: TeamManagementState;
+    useCM: ChatManagementState;
+    useUISM: UIStateManagementState;
 };
 
 export const NoteSidebar = (props: NoteSidebarProps) => {
-    const { useNM, allChats = [] } = props;
+    const { useNM, myself, setMyself, socket, useTEM, useCM, useUISM } = props;
+    const allChats = useCM.allChats;
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const { t } = useTranslation();
@@ -723,6 +740,17 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         />
     );
 
+    // A project's PM channel, which carries the project avatar. Same join
+    // key as `TaskNoteMain`: post-v3-flip a PM chat's `chatId` is the
+    // channel UUID, so match on the numeric `project.projectId` and keep
+    // the legacy id compare as a fallback for pre-migration rows.
+    const findPmChat = (projectId: number) =>
+        allChats.find(
+            (chat) =>
+                chat.chatType === 3 &&
+                (chat.project?.projectId === projectId || chat.chatId === String(projectId))
+        );
+
     // Grouped task notes by project and task
     const groupedTaskNotes = useMemo(
         () => groupTaskNotes(taskNoteState.tmpMetaTree as TaskNoteMetaTreeNode[], t),
@@ -823,6 +851,31 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         </GroupedNoteSection>
     );
 
+    // The project's avatar for a project folder row, or undefined to keep
+    // the default folder glyph when the project's PM channel isn't loaded.
+    //
+    // Clicking it opens the project profile (same as everywhere else the
+    // avatar appears) — `stopPropagation` keeps that click off the row,
+    // whose own job is expand/collapse.
+    const renderProjectLeadingIcon = (projectId: number) => {
+        const pmChat = findPmChat(projectId);
+        if (!pmChat) return undefined;
+        return (
+            <Box sx={{ display: "flex", flexShrink: 0 }} onClick={(e) => e.stopPropagation()}>
+                <ProjectAvatar
+                    avatarSize={18}
+                    myself={myself}
+                    pmChat={pmChat}
+                    setMyself={setMyself}
+                    socket={socket}
+                    useCM={useCM}
+                    useTEM={useTEM}
+                    useUISM={useUISM}
+                />
+            </Box>
+        );
+    };
+
     const renderGroupedTaskNotes = () =>
         groupedTaskNotes.map((projectGroup) => {
             const activeNoteId = useNM.currentTaskNote?.noteId;
@@ -833,6 +886,10 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                     defaultExpanded={projectGroupContainsNote(projectGroup, activeNoteId)}
                     groupKey={projectKey}
                     groupLabel={projectGroup.projectName}
+                    // The project's own avatar in place of the generic
+                    // folder glyph, so a project root reads the same here
+                    // as it does in the task-note header.
+                    leadingIcon={renderProjectLeadingIcon(projectGroup.projectId)}
                 >
                     {projectGroup.milestones.map((milestoneGroup) => {
                         const milestoneKey = `${projectKey}-milestone-${milestoneGroup.milestoneId}`;
