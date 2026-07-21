@@ -720,6 +720,9 @@ export const tasks = {
         topWeight: {
             title: "Top by Weight",
             subtitle: "Start these now",
+            // Tooltip on the active sort chip — the inactive ones just
+            // switch field, so the hint would be misleading there.
+            sortFlip: "Click again to reverse the order",
             help: {
                 title: "What is Task Weight?",
                 body: "A 1–25 score of how much a task needs to be started now. Weight = priority × time pressure to get started. Heavier effort levels start building that pressure earlier — an extensive task begins climbing about a week before its due date, a quick one only in the last few days — so big jobs surface while there's still room to work on them. The bigger the number, the sooner it should be picked up.",
