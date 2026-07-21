@@ -123,7 +123,19 @@ export const NOTIFICATION_CATEGORIES = [
         labelKey: "inbox",
         descriptionKey: "inbox",
         defaultEnabled: true,
-        hideSubToggle: true,
+    },
+    {
+        // Fired locally (never by the websocket router) when a Spotlight /
+        // thread / note agent run finishes while its surface is closed —
+        // see `agentRunNotice.ts`. Grouped under `inbox` deliberately: it is
+        // a system notice addressed to just this user, and reusing the group
+        // keeps it on the existing `enable_inbox` column instead of adding a
+        // sixth coarse master (which would need a backend migration).
+        key: "agent_run_done",
+        group: "inbox",
+        labelKey: "agentRunDone",
+        descriptionKey: "agentRunDone",
+        defaultEnabled: true,
     },
 ] as const satisfies readonly CategoryEntry[];
 

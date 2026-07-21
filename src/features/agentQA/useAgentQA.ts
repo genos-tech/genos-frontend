@@ -17,7 +17,7 @@
 //   - `decide` does NOT bump `turnId` — approve/reject is a continuation
 //     of the same turn, completed by the resumed stream.
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
     askAgentStream,
@@ -31,6 +31,7 @@ import { toWireMentions, type AgentMentionRef } from "./mentions/types";
 import {
     EMPTY_ASK_STATE,
     MAX_TURNS_IN_HISTORY,
+    type AgentRunResult,
     type AskState,
     type CompletedTurn,
     type ToolEvent,
@@ -42,6 +43,7 @@ export const useAgentQA = ({
     accessToken,
     teamId,
     buildAskExtras,
+    onRunComplete,
 }: UseAgentQAArgs): UseAgentQAReturn => {
     const [query, setQuery] = useState("");
     const [ask, setAsk] = useState<AskState>(EMPTY_ASK_STATE);
@@ -63,6 +65,37 @@ export const useAgentQA = ({
     // a per-thread (or per-note) session-id lookup on the server would
     // silently inherit the cleared session and re-attach its history.
     const pendingNewConversationRef = useRef(false);
+
+    // ---- Terminal-outcome plumbing for `onRunComplete`. ----
+    //
+    // The callback needs the turn's query + accumulated answer at the
+    // moment the stream ends, but `onDone` can't read them from `ask`:
+    // state updaters run during the commit phase, so a handler closure
+    // only ever sees a stale snapshot. Mirroring the live turn into a
+    // ref as the deltas arrive is what makes the terminal read correct.
+    // (Firing the callback from inside the `setAsk` updater — where
+    // `prev` *is* fresh — would be a side effect in an updater, which
+    // StrictMode double-invokes.)
+    const liveRunRef = useRef<AgentRunResult | null>(null);
+    // Fires at most once per turn. Deliberately NOT `promotedTurnIdsRef`:
+    // an explicit Cancel also promotes, and a run the user just cancelled
+    // must not announce itself as finished.
+    const completedTurnIdsRef = useRef<Set<number>>(new Set());
+    // Held in a ref so `buildStreamHandlers` stays memoised — callers
+    // typically pass an inline arrow that changes identity every render.
+    const onRunCompleteRef = useRef(onRunComplete);
+    useEffect(() => {
+        onRunCompleteRef.current = onRunComplete;
+    }, [onRunComplete]);
+
+    const finishRun = useCallback((turnId: number, patch: Partial<AgentRunResult>) => {
+        const live = liveRunRef.current;
+        if (!live || live.turnId !== turnId) return;
+        Object.assign(live, patch);
+        if (completedTurnIdsRef.current.has(turnId)) return;
+        completedTurnIdsRef.current.add(turnId);
+        onRunCompleteRef.current?.({ ...live });
+    }, []);
 
     // ---- Promote the current `ask` into the `turns` history. ----
     // Idempotent; safe to call from both onDone and onError.
@@ -119,6 +152,9 @@ export const useAgentQA = ({
                     setAsk((prev) =>
                         stillCurrent(prev) ? { ...prev, answer: prev.answer + text } : prev
                     );
+                    if (liveRunRef.current?.turnId === askedTurnId) {
+                        liveRunRef.current.answer += text;
+                    }
                 },
                 onDone: (sessionId?: string, runId?: string) => {
                     setAsk((prev) =>
@@ -132,6 +168,7 @@ export const useAgentQA = ({
                             : prev
                     );
                     promoteCurrentTurn(askedTurnId);
+                    finishRun(askedTurnId, { runId: runId ?? null });
                 },
                 onError: (message: string) => {
                     setAsk((prev) =>
@@ -140,6 +177,7 @@ export const useAgentQA = ({
                             : prev
                     );
                     promoteCurrentTurn(askedTurnId);
+                    finishRun(askedTurnId, { error: message });
                 },
                 onToolStart: ({
                     step,
@@ -260,7 +298,7 @@ export const useAgentQA = ({
                 },
             };
         },
-        [promoteCurrentTurn]
+        [promoteCurrentTurn, finishRun]
     );
 
     // ---- Send a question. ----
@@ -299,6 +337,15 @@ export const useAgentQA = ({
                 runId: null,
                 askedMentions: mentions?.length ? mentions : undefined,
             });
+
+            // Mirror of the turn that `onRunComplete` will report on.
+            liveRunRef.current = {
+                turnId: askedTurnId,
+                askedQuery: trimmed,
+                answer: "",
+                runId: null,
+                error: null,
+            };
 
             // Consume the "new conversation" flag (set by clearConversation).
             // One-shot — clears as soon as it's read so subsequent asks
@@ -389,6 +436,11 @@ export const useAgentQA = ({
     const onCancel = useCallback(() => {
         askAbortRef.current?.abort();
         askAbortRef.current = null;
+        // The user asked for this to stop — no "your answer is ready".
+        // Marking the turn complete without invoking the callback also
+        // blocks a late in-flight event from announcing it afterwards.
+        if (liveRunRef.current) completedTurnIdsRef.current.add(liveRunRef.current.turnId);
+        liveRunRef.current = null;
         setAsk((prev) => {
             if (!prev.isStreaming && prev.pendingApproval === null) return prev;
             const turnId = prev.turnId;
@@ -428,6 +480,11 @@ export const useAgentQA = ({
     const clearConversation = useCallback(() => {
         askAbortRef.current?.abort();
         askAbortRef.current = null;
+        // `turnId` restarts at 0 here, so the completed set must be
+        // cleared too or the first turn of the new conversation would be
+        // treated as already-announced.
+        liveRunRef.current = null;
+        completedTurnIdsRef.current.clear();
         promotedTurnIdsRef.current.clear();
         pendingNewConversationRef.current = true;
         setTurns([]);
@@ -451,6 +508,15 @@ export const useAgentQA = ({
     const reset = useCallback((args: { sessionId?: string | null; turns?: CompletedTurn[] }) => {
         askAbortRef.current?.abort();
         askAbortRef.current = null;
+        // Same reasoning as `onCancel`: the context this run belonged to
+        // is gone, so its completion is no longer worth announcing.
+        // Dropping the live mirror is what suppresses it — `finishRun`
+        // no-ops without one, even if a late event slips through. The
+        // completed set is then CLEARED rather than added to, because
+        // `reset` rewinds `turnId` to match the restored history and a
+        // stale id in the set would mute a genuine future run.
+        liveRunRef.current = null;
+        completedTurnIdsRef.current.clear();
         pendingNewConversationRef.current = false;
         if (args.turns !== undefined) {
             setTurns(args.turns);

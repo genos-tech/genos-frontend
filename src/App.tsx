@@ -665,6 +665,10 @@ export const App = () => {
     const spotlight = useSpotlight({
         accessToken,
         teamId: useTEM.currentTeamId,
+        // Handed down explicitly: this hook sits above NotificationsProvider,
+        // so it can't reach the manager through context. Used only to
+        // announce an answer that finished after the overlay was closed.
+        notificationManager: useNotif.manager,
     });
     // Spotlight-scoped settings modal (LLM model picker + AI-answer
     // toggles), opened from the gear icon on the Spotlight bar. Local

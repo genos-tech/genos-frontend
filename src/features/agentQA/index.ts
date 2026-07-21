@@ -38,6 +38,7 @@ export {
 export { useAgentMentionSources } from "./mentions/useAgentMentionSources";
 export {
     type AgentQALabels,
+    type AgentRunResult,
     type AskState,
     type CompletedTurn,
     EMPTY_ASK_STATE,

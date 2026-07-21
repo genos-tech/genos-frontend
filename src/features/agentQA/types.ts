@@ -138,6 +138,17 @@ export interface AgentQALabels {
     };
 }
 
+// Terminal outcome of one agent turn, handed to `onRunComplete`.
+// `error` is null on a clean finish and carries the failure message
+// otherwise; exactly one `onRunComplete` fires per turn either way.
+export interface AgentRunResult {
+    turnId: number;
+    askedQuery: string;
+    answer: string;
+    runId: string | null;
+    error: string | null;
+}
+
 export interface UseAgentQAArgs {
     accessToken: string | null;
     teamId: string | null | undefined;
@@ -145,6 +156,16 @@ export interface UseAgentQAArgs {
     // (`threadContext`, `noteContext`, etc.). Keeps the hook
     // policy-free — the caller decides what context the backend sees.
     buildAskExtras?: () => Partial<AskAgentArgs>;
+    // Fired once when a turn reaches a terminal state (done OR error),
+    // after it has been promoted into `turns`. Approval pauses do NOT
+    // fire it — the turn isn't finished until the resumed stream ends.
+    //
+    // Exists so a caller can notify the user about an answer that landed
+    // while its surface was closed (see `agentRunNotice.ts`). Kept as a
+    // bare callback rather than a notification config so the hook stays
+    // policy-free: whether a finished run is worth interrupting someone
+    // over is the caller's call, not this state machine's.
+    onRunComplete?: (result: AgentRunResult) => void;
 }
 
 export interface UseAgentQAReturn {
