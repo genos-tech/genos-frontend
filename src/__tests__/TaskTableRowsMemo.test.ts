@@ -130,9 +130,9 @@ describe("taskTableRowsPropsAreEqual — must-render (staleness guards)", () => 
     });
 
     it("re-renders when the quick-add row opens, moves or closes", () => {
-        expect(
-            taskTableRowsPropsAreEqual(baseProps(), baseProps({ quickAddParentId: "1" }))
-        ).toBe(false);
+        expect(taskTableRowsPropsAreEqual(baseProps(), baseProps({ quickAddParentId: "1" }))).toBe(
+            false
+        );
     });
 
     it("re-renders when quick-add field rules or project tags change", () => {
