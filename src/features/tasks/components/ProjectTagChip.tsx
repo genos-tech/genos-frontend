@@ -4,6 +4,8 @@ type ProjectTagChipProps = {
     label: string;
     tagColor: string;
     isDark: boolean;
+    /** Override the chip's font size. Defaults to the canonical `0.7rem`. */
+    fontSize?: string | number;
 };
 
 /**
@@ -25,7 +27,12 @@ type ProjectTagChipProps = {
  * leaf that doesn't subscribe to the color-scheme context per chip (the table
  * row, on the render hot path, already resolves the mode once).
  */
-export const ProjectTagChip = ({ label, tagColor, isDark }: ProjectTagChipProps) => (
+export const ProjectTagChip = ({
+    label,
+    tagColor,
+    isDark,
+    fontSize = "0.7rem",
+}: ProjectTagChipProps) => (
     <span
         style={{
             display: "inline-flex",
@@ -42,7 +49,7 @@ export const ProjectTagChip = ({ label, tagColor, isDark }: ProjectTagChipProps)
             backgroundColor: alpha(tagColor, isDark ? 0.1 : 0.05),
             color: isDark ? "#fff" : "#000",
             fontWeight: 600,
-            fontSize: "0.7rem",
+            fontSize,
             lineHeight: 1.2,
             padding: "1px 5px",
         }}

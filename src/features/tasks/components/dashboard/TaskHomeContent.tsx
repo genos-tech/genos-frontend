@@ -4718,6 +4718,7 @@ export const TaskHomeContent = ({
                                                                     <tr key={row.tagName}>
                                                                         <td>
                                                                             <ProjectTagChip
+                                                                                fontSize="0.8rem"
                                                                                 isDark={isDark}
                                                                                 label={row.tagName}
                                                                                 tagColor={
