@@ -477,6 +477,7 @@ export const tasks = {
         tags: "Tags",
         effortLevel: "Effort Level",
         sprint: "Sprint",
+        noSprint: "No Sprint",
         milestone: "Milestone",
         dependencies: "Dependencies",
     },
@@ -712,6 +713,7 @@ export const tasks = {
             empty: "No ongoing milestones in this project are assigned to you.",
             // {closed}/{total} completed sub-tasks.
             progress: "{closed}/{total} done",
+            openDiagram: "Open task graph",
         },
         // Team Capacity: Σ effort of a member's active tasks, bucketed by
         // due-window, answering "who's busy today vs. later".

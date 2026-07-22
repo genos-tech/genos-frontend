@@ -353,6 +353,15 @@ const buildNodesAndEdges = (
                 highlightAssigneeId != null &&
                 task.assigneeId != null &&
                 String(task.assigneeId) === String(highlightAssigneeId),
+            // Other members' tasks in highlight mode → dimmed + read-only (like
+            // a ghost). Root milestone and unassigned tasks stay normal.
+            isDimmed:
+                !isExternal &&
+                taskId !== rootTaskId &&
+                !isMilestone &&
+                highlightAssigneeId != null &&
+                task.assigneeId != null &&
+                String(task.assigneeId) !== String(highlightAssigneeId),
             isMilestone,
             isExternal,
             openBlockerCount: openBlockerCountByTask.get(taskId) ?? 0,

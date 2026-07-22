@@ -75,6 +75,7 @@ import {
 } from "../../utils/taskWeight";
 import { compareByUrgency, sortTopWeightRows, TopWeightSortMode } from "../../utils/topWeightSort";
 import { CopyableTaskIdText } from "../CopyableTaskId";
+import { SprintChip } from "../SprintChip";
 import { AssignedMilestoneCard } from "./AssignedMilestoneCard";
 import { TaskVelocitySection } from "./TaskVelocitySection";
 
@@ -893,6 +894,24 @@ export const TaskHomeContent = ({
     // a card in the Assigned Milestones section; the diagram highlights the
     // viewer's own tasks via `highlightAssigneeId`.
     const [diagramMilestone, setDiagramMilestone] = useState<Milestone | null>(null);
+
+    // sprintId → name for the CURRENT project. `allTasks` (and therefore
+    // `effectiveTasks`/`myTasks`/`topByWeight`) is current-project only, so
+    // this resolves the sprint chip on every dashboard row and on the
+    // Assigned Milestones cards. Unknown / null sprintId → SprintChip shows
+    // "No Sprint".
+    const sprintNameById = useMemo(() => {
+        const map = new Map<number, string>();
+        const projectId = usePM.currentProject?.projectId;
+        if (projectId != null) {
+            for (const s of useSM.projectSprints[projectId] ?? []) {
+                map.set(s.sprintId, s.name);
+            }
+        }
+        return map;
+    }, [usePM.currentProject?.projectId, useSM.projectSprints]);
+    const sprintNameFor = (sprintId: number | null | undefined): string | null =>
+        sprintId != null ? (sprintNameById.get(sprintId) ?? null) : null;
 
     // ── Handlers ──
     const projectCount = usePM.teamProjects?.length || 0;
@@ -2613,6 +2632,22 @@ export const TaskHomeContent = ({
                                                                                 {task.priority}
                                                                             </Chip>
                                                                         )}
+                                                                        {/* Sprint — left of the status chip. Hidden on
+                                                                            xs to keep the compact row from wrapping. */}
+                                                                        <Box
+                                                                            sx={{
+                                                                                display: {
+                                                                                    xs: "none",
+                                                                                    sm: "inline-flex",
+                                                                                },
+                                                                            }}
+                                                                        >
+                                                                            <SprintChip
+                                                                                name={sprintNameFor(
+                                                                                    task.sprintId
+                                                                                )}
+                                                                            />
+                                                                        </Box>
                                                                         <Chip
                                                                             size="sm"
                                                                             variant="soft"
@@ -2730,6 +2765,7 @@ export const TaskHomeContent = ({
                                                         <AssignedMilestoneCard
                                                             key={m.milestoneId}
                                                             milestone={m}
+                                                            sprintName={sprintNameFor(m.sprintId)}
                                                             onOpen={setDiagramMilestone}
                                                         />
                                                     ))}
@@ -3475,6 +3511,21 @@ export const TaskHomeContent = ({
                                                                         {task.assigneeName}
                                                                     </Typography>
                                                                 )}
+                                                                {/* Sprint — left of the status chip. */}
+                                                                <Box
+                                                                    sx={{
+                                                                        display: {
+                                                                            xs: "none",
+                                                                            sm: "inline-flex",
+                                                                        },
+                                                                    }}
+                                                                >
+                                                                    <SprintChip
+                                                                        name={sprintNameFor(
+                                                                            task.sprintId
+                                                                        )}
+                                                                    />
+                                                                </Box>
                                                                 <Chip
                                                                     size="sm"
                                                                     variant="soft"

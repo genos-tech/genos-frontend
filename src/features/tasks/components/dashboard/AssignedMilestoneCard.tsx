@@ -1,14 +1,17 @@
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
-import AccountTreeRoundedIcon from "@mui/icons-material/AccountTreeRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import { AvatarGroup, Box, Chip, LinearProgress, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
+import MuiChip from "@mui/material/Chip";
 
+import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
 import { fmt, useTranslation } from "../../../../i18n";
 import { TagListProps } from "../../../../types/tasks";
 import { Milestone } from "../../sprint-milestone/types";
 import { getMilestoneStatusChipColor } from "../../sprint-milestone/utils/sortMilestones";
+import { projectTagChipSx } from "../../utils/tagChipStyle";
+import { SprintChip } from "../SprintChip";
 
 // Same priority swatch the board card uses (SprintBoardCard.tsx) so a
 // milestone's priority chip reads identically across the two surfaces.
@@ -36,6 +39,9 @@ const daysUntil = (due: string | null): number | null => {
 
 type Props = {
     milestone: Milestone;
+    // Resolved sprint name for this milestone (null → "No Sprint"). Resolved
+    // by the parent from the current project's sprints.
+    sprintName: string | null;
     // Opens the task graph for this milestone (the parent renders the
     // LazyTaskDiagram and passes the viewer's id as highlightAssigneeId).
     onOpen: (milestone: Milestone) => void;
@@ -45,8 +51,8 @@ type Props = {
 // Milestones" section. It mirrors SprintBoardCard's LOOK but is NOT the
 // board card — that one is wrapped in @hello-pangea/dnd's <Draggable> and
 // would throw outside a <DragDropContext>. Clicking the card opens the
-// milestone's task graph.
-export const AssignedMilestoneCard = ({ milestone, onOpen }: Props) => {
+// milestone's task graph (a hover tooltip signals that).
+export const AssignedMilestoneCard = ({ milestone, sprintName, onOpen }: Props) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const { t } = useTranslation();
@@ -79,71 +85,71 @@ export const AssignedMilestoneCard = ({ milestone, onOpen }: Props) => {
         : null;
 
     return (
-        <Box
-            role="button"
-            tabIndex={0}
-            sx={{
-                backgroundColor: isDark ? "#1a1a24" : "#ffffff",
-                borderRadius: "8px",
-                p: 1.25,
-                border:
-                    mode === "dark"
-                        ? "1px solid rgba(255, 255, 255, 0.06)"
-                        : "1px solid rgba(0, 0, 0, 0.06)",
-                boxShadow:
-                    mode === "dark"
-                        ? "0 1px 2px rgba(0, 0, 0, 0.2)"
-                        : "0 1px 2px rgba(0, 0, 0, 0.05)",
-                cursor: "pointer",
-                transition: "all 0.15s ease",
-                display: "flex",
-                flexDirection: "column",
-                minWidth: 0,
-                "&:hover": {
-                    transform: "translateY(-1px)",
+        <AppTooltip title={t.tasks.dashboard.assignedMilestones.openDiagram}>
+            <Box
+                role="button"
+                tabIndex={0}
+                sx={{
+                    backgroundColor: isDark ? "#1a1a24" : "#ffffff",
+                    borderRadius: "8px",
+                    p: 1.25,
+                    border:
+                        mode === "dark"
+                            ? "1px solid rgba(255, 255, 255, 0.06)"
+                            : "1px solid rgba(0, 0, 0, 0.06)",
                     boxShadow:
                         mode === "dark"
-                            ? "0 4px 12px rgba(0, 0, 0, 0.4)"
-                            : "0 4px 12px rgba(0, 0, 0, 0.1)",
-                    borderColor: "#f97316",
-                },
-            }}
-            onClick={() => onOpen(milestone)}
-            onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    onOpen(milestone);
-                }
-            }}
-        >
-            {/* Header: flag + id · priority + graph affordance */}
-            <Box
-                sx={{
+                            ? "0 1px 2px rgba(0, 0, 0, 0.2)"
+                            : "0 1px 2px rgba(0, 0, 0, 0.05)",
+                    cursor: "pointer",
+                    transition: "all 0.15s ease",
                     display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    gap: 0.5,
-                    mb: 0.75,
+                    flexDirection: "column",
+                    minWidth: 0,
+                    "&:hover": {
+                        transform: "translateY(-1px)",
+                        boxShadow:
+                            mode === "dark"
+                                ? "0 4px 12px rgba(0, 0, 0, 0.4)"
+                                : "0 4px 12px rgba(0, 0, 0, 0.1)",
+                        borderColor: "#f97316",
+                    },
+                }}
+                onClick={() => onOpen(milestone)}
+                onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        onOpen(milestone);
+                    }
                 }}
             >
-                <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, minWidth: 0 }}>
-                    <FlagRoundedIcon sx={{ fontSize: 13, color: "#f97316", flexShrink: 0 }} />
-                    <Typography
-                        level="body-xs"
-                        sx={{
-                            color: mode === "dark" ? "#6b9fd4" : "#5a8ac7",
-                            fontWeight: 600,
-                            fontFamily: "'SF Mono', 'Monaco', 'Consolas', monospace",
-                            fontSize: "0.65rem",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                        }}
-                    >
-                        {milestone.displayId ?? `#${milestone.milestoneId}`}
-                    </Typography>
-                </Box>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flexShrink: 0 }}>
+                {/* Header: flag + id · priority */}
+                <Box
+                    sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: 0.5,
+                        mb: 0.75,
+                    }}
+                >
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, minWidth: 0 }}>
+                        <FlagRoundedIcon sx={{ fontSize: 13, color: "#f97316", flexShrink: 0 }} />
+                        <Typography
+                            level="body-xs"
+                            sx={{
+                                color: mode === "dark" ? "#6b9fd4" : "#5a8ac7",
+                                fontWeight: 600,
+                                fontFamily: "'SF Mono', 'Monaco', 'Consolas', monospace",
+                                fontSize: "0.65rem",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                            }}
+                        >
+                            {milestone.displayId ?? `#${milestone.milestoneId}`}
+                        </Typography>
+                    </Box>
                     {priorityStyle && (
                         <span
                             style={{
@@ -159,162 +165,152 @@ export const AssignedMilestoneCard = ({ milestone, onOpen }: Props) => {
                                 fontWeight: 700,
                                 letterSpacing: "0.3px",
                                 textTransform: "uppercase",
+                                flexShrink: 0,
                             }}
                         >
                             {milestone.priority}
                         </span>
                     )}
-                    <AccountTreeRoundedIcon
-                        sx={{
-                            fontSize: 15,
-                            color: mode === "dark" ? "#a78bfa" : "#7c3aed",
-                            opacity: 0.8,
-                        }}
-                    />
                 </Box>
-            </Box>
 
-            {/* Title */}
-            <Typography
-                level="body-sm"
-                sx={{
-                    fontWeight: 500,
-                    mb: 0.75,
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    display: "-webkit-box",
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: "vertical",
-                    lineHeight: 1.35,
-                    fontSize: "0.9rem",
-                    color: mode === "dark" ? "#e8e8e8" : "#1a1a1a",
-                }}
-            >
-                {milestone.title}
-            </Typography>
-
-            {/* Tags */}
-            {tags.length > 0 && (
-                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 0.75 }}>
-                    {tags.slice(0, 3).map((tag, idx) => (
-                        <span
-                            key={idx}
-                            style={{
-                                display: "inline-flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                padding: "0 6px",
-                                borderRadius: 8,
-                                backgroundColor: tag.tagColor,
-                                color: tag.tagTextColor,
-                                fontSize: "0.6rem",
-                                height: 16,
-                            }}
-                        >
-                            {tag.tagName}
-                        </span>
-                    ))}
-                    {tags.length > 3 && (
-                        <Typography
-                            level="body-xs"
-                            sx={{ color: mode === "dark" ? "#888" : "#666" }}
-                        >
-                            +{tags.length - 3}
-                        </Typography>
-                    )}
-                </Box>
-            )}
-
-            {/* Progress: closed / total sub-tasks */}
-            <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, mb: 0.75 }}>
-                <LinearProgress
-                    color={pct === 100 ? "success" : "primary"}
-                    size="sm"
-                    sx={{ flex: 1, "--LinearProgress-thickness": "6px" }}
-                    value={pct}
-                    determinate
-                />
+                {/* Title */}
                 <Typography
-                    level="body-xs"
+                    level="body-sm"
                     sx={{
-                        color: mode === "dark" ? "#999" : "#777",
-                        fontSize: "0.6rem",
-                        fontWeight: 600,
-                        whiteSpace: "nowrap",
+                        fontWeight: 500,
+                        mb: 0.75,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        display: "-webkit-box",
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: "vertical",
+                        lineHeight: 1.35,
+                        fontSize: "0.9rem",
+                        color: mode === "dark" ? "#e8e8e8" : "#1a1a1a",
                     }}
                 >
-                    {fmt(t.tasks.dashboard.assignedMilestones.progress, { closed, total })}
+                    {milestone.title}
                 </Typography>
-            </Box>
 
-            {/* Footer: assignees + status + due date */}
-            <Box
-                sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    gap: 0.5,
-                    mt: "auto",
-                    pt: 0.75,
-                    borderTop:
-                        mode === "dark"
-                            ? "1px solid rgba(255, 255, 255, 0.04)"
-                            : "1px solid rgba(0, 0, 0, 0.04)",
-                }}
-            >
-                <AvatarGroup size="sm" sx={{ "--Avatar-size": "20px" }}>
-                    {milestone.assignees
-                        .slice(0, 4)
-                        .map((a, idx) =>
-                            a.userId != null ? (
-                                <UserAvatar
-                                    key={String(a.userId)}
-                                    clickable={false}
-                                    showPulseDot={false}
-                                    size={20}
-                                    userId={a.userId}
-                                />
-                            ) : (
-                                <Box key={`x-${idx}`} />
-                            )
-                        )}
-                </AvatarGroup>
+                {/* Sprint */}
+                <Box sx={{ mb: 0.75 }}>
+                    <SprintChip name={sprintName} />
+                </Box>
 
-                <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flexShrink: 0 }}>
-                    <Chip
-                        size="sm"
-                        variant="solid"
-                        sx={{
-                            backgroundColor: statusTone.color,
-                            color: statusTone.textColor,
-                            fontWeight: 600,
-                            fontSize: "0.6rem",
-                            "--Chip-minHeight": "16px",
-                            "--Chip-paddingInline": "6px",
-                        }}
-                    >
-                        {milestone.status}
-                    </Chip>
-                    {dueLabel && (
-                        <Box
-                            sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 0.25,
-                                color: dueColor,
-                            }}
-                        >
-                            <AccessTimeIcon sx={{ fontSize: 11 }} />
+                {/* Tags */}
+                {tags.length > 0 && (
+                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 0.75 }}>
+                        {tags.slice(0, 3).map((tag, idx) => (
+                            <MuiChip
+                                key={idx}
+                                label={tag.tagName}
+                                size="small"
+                                variant="outlined"
+                                sx={projectTagChipSx(tag.tagColor, isDark)}
+                            />
+                        ))}
+                        {tags.length > 3 && (
                             <Typography
                                 level="body-xs"
-                                sx={{ fontWeight: 600, fontSize: "0.6rem", color: dueColor }}
+                                sx={{ color: mode === "dark" ? "#888" : "#666" }}
                             >
-                                {dueLabel}
+                                +{tags.length - 3}
                             </Typography>
-                        </Box>
-                    )}
+                        )}
+                    </Box>
+                )}
+
+                {/* Progress: closed / total sub-tasks */}
+                <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, mb: 0.75 }}>
+                    <LinearProgress
+                        color={pct === 100 ? "success" : "primary"}
+                        size="sm"
+                        sx={{ flex: 1, "--LinearProgress-thickness": "6px" }}
+                        value={pct}
+                        determinate
+                    />
+                    <Typography
+                        level="body-xs"
+                        sx={{
+                            color: mode === "dark" ? "#999" : "#777",
+                            fontSize: "0.6rem",
+                            fontWeight: 600,
+                            whiteSpace: "nowrap",
+                        }}
+                    >
+                        {fmt(t.tasks.dashboard.assignedMilestones.progress, { closed, total })}
+                    </Typography>
+                </Box>
+
+                {/* Footer: assignees + status + due date */}
+                <Box
+                    sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: 0.5,
+                        mt: "auto",
+                        pt: 0.75,
+                        borderTop:
+                            mode === "dark"
+                                ? "1px solid rgba(255, 255, 255, 0.04)"
+                                : "1px solid rgba(0, 0, 0, 0.04)",
+                    }}
+                >
+                    <AvatarGroup size="sm" sx={{ "--Avatar-size": "20px" }}>
+                        {milestone.assignees
+                            .slice(0, 4)
+                            .map((a, idx) =>
+                                a.userId != null ? (
+                                    <UserAvatar
+                                        key={String(a.userId)}
+                                        clickable={false}
+                                        showPulseDot={false}
+                                        size={20}
+                                        userId={a.userId}
+                                    />
+                                ) : (
+                                    <Box key={`x-${idx}`} />
+                                )
+                            )}
+                    </AvatarGroup>
+
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flexShrink: 0 }}>
+                        <Chip
+                            size="sm"
+                            variant="solid"
+                            sx={{
+                                backgroundColor: statusTone.color,
+                                color: statusTone.textColor,
+                                fontWeight: 600,
+                                fontSize: "0.6rem",
+                                "--Chip-minHeight": "16px",
+                                "--Chip-paddingInline": "6px",
+                            }}
+                        >
+                            {milestone.status}
+                        </Chip>
+                        {dueLabel && (
+                            <Box
+                                sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 0.25,
+                                    color: dueColor,
+                                }}
+                            >
+                                <AccessTimeIcon sx={{ fontSize: 11 }} />
+                                <Typography
+                                    level="body-xs"
+                                    sx={{ fontWeight: 600, fontSize: "0.6rem", color: dueColor }}
+                                >
+                                    {dueLabel}
+                                </Typography>
+                            </Box>
+                        )}
+                    </Box>
                 </Box>
             </Box>
-        </Box>
+        </AppTooltip>
     );
 };

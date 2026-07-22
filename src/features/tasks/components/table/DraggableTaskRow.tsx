@@ -37,6 +37,7 @@ import { UserProps } from "../../../../types/admin";
 import { TagListProps, TaskTableProps } from "../../../../types/tasks";
 import { stripOwnerState } from "../../../../utils/joyAutocomplete";
 import { PrStatusCell } from "../../../integrations/components/PrStatusCell";
+import { projectTagChipSx } from "../../utils/tagChipStyle";
 import { formatTaskDisplayId } from "../../utils/taskDisplayId";
 import { effortLevels, priorities } from "../../utils/taskMeta";
 import { computeTaskWeight, MAX_TASK_WEIGHT, weightBand } from "../../utils/taskWeight";
@@ -740,22 +741,8 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                         key={idx}
                                         label={tag.tagName}
                                         size="small"
+                                        sx={projectTagChipSx(tag.tagColor, mode === "dark")}
                                         variant="outlined"
-                                        sx={{
-                                            color: mode === "dark" ? "white" : "black",
-                                            fontWeight: 600,
-                                            borderRadius: "6px",
-                                            borderWidth: "2px",
-                                            borderColor: alpha(
-                                                tag.tagColor,
-                                                mode === "dark" ? 0.6 : 0.8
-                                            ),
-                                            fontSize: "0.7rem",
-                                            backgroundColor: alpha(
-                                                tag.tagColor,
-                                                mode === "dark" ? 0.1 : 0.05
-                                            ),
-                                        }}
                                     />
                                 ))
                         )}

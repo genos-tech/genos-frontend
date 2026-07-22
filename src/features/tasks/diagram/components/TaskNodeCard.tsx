@@ -78,13 +78,24 @@ export const TaskNodeCard = memo((props: NodeProps) => {
         isRoot,
         isCurrentPreview,
         isAssignedToViewer,
-        isExternal,
+        isExternal: isGhost,
+        isDimmed,
         openBlockerCount,
         projectName,
         onChange,
         onAddSubtask,
         onOpenPreview,
     } = props.data as unknown as TaskNodeData;
+
+    // Everything below reads `isExternal` to mean "render as a read-only,
+    // dimmed card". That's a true ghost (a task outside this tree) OR — only
+    // in the dashboard's highlight mode — another member's task (`isDimmed`),
+    // which we deliberately give the exact ghost treatment so the viewer's
+    // own tasks stand out and others' work can't be edited from this view.
+    // The two ghost-ONLY bits (the "External" chip and hiding the assignee)
+    // stay keyed to `isGhost`, so a dimmed card still shows whose task it is
+    // and never mislabels itself "External".
+    const isExternal = isGhost || !!isDimmed;
 
     const [editing, setEditing] = useState(false);
     const [draftTitle, setDraftTitle] = useState(task.title ?? "");
@@ -607,7 +618,11 @@ export const TaskNodeCard = memo((props: NodeProps) => {
 
             {/* Footer row */}
             <Stack alignItems="center" direction="row" spacing={0.75}>
-                {!isExternal && task.assigneeId && (
+                {/* Show the assignee on internal cards — including dimmed
+                    other-member cards, so the viewer can see WHOSE task it is.
+                    Only true ghosts (isGhost) hide it (they carry the
+                    "External" chip instead). */}
+                {!isGhost && task.assigneeId && (
                     // Avatar instead of name text — packs more identity
                     // into the same horizontal space and matches the
                     // affordance used everywhere else in the app
@@ -624,7 +639,10 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                         </Box>
                     </AppTooltip>
                 )}
-                {isExternal ? (
+                {/* "External" chip only for TRUE ghosts. Dimmed other-member
+                    cards fall through to the priority chip like any internal
+                    card — they're not external, just not the viewer's. */}
+                {isGhost ? (
                     <Chip
                         size="sm"
                         variant="soft"

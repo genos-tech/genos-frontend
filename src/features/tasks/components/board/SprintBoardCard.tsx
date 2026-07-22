@@ -8,6 +8,7 @@ import Box from "@mui/joy/Box";
 import IconButton from "@mui/joy/IconButton";
 import { useColorScheme } from "@mui/joy/styles";
 import Typography from "@mui/joy/Typography";
+import MuiChip from "@mui/material/Chip";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { useResolvedUserName } from "../../../../components/ui/avatars/AvatarContext";
@@ -15,6 +16,7 @@ import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
 import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TagListProps, TaskTableProps } from "../../../../types/tasks";
+import { projectTagChipSx } from "../../utils/tagChipStyle";
 import { CopyableTaskIdText } from "../CopyableTaskId";
 
 // Priority colors
@@ -270,22 +272,13 @@ const SprintBoardCardImpl = ({
                     {task.tags && task.tags.length > 0 && (
                         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 1 }}>
                             {task.tags.slice(0, 3).map((tag: TagListProps, idx: number) => (
-                                <span
+                                <MuiChip
                                     key={idx}
-                                    style={{
-                                        display: "inline-flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        padding: "0 6px",
-                                        borderRadius: 8,
-                                        backgroundColor: tag.tagColor,
-                                        color: tag.tagTextColor,
-                                        fontSize: "0.6rem",
-                                        height: 16,
-                                    }}
-                                >
-                                    {tag.tagName}
-                                </span>
+                                    label={tag.tagName}
+                                    size="small"
+                                    variant="outlined"
+                                    sx={projectTagChipSx(tag.tagColor, mode === "dark")}
+                                />
                             ))}
                             {task.tags.length > 3 && (
                                 <Typography

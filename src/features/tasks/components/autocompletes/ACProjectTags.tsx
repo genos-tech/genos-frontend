@@ -2,10 +2,10 @@ import { Chip, ListItemContent } from "@mui/joy";
 import Autocomplete from "@mui/joy/Autocomplete";
 import AutocompleteOption from "@mui/joy/AutocompleteOption";
 import { useColorScheme } from "@mui/joy/styles";
-import { alpha } from "@mui/system";
 
 import { useTranslation } from "../../../../i18n";
 import { TagListProps, TaskProps } from "../../../../types/tasks";
+import { projectTagChipSx } from "../../utils/tagChipStyle";
 
 type ACProjectTagsProps = {
     projectTags: TagListProps[];
@@ -46,13 +46,7 @@ export const ACProjectTags = (props: ACProjectTagsProps) => {
                             key={`ac-project-tags-name-chip-${option.tagName}`}
                             size="sm"
                             variant="outlined"
-                            sx={{
-                                color: mode === "dark" ? "white" : "black",
-                                fontWeight: "bold",
-                                borderRadius: "5px",
-                                borderWidth: "3px",
-                                borderColor: alpha(option.tagColor, mode === "dark" ? 0.5 : 0.75),
-                            }}
+                            sx={projectTagChipSx(option.tagColor, mode === "dark")}
                         >
                             {option.tagName}
                         </Chip>
@@ -67,13 +61,7 @@ export const ACProjectTags = (props: ACProjectTagsProps) => {
                             key={`ac-project-tags-chip-${key}`}
                             size="sm"
                             variant="outlined"
-                            sx={{
-                                color: mode === "dark" ? "white" : "black",
-                                fontWeight: "bold",
-                                borderRadius: "5px",
-                                borderWidth: "3px",
-                                borderColor: alpha(item.tagColor, mode === "dark" ? 0.5 : 0.75),
-                            }}
+                            sx={projectTagChipSx(item.tagColor, mode === "dark")}
                         >
                             {item.tagName}
                         </Chip>
