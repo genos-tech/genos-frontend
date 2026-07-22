@@ -57,11 +57,13 @@ import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { fmt, getMessages, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TaskTableProps } from "../../../../types/tasks";
+import { LazyTaskDiagram } from "../../diagram/components/LazyTaskDiagram";
 import { loadTeamTasks } from "../../services/loadTeamTasks";
 import { SprintConfigDialog } from "../../sprint-milestone/components/SprintConfigDialog";
 import { SprintManagerDialog } from "../../sprint-milestone/components/SprintManagerDialog";
 import { SprintMilestonesSection } from "../../sprint-milestone/components/SprintMilestonesSection";
 import { Milestone, Sprint } from "../../sprint-milestone/types";
+import { selectVisibleMilestones } from "../../sprint-milestone/utils/sortMilestones";
 import { predefinedPriorityFilters } from "../../types/TaskTableTypes";
 import {
     computeTaskWeight,
@@ -73,6 +75,7 @@ import {
 } from "../../utils/taskWeight";
 import { compareByUrgency, sortTopWeightRows, TopWeightSortMode } from "../../utils/topWeightSort";
 import { CopyableTaskIdText } from "../CopyableTaskId";
+import { AssignedMilestoneCard } from "./AssignedMilestoneCard";
 import { TaskVelocitySection } from "./TaskVelocitySection";
 
 // A task augmented with status/close-date rolled up from its parent chain.
@@ -860,6 +863,36 @@ export const TaskHomeContent = ({
             .sort(upNextSort === "weight" ? byWeight : byUrgency)
             .slice(0, 10);
     }, [myTasks, upNextSort]);
+
+    // ── Assigned Milestones (current project) ──
+    // Ongoing milestones the logged-in user is one of the assignees of.
+    // Current-project scoped: milestones only load for the active project
+    // (`useSM.projectMilestones` is keyed by project and populated on
+    // project switch), so this reads that slice directly. "Ongoing" ==
+    // `selectVisibleMilestones` (drops Deleted + Closed-in-ended-sprint) —
+    // the same visible-set definition the sidebar/filter use. The selector
+    // already sorts, so the cards render in due-date → status → title order.
+    const assignedMilestones = useMemo<Milestone[]>(() => {
+        const projectId = usePM.currentProject?.projectId;
+        if (!projectId) return [];
+        const all = useSM.projectMilestones[projectId] ?? [];
+        const sprints = useSM.projectSprints[projectId] ?? [];
+        return selectVisibleMilestones(all, sprints).filter((m) =>
+            (m.assignees ?? []).some(
+                (a) => a.userId != null && String(a.userId) === String(myself.userId)
+            )
+        );
+    }, [
+        usePM.currentProject?.projectId,
+        useSM.projectMilestones,
+        useSM.projectSprints,
+        myself.userId,
+    ]);
+
+    // Milestone whose task graph is open (null = closed). Opened by clicking
+    // a card in the Assigned Milestones section; the diagram highlights the
+    // viewer's own tasks via `highlightAssigneeId`.
+    const [diagramMilestone, setDiagramMilestone] = useState<Milestone | null>(null);
 
     // ── Handlers ──
     const projectCount = usePM.teamProjects?.length || 0;
@@ -2115,7 +2148,12 @@ export const TaskHomeContent = ({
                             {activeTab === "mytasks" && (
                                 <>
                                     {/* ════════ Section MY: My Tasks ════════ */}
-                                    {myStats.totalCount === 0 ? (
+                                    {/* Big "nothing assigned" card only when there's truly
+                                        nothing on this tab — no tasks AND no assigned
+                                        milestones. With milestones present it would sit,
+                                        contradictorily, above populated milestone cards. */}
+                                    {myStats.totalCount === 0 &&
+                                    assignedMilestones.length === 0 ? (
                                         <Card
                                             variant="soft"
                                             sx={{
@@ -2617,6 +2655,87 @@ export const TaskHomeContent = ({
                                                 )}
                                             </Box>
                                         </Stack>
+                                    )}
+
+                                    {/* ════════ Section: Assigned Milestones ════════ */}
+                                    {/* Suppressed only when the WHOLE tab is empty (no tasks
+                                        and no milestones) — the big card above already covers
+                                        that, so we don't stack a second "empty" line under it. */}
+                                    {(assignedMilestones.length > 0 || myStats.totalCount > 0) && (
+                                        <Box sx={{ mt: 3 }}>
+                                            <Stack
+                                                alignItems="center"
+                                                direction="row"
+                                                flexWrap="wrap"
+                                                spacing={1}
+                                                sx={{ mb: 1.5 }}
+                                            >
+                                                <FlagRoundedIcon
+                                                    sx={{ fontSize: 16, color: "#f97316" }}
+                                                />
+                                                <Typography
+                                                    level="body-sm"
+                                                    sx={{ color: textSecondary, fontWeight: 600 }}
+                                                >
+                                                    {t.tasks.dashboard.assignedMilestones.title}
+                                                </Typography>
+                                                <AppTooltip
+                                                    title={
+                                                        <Box sx={{ maxWidth: 260 }}>
+                                                            {
+                                                                t.tasks.dashboard
+                                                                    .assignedMilestones.help
+                                                            }
+                                                        </Box>
+                                                    }
+                                                >
+                                                    <HelpOutlineRoundedIcon
+                                                        sx={{
+                                                            fontSize: 15,
+                                                            color: textMuted,
+                                                            cursor: "help",
+                                                        }}
+                                                    />
+                                                </AppTooltip>
+                                                {assignedMilestones.length > 0 && (
+                                                    <Chip
+                                                        size="sm"
+                                                        sx={{ ml: { sm: "auto" } }}
+                                                        variant="soft"
+                                                    >
+                                                        {assignedMilestones.length}
+                                                    </Chip>
+                                                )}
+                                            </Stack>
+                                            {assignedMilestones.length === 0 ? (
+                                                <Typography
+                                                    level="body-sm"
+                                                    sx={{ color: textMuted }}
+                                                >
+                                                    {t.tasks.dashboard.assignedMilestones.empty}
+                                                </Typography>
+                                            ) : (
+                                                <Box
+                                                    sx={{
+                                                        display: "grid",
+                                                        gap: 1.5,
+                                                        gridTemplateColumns: {
+                                                            xs: "1fr",
+                                                            sm: "repeat(2, 1fr)",
+                                                            md: "repeat(3, 1fr)",
+                                                        },
+                                                    }}
+                                                >
+                                                    {assignedMilestones.map((m) => (
+                                                        <AssignedMilestoneCard
+                                                            key={m.milestoneId}
+                                                            milestone={m}
+                                                            onOpen={setDiagramMilestone}
+                                                        />
+                                                    ))}
+                                                </Box>
+                                            )}
+                                        </Box>
                                     )}
                                 </>
                             )}
@@ -4415,6 +4534,27 @@ export const TaskHomeContent = ({
                     )}
                 </Stack>
             </Box>
+
+            {/* Task graph for a clicked "Assigned Milestones" card. Lazy —
+                keeps @xyflow out of the dashboard chunk (only fetched on
+                first open). `highlightAssigneeId` paints the viewer's own
+                tasks/subtasks in the focus color. */}
+            {diagramMilestone != null &&
+                diagramMilestone.taskId != null &&
+                diagramMilestone.projectId != null && (
+                    <LazyTaskDiagram
+                        highlightAssigneeId={myself.userId}
+                        myself={myself}
+                        projectId={Number(diagramMilestone.projectId)}
+                        rootLabel={`${diagramMilestone.displayId ?? ""} · ${diagramMilestone.title}`}
+                        rootTaskId={Number(diagramMilestone.taskId)}
+                        usePM={usePM}
+                        useSM={useSM}
+                        useTM={useTM}
+                        open
+                        onClose={() => setDiagramMilestone(null)}
+                    />
+                )}
         </>
     );
 };

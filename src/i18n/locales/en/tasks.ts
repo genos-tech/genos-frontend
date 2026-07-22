@@ -704,6 +704,15 @@ export const tasks = {
                 body: "“By weight” shows the most pressing tasks first — Task Weight (1–25) = priority × time pressure to get started. The heavier a task's effort level, the earlier before its due date it starts climbing, so big jobs surface while there's still room to work on them. “By urgency” orders by overdue → priority → due date.",
             },
         },
+        // My Tasks "Assigned Milestones" — the ongoing milestones the user is
+        // an assignee of, in the current project. Cards open the task graph.
+        assignedMilestones: {
+            title: "Assigned Milestones",
+            help: "Ongoing milestones in this project you're assigned to. Click a card to open its task graph — your own tasks and subtasks are highlighted.",
+            empty: "No ongoing milestones in this project are assigned to you.",
+            // {closed}/{total} completed sub-tasks.
+            progress: "{closed}/{total} done",
+        },
         // Team Capacity: Σ effort of a member's active tasks, bucketed by
         // due-window, answering "who's busy today vs. later".
         capacity: {

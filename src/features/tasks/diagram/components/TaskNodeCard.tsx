@@ -56,6 +56,12 @@ const HANDLE_BASE = {
     borderRadius: "50%",
 } as const;
 
+// Focus color for "assigned to the viewer" nodes (dashboard's Assigned
+// Milestones section). Deliberately amber — a hue distinct from the purple
+// `isCurrentPreview` accent, so a card that is BOTH the anchor and one of the
+// viewer's tasks never blurs the two treatments together.
+const ASSIGNED_FOCUS_COLOR = "#f59e0b";
+
 export const TaskNodeCard = memo((props: NodeProps) => {
     const { mode } = useColorScheme();
     const { t } = useTranslation();
@@ -71,6 +77,7 @@ export const TaskNodeCard = memo((props: NodeProps) => {
         task,
         isRoot,
         isCurrentPreview,
+        isAssignedToViewer,
         isExternal,
         openBlockerCount,
         projectName,
@@ -151,9 +158,14 @@ export const TaskNodeCard = memo((props: NodeProps) => {
             // status mix) so it reads as an unambiguous "you are here"
             // marker regardless of the task's status color.
             P.accent
-          : statusTintColor
-            ? `color-mix(in srgb, ${baseBorder}, ${statusTintColor} 38%)`
-            : baseBorder;
+          : isAssignedToViewer
+            ? // Viewer's own task — amber-tinted border (takes precedence
+              // over the status tint; status is still legible via the chip
+              // and glow). Paired with the amber ring below.
+              `color-mix(in srgb, ${baseBorder}, ${ASSIGNED_FOCUS_COLOR} 55%)`
+            : statusTintColor
+              ? `color-mix(in srgb, ${baseBorder}, ${statusTintColor} 38%)`
+              : baseBorder;
     // Subtle status glow on non-ghost cards so the eye sweeps over
     // closed (green) / WIP (orange) tasks as a group.
     const statusGlow =
@@ -167,6 +179,14 @@ export const TaskNodeCard = memo((props: NodeProps) => {
     const currentRing = isCurrentPreview
         ? `0 0 0 2px ${alpha(P.accent, isDark ? 0.85 : 0.7)}, 0 0 22px ${alpha(P.accent, isDark ? 0.35 : 0.25)}`
         : null;
+    // "Assigned to viewer" ring — same additive box-shadow trick as
+    // `currentRing`, but amber. Skipped when the card is already the
+    // current-preview anchor so the two rings don't double up (the anchor
+    // treatment wins; the amber border tint still marks it as the viewer's).
+    const assignedRing =
+        isAssignedToViewer && !isExternal && !isCurrentPreview
+            ? `0 0 0 2px ${alpha(ASSIGNED_FOCUS_COLOR, isDark ? 0.9 : 0.75)}, 0 0 20px ${alpha(ASSIGNED_FOCUS_COLOR, isDark ? 0.4 : 0.28)}`
+            : null;
     // "Current preview" surface tint. Contrast by *lightness*, not
     // hue: every other card is already some shade of purple against a
     // purple canvas, so blending in MORE purple wouldn't make the
@@ -209,6 +229,9 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                           // outside any internal glow layers. `filter()`
                           // out nulls so a card with only one applicable
                           // shadow doesn't end up with stray commas.
+                          // `assignedRing` and `currentRing` are mutually
+                          // exclusive (see assignedRing), so at most one fires.
+                          assignedRing,
                           currentRing,
                           isRoot ? `0 6px 22px ${P.glow}` : null,
                           statusGlow,
