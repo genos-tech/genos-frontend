@@ -137,8 +137,12 @@ export const SprintBoard = (props: SprintBoardProps) => {
     // toggle would be a no-op (and the label "Show child tasks" would
     // misleadingly imply there are extra cards hiding).
     const [isMilestoneFilterActive, setIsMilestoneFilterActive] = useState<boolean>(false);
+    // When a Member filter is active the matching subtasks are already flat
+    // in `filteredTasks`, so the "Show child tasks" toggle is redundant —
+    // hide it (same reasoning as the milestone-scope case).
+    const [isMemberFilterActive, setIsMemberFilterActive] = useState<boolean>(false);
     const showChildTasksToggleVisible =
-        !isMilestoneFilterActive && useTM.tableMilestoneFilterId == null;
+        !isMilestoneFilterActive && !isMemberFilterActive && useTM.tableMilestoneFilterId == null;
 
     // Per-column sort tiers. Sourced from the shared
     // `useTaskSortPreferences` hook so the Settings modal is the only
@@ -523,8 +527,10 @@ export const SprintBoard = (props: SprintBoardProps) => {
                 <TaskFilterMenu
                     predefinedTagsFilters={predefinedTagsFilters}
                     setCurrentDisplayingTasks={setFilteredTasks}
+                    setIsMemberFilterActive={setIsMemberFilterActive}
                     setIsMilestoneFilterActive={setIsMilestoneFilterActive}
                     setVisibleChildTaskIds={setVisibleChildTaskIds}
+                    teamMembers={teamMembers}
                     useSM={useSM}
                     useTM={useTM}
                     hideStatusFilter

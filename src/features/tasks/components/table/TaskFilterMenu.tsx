@@ -2,10 +2,11 @@ import * as React from "react";
 import { useEffect, useMemo } from "react";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
+import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
 import { useColorScheme } from "@mui/joy/styles";
-import { Box, Chip, Stack, Typography } from "@mui/material";
+import { Avatar, Box, Chip, Stack, Typography } from "@mui/material";
 import Button from "@mui/material/Button";
 import Fade from "@mui/material/Fade";
 import IconButton from "@mui/material/IconButton";
@@ -18,7 +19,9 @@ import { TaskFilterMenuStyles } from "../../../../components/ui/styles/commonSty
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
+import { UserProps } from "../../../../types/admin";
 import { TaskTableProps } from "../../../../types/tasks";
+import { buildAvatarSrc } from "../../../../utils/avatarSrc";
 import {
     getMilestoneStatusChipColor,
     selectVisibleMilestones,
@@ -56,6 +59,14 @@ const MILESTONE_ACCENT_LIGHT = "#c2410c";
 const MILESTONE_ACCENT_BG_DARK = "rgba(249,115,22,0.35)";
 const MILESTONE_ACCENT_BG_LIGHT = "rgba(249,115,22,0.6)";
 
+// Member filter sentinels — mirror the milestone `all`/`none` pattern.
+// Distinct `__…__` strings so they can never collide with a real userId.
+type MemberFilterKey = string; // a userId, or one of the sentinels below
+const MEMBER_ALL = "__all__";
+const MEMBER_NONE = "__none__";
+const MEMBER_ACCENT_DARK = "#818cf8";
+const MEMBER_ACCENT_LIGHT = "#4f46e5";
+
 type TaskFilterMenuProps = {
     useTM: TaskManagementState;
     // Optional: when provided, the filter bar exposes a Milestone
@@ -80,6 +91,16 @@ type TaskFilterMenuProps = {
     // The board uses this to hide its "Show child tasks" toggle when
     // a milestone is already in scope (children are already showing).
     setIsMilestoneFilterActive?: (active: boolean) => void;
+    // Optional: the team's members, source for the Member multi-select.
+    // When omitted (or empty) the Member filter is not rendered — the
+    // legacy `ProjectTaskTable` call site doesn't pass it.
+    teamMembers?: UserProps[];
+    // Optional: receives `true` whenever the Member multi-select is narrowed
+    // to specific members (anything other than the "All" sentinel). The task
+    // table uses this to splice in the (dimmed, non-interactive) ancestor
+    // rows of a matching subtask so the dependency tree stays visible; the
+    // board ignores it (it renders the matches flat).
+    setIsMemberFilterActive?: (active: boolean) => void;
     hideStatusFilter?: boolean;
     // Optional: when provided, renders a "customize columns" gear icon
     // inline with the "Filters" label that opens the column-settings
@@ -97,6 +118,8 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         setCurrentDisplayingTasks,
         setVisibleChildTaskIds,
         setIsMilestoneFilterActive,
+        teamMembers,
+        setIsMemberFilterActive,
         hideStatusFilter,
         onOpenColumnSettings,
     } = props;
@@ -150,7 +173,8 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
             selectedTags,
             selectedPriorities,
             selectedEffortLevels,
-            selectedMilestoneKeys
+            selectedMilestoneKeys,
+            selectedMemberKeys
         );
     };
 
@@ -191,7 +215,8 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
             newTags,
             selectedPriorities,
             selectedEffortLevels,
-            selectedMilestoneKeys
+            selectedMilestoneKeys,
+            selectedMemberKeys
         );
     };
 
@@ -243,7 +268,8 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
             selectedTags,
             newPriorities,
             selectedEffortLevels,
-            selectedMilestoneKeys
+            selectedMilestoneKeys,
+            selectedMemberKeys
         );
     };
 
@@ -292,7 +318,8 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
             selectedTags,
             selectedPriorities,
             newEffortLevels,
-            selectedMilestoneKeys
+            selectedMilestoneKeys,
+            selectedMemberKeys
         );
     };
 
@@ -356,7 +383,14 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
             setAnchorElMilestoneFilter(null);
         }
 
-        applyFilters(selectedStatus, selectedTags, selectedPriorities, selectedEffortLevels, next);
+        applyFilters(
+            selectedStatus,
+            selectedTags,
+            selectedPriorities,
+            selectedEffortLevels,
+            next,
+            selectedMemberKeys
+        );
     };
 
     const milestoneFilterButtonLabel = useMemo(() => {
@@ -372,6 +406,65 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         }
         return t.tasks.milestoneFilter.all;
     }, [selectedMilestoneKeys, visibleMilestones, t]);
+
+    // Member filter — multi-select over the team's members. Same
+    // all / none / id shape as the milestone filter above.
+    const [selectedMemberKeys, setSelectedMemberKeys] = React.useState<MemberFilterKey[]>([
+        MEMBER_ALL,
+    ]);
+    const [anchorElMemberFilter, setAnchorElMemberFilter] = React.useState<null | HTMLElement>(
+        null
+    );
+    const openMemberFilter = Boolean(anchorElMemberFilter);
+    const handleClickMemberFilter = (event: React.MouseEvent<HTMLElement>) => {
+        setAnchorElMemberFilter(event.currentTarget);
+    };
+    // Drop a selected member id that's no longer on the team (member
+    // removed) so we don't filter by a stale id and show an empty table.
+    useEffect(() => {
+        if (selectedMemberKeys.length === 1 && selectedMemberKeys[0] === MEMBER_ALL) return;
+        const validIds = new Set((teamMembers ?? []).map((m) => String(m.userId)));
+        const pruned = selectedMemberKeys.filter((k) => k === MEMBER_NONE || validIds.has(k));
+        if (pruned.length === selectedMemberKeys.length) return;
+        setSelectedMemberKeys(pruned.length > 0 ? pruned : [MEMBER_ALL]);
+    }, [teamMembers]);
+    const handleCloseMemberFilter = (key: MemberFilterKey) => {
+        let next: MemberFilterKey[];
+        if (key === MEMBER_ALL) {
+            next = [MEMBER_ALL];
+            setSelectedMemberKeys(next);
+            setAnchorElMemberFilter(null);
+        } else if (selectedMemberKeys.some((k) => k === key)) {
+            next = selectedMemberKeys.filter((k) => k !== key);
+            setSelectedMemberKeys(next);
+        } else {
+            next = [...selectedMemberKeys.filter((k) => k !== MEMBER_ALL), key];
+            setSelectedMemberKeys(next);
+        }
+        if (next.length === 0) {
+            next = [MEMBER_ALL];
+            setSelectedMemberKeys(next);
+            setAnchorElMemberFilter(null);
+        }
+        applyFilters(
+            selectedStatus,
+            selectedTags,
+            selectedPriorities,
+            selectedEffortLevels,
+            selectedMilestoneKeys,
+            next
+        );
+    };
+    const memberFilterButtonLabel = useMemo(() => {
+        if (selectedMemberKeys.length === 1 && selectedMemberKeys[0] === MEMBER_ALL) {
+            return t.tasks.memberFilter.all;
+        }
+        const first = selectedMemberKeys[0];
+        if (first === MEMBER_NONE) return t.tasks.memberFilter.noAssignee;
+        const m = (teamMembers ?? []).find((mm) => String(mm.userId) === first);
+        const name = m?.userName ?? first;
+        return name.length > 16 ? `${name.slice(0, 16)}…` : name;
+    }, [selectedMemberKeys, teamMembers, t]);
 
     // Apply filters — single-pass walk over allTasks. Previously this was
     // 5-6 chained `.filter()` calls allocating intermediate arrays plus a
@@ -390,7 +483,8 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         tags: FilterProps[],
         priority: FilterProps[],
         effortLevel: FilterProps[],
-        milestoneSel: MilestoneFilterKey[]
+        milestoneSel: MilestoneFilterKey[],
+        memberSel: MemberFilterKey[]
     ) => {
         const milestoneScopeActive = useTM.tableMilestoneFilterId != null;
         const now = Date.now();
@@ -441,6 +535,17 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
             milestoneSel.filter((k): k is number => typeof k === "number")
         );
 
+        // --- Member (multi-select) predicate ---
+        // A task matches a member if its assignee is in the selection (or it's
+        // unassigned and the "No assignee" sentinel is chosen). Matching drives
+        // the flat board list AND the table's root set; the table separately
+        // splices in the (dimmed) ancestor chain of any matching subtask.
+        const memberFilterActive = !(memberSel.length === 1 && memberSel[0] === MEMBER_ALL);
+        const memberAllowNone = memberSel.includes(MEMBER_NONE);
+        const memberIdSet = new Set<string>(
+            memberSel.filter((k) => k !== MEMBER_ALL && k !== MEMBER_NONE)
+        );
+
         // --- Milestone scope (sidebar-driven) predicate ---
         let scopeBackingTaskId: string | null = null;
         const scopeTarget = useTM.tableMilestoneFilterId;
@@ -470,6 +575,9 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         const restrictTopToRoots =
             !milestoneScopeActive &&
             !milestoneFilterActive &&
+            // A member filter, like a milestone filter, wants its matching
+            // subtasks in `filteredTop` (flat board list + table roots).
+            !memberFilterActive &&
             ((statuses.length === 1 && statuses[0].label === "All") ||
                 (tags.length === 1 && tags[0].label === "All") ||
                 (priority.length === 1 && priority[0].label === "All") ||
@@ -522,6 +630,39 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                 }
             }
 
+            // Member multi-select (by assignee)
+            if (memberFilterActive) {
+                // A regular task has ONE assignee. A milestone can have many
+                // (MilestoneAssignees) — its backing row only carries the
+                // primary in `assigneeId`, so matching on that alone would
+                // miss members who are secondary assignees. Pull the full set
+                // from `useSM.projectMilestones` and union in the backing
+                // assignee as a fallback (covers the row landing before the
+                // milestone list is hydrated).
+                let assigneeIds: string[];
+                if (task.isMilestone === true) {
+                    const milestone =
+                        task.milestoneId != null && task.projectId != null && useSM
+                            ? (useSM.projectMilestones[task.projectId] ?? []).find(
+                                  (m) => m.milestoneId === task.milestoneId
+                              )
+                            : undefined;
+                    const ids = new Set<string>();
+                    for (const a of milestone?.assignees ?? []) {
+                        if (a.userId != null) ids.add(String(a.userId));
+                    }
+                    if (task.assigneeId != null) ids.add(String(task.assigneeId));
+                    assigneeIds = [...ids];
+                } else {
+                    assigneeIds = task.assigneeId != null ? [String(task.assigneeId)] : [];
+                }
+                if (assigneeIds.length === 0) {
+                    if (!memberAllowNone) continue;
+                } else if (!assigneeIds.some((id) => memberIdSet.has(id))) {
+                    continue;
+                }
+            }
+
             // Milestone scope (sidebar) — narrows to the backing task,
             // any task in the scoped milestone, or any direct child of
             // the backing task.
@@ -554,6 +695,10 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         if (setIsMilestoneFilterActive) {
             setIsMilestoneFilterActive(milestoneFilterActive);
         }
+
+        if (setIsMemberFilterActive) {
+            setIsMemberFilterActive(memberFilterActive);
+        }
     };
 
     const resetFilters = () => {
@@ -562,12 +707,14 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         setSelectedPriorities([predefinedPriorityFilters[0]]);
         setSelectedEffortLevels([predefinedEffortLevelFilters[0]]);
         setSelectedMilestoneKeys([MILESTONE_ALL]);
+        setSelectedMemberKeys([MEMBER_ALL]);
         applyFilters(
             defaultStatusFilters,
             [predefinedTagsFilters[0]],
             [predefinedPriorityFilters[0]],
             [predefinedEffortLevelFilters[0]],
-            [MILESTONE_ALL]
+            [MILESTONE_ALL],
+            [MEMBER_ALL]
         );
     };
 
@@ -577,9 +724,11 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
             selectedTags,
             selectedPriorities,
             selectedEffortLevels,
-            selectedMilestoneKeys
+            selectedMilestoneKeys,
+            selectedMemberKeys
         );
-    }, [useTM.allTasks, useTM.tableMilestoneFilterId, selectedMilestoneKeys]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [useTM.allTasks, useTM.tableMilestoneFilterId, selectedMilestoneKeys, selectedMemberKeys]);
 
     // NOTE: there used to be a second `applyFilters` pass here, keyed on
     // `[isTaskUpdated]`. It was redundant and expensive.
@@ -1651,6 +1800,281 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                         );
                     })}
                 </Menu>
+
+                {/* Member Filter — multi-select over the team's members.
+                    Filtering by a member surfaces every task/milestone
+                    assigned to them; in the table the (unassigned) ancestors
+                    of a matching subtask are still shown — dimmed and
+                    non-interactive — so the dependency tree stays legible. */}
+                {teamMembers && teamMembers.length > 0 && (
+                    <>
+                        <AppTooltip
+                            title={(() => {
+                                if (
+                                    selectedMemberKeys.length === 1 &&
+                                    selectedMemberKeys[0] === MEMBER_ALL
+                                ) {
+                                    return t.tasks.memberFilter.allMembers;
+                                }
+                                return selectedMemberKeys
+                                    .map((k) => {
+                                        if (k === MEMBER_NONE)
+                                            return t.tasks.memberFilter.noAssignee;
+                                        const m = teamMembers.find(
+                                            (mm) => String(mm.userId) === k
+                                        );
+                                        return m?.userName ?? k;
+                                    })
+                                    .join(", ");
+                            })()}
+                        >
+                            <Button
+                                aria-controls={openMemberFilter ? "fade-menu" : undefined}
+                                aria-expanded={openMemberFilter ? "true" : undefined}
+                                aria-haspopup="true"
+                                variant="contained"
+                                startIcon={
+                                    <PersonRoundedIcon
+                                        sx={{
+                                            fontSize: "16px",
+                                            color:
+                                                selectedMemberKeys.length === 1 &&
+                                                selectedMemberKeys[0] === MEMBER_ALL
+                                                    ? isDark
+                                                        ? MEMBER_ACCENT_DARK
+                                                        : MEMBER_ACCENT_LIGHT
+                                                    : "#fff",
+                                        }}
+                                    />
+                                }
+                                sx={{
+                                    color:
+                                        selectedMemberKeys.length === 1 &&
+                                        selectedMemberKeys[0] === MEMBER_ALL
+                                            ? styles.textColor
+                                            : "#fff",
+                                    background:
+                                        selectedMemberKeys.length === 1 &&
+                                        selectedMemberKeys[0] === MEMBER_ALL
+                                            ? isDark
+                                                ? "rgba(99,102,241,0.15)"
+                                                : "rgba(99,102,241,0.1)"
+                                            : isDark
+                                              ? `linear-gradient(135deg, ${alpha("#6366f1", 0.5)} 0%, ${alpha("#6366f1", 0.7)} 100%)`
+                                              : `linear-gradient(135deg, ${alpha("#6366f1", 0.75)} 0%, ${alpha("#6366f1", 0.95)} 100%)`,
+                                    border: `1px solid ${
+                                        isDark ? "rgba(99,102,241,0.35)" : "rgba(99,102,241,0.6)"
+                                    }`,
+                                    borderRadius: "10px",
+                                    fontSize: "12px",
+                                    fontWeight: 600,
+                                    height: "32px",
+                                    whiteSpace: "nowrap",
+                                    px: 1.5,
+                                    my: 0.5,
+                                    textTransform: "none",
+                                    boxShadow: isDark
+                                        ? "0 2px 8px rgba(99,102,241,0.25)"
+                                        : "0 2px 8px rgba(99,102,241,0.2)",
+                                    transition: "all 0.2s ease",
+                                    flexShrink: 0,
+                                    "&:hover": {
+                                        background:
+                                            selectedMemberKeys.length === 1 &&
+                                            selectedMemberKeys[0] === MEMBER_ALL
+                                                ? isDark
+                                                    ? "rgba(99,102,241,0.25)"
+                                                    : "rgba(99,102,241,0.2)"
+                                                : isDark
+                                                  ? `linear-gradient(135deg, ${alpha("#6366f1", 0.6)} 0%, ${alpha("#6366f1", 0.8)} 100%)`
+                                                  : `linear-gradient(135deg, ${alpha("#6366f1", 0.85)} 0%, ${alpha("#6366f1", 1)} 100%)`,
+                                        transform: "translateY(-1px)",
+                                    },
+                                }}
+                                onClick={handleClickMemberFilter}
+                            >
+                                Member: {memberFilterButtonLabel}
+                                {selectedMemberKeys.length > 1 && (
+                                    <Chip
+                                        label={`+${selectedMemberKeys.length - 1}`}
+                                        size="small"
+                                        sx={{
+                                            ml: 0.5,
+                                            height: "18px",
+                                            fontSize: "10px",
+                                            fontWeight: 700,
+                                            background: "rgba(255,255,255,0.2)",
+                                            color: "inherit",
+                                        }}
+                                    />
+                                )}
+                            </Button>
+                        </AppTooltip>
+                        <Menu
+                            anchorEl={anchorElMemberFilter}
+                            open={openMemberFilter}
+                            slots={{ transition: Fade }}
+                            slotProps={{
+                                paper: {
+                                    className: `custom-scrollbar-${isDark ? "dark" : "light"}`,
+                                    sx: {
+                                        background: styles.menuBg,
+                                        border: `1px solid ${styles.menuBorder}`,
+                                        borderRadius: "12px",
+                                        boxShadow: isDark
+                                            ? "0 8px 32px rgba(0,0,0,0.5)"
+                                            : "0 8px 32px rgba(0,0,0,0.15)",
+                                        mt: 1,
+                                        minWidth: "220px",
+                                        maxHeight: "320px",
+                                    },
+                                },
+                            }}
+                            onClose={() => setAnchorElMemberFilter(null)}
+                        >
+                            {([MEMBER_ALL, MEMBER_NONE] as MemberFilterKey[]).map((key) => {
+                                const isSelected = selectedMemberKeys.some((k) => k === key);
+                                const label =
+                                    key === MEMBER_ALL
+                                        ? t.tasks.memberFilter.all
+                                        : t.tasks.memberFilter.noAssignee;
+                                const accent = isDark ? MEMBER_ACCENT_DARK : MEMBER_ACCENT_LIGHT;
+                                return (
+                                    <MenuItem
+                                        key={`member-key-${key}`}
+                                        sx={{
+                                            borderRadius: "8px",
+                                            mx: 0.5,
+                                            my: 0.25,
+                                            "&:hover": { background: styles.buttonHoverBg },
+                                        }}
+                                        onClick={() => handleCloseMemberFilter(key)}
+                                    >
+                                        <Box
+                                            sx={{
+                                                width: "100%",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: 1,
+                                            }}
+                                        >
+                                            <PersonRoundedIcon
+                                                sx={{
+                                                    fontSize: 16,
+                                                    color: accent,
+                                                    opacity: key === MEMBER_ALL ? 0.5 : 1,
+                                                }}
+                                            />
+                                            <Typography
+                                                sx={{
+                                                    fontSize: "13px",
+                                                    fontWeight: isSelected ? 700 : 500,
+                                                    color: isSelected ? accent : styles.textColor,
+                                                    flex: 1,
+                                                }}
+                                            >
+                                                {label}
+                                            </Typography>
+                                            {isSelected && (
+                                                <Box
+                                                    sx={{
+                                                        width: 16,
+                                                        height: 16,
+                                                        borderRadius: "4px",
+                                                        background: accent,
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        justifyContent: "center",
+                                                        fontSize: "10px",
+                                                        color: "#fff",
+                                                        fontWeight: 700,
+                                                    }}
+                                                >
+                                                    ✓
+                                                </Box>
+                                            )}
+                                        </Box>
+                                    </MenuItem>
+                                );
+                            })}
+                            <Box
+                                sx={{
+                                    height: "1px",
+                                    background: styles.containerBorder,
+                                    mx: 1,
+                                    my: 0.5,
+                                }}
+                            />
+                            {teamMembers.map((m) => {
+                                const memberId = String(m.userId);
+                                const isSelected = selectedMemberKeys.some((k) => k === memberId);
+                                const accent = isDark ? MEMBER_ACCENT_DARK : MEMBER_ACCENT_LIGHT;
+                                return (
+                                    <MenuItem
+                                        key={`member-${memberId}`}
+                                        sx={{
+                                            borderRadius: "8px",
+                                            mx: 0.5,
+                                            my: 0.25,
+                                            "&:hover": { background: styles.buttonHoverBg },
+                                        }}
+                                        onClick={() => handleCloseMemberFilter(memberId)}
+                                    >
+                                        <Box
+                                            sx={{
+                                                width: "100%",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: 1,
+                                                minWidth: 0,
+                                            }}
+                                        >
+                                            <Avatar
+                                                src={buildAvatarSrc(m.avatarImgPath)}
+                                                sx={{ width: 22, height: 22, fontSize: 11 }}
+                                            >
+                                                {(m.userName?.[0] || "?").toUpperCase()}
+                                            </Avatar>
+                                            <Typography
+                                                sx={{
+                                                    fontSize: "13px",
+                                                    fontWeight: isSelected ? 700 : 500,
+                                                    color: isSelected ? accent : styles.textColor,
+                                                    flex: 1,
+                                                    overflow: "hidden",
+                                                    textOverflow: "ellipsis",
+                                                    whiteSpace: "nowrap",
+                                                    minWidth: 0,
+                                                }}
+                                            >
+                                                {m.userName}
+                                            </Typography>
+                                            {isSelected && (
+                                                <Box
+                                                    sx={{
+                                                        width: 16,
+                                                        height: 16,
+                                                        borderRadius: "4px",
+                                                        background: accent,
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        justifyContent: "center",
+                                                        fontSize: "10px",
+                                                        color: "#fff",
+                                                        fontWeight: 700,
+                                                        flexShrink: 0,
+                                                    }}
+                                                >
+                                                    ✓
+                                                </Box>
+                                            )}
+                                        </Box>
+                                    </MenuItem>
+                                );
+                            })}
+                        </Menu>
+                    </>
+                )}
 
                 <Box sx={{ flex: 1 }} />
 

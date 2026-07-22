@@ -16,6 +16,10 @@ export type TaskTableRowsProps = {
     displayRows: TaskTableProps[];
     depthMap: Map<string, number>;
     childrenByParent: Map<string, TaskTableProps[]>;
+    /** Ids of "ghost" rows — ancestors spliced in by the Member filter to keep
+     *  a matching subtask's dependency chain visible even though they aren't
+     *  assigned to the filtered member. Rendered dimmed + non-interactive. */
+    ghostIds: Set<string>;
     columns: ColumnDef[];
     expandedRows: Set<string>;
     sprintNamesById: Map<number, string>;
@@ -57,6 +61,7 @@ const TaskTableRowsImpl = (props: TaskTableRowsProps) => {
         displayRows,
         depthMap,
         childrenByParent,
+        ghostIds,
         columns,
         expandedRows,
         sprintNamesById,
@@ -93,6 +98,7 @@ const TaskTableRowsImpl = (props: TaskTableRowsProps) => {
                         expandedRows={expandedRows}
                         hasChildren={childrenByParent.has(String(task.id))}
                         index={index}
+                        isGhost={ghostIds.has(String(task.id))}
                         isSelected={resolveIsSelected(task)}
                         mode={mode}
                         myself={myself}
@@ -170,6 +176,7 @@ export const taskTableRowsPropsAreEqual = (
     prev.displayRows === next.displayRows &&
     prev.depthMap === next.depthMap &&
     prev.childrenByParent === next.childrenByParent &&
+    prev.ghostIds === next.ghostIds &&
     prev.columns === next.columns &&
     prev.expandedRows === next.expandedRows &&
     prev.sprintNamesById === next.sprintNamesById &&
