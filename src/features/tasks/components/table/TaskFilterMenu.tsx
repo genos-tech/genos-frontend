@@ -2,6 +2,7 @@ import * as React from "react";
 import { useEffect, useMemo } from "react";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
+import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
@@ -22,9 +23,11 @@ import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TaskTableProps } from "../../../../types/tasks";
 import { buildAvatarSrc } from "../../../../utils/avatarSrc";
+import { Milestone } from "../../sprint-milestone/types";
 import {
     getMilestoneStatusChipColor,
     getOutdatedMilestoneIds,
+    selectOutdatedMilestones,
     selectVisibleMilestones,
 } from "../../sprint-milestone/utils/sortMilestones";
 import {
@@ -361,6 +364,20 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         () => [...outdatedMilestoneIds].sort((a, b) => a - b).join(","),
         [outdatedMilestoneIds]
     );
+    // Past (Closed + ended-sprint) milestones. NOT listed in the dropdown by
+    // default — revealed by the "Show past milestones" expander inside it (a
+    // "load more"). Selecting one filters to it AND un-hides it in
+    // `applyFilters` (its tasks are otherwise dropped by the outdated-hide),
+    // showing its full history.
+    const pastMilestones = useMemo(() => {
+        if (!useSM || currentProjectId == null) return [];
+        return selectOutdatedMilestones(
+            useSM.projectMilestones[currentProjectId] ?? [],
+            useSM.projectSprints[currentProjectId] ?? []
+        );
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [useSM?.projectMilestones, useSM?.projectSprints, currentProjectId]);
+    const [pastMilestonesExpanded, setPastMilestonesExpanded] = React.useState(false);
     const [selectedMilestoneKeys, setSelectedMilestoneKeys] = React.useState<MilestoneFilterKey[]>(
         [MILESTONE_ALL]
     );
@@ -378,13 +395,18 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         if (selectedMilestoneKeys.length === 1 && selectedMilestoneKeys[0] === MILESTONE_ALL) {
             return;
         }
-        const validIds = new Set<number>(visibleMilestones.map((m) => m.milestoneId));
+        // Valid = ongoing OR past milestones (a selected past milestone must
+        // survive the prune, else it'd be dropped the instant it's picked).
+        const validIds = new Set<number>(
+            [...visibleMilestones, ...pastMilestones].map((m) => m.milestoneId)
+        );
         const pruned = selectedMilestoneKeys.filter(
             (k) => k === MILESTONE_NONE || (typeof k === "number" && validIds.has(k))
         );
         if (pruned.length === selectedMilestoneKeys.length) return;
         setSelectedMilestoneKeys(pruned.length > 0 ? pruned : [MILESTONE_ALL]);
-    }, [visibleMilestones, currentProjectId]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [visibleMilestones, pastMilestones, currentProjectId]);
     const handleCloseMilestoneFilter = (key: MilestoneFilterKey) => {
         let next: MilestoneFilterKey[];
         if (key === MILESTONE_ALL) {
@@ -422,12 +444,149 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         const first = selectedMilestoneKeys[0];
         if (first === MILESTONE_NONE) return t.tasks.milestoneFilter.noMilestone;
         if (typeof first === "number") {
-            const m = visibleMilestones.find((mm) => mm.milestoneId === first);
+            const m =
+                visibleMilestones.find((mm) => mm.milestoneId === first) ??
+                pastMilestones.find((mm) => mm.milestoneId === first);
             const title = m?.title ?? `#${first}`;
             return title.length > 16 ? `${title.slice(0, 16)}…` : title;
         }
         return t.tasks.milestoneFilter.all;
-    }, [selectedMilestoneKeys, visibleMilestones, t]);
+    }, [selectedMilestoneKeys, visibleMilestones, pastMilestones, t]);
+
+    // One selectable milestone row in the dropdown. Shared by the ongoing
+    // list and the (expandable) past-milestones list.
+    const renderMilestoneMenuItem = (m: Milestone) => {
+        const isSelected = selectedMilestoneKeys.some((k) => k === m.milestoneId);
+        const sprintName =
+            m.sprintId == null
+                ? t.tasks.milestoneFilter.noSprint
+                : (projectSprints.find((s) => s.sprintId === m.sprintId)?.name ??
+                  t.tasks.milestoneFilter.sprintFallback);
+        return (
+            <MenuItem
+                key={`milestone-${m.milestoneId}`}
+                sx={{
+                    borderRadius: "8px",
+                    mx: 0.5,
+                    my: 0.25,
+                    transition: "all 0.2s ease",
+                    "&:hover": {
+                        background: styles.buttonHoverBg,
+                    },
+                }}
+                onClick={() => handleCloseMilestoneFilter(m.milestoneId)}
+            >
+                <Box
+                    sx={{
+                        width: "100%",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1,
+                        minWidth: 0,
+                    }}
+                >
+                    <FlagRoundedIcon
+                        sx={{
+                            fontSize: 14,
+                            color: isDark ? MILESTONE_ACCENT_DARK : MILESTONE_ACCENT_LIGHT,
+                            flexShrink: 0,
+                        }}
+                    />
+                    <Box
+                        sx={{
+                            flex: 1,
+                            minWidth: 0,
+                            display: "flex",
+                            flexDirection: "column",
+                            lineHeight: 1.2,
+                        }}
+                    >
+                        <Typography
+                            sx={{
+                                fontSize: "13px",
+                                fontWeight: isSelected ? 700 : 500,
+                                color: isSelected
+                                    ? isDark
+                                        ? MILESTONE_ACCENT_DARK
+                                        : MILESTONE_ACCENT_LIGHT
+                                    : styles.textColor,
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                            }}
+                        >
+                            {m.title}
+                        </Typography>
+                        <Box
+                            sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 0.75,
+                                minWidth: 0,
+                            }}
+                        >
+                            <Typography
+                                sx={{
+                                    fontSize: "10px",
+                                    color: styles.mutedText,
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    whiteSpace: "nowrap",
+                                    minWidth: 0,
+                                }}
+                            >
+                                {sprintName}
+                            </Typography>
+                            {m.status
+                                ? (() => {
+                                      const tone = getMilestoneStatusChipColor(m.status as string);
+                                      return (
+                                          <Chip
+                                              label={m.status}
+                                              size="small"
+                                              sx={{
+                                                  height: 16,
+                                                  fontSize: "9px",
+                                                  fontWeight: 700,
+                                                  backgroundColor: tone.color,
+                                                  color: tone.textColor,
+                                                  flexShrink: 0,
+                                                  "& .MuiChip-label": {
+                                                      px: 0.75,
+                                                      lineHeight: 1,
+                                                  },
+                                              }}
+                                          />
+                                      );
+                                  })()
+                                : null}
+                        </Box>
+                    </Box>
+                    {isSelected && (
+                        <Box
+                            sx={{
+                                width: 16,
+                                height: 16,
+                                borderRadius: "4px",
+                                background: isDark
+                                    ? MILESTONE_ACCENT_DARK
+                                    : MILESTONE_ACCENT_LIGHT,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                fontSize: "10px",
+                                color: "#fff",
+                                fontWeight: 700,
+                                flexShrink: 0,
+                            }}
+                        >
+                            ✓
+                        </Box>
+                    )}
+                </Box>
+            </MenuItem>
+        );
+    };
 
     // Member filter — multi-select over the team's members. Same
     // all / none / id shape as the milestone filter above.
@@ -615,13 +774,16 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
 
         for (const task of useTM.allTasks) {
             // Outdated milestones (Closed + ended sprint) and everything under
-            // them are hidden EVERYWHERE — reachable only by scoping to one via
-            // the sidebar's "Past milestones" folder (which sets
-            // `tableMilestoneFilterId`, so that one milestone is exempt here).
+            // them are hidden EVERYWHERE, UNLESS the user opts in: by scoping to
+            // that one milestone via the sidebar's "Past milestones" folder
+            // (`tableMilestoneFilterId`), or by SELECTING it in the milestone
+            // dropdown (revealed there via "Show past milestones").
+            const isOutdatedTask =
+                task.milestoneId != null && outdatedMilestoneIds.has(task.milestoneId);
             if (
-                task.milestoneId != null &&
+                isOutdatedTask &&
                 task.milestoneId !== scopeTarget &&
-                outdatedMilestoneIds.has(task.milestoneId)
+                !(task.milestoneId != null && milestoneIdSet.has(task.milestoneId))
             ) {
                 continue;
             }
@@ -638,9 +800,16 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                 continue;
             }
 
-            // Status (string + expired axes). Bypassed when scoped to a past
-            // milestone so its Closed subtasks show.
-            if (!scopeIsOutdated) {
+            // Status (string + expired axes). Bypassed for an outdated task the
+            // user is deliberately surfacing — a scoped past milestone
+            // (`scopeIsOutdated`) or one they selected in the dropdown — since
+            // both want its FULL history (incl. Closed), not the ongoing view.
+            const bypassStatus =
+                scopeIsOutdated ||
+                (isOutdatedTask &&
+                    task.milestoneId != null &&
+                    milestoneIdSet.has(task.milestoneId));
+            if (!bypassStatus) {
                 if (statusStringFilter !== null && !statusStringFilter.has(task.status ?? "")) {
                     continue;
                 }
@@ -762,6 +931,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         setSelectedEffortLevels([predefinedEffortLevelFilters[0]]);
         setSelectedMilestoneKeys([MILESTONE_ALL]);
         setSelectedMemberKeys([MEMBER_ALL]);
+        setPastMilestonesExpanded(false);
         applyFilters(
             defaultStatusFilters,
             [predefinedTagsFilters[0]],
@@ -1156,146 +1326,69 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                                     }}
                                 />
                             )}
-                            {visibleMilestones.map((m) => {
-                                const isSelected = selectedMilestoneKeys.some(
-                                    (k) => k === m.milestoneId
-                                );
-                                const sprintName =
-                                    m.sprintId == null
-                                        ? t.tasks.milestoneFilter.noSprint
-                                        : (projectSprints.find((s) => s.sprintId === m.sprintId)
-                                              ?.name ?? t.tasks.milestoneFilter.sprintFallback);
-                                return (
-                                    <MenuItem
-                                        key={`milestone-${m.milestoneId}`}
+                            {visibleMilestones.map(renderMilestoneMenuItem)}
+
+                            {/* "Show past milestones" expander — a "load more" that reveals the
+                                outdated (Closed + ended-sprint) milestones as extra selectable
+                                options. Hidden by default; selecting one filters to it (and
+                                un-hides it — see applyFilters). Clicking the row only expands
+                                the list, so keep the menu open. */}
+                            {pastMilestones.length > 0 && (
+                                <MenuItem
+                                    sx={{
+                                        borderRadius: "8px",
+                                        mx: 0.5,
+                                        my: 0.25,
+                                        "&:hover": { background: styles.buttonHoverBg },
+                                    }}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setPastMilestonesExpanded((prev) => !prev);
+                                    }}
+                                >
+                                    <Box
                                         sx={{
-                                            borderRadius: "8px",
-                                            mx: 0.5,
-                                            my: 0.25,
-                                            transition: "all 0.2s ease",
-                                            "&:hover": {
-                                                background: styles.buttonHoverBg,
-                                            },
+                                            width: "100%",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: 1,
                                         }}
-                                        onClick={() => handleCloseMilestoneFilter(m.milestoneId)}
                                     >
-                                        <Box
+                                        <HistoryRoundedIcon
                                             sx={{
-                                                width: "100%",
-                                                display: "flex",
-                                                alignItems: "center",
-                                                gap: 1,
-                                                minWidth: 0,
+                                                fontSize: 15,
+                                                color: styles.mutedText,
+                                                flexShrink: 0,
+                                            }}
+                                        />
+                                        <Typography
+                                            sx={{
+                                                fontSize: "13px",
+                                                fontWeight: 600,
+                                                color: styles.textColor,
+                                                flex: 1,
                                             }}
                                         >
-                                            <FlagRoundedIcon
-                                                sx={{
-                                                    fontSize: 14,
-                                                    color: isDark
-                                                        ? MILESTONE_ACCENT_DARK
-                                                        : MILESTONE_ACCENT_LIGHT,
-                                                    flexShrink: 0,
-                                                }}
-                                            />
-                                            <Box
-                                                sx={{
-                                                    flex: 1,
-                                                    minWidth: 0,
-                                                    display: "flex",
-                                                    flexDirection: "column",
-                                                    lineHeight: 1.2,
-                                                }}
-                                            >
-                                                <Typography
-                                                    sx={{
-                                                        fontSize: "13px",
-                                                        fontWeight: isSelected ? 700 : 500,
-                                                        color: isSelected
-                                                            ? isDark
-                                                                ? MILESTONE_ACCENT_DARK
-                                                                : MILESTONE_ACCENT_LIGHT
-                                                            : styles.textColor,
-                                                        overflow: "hidden",
-                                                        textOverflow: "ellipsis",
-                                                        whiteSpace: "nowrap",
-                                                    }}
-                                                >
-                                                    {m.title}
-                                                </Typography>
-                                                <Box
-                                                    sx={{
-                                                        display: "flex",
-                                                        alignItems: "center",
-                                                        gap: 0.75,
-                                                        minWidth: 0,
-                                                    }}
-                                                >
-                                                    <Typography
-                                                        sx={{
-                                                            fontSize: "10px",
-                                                            color: styles.mutedText,
-                                                            overflow: "hidden",
-                                                            textOverflow: "ellipsis",
-                                                            whiteSpace: "nowrap",
-                                                            minWidth: 0,
-                                                        }}
-                                                    >
-                                                        {sprintName}
-                                                    </Typography>
-                                                    {m.status
-                                                        ? (() => {
-                                                              const tone =
-                                                                  getMilestoneStatusChipColor(
-                                                                      m.status as string
-                                                                  );
-                                                              return (
-                                                                  <Chip
-                                                                      label={m.status}
-                                                                      size="small"
-                                                                      sx={{
-                                                                          height: 16,
-                                                                          fontSize: "9px",
-                                                                          fontWeight: 700,
-                                                                          backgroundColor:
-                                                                              tone.color,
-                                                                          color: tone.textColor,
-                                                                          flexShrink: 0,
-                                                                          "& .MuiChip-label": {
-                                                                              px: 0.75,
-                                                                              lineHeight: 1,
-                                                                          },
-                                                                      }}
-                                                                  />
-                                                              );
-                                                          })()
-                                                        : null}
-                                                </Box>
-                                            </Box>
-                                            {isSelected && (
-                                                <Box
-                                                    sx={{
-                                                        width: 16,
-                                                        height: 16,
-                                                        borderRadius: "4px",
-                                                        background: isDark
-                                                            ? MILESTONE_ACCENT_DARK
-                                                            : MILESTONE_ACCENT_LIGHT,
-                                                        display: "flex",
-                                                        alignItems: "center",
-                                                        justifyContent: "center",
-                                                        fontSize: "10px",
-                                                        color: "#fff",
-                                                        fontWeight: 700,
-                                                        flexShrink: 0,
-                                                    }}
-                                                >
-                                                    ✓
-                                                </Box>
-                                            )}
-                                        </Box>
-                                    </MenuItem>
-                                );
-                            })}
+                                            {pastMilestonesExpanded
+                                                ? t.tasks.milestoneFilter.hidePastMilestones
+                                                : t.tasks.milestoneFilter.showPastMilestones}
+                                        </Typography>
+                                        <Chip
+                                            label={pastMilestones.length}
+                                            size="small"
+                                            sx={{
+                                                height: 16,
+                                                fontSize: "9px",
+                                                fontWeight: 700,
+                                                background: styles.buttonHoverBg,
+                                                color: styles.mutedText,
+                                                "& .MuiChip-label": { px: 0.75, lineHeight: 1 },
+                                            }}
+                                        />
+                                    </Box>
+                                </MenuItem>
+                            )}
+                            {pastMilestonesExpanded && pastMilestones.map(renderMilestoneMenuItem)}
                         </Menu>
                     </>
                 )}

@@ -2273,7 +2273,15 @@ const MilestonePreviewInner = ({
                                     useTM.setIsTaskPreviewVisible(false);
                                     useTM.setCurrentPreviewKind("task");
                                     useTM.setCurrentPreviewMilestoneId(-1);
-                                    useTM.setTableMilestoneFilterId(null);
+                                    // Do NOT clear the table's milestone SCOPE here.
+                                    // Clicking a milestone in the sidebar sets both the
+                                    // preview AND the scope; tying the scope's lifetime
+                                    // to the preview meant closing the preview silently
+                                    // reset the filter (most visibly for a past
+                                    // milestone, whose tasks are hidden by default and
+                                    // so vanished). The scope is an explicit filter —
+                                    // cleared via the "Milestone: …" chip in the filter
+                                    // bar, not by closing the preview.
                                     if (isNoMainPanelVisible(useTM)) {
                                         useTM.setIsTaskTableVisible(true);
                                     }
