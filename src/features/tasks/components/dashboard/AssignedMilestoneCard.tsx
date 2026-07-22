@@ -281,24 +281,24 @@ export const AssignedMilestoneCard = ({ milestone, sprintName, onOpen }: Props) 
                                 {milestone.priority}
                             </span>
                         )}
-                        {dueLabel && (
-                            <Box
-                                sx={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: 0.25,
-                                    color: dueColor,
-                                }}
+                        {/* Always show a due indicator; "No due date" when the
+                            milestone has none configured. */}
+                        <Box
+                            sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 0.25,
+                                color: dueColor,
+                            }}
+                        >
+                            <AccessTimeIcon sx={{ fontSize: 11 }} />
+                            <Typography
+                                level="body-xs"
+                                sx={{ fontWeight: 600, fontSize: "0.6rem", color: dueColor }}
                             >
-                                <AccessTimeIcon sx={{ fontSize: 11 }} />
-                                <Typography
-                                    level="body-xs"
-                                    sx={{ fontWeight: 600, fontSize: "0.6rem", color: dueColor }}
-                                >
-                                    {dueLabel}
-                                </Typography>
-                            </Box>
-                        )}
+                                {dueLabel ?? t.tasks.board.noDueDate}
+                            </Typography>
+                        </Box>
                     </Box>
                 </Box>
             </Box>
