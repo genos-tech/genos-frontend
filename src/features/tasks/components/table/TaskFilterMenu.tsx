@@ -1,8 +1,12 @@
 import * as React from "react";
 import { useEffect, useMemo } from "react";
+import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
+import DirectionsRunRoundedIcon from "@mui/icons-material/DirectionsRunRounded";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
+import KeyboardArrowDownRoundedIcon from "@mui/icons-material/KeyboardArrowDownRounded";
+import KeyboardArrowRightRoundedIcon from "@mui/icons-material/KeyboardArrowRightRounded";
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
@@ -27,6 +31,7 @@ import { Milestone } from "../../sprint-milestone/types";
 import {
     getMilestoneStatusChipColor,
     getOutdatedMilestoneIds,
+    groupMilestonesByYearAndSprint,
     selectOutdatedMilestones,
     selectVisibleMilestones,
 } from "../../sprint-milestone/utils/sortMilestones";
@@ -377,7 +382,30 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         );
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [useSM?.projectMilestones, useSM?.projectSprints, currentProjectId]);
+    // Same past milestones as a year → sprint tree, so the expander reveals
+    // `<year>/<sprint>/<milestone>` folders instead of a flat list. Display
+    // only — all filter/scope logic still reads the flat `pastMilestones`.
+    const pastMilestonesByYear = useMemo(() => {
+        if (!useSM || currentProjectId == null) return [];
+        return groupMilestonesByYearAndSprint(
+            pastMilestones,
+            useSM.projectSprints[currentProjectId] ?? []
+        );
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [pastMilestones, useSM?.projectSprints, currentProjectId]);
     const [pastMilestonesExpanded, setPastMilestonesExpanded] = React.useState(false);
+    // Which year / sprint folders are expanded inside the past-milestones tree.
+    // Sprint keys are namespaced by year (`<year>::<sprintId>`) so two years
+    // can't collide on a shared sprint key.
+    const [expandedYears, setExpandedYears] = React.useState<Set<string>>(new Set());
+    const [expandedSprints, setExpandedSprints] = React.useState<Set<string>>(new Set());
+    const toggleInSet = (setter: React.Dispatch<React.SetStateAction<Set<string>>>, key: string) =>
+        setter((prev) => {
+            const next = new Set(prev);
+            if (next.has(key)) next.delete(key);
+            else next.add(key);
+            return next;
+        });
     const [selectedMilestoneKeys, setSelectedMilestoneKeys] = React.useState<MilestoneFilterKey[]>(
         [MILESTONE_ALL]
     );
@@ -454,8 +482,10 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
     }, [selectedMilestoneKeys, visibleMilestones, pastMilestones, t]);
 
     // One selectable milestone row in the dropdown. Shared by the ongoing
-    // list and the (expandable) past-milestones list.
-    const renderMilestoneMenuItem = (m: Milestone) => {
+    // list and the (expandable) past-milestones tree. `indentPl` deepens the
+    // left padding when the row sits inside a year/sprint folder (default 2 =
+    // the flat, top-level indent that matches the ongoing list).
+    const renderMilestoneMenuItem = (m: Milestone, indentPl = 2) => {
         const isSelected = selectedMilestoneKeys.some((k) => k === m.milestoneId);
         const sprintName =
             m.sprintId == null
@@ -469,6 +499,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                     borderRadius: "8px",
                     mx: 0.5,
                     my: 0.25,
+                    pl: indentPl,
                     transition: "all 0.2s ease",
                     "&:hover": {
                         background: styles.buttonHoverBg,
@@ -587,6 +618,76 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
             </MenuItem>
         );
     };
+
+    // A collapsible folder row inside the past-milestones tree (year / sprint
+    // level). Clicking only toggles the folder, so `stopPropagation` keeps the
+    // Menu open — same as the "Show past milestones" expander above.
+    const renderTreeFolderRow = (opts: {
+        rowKey: string;
+        icon: React.ReactNode;
+        label: string;
+        count: number;
+        open: boolean;
+        indentPl: number;
+        onToggle: () => void;
+    }) => (
+        <MenuItem
+            key={opts.rowKey}
+            sx={{
+                borderRadius: "8px",
+                mx: 0.5,
+                my: 0.25,
+                pl: opts.indentPl,
+                "&:hover": { background: styles.buttonHoverBg },
+            }}
+            onClick={(e) => {
+                e.stopPropagation();
+                opts.onToggle();
+            }}
+        >
+            <Box
+                sx={{ width: "100%", display: "flex", alignItems: "center", gap: 1, minWidth: 0 }}
+            >
+                {opts.open ? (
+                    <KeyboardArrowDownRoundedIcon
+                        sx={{ fontSize: 16, color: styles.mutedText, flexShrink: 0 }}
+                    />
+                ) : (
+                    <KeyboardArrowRightRoundedIcon
+                        sx={{ fontSize: 16, color: styles.mutedText, flexShrink: 0 }}
+                    />
+                )}
+                {opts.icon}
+                <Typography
+                    sx={{
+                        fontSize: "13px",
+                        fontWeight: 600,
+                        color: styles.textColor,
+                        flex: 1,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                        minWidth: 0,
+                    }}
+                >
+                    {opts.label}
+                </Typography>
+                <Chip
+                    label={opts.count}
+                    size="small"
+                    sx={{
+                        height: 16,
+                        fontSize: "9px",
+                        fontWeight: 700,
+                        background: styles.buttonHoverBg,
+                        color: styles.mutedText,
+                        flexShrink: 0,
+                        "& .MuiChip-label": { px: 0.75, lineHeight: 1 },
+                    }}
+                />
+            </Box>
+        </MenuItem>
+    );
 
     // Member filter — multi-select over the team's members. Same
     // all / none / id shape as the milestone filter above.
@@ -1326,7 +1427,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                                     }}
                                 />
                             )}
-                            {visibleMilestones.map(renderMilestoneMenuItem)}
+                            {visibleMilestones.map((m) => renderMilestoneMenuItem(m))}
 
                             {/* "Show past milestones" expander — a "load more" that reveals the
                                 outdated (Closed + ended-sprint) milestones as extra selectable
@@ -1388,7 +1489,71 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                                     </Box>
                                 </MenuItem>
                             )}
-                            {pastMilestonesExpanded && pastMilestones.map(renderMilestoneMenuItem)}
+                            {/* MUI Menu manages focus over its direct children and
+                                rejects Fragments, so the year → sprint → milestone
+                                tree is flattened into a single keyed array via
+                                flatMap rather than nested fragments. */}
+                            {pastMilestonesExpanded &&
+                                pastMilestonesByYear.flatMap((yearGroup) => {
+                                    const yearOpen = expandedYears.has(yearGroup.year);
+                                    const yearCount = yearGroup.sprints.reduce(
+                                        (n, s) => n + s.milestones.length,
+                                        0
+                                    );
+                                    const rows: React.ReactNode[] = [
+                                        renderTreeFolderRow({
+                                            rowKey: `past-year-row-${yearGroup.year}`,
+                                            icon: (
+                                                <CalendarMonthRoundedIcon
+                                                    sx={{
+                                                        fontSize: 14,
+                                                        color: styles.mutedText,
+                                                        flexShrink: 0,
+                                                    }}
+                                                />
+                                            ),
+                                            label: yearGroup.year,
+                                            count: yearCount,
+                                            open: yearOpen,
+                                            indentPl: 3,
+                                            onToggle: () =>
+                                                toggleInSet(setExpandedYears, yearGroup.year),
+                                        }),
+                                    ];
+                                    if (!yearOpen) return rows;
+                                    for (const sprintGroup of yearGroup.sprints) {
+                                        const sprintKey = `${yearGroup.year}::${
+                                            sprintGroup.sprintId ?? "none"
+                                        }`;
+                                        const sprintOpen = expandedSprints.has(sprintKey);
+                                        rows.push(
+                                            renderTreeFolderRow({
+                                                rowKey: `past-sprint-row-${sprintKey}`,
+                                                icon: (
+                                                    <DirectionsRunRoundedIcon
+                                                        sx={{
+                                                            fontSize: 14,
+                                                            color: styles.mutedText,
+                                                            flexShrink: 0,
+                                                        }}
+                                                    />
+                                                ),
+                                                label: sprintGroup.sprintName,
+                                                count: sprintGroup.milestones.length,
+                                                open: sprintOpen,
+                                                indentPl: 5,
+                                                onToggle: () =>
+                                                    toggleInSet(setExpandedSprints, sprintKey),
+                                            })
+                                        );
+                                        if (sprintOpen) {
+                                            for (const m of sprintGroup.milestones) {
+                                                rows.push(renderMilestoneMenuItem(m, 7));
+                                            }
+                                        }
+                                    }
+                                    return rows;
+                                })}
                         </Menu>
                     </>
                 )}

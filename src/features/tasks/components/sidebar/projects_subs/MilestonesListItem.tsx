@@ -1,5 +1,7 @@
 import { ReactNode, useMemo, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
+import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
+import DirectionsRunRoundedIcon from "@mui/icons-material/DirectionsRunRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import KeyboardArrowDownRoundedIcon from "@mui/icons-material/KeyboardArrowDownRounded";
@@ -30,6 +32,7 @@ import { UserProps } from "../../../../../types/admin";
 import { Milestone } from "../../../sprint-milestone/types";
 import {
     getMilestoneStatusChipColor,
+    groupMilestonesByYearAndSprint,
     selectOutdatedMilestones,
     selectVisibleMilestones,
 } from "../../../sprint-milestone/utils/sortMilestones";
@@ -79,6 +82,15 @@ export const MilestonesListItem = ({
     const pastMilestones: Milestone[] = useMemo(
         () => selectOutdatedMilestones(useSM.projectMilestones[currentProjectId] ?? [], sprints),
         [useSM.projectMilestones, currentProjectId, sprints]
+    );
+
+    // Same past milestones, bucketed into a year → sprint tree so the folder
+    // renders as `<year>/<sprint>/<milestone>` instead of a flat list that
+    // could run to hundreds of rows. Display-only — every consumer that filters
+    // or scopes still reads the flat `pastMilestones` above.
+    const pastMilestonesByYear = useMemo(
+        () => groupMilestonesByYearAndSprint(pastMilestones, sprints),
+        [pastMilestones, sprints]
     );
 
     const handleOpen = async (milestoneId: number) => {
@@ -132,7 +144,9 @@ export const MilestonesListItem = ({
         useTM.setIsTaskTableVisible(false);
     };
 
-    const renderMilestoneRow = (m: Milestone) => {
+    // `ml` lets callers indent the row deeper when it's nested inside the
+    // Past-milestones year/sprint tree (default 5 = the flat, top-level indent).
+    const renderMilestoneRow = (m: Milestone, ml = 5) => {
         const sprintName =
             m.sprintId == null
                 ? t.tasks.sidebar.noSprint
@@ -141,7 +155,7 @@ export const MilestonesListItem = ({
         return (
             <ListItem key={m.milestoneId} sx={{ pl: 0, pr: 1 }}>
                 <ListItemButton
-                    sx={{ borderRadius: 8, ml: 5, py: 0.5, pr: 0.5 }}
+                    sx={{ borderRadius: 8, ml, py: 0.5, pr: 0.5 }}
                     selected={
                         useTM.currentPreviewKind === "milestone" &&
                         useTM.currentPreviewMilestoneId === m.milestoneId
@@ -242,50 +256,120 @@ export const MilestonesListItem = ({
 
     return (
         <List sx={{ gap: 0.25 }}>
-            {milestones.map(renderMilestoneRow)}
+            {milestones.map((m) => renderMilestoneRow(m))}
             {pastMilestones.length > 0 && (
-                <PastMilestonesFolder count={pastMilestones.length} isDark={isDark}>
-                    {pastMilestones.map(renderMilestoneRow)}
-                </PastMilestonesFolder>
+                <MilestoneTreeFolder
+                    count={pastMilestones.length}
+                    isDark={isDark}
+                    label={t.tasks.sidebar.pastMilestones}
+                    ml={5}
+                    icon={
+                        <HistoryRoundedIcon
+                            sx={{
+                                fontSize: 15,
+                                mr: 0.75,
+                                color: isDark ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.4)",
+                            }}
+                        />
+                    }
+                >
+                    {pastMilestonesByYear.map((yearGroup) => {
+                        const yearCount = yearGroup.sprints.reduce(
+                            (n, s) => n + s.milestones.length,
+                            0
+                        );
+                        return (
+                            <MilestoneTreeFolder
+                                key={yearGroup.year}
+                                count={yearCount}
+                                isDark={isDark}
+                                label={yearGroup.year}
+                                ml={7}
+                                icon={
+                                    <CalendarMonthRoundedIcon
+                                        sx={{
+                                            fontSize: 15,
+                                            mr: 0.75,
+                                            color: isDark
+                                                ? "rgba(255,255,255,0.45)"
+                                                : "rgba(0,0,0,0.4)",
+                                        }}
+                                    />
+                                }
+                            >
+                                {yearGroup.sprints.map((sprintGroup) => (
+                                    <MilestoneTreeFolder
+                                        key={sprintGroup.sprintId ?? "none"}
+                                        count={sprintGroup.milestones.length}
+                                        isDark={isDark}
+                                        label={sprintGroup.sprintName}
+                                        ml={9}
+                                        icon={
+                                            <DirectionsRunRoundedIcon
+                                                sx={{
+                                                    fontSize: 15,
+                                                    mr: 0.75,
+                                                    color: isDark
+                                                        ? "rgba(255,255,255,0.45)"
+                                                        : "rgba(0,0,0,0.4)",
+                                                }}
+                                            />
+                                        }
+                                    >
+                                        {sprintGroup.milestones.map((m) =>
+                                            renderMilestoneRow(m, 11)
+                                        )}
+                                    </MilestoneTreeFolder>
+                                ))}
+                            </MilestoneTreeFolder>
+                        );
+                    })}
+                </MilestoneTreeFolder>
             )}
             <AddMilestoneRow isDark={isDark} onClick={handleAddMilestone} />
         </List>
     );
 };
 
-// Collapsible "Past milestones" section. Defaults collapsed — it's an
-// archive, not something the user looks at every session.
-const PastMilestonesFolder = ({
+// Generic collapsible folder used for every level of the "Past milestones"
+// tree (Past milestones → year → sprint). Defaults collapsed — it's an
+// archive, not something the user looks at every session. `ml` sets the
+// indent so nested levels staircase inward.
+const MilestoneTreeFolder = ({
+    icon,
+    label,
     count,
+    ml,
     isDark,
     children,
 }: {
+    icon: ReactNode;
+    label: string;
     count: number;
+    ml: number;
     isDark: boolean;
     children: ReactNode;
 }) => {
-    const { t } = useTranslation();
     const [open, setOpen] = useState(false);
     return (
         <>
             <ListItem sx={{ pl: 0 }}>
                 <ListItemButton
-                    sx={{ borderRadius: 8, ml: 5, py: 0.5, pr: 0.5 }}
+                    sx={{ borderRadius: 8, ml, py: 0.5, pr: 0.5 }}
                     onClick={() => setOpen((prev) => !prev)}
                 >
-                    <HistoryRoundedIcon
-                        sx={{
-                            fontSize: 15,
-                            mr: 0.75,
-                            color: isDark ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.4)",
-                        }}
-                    />
+                    {icon}
                     <ListItemContent>
                         <Typography
                             level="body-sm"
-                            sx={{ color: isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.55)" }}
+                            sx={{
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                                color: isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.55)",
+                            }}
                         >
-                            {t.tasks.sidebar.pastMilestones}
+                            {label}
                         </Typography>
                     </ListItemContent>
                     <Chip size="sm" variant="soft">
