@@ -43,8 +43,8 @@ export const ProjectTagChip = ({ label, tagColor, isDark }: ProjectTagChipProps)
             color: isDark ? "#fff" : "#000",
             fontWeight: 600,
             fontSize: "0.7rem",
-            lineHeight: 1.4,
-            padding: "2px 8px",
+            lineHeight: 1.2,
+            padding: "1px 5px",
         }}
     >
         {label}

@@ -1,6 +1,6 @@
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
-import { AvatarGroup, Box, Chip, LinearProgress, Typography } from "@mui/joy";
+import { AvatarGroup, Box, LinearProgress, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
@@ -8,9 +8,9 @@ import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
 import { fmt, useTranslation } from "../../../../i18n";
 import { TagListProps } from "../../../../types/tasks";
 import { Milestone } from "../../sprint-milestone/types";
-import { getMilestoneStatusChipColor } from "../../sprint-milestone/utils/sortMilestones";
 import { ProjectTagChip } from "../ProjectTagChip";
 import { SprintChip } from "../SprintChip";
+import { TaskStatusChip } from "../TaskStatusChip";
 
 // Same priority swatch the board card uses (SprintBoardCard.tsx) so a
 // milestone's priority chip reads identically across the two surfaces.
@@ -58,7 +58,6 @@ export const AssignedMilestoneCard = ({ milestone, sprintName, onOpen }: Props) 
 
     const tags = asTags(milestone.tags);
     const priorityStyle = milestone.priority ? priorityColors[milestone.priority] : null;
-    const statusTone = getMilestoneStatusChipColor(milestone.status);
     const total = milestone.tasksTotal ?? 0;
     const closed = milestone.tasksClosed ?? 0;
     const pct = total > 0 ? Math.round((closed / total) * 100) : 0;
@@ -122,7 +121,7 @@ export const AssignedMilestoneCard = ({ milestone, sprintName, onOpen }: Props) 
                     }
                 }}
             >
-                {/* Header: flag + id · priority */}
+                {/* Header: sprint + flag + id (left) · status (right) */}
                 <Box
                     sx={{
                         display: "flex",
@@ -133,6 +132,8 @@ export const AssignedMilestoneCard = ({ milestone, sprintName, onOpen }: Props) 
                     }}
                 >
                     <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, minWidth: 0 }}>
+                        {/* Sprint — left of the milestone id, per request. */}
+                        <SprintChip name={sprintName} />
                         <FlagRoundedIcon sx={{ fontSize: 13, color: "#f97316", flexShrink: 0 }} />
                         <Typography
                             level="body-xs"
@@ -144,32 +145,15 @@ export const AssignedMilestoneCard = ({ milestone, sprintName, onOpen }: Props) 
                                 overflow: "hidden",
                                 textOverflow: "ellipsis",
                                 whiteSpace: "nowrap",
+                                flexShrink: 0,
                             }}
                         >
                             {milestone.displayId ?? `#${milestone.milestoneId}`}
                         </Typography>
                     </Box>
-                    {priorityStyle && (
-                        <span
-                            style={{
-                                display: "inline-flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                padding: "0 6px",
-                                borderRadius: 4,
-                                backgroundColor: priorityStyle.bg,
-                                color: priorityStyle.text,
-                                fontSize: "0.55rem",
-                                height: 16,
-                                fontWeight: 700,
-                                letterSpacing: "0.3px",
-                                textTransform: "uppercase",
-                                flexShrink: 0,
-                            }}
-                        >
-                            {milestone.priority}
-                        </span>
-                    )}
+                    {/* Status — top-right (swapped with priority, per request);
+                        same chip as the dashboard's Up Next rows. */}
+                    <TaskStatusChip status={milestone.status} />
                 </Box>
 
                 {/* Title */}
@@ -190,33 +174,6 @@ export const AssignedMilestoneCard = ({ milestone, sprintName, onOpen }: Props) 
                 >
                     {milestone.title}
                 </Typography>
-
-                {/* Sprint */}
-                <Box sx={{ mb: 0.75 }}>
-                    <SprintChip name={sprintName} />
-                </Box>
-
-                {/* Tags */}
-                {tags.length > 0 && (
-                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 0.75 }}>
-                        {tags.slice(0, 3).map((tag, idx) => (
-                            <ProjectTagChip
-                                key={idx}
-                                isDark={isDark}
-                                label={tag.tagName}
-                                tagColor={tag.tagColor}
-                            />
-                        ))}
-                        {tags.length > 3 && (
-                            <Typography
-                                level="body-xs"
-                                sx={{ color: mode === "dark" ? "#888" : "#666" }}
-                            >
-                                +{tags.length - 3}
-                            </Typography>
-                        )}
-                    </Box>
-                )}
 
                 {/* Progress: closed / total sub-tasks */}
                 <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, mb: 0.75 }}>
@@ -240,7 +197,7 @@ export const AssignedMilestoneCard = ({ milestone, sprintName, onOpen }: Props) 
                     </Typography>
                 </Box>
 
-                {/* Footer: assignees + status + due date */}
+                {/* Footer: [assignees + tags] (left) · [priority + due] (right) */}
                 <Box
                     sx={{
                         display: "flex",
@@ -255,39 +212,75 @@ export const AssignedMilestoneCard = ({ milestone, sprintName, onOpen }: Props) 
                                 : "1px solid rgba(0, 0, 0, 0.04)",
                     }}
                 >
-                    <AvatarGroup size="sm" sx={{ "--Avatar-size": "20px" }}>
-                        {milestone.assignees
-                            .slice(0, 4)
-                            .map((a, idx) =>
-                                a.userId != null ? (
-                                    <UserAvatar
-                                        key={String(a.userId)}
-                                        clickable={false}
-                                        showPulseDot={false}
-                                        size={20}
-                                        userId={a.userId}
-                                    />
-                                ) : (
-                                    <Box key={`x-${idx}`} />
-                                )
-                            )}
-                    </AvatarGroup>
+                    {/* Assignees + tags — tags sit right next to the avatars,
+                        per request. Wraps if the tags are many. */}
+                    <Box
+                        sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            flexWrap: "wrap",
+                            gap: 0.5,
+                            minWidth: 0,
+                        }}
+                    >
+                        <AvatarGroup size="sm" sx={{ "--Avatar-size": "20px" }}>
+                            {milestone.assignees
+                                .slice(0, 4)
+                                .map((a, idx) =>
+                                    a.userId != null ? (
+                                        <UserAvatar
+                                            key={String(a.userId)}
+                                            clickable={false}
+                                            showPulseDot={false}
+                                            size={20}
+                                            userId={a.userId}
+                                        />
+                                    ) : (
+                                        <Box key={`x-${idx}`} />
+                                    )
+                                )}
+                        </AvatarGroup>
+                        {tags.slice(0, 3).map((tag, idx) => (
+                            <ProjectTagChip
+                                key={idx}
+                                isDark={isDark}
+                                label={tag.tagName}
+                                tagColor={tag.tagColor}
+                            />
+                        ))}
+                        {tags.length > 3 && (
+                            <Typography
+                                level="body-xs"
+                                sx={{ color: mode === "dark" ? "#888" : "#666" }}
+                            >
+                                +{tags.length - 3}
+                            </Typography>
+                        )}
+                    </Box>
 
+                    {/* Priority (moved to bottom-right, swapped with status) + due. */}
                     <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flexShrink: 0 }}>
-                        <Chip
-                            size="sm"
-                            variant="solid"
-                            sx={{
-                                backgroundColor: statusTone.color,
-                                color: statusTone.textColor,
-                                fontWeight: 600,
-                                fontSize: "0.6rem",
-                                "--Chip-minHeight": "16px",
-                                "--Chip-paddingInline": "6px",
-                            }}
-                        >
-                            {milestone.status}
-                        </Chip>
+                        {priorityStyle && (
+                            <span
+                                style={{
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    padding: "0 6px",
+                                    borderRadius: 4,
+                                    backgroundColor: priorityStyle.bg,
+                                    color: priorityStyle.text,
+                                    fontSize: "0.55rem",
+                                    height: 16,
+                                    fontWeight: 700,
+                                    letterSpacing: "0.3px",
+                                    textTransform: "uppercase",
+                                    flexShrink: 0,
+                                }}
+                            >
+                                {milestone.priority}
+                            </span>
+                        )}
                         {dueLabel && (
                             <Box
                                 sx={{

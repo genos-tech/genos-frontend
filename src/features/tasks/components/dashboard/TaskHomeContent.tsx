@@ -75,7 +75,9 @@ import {
 } from "../../utils/taskWeight";
 import { compareByUrgency, sortTopWeightRows, TopWeightSortMode } from "../../utils/topWeightSort";
 import { CopyableTaskIdText } from "../CopyableTaskId";
+import { ProjectTagChip } from "../ProjectTagChip";
 import { SprintChip } from "../SprintChip";
+import { getStatusIcon, STATUS_COLORS, TaskStatusChip } from "../TaskStatusChip";
 import { AssignedMilestoneCard } from "./AssignedMilestoneCard";
 import { TaskVelocitySection } from "./TaskVelocitySection";
 
@@ -208,14 +210,6 @@ const sprintBucketOf = (s: Sprint, todayIso: string): "past" | "current" | "upco
     return "upcoming";
 };
 
-const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
-    Open: { bg: "rgba(59,130,246,0.12)", text: "#3b82f6" },
-    WIP: { bg: "rgba(251,191,36,0.12)", text: "#fbbf24" },
-    Blocked: { bg: "rgba(244,63,94,0.12)", text: "#f43f5e" },
-    Pending: { bg: "rgba(251,146,60,0.12)", text: "#fb923c" },
-    Closed: { bg: "rgba(34,197,94,0.12)", text: "#22c55e" },
-};
-
 // Priority swatches sourced from `predefinedPriorityFilters` so the
 // dashboard chip stays in lockstep with the table's filter chips.
 // `light` / `dark` are kept separate even though the current palette
@@ -237,24 +231,6 @@ const STATUS_LABEL_KEYS: Record<string, "open" | "wip" | "blocked" | "pending" |
     Blocked: "blocked",
     Pending: "pending",
     Closed: "closed",
-};
-
-const getStatusIcon = (status: string, size = 14) => {
-    const sx = { fontSize: size };
-    switch (status) {
-        case "Open":
-            return <RadioButtonUncheckedRoundedIcon sx={sx} />;
-        case "WIP":
-            return <PlayCircleOutlineRoundedIcon sx={sx} />;
-        case "Blocked":
-            return <BlockRoundedIcon sx={sx} />;
-        case "Pending":
-            return <PendingActionsRoundedIcon sx={sx} />;
-        case "Closed":
-            return <CheckCircleOutlineRoundedIcon sx={sx} />;
-        default:
-            return <RadioButtonUncheckedRoundedIcon sx={sx} />;
-    }
 };
 
 const formatRelativeTime = (dateStr: string | null): string => {
@@ -2648,24 +2624,11 @@ export const TaskHomeContent = ({
                                                                                 )}
                                                                             />
                                                                         </Box>
-                                                                        <Chip
-                                                                            size="sm"
-                                                                            variant="soft"
-                                                                            startDecorator={getStatusIcon(
-                                                                                task.effectiveStatus,
-                                                                                12
-                                                                            )}
-                                                                            sx={{
-                                                                                fontSize:
-                                                                                    "0.65rem",
-                                                                                backgroundColor:
-                                                                                    sc.bg,
-                                                                                color: sc.text,
-                                                                                flexShrink: 0,
-                                                                            }}
-                                                                        >
-                                                                            {task.effectiveStatus}
-                                                                        </Chip>
+                                                                        <TaskStatusChip
+                                                                            status={
+                                                                                task.effectiveStatus
+                                                                            }
+                                                                        />
                                                                         <Typography
                                                                             level="body-xs"
                                                                             sx={{
@@ -4436,33 +4399,13 @@ export const TaskHomeContent = ({
                                                                 return (
                                                                     <tr key={row.tagName}>
                                                                         <td>
-                                                                            <Chip
-                                                                                size="sm"
-                                                                                variant="soft"
-                                                                                startDecorator={
-                                                                                    <Box
-                                                                                        sx={{
-                                                                                            width: 8,
-                                                                                            height: 8,
-                                                                                            borderRadius:
-                                                                                                "50%",
-                                                                                            backgroundColor:
-                                                                                                row.tagColor,
-                                                                                        }}
-                                                                                    />
+                                                                            <ProjectTagChip
+                                                                                isDark={isDark}
+                                                                                label={row.tagName}
+                                                                                tagColor={
+                                                                                    row.tagColor
                                                                                 }
-                                                                                sx={{
-                                                                                    maxWidth:
-                                                                                        "100%",
-                                                                                    fontWeight: 600,
-                                                                                    backgroundColor: `${row.tagColor}1F`,
-                                                                                    color: row.tagColor,
-                                                                                    border: "1px solid",
-                                                                                    borderColor: `${row.tagColor}40`,
-                                                                                }}
-                                                                            >
-                                                                                {row.tagName}
-                                                                            </Chip>
+                                                                            />
                                                                         </td>
                                                                         <td
                                                                             style={{
