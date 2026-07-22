@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { Key, useEffect, useMemo, useState } from "react";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import BlockRoundedIcon from "@mui/icons-material/BlockRounded";
@@ -7,6 +7,7 @@ import CancelIcon from "@mui/icons-material/Cancel";
 import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import FolderOpenRoundedIcon from "@mui/icons-material/FolderOpenRounded";
+import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
 import HelpOutlineRoundedIcon from "@mui/icons-material/HelpOutlineRounded";
 import KeyboardArrowDownRoundedIcon from "@mui/icons-material/KeyboardArrowDownRounded";
 import LocalOfferRoundedIcon from "@mui/icons-material/LocalOfferRounded";
@@ -29,6 +30,8 @@ import {
     Grid,
     IconButton,
     LinearProgress,
+    ListItemContent,
+    ListItemDecorator,
     Option,
     Select,
     Stack,
@@ -37,6 +40,8 @@ import {
     Tabs,
     Typography,
 } from "@mui/joy";
+import Autocomplete from "@mui/joy/Autocomplete";
+import AutocompleteOption from "@mui/joy/AutocompleteOption";
 import Avatar from "@mui/joy/Avatar";
 import { useColorScheme } from "@mui/joy/styles";
 import Tab, { tabClasses } from "@mui/joy/Tab";
@@ -275,6 +280,74 @@ const formatDueLabel = (dueDate: string | null): { text: string; tone: DueTone }
     };
 };
 
+// KPI rollup for one person's tasks (active/closed/overdue/completion, …).
+// Extracted so the "My Tasks" tab, its tab badge, and the "Member's Tasks"
+// tab all compute the same numbers for whichever user is in focus.
+const computeAssigneeStats = (tasks: EffectiveTask[]) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const weekAhead = new Date(today);
+    weekAhead.setDate(weekAhead.getDate() + 7);
+
+    let openCount = 0;
+    let wipCount = 0;
+    let blockedCount = 0;
+    let pendingCount = 0;
+    let closedCount = 0;
+    let overdueCount = 0;
+    let dueThisWeekCount = 0;
+    for (const t of tasks) {
+        const isClosed = t.effectiveStatus === "Closed";
+        if (t.effectiveStatus === "Open") openCount++;
+        else if (t.effectiveStatus === "WIP") wipCount++;
+        else if (t.effectiveStatus === "Blocked") blockedCount++;
+        else if (t.effectiveStatus === "Pending") pendingCount++;
+        else if (isClosed) closedCount++;
+
+        if (!isClosed && t.dueDate) {
+            const d = new Date(t.dueDate);
+            d.setHours(0, 0, 0, 0);
+            if (d < today) overdueCount++;
+            else if (d <= weekAhead) dueThisWeekCount++;
+        }
+    }
+    const totalCount = openCount + wipCount + blockedCount + pendingCount + closedCount;
+    const activeCount = openCount + wipCount + blockedCount + pendingCount;
+    const completionPct = totalCount > 0 ? Math.round((closedCount / totalCount) * 100) : 0;
+    return {
+        openCount,
+        wipCount,
+        blockedCount,
+        pendingCount,
+        closedCount,
+        totalCount,
+        activeCount,
+        overdueCount,
+        dueThisWeekCount,
+        completionPct,
+    };
+};
+
+// Top 10 active tasks to look at next: overdue → priority → soonest due →
+// recent (urgency), or weight-first with urgency as tie-break. Shared by the
+// "Up Next" list for whichever user is in focus.
+const computeUpNext = (tasks: EffectiveTask[], upNextSort: "weight" | "urgency") => {
+    const todayMs = startOfTodayMs();
+    const active = tasks.filter((t) => t.effectiveStatus !== "Closed");
+    const byUrgency = (a: EffectiveTask, b: EffectiveTask): number =>
+        compareByUrgency(a, b, todayMs);
+    const byWeight = (a: EffectiveTask, b: EffectiveTask): number => {
+        const wa = computeTaskWeight(a);
+        const wb = computeTaskWeight(b);
+        if (wa !== wb) return wb - wa;
+        return byUrgency(a, b);
+    };
+    return active
+        .slice()
+        .sort(upNextSort === "weight" ? byWeight : byUrgency)
+        .slice(0, 10);
+};
+
 export const TaskHomeContent = ({
     useTM,
     usePM,
@@ -294,7 +367,9 @@ export const TaskHomeContent = ({
     const headerStyles = isDark ? TaskHeaderStyles.dark : TaskHeaderStyles.light;
     const [sprintConfigOpen, setSprintConfigOpen] = useState(false);
     const [sprintManagerOpen, setSprintManagerOpen] = useState(false);
-    const [activeTab, setActiveTab] = useState<"overall" | "sprint" | "mytasks">("overall");
+    const [activeTab, setActiveTab] = useState<"overall" | "sprint" | "mytasks" | "members">(
+        "overall"
+    );
     // How the My Tasks "Up Next" list is ordered. Default "weight" so the
     // most pressing task (priority × urgency) surfaces first — the whole
     // point of the pointing system. "urgency" keeps the older overdue →
@@ -756,114 +831,94 @@ export const TaskHomeContent = ({
         return { overdue, upcoming };
     }, [effectiveTasks]);
 
-    // ── My Tasks (assigned to the logged-in user) ──
-    // Personal lens over effectiveTasks. Counts feed the KPI strip; the
-    // ranked list ("Up Next") surfaces what to look at next.
+    // ── My Tasks (badge) + Focus user (shared tasks body) ──
+    // `myTasks`/`myStats` stay pinned to the logged-in user so the "My Tasks"
+    // TAB BADGE always shows my own count, no matter which tab is open.
     const myTasks = useMemo(
         () => effectiveTasks.filter((t) => t.assigneeId === myself.userId),
         [effectiveTasks, myself.userId]
     );
+    const myStats = useMemo(() => computeAssigneeStats(myTasks), [myTasks]);
 
-    // Numeric task ids for the personal velocity chart (tasks assigned to
-    // me — consistent with the rest of the My Tasks tab).
-    const myTaskIds = useMemo(() => {
-        return myTasks.map((t) => Number(t.id)).filter((n) => Number.isFinite(n) && n > 0);
-    }, [myTasks]);
-
-    const myStats = useMemo(() => {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const weekAhead = new Date(today);
-        weekAhead.setDate(weekAhead.getDate() + 7);
-
-        let openCount = 0;
-        let wipCount = 0;
-        let blockedCount = 0;
-        let pendingCount = 0;
-        let closedCount = 0;
-        let overdueCount = 0;
-        let dueThisWeekCount = 0;
-        for (const t of myTasks) {
-            const isClosed = t.effectiveStatus === "Closed";
-            if (t.effectiveStatus === "Open") openCount++;
-            else if (t.effectiveStatus === "WIP") wipCount++;
-            else if (t.effectiveStatus === "Blocked") blockedCount++;
-            else if (t.effectiveStatus === "Pending") pendingCount++;
-            else if (isClosed) closedCount++;
-
-            if (!isClosed && t.dueDate) {
-                const d = new Date(t.dueDate);
-                d.setHours(0, 0, 0, 0);
-                if (d < today) overdueCount++;
-                else if (d <= weekAhead) dueThisWeekCount++;
-            }
+    // Distinct assignees WITH tasks in the current project (excluding me),
+    // busiest-first — the picker options for the "Member's Tasks" tab.
+    const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
+    const projectMembers = useMemo(() => {
+        const map = new Map<
+            string,
+            { id: string; name: string; email: string | null; count: number }
+        >();
+        for (const t of effectiveTasks) {
+            if (!t.assigneeId || String(t.assigneeId) === String(myself.userId)) continue;
+            const key = String(t.assigneeId);
+            const entry = map.get(key) ?? {
+                id: key,
+                name: t.assigneeName || key,
+                email: t.assigneeEmail ?? null,
+                count: 0,
+            };
+            entry.count++;
+            map.set(key, entry);
         }
-        const totalCount = openCount + wipCount + blockedCount + pendingCount + closedCount;
-        const activeCount = openCount + wipCount + blockedCount + pendingCount;
-        const completionPct = totalCount > 0 ? Math.round((closedCount / totalCount) * 100) : 0;
-        return {
-            openCount,
-            wipCount,
-            blockedCount,
-            pendingCount,
-            closedCount,
-            totalCount,
-            activeCount,
-            overdueCount,
-            dueThisWeekCount,
-            completionPct,
-        };
-    }, [myTasks]);
+        return Array.from(map.values()).sort((a, b) => b.count - a.count);
+    }, [effectiveTasks, myself.userId]);
+    // Resolve the picked id to a member object. `null` when nothing is picked
+    // OR the picked member isn't in THIS project's list (e.g. after a project
+    // switch). Every render gate keys off this RESOLVED object, so a stale id
+    // self-heals back to the "pick a member" prompt instead of a ghost body.
+    const selectedMember = selectedMemberId
+        ? (projectMembers.find((m) => m.id === selectedMemberId) ?? null)
+        : null;
 
-    // Top 10 active tasks to look at next. Ranking:
-    //   1. Overdue first (most overdue first)
-    //   2. Then priority order (Critical → Minimal → no priority)
-    //   3. Then soonest due date (no due date last)
-    //   4. Tie-break on most recently updated
-    const myUpNext = useMemo(() => {
-        const todayMs = startOfTodayMs();
-        const active = myTasks.filter((t) => t.effectiveStatus !== "Closed");
-        // Deadline-first rule: overdue → priority → soonest due → recent.
-        // Shared with the "Top by Weight" panel's "By urgency" mode.
-        const byUrgency = (a: EffectiveTask, b: EffectiveTask): number =>
-            compareByUrgency(a, b, todayMs);
-        // Weight-first: highest Task Weight (priority × urgency) first, with
-        // the deadline rule breaking ties so equal-weight rows stay stable.
-        const byWeight = (a: EffectiveTask, b: EffectiveTask): number => {
-            const wa = computeTaskWeight(a);
-            const wb = computeTaskWeight(b);
-            if (wa !== wb) return wb - wa;
-            return byUrgency(a, b);
-        };
-        return active
-            .slice()
-            .sort(upNextSort === "weight" ? byWeight : byUrgency)
-            .slice(0, 10);
-    }, [myTasks, upNextSort]);
+    // The user the shared tasks-body renders stats for: me on "My Tasks", the
+    // resolved member on "Member's Tasks" (null → the body isn't shown).
+    const focusUserId: string | null =
+        activeTab === "members"
+            ? (selectedMember?.id ?? null)
+            : myself.userId != null
+              ? String(myself.userId)
+              : null;
+    const isViewingSelf = focusUserId != null && focusUserId === String(myself.userId);
 
-    // ── Assigned Milestones (current project) ──
-    // Ongoing milestones the logged-in user is one of the assignees of.
+    const focusTasks = useMemo(
+        () =>
+            focusUserId == null
+                ? []
+                : effectiveTasks.filter((t) => String(t.assigneeId) === focusUserId),
+        [effectiveTasks, focusUserId]
+    );
+    // Numeric task ids for the focus user's velocity chart.
+    const focusTaskIds = useMemo(
+        () => focusTasks.map((t) => Number(t.id)).filter((n) => Number.isFinite(n) && n > 0),
+        [focusTasks]
+    );
+    const focusStats = useMemo(() => computeAssigneeStats(focusTasks), [focusTasks]);
+    const focusUpNext = useMemo(
+        () => computeUpNext(focusTasks, upNextSort),
+        [focusTasks, upNextSort]
+    );
+
+    // ── Assigned Milestones (current project, focus user) ──
+    // Ongoing milestones the FOCUS user is one of the assignees of.
     // Current-project scoped: milestones only load for the active project
     // (`useSM.projectMilestones` is keyed by project and populated on
     // project switch), so this reads that slice directly. "Ongoing" ==
     // `selectVisibleMilestones` (drops Deleted + Closed-in-ended-sprint) —
     // the same visible-set definition the sidebar/filter use. The selector
     // already sorts, so the cards render in due-date → status → title order.
-    const assignedMilestones = useMemo<Milestone[]>(() => {
+    const focusAssignedMilestones = useMemo<Milestone[]>(() => {
         const projectId = usePM.currentProject?.projectId;
-        if (!projectId) return [];
+        if (!projectId || focusUserId == null) return [];
         const all = useSM.projectMilestones[projectId] ?? [];
         const sprints = useSM.projectSprints[projectId] ?? [];
         return selectVisibleMilestones(all, sprints).filter((m) =>
-            (m.assignees ?? []).some(
-                (a) => a.userId != null && String(a.userId) === String(myself.userId)
-            )
+            (m.assignees ?? []).some((a) => a.userId != null && String(a.userId) === focusUserId)
         );
     }, [
         usePM.currentProject?.projectId,
         useSM.projectMilestones,
         useSM.projectSprints,
-        myself.userId,
+        focusUserId,
     ]);
 
     // Milestone whose task graph is open (null = closed). Opened by clicking
@@ -1537,7 +1592,9 @@ export const TaskHomeContent = ({
                                     }}
                                     onChange={(_, value) =>
                                         value &&
-                                        setActiveTab(value as "overall" | "sprint" | "mytasks")
+                                        setActiveTab(
+                                            value as "overall" | "sprint" | "mytasks" | "members"
+                                        )
                                     }
                                 >
                                     <TabList
@@ -1624,6 +1681,10 @@ export const TaskHomeContent = ({
                                                     {myStats.totalCount}
                                                 </Box>
                                             )}
+                                        </Tab>
+                                        <Tab value="members" indicatorInset>
+                                            <GroupsRoundedIcon sx={{ fontSize: 16 }} />
+                                            Member&apos;s Tasks
                                         </Tab>
                                     </TabList>
                                 </Tabs>
@@ -2139,16 +2200,236 @@ export const TaskHomeContent = ({
                                 </>
                             )}
 
-                            {/* ════════ TAB: My Tasks ════════ */}
-                            {activeTab === "mytasks" && (
+                            {/* ════════ TAB: Member's Tasks — picker + banner ════════ */}
+                            {activeTab === "members" && (
+                                <Box sx={{ mb: 2 }}>
+                                    <Card
+                                        variant="soft"
+                                        sx={{
+                                            p: 2,
+                                            background: cardBg,
+                                            border: "1px solid",
+                                            borderColor: cardBorder,
+                                        }}
+                                    >
+                                        <Stack
+                                            alignItems={{ sm: "center" }}
+                                            direction={{ xs: "column", sm: "row" }}
+                                            spacing={2}
+                                        >
+                                            <Box sx={{ minWidth: { sm: 260 }, width: "100%" }}>
+                                                <Typography
+                                                    level="body-xs"
+                                                    sx={{
+                                                        color: textMuted,
+                                                        fontWeight: 600,
+                                                        mb: 0.5,
+                                                    }}
+                                                >
+                                                    {t.tasks.dashboard.memberTasks.pickLabel}
+                                                </Typography>
+                                                <Autocomplete
+                                                    getOptionLabel={(o) => o.name}
+                                                    isOptionEqualToValue={(o, v) => o.id === v.id}
+                                                    options={projectMembers}
+                                                    size="sm"
+                                                    value={selectedMember}
+                                                    placeholder={
+                                                        t.tasks.dashboard.memberTasks
+                                                            .pickPlaceholder
+                                                    }
+                                                    renderOption={(optProps, o) => {
+                                                        // MUI derives the option key from
+                                                        // getOptionLabel (the NAME), so two members
+                                                        // with the same name collide. Drop that key
+                                                        // (extract it out of the spread) and key by
+                                                        // the unique member id instead.
+                                                        const { key: _labelKey, ...rest } =
+                                                            optProps as typeof optProps & {
+                                                                key?: Key;
+                                                            };
+                                                        void _labelKey;
+                                                        return (
+                                                            <AutocompleteOption
+                                                                key={o.id}
+                                                                {...rest}
+                                                            >
+                                                                <ListItemDecorator>
+                                                                    <UserAvatar
+                                                                        clickable={false}
+                                                                        showPulseDot={false}
+                                                                        size={22}
+                                                                        userId={o.id}
+                                                                    />
+                                                                </ListItemDecorator>
+                                                                <ListItemContent
+                                                                    sx={{ minWidth: 0 }}
+                                                                >
+                                                                    <Typography
+                                                                        level="body-sm"
+                                                                        sx={{ fontWeight: 600 }}
+                                                                        noWrap
+                                                                    >
+                                                                        {o.name}
+                                                                    </Typography>
+                                                                    {o.email && (
+                                                                        <Typography
+                                                                            level="body-xs"
+                                                                            sx={{
+                                                                                color: textMuted,
+                                                                            }}
+                                                                            noWrap
+                                                                        >
+                                                                            {o.email}
+                                                                        </Typography>
+                                                                    )}
+                                                                </ListItemContent>
+                                                                <Chip size="sm" variant="soft">
+                                                                    {o.count}
+                                                                </Chip>
+                                                            </AutocompleteOption>
+                                                        );
+                                                    }}
+                                                    startDecorator={
+                                                        <PersonRoundedIcon sx={{ fontSize: 16 }} />
+                                                    }
+                                                    onChange={(_, v) =>
+                                                        setSelectedMemberId(v ? v.id : null)
+                                                    }
+                                                />
+                                            </Box>
+                                            {/* Prominent "whose stats" banner so it's always
+                                                clear which member is selected. */}
+                                            {selectedMember ? (
+                                                <Stack
+                                                    alignItems="center"
+                                                    direction="row"
+                                                    spacing={1.25}
+                                                    sx={{
+                                                        px: 1.5,
+                                                        py: 1,
+                                                        borderRadius: "10px",
+                                                        background: isDark
+                                                            ? "rgba(139,92,246,0.12)"
+                                                            : "rgba(124,58,237,0.08)",
+                                                        border: "1px solid",
+                                                        borderColor: isDark
+                                                            ? "rgba(139,92,246,0.3)"
+                                                            : "rgba(124,58,237,0.2)",
+                                                    }}
+                                                >
+                                                    <UserAvatar
+                                                        clickable={false}
+                                                        showPulseDot={false}
+                                                        size={32}
+                                                        userId={selectedMember.id}
+                                                    />
+                                                    <Box sx={{ minWidth: 0 }}>
+                                                        <Typography
+                                                            level="body-xs"
+                                                            sx={{ color: textMuted }}
+                                                        >
+                                                            {t.tasks.dashboard.memberTasks.viewing}
+                                                        </Typography>
+                                                        <Typography
+                                                            level="title-sm"
+                                                            sx={{
+                                                                fontWeight: 700,
+                                                                color: isDark
+                                                                    ? "#a78bfa"
+                                                                    : "#7c3aed",
+                                                                overflow: "hidden",
+                                                                textOverflow: "ellipsis",
+                                                                whiteSpace: "nowrap",
+                                                            }}
+                                                        >
+                                                            {selectedMember.name}
+                                                        </Typography>
+                                                        {selectedMember.email && (
+                                                            <Typography
+                                                                level="body-xs"
+                                                                sx={{ color: textMuted }}
+                                                                noWrap
+                                                            >
+                                                                {selectedMember.email}
+                                                            </Typography>
+                                                        )}
+                                                    </Box>
+                                                </Stack>
+                                            ) : (
+                                                <Typography
+                                                    level="body-sm"
+                                                    sx={{ color: textMuted }}
+                                                >
+                                                    {projectMembers.length === 0
+                                                        ? t.tasks.dashboard.memberTasks.noMembers
+                                                        : t.tasks.dashboard.memberTasks.pickHint}
+                                                </Typography>
+                                            )}
+                                        </Stack>
+                                    </Card>
+                                </Box>
+                            )}
+
+                            {/* Members tab, nothing picked yet → prompt (skips the body). */}
+                            {activeTab === "members" && selectedMember == null && (
+                                <Card
+                                    variant="soft"
+                                    sx={{
+                                        p: 4,
+                                        textAlign: "center",
+                                        background: cardBg,
+                                        border: "2px dashed",
+                                        borderColor: cardBorder,
+                                    }}
+                                >
+                                    <Stack alignItems="center" spacing={2}>
+                                        <Box
+                                            sx={{
+                                                width: 56,
+                                                height: 56,
+                                                borderRadius: "14px",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                background: isDark
+                                                    ? "rgba(139,92,246,0.1)"
+                                                    : "rgba(124,58,237,0.08)",
+                                            }}
+                                        >
+                                            <GroupsRoundedIcon
+                                                sx={{
+                                                    fontSize: 28,
+                                                    color: isDark ? "#a78bfa" : "#7c3aed",
+                                                }}
+                                            />
+                                        </Box>
+                                        <Typography
+                                            level="title-md"
+                                            sx={{ fontWeight: 600, color: textPrimary }}
+                                        >
+                                            {t.tasks.dashboard.memberTasks.promptTitle}
+                                        </Typography>
+                                        <Typography level="body-sm" sx={{ color: textMuted }}>
+                                            {projectMembers.length === 0
+                                                ? t.tasks.dashboard.memberTasks.noMembers
+                                                : t.tasks.dashboard.memberTasks.promptBody}
+                                        </Typography>
+                                    </Stack>
+                                </Card>
+                            )}
+
+                            {/* ════════ TAB: My Tasks / Member's Tasks (shared body) ════════ */}
+                            {(activeTab === "mytasks" ||
+                                (activeTab === "members" && selectedMember != null)) && (
                                 <>
                                     {/* ════════ Section MY: My Tasks ════════ */}
                                     {/* Big "nothing assigned" card only when there's truly
                                         nothing on this tab — no tasks AND no assigned
                                         milestones. With milestones present it would sit,
                                         contradictorily, above populated milestone cards. */}
-                                    {myStats.totalCount === 0 &&
-                                    assignedMilestones.length === 0 ? (
+                                    {focusStats.totalCount === 0 &&
+                                    focusAssignedMilestones.length === 0 ? (
                                         <Card
                                             variant="soft"
                                             sx={{
@@ -2184,13 +2465,19 @@ export const TaskHomeContent = ({
                                                     level="title-md"
                                                     sx={{ fontWeight: 600, color: textPrimary }}
                                                 >
-                                                    {t.tasks.dashboard.nothingAssignedTitle}
+                                                    {isViewingSelf
+                                                        ? t.tasks.dashboard.nothingAssignedTitle
+                                                        : t.tasks.dashboard.memberTasks
+                                                              .nothingAssignedTitle}
                                                 </Typography>
                                                 <Typography
                                                     level="body-sm"
                                                     sx={{ color: textMuted }}
                                                 >
-                                                    {t.tasks.dashboard.nothingAssignedBody}
+                                                    {isViewingSelf
+                                                        ? t.tasks.dashboard.nothingAssignedBody
+                                                        : t.tasks.dashboard.memberTasks
+                                                              .nothingAssignedBody}
                                                 </Typography>
                                             </Stack>
                                         </Card>
@@ -2202,7 +2489,7 @@ export const TaskHomeContent = ({
                                                     [
                                                         {
                                                             label: t.tasks.dashboard.kpiActive,
-                                                            value: String(myStats.activeCount),
+                                                            value: String(focusStats.activeCount),
                                                             color: "#3b82f6",
                                                             icon: (
                                                                 <PlayCircleOutlineRoundedIcon
@@ -2212,7 +2499,7 @@ export const TaskHomeContent = ({
                                                         },
                                                         {
                                                             label: t.tasks.dashboard.kpiClosed,
-                                                            value: String(myStats.closedCount),
+                                                            value: String(focusStats.closedCount),
                                                             color: "#22c55e",
                                                             icon: (
                                                                 <CheckCircleOutlineRoundedIcon
@@ -2222,7 +2509,7 @@ export const TaskHomeContent = ({
                                                         },
                                                         {
                                                             label: t.tasks.dashboard.kpiOverdue,
-                                                            value: String(myStats.overdueCount),
+                                                            value: String(focusStats.overdueCount),
                                                             color: "#ef4444",
                                                             icon: (
                                                                 <WarningAmberRoundedIcon
@@ -2234,7 +2521,7 @@ export const TaskHomeContent = ({
                                                             label: t.tasks.dashboard
                                                                 .kpiDueThisWeek,
                                                             value: String(
-                                                                myStats.dueThisWeekCount
+                                                                focusStats.dueThisWeekCount
                                                             ),
                                                             color: "#f59e0b",
                                                             icon: (
@@ -2245,7 +2532,7 @@ export const TaskHomeContent = ({
                                                         },
                                                         {
                                                             label: t.tasks.dashboard.kpiCompletion,
-                                                            value: `${myStats.completionPct}%`,
+                                                            value: `${focusStats.completionPct}%`,
                                                             color: "#a78bfa",
                                                             icon: (
                                                                 <TrendingUpRoundedIcon
@@ -2318,7 +2605,7 @@ export const TaskHomeContent = ({
                                             {/* My velocity (personal throughput over time) */}
                                             <TaskVelocitySection
                                                 isDark={isDark}
-                                                taskIds={myTaskIds}
+                                                taskIds={focusTaskIds}
                                                 teamId={myself.teamId}
                                                 textMuted={textMuted}
                                                 textPrimary={textPrimary}
@@ -2427,7 +2714,7 @@ export const TaskHomeContent = ({
                                                         })}
                                                     </Stack>
                                                 </Stack>
-                                                {myUpNext.length === 0 ? (
+                                                {focusUpNext.length === 0 ? (
                                                     <Card
                                                         variant="outlined"
                                                         sx={{
@@ -2449,7 +2736,7 @@ export const TaskHomeContent = ({
                                                     </Card>
                                                 ) : (
                                                     <Stack spacing={0.75}>
-                                                        {myUpNext.map((task) => {
+                                                        {focusUpNext.map((task) => {
                                                             const sc =
                                                                 STATUS_COLORS[
                                                                     task.effectiveStatus
@@ -2659,7 +2946,8 @@ export const TaskHomeContent = ({
                                     {/* Suppressed only when the WHOLE tab is empty (no tasks
                                         and no milestones) — the big card above already covers
                                         that, so we don't stack a second "empty" line under it. */}
-                                    {(assignedMilestones.length > 0 || myStats.totalCount > 0) && (
+                                    {(focusAssignedMilestones.length > 0 ||
+                                        focusStats.totalCount > 0) && (
                                         <Box sx={{ mt: 3 }}>
                                             <Stack
                                                 alignItems="center"
@@ -2680,10 +2968,11 @@ export const TaskHomeContent = ({
                                                 <AppTooltip
                                                     title={
                                                         <Box sx={{ maxWidth: 260 }}>
-                                                            {
-                                                                t.tasks.dashboard
-                                                                    .assignedMilestones.help
-                                                            }
+                                                            {isViewingSelf
+                                                                ? t.tasks.dashboard
+                                                                      .assignedMilestones.help
+                                                                : t.tasks.dashboard.memberTasks
+                                                                      .milestonesHelp}
                                                         </Box>
                                                     }
                                                 >
@@ -2695,22 +2984,26 @@ export const TaskHomeContent = ({
                                                         }}
                                                     />
                                                 </AppTooltip>
-                                                {assignedMilestones.length > 0 && (
+                                                {focusAssignedMilestones.length > 0 && (
                                                     <Chip
                                                         size="sm"
                                                         sx={{ ml: { sm: "auto" } }}
                                                         variant="soft"
                                                     >
-                                                        {assignedMilestones.length}
+                                                        {focusAssignedMilestones.length}
                                                     </Chip>
                                                 )}
                                             </Stack>
-                                            {assignedMilestones.length === 0 ? (
+                                            {focusAssignedMilestones.length === 0 ? (
                                                 <Typography
                                                     level="body-sm"
                                                     sx={{ color: textMuted }}
                                                 >
-                                                    {t.tasks.dashboard.assignedMilestones.empty}
+                                                    {isViewingSelf
+                                                        ? t.tasks.dashboard.assignedMilestones
+                                                              .empty
+                                                        : t.tasks.dashboard.memberTasks
+                                                              .milestonesEmpty}
                                                 </Typography>
                                             ) : (
                                                 <Box
@@ -2724,7 +3017,7 @@ export const TaskHomeContent = ({
                                                         },
                                                     }}
                                                 >
-                                                    {assignedMilestones.map((m) => (
+                                                    {focusAssignedMilestones.map((m) => (
                                                         <AssignedMilestoneCard
                                                             key={m.milestoneId}
                                                             milestone={m}
@@ -4537,7 +4830,7 @@ export const TaskHomeContent = ({
                 diagramMilestone.taskId != null &&
                 diagramMilestone.projectId != null && (
                     <LazyTaskDiagram
-                        highlightAssigneeId={myself.userId}
+                        highlightAssigneeId={focusUserId ?? myself.userId}
                         myself={myself}
                         projectId={Number(diagramMilestone.projectId)}
                         rootLabel={`${diagramMilestone.displayId ?? ""} · ${diagramMilestone.title}`}

@@ -715,6 +715,22 @@ export const tasks = {
             progress: "{closed}/{total} done",
             openDiagram: "Open task graph",
         },
+        // "Member's Tasks" tab — the same stats as My Tasks, for a picked member.
+        memberTasks: {
+            pickLabel: "Member",
+            pickPlaceholder: "Search a member…",
+            viewing: "Viewing",
+            pickHint: "Pick a member to see their task stats.",
+            noMembers: "No other members have tasks in this project.",
+            promptTitle: "Pick a member",
+            promptBody: "Choose a member above to see their task stats.",
+            nothingAssignedTitle: "Nothing assigned to this member",
+            nothingAssignedBody:
+                "Tasks assigned to this member in this project will show up here.",
+            milestonesEmpty: "No ongoing milestones in this project are assigned to this member.",
+            milestonesHelp:
+                "Ongoing milestones in this project this member is assigned to. Click a card to open its task graph — this member's tasks and subtasks are highlighted.",
+        },
         // Team Capacity: Σ effort of a member's active tasks, bucketed by
         // due-window, answering "who's busy today vs. later".
         capacity: {
