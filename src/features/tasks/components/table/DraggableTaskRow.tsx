@@ -37,10 +37,10 @@ import { UserProps } from "../../../../types/admin";
 import { TagListProps, TaskTableProps } from "../../../../types/tasks";
 import { stripOwnerState } from "../../../../utils/joyAutocomplete";
 import { PrStatusCell } from "../../../integrations/components/PrStatusCell";
-import { projectTagChipSx } from "../../utils/tagChipStyle";
 import { formatTaskDisplayId } from "../../utils/taskDisplayId";
 import { effortLevels, priorities } from "../../utils/taskMeta";
 import { computeTaskWeight, MAX_TASK_WEIGHT, weightBand } from "../../utils/taskWeight";
+import { ProjectTagChip } from "../ProjectTagChip";
 import { ColumnDef, LEADING_GUTTER_WIDTH, statusOptions } from "./DraggableTaskTable";
 
 // Depth-based background colors for nested task rows. Exported (along
@@ -737,12 +737,11 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                             [...tags]
                                 .sort((a, b) => (a.tagName || "").localeCompare(b.tagName || ""))
                                 .map((tag, idx) => (
-                                    <Chip
+                                    <ProjectTagChip
                                         key={idx}
+                                        isDark={mode === "dark"}
                                         label={tag.tagName}
-                                        size="small"
-                                        sx={projectTagChipSx(tag.tagColor, mode === "dark")}
-                                        variant="outlined"
+                                        tagColor={tag.tagColor}
                                     />
                                 ))
                         )}

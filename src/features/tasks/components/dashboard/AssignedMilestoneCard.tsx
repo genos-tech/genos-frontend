@@ -2,7 +2,6 @@ import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import { AvatarGroup, Box, Chip, LinearProgress, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
-import MuiChip from "@mui/material/Chip";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
@@ -10,7 +9,7 @@ import { fmt, useTranslation } from "../../../../i18n";
 import { TagListProps } from "../../../../types/tasks";
 import { Milestone } from "../../sprint-milestone/types";
 import { getMilestoneStatusChipColor } from "../../sprint-milestone/utils/sortMilestones";
-import { projectTagChipSx } from "../../utils/tagChipStyle";
+import { ProjectTagChip } from "../ProjectTagChip";
 import { SprintChip } from "../SprintChip";
 
 // Same priority swatch the board card uses (SprintBoardCard.tsx) so a
@@ -201,12 +200,11 @@ export const AssignedMilestoneCard = ({ milestone, sprintName, onOpen }: Props) 
                 {tags.length > 0 && (
                     <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 0.75 }}>
                         {tags.slice(0, 3).map((tag, idx) => (
-                            <MuiChip
+                            <ProjectTagChip
                                 key={idx}
+                                isDark={isDark}
                                 label={tag.tagName}
-                                size="small"
-                                variant="outlined"
-                                sx={projectTagChipSx(tag.tagColor, isDark)}
+                                tagColor={tag.tagColor}
                             />
                         ))}
                         {tags.length > 3 && (
