@@ -59,6 +59,12 @@ type TaskCreateFooterProps = {
      *  `getMissingRequiredFields`). Non-empty disables Create — the
      *  form renders the matching "Required: …" hint beside this footer. */
     missingRequiredFields?: string[];
+    /** Reads the body editor's CURRENT document at submit time. `taskContent.body`
+     *  lags — it's synced from the collaborative editor on a debounce (flushed
+     *  only on blur) — so a quick click, and every Cmd/Ctrl+Enter submit (which
+     *  never blurs the editor), sent the pre-edit body and dropped the user's
+     *  typing. When provided, its result overrides `taskContent.body`. */
+    getLatestBody?: () => TaskProps["body"];
 };
 
 export const TaskCreateFooter = forwardRef<TaskCreateFooterHandle, TaskCreateFooterProps>(
@@ -79,6 +85,7 @@ export const TaskCreateFooter = forwardRef<TaskCreateFooterHandle, TaskCreateFoo
             usePM,
             isDirty = false,
             missingRequiredFields = [],
+            getLatestBody,
         } = props;
 
         const { mode } = useColorScheme();
@@ -98,10 +105,16 @@ export const TaskCreateFooter = forwardRef<TaskCreateFooterHandle, TaskCreateFoo
 
             setIsCreatingTask?.(true);
             try {
+                // Snapshot the editor's live body at submit time — `taskContent.body`
+                // can lag the last keystrokes (see `getLatestBody`).
+                const liveBody = getLatestBody?.();
+                const submittedTaskContent =
+                    liveBody !== undefined ? { ...taskContent, body: liveBody } : taskContent;
+
                 const result = await uploadNewTask({
                     socket: socket,
                     myself: myself,
-                    taskContent: taskContent,
+                    taskContent: submittedTaskContent,
                     useCM: useCM,
                     accessToken: accessToken || "",
                     setTitleError: setTitleError,
