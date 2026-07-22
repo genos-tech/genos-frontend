@@ -1,6 +1,8 @@
-import { useMemo, useState } from "react";
+import { ReactNode, useMemo, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
+import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
+import KeyboardArrowDownRoundedIcon from "@mui/icons-material/KeyboardArrowDownRounded";
 import {
     Avatar,
     AvatarGroup,
@@ -25,9 +27,10 @@ import { SprintMilestoneManagementState } from "../../../../../hooks/tasks/useSp
 import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../../i18n";
 import { UserProps } from "../../../../../types/admin";
-import { Milestone, MilestoneStatus } from "../../../sprint-milestone/types";
+import { Milestone } from "../../../sprint-milestone/types";
 import {
     getMilestoneStatusChipColor,
+    selectOutdatedMilestones,
     selectVisibleMilestones,
 } from "../../../sprint-milestone/utils/sortMilestones";
 
@@ -66,6 +69,15 @@ export const MilestonesListItem = ({
 
     const milestones: Milestone[] = useMemo(
         () => selectVisibleMilestones(useSM.projectMilestones[currentProjectId] ?? [], sprints),
+        [useSM.projectMilestones, currentProjectId, sprints]
+    );
+
+    // "Past milestones": Closed milestones whose sprint has ended. They're
+    // hidden from the board/table (and the member filter); this folder is the
+    // only way to reach them. Clicking one scopes the table/board to it (same
+    // `handleOpen` as a live milestone), which un-hides its full task history.
+    const pastMilestones: Milestone[] = useMemo(
+        () => selectOutdatedMilestones(useSM.projectMilestones[currentProjectId] ?? [], sprints),
         [useSM.projectMilestones, currentProjectId, sprints]
     );
 
@@ -120,136 +132,178 @@ export const MilestonesListItem = ({
         useTM.setIsTaskTableVisible(false);
     };
 
-    if (milestones.length === 0) {
+    const renderMilestoneRow = (m: Milestone) => {
+        const sprintName =
+            m.sprintId == null
+                ? t.tasks.sidebar.noSprint
+                : (sprints.find((s) => s.sprintId === m.sprintId)?.name ??
+                  t.tasks.sidebar.sprintFallback);
         return (
-            <List sx={{ gap: 0.25 }}>
-                <AddMilestoneRow isDark={isDark} onClick={handleAddMilestone} />
-            </List>
+            <ListItem key={m.milestoneId} sx={{ pl: 0, pr: 1 }}>
+                <ListItemButton
+                    sx={{ borderRadius: 8, ml: 5, py: 0.5, pr: 0.5 }}
+                    selected={
+                        useTM.currentPreviewKind === "milestone" &&
+                        useTM.currentPreviewMilestoneId === m.milestoneId
+                    }
+                    onClick={() => handleOpen(m.milestoneId)}
+                >
+                    <FlagRoundedIcon sx={{ fontSize: 14, color: "#f97316", mr: 0.75 }} />
+                    <ListItemContent>
+                        <Stack
+                            alignItems="center"
+                            direction="row"
+                            spacing={0.5}
+                            sx={{ minWidth: 0 }}
+                        >
+                            <Typography
+                                level="body-sm"
+                                sx={{
+                                    flex: 1,
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    whiteSpace: "nowrap",
+                                    color: isDark ? "rgba(255,255,255,0.85)" : "rgba(0,0,0,0.8)",
+                                }}
+                            >
+                                {m.title}
+                            </Typography>
+                            <Chip size="sm" variant="soft">
+                                {m.tasksClosed ?? 0}/{m.tasksTotal ?? 0}
+                            </Chip>
+                        </Stack>
+                        <Stack alignItems="center" direction="row" spacing={0.5} sx={{ mt: 0.25 }}>
+                            <Chip size="sm" variant="outlined">
+                                {sprintName}
+                            </Chip>
+                            {(() => {
+                                const tone = getMilestoneStatusChipColor(m.status);
+                                return (
+                                    <Chip
+                                        size="sm"
+                                        variant="solid"
+                                        sx={{
+                                            backgroundColor: tone.color,
+                                            color: tone.textColor,
+                                            fontWeight: 600,
+                                        }}
+                                    >
+                                        {m.status}
+                                    </Chip>
+                                );
+                            })()}
+                            <Box sx={{ flex: 1 }} />
+                            <AvatarGroup size="sm" sx={{ "--Avatar-size": "18px" }}>
+                                {m.assignees.slice(0, 4).map((a) => {
+                                    const userIdKey = a.userId != null ? String(a.userId) : "";
+                                    const profile = userIdKey
+                                        ? useTEM.teamMemberProfiles[userIdKey]
+                                        : undefined;
+                                    // Use AvatarWithStatus when we can resolve
+                                    // the team member profile (gives us online
+                                    // pulse + click-to-profile); fall back to a
+                                    // plain Avatar for legacy assignees that
+                                    // aren't in the team profile map (e.g.
+                                    // recently removed members).
+                                    return profile ? (
+                                        <AvatarWithStatus
+                                            key={userIdKey}
+                                            avatarSize={18}
+                                            avatarUser={profile}
+                                            isYou={String(myself.userId) === userIdKey}
+                                            myself={myself}
+                                            setMyself={setMyself}
+                                            showPulseDot={false}
+                                            socket={socket}
+                                            useCM={useCM}
+                                            useUISM={useUISM}
+                                        />
+                                    ) : (
+                                        <Avatar
+                                            key={userIdKey || `idx-${a.username}`}
+                                            sx={{ fontSize: 10 }}
+                                            src={
+                                                a.profileImageUrl
+                                                    ? `${media_url}/${a.profileImageUrl}`
+                                                    : undefined
+                                            }
+                                        >
+                                            {(a.username?.[0] || "?").toUpperCase()}
+                                        </Avatar>
+                                    );
+                                })}
+                            </AvatarGroup>
+                        </Stack>
+                    </ListItemContent>
+                </ListItemButton>
+            </ListItem>
         );
-    }
+    };
 
     return (
         <List sx={{ gap: 0.25 }}>
-            {milestones.map((m) => {
-                const sprintName =
-                    m.sprintId == null
-                        ? t.tasks.sidebar.noSprint
-                        : (sprints.find((s) => s.sprintId === m.sprintId)?.name ??
-                          t.tasks.sidebar.sprintFallback);
-                return (
-                    <ListItem key={m.milestoneId} sx={{ pl: 0, pr: 1 }}>
-                        <ListItemButton
-                            sx={{ borderRadius: 8, ml: 5, py: 0.5, pr: 0.5 }}
-                            selected={
-                                useTM.currentPreviewKind === "milestone" &&
-                                useTM.currentPreviewMilestoneId === m.milestoneId
-                            }
-                            onClick={() => handleOpen(m.milestoneId)}
-                        >
-                            <FlagRoundedIcon sx={{ fontSize: 14, color: "#f97316", mr: 0.75 }} />
-                            <ListItemContent>
-                                <Stack
-                                    alignItems="center"
-                                    direction="row"
-                                    spacing={0.5}
-                                    sx={{ minWidth: 0 }}
-                                >
-                                    <Typography
-                                        level="body-sm"
-                                        sx={{
-                                            flex: 1,
-                                            overflow: "hidden",
-                                            textOverflow: "ellipsis",
-                                            whiteSpace: "nowrap",
-                                            color: isDark
-                                                ? "rgba(255,255,255,0.85)"
-                                                : "rgba(0,0,0,0.8)",
-                                        }}
-                                    >
-                                        {m.title}
-                                    </Typography>
-                                    <Chip size="sm" variant="soft">
-                                        {m.tasksClosed ?? 0}/{m.tasksTotal ?? 0}
-                                    </Chip>
-                                </Stack>
-                                <Stack
-                                    alignItems="center"
-                                    direction="row"
-                                    spacing={0.5}
-                                    sx={{ mt: 0.25 }}
-                                >
-                                    <Chip size="sm" variant="outlined">
-                                        {sprintName}
-                                    </Chip>
-                                    {(() => {
-                                        const tone = getMilestoneStatusChipColor(m.status);
-                                        return (
-                                            <Chip
-                                                size="sm"
-                                                variant="solid"
-                                                sx={{
-                                                    backgroundColor: tone.color,
-                                                    color: tone.textColor,
-                                                    fontWeight: 600,
-                                                }}
-                                            >
-                                                {m.status}
-                                            </Chip>
-                                        );
-                                    })()}
-                                    <Box sx={{ flex: 1 }} />
-                                    <AvatarGroup size="sm" sx={{ "--Avatar-size": "18px" }}>
-                                        {m.assignees.slice(0, 4).map((a) => {
-                                            const userIdKey =
-                                                a.userId != null ? String(a.userId) : "";
-                                            const profile = userIdKey
-                                                ? useTEM.teamMemberProfiles[userIdKey]
-                                                : undefined;
-                                            // Use AvatarWithStatus when we
-                                            // can resolve the team member
-                                            // profile (gives us online
-                                            // pulse + click-to-profile);
-                                            // fall back to a plain Avatar
-                                            // for legacy assignees that
-                                            // aren't in the team profile
-                                            // map (e.g. recently removed
-                                            // members).
-                                            return profile ? (
-                                                <AvatarWithStatus
-                                                    key={userIdKey}
-                                                    avatarSize={18}
-                                                    avatarUser={profile}
-                                                    isYou={String(myself.userId) === userIdKey}
-                                                    myself={myself}
-                                                    setMyself={setMyself}
-                                                    showPulseDot={false}
-                                                    socket={socket}
-                                                    useCM={useCM}
-                                                    useUISM={useUISM}
-                                                />
-                                            ) : (
-                                                <Avatar
-                                                    key={userIdKey || `idx-${a.username}`}
-                                                    sx={{ fontSize: 10 }}
-                                                    src={
-                                                        a.profileImageUrl
-                                                            ? `${media_url}/${a.profileImageUrl}`
-                                                            : undefined
-                                                    }
-                                                >
-                                                    {(a.username?.[0] || "?").toUpperCase()}
-                                                </Avatar>
-                                            );
-                                        })}
-                                    </AvatarGroup>
-                                </Stack>
-                            </ListItemContent>
-                        </ListItemButton>
-                    </ListItem>
-                );
-            })}
+            {milestones.map(renderMilestoneRow)}
+            {pastMilestones.length > 0 && (
+                <PastMilestonesFolder count={pastMilestones.length} isDark={isDark}>
+                    {pastMilestones.map(renderMilestoneRow)}
+                </PastMilestonesFolder>
+            )}
             <AddMilestoneRow isDark={isDark} onClick={handleAddMilestone} />
         </List>
+    );
+};
+
+// Collapsible "Past milestones" section. Defaults collapsed — it's an
+// archive, not something the user looks at every session.
+const PastMilestonesFolder = ({
+    count,
+    isDark,
+    children,
+}: {
+    count: number;
+    isDark: boolean;
+    children: ReactNode;
+}) => {
+    const { t } = useTranslation();
+    const [open, setOpen] = useState(false);
+    return (
+        <>
+            <ListItem sx={{ pl: 0 }}>
+                <ListItemButton
+                    sx={{ borderRadius: 8, ml: 5, py: 0.5, pr: 0.5 }}
+                    onClick={() => setOpen((prev) => !prev)}
+                >
+                    <HistoryRoundedIcon
+                        sx={{
+                            fontSize: 15,
+                            mr: 0.75,
+                            color: isDark ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.4)",
+                        }}
+                    />
+                    <ListItemContent>
+                        <Typography
+                            level="body-sm"
+                            sx={{ color: isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.55)" }}
+                        >
+                            {t.tasks.sidebar.pastMilestones}
+                        </Typography>
+                    </ListItemContent>
+                    <Chip size="sm" variant="soft">
+                        {count}
+                    </Chip>
+                    <KeyboardArrowDownRoundedIcon
+                        sx={{
+                            fontSize: 16,
+                            ml: 0.5,
+                            color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.35)",
+                            transition: "transform 0.2s ease",
+                            transform: open ? "rotate(180deg)" : "none",
+                        }}
+                    />
+                </ListItemButton>
+            </ListItem>
+            {open && children}
+        </>
     );
 };
 

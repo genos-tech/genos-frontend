@@ -24,6 +24,7 @@ import { TaskTableProps } from "../../../../types/tasks";
 import { buildAvatarSrc } from "../../../../utils/avatarSrc";
 import {
     getMilestoneStatusChipColor,
+    getOutdatedMilestoneIds,
     selectVisibleMilestones,
 } from "../../sprint-milestone/utils/sortMilestones";
 import {
@@ -339,6 +340,27 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         if (!useSM || currentProjectId == null) return [];
         return useSM.projectSprints[currentProjectId] ?? [];
     }, [useSM, currentProjectId]);
+
+    // Outdated (Closed + ended-sprint) milestone ids for THIS project. Their
+    // milestones and tasks are dropped from the board/table (and the member
+    // filter) — reachable only via the sidebar's "Past milestones" folder,
+    // which scopes to one through `tableMilestoneFilterId`. Keyed on the
+    // actual milestone/sprint state (not the whole churning `useSM`) so the
+    // Set identity is stable between real data changes.
+    const outdatedMilestoneIds = useMemo(() => {
+        if (!useSM || currentProjectId == null) return new Set<number>();
+        return getOutdatedMilestoneIds(
+            useSM.projectMilestones[currentProjectId] ?? [],
+            useSM.projectSprints[currentProjectId] ?? []
+        );
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [useSM?.projectMilestones, useSM?.projectSprints, currentProjectId]);
+    // Stable primitive for the applyFilters effect deps — re-runs the filter
+    // only when the outdated SET actually changes, never per render.
+    const outdatedMilestoneKey = useMemo(
+        () => [...outdatedMilestoneIds].sort((a, b) => a - b).join(","),
+        [outdatedMilestoneIds]
+    );
     const [selectedMilestoneKeys, setSelectedMilestoneKeys] = React.useState<MilestoneFilterKey[]>(
         [MILESTONE_ALL]
     );
@@ -555,6 +577,11 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
             );
             scopeBackingTaskId = milestoneTask?.id != null ? String(milestoneTask.id) : null;
         }
+        // Scoped to a PAST milestone (from the sidebar's "Past milestones"
+        // folder)? Then show its FULL history — bypass the status filter so
+        // Closed subtasks appear, and don't apply the outdated-hide to it.
+        const scopeIsOutdated =
+            milestoneScopeActive && scopeTarget != null && outdatedMilestoneIds.has(scopeTarget);
 
         // The "All in any dimension → restrict to roots" rule the
         // legacy code applied inside each per-dimension `if (... "All")`
@@ -587,14 +614,41 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         const childIdSet = new Set<string>();
 
         for (const task of useTM.allTasks) {
-            // Status (string + expired axes)
-            if (statusStringFilter !== null && !statusStringFilter.has(task.status ?? "")) {
+            // Outdated milestones (Closed + ended sprint) and everything under
+            // them are hidden EVERYWHERE — reachable only by scoping to one via
+            // the sidebar's "Past milestones" folder (which sets
+            // `tableMilestoneFilterId`, so that one milestone is exempt here).
+            if (
+                task.milestoneId != null &&
+                task.milestoneId !== scopeTarget &&
+                outdatedMilestoneIds.has(task.milestoneId)
+            ) {
                 continue;
             }
-            if (requireExpired) {
-                if (!task.dueDate) continue;
-                const ts = new Date(task.dueDate).getTime();
-                if (!Number.isFinite(ts) || ts >= now) continue;
+
+            // When narrowing by MEMBER, also drop the member's own closed /
+            // deleted standalone tasks (kept only when a milestone scope is
+            // active, so a scoped past milestone still lists its full history).
+            if (
+                memberFilterActive &&
+                !milestoneScopeActive &&
+                task.isMilestone !== true &&
+                (task.status === "Closed" || task.status === "Deleted")
+            ) {
+                continue;
+            }
+
+            // Status (string + expired axes). Bypassed when scoped to a past
+            // milestone so its Closed subtasks show.
+            if (!scopeIsOutdated) {
+                if (statusStringFilter !== null && !statusStringFilter.has(task.status ?? "")) {
+                    continue;
+                }
+                if (requireExpired) {
+                    if (!task.dueDate) continue;
+                    const ts = new Date(task.dueDate).getTime();
+                    if (!Number.isFinite(ts) || ts >= now) continue;
+                }
             }
 
             // Tags (substring search on concatTags)
@@ -728,7 +782,13 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
             selectedMemberKeys
         );
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [useTM.allTasks, useTM.tableMilestoneFilterId, selectedMilestoneKeys, selectedMemberKeys]);
+    }, [
+        useTM.allTasks,
+        useTM.tableMilestoneFilterId,
+        selectedMilestoneKeys,
+        selectedMemberKeys,
+        outdatedMilestoneKey,
+    ]);
 
     // NOTE: there used to be a second `applyFilters` pass here, keyed on
     // `[isTaskUpdated]`. It was redundant and expensive.
