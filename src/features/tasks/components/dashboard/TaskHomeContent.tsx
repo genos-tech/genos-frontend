@@ -69,12 +69,7 @@ import {
     MAX_TASK_WEIGHT,
     weightBand,
 } from "../../utils/taskWeight";
-import {
-    nextTopWeightSort,
-    sortTopWeightRows,
-    TopWeightSort,
-    TopWeightSortField,
-} from "../../utils/topWeightSort";
+import { compareByUrgency, sortTopWeightRows, TopWeightSortMode } from "../../utils/topWeightSort";
 import { CopyableTaskIdText } from "../CopyableTaskId";
 import { TaskVelocitySection } from "./TaskVelocitySection";
 
@@ -105,6 +100,13 @@ type TaskHomeContentProps = {
     useUISM: UIStateManagementState;
     socket: Socket | null;
     onCloseTaskHome: () => void;
+};
+
+// Midnight-of-today in ms — the "overdue" cutoff for the urgency sorts.
+const startOfTodayMs = (): number => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d.getTime();
 };
 
 const sprintBucketOf = (s: Sprint, todayIso: string): "past" | "current" | "upcoming" => {
@@ -229,14 +231,10 @@ export const TaskHomeContent = ({
     // priority → due-date rule for users who prefer a deadline-first view.
     const [upNextSort, setUpNextSort] = useState<"weight" | "urgency">("weight");
     // How the "Top by Weight" shortlist is ordered (not which tasks are in
-    // it — see TopWeightSortField).
-    const [topWeightSort, setTopWeightSort] = useState<TopWeightSort>({
-        field: "weight",
-        dir: "desc",
-    });
-
-    const handleTopWeightSort = (field: TopWeightSortField) =>
-        setTopWeightSort((prev) => nextTopWeightSort(prev, field));
+    // it — the shortlist is always the heaviest tasks). Mirrors the "Up Next"
+    // list's options: "weight" (default) reads heaviest → soonest due →
+    // status; "urgency" reuses Up Next's deadline-first rule.
+    const [topWeightSort, setTopWeightSort] = useState<TopWeightSortMode>("weight");
 
     useEffect(() => {
         if (usePM.currentProject?.projectId) {
@@ -674,10 +672,10 @@ export const TaskHomeContent = ({
 
     // Display order for that shortlist. Deliberately a SECOND pass over the
     // already-sliced top 10: the panel always shows the heaviest tasks, and
-    // this only decides how they're read (by deadline, by status). Sorting
+    // this only decides how they're read (by weight, or by urgency). Sorting
     // before the slice would silently turn it into a different panel.
     const topByWeightRows = useMemo(
-        () => sortTopWeightRows(topByWeight, topWeightSort),
+        () => sortTopWeightRows(topByWeight, topWeightSort, startOfTodayMs()),
         [topByWeight, topWeightSort]
     );
 
@@ -767,38 +765,12 @@ export const TaskHomeContent = ({
     //   3. Then soonest due date (no due date last)
     //   4. Tie-break on most recently updated
     const myUpNext = useMemo(() => {
-        const todayMs = (() => {
-            const d = new Date();
-            d.setHours(0, 0, 0, 0);
-            return d.getTime();
-        })();
-        const priorityRank: Record<string, number> = {
-            Critical: 0,
-            High: 1,
-            Normal: 2,
-            Low: 3,
-            Minimal: 4,
-        };
+        const todayMs = startOfTodayMs();
         const active = myTasks.filter((t) => t.effectiveStatus !== "Closed");
         // Deadline-first rule: overdue → priority → soonest due → recent.
-        const byUrgency = (a: EffectiveTask, b: EffectiveTask): number => {
-            const da = a.dueDate ? new Date(a.dueDate).getTime() : Infinity;
-            const db = b.dueDate ? new Date(b.dueDate).getTime() : Infinity;
-            const aOver = a.dueDate != null && da < todayMs;
-            const bOver = b.dueDate != null && db < todayMs;
-            if (aOver !== bOver) return aOver ? -1 : 1;
-            if (aOver && bOver) return da - db;
-
-            const pa = priorityRank[a.priority ?? ""] ?? 5;
-            const pb = priorityRank[b.priority ?? ""] ?? 5;
-            if (pa !== pb) return pa - pb;
-
-            if (da !== db) return da - db;
-
-            const ua = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
-            const ub = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
-            return ub - ua;
-        };
+        // Shared with the "Top by Weight" panel's "By urgency" mode.
+        const byUrgency = (a: EffectiveTask, b: EffectiveTask): number =>
+            compareByUrgency(a, b, todayMs);
         // Weight-first: highest Task Weight (priority × urgency) first, with
         // the deadline rule breaking ties so equal-weight rows stay stable.
         const byWeight = (a: EffectiveTask, b: EffectiveTask): number => {
@@ -3113,8 +3085,10 @@ export const TaskHomeContent = ({
                                                     </AppTooltip>
                                                 </Typography>
                                                 {/* Sort selector — reorders the
-                                                    shortlist; clicking the active
-                                                    chip flips the direction. */}
+                                                    shortlist. Same options as the
+                                                    "Up Next" list: order by Task
+                                                    Weight (default) or by the
+                                                    deadline rule. */}
                                                 <Stack
                                                     direction="row"
                                                     spacing={0.5}
@@ -3124,33 +3098,22 @@ export const TaskHomeContent = ({
                                                         [
                                                             {
                                                                 key: "weight" as const,
-                                                                label: t.tasks.table.columns
-                                                                    .weight,
+                                                                label: t.tasks.dashboard.upNext
+                                                                    .byWeight,
                                                             },
                                                             {
-                                                                key: "dueDate" as const,
-                                                                label: t.tasks.table.columns
-                                                                    .dueDate,
-                                                            },
-                                                            {
-                                                                key: "status" as const,
-                                                                label: t.tasks.table.columns
-                                                                    .status,
+                                                                key: "urgency" as const,
+                                                                label: t.tasks.dashboard.upNext
+                                                                    .byUrgency,
                                                             },
                                                         ] as const
                                                     ).map((opt) => {
-                                                        const active =
-                                                            topWeightSort.field === opt.key;
+                                                        const active = topWeightSort === opt.key;
                                                         return (
                                                             <Chip
                                                                 key={opt.key}
                                                                 size="sm"
-                                                                title={
-                                                                    active
-                                                                        ? t.tasks.dashboard
-                                                                              .topWeight.sortFlip
-                                                                        : undefined
-                                                                }
+                                                                variant={active ? "solid" : "soft"}
                                                                 sx={{
                                                                     cursor: "pointer",
                                                                     fontSize: "0.7rem",
@@ -3171,19 +3134,11 @@ export const TaskHomeContent = ({
                                                                               : "rgba(0,0,0,0.08)",
                                                                     },
                                                                 }}
-                                                                variant={active ? "solid" : "soft"}
                                                                 onClick={() =>
-                                                                    handleTopWeightSort(opt.key)
+                                                                    setTopWeightSort(opt.key)
                                                                 }
                                                             >
-                                                                {active
-                                                                    ? `${opt.label} ${
-                                                                          topWeightSort.dir ===
-                                                                          "asc"
-                                                                              ? "↑"
-                                                                              : "↓"
-                                                                      }`
-                                                                    : opt.label}
+                                                                {opt.label}
                                                             </Chip>
                                                         );
                                                     })}
