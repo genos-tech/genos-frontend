@@ -47,6 +47,7 @@ import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithSt
 import { ProjectAvatar } from "../../../../components/ui/avatars/ProjectAvatar";
 import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
 import { TaskHeaderStyles } from "../../../../components/ui/styles/commonStyle";
+import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
@@ -56,6 +57,7 @@ import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { fmt, getMessages, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TaskTableProps } from "../../../../types/tasks";
+import { loadTeamTasks } from "../../services/loadTeamTasks";
 import { SprintConfigDialog } from "../../sprint-milestone/components/SprintConfigDialog";
 import { SprintManagerDialog } from "../../sprint-milestone/components/SprintManagerDialog";
 import { SprintMilestonesSection } from "../../sprint-milestone/components/SprintMilestonesSection";
@@ -107,6 +109,93 @@ const startOfTodayMs = (): number => {
     const d = new Date();
     d.setHours(0, 0, 0, 0);
     return d.getTime();
+};
+
+// Roll a flat task list up into `EffectiveTask`s: drop Deleted tasks and
+// whole branches under a Deleted parent, and treat a sub-task of a Closed
+// parent as Closed itself. Shared by the current-project dashboard metrics
+// and the team-wide (all-projects) Team Capacity pass, so both apply the
+// exact same closed/deleted semantics. Iterates `taskById.values()` so any
+// duplicate rows collapse to one entry per id (latest wins).
+const deriveEffectiveTasks = (taskById: Map<string, TaskTableProps>): EffectiveTask[] => {
+    const result: EffectiveTask[] = [];
+    for (const t of taskById.values()) {
+        if (!t.id) continue;
+        if (t.status === "Deleted") continue;
+
+        const visited = new Set<string>();
+        let current: TaskTableProps | undefined = t;
+        let ancestorClosedDate: string | null = null;
+        let isInDeletedBranch = false;
+
+        while (current && current.id && !visited.has(current.id)) {
+            visited.add(current.id);
+            if (current.status === "Deleted") {
+                isInDeletedBranch = true;
+                break;
+            }
+            if (current.status === "Closed" && ancestorClosedDate === null) {
+                ancestorClosedDate = current.updatedAt;
+            }
+            if (!current.parentTaskId) break;
+            current = taskById.get(String(current.parentTaskId));
+        }
+
+        if (isInDeletedBranch) continue;
+
+        const effectiveStatus = ancestorClosedDate !== null ? "Closed" : t.status || "Open";
+        const effectiveCloseDate = t.status === "Closed" ? t.updatedAt : ancestorClosedDate;
+
+        result.push({ ...t, effectiveStatus, effectiveCloseDate });
+    }
+    return result;
+};
+
+// Per-assignee effort load, bucketed by due-window. Shared by the
+// current-project pass (which fixes the ROSTER) and the team-wide pass
+// (which supplies each member's cross-project numbers) so the two can't
+// diverge in how they count effort. Milestone-backing rows are excluded —
+// their child tasks already carry the effort — and Closed (rolled-up)
+// tasks don't count toward load.
+type CapacityEntry = {
+    id: string;
+    name: string;
+    imgPath: string | null;
+    buckets: Record<DueBucket, number>;
+    total: number;
+    nearTerm: number;
+    count: number;
+};
+
+const buildCapacityMap = (tasks: EffectiveTask[]): Map<string, CapacityEntry> => {
+    const map = new Map<string, CapacityEntry>();
+    for (const t of tasks) {
+        if (t.effectiveStatus === "Closed") continue;
+        if (t.isMilestone === true) continue;
+        const id = t.assigneeId || "__unassigned__";
+        const entry = map.get(id) || {
+            id,
+            name: t.assigneeName || "Unassigned",
+            imgPath: t.assigneeImgPath || null,
+            buckets: { overdue: 0, today: 0, week: 0, later: 0, none: 0 } as Record<
+                DueBucket,
+                number
+            >,
+            total: 0,
+            nearTerm: 0,
+            count: 0,
+        };
+        const pts = effortPoints(t.effortLevel);
+        const bucket = dueBucket(t.dueDate);
+        entry.buckets[bucket] += pts;
+        entry.total += pts;
+        entry.count += 1;
+        if (bucket === "overdue" || bucket === "today" || bucket === "week") {
+            entry.nearTerm += pts;
+        }
+        map.set(id, entry);
+    }
+    return map;
 };
 
 const sprintBucketOf = (s: Sprint, todayIso: string): "past" | "current" | "upcoming" => {
@@ -221,6 +310,7 @@ export const TaskHomeContent = ({
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const { t } = useTranslation();
+    const { accessToken } = useAuth();
     const headerStyles = isDark ? TaskHeaderStyles.dark : TaskHeaderStyles.light;
     const [sprintConfigOpen, setSprintConfigOpen] = useState(false);
     const [sprintManagerOpen, setSprintManagerOpen] = useState(false);
@@ -298,44 +388,44 @@ export const TaskHomeContent = ({
     // via socket-driven upserts upstream — collapse to one entry per id.
     // `taskById` is built with `Map.set`, so the latest row wins, which
     // matches what a user expects after an edit.
-    const effectiveTasks = useMemo<EffectiveTask[]>(() => {
-        const result: EffectiveTask[] = [];
-        for (const t of taskById.values()) {
-            if (!t.id) continue;
-            // Rule 1: ignore tasks that are themselves Deleted.
-            if (t.status === "Deleted") continue;
+    const effectiveTasks = useMemo<EffectiveTask[]>(
+        () => deriveEffectiveTasks(taskById),
+        [taskById]
+    );
 
-            // Walk ancestors (including self) to find the closest Closed and
-            // detect any Deleted ancestor.
-            const visited = new Set<string>();
-            let current: TaskTableProps | undefined = t;
-            let ancestorClosedDate: string | null = null;
-            let isInDeletedBranch = false;
+    // ── Team-wide tasks (all projects), for the Team Capacity section ──
+    // This dashboard is project-scoped, but a member's real load spans every
+    // project they're on. `getTeamTasks` returns the whole team's tasks
+    // (all projects) with effort/due/assignee, letting us sum a member's
+    // cross-project load while keeping the visible ROSTER project-scoped
+    // (see `teamCapacity`). Keyed on the team — the data isn't
+    // project-specific, and the dashboard remounts on navigation which
+    // refreshes it. Fails soft: an error (or the pre-load window) just
+    // leaves the capacity bars on this project's numbers.
+    const [teamWideTasks, setTeamWideTasks] = useState<TaskTableProps[]>([]);
+    useEffect(() => {
+        if (!myself.teamId || !accessToken) return;
+        let cancelled = false;
+        (async () => {
+            const rows: TaskTableProps[] = (await loadTeamTasks(myself, accessToken)) ?? [];
+            if (cancelled) return;
+            setTeamWideTasks(Array.isArray(rows) ? rows : []);
+        })();
+        return () => {
+            cancelled = true;
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [myself.teamId, accessToken]);
 
-            while (current && current.id && !visited.has(current.id)) {
-                visited.add(current.id);
-                if (current.status === "Deleted") {
-                    isInDeletedBranch = true;
-                    break;
-                }
-                if (current.status === "Closed" && ancestorClosedDate === null) {
-                    ancestorClosedDate = current.updatedAt;
-                }
-                if (!current.parentTaskId) break;
-                current = taskById.get(String(current.parentTaskId));
-            }
-
-            // Rule 4: also drop tasks whose ancestor is Deleted (orphan branch).
-            if (isInDeletedBranch) continue;
-
-            // Rule 2: parent Closed ⇒ child treated as Closed.
-            const effectiveStatus = ancestorClosedDate !== null ? "Closed" : t.status || "Open";
-            const effectiveCloseDate = t.status === "Closed" ? t.updatedAt : ancestorClosedDate;
-
-            result.push({ ...t, effectiveStatus, effectiveCloseDate });
+    // Same closed/deleted rollup as `effectiveTasks`, over the team-wide set.
+    const teamEffectiveTasks = useMemo<EffectiveTask[]>(() => {
+        if (teamWideTasks.length === 0) return [];
+        const map = new Map<string, TaskTableProps>();
+        for (const tk of teamWideTasks) {
+            if (tk.id) map.set(String(tk.id), tk);
         }
-        return result;
-    }, [taskById]);
+        return deriveEffectiveTasks(map);
+    }, [teamWideTasks]);
 
     const stats = useMemo(() => {
         const openCount = effectiveTasks.filter((t) => t.effectiveStatus === "Open").length;
@@ -603,48 +693,34 @@ export const TaskHomeContent = ({
     // one number into a load *curve* — busy today vs. later — which is what
     // answers "who can take on this task?".
     const teamCapacity = useMemo(() => {
-        type Buckets = Record<DueBucket, number>;
-        const zero = (): Buckets => ({ overdue: 0, today: 0, week: 0, later: 0, none: 0 });
-        const map = new Map<
-            string,
-            {
-                id: string;
-                name: string;
-                imgPath: string | null;
-                buckets: Buckets;
-                total: number;
-                nearTerm: number;
-                count: number;
-            }
-        >();
-        for (const t of effectiveTasks) {
-            if (t.effectiveStatus === "Closed") continue;
-            if (t.isMilestone === true) continue;
-            const id = t.assigneeId || "__unassigned__";
-            const entry = map.get(id) || {
-                id,
-                name: t.assigneeName || "Unassigned",
-                imgPath: t.assigneeImgPath || null,
-                buckets: zero(),
-                total: 0,
-                nearTerm: 0,
-                count: 0,
-            };
-            const pts = effortPoints(t.effortLevel);
-            const bucket = dueBucket(t.dueDate);
-            entry.buckets[bucket] += pts;
-            entry.total += pts;
-            entry.count += 1;
-            if (bucket === "overdue" || bucket === "today" || bucket === "week") {
-                entry.nearTerm += pts;
-            }
-            map.set(id, entry);
+        // Roster = members with active work in THIS project (unchanged): the
+        // dashboard is project-scoped, so we don't surface people who only
+        // have tasks on other projects.
+        const projectMap = buildCapacityMap(effectiveTasks);
+        // Cross-project load per member, from the team-wide task set.
+        const teamMap = buildCapacityMap(teamEffectiveTasks);
+
+        // For each roster member, swap in their WHOLE-TEAM numbers so a bar
+        // reflects their real load across every project — the point of the
+        // feature. `__unassigned__` stays project-scoped (it isn't a person,
+        // and summing unassigned tasks team-wide is meaningless). Missing
+        // from the team map (fetch not landed / failed) ⇒ keep the
+        // project-scoped fallback so bars are never blank.
+        for (const [id, entry] of projectMap) {
+            if (id === "__unassigned__") continue;
+            const teamEntry = teamMap.get(id);
+            if (!teamEntry) continue;
+            entry.buckets = teamEntry.buckets;
+            entry.total = teamEntry.total;
+            entry.nearTerm = teamEntry.nearTerm;
+            entry.count = teamEntry.count;
         }
+
         // Busiest-in-the-near-term first — that's the manager's triage order.
-        return Array.from(map.values()).sort(
+        return Array.from(projectMap.values()).sort(
             (a, b) => b.nearTerm - a.nearTerm || b.total - a.total
         );
-    }, [effectiveTasks]);
+    }, [effectiveTasks, teamEffectiveTasks]);
 
     // Largest single-member near-term load, so every capacity bar can be
     // drawn to a shared scale (a bar's fill = this member's load vs. the

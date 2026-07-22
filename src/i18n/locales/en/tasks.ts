@@ -700,7 +700,8 @@ export const tasks = {
         // due-window, answering "who's busy today vs. later".
         capacity: {
             title: "Team Capacity",
-            subtitle: "Active effort load by member — who's busy now vs. later",
+            subtitle:
+                "Active effort load by member, counted across every project — who's busy now vs. later",
             overdue: "Overdue",
             today: "Today",
             week: "This week",
@@ -712,7 +713,7 @@ export const tasks = {
             effortTooltip: "{label}: {points} effort pts",
             help: {
                 title: "What is Team Capacity?",
-                body: "How much active work each person is carrying, in effort points, split by when it's due. A longer, redder bar = busier right now — so pick someone with a shorter bar to take on new work.",
+                body: "How much active work each person is carrying, in effort points, split by when it's due. A longer, redder bar = busier right now — so pick someone with a shorter bar to take on new work. Each bar counts a member's load across ALL of their projects, not just this one — so someone can look busy here because they're loaded elsewhere. The people listed are still this project's members.",
             },
         },
         // Top by Weight: the active tasks with the highest
