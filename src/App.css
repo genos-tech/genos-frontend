@@ -1078,13 +1078,23 @@ div[data-floating-ui-focusable] {
       so portal'd nodes anywhere in the document inherit it.
    2. `.bn-root` overrides BlockNote's own default rule (same
       specificity but ours loads later in the bundle).
-   3. The `!important z-index: 1400` selectors below beat the inline
+   3. The `!important z-index` selectors below beat the inline
       `calc(…)` style on the actual floating wrappers, so we don't
-      depend on the variable making it through the cascade. */
+      depend on the variable making it through the cascade.
+
+   The value must clear the HIGHEST overlay that can host a BlockNote
+   editor. BlockNote portals this floating UI to `document.body` (via
+   `editor.portalElement`), so it competes at body level with those
+   overlays rather than being nested inside them. UrlLinkModal previews
+   go up to 13200 (a Spotlight citation preview — see App.tsx), so 1400
+   left every "/", ":", "@", "#" menu and the toolbars rendering BEHIND
+   the modal ("the emoji picker won't open" bug). 13300 sits just above
+   that ceiling and well below the session-superseded overlay (20000)
+   and the app header (100000), which never host an editor. */
 :root,
 html,
 .bn-root {
-    --bn-ui-base-z-index: 1400 !important;
+    --bn-ui-base-z-index: 13300 !important;
 }
 
 .bn-side-menu,
@@ -1094,7 +1104,7 @@ html,
 .bn-table-handle,
 .bn-grid-suggestion-menu,
 .bn-floating-toolbar {
-    z-index: 1400 !important;
+    z-index: 13300 !important;
 }
 
 /* …and the counterpart the block above creates.
@@ -1103,9 +1113,9 @@ html,
    comment "⋯" menu — are Mantine popovers, and BlockNote's Mantine
    adapter passes them no `zIndex`, so they land on Mantine's default
    popover layer (300). Everything else here is positioned as
-   `calc(var(--bn-ui-base-z-index, 0) + <offset>)`, which the 1400 base
-   above lifts to 1400–1490 — the floating comment card itself is
-   offset 30, i.e. 1430. So the picker opened at 300, *behind* the very
+   `calc(var(--bn-ui-base-z-index, 0) + <offset>)`, which the 13300 base
+   above lifts to 13300–13390 — the floating comment card itself is
+   offset 30, i.e. 13330. So the picker opened at 300, *behind* the very
    comment it belongs to (they overlap: it drops out of the card's own
    toolbar). Both share BlockNote's body-level portal, so this is a
    plain within-portal ordering fight, not a portal-escape problem.
