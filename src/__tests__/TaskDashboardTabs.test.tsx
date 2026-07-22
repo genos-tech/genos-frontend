@@ -8,6 +8,17 @@ import { TaskDashboard } from "../features/tasks/components/dashboard/TaskDashbo
 import { UserProps } from "../types/admin";
 import { TaskTableProps } from "../types/tasks";
 
+// TaskHomeContent reads the auth token (for the team-wide capacity fetch);
+// stub it so the component mounts outside an AuthProvider. The team-wide
+// fetch itself is stubbed empty so the capacity section just falls back to
+// this project's numbers (all we assert here is the tabs + tag insights).
+vi.mock("../context/AuthContext", () => ({
+    useAuth: () => ({ accessToken: "test-token" }),
+}));
+vi.mock("../features/tasks/services/loadTeamTasks", () => ({
+    loadTeamTasks: vi.fn().mockResolvedValue([]),
+}));
+
 // Smoke test for the tabbed dashboard + Tag Insights. TaskHomeContent has no
 // prior test coverage; the tabs (Joy Tabs/TabList/Tab) and the tag-stats table
 // are the highest render-risk additions, so this mounts the real component with
