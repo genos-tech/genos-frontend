@@ -34,7 +34,7 @@ import { UIStateManagementState } from "../../../../hooks/common/useUIStateManag
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
-import { TaskTableProps } from "../../../../types/tasks";
+import { TagListProps, TaskTableProps } from "../../../../types/tasks";
 import { stripOwnerState } from "../../../../utils/joyAutocomplete";
 import { PrStatusCell } from "../../../integrations/components/PrStatusCell";
 import { formatTaskDisplayId } from "../../utils/taskDisplayId";
@@ -188,6 +188,8 @@ export type DraggableTaskRowProps = {
     mode: "light" | "dark" | undefined;
     myself: UserProps;
     teamMembers: UserProps[];
+    /** The focused project's tags — options for the inline tags-cell editor. */
+    projectTags: TagListProps[];
     onRowUpdate: (task: TaskTableProps) => Promise<TaskTableProps>;
     // Parent-owned debounced preview switch. Replaces the older
     // `onRowDoubleClick(taskId)` callback — the parent now coalesces
@@ -256,6 +258,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
         onRequestPreview,
         isSelected,
         isGhost = false,
+        projectTags,
         useTM,
         useTEM,
         useCM,
@@ -321,6 +324,12 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
     // Edit states for different fields
     const [editingField, setEditingField] = useState<string | null>(null);
     const [editValue, setEditValue] = useState<string>("");
+    // Tags is multi-value, so it needs its own array edit buffer (the shared
+    // `editValue` above is single-string). Committed once, on blur.
+    const [editTags, setEditTags] = useState<TagListProps[]>([]);
+    // Set on Escape so the blur that follows the editor unmounting doesn't
+    // commit the (discarded) selection.
+    const revertTagsRef = useRef(false);
 
     const handleStartEdit = (field: string, value: string) => {
         setEditingField(field);
@@ -344,6 +353,21 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
     const handleSelectChange = async (field: string, value: string) => {
         const updatedTask = { ...task, [field]: value };
         await onRowUpdate(updatedTask);
+    };
+
+    const handleStartEditTags = () => {
+        setEditingField("tags");
+        setEditTags(task.tags ?? []);
+    };
+
+    // Commit the accumulated tag selection once (on blur / Enter), not on
+    // every toggle. Recompute `concatTags` locally so the tag filter reacts
+    // immediately; `updateTaskFromTable` persists the same set via the task PUT.
+    const handleSaveTags = async () => {
+        const nextConcat =
+            editTags.length > 0 ? "/" + editTags.map((tg) => tg.tagName).join("/") + "/" : null;
+        setEditingField(null);
+        await onRowUpdate({ ...task, tags: editTags, concatTags: nextConcat });
     };
 
     const renderCellContent = (column: ColumnDef) => {
@@ -569,37 +593,175 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                 return <PrStatusCell accessToken={accessToken} taskId={task.id} />;
             }
 
-            case "tags":
+            case "tags": {
                 const tags = task.tags || [];
+                const tagAccent = mode === "dark" ? "#a78bfa" : "#7c3aed";
+                if (editingField === "tags") {
+                    return (
+                        // Stop mouse events reaching the row (drag / preview).
+                        <Box
+                            sx={{ width: "100%" }}
+                            onClick={(e) => e.stopPropagation()}
+                            onMouseDown={(e) => e.stopPropagation()}
+                        >
+                            <Autocomplete
+                                autoHighlight
+                                disableCloseOnSelect
+                                multiple
+                                openOnFocus
+                                getOptionLabel={(option: TagListProps) => option.tagName}
+                                isOptionEqualToValue={(option, value) =>
+                                    option.tagName === value?.tagName
+                                }
+                                options={projectTags}
+                                size="small"
+                                sx={{ width: "100%", minWidth: 160 }}
+                                value={editTags}
+                                onChange={(_, newValue) => setEditTags(newValue)}
+                                onBlur={() => {
+                                    if (revertTagsRef.current) {
+                                        revertTagsRef.current = false;
+                                        return;
+                                    }
+                                    handleSaveTags();
+                                }}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Escape") {
+                                        e.stopPropagation();
+                                        revertTagsRef.current = true;
+                                        handleCancelEdit();
+                                    }
+                                }}
+                                renderTags={(value, getTagProps) =>
+                                    value.map((tag, idx) => {
+                                        const { key, ...chipProps } = getTagProps({ index: idx });
+                                        return (
+                                            <Chip
+                                                key={key}
+                                                {...chipProps}
+                                                label={tag.tagName}
+                                                size="small"
+                                                sx={{
+                                                    height: 20,
+                                                    fontSize: "0.7rem",
+                                                    fontWeight: 600,
+                                                    color: mode === "dark" ? "white" : "black",
+                                                    borderColor: alpha(tag.tagColor, 0.6),
+                                                    backgroundColor: alpha(tag.tagColor, 0.12),
+                                                }}
+                                            />
+                                        );
+                                    })
+                                }
+                                PaperComponent={({ children, ...paperProps }) => (
+                                    <Paper
+                                        {...paperProps}
+                                        sx={{
+                                            backgroundColor:
+                                                mode === "dark" ? "#1a1a2e" : "#ffffff",
+                                            borderRadius: "10px",
+                                            border:
+                                                mode === "dark"
+                                                    ? "1px solid rgba(255, 255, 255, 0.1)"
+                                                    : "1px solid rgba(0, 0, 0, 0.08)",
+                                            boxShadow:
+                                                mode === "dark"
+                                                    ? "0 8px 32px rgba(0, 0, 0, 0.5)"
+                                                    : "0 8px 32px rgba(0, 0, 0, 0.12)",
+                                            mt: 0.5,
+                                        }}
+                                    >
+                                        {children}
+                                    </Paper>
+                                )}
+                                renderInput={(params) => (
+                                    <TextField
+                                        {...params}
+                                        autoFocus
+                                        placeholder={tags.length === 0 ? "Add tags…" : ""}
+                                        sx={{
+                                            "& .MuiOutlinedInput-root": {
+                                                borderRadius: "6px",
+                                                fontSize: "0.8rem",
+                                                padding: "2px 6px",
+                                                "&:hover fieldset": { borderColor: tagAccent },
+                                                "&.Mui-focused fieldset": {
+                                                    borderColor: tagAccent,
+                                                    borderWidth: "1.5px",
+                                                },
+                                            },
+                                        }}
+                                    />
+                                )}
+                            />
+                        </Box>
+                    );
+                }
+                // Read view: chips, click anywhere in the cell to edit.
                 return (
-                    <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
-                        {[...tags]
-                            .sort((a, b) => (a.tagName || "").localeCompare(b.tagName || ""))
-                            .map((tag, idx) => (
-                                <Chip
-                                    key={idx}
-                                    label={tag.tagName}
-                                    size="small"
-                                    variant="outlined"
-                                    sx={{
-                                        color: mode === "dark" ? "white" : "black",
-                                        fontWeight: 600,
-                                        borderRadius: "6px",
-                                        borderWidth: "2px",
-                                        borderColor: alpha(
-                                            tag.tagColor,
-                                            mode === "dark" ? 0.6 : 0.8
-                                        ),
-                                        fontSize: "0.7rem",
-                                        backgroundColor: alpha(
-                                            tag.tagColor,
-                                            mode === "dark" ? 0.1 : 0.05
-                                        ),
-                                    }}
-                                />
-                            ))}
+                    <Box
+                        sx={{
+                            display: "flex",
+                            gap: 0.5,
+                            flexWrap: "wrap",
+                            alignItems: "center",
+                            width: "100%",
+                            minHeight: 24,
+                            cursor: "pointer",
+                            borderRadius: "6px",
+                            px: 0.5,
+                            transition: "background-color 0.15s ease",
+                            "&:hover": {
+                                backgroundColor:
+                                    mode === "dark"
+                                        ? "rgba(255,255,255,0.06)"
+                                        : "rgba(0,0,0,0.04)",
+                            },
+                        }}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            handleStartEditTags();
+                        }}
+                    >
+                        {tags.length === 0 ? (
+                            <Typography
+                                sx={{
+                                    fontSize: "0.72rem",
+                                    color: mode === "dark" ? "#6b7280" : "#9ca3af",
+                                }}
+                            >
+                                + Add tags
+                            </Typography>
+                        ) : (
+                            [...tags]
+                                .sort((a, b) => (a.tagName || "").localeCompare(b.tagName || ""))
+                                .map((tag, idx) => (
+                                    <Chip
+                                        key={idx}
+                                        label={tag.tagName}
+                                        size="small"
+                                        variant="outlined"
+                                        sx={{
+                                            color: mode === "dark" ? "white" : "black",
+                                            fontWeight: 600,
+                                            borderRadius: "6px",
+                                            borderWidth: "2px",
+                                            borderColor: alpha(
+                                                tag.tagColor,
+                                                mode === "dark" ? 0.6 : 0.8
+                                            ),
+                                            fontSize: "0.7rem",
+                                            backgroundColor: alpha(
+                                                tag.tagColor,
+                                                mode === "dark" ? 0.1 : 0.05
+                                            ),
+                                        }}
+                                    />
+                                ))
+                        )}
                     </Box>
                 );
+            }
 
             case "title":
                 if (editingField === "title") {
@@ -1781,6 +1943,7 @@ export const draggableTaskRowPropsAreEqual = (
     prev.hasChildren === next.hasChildren &&
     prev.sprintNamesById === next.sprintNamesById &&
     prev.isSelected === next.isSelected &&
+    prev.projectTags === next.projectTags &&
     (prev.isGhost ?? false) === (next.isGhost ?? false);
 
 export const DraggableTaskRow = memo(DraggableTaskRowImpl, draggableTaskRowPropsAreEqual);

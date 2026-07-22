@@ -1000,6 +1000,20 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                 if ((prevRow?.assigneeId ?? null) !== (updatedRow.assigneeId ?? null)) {
                     patch.assigneeIds = updatedRow.assigneeId ? [updatedRow.assigneeId] : [];
                 }
+                // Tags is an ARRAY — compare by name-set, not identity, or the
+                // patch would always be "changed" and defeat the skip-guard
+                // below (churning tsUpdatedAt on every milestone row edit).
+                const prevTagNames = (prevRow?.tags ?? [])
+                    .map((tg) => tg.tagName)
+                    .sort()
+                    .join("|");
+                const nextTagNames = (updatedRow.tags ?? [])
+                    .map((tg) => tg.tagName)
+                    .sort()
+                    .join("|");
+                if (prevTagNames !== nextTagNames) {
+                    patch.tags = updatedRow.tags ?? [];
+                }
 
                 // Nothing actually changed beyond the bookkeeping id; skip
                 // the round-trip so we don't churn `tsUpdatedAt`.
@@ -1627,6 +1641,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                         expandedRows={expandedRows}
                                         mode={mode}
                                         myself={myself}
+                                        projectTags={quickAddProjectTags}
                                         quickAddFieldRules={quickAddFieldRules}
                                         quickAddParentId={quickAddParentId}
                                         quickAddProjectTags={quickAddProjectTags}
