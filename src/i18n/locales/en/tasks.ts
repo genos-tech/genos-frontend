@@ -627,6 +627,8 @@ export const tasks = {
         noMilestone: "No milestone",
         noSprint: "No sprint",
         sprintFallback: "Sprint",
+        showPastMilestones: "Show past milestones",
+        hidePastMilestones: "Hide past milestones",
     },
     memberFilter: {
         all: "All",

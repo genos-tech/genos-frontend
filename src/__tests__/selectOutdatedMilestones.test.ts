@@ -13,11 +13,21 @@ import { describe, expect, it } from "vitest";
 import type { Milestone, Sprint } from "../features/tasks/sprint-milestone/types";
 import {
     getOutdatedMilestoneIds,
+    groupMilestonesByYearAndSprint,
+    MILESTONE_SPRINT_UNKNOWN,
+    MILESTONE_YEAR_UNKNOWN,
     selectOutdatedMilestones,
 } from "../features/tasks/sprint-milestone/utils/sortMilestones";
 
 const sprint = (sprintId: number, status: Sprint["status"], isDeleted = false): Sprint =>
     ({ sprintId, status, isDeleted }) as unknown as Sprint;
+
+const datedSprint = (
+    sprintId: number,
+    name: string,
+    endDate: string,
+    status: Sprint["status"] = "archived"
+): Sprint => ({ sprintId, name, endDate, status, isDeleted: false }) as unknown as Sprint;
 
 const milestone = (
     milestoneId: number,
@@ -93,5 +103,60 @@ describe("getOutdatedMilestoneIds", () => {
             SPRINTS
         );
         expect([...ids].sort()).toEqual([10]);
+    });
+});
+
+describe("groupMilestonesByYearAndSprint", () => {
+    // Sprint A/B end in 2026, Sprint C in 2025.
+    const DATED_SPRINTS = [
+        datedSprint(1, "Sprint A", "2026-03-31"),
+        datedSprint(2, "Sprint B", "2026-06-30"),
+        datedSprint(3, "Sprint C", "2025-09-30", "completed"),
+    ];
+
+    it("builds a year → sprint → milestone tree, newest year and sprint first", () => {
+        const groups = groupMilestonesByYearAndSprint(
+            [
+                milestone(100, "Closed", 2), // 2026 / Sprint B
+                milestone(101, "Closed", 1), // 2026 / Sprint A
+                milestone(102, "Closed", 2), // 2026 / Sprint B
+                milestone(103, "Closed", 3), // 2025 / Sprint C
+            ],
+            DATED_SPRINTS
+        );
+
+        expect(groups.map((g) => g.year)).toEqual(["2026", "2025"]);
+
+        const y2026 = groups[0];
+        // Within a year, sprints order by end date descending (B ends after A).
+        expect(y2026.sprints.map((s) => s.sprintName)).toEqual(["Sprint B", "Sprint A"]);
+        // Milestones keep their incoming order within a sprint bucket.
+        expect(y2026.sprints[0].milestones.map((m) => m.milestoneId)).toEqual([100, 102]);
+        expect(y2026.sprints[1].milestones.map((m) => m.milestoneId)).toEqual([101]);
+
+        const y2025 = groups[1];
+        expect(y2025.sprints).toHaveLength(1);
+        expect(y2025.sprints[0].milestones.map((m) => m.milestoneId)).toEqual([103]);
+    });
+
+    it("falls back to the milestone's own due date when it has no sprint", () => {
+        const groups = groupMilestonesByYearAndSprint(
+            [milestone(200, "Closed", null, { dueDate: "2024-01-15" })],
+            DATED_SPRINTS
+        );
+        expect(groups.map((g) => g.year)).toEqual(["2024"]);
+        expect(groups[0].sprints[0].sprintId).toBeNull();
+        expect(groups[0].sprints[0].sprintName).toBe(MILESTONE_SPRINT_UNKNOWN);
+    });
+
+    it("puts undatable milestones in a trailing '—' bucket", () => {
+        const groups = groupMilestonesByYearAndSprint(
+            [
+                milestone(300, "Closed", null), // no sprint, no due date → unknown
+                milestone(301, "Closed", 2), // 2026
+            ],
+            DATED_SPRINTS
+        );
+        expect(groups.map((g) => g.year)).toEqual(["2026", MILESTONE_YEAR_UNKNOWN]);
     });
 });

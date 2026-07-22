@@ -168,3 +168,86 @@ export const selectOutdatedMilestones = (
  *  hide-set the task filter uses to drop outdated milestones and their tasks. */
 export const getOutdatedMilestoneIds = (milestones: Milestone[], sprints: Sprint[]): Set<number> =>
     new Set(selectOutdatedMilestones(milestones, sprints).map((m) => m.milestoneId));
+
+/** A sprint bucket of milestones inside a year bucket. */
+export type MilestoneSprintGroup = {
+    sprintId: number | null;
+    sprintName: string;
+    milestones: Milestone[];
+};
+
+/** A year bucket of sprint buckets — "2026" → [sprint-X, sprint-Y] → … */
+export type MilestoneYearGroup = { year: string; sprints: MilestoneSprintGroup[] };
+
+/** Fallback bucket labels for milestones with no resolvable date / sprint. */
+export const MILESTONE_YEAR_UNKNOWN = "—";
+export const MILESTONE_SPRINT_UNKNOWN = "—";
+
+/**
+ * Group milestones into a two-level year → sprint tree so a long history
+ * (e.g. 10 years × 100 milestones) doesn't render as one giant flat list —
+ * used by both the sidebar's "Past milestones" folder and the filter's
+ * expander, which render it as `<year>/<sprint>/<milestone>`.
+ *
+ * The year comes from the milestone's SPRINT end date (past milestones are
+ * always tied to an ended sprint), falling back to the milestone's own due
+ * date; undatable ones land in a trailing "—" year. Within a year, sprints
+ * are ordered most-recently-ended first (a null / unknown sprint sorts last).
+ * Milestones within a sprint keep their incoming (already
+ * `compareMilestones`-sorted) order.
+ */
+export const groupMilestonesByYearAndSprint = (
+    milestones: Milestone[],
+    sprints: Sprint[]
+): MilestoneYearGroup[] => {
+    const sprintById = new Map<number, Sprint>(sprints.map((s) => [s.sprintId, s]));
+    const yearOf = (m: Milestone): string => {
+        const raw =
+            (m.sprintId != null ? sprintById.get(m.sprintId)?.endDate : null) || m.dueDate || null;
+        if (!raw) return MILESTONE_YEAR_UNKNOWN;
+        const y = new Date(raw).getFullYear();
+        return Number.isFinite(y) ? String(y) : MILESTONE_YEAR_UNKNOWN;
+    };
+    const sprintEndTime = (sprintId: number | null): number => {
+        if (sprintId == null) return -Infinity; // undated sprint bucket sorts last
+        const end = sprintById.get(sprintId)?.endDate;
+        const time = end ? new Date(end).getTime() : NaN;
+        return Number.isFinite(time) ? time : -Infinity;
+    };
+
+    // year -> (sprint key -> milestones), preserving incoming milestone order.
+    const byYear = new Map<string, Map<string, Milestone[]>>();
+    for (const m of milestones) {
+        const year = yearOf(m);
+        const sprintKey = m.sprintId != null ? String(m.sprintId) : "none";
+        let sprintMap = byYear.get(year);
+        if (!sprintMap) {
+            sprintMap = new Map<string, Milestone[]>();
+            byYear.set(year, sprintMap);
+        }
+        const arr = sprintMap.get(sprintKey);
+        if (arr) arr.push(m);
+        else sprintMap.set(sprintKey, [m]);
+    }
+
+    return [...byYear.entries()]
+        .sort(([a], [b]) => {
+            if (a === MILESTONE_YEAR_UNKNOWN) return 1;
+            if (b === MILESTONE_YEAR_UNKNOWN) return -1;
+            return Number(b) - Number(a);
+        })
+        .map(([year, sprintMap]) => ({
+            year,
+            sprints: [...sprintMap.entries()]
+                .map(([key, ms]) => {
+                    const sprintId = key === "none" ? null : Number(key);
+                    const sprint = sprintId != null ? sprintById.get(sprintId) : undefined;
+                    return {
+                        sprintId,
+                        sprintName: sprint?.name || MILESTONE_SPRINT_UNKNOWN,
+                        milestones: ms,
+                    };
+                })
+                .sort((s1, s2) => sprintEndTime(s2.sprintId) - sprintEndTime(s1.sprintId)),
+        }));
+};
