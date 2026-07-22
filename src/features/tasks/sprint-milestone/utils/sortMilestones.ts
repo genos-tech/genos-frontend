@@ -127,3 +127,44 @@ export const selectVisibleMilestones = (
         })
         .sort(compareMilestones);
 };
+
+/**
+ * "Outdated" (past-sprint) milestones — the ones we hide from the board /
+ * table (and the member filter) and surface only through the sidebar's
+ * "Past milestones" folder.
+ *
+ * Definition is deliberately NARROW: a milestone is outdated iff it's
+ * **Closed AND tied to an ended (completed/archived) sprint**. This is a
+ * subset of what `selectVisibleMilestones` hides — it intentionally does
+ * NOT include `Deleted`/soft-deleted milestones, because this set gates
+ * TASK hiding (`getOutdatedMilestoneIds`) and a stray deleted milestone
+ * slipping in would make its tasks vanish with no way to reach them.
+ * Deleted milestones/tasks are already handled by the status/column logic.
+ *
+ * Sorted via `compareMilestones` so the sidebar folder needs no re-sort.
+ */
+export const selectOutdatedMilestones = (
+    milestones: Milestone[],
+    sprints: Sprint[]
+): Milestone[] => {
+    const endedSprintIds = new Set<number>(
+        sprints
+            .filter((s) => !s.isDeleted && ENDED_SPRINT_STATUSES.has(s.status))
+            .map((s) => s.sprintId)
+    );
+    return milestones
+        .filter(
+            (m) =>
+                !m.isDeleted &&
+                m.status !== "Deleted" &&
+                m.status === "Closed" &&
+                m.sprintId != null &&
+                endedSprintIds.has(m.sprintId)
+        )
+        .sort(compareMilestones);
+};
+
+/** Ids of the outdated milestones (see `selectOutdatedMilestones`) — the
+ *  hide-set the task filter uses to drop outdated milestones and their tasks. */
+export const getOutdatedMilestoneIds = (milestones: Milestone[], sprints: Sprint[]): Set<number> =>
+    new Set(selectOutdatedMilestones(milestones, sprints).map((m) => m.milestoneId));

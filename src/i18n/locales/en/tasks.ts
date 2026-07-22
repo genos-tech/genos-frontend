@@ -91,6 +91,7 @@ export const tasks = {
         footerTagline: "Stay productive",
         noProjectsAvailable: "No projects available",
         addMilestone: "Add milestone",
+        pastMilestones: "Past milestones",
         moveToNoSprint: "Move to: No sprint",
         moveToSprintPrefix: "Move to: ",
         sprintFallback: "Sprint",
