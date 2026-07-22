@@ -34,6 +34,7 @@ import type { TaskTableProps } from "../types/tasks";
 const TASK = { id: "42", title: "Some task", isMilestone: false } as unknown as TaskTableProps;
 const COLUMNS = [] as unknown as DraggableTaskRowProps["columns"];
 const TEAM_MEMBERS = [] as unknown as UserProps[];
+const PROJECT_TAGS = [] as unknown as DraggableTaskRowProps["projectTags"];
 const EXPANDED = new Set<string>();
 const SPRINT_NAMES = new Map<number, string>();
 const MYSELF = { userId: "u1" } as unknown as UserProps;
@@ -62,6 +63,7 @@ const baseProps = (over: Partial<DraggableTaskRowProps> = {}): DraggableTaskRowP
         hasChildren: false,
         sprintNamesById: SPRINT_NAMES,
         isSelected: false,
+        projectTags: PROJECT_TAGS,
         useTM: freshUseTM(),
         ...over,
     }) as unknown as DraggableTaskRowProps;
@@ -120,6 +122,16 @@ describe("draggableTaskRowPropsAreEqual — must-render (staleness guards)", () 
     it("re-renders when the task object itself changes", () => {
         const prev = baseProps();
         const next = baseProps({ task: { ...TASK, title: "Renamed" } as TaskTableProps });
+        expect(draggableTaskRowPropsAreEqual(prev, next)).toBe(false);
+    });
+
+    it("re-renders when the project's tag options change (inline tags editor)", () => {
+        const prev = baseProps({ projectTags: PROJECT_TAGS });
+        const next = baseProps({
+            projectTags: [
+                { tagName: "backend" },
+            ] as unknown as DraggableTaskRowProps["projectTags"],
+        });
         expect(draggableTaskRowPropsAreEqual(prev, next)).toBe(false);
     });
 

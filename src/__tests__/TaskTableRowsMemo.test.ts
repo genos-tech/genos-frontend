@@ -71,6 +71,7 @@ const baseProps = (over: Partial<TaskTableRowsProps> = {}): TaskTableRowsProps =
         mode: "light",
         myself: MYSELF,
         teamMembers: MEMBERS,
+        projectTags: TAGS,
         socket: null,
         quickAddParentId: null,
         quickAddFieldRules: null,
@@ -125,6 +126,13 @@ describe("taskTableRowsPropsAreEqual — must-render (staleness guards)", () => 
         // Toggling the Member filter (or a match set change) hands a new
         // `ghostIds` set — rows must re-render so ancestors dim/undim.
         const next = baseProps({ ghostIds: new Set(["1"]) });
+        expect(taskTableRowsPropsAreEqual(baseProps(), next)).toBe(false);
+    });
+
+    it("re-renders when the project's tag options change (inline tags editor)", () => {
+        const next = baseProps({
+            projectTags: [{ tagName: "backend" }] as unknown as TagListProps[],
+        });
         expect(taskTableRowsPropsAreEqual(baseProps(), next)).toBe(false);
     });
 

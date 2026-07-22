@@ -26,6 +26,8 @@ export type TaskTableRowsProps = {
     mode: "light" | "dark" | undefined;
     myself: UserProps;
     teamMembers: UserProps[];
+    /** The focused project's tags — options for the inline tags-cell editor. */
+    projectTags: TagListProps[];
     socket: Socket | null;
     /** Row id the inline quick-add draft is anchored beneath (null = closed). */
     quickAddParentId: string | null;
@@ -68,6 +70,7 @@ const TaskTableRowsImpl = (props: TaskTableRowsProps) => {
         mode,
         myself,
         teamMembers,
+        projectTags,
         socket,
         quickAddParentId,
         quickAddFieldRules,
@@ -102,6 +105,7 @@ const TaskTableRowsImpl = (props: TaskTableRowsProps) => {
                         isSelected={resolveIsSelected(task)}
                         mode={mode}
                         myself={myself}
+                        projectTags={projectTags}
                         setMyself={setMyself}
                         socket={socket}
                         sprintNamesById={sprintNamesById}
@@ -183,6 +187,7 @@ export const taskTableRowsPropsAreEqual = (
     prev.mode === next.mode &&
     prev.myself === next.myself &&
     prev.teamMembers === next.teamMembers &&
+    prev.projectTags === next.projectTags &&
     prev.socket === next.socket &&
     prev.quickAddParentId === next.quickAddParentId &&
     prev.quickAddFieldRules === next.quickAddFieldRules &&

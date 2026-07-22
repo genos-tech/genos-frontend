@@ -39,6 +39,16 @@ export const updateTaskFromTable = async (
             return updatedRow;
         }
 
+        // Tags are editable inline from the table too. The row carries the
+        // desired set; forward it (and recompute `concatTags` from it) so the
+        // PUT persists tags — `sendUpdatedSpecificTask` already sends
+        // `updatedTask.tags` — and the local/IDB row + the tag filter stay
+        // consistent. Falls back to the server's current tags for callers that
+        // don't touch them (status/assignee edits, the drag-reparent path).
+        const nextTags = updatedRow.tags ?? fullTask.tags ?? [];
+        const nextConcatTags =
+            nextTags.length > 0 ? "/" + nextTags.map((t) => t.tagName).join("/") + "/" : null;
+
         // Update the task with the new values from the table.
         // `parentTaskId` and `milestoneId` are forwarded so the
         // drag-to-reparent path in DraggableTaskTable can reuse this
@@ -68,6 +78,8 @@ export const updateTaskFromTable = async (
                 updatedRow.parentTaskId != null && updatedRow.parentTaskId !== ""
                     ? Number(updatedRow.parentTaskId)
                     : null,
+            tags: nextTags,
+            concatTags: nextConcatTags ?? undefined,
         };
 
         // Handle assignee update if it changed
@@ -99,6 +111,8 @@ export const updateTaskFromTable = async (
 
         return {
             ...updatedRow,
+            tags: nextTags,
+            concatTags: nextConcatTags,
             assigneeId: newAssignee?.userId || updatedRow.assigneeId,
             assigneeName: newAssignee?.userName || updatedRow.assigneeName,
             assigneeEmail: newAssignee?.userEmail || updatedRow.assigneeEmail,
