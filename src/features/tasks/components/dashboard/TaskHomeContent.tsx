@@ -899,7 +899,10 @@ export const TaskHomeContent = ({
     );
 
     // ── Assigned Milestones (current project, focus user) ──
-    // Ongoing milestones the FOCUS user is one of the assignees of.
+    // Ongoing milestones the FOCUS user is involved in — EITHER a milestone
+    // assignee OR the assignee of a task under the milestone. (A user often
+    // owns tasks inside a milestone without being one of the milestone's own
+    // assignees, and those milestones must still show up.)
     // Current-project scoped: milestones only load for the active project
     // (`useSM.projectMilestones` is keyed by project and populated on
     // project switch), so this reads that slice directly. "Ongoing" ==
@@ -911,14 +914,36 @@ export const TaskHomeContent = ({
         if (!projectId || focusUserId == null) return [];
         const all = useSM.projectMilestones[projectId] ?? [];
         const sprints = useSM.projectSprints[projectId] ?? [];
-        return selectVisibleMilestones(all, sprints).filter((m) =>
-            (m.assignees ?? []).some((a) => a.userId != null && String(a.userId) === focusUserId)
-        );
+
+        // Milestones the user has a task in. A task links to its milestone by
+        // `milestoneId`; a task in a milestone (incl. subtasks that may not
+        // carry `milestoneId`) has the milestone's backing task as its tree
+        // root, so `rootTaskId === milestone.taskId` catches those too.
+        const taskMilestoneIds = new Set<number>();
+        const taskRootIds = new Set<number>();
+        for (const t of focusTasks) {
+            if (t.isMilestone === true) continue;
+            if (t.milestoneId != null) taskMilestoneIds.add(Number(t.milestoneId));
+            const root =
+                t.rootTaskId != null ? Number(t.rootTaskId) : t.id != null ? Number(t.id) : null;
+            if (root != null) taskRootIds.add(root);
+        }
+
+        return selectVisibleMilestones(all, sprints).filter((m) => {
+            const isAssignee = (m.assignees ?? []).some(
+                (a) => a.userId != null && String(a.userId) === focusUserId
+            );
+            const hasTaskInIt =
+                taskMilestoneIds.has(m.milestoneId) ||
+                (m.taskId != null && taskRootIds.has(Number(m.taskId)));
+            return isAssignee || hasTaskInIt;
+        });
     }, [
         usePM.currentProject?.projectId,
         useSM.projectMilestones,
         useSM.projectSprints,
         focusUserId,
+        focusTasks,
     ]);
 
     // Milestone whose task graph is open (null = closed). Opened by clicking

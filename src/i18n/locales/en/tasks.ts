@@ -709,7 +709,7 @@ export const tasks = {
         // an assignee of, in the current project. Cards open the task graph.
         assignedMilestones: {
             title: "Assigned Milestones",
-            help: "Ongoing milestones in this project you're assigned to. Click a card to open its task graph — your own tasks and subtasks are highlighted.",
+            help: "Ongoing milestones in this project you're assigned to, or that have a task assigned to you. Click a card to open its task graph — your own tasks and subtasks are highlighted.",
             empty: "No ongoing milestones in this project are assigned to you.",
             // {closed}/{total} completed sub-tasks.
             progress: "{closed}/{total} done",
@@ -729,7 +729,7 @@ export const tasks = {
                 "Tasks assigned to this member in this project will show up here.",
             milestonesEmpty: "No ongoing milestones in this project are assigned to this member.",
             milestonesHelp:
-                "Ongoing milestones in this project this member is assigned to. Click a card to open its task graph — this member's tasks and subtasks are highlighted.",
+                "Ongoing milestones in this project this member is assigned to, or that have a task assigned to them. Click a card to open its task graph — this member's tasks and subtasks are highlighted.",
         },
         // Team Capacity: Σ effort of a member's active tasks, bucketed by
         // due-window, answering "who's busy today vs. later".
