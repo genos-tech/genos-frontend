@@ -627,6 +627,11 @@ export const tasks = {
         noSprint: "No sprint",
         sprintFallback: "Sprint",
     },
+    memberFilter: {
+        all: "All",
+        allMembers: "All members",
+        noAssignee: "No assignee",
+    },
 
     // Table-row interactions.
     table: {

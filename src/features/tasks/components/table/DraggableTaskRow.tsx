@@ -205,6 +205,11 @@ export type DraggableTaskRowProps = {
     // re-render all N rows — the table's share of the task-switch jank.
     // Mirrors the pattern SprintBoardCard already uses.
     isSelected: boolean;
+    // A "ghost" row: a non-matching ancestor the Member filter splices in so a
+    // matching subtask's dependency chain stays visible. Rendered dimmed and
+    // fully non-interactive (no preview open, no inline edit, no drag) — it's
+    // context, not a row the user acts on. Defaults to false everywhere else.
+    isGhost?: boolean;
     useTM: TaskManagementState;
     useTEM: TeamManagementState;
     useCM: ChatManagementState;
@@ -250,6 +255,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
         onRowUpdate,
         onRequestPreview,
         isSelected,
+        isGhost = false,
         useTM,
         useTEM,
         useCM,
@@ -306,6 +312,9 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
     // `onRequestPreview` so rapid clicks collapse into a single
     // TaskPreview fetch cascade instead of fanning out one per click.
     const openPreview = () => {
+        // Ghost rows are inert context — never open a preview from them.
+        // (Belt-and-suspenders: the row also carries `pointer-events: none`.)
+        if (isGhost) return;
         onRequestPreview(task);
     };
 
@@ -1438,7 +1447,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
         <Draggable
             draggableId={String(task.id)}
             index={index}
-            isDragDisabled={task.isMilestone === true}
+            isDragDisabled={task.isMilestone === true || isGhost}
         >
             {(provided, snapshot) => {
                 const showHoverBg = !snapshot.isDragging && !isSelected;
@@ -1496,6 +1505,15 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                         sx={{
                             position: "relative",
                             transition: "transform 150ms ease, opacity 150ms ease",
+                            // Ghost (Member-filter ancestor) rows are dimmed and
+                            // inert: no clicks reach the cells (preview / inline
+                            // edit), and the drag handle is already disabled via
+                            // `isDragDisabled`. They exist only to keep the
+                            // matching subtask's dependency chain legible.
+                            ...(isGhost && {
+                                opacity: 0.4,
+                                pointerEvents: "none",
+                            }),
                             ...(isCombineTarget && {
                                 zIndex: 2,
                                 animation: "combineTargetPulse 1.1s ease-in-out infinite",
@@ -1762,6 +1780,7 @@ export const draggableTaskRowPropsAreEqual = (
     prev.expandedRows === next.expandedRows &&
     prev.hasChildren === next.hasChildren &&
     prev.sprintNamesById === next.sprintNamesById &&
-    prev.isSelected === next.isSelected;
+    prev.isSelected === next.isSelected &&
+    (prev.isGhost ?? false) === (next.isGhost ?? false);
 
 export const DraggableTaskRow = memo(DraggableTaskRowImpl, draggableTaskRowPropsAreEqual);

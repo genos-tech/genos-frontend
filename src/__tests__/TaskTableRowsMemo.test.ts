@@ -31,6 +31,7 @@ import type { TagListProps, TaskTableProps } from "../types/tasks";
 const ROWS = [{ id: "1" }, { id: "2" }] as unknown as TaskTableProps[];
 const DEPTHS = new Map<string, number>();
 const CHILDREN = new Map<string, TaskTableProps[]>();
+const GHOSTS = new Set<string>();
 const COLUMNS = [] as unknown as TaskTableRowsProps["columns"];
 const EXPANDED = new Set<string>();
 const SPRINTS = new Map<number, string>();
@@ -63,6 +64,7 @@ const baseProps = (over: Partial<TaskTableRowsProps> = {}): TaskTableRowsProps =
         displayRows: ROWS,
         depthMap: DEPTHS,
         childrenByParent: CHILDREN,
+        ghostIds: GHOSTS,
         columns: COLUMNS,
         expandedRows: EXPANDED,
         sprintNamesById: SPRINTS,
@@ -116,6 +118,13 @@ describe("taskTableRowsPropsAreEqual — must-render (staleness guards)", () => 
 
     it("re-renders when the subtask index changes", () => {
         const next = baseProps({ childrenByParent: new Map([["1", []]]) });
+        expect(taskTableRowsPropsAreEqual(baseProps(), next)).toBe(false);
+    });
+
+    it("re-renders when the member-filter ghost set changes", () => {
+        // Toggling the Member filter (or a match set change) hands a new
+        // `ghostIds` set — rows must re-render so ancestors dim/undim.
+        const next = baseProps({ ghostIds: new Set(["1"]) });
         expect(taskTableRowsPropsAreEqual(baseProps(), next)).toBe(false);
     });
 

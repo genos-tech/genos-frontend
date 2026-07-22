@@ -29,6 +29,7 @@ import { createQuickTask } from "../../services/createQuickTask";
 import { emitTaskTouched } from "../../services/taskEvents";
 import { updateTaskFromTable } from "../../services/updateTaskFromTable";
 import { FilterProps } from "../../types/TaskTableTypes";
+import { deriveGhostAncestors } from "../../utils/ghostAncestors";
 import { sortTableTasks, SortTier } from "../../utils/sortTask";
 import { formatTaskDisplayId } from "../../utils/taskDisplayId";
 import { effortLevels, priorities, statuses } from "../../utils/taskMeta";
@@ -226,6 +227,14 @@ export const columns = defaultColumns;
 // table regardless of column-settings state.
 export const FIXED_LEADING_FIELDS: readonly string[] = ["__expand", "id"];
 
+// Stable empties for the member-filter "ghost ancestor" computation. Returned
+// (by reference) whenever the member filter is inactive, so `ghostInfo.ghostIds`
+// keeps a constant identity across `allTasks` churn — otherwise the memoized
+// `TaskTableRows` comparator would see a "changed" set and re-render the whole
+// row list on every task open (the exact cascade that memo exists to avoid).
+const EMPTY_GHOST_IDS: Set<string> = new Set();
+const EMPTY_GHOST_ROWS: TaskTableProps[] = [];
+
 // Sort helpers (rank maps, parseTs, fieldValue, nullTier, comparator
 // builder) live in `features/tasks/utils/sortTask.ts` and are shared
 // with the sprint board. See that module for the rationale on rank
@@ -403,6 +412,12 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
     // not run yet; treat as permissive so the table is usable on
     // first paint without flashing children in and out.
     const [visibleChildTaskIds, setVisibleChildTaskIds] = useState<Set<string> | null>(null);
+    // True while the Member filter is narrowed to specific members. When on,
+    // the table splices the (dimmed, non-interactive) ancestor chain of every
+    // matching subtask back into the tree so dependencies stay visible even
+    // though those ancestors aren't assigned to the filtered member. See
+    // `ghostInfo` / `displayRows` below.
+    const [isMemberFilterActive, setIsMemberFilterActive] = useState<boolean>(false);
     // Sort tiers are sourced from `useTaskSortPreferences` so they
     // stay in sync with the Settings modal selectors and persist
     // across reloads via localStorage. Default = `[{priority, desc}]`,
@@ -552,29 +567,82 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         return map;
     }, [useTM.allTasks]);
 
+    // Ghost-ancestor computation for the Member filter. When it's active,
+    // `currentDisplayingTasks` holds only the MATCHES (tasks/milestones
+    // assigned to the filtered member). A matching subtask whose parent
+    // ISN'T assigned to that member would otherwise vanish — its parent isn't
+    // a match, so the tree has nothing to hang it under. We walk each match
+    // up to its root, collecting every ancestor: ancestors that are NOT
+    // themselves matches become "ghosts" (rendered dimmed + non-interactive),
+    // and the full ancestor set is force-expanded so the match is visible.
+    const ghostInfo = useMemo(() => {
+        if (!isMemberFilterActive) {
+            return {
+                ghostIds: EMPTY_GHOST_IDS,
+                ancestorIds: EMPTY_GHOST_IDS,
+                ghostRoots: EMPTY_GHOST_ROWS,
+                ghostChildren: EMPTY_GHOST_ROWS,
+            };
+        }
+        return deriveGhostAncestors(currentDisplayingTasks, useTM.allTasks);
+    }, [isMemberFilterActive, currentDisplayingTasks, useTM.allTasks]);
+
+    // `childrenByParent` PLUS the ghost ancestors' own child-links, so a ghost
+    // intermediate appears under its (also-ghost) parent. Identical to
+    // `childrenByParent` whenever the member filter is inactive, so passing it
+    // everywhere keeps the non-filtered path byte-for-byte unchanged.
+    const childrenByParentEffective = useMemo(() => {
+        if (!isMemberFilterActive || ghostInfo.ghostChildren.length === 0) {
+            return childrenByParent;
+        }
+        const map = new Map(childrenByParent);
+        for (const ghost of ghostInfo.ghostChildren) {
+            const pid = String(ghost.parentTaskId);
+            const existing = map.get(pid) ?? [];
+            if (existing.some((c) => String(c.id) === String(ghost.id))) continue;
+            const merged = [...existing, ghost];
+            map.set(pid, merged.length > 1 ? sortTasks(merged) : merged);
+        }
+        return map;
+    }, [isMemberFilterActive, ghostInfo, childrenByParent, sortTasks]);
+
     const depthMap = useMemo(() => new Map<string, number>(), []);
 
     const displayRows = useMemo(() => {
         depthMap.clear();
         const result: TaskTableProps[] = [];
 
+        // Force ghost-ancestor chains open so the matching subtask beneath
+        // them actually renders — the user can't be asked to expand a row
+        // they can't click. No-op when the member filter is inactive.
+        const effectiveExpanded =
+            ghostInfo.ancestorIds.size > 0
+                ? new Set<string>([...expandedRows, ...ghostInfo.ancestorIds])
+                : expandedRows;
+
         const insertWithChildren = (task: TaskTableProps, depth: number) => {
             depthMap.set(String(task.id), depth);
             result.push(task);
-            if (task.id && expandedRows.has(String(task.id))) {
-                const children = childrenByParent.get(String(task.id)) || [];
+            if (task.id && effectiveExpanded.has(String(task.id))) {
+                const children = childrenByParentEffective.get(String(task.id)) || [];
                 for (const child of children) {
                     insertWithChildren(child, depth + 1);
                 }
             }
         };
 
-        const parentRows = currentDisplayingTasks.filter((t) => t.parentTaskId == null);
+        const rootMatches = currentDisplayingTasks.filter((t) => t.parentTaskId == null);
+        // Ghost roots are ancestors that happen to be top-level tasks; merge
+        // them with the matching roots and sort so their position is stable.
+        const parentRows =
+            ghostInfo.ghostRoots.length > 0
+                ? sortTasks([...rootMatches, ...ghostInfo.ghostRoots])
+                : rootMatches;
         for (const row of parentRows) {
             insertWithChildren(row, 0);
         }
         return result;
-    }, [currentDisplayingTasks, expandedRows, childrenByParent]);
+    }, [currentDisplayingTasks, expandedRows, childrenByParentEffective, ghostInfo, sortTasks]);
 
     // Close a pristine quick-add row whose anchor row left the visible
     // tree (filtered out, ancestor collapsed, project switch). A dirty
@@ -1382,7 +1450,9 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                 <TaskFilterMenu
                     predefinedTagsFilters={predefinedTagsFilters}
                     setCurrentDisplayingTasks={setCurrentDisplayingTasksSorted}
+                    setIsMemberFilterActive={setIsMemberFilterActive}
                     setVisibleChildTaskIds={setVisibleChildTaskIds}
+                    teamMembers={teamMembers}
                     useSM={useSM}
                     useTM={useTM}
                     onOpenColumnSettings={() => setIsColumnSettingsOpen(true)}
@@ -1549,7 +1619,8 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                     }}
                                 >
                                     <TaskTableRows
-                                        childrenByParent={childrenByParent}
+                                        childrenByParent={childrenByParentEffective}
+                                        ghostIds={ghostInfo.ghostIds}
                                         columns={columnsWithWidths}
                                         depthMap={depthMap}
                                         displayRows={displayRows}
