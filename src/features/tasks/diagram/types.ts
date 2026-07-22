@@ -31,6 +31,24 @@ export type TaskNodeData = {
      * `isRoot` and `isCurrentPreview` light up different cards.
      */
     isCurrentPreview: boolean;
+    /**
+     * True when this node's task is assigned to the "viewer" the diagram was
+     * opened to highlight (see `ModalTaskDiagram.highlightAssigneeId`). Opt-in:
+     * only the dashboard's "Assigned Milestones" section sets it, so every
+     * other diagram surface leaves it false. Drives a distinct focus color on
+     * the card so the viewer can spot their own tasks/subtasks in the tree.
+     */
+    isAssignedToViewer?: boolean;
+    /**
+     * True for a task assigned to someone OTHER than the highlight viewer
+     * (see `ModalTaskDiagram.highlightAssigneeId`). Opt-in like
+     * `isAssignedToViewer`: set only in the dashboard's highlight mode. Such
+     * nodes render dimmed + read-only — the same treatment as an external
+     * ghost — so the viewer's own tasks stand out and other members' work
+     * can't be edited from this focused view. Unassigned tasks and the root
+     * milestone are never dimmed.
+     */
+    isDimmed?: boolean;
     /** Mirrors `task.isMilestone`, surfaced for fast lookups during render. */
     isMilestone: boolean;
     /**

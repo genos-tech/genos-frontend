@@ -1,11 +1,11 @@
-import { Chip, ListItemContent } from "@mui/joy";
+import { ListItemContent } from "@mui/joy";
 import Autocomplete from "@mui/joy/Autocomplete";
 import AutocompleteOption from "@mui/joy/AutocompleteOption";
 import { useColorScheme } from "@mui/joy/styles";
-import { alpha } from "@mui/system";
 
 import { useTranslation } from "../../../../i18n";
 import { TagListProps, TaskProps } from "../../../../types/tasks";
+import { ProjectTagChip } from "../ProjectTagChip";
 
 type ACProjectTagsProps = {
     projectTags: TagListProps[];
@@ -42,41 +42,24 @@ export const ACProjectTags = (props: ACProjectTagsProps) => {
             renderOption={(props, option) => (
                 <AutocompleteOption {...props} key={`ac-project-tags-name-${option.tagName}`}>
                     <ListItemContent sx={{ fontSize: "sm" }}>
-                        <Chip
-                            key={`ac-project-tags-name-chip-${option.tagName}`}
-                            size="sm"
-                            variant="outlined"
-                            sx={{
-                                color: mode === "dark" ? "white" : "black",
-                                fontWeight: "bold",
-                                borderRadius: "5px",
-                                borderWidth: "3px",
-                                borderColor: alpha(option.tagColor, mode === "dark" ? 0.5 : 0.75),
-                            }}
-                        >
-                            {option.tagName}
-                        </Chip>
+                        <ProjectTagChip
+                            isDark={mode === "dark"}
+                            label={option.tagName}
+                            tagColor={option.tagColor}
+                        />
                     </ListItemContent>
                 </AutocompleteOption>
             )}
             renderTags={(tags, getTagProps) =>
                 tags.map((item, index) => {
-                    const { key, ...tagProps } = getTagProps({ index }); // spread the 'key'
+                    const { key } = getTagProps({ index });
                     return (
-                        <Chip
+                        <ProjectTagChip
                             key={`ac-project-tags-chip-${key}`}
-                            size="sm"
-                            variant="outlined"
-                            sx={{
-                                color: mode === "dark" ? "white" : "black",
-                                fontWeight: "bold",
-                                borderRadius: "5px",
-                                borderWidth: "3px",
-                                borderColor: alpha(item.tagColor, mode === "dark" ? 0.5 : 0.75),
-                            }}
-                        >
-                            {item.tagName}
-                        </Chip>
+                            isDark={mode === "dark"}
+                            label={item.tagName}
+                            tagColor={item.tagColor}
+                        />
                     );
                 })
             }

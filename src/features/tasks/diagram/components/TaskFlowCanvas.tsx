@@ -86,6 +86,11 @@ type Props = {
      *  which stays so the focal point doesn't vanish) and any edge
      *  touching one. Layout re-runs automatically when this flips. */
     hideClosed: boolean;
+    /** Optional. When set, task nodes whose `assigneeId` matches get a
+     *  distinct focus color so the viewer can spot their own tasks in the
+     *  tree. Opt-in — only the dashboard's "Assigned Milestones" section
+     *  passes it; every other diagram surface leaves nodes un-highlighted. */
+    highlightAssigneeId?: number | string | null;
 };
 
 // Hoisted so `computeOverview` and `buildNodesAndEdges` share one
@@ -304,7 +309,11 @@ const buildNodesAndEdges = (
         onDelete: (taskId: number) => void | Promise<void>;
         onOpenPreview: (taskId: number) => void;
     },
-    hideClosed: boolean
+    hideClosed: boolean,
+    // When set, task nodes whose assignee matches get the "assigned to
+    // viewer" focus color. Null (the default everywhere but the dashboard's
+    // Assigned Milestones section) leaves every node un-highlighted.
+    highlightAssigneeId: number | string | null
 ): { nodes: Node[]; edges: Edge[]; titleByTaskId: Map<number, string> } => {
     // Descendant counts power the milestone progress bar.
     const descendantCounts = computeDescendantCounts(graph.tasks);
@@ -337,6 +346,22 @@ const buildNodesAndEdges = (
             // accent treatment for them even if the id happens to match.
             isCurrentPreview:
                 !isExternal && currentPreviewTaskId != null && taskId === currentPreviewTaskId,
+            // Focus color for the viewer's own tasks — ghosts excluded (they
+            // live in another tree and can't be "your task here").
+            isAssignedToViewer:
+                !isExternal &&
+                highlightAssigneeId != null &&
+                task.assigneeId != null &&
+                String(task.assigneeId) === String(highlightAssigneeId),
+            // Other members' tasks in highlight mode → dimmed + read-only (like
+            // a ghost). Root milestone and unassigned tasks stay normal.
+            isDimmed:
+                !isExternal &&
+                taskId !== rootTaskId &&
+                !isMilestone &&
+                highlightAssigneeId != null &&
+                task.assigneeId != null &&
+                String(task.assigneeId) !== String(highlightAssigneeId),
             isMilestone,
             isExternal,
             openBlockerCount: openBlockerCountByTask.get(taskId) ?? 0,
@@ -487,6 +512,7 @@ const CanvasInner = ({
     onOverviewChange,
     onCloseModal,
     hideClosed,
+    highlightAssigneeId,
 }: Props) => {
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
@@ -874,7 +900,8 @@ const CanvasInner = ({
                     onDelete: (id) => handlerBagRef.current.onDelete(id),
                     onOpenPreview: (id) => handlerBagRef.current.onOpenPreview(id),
                 },
-                hideClosed
+                hideClosed,
+                highlightAssigneeId ?? null
             );
             const positioned = dagreLayout(rawNodes, rawEdges, "TB");
             setNodes(positioned);
@@ -889,7 +916,15 @@ const CanvasInner = ({
                 pendingFitRef.current = true;
             }
         },
-        [dagreLayout, rootTaskId, useSM, projectId, usePM.currentProject, hideClosed]
+        [
+            dagreLayout,
+            rootTaskId,
+            useSM,
+            projectId,
+            usePM.currentProject,
+            hideClosed,
+            highlightAssigneeId,
+        ]
     );
 
     // Perform a pending fit once React Flow has measured the nodes.

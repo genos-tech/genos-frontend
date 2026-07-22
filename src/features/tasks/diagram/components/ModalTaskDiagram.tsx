@@ -56,6 +56,11 @@ export type ModalTaskDiagramProps = {
      *  `diagramZIndex.ts`. Defaults to DIAGRAM_DEFAULT_Z_INDEX (9999),
      *  the page-hosted layer. */
     zIndex?: number;
+    /** Optional. When set, task nodes assigned to this user get a distinct
+     *  focus color so the viewer can spot their own tasks/subtasks in the
+     *  tree. Opt-in — only the dashboard's "Assigned Milestones" section
+     *  passes it; every other opener leaves the graph un-highlighted. */
+    highlightAssigneeId?: number | string | null;
 };
 
 // Full-screen diagram modal. Substantially larger than every other
@@ -81,6 +86,7 @@ export const ModalTaskDiagram = ({
     usePM,
     useSM,
     zIndex,
+    highlightAssigneeId,
 }: ModalTaskDiagramProps) => {
     const { mode } = useColorScheme();
     const { t } = useTranslation();
@@ -553,6 +559,7 @@ export const ModalTaskDiagram = ({
                         {open && (
                             <TaskFlowCanvas
                                 hideClosed={hideClosed}
+                                highlightAssigneeId={highlightAssigneeId}
                                 myself={myself}
                                 projectId={projectId}
                                 rootTaskId={rootTaskId}

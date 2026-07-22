@@ -16,6 +16,7 @@ import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TagListProps, TaskTableProps } from "../../../../types/tasks";
 import { CopyableTaskIdText } from "../CopyableTaskId";
+import { ProjectTagChip } from "../ProjectTagChip";
 
 // Priority colors
 const priorityColors: Record<string, { bg: string; text: string }> = {
@@ -270,22 +271,12 @@ const SprintBoardCardImpl = ({
                     {task.tags && task.tags.length > 0 && (
                         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 1 }}>
                             {task.tags.slice(0, 3).map((tag: TagListProps, idx: number) => (
-                                <span
+                                <ProjectTagChip
                                     key={idx}
-                                    style={{
-                                        display: "inline-flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        padding: "0 6px",
-                                        borderRadius: 8,
-                                        backgroundColor: tag.tagColor,
-                                        color: tag.tagTextColor,
-                                        fontSize: "0.6rem",
-                                        height: 16,
-                                    }}
-                                >
-                                    {tag.tagName}
-                                </span>
+                                    isDark={mode === "dark"}
+                                    label={tag.tagName}
+                                    tagColor={tag.tagColor}
+                                />
                             ))}
                             {task.tags.length > 3 && (
                                 <Typography

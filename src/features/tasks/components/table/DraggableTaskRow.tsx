@@ -40,6 +40,7 @@ import { PrStatusCell } from "../../../integrations/components/PrStatusCell";
 import { formatTaskDisplayId } from "../../utils/taskDisplayId";
 import { effortLevels, priorities } from "../../utils/taskMeta";
 import { computeTaskWeight, MAX_TASK_WEIGHT, weightBand } from "../../utils/taskWeight";
+import { ProjectTagChip } from "../ProjectTagChip";
 import { ColumnDef, LEADING_GUTTER_WIDTH, statusOptions } from "./DraggableTaskTable";
 
 // Depth-based background colors for nested task rows. Exported (along
@@ -736,26 +737,11 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                             [...tags]
                                 .sort((a, b) => (a.tagName || "").localeCompare(b.tagName || ""))
                                 .map((tag, idx) => (
-                                    <Chip
+                                    <ProjectTagChip
                                         key={idx}
+                                        isDark={mode === "dark"}
                                         label={tag.tagName}
-                                        size="small"
-                                        variant="outlined"
-                                        sx={{
-                                            color: mode === "dark" ? "white" : "black",
-                                            fontWeight: 600,
-                                            borderRadius: "6px",
-                                            borderWidth: "2px",
-                                            borderColor: alpha(
-                                                tag.tagColor,
-                                                mode === "dark" ? 0.6 : 0.8
-                                            ),
-                                            fontSize: "0.7rem",
-                                            backgroundColor: alpha(
-                                                tag.tagColor,
-                                                mode === "dark" ? 0.1 : 0.05
-                                            ),
-                                        }}
+                                        tagColor={tag.tagColor}
                                     />
                                 ))
                         )}

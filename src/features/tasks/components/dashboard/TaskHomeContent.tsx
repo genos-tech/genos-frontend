@@ -57,11 +57,13 @@ import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { fmt, getMessages, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TaskTableProps } from "../../../../types/tasks";
+import { LazyTaskDiagram } from "../../diagram/components/LazyTaskDiagram";
 import { loadTeamTasks } from "../../services/loadTeamTasks";
 import { SprintConfigDialog } from "../../sprint-milestone/components/SprintConfigDialog";
 import { SprintManagerDialog } from "../../sprint-milestone/components/SprintManagerDialog";
 import { SprintMilestonesSection } from "../../sprint-milestone/components/SprintMilestonesSection";
 import { Milestone, Sprint } from "../../sprint-milestone/types";
+import { selectVisibleMilestones } from "../../sprint-milestone/utils/sortMilestones";
 import { predefinedPriorityFilters } from "../../types/TaskTableTypes";
 import {
     computeTaskWeight,
@@ -73,6 +75,10 @@ import {
 } from "../../utils/taskWeight";
 import { compareByUrgency, sortTopWeightRows, TopWeightSortMode } from "../../utils/topWeightSort";
 import { CopyableTaskIdText } from "../CopyableTaskId";
+import { ProjectTagChip } from "../ProjectTagChip";
+import { SprintChip } from "../SprintChip";
+import { getStatusIcon, STATUS_COLORS, TaskStatusChip } from "../TaskStatusChip";
+import { AssignedMilestoneCard } from "./AssignedMilestoneCard";
 import { TaskVelocitySection } from "./TaskVelocitySection";
 
 // A task augmented with status/close-date rolled up from its parent chain.
@@ -204,14 +210,6 @@ const sprintBucketOf = (s: Sprint, todayIso: string): "past" | "current" | "upco
     return "upcoming";
 };
 
-const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
-    Open: { bg: "rgba(59,130,246,0.12)", text: "#3b82f6" },
-    WIP: { bg: "rgba(251,191,36,0.12)", text: "#fbbf24" },
-    Blocked: { bg: "rgba(244,63,94,0.12)", text: "#f43f5e" },
-    Pending: { bg: "rgba(251,146,60,0.12)", text: "#fb923c" },
-    Closed: { bg: "rgba(34,197,94,0.12)", text: "#22c55e" },
-};
-
 // Priority swatches sourced from `predefinedPriorityFilters` so the
 // dashboard chip stays in lockstep with the table's filter chips.
 // `light` / `dark` are kept separate even though the current palette
@@ -233,24 +231,6 @@ const STATUS_LABEL_KEYS: Record<string, "open" | "wip" | "blocked" | "pending" |
     Blocked: "blocked",
     Pending: "pending",
     Closed: "closed",
-};
-
-const getStatusIcon = (status: string, size = 14) => {
-    const sx = { fontSize: size };
-    switch (status) {
-        case "Open":
-            return <RadioButtonUncheckedRoundedIcon sx={sx} />;
-        case "WIP":
-            return <PlayCircleOutlineRoundedIcon sx={sx} />;
-        case "Blocked":
-            return <BlockRoundedIcon sx={sx} />;
-        case "Pending":
-            return <PendingActionsRoundedIcon sx={sx} />;
-        case "Closed":
-            return <CheckCircleOutlineRoundedIcon sx={sx} />;
-        default:
-            return <RadioButtonUncheckedRoundedIcon sx={sx} />;
-    }
 };
 
 const formatRelativeTime = (dateStr: string | null): string => {
@@ -860,6 +840,54 @@ export const TaskHomeContent = ({
             .sort(upNextSort === "weight" ? byWeight : byUrgency)
             .slice(0, 10);
     }, [myTasks, upNextSort]);
+
+    // ── Assigned Milestones (current project) ──
+    // Ongoing milestones the logged-in user is one of the assignees of.
+    // Current-project scoped: milestones only load for the active project
+    // (`useSM.projectMilestones` is keyed by project and populated on
+    // project switch), so this reads that slice directly. "Ongoing" ==
+    // `selectVisibleMilestones` (drops Deleted + Closed-in-ended-sprint) —
+    // the same visible-set definition the sidebar/filter use. The selector
+    // already sorts, so the cards render in due-date → status → title order.
+    const assignedMilestones = useMemo<Milestone[]>(() => {
+        const projectId = usePM.currentProject?.projectId;
+        if (!projectId) return [];
+        const all = useSM.projectMilestones[projectId] ?? [];
+        const sprints = useSM.projectSprints[projectId] ?? [];
+        return selectVisibleMilestones(all, sprints).filter((m) =>
+            (m.assignees ?? []).some(
+                (a) => a.userId != null && String(a.userId) === String(myself.userId)
+            )
+        );
+    }, [
+        usePM.currentProject?.projectId,
+        useSM.projectMilestones,
+        useSM.projectSprints,
+        myself.userId,
+    ]);
+
+    // Milestone whose task graph is open (null = closed). Opened by clicking
+    // a card in the Assigned Milestones section; the diagram highlights the
+    // viewer's own tasks via `highlightAssigneeId`.
+    const [diagramMilestone, setDiagramMilestone] = useState<Milestone | null>(null);
+
+    // sprintId → name for the CURRENT project. `allTasks` (and therefore
+    // `effectiveTasks`/`myTasks`/`topByWeight`) is current-project only, so
+    // this resolves the sprint chip on every dashboard row and on the
+    // Assigned Milestones cards. Unknown / null sprintId → SprintChip shows
+    // "No Sprint".
+    const sprintNameById = useMemo(() => {
+        const map = new Map<number, string>();
+        const projectId = usePM.currentProject?.projectId;
+        if (projectId != null) {
+            for (const s of useSM.projectSprints[projectId] ?? []) {
+                map.set(s.sprintId, s.name);
+            }
+        }
+        return map;
+    }, [usePM.currentProject?.projectId, useSM.projectSprints]);
+    const sprintNameFor = (sprintId: number | null | undefined): string | null =>
+        sprintId != null ? (sprintNameById.get(sprintId) ?? null) : null;
 
     // ── Handlers ──
     const projectCount = usePM.teamProjects?.length || 0;
@@ -2115,7 +2143,12 @@ export const TaskHomeContent = ({
                             {activeTab === "mytasks" && (
                                 <>
                                     {/* ════════ Section MY: My Tasks ════════ */}
-                                    {myStats.totalCount === 0 ? (
+                                    {/* Big "nothing assigned" card only when there's truly
+                                        nothing on this tab — no tasks AND no assigned
+                                        milestones. With milestones present it would sit,
+                                        contradictorily, above populated milestone cards. */}
+                                    {myStats.totalCount === 0 &&
+                                    assignedMilestones.length === 0 ? (
                                         <Card
                                             variant="soft"
                                             sx={{
@@ -2575,24 +2608,27 @@ export const TaskHomeContent = ({
                                                                                 {task.priority}
                                                                             </Chip>
                                                                         )}
-                                                                        <Chip
-                                                                            size="sm"
-                                                                            variant="soft"
-                                                                            startDecorator={getStatusIcon(
-                                                                                task.effectiveStatus,
-                                                                                12
-                                                                            )}
+                                                                        {/* Sprint — left of the status chip. Hidden on
+                                                                            xs to keep the compact row from wrapping. */}
+                                                                        <Box
                                                                             sx={{
-                                                                                fontSize:
-                                                                                    "0.65rem",
-                                                                                backgroundColor:
-                                                                                    sc.bg,
-                                                                                color: sc.text,
-                                                                                flexShrink: 0,
+                                                                                display: {
+                                                                                    xs: "none",
+                                                                                    sm: "inline-flex",
+                                                                                },
                                                                             }}
                                                                         >
-                                                                            {task.effectiveStatus}
-                                                                        </Chip>
+                                                                            <SprintChip
+                                                                                name={sprintNameFor(
+                                                                                    task.sprintId
+                                                                                )}
+                                                                            />
+                                                                        </Box>
+                                                                        <TaskStatusChip
+                                                                            status={
+                                                                                task.effectiveStatus
+                                                                            }
+                                                                        />
                                                                         <Typography
                                                                             level="body-xs"
                                                                             sx={{
@@ -2617,6 +2653,88 @@ export const TaskHomeContent = ({
                                                 )}
                                             </Box>
                                         </Stack>
+                                    )}
+
+                                    {/* ════════ Section: Assigned Milestones ════════ */}
+                                    {/* Suppressed only when the WHOLE tab is empty (no tasks
+                                        and no milestones) — the big card above already covers
+                                        that, so we don't stack a second "empty" line under it. */}
+                                    {(assignedMilestones.length > 0 || myStats.totalCount > 0) && (
+                                        <Box sx={{ mt: 3 }}>
+                                            <Stack
+                                                alignItems="center"
+                                                direction="row"
+                                                flexWrap="wrap"
+                                                spacing={1}
+                                                sx={{ mb: 1.5 }}
+                                            >
+                                                <FlagRoundedIcon
+                                                    sx={{ fontSize: 16, color: "#f97316" }}
+                                                />
+                                                <Typography
+                                                    level="body-sm"
+                                                    sx={{ color: textSecondary, fontWeight: 600 }}
+                                                >
+                                                    {t.tasks.dashboard.assignedMilestones.title}
+                                                </Typography>
+                                                <AppTooltip
+                                                    title={
+                                                        <Box sx={{ maxWidth: 260 }}>
+                                                            {
+                                                                t.tasks.dashboard
+                                                                    .assignedMilestones.help
+                                                            }
+                                                        </Box>
+                                                    }
+                                                >
+                                                    <HelpOutlineRoundedIcon
+                                                        sx={{
+                                                            fontSize: 15,
+                                                            color: textMuted,
+                                                            cursor: "help",
+                                                        }}
+                                                    />
+                                                </AppTooltip>
+                                                {assignedMilestones.length > 0 && (
+                                                    <Chip
+                                                        size="sm"
+                                                        sx={{ ml: { sm: "auto" } }}
+                                                        variant="soft"
+                                                    >
+                                                        {assignedMilestones.length}
+                                                    </Chip>
+                                                )}
+                                            </Stack>
+                                            {assignedMilestones.length === 0 ? (
+                                                <Typography
+                                                    level="body-sm"
+                                                    sx={{ color: textMuted }}
+                                                >
+                                                    {t.tasks.dashboard.assignedMilestones.empty}
+                                                </Typography>
+                                            ) : (
+                                                <Box
+                                                    sx={{
+                                                        display: "grid",
+                                                        gap: 1.5,
+                                                        gridTemplateColumns: {
+                                                            xs: "1fr",
+                                                            sm: "repeat(2, 1fr)",
+                                                            md: "repeat(3, 1fr)",
+                                                        },
+                                                    }}
+                                                >
+                                                    {assignedMilestones.map((m) => (
+                                                        <AssignedMilestoneCard
+                                                            key={m.milestoneId}
+                                                            milestone={m}
+                                                            sprintName={sprintNameFor(m.sprintId)}
+                                                            onOpen={setDiagramMilestone}
+                                                        />
+                                                    ))}
+                                                </Box>
+                                            )}
+                                        </Box>
                                     )}
                                 </>
                             )}
@@ -3356,6 +3474,21 @@ export const TaskHomeContent = ({
                                                                         {task.assigneeName}
                                                                     </Typography>
                                                                 )}
+                                                                {/* Sprint — left of the status chip. */}
+                                                                <Box
+                                                                    sx={{
+                                                                        display: {
+                                                                            xs: "none",
+                                                                            sm: "inline-flex",
+                                                                        },
+                                                                    }}
+                                                                >
+                                                                    <SprintChip
+                                                                        name={sprintNameFor(
+                                                                            task.sprintId
+                                                                        )}
+                                                                    />
+                                                                </Box>
                                                                 <Chip
                                                                     size="sm"
                                                                     variant="soft"
@@ -4266,33 +4399,13 @@ export const TaskHomeContent = ({
                                                                 return (
                                                                     <tr key={row.tagName}>
                                                                         <td>
-                                                                            <Chip
-                                                                                size="sm"
-                                                                                variant="soft"
-                                                                                startDecorator={
-                                                                                    <Box
-                                                                                        sx={{
-                                                                                            width: 8,
-                                                                                            height: 8,
-                                                                                            borderRadius:
-                                                                                                "50%",
-                                                                                            backgroundColor:
-                                                                                                row.tagColor,
-                                                                                        }}
-                                                                                    />
+                                                                            <ProjectTagChip
+                                                                                isDark={isDark}
+                                                                                label={row.tagName}
+                                                                                tagColor={
+                                                                                    row.tagColor
                                                                                 }
-                                                                                sx={{
-                                                                                    maxWidth:
-                                                                                        "100%",
-                                                                                    fontWeight: 600,
-                                                                                    backgroundColor: `${row.tagColor}1F`,
-                                                                                    color: row.tagColor,
-                                                                                    border: "1px solid",
-                                                                                    borderColor: `${row.tagColor}40`,
-                                                                                }}
-                                                                            >
-                                                                                {row.tagName}
-                                                                            </Chip>
+                                                                            />
                                                                         </td>
                                                                         <td
                                                                             style={{
@@ -4415,6 +4528,27 @@ export const TaskHomeContent = ({
                     )}
                 </Stack>
             </Box>
+
+            {/* Task graph for a clicked "Assigned Milestones" card. Lazy —
+                keeps @xyflow out of the dashboard chunk (only fetched on
+                first open). `highlightAssigneeId` paints the viewer's own
+                tasks/subtasks in the focus color. */}
+            {diagramMilestone != null &&
+                diagramMilestone.taskId != null &&
+                diagramMilestone.projectId != null && (
+                    <LazyTaskDiagram
+                        highlightAssigneeId={myself.userId}
+                        myself={myself}
+                        projectId={Number(diagramMilestone.projectId)}
+                        rootLabel={`${diagramMilestone.displayId ?? ""} · ${diagramMilestone.title}`}
+                        rootTaskId={Number(diagramMilestone.taskId)}
+                        usePM={usePM}
+                        useSM={useSM}
+                        useTM={useTM}
+                        open
+                        onClose={() => setDiagramMilestone(null)}
+                    />
+                )}
         </>
     );
 };
