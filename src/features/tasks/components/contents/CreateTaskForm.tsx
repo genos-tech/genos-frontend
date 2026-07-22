@@ -193,6 +193,23 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
         editorRef.current = editor;
     }, []);
 
+    // Read the editor's CURRENT document straight from the instance at submit
+    // time. `body` state lags: `BnTaskPreview` syncs it on a debounce (flushed
+    // only on blur), so clicking "Create Task" — and especially Cmd/Ctrl+Enter,
+    // which never blurs the editor — fired the create with the pre-edit body
+    // and the user's typing was silently dropped. Falls back to `body` if the
+    // editor isn't mounted yet (nothing typed can have been lost in that case).
+    const getLiveBody = useCallback((): PartialBlock[] => {
+        const editor = editorRef.current;
+        try {
+            const doc = editor?.document as PartialBlock[] | undefined;
+            if (doc && doc.length > 0) return doc;
+        } catch {
+            // Editor not ready / mid-teardown — fall through to state.
+        }
+        return body;
+    }, [body]);
+
     // Seed the editor's body with `blocks` and remember which picker option
     // is active. Shared by the built-in and custom-template paths.
     const applyBlocks = (value: string, blocks: PartialBlock[]) => {
@@ -896,7 +913,10 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
         const created = await useSM.createNewMilestone({
             projectId,
             title: taskTitle.trim(),
-            description: body,
+            // Live editor content, not the debounced `body` state — see
+            // `getLiveBody`. Cmd/Ctrl+Enter never blurs the editor, so the
+            // state can lag the last keystrokes at submit time.
+            description: getLiveBody(),
             // Thread origin (milestone created from a DM/GM/MDM thread).
             // Persisted on the backing task row server-side; drives the
             // milestone preview's "Check thread" button.
@@ -1634,6 +1654,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                             <TaskCreateFooter
                                 ref={taskFooterRef}
                                 accessToken={accessToken}
+                                getLatestBody={getLiveBody}
                                 isCreatingTask={isCreatingTask}
                                 isDirty={isDirty}
                                 missingRequiredFields={missingFieldLabels}
