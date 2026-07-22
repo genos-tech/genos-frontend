@@ -1,20 +1,14 @@
 import { useMemo, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
-import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
 import {
     Avatar,
     AvatarGroup,
     Box,
     Chip,
-    Dropdown,
-    IconButton,
     List,
     ListItem,
     ListItemContent,
-    Menu,
-    MenuButton,
-    MenuItem,
     Stack,
     Typography,
 } from "@mui/joy";
@@ -250,52 +244,6 @@ export const MilestonesListItem = ({
                                     </AvatarGroup>
                                 </Stack>
                             </ListItemContent>
-                            <Dropdown>
-                                <MenuButton
-                                    slots={{ root: IconButton }}
-                                    slotProps={{
-                                        root: {
-                                            variant: "plain",
-                                            size: "sm",
-                                            onClick: (e: any) => e.stopPropagation(),
-                                        },
-                                    }}
-                                >
-                                    <MoreHorizRoundedIcon sx={{ fontSize: 16 }} />
-                                </MenuButton>
-                                <Menu placement="bottom-end">
-                                    <MenuItem
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            useSM.moveMilestone(
-                                                m.milestoneId,
-                                                null,
-                                                currentProjectId
-                                            );
-                                        }}
-                                    >
-                                        {t.tasks.sidebar.moveToNoSprint}
-                                    </MenuItem>
-                                    {sprints
-                                        .filter((s) => s.sprintId !== m.sprintId)
-                                        .map((s) => (
-                                            <MenuItem
-                                                key={s.sprintId}
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    useSM.moveMilestone(
-                                                        m.milestoneId,
-                                                        s.sprintId,
-                                                        currentProjectId
-                                                    );
-                                                }}
-                                            >
-                                                {t.tasks.sidebar.moveToSprintPrefix}
-                                                {s.name}
-                                            </MenuItem>
-                                        ))}
-                                </Menu>
-                            </Dropdown>
                         </ListItemButton>
                     </ListItem>
                 );
