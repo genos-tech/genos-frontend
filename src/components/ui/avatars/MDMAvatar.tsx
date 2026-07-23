@@ -12,17 +12,26 @@ type MDMAvatarProps = {
     members?: MDMMemberProps[];
     size?: "sm" | "md";
     teamMemberProfiles?: Record<string, UserProps>;
+    /**
+     * Exact pixel size of each member circle, overriding the `size`
+     * preset. Same escape hatch `GMAvatar` / `ProjectAvatar` expose under
+     * this name, for dense surfaces (note-sidebar folder rows at 18px)
+     * where neither 28 nor 32 fits. The overlap step and the empty-state
+     * glyph scale with it so the stack keeps its proportions.
+     */
+    avatarSize?: number;
 };
 
 export const MDMAvatar: React.FC<MDMAvatarProps> = ({
     members,
     size = "sm",
     teamMemberProfiles,
+    avatarSize,
 }) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
 
-    const miniSize = size === "sm" ? 28 : 32;
+    const miniSize = avatarSize ?? (size === "sm" ? 28 : 32);
     const maxVisible = 3;
 
     if (!members || members.length === 0) {
@@ -30,6 +39,7 @@ export const MDMAvatar: React.FC<MDMAvatarProps> = ({
             <Avatar
                 size={size}
                 sx={{
+                    ...(avatarSize ? { width: avatarSize, height: avatarSize } : {}),
                     background: isDark
                         ? "linear-gradient(135deg, rgba(59, 130, 246, 0.3) 0%, rgba(37, 99, 235, 0.3) 100%)"
                         : "linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.2) 100%)",
@@ -39,7 +49,11 @@ export const MDMAvatar: React.FC<MDMAvatarProps> = ({
             >
                 <PeopleRoundedIcon
                     sx={{
-                        fontSize: size === "sm" ? 18 : 22,
+                        fontSize: avatarSize
+                            ? Math.round(avatarSize * 0.64)
+                            : size === "sm"
+                              ? 18
+                              : 22,
                         color: isDark ? "#60a5fa" : "#3b82f6",
                     }}
                 />

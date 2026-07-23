@@ -46,6 +46,7 @@ import { TaskInfoPill } from "../../../tasks/components/TaskInfoPill";
 import { ThreadAskModal } from "../../../threadAsk/ThreadAskModal";
 import { useThreadAsk } from "../../../threadAsk/useThreadAsk";
 import { useChatContext } from "../../context/ChatContext";
+import { forgetThread } from "../../utils/threadMemory";
 
 // chatType → URL segment for building a thread deep-link
 // (/workspace/chat/{path}/{chatId}/thread/{threadId}).
@@ -197,29 +198,49 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
         TSLastMessage: useCM.currentThreadChat?.TSLastMessage as string,
     };
 
-    // Mobile back: navigate up one URL segment from
-    // `/workspace/chat/:type/:id/thread/:tid` to `/workspace/chat/:type/:id`.
-    // useChatRouting picks up the missing thread segment and clears
-    // isThreadVisible, so the main chat pane takes over.
-    const handleMobileBack = () => {
-        const CHAT_TYPE_TO_PATH: Record<number, string> = {
-            1: "dm",
-            2: "gm",
-            3: "pm",
-            4: "mdm",
-            5: "activity",
-            6: "flagged",
-        };
+    const CHAT_TYPE_TO_PATH: Record<number, string> = {
+        1: "dm",
+        2: "gm",
+        3: "pm",
+        4: "mdm",
+        5: "activity",
+        6: "flagged",
+    };
+
+    /**
+     * Close the thread pane at the user's explicit request (the back
+     * arrow and the X — NOT the "open task preview" / "create task"
+     * buttons elsewhere, which merely swap panes).
+     *
+     * `forgetThread` is the difference that makes "reopen the thread when
+     * I come back to this chat, unless I closed it myself" work: the
+     * per-chat memory in `threadMemory` is what `useChatRouting` replays
+     * on chat switch, and only a deliberate close clears it.
+     *
+     * Dropping the `/thread/:tid` URL segment keeps the URL honest about
+     * what's on screen; without it a refresh would resurrect the thread
+     * the user just dismissed.
+     */
+    const closeThreadByUser = () => {
         const chatType = useCM.currentThreadChat?.chatType;
         const chatId = useCM.currentThreadChat?.chatId;
-        const typePath = chatType !== undefined ? CHAT_TYPE_TO_PATH[chatType] : undefined;
-        if (typePath && chatId !== undefined) {
-            navigate(`/workspace/chat/${typePath}/${chatId}`);
+        if (chatType !== undefined && chatId !== undefined) {
+            forgetThread(chatType, chatId);
+            const typePath = CHAT_TYPE_TO_PATH[chatType];
+            if (typePath) {
+                navigate(`/workspace/chat/${typePath}/${chatId}`);
+            }
         }
         useCM.setIsMainChatVisible(true);
         useCM.setIsThreadVisible(false);
         useCM.setCurrentThreadChat(dummyThreadChat);
     };
+
+    // Mobile back: navigate up one URL segment from
+    // `/workspace/chat/:type/:id/thread/:tid` to `/workspace/chat/:type/:id`.
+    // useChatRouting picks up the missing thread segment and clears
+    // isThreadVisible, so the main chat pane takes over.
+    const handleMobileBack = closeThreadByUser;
 
     const openTaskHandler = () => {
         useCM.setIsMainChatVisible(false);
@@ -702,11 +723,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                         size="sm"
                         variant="plain"
                         sx={dangerButtonStyle}
-                        onClick={() => {
-                            useCM.setIsMainChatVisible(true);
-                            useCM.setIsThreadVisible(false);
-                            useCM.setCurrentThreadChat(dummyThreadChat);
-                        }}
+                        onClick={closeThreadByUser}
                     >
                         <CloseRoundedIcon sx={{ fontSize: 18, color: "#c026a8" }} />
                     </IconButton>

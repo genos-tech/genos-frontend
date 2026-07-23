@@ -21,7 +21,12 @@ type Props = {
 // authority — anything that slips through still gets a 4xx.
 const NAME_RE = /^[a-z0-9_+-]{1,50}$/;
 const MAX_BYTES = 512 * 1024;
-const ALLOWED_EXT = /\.(png|jpe?g|gif|webp)$/i;
+// SVG is allowed: the API forces `Content-Disposition: attachment` on
+// every /media/ response, and emoji only ever render through `<img src>`
+// (CustomEmojiImg) — a non-scripted context — so a stored SVG has no
+// path to execute. The server additionally rejects SVG carrying scripts
+// or event handlers.
+const ALLOWED_EXT = /\.(png|jpe?g|gif|webp|svg)$/i;
 
 // Settings → Custom emoji. Grid of the team's emoji + upload form.
 // Any member can upload; only the uploader sees a delete button (the
@@ -60,7 +65,7 @@ export const TeamEmojiPanel = ({ myself, teamMemberProfiles }: Props) => {
             return;
         }
         if (!ALLOWED_EXT.test(picked.name)) {
-            setError("Use a .png, .jpg, .gif or .webp file.");
+            setError("Use a .png, .jpg, .gif, .webp or .svg file.");
             setFile(null);
             return;
         }
@@ -123,7 +128,7 @@ export const TeamEmojiPanel = ({ myself, teamMemberProfiles }: Props) => {
                     </Button>
                     <input
                         ref={fileInputRef}
-                        accept=".png,.jpg,.jpeg,.gif,.webp"
+                        accept=".png,.jpg,.jpeg,.gif,.webp,.svg"
                         style={{ display: "none" }}
                         type="file"
                         onChange={(e) => handlePickFile(e.target.files?.[0] ?? null)}

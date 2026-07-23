@@ -11,6 +11,7 @@ import { loadV3SpecificMessages, readV3CachedMessages } from "../services/loadV3
 import { loadV3SpecificThreadMessages } from "../services/loadV3SpecificThreadMessages";
 import { resolveV3MessageUuid, resolveV3ThreadRootUuid } from "../utils/channelIdResolvers";
 import { parseChatRoute } from "../utils/parseChatRoute";
+import { recallThread, rememberThread, threadUrlToken } from "../utils/threadMemory";
 
 // Chat type constants matching the existing codebase.
 // Keys sorted alphabetically per `sort-keys` (the integer values are
@@ -48,7 +49,10 @@ const buildChatPath = (
     // services still building integer-keyed URLs) keep working via
     // the template literal coercion.
     chatId?: string | number,
-    threadId?: number,
+    // Widened alongside `chatId`: a DM/GM/MDM thread segment is the
+    // thread-root UUID (string), PM keeps the numeric task id. See
+    // `parseChatRoute`, which parses the segment back type-awarely.
+    threadId?: number | string,
     messageId?: number,
     commentId?: number
 ): string => {
@@ -530,10 +534,9 @@ export const useChatRouting = ({ useCM, useTM, myself, isActiveRoute }: UseChatR
         const typePath = CHAT_TYPE_REVERSE_MAP[currentMainChat.chatType];
         if (!typePath) return;
 
-        const threadId =
-            currentThreadChat.chatType === 3 && currentThreadChat.taskId
-                ? currentThreadChat.taskId
-                : currentThreadChat.threadId;
+        // Shared with `threadMemory` so a remembered thread replays into
+        // exactly the path this effect would have produced.
+        const threadId = threadUrlToken(currentThreadChat);
 
         // Preserve the deep-link target already in the URL. `commentId`
         // wins over `messageId` because the user explicitly navigated
@@ -580,6 +583,98 @@ export const useChatRouting = ({ useCM, useTM, myself, isActiveRoute }: UseChatR
         useCM.currentThreadChat?.chatId,
         useCM.currentThreadChat?.threadId,
     ]);
+
+    // Remember which thread each chat had open.
+    //
+    // Recorded from the live pane rather than from the click handlers so
+    // every way of opening a thread (bubble reply, activity row, deep
+    // link, flagged list) is covered by one rule. The parent-chat guard
+    // drops the `dummyThreadChat` placeholder the close buttons install
+    // and any half-swapped state mid-chat-switch.
+    useEffect(() => {
+        const currentMainChat = useCM.currentMainChat;
+        const currentThreadChat = useCM.currentThreadChat;
+        if (!useCM.isThreadVisible || !currentThreadChat || !currentMainChat) return;
+        if (String(currentThreadChat.chatId) !== String(currentMainChat.chatId)) return;
+
+        const token = threadUrlToken(currentThreadChat);
+        if (token === undefined || token === null || token === "") return;
+        rememberThread(currentMainChat.chatType, currentMainChat.chatId, token);
+        // Primitive slices only, like the URL effects above: the chat and
+        // thread OBJECTS churn on every message patch, and re-running this
+        // on that would rewrite the same value dozens of times a minute.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [
+        useCM.isThreadVisible,
+        useCM.currentMainChat?.chatId,
+        useCM.currentMainChat?.chatType,
+        useCM.currentThreadChat?.chatId,
+        useCM.currentThreadChat?.threadId,
+        useCM.currentThreadChat?.taskId,
+    ]);
+
+    // Keep the thread pane tied to the chat pane.
+    //
+    // Keyed on `currentMainChat` identity, NOT on the URL: chat selection
+    // is state-first (`useChatListItem` calls `setCurrentMainChat` with no
+    // navigate), and the main-chat URL effect above deliberately bails
+    // while a thread is visible — so switching chats with a thread open
+    // changes no URL at all. A URL-keyed reconcile would never fire on
+    // the exact case this fixes.
+    //
+    // Two jobs, in order:
+    //   1. A thread belonging to a DIFFERENT chat must never remain on
+    //      screen beside this one. Closing it also releases the
+    //      `isThreadVisible` guard in the main-chat URL effect, which then
+    //      corrects the now-stale chat URL on its own.
+    //   2. Restore the thread this chat last had open, unless the user
+    //      closed it by hand (`forgetThread` at the close buttons).
+    useEffect(() => {
+        const currentMainChat = useCM.currentMainChat;
+        if (!currentMainChat || currentMainChat.chatId === "") return;
+
+        const currentThreadChat = useCM.currentThreadChat;
+        const threadBelongsHere =
+            currentThreadChat !== undefined &&
+            String(currentThreadChat.chatId) === String(currentMainChat.chatId);
+
+        if (useCM.isThreadVisible && threadBelongsHere) return;
+
+        // (1) Unconditional — never gated on the memory, or a foreign
+        // thread could stay visible when this chat has no remembered one.
+        if (currentThreadChat !== undefined && !threadBelongsHere) {
+            useCM.setIsThreadVisible(false);
+            useCM.setCurrentThreadChat(undefined);
+        }
+
+        // (2) An explicit target in the URL always outranks the memory:
+        // a `/thread/…` deep link is loaded by Effect 1, and a
+        // `/message/…` or `/comment/…` link would be clobbered by an
+        // auto-reopen. `window.location` (not the closure `pathname`),
+        // which can lag a render behind — same reasoning as the guards in
+        // the URL effects above.
+        const liveRoute = parseChatRoute(window.location.pathname);
+        if (
+            liveRoute.threadId !== undefined ||
+            liveRoute.messageId !== undefined ||
+            liveRoute.commentId !== undefined
+        ) {
+            return;
+        }
+
+        const remembered = recallThread(currentMainChat.chatType, currentMainChat.chatId);
+        if (remembered === undefined) return;
+
+        const typePath = CHAT_TYPE_REVERSE_MAP[currentMainChat.chatType];
+        if (!typePath) return;
+
+        const threadPath = buildChatPath(typePath, currentMainChat.chatId, remembered);
+        if (window.location.pathname === threadPath) return;
+        // `replace` — an automatic restore is not a navigation step the
+        // user took, so it must not add a Back-button entry.
+        navigate(threadPath, { replace: true });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [useCM.currentMainChat?.chatId, useCM.currentMainChat?.chatType]);
 
     // Keys sorted alphabetically (case-insensitive) per `sort-keys`.
     return {
