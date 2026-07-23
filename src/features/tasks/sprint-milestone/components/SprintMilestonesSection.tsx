@@ -194,6 +194,7 @@ export const SprintMilestonesSection = ({
                                                         socket={socket}
                                                         useCM={useCM}
                                                         useUISM={useUISM}
+                                                        showPulseDot={false}
                                                     />
                                                 ) : (
                                                     <Avatar

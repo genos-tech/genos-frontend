@@ -12,6 +12,33 @@ import { CopyableTaskIdText } from "../CopyableTaskId";
 import { SprintChip } from "../SprintChip";
 import { STATUS_COLORS, TaskStatusChip } from "../TaskStatusChip";
 
+/**
+ * Reserved width per metadata column.
+ *
+ * Kept as TIGHT as the widest label each column can hold, because any
+ * leftover inside a column shows up as gap between that chip and the next
+ * one. Sizing these generously is what makes a columned layout look
+ * padded, so they're deliberately near the content width:
+ *
+ *   priority  "Critical"          — 8 chars @ 0.65rem chip
+ *   status    "Blocked"/"Pending" — 7 chars @ 0.65rem chip + 12px icon
+ *   due       "Due tomorrow" / "Overdue 123d" — 12 chars @ body-xs
+ *   sprint    matches `SprintChip`'s own maxWidth, so a long sprint name
+ *             can never overflow its column
+ *
+ * Fixed pixels rather than a CSS grid: every row is its own <Card>, so
+ * grid columns can't be shared across rows. Locales with longer strings
+ * ellipsis inside their column rather than widening it, which keeps the
+ * list aligned at the cost of truncating an outlier.
+ */
+const SLOT_WIDTH = {
+    assignee: 24,
+    due: 80,
+    priority: 58,
+    sprint: 130,
+    status: 70,
+} as const;
+
 // Structural, so both `EffectiveTask` (dashboard) and any future caller
 // holding a plain task + a resolved status can pass one in without this
 // module depending on `TaskHomeContent`.
@@ -65,7 +92,42 @@ export const DashboardTaskRow = ({ task, sprintName, onClick }: DashboardTaskRow
 
     // Hidden on xs so the compact row can't wrap. Status and due date stay
     // visible at every width — they're the two the row is scanned for.
-    const hideOnXs = { display: { xs: "none", sm: "inline-flex" } } as const;
+    // `display: none` also releases the slot's reserved width, so the xs
+    // layout doesn't carry gaps for chips it isn't drawing.
+    const hideOnXs = { display: { xs: "none", sm: "flex" } } as const;
+
+    // A fixed-width column for one piece of metadata.
+    //
+    // The metadata cluster is pushed right by the title's `flex: 1`, so
+    // with naturally-sized chips the cluster's total width — and therefore
+    // where it starts — changed with every row's content ("Overdue 62d" vs
+    // "No due date", "Sprint 1 (2026)" vs "No Sprint", priority chip
+    // present vs absent). Down a list that reads as ragged, mismatched
+    // spacing between rows.
+    //
+    // Reserving a fixed column per slot lines the chips up vertically, and
+    // an absent chip holds its place instead of dragging its neighbours
+    // left. Each row is its own <Card>, so a real CSS grid can't align
+    // across rows — fixed widths are what works here.
+    //
+    // Contents are left-aligned so every column shares a hard left edge —
+    // the strongest "these are aligned" signal down a list. Centring would
+    // split each chip's leftover space onto both sides, which reads as a
+    // wide, uneven gap between neighbouring chips.
+    const slot = (width: number, hideOnNarrow: boolean, children: React.ReactNode) => (
+        <Box
+            sx={{
+                width,
+                flexShrink: 0,
+                alignItems: "center",
+                justifyContent: "flex-start",
+                overflow: "hidden",
+                ...(hideOnNarrow ? hideOnXs : { display: "flex" }),
+            }}
+        >
+            {children}
+        </Box>
+    );
 
     return (
         <Card
@@ -83,7 +145,7 @@ export const DashboardTaskRow = ({ task, sprintName, onClick }: DashboardTaskRow
             }}
             onClick={onClick}
         >
-            <Stack alignItems="center" direction="row" spacing={1.5}>
+            <Stack alignItems="center" direction="row" spacing={0.5}>
                 {/* Task Weight badge, leftmost — squared heat chip. */}
                 <AppTooltip
                     title={`${fmt(t.tasks.table.weightTooltip, {
@@ -138,41 +200,48 @@ export const DashboardTaskRow = ({ task, sprintName, onClick }: DashboardTaskRow
                     </Typography>
                 </Stack>
 
-                {task.priority && (
-                    <Chip
-                        size="sm"
-                        variant="soft"
-                        sx={{
-                            fontSize: "0.65rem",
-                            fontWeight: 600,
-                            backgroundColor: `${pColor}1F`,
-                            color: pColor,
-                            flexShrink: 0,
-                            ...hideOnXs,
-                        }}
-                    >
-                        {task.priority}
-                    </Chip>
+                {slot(
+                    SLOT_WIDTH.priority,
+                    true,
+                    task.priority ? (
+                        <Chip
+                            size="sm"
+                            variant="soft"
+                            sx={{
+                                fontSize: "0.65rem",
+                                fontWeight: 600,
+                                backgroundColor: `${pColor}1F`,
+                                color: pColor,
+                                maxWidth: "100%",
+                            }}
+                        >
+                            {task.priority}
+                        </Chip>
+                    ) : null
                 )}
 
-                <TaskStatusChip status={task.effectiveStatus} />
+                {slot(SLOT_WIDTH.status, false, <TaskStatusChip status={task.effectiveStatus} />)}
 
-                <Typography
-                    level="body-xs"
-                    sx={{
-                        color: dueColor,
-                        fontWeight: due.tone === "overdue" ? 700 : 500,
-                        flexShrink: 0,
-                        minWidth: 90,
-                        textAlign: "right",
-                    }}
-                >
-                    {due.text}
-                </Typography>
+                {slot(
+                    SLOT_WIDTH.due,
+                    false,
+                    <Typography
+                        level="body-xs"
+                        sx={{
+                            color: dueColor,
+                            fontWeight: due.tone === "overdue" ? 700 : 500,
+                            // Long translations of these labels (e.g. ar/hi)
+                            // ellipsis instead of blowing the fixed column.
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                        }}
+                    >
+                        {due.text}
+                    </Typography>
+                )}
 
-                <Box sx={hideOnXs}>
-                    <SprintChip name={sprintName} />
-                </Box>
+                {slot(SLOT_WIDTH.sprint, true, <SprintChip name={sprintName} />)}
 
                 {/* Assignee, rightmost. Deliberately NOT clickable: the row
                     itself opens the task, and a clickable avatar's own
@@ -180,9 +249,11 @@ export const DashboardTaskRow = ({ task, sprintName, onClick }: DashboardTaskRow
                     open the profile modal and navigate. The pulse dot is
                     off because its placement is calibrated for 26/32px and
                     floats outside the circle at this size. Unassigned rows
-                    render nothing rather than a "?" bubble. */}
-                {task.assigneeId && (
-                    <Box sx={{ ...hideOnXs, flexShrink: 0 }}>
+                    keep the empty slot so the columns stay aligned. */}
+                {slot(
+                    SLOT_WIDTH.assignee,
+                    true,
+                    task.assigneeId ? (
                         <AppTooltip title={task.assigneeName ?? ""}>
                             <Box sx={{ display: "flex" }}>
                                 <UserAvatar
@@ -193,7 +264,7 @@ export const DashboardTaskRow = ({ task, sprintName, onClick }: DashboardTaskRow
                                 />
                             </Box>
                         </AppTooltip>
-                    </Box>
+                    ) : null
                 )}
             </Stack>
         </Card>
