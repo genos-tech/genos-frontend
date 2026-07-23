@@ -76,12 +76,19 @@ type QuickAddTaskRowProps = {
     onDirtyChange: (dirty: boolean) => void;
 };
 
+// MUI renders Select menus and Autocomplete dropdowns in portals, outside
+// this row's DOM subtree. Both the click-outside dismissal and the
+// Enter-to-submit guard need to treat an interaction with one of those
+// popups as an interaction WITH the row, so they share one selector.
+const POPUP_SELECTOR =
+    '.MuiPopover-root, .MuiModal-root, .MuiAutocomplete-popper, [role="listbox"], [role="option"]';
+
 // Inline creation row rendered directly beneath a parent row in the
 // task table. Unlike DraggableTaskRow's cells there's no display/edit
 // toggle — the row is a transient form, so every field is a compact
-// always-editable input. Enter (or the ✓ button) creates and keeps the
-// row open with cleared fields for rapid consecutive adds; Escape
-// discards; clicking outside discards only while the title is empty.
+// always-editable input. Enter (from any field) or the ✓ button creates;
+// Escape discards; clicking outside discards only while the title is
+// empty.
 //
 // Deliberately NOT memoized and NOT a dnd Draggable: at most one
 // instance is mounted at a time, and it must not consume a Draggable
@@ -158,11 +165,7 @@ export const QuickAddTaskRow = (props: QuickAddTaskRowProps) => {
             // this row's DOM subtree. A click on a menu option (or the
             // Select's modal backdrop) is an interaction WITH the row,
             // not outside it — never treat those as a dismissal.
-            if (
-                target.closest(
-                    '.MuiPopover-root, .MuiModal-root, .MuiAutocomplete-popper, [role="listbox"], [role="option"]'
-                )
-            ) {
+            if (target.closest(POPUP_SELECTOR)) {
                 return;
             }
             if (isSubmittingRef.current) return;
@@ -385,12 +388,6 @@ export const QuickAddTaskRow = (props: QuickAddTaskRowProps) => {
                         }}
                         autoFocus
                         onChange={(e) => handleTitleChange(e.target.value)}
-                        onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                                e.preventDefault();
-                                void submit();
-                            }
-                        }}
                     />
                 );
 
@@ -733,6 +730,32 @@ export const QuickAddTaskRow = (props: QuickAddTaskRowProps) => {
                 if (e.key === "Escape" && !isSubmittingRef.current) {
                     e.preventDefault();
                     onClose();
+                    return;
+                }
+                // Enter creates the task from ANYWHERE in the row, not
+                // just the title box. Editing the assignee or the due
+                // date and pressing Enter used to do nothing, because the
+                // only handler lived on the title's TextField.
+                //
+                // The guard is the whole trick: Enter inside an open
+                // Select / Autocomplete means "take the highlighted
+                // option", so it must not also submit.
+                //   - An open Select moves focus into a portal — and
+                //     React portals bubble through the REACT tree, so
+                //     those keydowns DO reach this handler despite
+                //     sitting outside the row in the DOM. Same selector
+                //     list the click-outside guard above uses.
+                //   - An open Autocomplete keeps focus in its input, so
+                //     it is NOT in a portal; `aria-expanded` is what
+                //     catches it. MUI sets that attribute explicitly on
+                //     both widgets, so the check is safe for a closed
+                //     Select too (it reads "false", not absent).
+                if (e.key === "Enter") {
+                    const target = e.target as HTMLElement | null;
+                    if (target?.closest(POPUP_SELECTOR)) return;
+                    if (target?.getAttribute("aria-expanded") === "true") return;
+                    e.preventDefault();
+                    void submit();
                 }
             }}
         >

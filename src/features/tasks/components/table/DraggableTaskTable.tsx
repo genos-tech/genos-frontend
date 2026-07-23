@@ -32,6 +32,7 @@ import { FilterProps } from "../../types/TaskTableTypes";
 import { deriveGhostAncestors } from "../../utils/ghostAncestors";
 import { sortTableTasks, SortTier } from "../../utils/sortTask";
 import { formatTaskDisplayId } from "../../utils/taskDisplayId";
+import { taskFilterStorageKey } from "../../utils/taskFilterStorage";
 import { effortLevels, priorities, statuses } from "../../utils/taskMeta";
 import { QuickAddDraft } from "./QuickAddTaskRow";
 import { TaskFilterMenu } from "./TaskFilterMenu";
@@ -1469,6 +1470,10 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                     teamMembers={teamMembers}
                     useSM={useSM}
                     useTM={useTM}
+                    filterStorageKey={taskFilterStorageKey(
+                        "table",
+                        usePM.currentProject?.projectId
+                    )}
                     onOpenColumnSettings={() => setIsColumnSettingsOpen(true)}
                 />
                 <TaskTableColumnSettings
@@ -1634,11 +1639,11 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                 >
                                     <TaskTableRows
                                         childrenByParent={childrenByParentEffective}
-                                        ghostIds={ghostInfo.ghostIds}
                                         columns={columnsWithWidths}
                                         depthMap={depthMap}
                                         displayRows={displayRows}
                                         expandedRows={expandedRows}
+                                        ghostIds={ghostInfo.ghostIds}
                                         mode={mode}
                                         myself={myself}
                                         projectTags={quickAddProjectTags}
