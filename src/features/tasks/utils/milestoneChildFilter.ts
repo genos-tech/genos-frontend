@@ -55,8 +55,8 @@ export const selectMilestonesWithMatchingChildren = (
 };
 
 /**
- * Backing-task ids of the milestones the user picked in the milestone
- * filter — the only rows the table auto-expands.
+ * Backing-task ids of the milestones the user has narrowed to — the only
+ * rows the table auto-expands.
  *
  * Narrowing to a milestone is a statement about wanting to see THAT
  * milestone's work, so opening it saves a click that has no other
@@ -64,8 +64,10 @@ export const selectMilestonesWithMatchingChildren = (
  * on, say, a tag filter fires across the whole list at once and reorders
  * what the user is reading, which is disruptive rather than helpful.
  *
- * Returns empty when the milestone filter isn't narrowing (i.e. "All"),
- * so the default view is never force-opened.
+ * Callers pass the union of both ways to narrow — the filter menu's
+ * milestone dropdown and the sidebar's Milestones folder — since those
+ * are the same gesture from the user's side. Returns empty when neither
+ * is narrowing, so the default view is never force-opened.
  */
 export const selectMilestoneRowsForSelection = (
     allTasks: readonly TaskTableProps[],

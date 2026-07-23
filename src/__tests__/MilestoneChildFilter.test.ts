@@ -119,6 +119,14 @@ describe("selectMilestoneRowsForSelection", () => {
         expect(result.has("plain")).toBe(false);
     });
 
+    it("expands a sidebar-scoped milestone the dropdown didn't pick", () => {
+        // The sidebar's Milestones folder narrows via
+        // `useTM.tableMilestoneFilterId` rather than this dropdown. The
+        // caller unions the two before calling, because they're the same
+        // gesture — so a scope-only selection must still expand.
+        expect([...selectMilestoneRowsForSelection(tasks, new Set([2]))]).toEqual(["m2"]);
+    });
+
     it("ignores a selected id with no milestone row loaded", () => {
         expect(selectMilestoneRowsForSelection(tasks, new Set([999])).size).toBe(0);
     });

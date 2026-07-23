@@ -1277,10 +1277,18 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         // helpful. A milestone rescued by one of its tasks therefore
         // appears closed too — the chevron is the user's to press.
         if (setMilestoneAutoExpandIds) {
+            // BOTH ways of narrowing to a milestone count: this dropdown,
+            // and the sidebar's Milestones folder
+            // (`useTM.tableMilestoneFilterId`). They're the same gesture
+            // from the user's side — "show me this milestone's work" — so
+            // they get the same result. An empty set (nothing picked
+            // either way) leaves every row as the user left it.
+            const expandTargets = new Set<number>(milestoneIdSet);
+            if (milestoneScopeActive && scopeTarget != null) {
+                expandTargets.add(scopeTarget);
+            }
             setMilestoneAutoExpandIds(
-                milestoneFilterActive
-                    ? selectMilestoneRowsForSelection(useTM.allTasks, milestoneIdSet)
-                    : new Set<string>()
+                selectMilestoneRowsForSelection(useTM.allTasks, expandTargets)
             );
         }
 
