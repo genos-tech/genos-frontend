@@ -15,6 +15,8 @@ import { TeamManagementState } from "../../../../hooks/common/useTeamManagement"
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
 import { TodoCategoryProps, TodoItemProps } from "../../../../types/chat";
+import { extractYYYYMMDDHHMM } from "../../../../utils/dateUtils";
+import { formatCompletedTime } from "../../utils/todoCompletion";
 import { useLinkifyPaste } from "./titleLinks";
 import { TodoItemMoreMenu } from "./TodoItemMoreMenu";
 import { TodoNotesEditor } from "./TodoNotesEditor";
@@ -392,6 +394,27 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
                     >
                         {title ? renderTitleWithLinks(title, urlLinkModal) : "Untitled todo"}
                     </Box>
+                )}
+                {/* Completion time. `tsCompletedAt` was already persisted
+                    and serialized server-side but never surfaced, so
+                    "what did I finish today?" was unanswerable from the
+                    list — the whole reason the Completed Today tab
+                    exists. Time only: the owning group already states
+                    the date. */}
+                {item.isCompleted && item.tsCompletedAt && (
+                    <AppTooltip title={`Completed ${extractYYYYMMDDHHMM(item.tsCompletedAt)}`}>
+                        <Box
+                            sx={{
+                                flexShrink: 0,
+                                fontSize: "0.7rem",
+                                fontVariantNumeric: "tabular-nums",
+                                whiteSpace: "nowrap",
+                                color: isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.35)",
+                            }}
+                        >
+                            {formatCompletedTime(item.tsCompletedAt)}
+                        </Box>
+                    </AppTooltip>
                 )}
                 <AppTooltip title={notesExpanded ? "Collapse notes" : "Expand notes"}>
                     <IconButton

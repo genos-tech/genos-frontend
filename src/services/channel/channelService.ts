@@ -1944,6 +1944,36 @@ export class ChannelService {
         this._notify();
     }
 
+    // Load the user's pinned channels from the server.
+    //
+    // Pins are durable server-side, but until now nothing read them back:
+    // `pinChannel` POSTs, the server broadcasts `pin.added`, and the only
+    // other source was this session's IDB cache. So a fresh browser, a
+    // second device, or cleared site data showed NO pins even though the
+    // rows existed — the data was persistent but unreachable.
+    //
+    // Reconciles rather than merges: a pin removed on another device must
+    // disappear here too, and `_removePinByChannel` also clears the IDB
+    // row so the stale entry can't come back on the next cold start.
+    // `_upsertPin` persists each server pin, replacing any optimistic id.
+    async fetchPins(): Promise<void> {
+        let pins: Pin[];
+        try {
+            const res = await this.api().get<{ pins: Pin[] }>("/api/v3/pins/");
+            pins = res.data?.pins ?? [];
+        } catch {
+            // Offline / auth blip: keep whatever IDB hydration gave us
+            // rather than blanking the user's pins on a failed request.
+            return;
+        }
+        const serverChannelIds = new Set(pins.map((p) => p.channelId));
+        for (const channelId of [...this._pinByChannelId.keys()]) {
+            if (!serverChannelIds.has(channelId)) this._removePinByChannel(channelId);
+        }
+        for (const p of pins) this._upsertPin(p);
+        this._notify();
+    }
+
     // ---- Inbound pin / flag socket handlers -------------------------------
     //
     // `pin.added` / `pin.removed` / `flag.added` / `flag.removed` arrive

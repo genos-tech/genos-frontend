@@ -174,6 +174,18 @@ export const useTodoGroups = (myself: UserProps, accessToken: string | null) => 
                                 title: patch.title ?? i.title,
                                 notes: patch.notes !== undefined ? patch.notes : i.notes,
                                 isCompleted: patch.isCompleted ?? i.isCompleted,
+                                // Mirror the server's own rule
+                                // (`todo_views.py` stamps / clears
+                                // `ts_completed_at` on every toggle) so
+                                // the Completed Today view picks the item
+                                // up on the optimistic pass instead of
+                                // waiting for the response to land.
+                                tsCompletedAt:
+                                    patch.isCompleted === undefined
+                                        ? i.tsCompletedAt
+                                        : patch.isCompleted
+                                          ? (i.tsCompletedAt ?? new Date().toISOString())
+                                          : null,
                                 categoryId:
                                     patch.categoryId !== undefined
                                         ? patch.categoryId

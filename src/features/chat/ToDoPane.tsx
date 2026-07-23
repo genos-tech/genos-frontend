@@ -9,6 +9,11 @@ import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
 
 import { TodoGroupCard } from "./components/todo/TodoGroupCard";
+import {
+    countCompletedToday,
+    isCompletedToday,
+    selectCompletedToday,
+} from "./utils/todoCompletion";
 
 import { AppTooltip } from "../../components/ui/AppTooltip";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
@@ -98,19 +103,30 @@ export const ToDoPane = (props: ToDoPaneProps) => {
     const { groups, categories, incompleteCount, addItem, patchItem, removeItem, addCategory } =
         useTG;
 
-    // Apply the existing "Incomplete only" filter chip — now operates
-    // on groups: a group is hidden if all items are completed (when the
-    // chip is on). Groups with zero items still show so the user can
-    // add to today.
+    // "Completed Today" is a LOCAL third mode rather than a third value on
+    // `useCM.showOnlyInCompleteTodos`. That flag is shared state which
+    // `ModalTodoView` pre-seeds and the deep-link tab-flip below writes to,
+    // so widening it to a tri-state would ripple through both for a view
+    // neither of them needs. Instead it overrides the pair when on, and
+    // All / Incomplete keep driving the shared boolean exactly as before.
+    const [showCompletedToday, setShowCompletedToday] = useState(false);
+
+    // Apply the filter chips — these operate on groups: a group is hidden
+    // if it has no items left after filtering. On Incomplete, a group with
+    // zero items still shows so the user can add to today; on Completed
+    // Today it doesn't, because an "add" affordance is noise on a view
+    // whose whole job is reviewing what's already done.
     const displayGroups = useMemo(() => {
+        if (showCompletedToday) return selectCompletedToday(groups);
         if (!useCM.showOnlyInCompleteTodos) return groups;
         return groups
             .map((g) => ({ ...g, items: g.items.filter((i) => !i.isCompleted) }))
             .filter((g) => g.items.length > 0 || g.localDate === getLocalCurrentDate());
-    }, [groups, useCM.showOnlyInCompleteTodos]);
+    }, [groups, useCM.showOnlyInCompleteTodos, showCompletedToday]);
 
     const totalItems = useMemo(() => groups.reduce((a, g) => a + g.items.length, 0), [groups]);
     const completedItems = totalItems - incompleteCount;
+    const completedTodayCount = useMemo(() => countCompletedToday(groups), [groups]);
 
     const handleCreateTodayGroup = async () => {
         // Add an empty "Untitled todo" placeholder for today, opening the
@@ -169,6 +185,12 @@ export const ToDoPane = (props: ToDoPaneProps) => {
         tabFlipHandledRef.current = key;
         if (item.isCompleted && useCM.showOnlyInCompleteTodos) {
             useCM.setShowOnlyInCompleteTodos(false);
+        }
+        // The target may also be invisible on Completed Today (completed
+        // on an earlier day, or not completed at all) — drop back to All
+        // so the highlight is actually reachable.
+        if (showCompletedToday && !isCompletedToday(item)) {
+            setShowCompletedToday(false);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [focusTarget, groups, useCM.showOnlyInCompleteTodos]);
@@ -275,8 +297,15 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                         <Chip
                             size="sm"
                             sx={{ cursor: "pointer", borderRadius: "6px" }}
-                            variant={!useCM.showOnlyInCompleteTodos ? "solid" : "soft"}
-                            onClick={() => useCM.setShowOnlyInCompleteTodos(false)}
+                            variant={
+                                !showCompletedToday && !useCM.showOnlyInCompleteTodos
+                                    ? "solid"
+                                    : "soft"
+                            }
+                            onClick={() => {
+                                setShowCompletedToday(false);
+                                useCM.setShowOnlyInCompleteTodos(false);
+                            }}
                         >
                             All ({totalItems})
                         </Chip>
@@ -285,10 +314,27 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                             size="sm"
                             startDecorator={<FilterListRoundedIcon sx={{ fontSize: 14 }} />}
                             sx={{ cursor: "pointer", borderRadius: "6px" }}
-                            variant={useCM.showOnlyInCompleteTodos ? "solid" : "soft"}
-                            onClick={() => useCM.setShowOnlyInCompleteTodos(true)}
+                            variant={
+                                !showCompletedToday && useCM.showOnlyInCompleteTodos
+                                    ? "solid"
+                                    : "soft"
+                            }
+                            onClick={() => {
+                                setShowCompletedToday(false);
+                                useCM.setShowOnlyInCompleteTodos(true);
+                            }}
                         >
                             Incomplete ({incompleteCount})
+                        </Chip>
+                        <Chip
+                            color="success"
+                            size="sm"
+                            startDecorator={<TaskAltRoundedIcon sx={{ fontSize: 14 }} />}
+                            sx={{ cursor: "pointer", borderRadius: "6px" }}
+                            variant={showCompletedToday ? "solid" : "soft"}
+                            onClick={() => setShowCompletedToday(true)}
+                        >
+                            Completed Today ({completedTodayCount})
                         </Chip>
                     </Stack>
                 </Stack>
@@ -335,6 +381,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                 ) : (
                     <EmptyState
                         isDark={isDark}
+                        showCompletedToday={showCompletedToday}
                         showIncompleteOnly={useCM.showOnlyInCompleteTodos}
                         onAddTodayClick={handleCreateTodayGroup}
                     />
@@ -404,11 +451,17 @@ export const ToDoPane = (props: ToDoPaneProps) => {
 
 interface EmptyStateProps {
     showIncompleteOnly: boolean;
+    showCompletedToday: boolean;
     onAddTodayClick: () => void;
     isDark: boolean;
 }
 
-const EmptyState = ({ showIncompleteOnly, onAddTodayClick, isDark }: EmptyStateProps) => {
+const EmptyState = ({
+    showIncompleteOnly,
+    showCompletedToday,
+    onAddTodayClick,
+    isDark,
+}: EmptyStateProps) => {
     return (
         <Stack
             alignItems="center"
@@ -442,7 +495,11 @@ const EmptyState = ({ showIncompleteOnly, onAddTodayClick, isDark }: EmptyStateP
                         color: isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.55)",
                     }}
                 >
-                    {showIncompleteOnly ? "All caught up!" : "No todos yet"}
+                    {showCompletedToday
+                        ? "Nothing finished yet today"
+                        : showIncompleteOnly
+                          ? "All caught up!"
+                          : "No todos yet"}
                 </Typography>
                 <Typography
                     level="body-xs"
@@ -452,11 +509,13 @@ const EmptyState = ({ showIncompleteOnly, onAddTodayClick, isDark }: EmptyStateP
                         maxWidth: 240,
                     }}
                 >
-                    {showIncompleteOnly
-                        ? "No incomplete items in your visible groups."
-                        : "Create today's group to get started."}
+                    {showCompletedToday
+                        ? "Items you tick off today will show up here."
+                        : showIncompleteOnly
+                          ? "No incomplete items in your visible groups."
+                          : "Create today's group to get started."}
                 </Typography>
-                {!showIncompleteOnly && (
+                {!showIncompleteOnly && !showCompletedToday && (
                     <IconButton
                         size="sm"
                         sx={{ mt: 1, borderRadius: "8px", px: 1.5 }}
