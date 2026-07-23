@@ -975,7 +975,17 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
             // resolve the title and falls back to "Milestone: #<id>",
             // and the table/sprint board can't enumerate the milestone's
             // children either.
-            await usePM.loadProjectsAndTasks(projectId);
+            //
+            // `refreshProjectTasks`, NOT `loadProjectsAndTasks`. The latter
+            // only reloads tasks inside `if (currentProject === null ||
+            // currentProject.projectId !== loadedTeamProjects[i].projectId)`
+            // — every one of its `loadProjectTasks` calls sits in that
+            // branch. Creating a milestone in the project you are already
+            // viewing takes the equal path, so the reload never ran and the
+            // new milestone was missing from the table and the board until a
+            // page refresh. `refreshProjectTasks` reloads unconditionally,
+            // which is what this call always meant to do.
+            await usePM.refreshProjectTasks(projectId);
             // Mirror the "task created" socket fan-out for milestones so
             // teammates see a chat bubble in the project's PM channel
             // (and any open thread) when a new milestone lands. Wrapped

@@ -9,6 +9,16 @@ import { AttachmentFileProps, TaskProps } from "./tasks";
 export interface TaskEditState {
     uploadedFiles: AttachmentFileProps[];
     taskUpdated: boolean;
+    /**
+     * Monotonic counter bumped by every `setTaskUpdated(true)` call.
+     *
+     * `taskUpdated` alone is an unreliable save trigger: React coalesces a
+     * `setState(true)` while the value is ALREADY true, so an edit made
+     * while a previous save is still in flight produces no state change,
+     * no effect re-run, and is silently never sent. Effects that mean
+     * "a save was requested" must key on this instead of the boolean.
+     */
+    taskUpdateSeq: number;
     startIntervalUpdatingTask: boolean;
     taskStatusUpdated: boolean;
     taskBodyEdited: boolean;
