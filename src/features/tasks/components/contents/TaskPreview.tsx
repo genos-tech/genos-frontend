@@ -101,6 +101,44 @@ const SectionHeader = ({ children, isDark }: { children: React.ReactNode; isDark
     </Typography>
 );
 
+/**
+ * "Linked pull requests" — a rich card per PR URL found in the entity's
+ * Links list. Source of truth is `links`; there is no separate PR field.
+ *
+ * Shared by the task branch and `MilestonePreviewInner`. It lived inline
+ * in the task branch only, so a milestone's PRs never rendered even
+ * though milestones carry `links` exactly like tasks do (the create form
+ * forwards them, and `DynamicURLManager` edits them in both previews).
+ * Extracted rather than copied so the two panes can't drift again.
+ *
+ * Renders nothing — divider and header included — when no link parses as
+ * a PR URL, so a task with only non-GitHub links is unaffected.
+ */
+const LinkedPrSection = ({
+    links,
+    isDark,
+    accessToken,
+}: {
+    links: TaskProps["links"] | undefined;
+    isDark: boolean;
+    accessToken: string | null;
+}) => {
+    const { t } = useTranslation();
+    const prUrls = (links ?? []).map((l) => l.url).filter((u) => parsePrUrl(u) !== null);
+    if (prUrls.length === 0) return null;
+    return (
+        <>
+            <SectionDivider isDark={isDark} />
+            <SectionHeader isDark={isDark}>{t.tasks.linkedPr.header}</SectionHeader>
+            <Stack spacing={1}>
+                {prUrls.map((url) => (
+                    <LinkedPrCard key={url} accessToken={accessToken ?? ""} url={url} />
+                ))}
+            </Stack>
+        </>
+    );
+};
+
 type TaskPreviewProps = {
     socket: Socket | null;
     myself: UserProps;
@@ -903,32 +941,11 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                                 />
                             </Box>
 
-                            {(() => {
-                                // Auto-detect PR URLs in the task's Links list and
-                                // surface a rich card per PR. Source of truth is
-                                // `links`; no separate column / input.
-                                const prUrls = (taskEditState.tmpCurrentTaskContent.links ?? [])
-                                    .map((l) => l.url)
-                                    .filter((u) => parsePrUrl(u) !== null);
-                                if (prUrls.length === 0) return null;
-                                return (
-                                    <>
-                                        <SectionDivider isDark={isDark} />
-                                        <SectionHeader isDark={isDark}>
-                                            {t.tasks.linkedPr.header}
-                                        </SectionHeader>
-                                        <Stack spacing={1}>
-                                            {prUrls.map((url) => (
-                                                <LinkedPrCard
-                                                    key={url}
-                                                    accessToken={accessToken ?? ""}
-                                                    url={url}
-                                                />
-                                            ))}
-                                        </Stack>
-                                    </>
-                                );
-                            })()}
+                            <LinkedPrSection
+                                accessToken={accessToken}
+                                isDark={isDark}
+                                links={taskEditState.tmpCurrentTaskContent.links}
+                            />
 
                             <SectionDivider isDark={isDark} />
 
@@ -2449,6 +2466,14 @@ const MilestonePreviewInner = ({
                             }}
                         />
                     </Box>
+
+                    {/* Same slot as the task branch: after the metadata
+                        block, before the description. */}
+                    <LinkedPrSection
+                        accessToken={accessToken}
+                        isDark={isDark}
+                        links={taskContentLike.links}
+                    />
 
                     <SectionDivider isDark={isDark} />
 
