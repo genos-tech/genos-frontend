@@ -44,8 +44,10 @@ import { ProjectManagementState } from "../../hooks/common/useProjectManagement"
 import { SprintMilestoneManagementState } from "../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../i18n";
+import { UserProps } from "../../types/admin";
 import { AllChatProps } from "../../types/chat";
 import { useAvatarContext } from "../ui/avatars/AvatarContext";
+import { MDMAvatar } from "../ui/avatars/MDMAvatar";
 import { UserAvatar } from "../ui/avatars/UserAvatar";
 import { EmojiText } from "../ui/emoji/EmojiText";
 
@@ -162,15 +164,16 @@ const GroupOrProjectAvatar = ({
 const renderChatAvatar = (
     chatType: number,
     chat: AllChatProps | undefined,
-    isDark: boolean
+    isDark: boolean,
+    teamMemberProfiles: Record<string, UserProps>
 ): React.ReactNode => {
     // DM
     if (chatType === 1) {
         const partnerUserId = chat?.dmPartnerUser?.userId;
         return <UserAvatar clickable={false} size={AVATAR_SIZE} userId={partnerUserId} />;
     }
-    // GM or MDM
-    if (chatType === 2 || chatType === 4) {
+    // GM
+    if (chatType === 2) {
         return (
             <GroupOrProjectAvatar
                 fallback={<GroupsRoundedIcon sx={{ fontSize: AVATAR_FALLBACK_ICON_SIZE }} />}
@@ -178,6 +181,14 @@ const renderChatAvatar = (
                 src={buildMediaSrc(chat?.profileImagePath)}
             />
         );
+    }
+    // MDM — an MDM has no profile image of its own; its identity IS its
+    // members, so the sidebar (ChatListItemAvatar) renders the overlapping
+    // member stack. Use the same component with the same `size="sm"`
+    // layout here rather than a generic group glyph. `HistoryRow` widens
+    // its avatar slot for this case (the stack is wider than one avatar).
+    if (chatType === 4) {
+        return <MDMAvatar members={chat?.mdmMembers} teamMemberProfiles={teamMemberProfiles} />;
     }
     // PM
     if (chatType === 3) {
@@ -286,9 +297,13 @@ const HistoryRow = ({
         }}
         onClick={onClick}
     >
+        {/* `minWidth` rather than a fixed `width`: the MDM avatar is a
+            stack of up to three overlapping circles and is ~60px wide, so
+            a hard 32px box would clip it. Single-avatar rows still occupy
+            exactly AVATAR_SIZE, keeping the labels aligned. */}
         <Box
             sx={{
-                width: AVATAR_SIZE,
+                minWidth: AVATAR_SIZE,
                 height: AVATAR_SIZE,
                 display: "flex",
                 alignItems: "center",
@@ -462,7 +477,7 @@ export const HistoryModal = ({
     const { mode } = useColorScheme();
     const { t } = useTranslation();
     const isDark = mode === "dark";
-    const { myself } = useAvatarContext();
+    const { myself, teamMemberProfiles } = useAvatarContext();
     const { chatsEntries, tasksEntries, notesEntries, clear } = useHistory();
     const [tab, setTab] = useState<HistoryTabKey>("chats");
 
@@ -504,7 +519,7 @@ export const HistoryModal = ({
                 return (
                     <HistoryRow
                         key={`chat-${entry.chatType}-${entry.chatId}-${entry.messageId ?? 0}-${entry.openedAt}`}
-                        avatar={renderChatAvatar(entry.chatType, chat, isDark)}
+                        avatar={renderChatAvatar(entry.chatType, chat, isDark, teamMemberProfiles)}
                         isDark={isDark}
                         label={entry.label}
                         subtitle={subtitle}
@@ -526,7 +541,7 @@ export const HistoryModal = ({
                 return (
                     <HistoryRow
                         key={`thread-${entry.chatType}-${entry.chatId}-${entry.threadId}-${entry.messageId ?? 0}-${entry.openedAt}`}
-                        avatar={renderChatAvatar(entry.chatType, chat, isDark)}
+                        avatar={renderChatAvatar(entry.chatType, chat, isDark, teamMemberProfiles)}
                         isDark={isDark}
                         label={entry.label}
                         subtitle={subtitle}
@@ -608,7 +623,12 @@ export const HistoryModal = ({
                     entry.chatId != null
                 ) {
                     const chat = findChat(entry.chatType, entry.chatId);
-                    noteAvatar = renderChatAvatar(entry.chatType, chat, isDark);
+                    noteAvatar = renderChatAvatar(
+                        entry.chatType,
+                        chat,
+                        isDark,
+                        teamMemberProfiles
+                    );
                 } else {
                     noteAvatar = (
                         <GroupOrProjectAvatar

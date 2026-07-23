@@ -4,13 +4,24 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { TaskManagementState } from "../../../hooks/tasks/useTaskManagement";
+import { channelService } from "../../../services/channel/channelService";
 import { UserProps } from "../../../types/admin";
 import { ChatProps, MessageProps, ThreadMessageProps, ThreadProps } from "../../../types/chat";
 import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
 import { loadV3SpecificMessages, readV3CachedMessages } from "../services/loadV3SpecificMessages";
-import { loadV3SpecificThreadMessages } from "../services/loadV3SpecificThreadMessages";
+import {
+    loadV3SpecificThreadMessages,
+    readV3CachedThreadMessages,
+} from "../services/loadV3SpecificThreadMessages";
 import { resolveV3MessageUuid, resolveV3ThreadRootUuid } from "../utils/channelIdResolvers";
 import { parseChatRoute } from "../utils/parseChatRoute";
+import {
+    chatKey,
+    recallThread,
+    rememberThread,
+    resolveThreadRestore,
+    threadUrlToken,
+} from "../utils/threadMemory";
 
 // Chat type constants matching the existing codebase.
 // Keys sorted alphabetically per `sort-keys` (the integer values are
@@ -48,7 +59,10 @@ const buildChatPath = (
     // services still building integer-keyed URLs) keep working via
     // the template literal coercion.
     chatId?: string | number,
-    threadId?: number,
+    // Widened alongside `chatId`: a DM/GM/MDM thread segment is the
+    // thread-root UUID (string), PM keeps the numeric task id. See
+    // `parseChatRoute`, which parses the segment back type-awarely.
+    threadId?: number | string,
     messageId?: number,
     commentId?: number
 ): string => {
@@ -194,7 +208,14 @@ export const useChatRouting = ({ useCM, useTM, myself, isActiveRoute }: UseChatR
             threadId: number,
             paneType: number,
             messageId: number | undefined,
-            useTaskIdAsThreadId: boolean
+            useTaskIdAsThreadId: boolean,
+            // Set the thread synchronously instead of after the 250ms
+            // settle below. Used by the optimistic cache paint, which is
+            // the whole point of that path — deferring it would hand back
+            // the latency we just saved. The deferred default is kept for
+            // the network path, where the delay lets the pane mount
+            // before `moveToSpecificIndex` drives the scroll.
+            immediate = false
         ) => {
             if (!threadMessages || threadMessages.length === 0) {
                 useCM.setIsThreadVisible(true);
@@ -217,7 +238,7 @@ export const useChatRouting = ({ useCM, useTM, myself, isActiveRoute }: UseChatR
                 TSLastMessage: getLocalCurrentTimestamp(),
             };
 
-            setTimeout(() => {
+            const applyThread = () => {
                 // The thread indexMap + focus-highlight key on the bare v3
                 // reply UUID (`messageIdWithChatIdAndThreadId`). The old
                 // `${chatId}-${threadId}-${messageId}` composite embeds two
@@ -232,7 +253,13 @@ export const useChatRouting = ({ useCM, useTM, myself, isActiveRoute }: UseChatR
                         : undefined;
                 const newMoveIndex = (target ?? threadMessages[0])?.messageIdWithChatIdAndThreadId;
                 useCM.setCurrentThreadChat({ ...newThread, moveToSpecificIndex: newMoveIndex });
-            }, 250);
+            };
+
+            if (immediate) {
+                applyThread();
+            } else {
+                setTimeout(applyThread, 250);
+            }
 
             if (newThread.taskExist === true && firstMessage.taskId) {
                 useTM.setCurrentPreviewTaskId(firstMessage.taskId);
@@ -442,18 +469,75 @@ export const useChatRouting = ({ useCM, useTM, myself, isActiveRoute }: UseChatR
             const isPm = paneType === 3;
             const threadRootUuid = resolveV3ThreadRootUuid(chatId, threadId, isPm);
             if (threadRootUuid) {
-                loadV3SpecificThreadMessages(chatId, threadRootUuid, paneType).then(
-                    (threadMessages: ThreadMessageProps[]) => {
-                        processThreadMessages(
-                            threadMessages,
-                            chatId as unknown as number,
-                            threadRootUuid as unknown as number,
-                            paneType,
-                            messageId,
-                            isPm
-                        );
-                    }
+                // Paint the thread INSTANTLY from the in-memory snapshot
+                // (hydrated from IDB on boot, kept warm by every sync),
+                // exactly as the main-chat branch above already does.
+                //
+                // This branch used to go straight to
+                // `loadV3SpecificThreadMessages`, which AWAITS a full
+                // `syncChannel` round-trip before it returns anything —
+                // and then handed the result to the 250ms settle. Opening
+                // a thread from the URL (deep link, back/forward, and the
+                // per-chat restore) therefore cost ~1s + 250ms of blank
+                // pane even when every reply was already in IDB. Thread
+                // replies live in the same `messagesByChannel` slice as
+                // top-level rows, so a channel we've already opened has
+                // them cached.
+                //
+                // Revalidation is not lost: `useChatManagement`'s thread
+                // subscription is keyed on the open thread's channel +
+                // root and patches `currentThreadChat.messages` from the
+                // snapshot whenever the background sync lands.
+                const cachedThreadMessages = readV3CachedThreadMessages(
+                    chatId,
+                    threadRootUuid,
+                    paneType
                 );
+                const paintedFromCache = cachedThreadMessages.length > 0;
+                if (paintedFromCache) {
+                    processThreadMessages(
+                        cachedThreadMessages,
+                        chatId as unknown as number,
+                        threadRootUuid as unknown as number,
+                        paneType,
+                        messageId,
+                        isPm,
+                        // Synchronous only when there is no reply to
+                        // scroll to. With a `/message/:id` target the
+                        // 250ms settle is load-bearing — it lets the
+                        // pane mount before `moveToSpecificIndex` drives
+                        // the scroll — so deep links keep the old
+                        // timing exactly. They still skip the network,
+                        // which is the bulk of the wait.
+                        messageId === undefined
+                    );
+                    // Background revalidate only — the subscription above
+                    // applies whatever comes back, so there is nothing to
+                    // await and no second `processThreadMessages` (which
+                    // would re-set the thread 250ms later and re-run the
+                    // scroll for no reason).
+                    void channelService
+                        .syncChannel(chatId)
+                        .catch((error) =>
+                            console.error("[useChatRouting] thread revalidate failed:", error)
+                        );
+                } else {
+                    // Never-cached thread (first-ever open, or a cold boot
+                    // before hydration): nothing to paint, so take the
+                    // awaited path as before.
+                    loadV3SpecificThreadMessages(chatId, threadRootUuid, paneType).then(
+                        (threadMessages: ThreadMessageProps[]) => {
+                            processThreadMessages(
+                                threadMessages,
+                                chatId as unknown as number,
+                                threadRootUuid as unknown as number,
+                                paneType,
+                                messageId,
+                                isPm
+                            );
+                        }
+                    );
+                }
             }
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -530,10 +614,9 @@ export const useChatRouting = ({ useCM, useTM, myself, isActiveRoute }: UseChatR
         const typePath = CHAT_TYPE_REVERSE_MAP[currentMainChat.chatType];
         if (!typePath) return;
 
-        const threadId =
-            currentThreadChat.chatType === 3 && currentThreadChat.taskId
-                ? currentThreadChat.taskId
-                : currentThreadChat.threadId;
+        // Shared with `threadMemory` so a remembered thread replays into
+        // exactly the path this effect would have produced.
+        const threadId = threadUrlToken(currentThreadChat);
 
         // Preserve the deep-link target already in the URL. `commentId`
         // wins over `messageId` because the user explicitly navigated
@@ -580,6 +663,115 @@ export const useChatRouting = ({ useCM, useTM, myself, isActiveRoute }: UseChatR
         useCM.currentThreadChat?.chatId,
         useCM.currentThreadChat?.threadId,
     ]);
+
+    // Remember which thread each chat had open.
+    //
+    // Recorded from the live pane rather than from the click handlers so
+    // every way of opening a thread (bubble reply, activity row, deep
+    // link, flagged list) is covered by one rule. The parent-chat guard
+    // drops the `dummyThreadChat` placeholder the close buttons install
+    // and any half-swapped state mid-chat-switch.
+    useEffect(() => {
+        const currentMainChat = useCM.currentMainChat;
+        const currentThreadChat = useCM.currentThreadChat;
+        if (!useCM.isThreadVisible || !currentThreadChat || !currentMainChat) return;
+        if (String(currentThreadChat.chatId) !== String(currentMainChat.chatId)) return;
+
+        const token = threadUrlToken(currentThreadChat);
+        if (token === undefined || token === null || token === "") return;
+        rememberThread(currentMainChat.chatType, currentMainChat.chatId, token);
+        // Primitive slices only, like the URL effects above: the chat and
+        // thread OBJECTS churn on every message patch, and re-running this
+        // on that would rewrite the same value dozens of times a minute.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [
+        useCM.isThreadVisible,
+        useCM.currentMainChat?.chatId,
+        useCM.currentMainChat?.chatType,
+        useCM.currentThreadChat?.chatId,
+        useCM.currentThreadChat?.threadId,
+        useCM.currentThreadChat?.taskId,
+    ]);
+
+    // Keep the thread pane tied to the chat pane.
+    //
+    // Keyed on `currentMainChat` identity, NOT on the URL: chat selection
+    // is state-first (`useChatListItem` calls `setCurrentMainChat` with no
+    // navigate), and the main-chat URL effect above deliberately bails
+    // while a thread is visible — so switching chats with a thread open
+    // changes no URL at all. A URL-keyed reconcile would never fire on
+    // the exact case this fixes.
+    //
+    // Two jobs, in order:
+    //   1. A thread belonging to a DIFFERENT chat must never remain on
+    //      screen beside this one. Closing it also releases the
+    //      `isThreadVisible` guard in the main-chat URL effect, which then
+    //      corrects the now-stale chat URL on its own.
+    //   2. Restore the thread this chat last had open, unless the user
+    //      closed it by hand (`forgetThread` at the close buttons).
+    useEffect(() => {
+        const currentMainChat = useCM.currentMainChat;
+        if (!currentMainChat || currentMainChat.chatId === "") return;
+
+        const currentThreadChat = useCM.currentThreadChat;
+        const threadBelongsHere =
+            currentThreadChat !== undefined &&
+            String(currentThreadChat.chatId) === String(currentMainChat.chatId);
+
+        if (useCM.isThreadVisible && threadBelongsHere) return;
+
+        // (1) Unconditional — never gated on the memory, or a foreign
+        // thread could stay visible when this chat has no remembered one.
+        if (currentThreadChat !== undefined && !threadBelongsHere) {
+            useCM.setIsThreadVisible(false);
+            useCM.setCurrentThreadChat(undefined);
+        }
+
+        // (2) Decide what the URL should say for the chat that is now
+        // open. `window.location` (not the closure `pathname`, which can
+        // lag a render behind) — same reasoning as the guards in the URL
+        // effects above.
+        const typePath = CHAT_TYPE_REVERSE_MAP[currentMainChat.chatType];
+        if (!typePath) return;
+
+        const liveRoute = parseChatRoute(window.location.pathname);
+        const liveChatTypeCode = liveRoute.chatType
+            ? CHAT_TYPE_MAP[liveRoute.chatType]
+            : undefined;
+        const mainChatKey = chatKey(currentMainChat.chatType, currentMainChat.chatId);
+        const urlChatKey =
+            liveChatTypeCode !== undefined && liveRoute.chatId !== undefined
+                ? chatKey(liveChatTypeCode, liveRoute.chatId)
+                : undefined;
+
+        const remembered = recallThread(currentMainChat.chatType, currentMainChat.chatId);
+        const decision = resolveThreadRestore({
+            mainChatKey,
+            remembered,
+            urlChatKey,
+            urlHasExplicitTarget:
+                liveRoute.threadId !== undefined ||
+                liveRoute.messageId !== undefined ||
+                liveRoute.commentId !== undefined,
+        });
+        if (decision === "keep-url") return;
+
+        const targetPath =
+            decision === "restore-thread"
+                ? buildChatPath(typePath, currentMainChat.chatId, remembered)
+                : buildChatPath(typePath, currentMainChat.chatId);
+
+        if (window.location.pathname === targetPath) return;
+
+        // Push when the URL was describing a DIFFERENT chat — that's a
+        // real chat switch which the main-chat URL effect above skipped
+        // (it bails while a thread is visible), so this is the entry it
+        // would have pushed. Replace when we're only adding or dropping
+        // the thread segment within the chat already in the URL: an
+        // automatic restore isn't a navigation step the user took.
+        navigate(targetPath, { replace: urlChatKey === mainChatKey });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [useCM.currentMainChat?.chatId, useCM.currentMainChat?.chatType]);
 
     // Keys sorted alphabetically (case-insensitive) per `sort-keys`.
     return {

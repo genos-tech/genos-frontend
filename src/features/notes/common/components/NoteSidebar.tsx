@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { ReactNode, useEffect, useMemo, useState } from "react";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import CreateNewFolderRoundedIcon from "@mui/icons-material/CreateNewFolderRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
@@ -19,6 +19,9 @@ import ListItemButton from "@mui/joy/ListItemButton";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
+import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
+import { GMAvatar } from "../../../../components/ui/avatars/GMAvatar";
+import { MDMAvatar } from "../../../../components/ui/avatars/MDMAvatar";
 import { ProjectAvatar } from "../../../../components/ui/avatars/ProjectAvatar";
 import { MoreMenuItem } from "../../../../components/ui/MoreMenu";
 import { useAuth } from "../../../../context/AuthContext";
@@ -974,6 +977,86 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         );
     };
 
+    // The chat's own avatar for a chat-note folder row — the same glyph
+    // the chat header and the chat sidebar show for that channel, so a
+    // DM folder reads as its partner, a GM/PM folder as its group image,
+    // and an MDM folder as its overlapping member stack. Mirrors
+    // `renderProjectLeadingIcon` above (18px, click passes through to the
+    // avatar's own profile modal, not the row's expand/collapse).
+    //
+    // Returns undefined when the channel isn't in `allChats` yet, which
+    // keeps the default folder glyph rather than rendering a blank.
+    //
+    // PUNCH LIST (v3 chatId migration): `AllChatProps.chatId` is `string`
+    // post-flip while `ChatGroup.chatId` is still the legacy `number`, so
+    // the compare stringifies — same as `groupChatNotesByType` above.
+    const renderChatLeadingIcon = (chatGroup: ChatGroup) => {
+        const chat = allChats.find(
+            (c) => c.chatType === chatGroup.chatType && c.chatId === String(chatGroup.chatId)
+        );
+        if (!chat) return undefined;
+
+        // Presence dots are suppressed on every branch: a folder row is a
+        // location, not a presence surface, and `UserAvatar`'s dot
+        // placement is calibrated for 26/32px — at 18 it floats outside
+        // the circle. (MDMAvatar draws dots only when handed
+        // `teamMemberProfiles`, so omitting that prop is its opt-out.)
+        let avatar: ReactNode;
+        if (chatGroup.chatType === 1 && chat.dmPartnerUser?.userId) {
+            avatar = (
+                <AvatarWithStatus
+                    avatarSize={18}
+                    avatarUser={useTEM.teamMemberProfiles[chat.dmPartnerUser.userId]}
+                    chat={chat}
+                    isYou={chat.dmPartnerUser.userId === myself.userId}
+                    myself={myself}
+                    setMyself={setMyself}
+                    showPulseDot={false}
+                    socket={socket}
+                    useCM={useCM}
+                    useUISM={useUISM}
+                />
+            );
+        } else if (chatGroup.chatType === 2) {
+            avatar = (
+                <GMAvatar
+                    avatarSize={18}
+                    gmChat={chat}
+                    isYou={false}
+                    myself={myself}
+                    setMyself={setMyself}
+                    socket={socket}
+                    useCM={useCM}
+                    useTEM={useTEM}
+                    useUISM={useUISM}
+                />
+            );
+        } else if (chatGroup.chatType === 3) {
+            avatar = (
+                <ProjectAvatar
+                    avatarSize={18}
+                    myself={myself}
+                    pmChat={chat}
+                    setMyself={setMyself}
+                    socket={socket}
+                    useCM={useCM}
+                    useTEM={useTEM}
+                    useUISM={useUISM}
+                />
+            );
+        } else if (chatGroup.chatType === 4) {
+            avatar = <MDMAvatar avatarSize={18} members={chat.mdmMembers} />;
+        } else {
+            return undefined;
+        }
+
+        return (
+            <Box sx={{ display: "flex", flexShrink: 0 }} onClick={(e) => e.stopPropagation()}>
+                {avatar}
+            </Box>
+        );
+    };
+
     const renderGroupedTaskNotes = () =>
         groupedTaskNotes.map((projectGroup) => {
             const activeNoteId = useNM.currentTaskNote?.noteId;
@@ -1106,6 +1189,10 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                         droppableKind={3}
                         groupKey={`chat-${chatGroup.chatType}-${chatGroup.chatId}`}
                         groupLabel={chatGroup.chatName}
+                        // The channel's own avatar in place of the generic
+                        // folder glyph, so a chat folder reads the same
+                        // here as it does in the chat header / sidebar.
+                        leadingIcon={renderChatLeadingIcon(chatGroup)}
                         menuItems={buildChatFolderMenuItems(chatGroup)}
                         defaultExpanded={chatGroup.notes.some(
                             (note) => note.noteId === useNM.currentChatNote?.noteId

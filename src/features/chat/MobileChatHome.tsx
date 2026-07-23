@@ -47,6 +47,14 @@ type MobileChatHomeProps = {
     // Gates the create-task overlay: only the ACTIVE keep-alive Home
     // may mount CreateTaskForm (see the overlay comment below).
     isActiveRoute: boolean;
+    /**
+     * Chat-surface task-preview visibility, computed once by `ChatHome`
+     * (`useSurfaceTaskPreviewVisible`) and passed down so both layouts
+     * share one decision rather than each deriving its own from the
+     * global flag. See the hook for why the global flag alone leaks the
+     * panel across pages.
+     */
+    isTaskPreviewVisibleHere: boolean;
 };
 
 // Full-screen overlay shell for flag-driven side panes that have no URL
@@ -122,6 +130,7 @@ export const MobileChatHome = (props: MobileChatHomeProps) => {
         useTG,
         setTodoFromMessageBubble,
         isActiveRoute,
+        isTaskPreviewVisibleHere,
     } = props;
 
     // URL-driven pane selection. Sidebar is the default; main chat takes
@@ -236,7 +245,12 @@ export const MobileChatHome = (props: MobileChatHomeProps) => {
                 </MobileOverlay>
             )}
 
-            {useTM.isTaskPreviewVisible === true &&
+            {/* Same surface-scoping as the desktop chat pane: the global
+                `isTaskPreviewVisible` is shared with the task page, so on
+                its own it would pop this overlay open on the chat page
+                for a preview the user opened on the task page. */}
+            {isTaskPreviewVisibleHere &&
+                useTM.isTaskPreviewVisible === true &&
                 (useTM.currentPreviewTask || useTM.currentPreviewKind === "milestone") && (
                     <MobileOverlay onClose={() => useTM.setIsTaskPreviewVisible(false)}>
                         <Box sx={{ p: 1, pt: 6, height: "100%", overflow: "auto" }}>

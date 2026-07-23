@@ -2,7 +2,7 @@
 // the order of `react` vs `@mui/...`. Prettier wins; disable
 // simple-import-sort.
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Box, Sheet, Snackbar } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Panel, PanelGroup } from "react-resizable-panels";
@@ -32,6 +32,7 @@ import { UIStateManagementState } from "../../hooks/common/useUIStateManagement"
 import { InboxManagementState } from "../../hooks/inbox/useInboxManagement";
 import { NoteManagementState } from "../../hooks/notes/useNoteManagement";
 import { SprintMilestoneManagementState } from "../../hooks/tasks/useSprintMilestoneManagement";
+import { useSurfaceTaskPreviewVisible } from "../../hooks/tasks/useSurfaceTaskPreviewVisible";
 import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
 import { usePanelSizes } from "../../hooks/usePanelSizes";
 import { UseTodoGroupsState } from "../../hooks/useTodoGroups";
@@ -159,28 +160,21 @@ export const ChatHome = (props: ChatHomeProps) => {
     };
 
     // Task preview is closed by default on chat. `useTM.isTaskPreviewVisible`
-    // may already be true on mount because it's shared with other pages (e.g.
-    // task home) — we must not auto-open the panel in that case. The sticky
-    // flag flips only when the user actively opens (false → true) or switches
-    // tasks while on the chat page; once true it stays true for this mount.
-    const [initialTaskPreviewVisible, setInitialTaskPreviewVisible] = useState<boolean>(false);
-    const prevPreviewRef = useRef({
-        visible: useTM.isTaskPreviewVisible,
-        taskId: useTM.currentPreviewTaskId,
-    });
-    useEffect(() => {
-        const opened = !prevPreviewRef.current.visible && useTM.isTaskPreviewVisible;
-        const switched =
-            useTM.isTaskPreviewVisible &&
-            prevPreviewRef.current.taskId !== useTM.currentPreviewTaskId;
-        if (opened || switched) {
-            setInitialTaskPreviewVisible(true);
-        }
-        prevPreviewRef.current = {
-            visible: useTM.isTaskPreviewVisible,
-            taskId: useTM.currentPreviewTaskId,
-        };
-    }, [useTM.isTaskPreviewVisible, useTM.currentPreviewTaskId]);
+    // is shared with the task page, so it may already be true on mount — we
+    // must not auto-open the panel in that case.
+    //
+    // This used to be an ungated sticky flag local to this component, which
+    // was the bug: the Homes are keep-alive, so this component stays mounted
+    // while the user is on the TASK page and its effect happily observed the
+    // false → true transition caused by opening a preview *there*. Switching
+    // to chat then found the flag already set and rendered the panel.
+    // `useSurfaceTaskPreviewVisible` gates that observation on isActiveRoute
+    // and persists the result per surface.
+    const [initialTaskPreviewVisible, setInitialTaskPreviewVisible] = useSurfaceTaskPreviewVisible(
+        "chat",
+        isActiveRoute,
+        useTM
+    );
 
     // Consume the cross-page "open task preview on chat" intent. Set by
     // moveToSpecificChat (only when the opened thread carries a task, so
@@ -338,6 +332,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                         <MobileChatHome
                             chatRouting={chatRouting}
                             isActiveRoute={isActiveRoute}
+                            isTaskPreviewVisibleHere={initialTaskPreviewVisible}
                             currentMainChatId={currentMainChatId}
                             currentThreadChatId={currentThreadChatId}
                             currentWindowHeight={height}
