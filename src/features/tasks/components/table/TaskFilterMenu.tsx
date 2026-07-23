@@ -43,7 +43,10 @@ import {
     predefinedStatusFilters,
     taskTypes,
 } from "../../types/TaskTableTypes";
-import { selectMilestonesWithMatchingChildren } from "../../utils/milestoneChildFilter";
+import {
+    selectMilestoneRowsForSelection,
+    selectMilestonesWithMatchingChildren,
+} from "../../utils/milestoneChildFilter";
 import {
     clearStoredFilters,
     readStoredFilters,
@@ -1263,28 +1266,21 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
             setVisibleChildTaskIds(childIdSet);
         }
 
-        // Auto-expand milestones whose tasks matched, so the matching task
-        // is ON SCREEN rather than one click away — the point of the
-        // rescue. Mirrors how the member filter force-opens ghost-ancestor
-        // chains in `DraggableTaskTable`.
+        // Auto-expand ONLY the milestones picked in the milestone filter.
         //
-        // Gated on a filter actually narrowing something: in the default
-        // all-"All" view nothing is being looked for, so force-opening
-        // every milestone would just be noise. Applied to matching AND
-        // rescued milestones alike — whether the milestone itself happens
-        // to carry the tag shouldn't change whether its matching task is
-        // visible.
+        // Narrowing to a milestone is a statement about wanting to see
+        // that milestone's work, so opening it saves a click with no
+        // other purpose. Every other filter deliberately leaves rows
+        // closed: expanding on a tag / status / priority / effort /
+        // member filter fires across the whole list at once and reorders
+        // what the user is reading, which is disruptive rather than
+        // helpful. A milestone rescued by one of its tasks therefore
+        // appears closed too — the chevron is the user's to press.
         if (setMilestoneAutoExpandIds) {
-            const anyFilterNarrowing =
-                statusStringFilter !== null ||
-                requireExpired ||
-                tagLabels !== null ||
-                prioritySet !== null ||
-                effortSet !== null ||
-                milestoneFilterActive ||
-                memberFilterActive;
             setMilestoneAutoExpandIds(
-                anyFilterNarrowing ? milestonesWithMatchingChildren : new Set<string>()
+                milestoneFilterActive
+                    ? selectMilestoneRowsForSelection(useTM.allTasks, milestoneIdSet)
+                    : new Set<string>()
             );
         }
 
@@ -1472,8 +1468,13 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                                 >
                                     {t.tasks.filterHelp.milestoneRescue}
                                 </Typography>
-                                <Typography sx={{ display: "block", fontSize: "11.5px" }}>
+                                <Typography
+                                    sx={{ display: "block", fontSize: "11.5px", mb: 0.75 }}
+                                >
                                     {t.tasks.filterHelp.subtasks}
+                                </Typography>
+                                <Typography sx={{ display: "block", fontSize: "11.5px" }}>
+                                    {t.tasks.filterHelp.milestoneExpand}
                                 </Typography>
                             </Box>
                         }

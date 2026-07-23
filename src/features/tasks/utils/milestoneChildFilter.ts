@@ -53,3 +53,31 @@ export const selectMilestonesWithMatchingChildren = (
     }
     return result;
 };
+
+/**
+ * Backing-task ids of the milestones the user picked in the milestone
+ * filter — the only rows the table auto-expands.
+ *
+ * Narrowing to a milestone is a statement about wanting to see THAT
+ * milestone's work, so opening it saves a click that has no other
+ * purpose. Every other filter deliberately leaves rows closed: expanding
+ * on, say, a tag filter fires across the whole list at once and reorders
+ * what the user is reading, which is disruptive rather than helpful.
+ *
+ * Returns empty when the milestone filter isn't narrowing (i.e. "All"),
+ * so the default view is never force-opened.
+ */
+export const selectMilestoneRowsForSelection = (
+    allTasks: readonly TaskTableProps[],
+    selectedMilestoneIds: ReadonlySet<number>
+): Set<string> => {
+    const result = new Set<string>();
+    if (selectedMilestoneIds.size === 0) return result;
+    for (const task of allTasks) {
+        if (task.id == null || !isMilestoneRow(task)) continue;
+        if (task.milestoneId != null && selectedMilestoneIds.has(task.milestoneId)) {
+            result.add(String(task.id));
+        }
+    }
+    return result;
+};

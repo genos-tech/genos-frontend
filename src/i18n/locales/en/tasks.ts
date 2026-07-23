@@ -493,9 +493,11 @@ export const tasks = {
         rootRows:
             "The list shows top-level rows — root tasks and milestones. Expand a row to see what's underneath it.",
         milestoneRescue:
-            "A milestone is shown when it matches OR when one of its tasks does — so a milestone with no tags still appears if a task under it has the tag you picked. It opens automatically to show the matching tasks.",
+            "A milestone is shown when it matches OR when one of its tasks does — so a milestone with no tags still appears if a task under it has the tag you picked. Expand it to see which tasks matched.",
         subtasks:
             "Sub-tasks under a task don't do the same: a matching sub-task won't pull in its parent task.",
+        milestoneExpand:
+            "Filtering by a specific milestone opens it automatically so you can see its tasks. Other filters leave rows collapsed.",
     },
     filters: {
         all: "All",

@@ -413,11 +413,12 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
     // not run yet; treat as permissive so the table is usable on
     // first paint without flashing children in and out.
     const [visibleChildTaskIds, setVisibleChildTaskIds] = useState<Set<string> | null>(null);
-    // Milestones whose direct child tasks matched the active filter. Force-
-    // expanded below so the matching task is on screen — a milestone can be
-    // rescued into the list purely because of its tasks, and leaving it
-    // collapsed would show the user a row that looks like it doesn't match
-    // anything. Empty when no filter is narrowing.
+    // Milestones the user picked in the MILESTONE filter. Force-expanded
+    // below, because narrowing to a milestone is a statement about wanting
+    // to see that milestone's work. Deliberately empty for every other
+    // filter: expanding on a tag / status / priority / effort / member
+    // filter fires across the whole list at once and reorders what the
+    // user is reading.
     const [milestoneAutoExpandIds, setMilestoneAutoExpandIds] = useState<Set<string>>(
         () => new Set()
     );
@@ -624,9 +625,11 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         // Force ghost-ancestor chains open so the matching subtask beneath
         // them actually renders — the user can't be asked to expand a row
         // they can't click. No-op when the member filter is inactive.
-        // Two sources of forced expansion, same reasoning: a row the filter
-        // put on screen must reveal WHY it's there. Ghost ancestors carry a
-        // matching subtask; auto-expanded milestones carry a matching task.
+        // Two sources of forced expansion. Ghost ancestors are opened
+        // because the user CAN'T click them (they're dimmed placeholders
+        // around a matching subtask). A milestone picked in the milestone
+        // filter is opened because that selection is itself the request to
+        // see its tasks.
         const forcedOpen = [...ghostInfo.ancestorIds, ...milestoneAutoExpandIds];
         const effectiveExpanded =
             forcedOpen.length > 0

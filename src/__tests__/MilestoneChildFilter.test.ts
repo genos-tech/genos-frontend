@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { selectMilestonesWithMatchingChildren } from "../features/tasks/utils/milestoneChildFilter";
+import {
+    selectMilestoneRowsForSelection,
+    selectMilestonesWithMatchingChildren,
+} from "../features/tasks/utils/milestoneChildFilter";
 import { TaskTableProps } from "../types/tasks";
 
 // Picking a milestone sets the task's `parentTaskId` to that milestone's
@@ -81,5 +84,42 @@ describe("selectMilestonesWithMatchingChildren", () => {
         // `allTasks` rows arrive with numeric ids on some paths.
         const tasks = [milestone("7"), row("a", { parentTaskId: 7 as unknown as string })];
         expect([...selectMilestonesWithMatchingChildren(tasks, new Set(["a"]))]).toEqual(["7"]);
+    });
+});
+
+describe("selectMilestoneRowsForSelection", () => {
+    // Only the MILESTONE filter auto-expands. Picking a milestone is
+    // itself the request to see its tasks; every other filter leaves rows
+    // collapsed, because expanding across the whole list at once reorders
+    // what the user is reading.
+    const tasks = [
+        row("m1", { isMilestone: true, milestoneId: 1 }),
+        taskUnder("t1", "m1"),
+        row("m2", { isMilestone: true, milestoneId: 2 }),
+        taskUnder("t2", "m2"),
+        row("plain"),
+    ];
+
+    it("returns the backing rows of the selected milestones", () => {
+        expect([...selectMilestoneRowsForSelection(tasks, new Set([1]))]).toEqual(["m1"]);
+        expect(
+            [...selectMilestoneRowsForSelection(tasks, new Set([1, 2])).values()].sort()
+        ).toEqual(["m1", "m2"]);
+    });
+
+    it("expands nothing when the milestone filter isn't narrowing", () => {
+        // "All" / "No milestone" contribute no numeric ids, so the caller
+        // hands over an empty set and the default view stays untouched.
+        expect(selectMilestoneRowsForSelection(tasks, new Set()).size).toBe(0);
+    });
+
+    it("never returns a non-milestone row", () => {
+        const result = selectMilestoneRowsForSelection(tasks, new Set([1, 2]));
+        expect(result.has("t1")).toBe(false);
+        expect(result.has("plain")).toBe(false);
+    });
+
+    it("ignores a selected id with no milestone row loaded", () => {
+        expect(selectMilestoneRowsForSelection(tasks, new Set([999])).size).toBe(0);
     });
 });
