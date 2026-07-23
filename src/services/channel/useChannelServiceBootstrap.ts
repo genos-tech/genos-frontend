@@ -140,7 +140,13 @@ export function useChannelServiceBootstrap(
 
         // Best-effort cache load. Doesn't block the socket — hooks
         // can start rendering off whatever lands first (cache or live).
-        void channelService.hydrateFromIDB();
+        //
+        // Pins are then reconciled against the server. IDB alone can't be
+        // the source of truth for them: it's empty on a fresh browser or
+        // a second device, which is why pinned chats appeared to have been
+        // lost. Sequenced after hydration so the fetch reconciles against
+        // the cached set rather than racing it.
+        void channelService.hydrateFromIDB().then(() => channelService.fetchPins());
 
         return () => {
             next.off("connect", onConnect);
