@@ -11,7 +11,13 @@ import { loadV3SpecificMessages, readV3CachedMessages } from "../services/loadV3
 import { loadV3SpecificThreadMessages } from "../services/loadV3SpecificThreadMessages";
 import { resolveV3MessageUuid, resolveV3ThreadRootUuid } from "../utils/channelIdResolvers";
 import { parseChatRoute } from "../utils/parseChatRoute";
-import { recallThread, rememberThread, threadUrlToken } from "../utils/threadMemory";
+import {
+    chatKey,
+    recallThread,
+    rememberThread,
+    resolveThreadRestore,
+    threadUrlToken,
+} from "../utils/threadMemory";
 
 // Chat type constants matching the existing codebase.
 // Keys sorted alphabetically per `sort-keys` (the integer values are
@@ -647,32 +653,49 @@ export const useChatRouting = ({ useCM, useTM, myself, isActiveRoute }: UseChatR
             useCM.setCurrentThreadChat(undefined);
         }
 
-        // (2) An explicit target in the URL always outranks the memory:
-        // a `/thread/…` deep link is loaded by Effect 1, and a
-        // `/message/…` or `/comment/…` link would be clobbered by an
-        // auto-reopen. `window.location` (not the closure `pathname`),
-        // which can lag a render behind — same reasoning as the guards in
-        // the URL effects above.
-        const liveRoute = parseChatRoute(window.location.pathname);
-        if (
-            liveRoute.threadId !== undefined ||
-            liveRoute.messageId !== undefined ||
-            liveRoute.commentId !== undefined
-        ) {
-            return;
-        }
-
-        const remembered = recallThread(currentMainChat.chatType, currentMainChat.chatId);
-        if (remembered === undefined) return;
-
+        // (2) Decide what the URL should say for the chat that is now
+        // open. `window.location` (not the closure `pathname`, which can
+        // lag a render behind) — same reasoning as the guards in the URL
+        // effects above.
         const typePath = CHAT_TYPE_REVERSE_MAP[currentMainChat.chatType];
         if (!typePath) return;
 
-        const threadPath = buildChatPath(typePath, currentMainChat.chatId, remembered);
-        if (window.location.pathname === threadPath) return;
-        // `replace` — an automatic restore is not a navigation step the
-        // user took, so it must not add a Back-button entry.
-        navigate(threadPath, { replace: true });
+        const liveRoute = parseChatRoute(window.location.pathname);
+        const liveChatTypeCode = liveRoute.chatType
+            ? CHAT_TYPE_MAP[liveRoute.chatType]
+            : undefined;
+        const mainChatKey = chatKey(currentMainChat.chatType, currentMainChat.chatId);
+        const urlChatKey =
+            liveChatTypeCode !== undefined && liveRoute.chatId !== undefined
+                ? chatKey(liveChatTypeCode, liveRoute.chatId)
+                : undefined;
+
+        const remembered = recallThread(currentMainChat.chatType, currentMainChat.chatId);
+        const decision = resolveThreadRestore({
+            mainChatKey,
+            remembered,
+            urlChatKey,
+            urlHasExplicitTarget:
+                liveRoute.threadId !== undefined ||
+                liveRoute.messageId !== undefined ||
+                liveRoute.commentId !== undefined,
+        });
+        if (decision === "keep-url") return;
+
+        const targetPath =
+            decision === "restore-thread"
+                ? buildChatPath(typePath, currentMainChat.chatId, remembered)
+                : buildChatPath(typePath, currentMainChat.chatId);
+
+        if (window.location.pathname === targetPath) return;
+
+        // Push when the URL was describing a DIFFERENT chat — that's a
+        // real chat switch which the main-chat URL effect above skipped
+        // (it bails while a thread is visible), so this is the entry it
+        // would have pushed. Replace when we're only adding or dropping
+        // the thread segment within the chat already in the URL: an
+        // automatic restore isn't a navigation step the user took.
+        navigate(targetPath, { replace: urlChatKey === mainChatKey });
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [useCM.currentMainChat?.chatId, useCM.currentMainChat?.chatType]);
 

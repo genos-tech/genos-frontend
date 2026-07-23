@@ -80,6 +80,52 @@ export const recallThread = (
     chatId: number | string
 ): number | string | undefined => readAll()[memoryKey(chatType, chatId)];
 
+/**
+ * What the URL should describe for the chat that is now open.
+ *
+ *   "keep-url"        the URL already targets something specific INSIDE
+ *                     this chat (a thread / message / comment deep
+ *                     link) — it outranks the remembered thread.
+ *   "restore-thread"  reopen the thread this chat last had open.
+ *   "chat-only"       plain chat view, no thread.
+ *
+ * The `urlPointsHere` distinction is the whole trick. After switching
+ * away from a chat that had a thread open, the URL is left describing
+ * the chat we LEFT (`/chat/dm/a/thread/X`), because the main-chat URL
+ * effect deliberately bails while a thread is visible and never re-runs
+ * once the thread closes. That leftover looks identical to a deep link,
+ * so an "is there a /thread/ segment?" test alone reads as "the user
+ * asked for this thread" and suppresses the restore forever after.
+ *
+ * A segment belonging to a DIFFERENT chat than the open one is by
+ * definition stale, never a deep link — so only a segment for THIS chat
+ * is allowed to win.
+ */
+export type ThreadRestoreDecision = "keep-url" | "restore-thread" | "chat-only";
+
+export const resolveThreadRestore = ({
+    urlChatKey,
+    urlHasExplicitTarget,
+    mainChatKey,
+    remembered,
+}: {
+    /** `"<chatType>:<chatId>"` parsed from the live URL, if it has one. */
+    urlChatKey: string | undefined;
+    /** Does the URL carry a thread / message / comment segment? */
+    urlHasExplicitTarget: boolean;
+    /** `"<chatType>:<chatId>"` of the chat that is now open. */
+    mainChatKey: string;
+    remembered: number | string | undefined;
+}): ThreadRestoreDecision => {
+    if (urlChatKey === mainChatKey && urlHasExplicitTarget) return "keep-url";
+    if (remembered !== undefined) return "restore-thread";
+    return "chat-only";
+};
+
+/** `"<chatType>:<chatId>"` — the shared key shape for the helpers above. */
+export const chatKey = (chatType: number, chatId: number | string): string =>
+    memoryKey(chatType, chatId);
+
 export const forgetThread = (chatType: number, chatId: number | string): void => {
     const memory = readAll();
     const key = memoryKey(chatType, chatId);
