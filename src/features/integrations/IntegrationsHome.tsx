@@ -33,6 +33,7 @@ import { useColorScheme } from "@mui/joy/styles";
 
 import { CalendarEventModal } from "./components/CalendarEventModal";
 import { ConnectionsSection } from "./components/ConnectionsSection";
+import { GithubRepoAccessSection } from "./components/GithubRepoAccessSection";
 import { ReconnectGoogleCalendarButton } from "./components/ReconnectGoogleCalendarButton";
 import { CalendarEvent, deleteEvent, listEvents } from "./services/calendar";
 import {
@@ -583,6 +584,8 @@ const GithubTab = ({
                     ))}
                 </Stack>
             )}
+
+            <GithubRepoAccessSection accessToken={accessToken} />
 
             <WebhookSetup />
         </Stack>

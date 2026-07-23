@@ -56,6 +56,57 @@ export const listMyPulls = async (
     }
 };
 
+export interface GithubRepoSummary {
+    full_name: string;
+    name: string;
+    owner: string;
+    private: boolean;
+    html_url: string;
+    updated_at: string;
+}
+
+export interface GithubRepoOwner {
+    login: string;
+    /** "User" (personal account) or "Organization". */
+    type: string;
+    repo_count: number;
+}
+
+export interface GithubAccessibleReposResponse {
+    repos: GithubRepoSummary[];
+    owners: GithubRepoOwner[];
+    /** True when the repo list hit the server's one-page cap. */
+    truncated: boolean;
+    /** GitHub's per-application settings page — where ORGANIZATION access
+     *  is granted. Null when no OAuth client id is configured. */
+    manage_url: string | null;
+}
+
+/**
+ * What Genos can currently reach on GitHub, grouped by owner.
+ *
+ * Backs the "Repository access" panel. There is no per-repo selection to
+ * fetch — the integration is an OAuth App with the account-wide `repo`
+ * scope — so the useful question is which OWNERS are visible: a personal
+ * repo appears the moment it's created, while an organization only shows
+ * up once it has granted the app access.
+ */
+export const listAccessibleRepos = async (
+    accessToken: string,
+    setErrorMessage?: (value: string) => void
+): Promise<GithubAccessibleReposResponse | "github_not_connected" | null> => {
+    try {
+        const api = authApi(accessToken);
+        if (!api) return null;
+        const res = await api.get<GithubAccessibleReposResponse>("/github/accessible-repos/");
+        return res.data;
+    } catch (error) {
+        return surfaceError(error, setErrorMessage) === "github_not_connected"
+            ? "github_not_connected"
+            : null;
+    }
+};
+
 export const getPullDetail = async (
     accessToken: string,
     owner: string,

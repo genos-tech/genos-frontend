@@ -45,6 +45,7 @@ import { useColorScheme } from "@mui/joy/styles";
 
 import { useAuth } from "../../context/AuthContext";
 import { ConnectionsSection } from "../../features/integrations/components/ConnectionsSection";
+import { GithubRepoAccessSection } from "../../features/integrations/components/GithubRepoAccessSection";
 import { ReconnectGoogleCalendarButton } from "../../features/integrations/components/ReconnectGoogleCalendarButton";
 import { OAUTH_INTEGRATIONS_ENABLED } from "../../features/integrations/featureFlags";
 import { listCalendars } from "../../features/integrations/services/calendar";
@@ -1143,8 +1144,33 @@ type SettingsTabKey =
  */
 const IntegrationsSection = () => {
     const { accessToken } = useAuth();
+    const [githubConnected, setGithubConnected] = useState(false);
+
+    // The repo-access panel is only meaningful once GitHub is connected —
+    // before that the Connections rows above are the whole story, and an
+    // empty "Repository access" card would just be noise.
+    useEffect(() => {
+        if (!accessToken) return;
+        let cancelled = false;
+        void listConnections(accessToken).then((res) => {
+            if (cancelled) return;
+            setGithubConnected(!!res?.connections.find((c) => c.provider === "github"));
+        });
+        return () => {
+            cancelled = true;
+        };
+    }, [accessToken]);
+
     if (!accessToken) return null;
-    return <ConnectionsSection accessToken={accessToken} />;
+    return (
+        <Stack spacing={2}>
+            <ConnectionsSection accessToken={accessToken} />
+            {/* Same panel the Integrations page shows, so "which repos can
+                Genos see, and how do I add my new org" is answerable
+                without leaving Settings. */}
+            {githubConnected && <GithubRepoAccessSection accessToken={accessToken} />}
+        </Stack>
+    );
 };
 
 export const SettingsModal = ({
