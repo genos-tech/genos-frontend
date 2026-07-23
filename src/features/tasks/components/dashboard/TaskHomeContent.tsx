@@ -59,7 +59,7 @@ import { TeamManagementState } from "../../../../hooks/common/useTeamManagement"
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
-import { fmt, getMessages, useTranslation } from "../../../../i18n";
+import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TaskTableProps } from "../../../../types/tasks";
 import { LazyTaskDiagram } from "../../diagram/components/LazyTaskDiagram";
@@ -69,21 +69,14 @@ import { SprintManagerDialog } from "../../sprint-milestone/components/SprintMan
 import { SprintMilestonesSection } from "../../sprint-milestone/components/SprintMilestonesSection";
 import { Milestone, Sprint } from "../../sprint-milestone/types";
 import { selectVisibleMilestones } from "../../sprint-milestone/utils/sortMilestones";
-import { predefinedPriorityFilters } from "../../types/TaskTableTypes";
-import {
-    computeTaskWeight,
-    dueBucket,
-    DueBucket,
-    effortPoints,
-    MAX_TASK_WEIGHT,
-    weightBand,
-} from "../../utils/taskWeight";
+import { PRIORITY_COLORS } from "../../utils/dashboardRowFormat";
+import { computeTaskWeight, dueBucket, DueBucket, effortPoints } from "../../utils/taskWeight";
 import { compareByUrgency, sortTopWeightRows, TopWeightSortMode } from "../../utils/topWeightSort";
 import { CopyableTaskIdText } from "../CopyableTaskId";
 import { ProjectTagChip } from "../ProjectTagChip";
-import { SprintChip } from "../SprintChip";
-import { getStatusIcon, STATUS_COLORS, TaskStatusChip } from "../TaskStatusChip";
+import { getStatusIcon, STATUS_COLORS } from "../TaskStatusChip";
 import { AssignedMilestoneCard } from "./AssignedMilestoneCard";
+import { DashboardTaskRow } from "./DashboardTaskRow";
 import { TaskVelocitySection } from "./TaskVelocitySection";
 
 // A task augmented with status/close-date rolled up from its parent chain.
@@ -215,18 +208,6 @@ const sprintBucketOf = (s: Sprint, todayIso: string): "past" | "current" | "upco
     return "upcoming";
 };
 
-// Priority swatches sourced from `predefinedPriorityFilters` so the
-// dashboard chip stays in lockstep with the table's filter chips.
-// `light` / `dark` are kept separate even though the current palette
-// happens to match across modes — keeps the lookup honest for future
-// per-mode tweaks. Non-priority labels (e.g. the "All" filter row) are
-// skipped at build time.
-const PRIORITY_COLORS: Record<string, { light: string; dark: string }> = Object.fromEntries(
-    predefinedPriorityFilters
-        .filter((f) => f.label !== "All")
-        .map((f) => [f.label, { light: f.lightModeColor, dark: f.darkModeColor }])
-);
-
 // Maps a backend status enum to the i18n key whose value renders in
 // the dashboard. Resolve through `t.tasks.dashboard.statusLabels[key]`
 // at the call site (`statusKeyFor` below).
@@ -248,36 +229,6 @@ const formatRelativeTime = (dateStr: string | null): string => {
     const weeks = Math.floor(days / 7);
     if (weeks === 1) return "1 week ago";
     return `${weeks} weeks ago`;
-};
-
-type DueTone = "overdue" | "today" | "soon" | "later" | "none";
-// Compact, human-readable due-date label used by the My Tasks "Up Next" list.
-// `tone` lets the caller pick the right color without re-parsing the date.
-const formatDueLabel = (dueDate: string | null): { text: string; tone: DueTone } => {
-    const labels = getMessages().tasks.dueLabel;
-    if (!dueDate) return { text: labels.noDueDate, tone: "none" };
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const d = new Date(dueDate);
-    d.setHours(0, 0, 0, 0);
-    const diffDays = Math.round((d.getTime() - today.getTime()) / 86400000);
-    if (diffDays < 0) return { text: fmt(labels.overdue, { days: -diffDays }), tone: "overdue" };
-    if (diffDays === 0) return { text: labels.dueToday, tone: "today" };
-    if (diffDays === 1) return { text: labels.dueTomorrow, tone: "soon" };
-    if (diffDays <= 6) {
-        return {
-            text: fmt(labels.dueOn, {
-                when: d.toLocaleDateString(undefined, { weekday: "short" }),
-            }),
-            tone: "soon",
-        };
-    }
-    return {
-        text: fmt(labels.dueOn, {
-            when: d.toLocaleDateString(undefined, { month: "short", day: "numeric" }),
-        }),
-        tone: "later",
-    };
 };
 
 // KPI rollup for one person's tasks (active/closed/overdue/completion, …).
@@ -1628,7 +1579,15 @@ export const TaskHomeContent = ({
                                             flexWrap: "nowrap",
                                             overflowX: "auto",
                                             [`&& .${tabClasses.root}`]: {
-                                                flex: "initial",
+                                                // `0 0 auto`, NOT `initial`. `initial` is
+                                                // `0 1 auto` — shrink ENABLED — so at a narrow
+                                                // width the tabs compressed below their content
+                                                // and, with `whiteSpace: nowrap`, their labels
+                                                // spilled over each other instead of the
+                                                // TabList's `overflowX: auto` kicking in.
+                                                // Refusing to shrink turns that squash back
+                                                // into a scroll.
+                                                flex: "0 0 auto",
                                                 bgcolor: "transparent",
                                                 borderRadius: "10px 10px 0 0",
                                                 px: 2,
@@ -2343,8 +2302,12 @@ export const TaskHomeContent = ({
                                                             : "rgba(124,58,237,0.2)",
                                                     }}
                                                 >
+                                                    {/* Clickable: opens the member's profile
+                                                        modal. Safe here because — unlike the
+                                                        dashboard task rows — this banner has no
+                                                        onClick of its own for the avatar's
+                                                        handler to bubble into. */}
                                                     <UserAvatar
-                                                        clickable={false}
                                                         showPulseDot={false}
                                                         size={32}
                                                         userId={selectedMember.id}
@@ -2761,206 +2724,20 @@ export const TaskHomeContent = ({
                                                     </Card>
                                                 ) : (
                                                     <Stack spacing={0.75}>
-                                                        {focusUpNext.map((task) => {
-                                                            const sc =
-                                                                STATUS_COLORS[
-                                                                    task.effectiveStatus
-                                                                ] || STATUS_COLORS.Open;
-                                                            const pSwatch = task.priority
-                                                                ? PRIORITY_COLORS[task.priority]
-                                                                : undefined;
-                                                            const pColor = pSwatch
-                                                                ? isDark
-                                                                    ? pSwatch.dark
-                                                                    : pSwatch.light
-                                                                : textMuted;
-                                                            const weight = computeTaskWeight(task);
-                                                            const wb = weightBand(weight);
-                                                            const due = formatDueLabel(
-                                                                task.dueDate
-                                                            );
-                                                            const dueColor =
-                                                                due.tone === "overdue"
-                                                                    ? "#ef4444"
-                                                                    : due.tone === "today" ||
-                                                                        due.tone === "soon"
-                                                                      ? "#f59e0b"
-                                                                      : textMuted;
-                                                            return (
-                                                                <Card
-                                                                    key={task.id}
-                                                                    variant="outlined"
-                                                                    sx={{
-                                                                        p: 1.25,
-                                                                        cursor: "pointer",
-                                                                        background: cardBg,
-                                                                        borderColor: cardBorder,
-                                                                        transition:
-                                                                            "all 0.2s ease",
-                                                                        "&:hover": {
-                                                                            borderColor: sc.text,
-                                                                            background: isDark
-                                                                                ? "rgba(255,255,255,0.04)"
-                                                                                : "rgba(255,255,255,0.9)",
-                                                                        },
-                                                                    }}
-                                                                    onClick={() =>
-                                                                        handleTaskClick(
-                                                                            Number(task.id)
-                                                                        )
-                                                                    }
-                                                                >
-                                                                    <Stack
-                                                                        alignItems="center"
-                                                                        direction="row"
-                                                                        spacing={1.5}
-                                                                    >
-                                                                        {/* Task Weight badge,
-                                                                            leftmost — same squared
-                                                                            heat chip as the Top by
-                                                                            Weight section. */}
-                                                                        <AppTooltip
-                                                                            title={`${fmt(
-                                                                                t.tasks.table
-                                                                                    .weightTooltip,
-                                                                                {
-                                                                                    weight,
-                                                                                    max: MAX_TASK_WEIGHT,
-                                                                                }
-                                                                            )} · ${t.tasks.table.weightBands[wb.band]}`}
-                                                                        >
-                                                                            <Box
-                                                                                sx={{
-                                                                                    width: 30,
-                                                                                    height: 30,
-                                                                                    borderRadius:
-                                                                                        "8px",
-                                                                                    flexShrink: 0,
-                                                                                    display:
-                                                                                        "flex",
-                                                                                    alignItems:
-                                                                                        "center",
-                                                                                    justifyContent:
-                                                                                        "center",
-                                                                                    fontWeight: 700,
-                                                                                    fontSize:
-                                                                                        "0.8rem",
-                                                                                    color: "white",
-                                                                                    backgroundColor:
-                                                                                        wb.color,
-                                                                                }}
-                                                                            >
-                                                                                {weight}
-                                                                            </Box>
-                                                                        </AppTooltip>
-                                                                        <Stack
-                                                                            alignItems="center"
-                                                                            direction="row"
-                                                                            spacing={0.75}
-                                                                            sx={{
-                                                                                flex: 1,
-                                                                                minWidth: 0,
-                                                                            }}
-                                                                        >
-                                                                            <CopyableTaskIdText
-                                                                                level="body-xs"
-                                                                                task={task}
-                                                                                sx={{
-                                                                                    fontWeight: 600,
-                                                                                    color: textMuted,
-                                                                                    flexShrink: 0,
-                                                                                }}
-                                                                            />
-                                                                            {task.isMilestone ===
-                                                                                true && (
-                                                                                <FlagRoundedIcon
-                                                                                    sx={{
-                                                                                        fontSize: 12,
-                                                                                        color: "#f97316",
-                                                                                        flexShrink: 0,
-                                                                                    }}
-                                                                                />
-                                                                            )}
-                                                                            <Typography
-                                                                                level="body-sm"
-                                                                                sx={{
-                                                                                    fontWeight: 500,
-                                                                                    color: textPrimary,
-                                                                                    overflow:
-                                                                                        "hidden",
-                                                                                    textOverflow:
-                                                                                        "ellipsis",
-                                                                                    whiteSpace:
-                                                                                        "nowrap",
-                                                                                }}
-                                                                            >
-                                                                                {task.title ||
-                                                                                    t.tasks
-                                                                                        .dashboard
-                                                                                        .untitledTask}
-                                                                            </Typography>
-                                                                        </Stack>
-                                                                        {task.priority && (
-                                                                            <Chip
-                                                                                size="sm"
-                                                                                variant="soft"
-                                                                                sx={{
-                                                                                    fontSize:
-                                                                                        "0.65rem",
-                                                                                    fontWeight: 600,
-                                                                                    backgroundColor: `${pColor}1F`,
-                                                                                    color: pColor,
-                                                                                    flexShrink: 0,
-                                                                                    display: {
-                                                                                        xs: "none",
-                                                                                        sm: "inline-flex",
-                                                                                    },
-                                                                                }}
-                                                                            >
-                                                                                {task.priority}
-                                                                            </Chip>
-                                                                        )}
-                                                                        {/* Sprint — left of the status chip. Hidden on
-                                                                            xs to keep the compact row from wrapping. */}
-                                                                        <Box
-                                                                            sx={{
-                                                                                display: {
-                                                                                    xs: "none",
-                                                                                    sm: "inline-flex",
-                                                                                },
-                                                                            }}
-                                                                        >
-                                                                            <SprintChip
-                                                                                name={sprintNameFor(
-                                                                                    task.sprintId
-                                                                                )}
-                                                                            />
-                                                                        </Box>
-                                                                        <TaskStatusChip
-                                                                            status={
-                                                                                task.effectiveStatus
-                                                                            }
-                                                                        />
-                                                                        <Typography
-                                                                            level="body-xs"
-                                                                            sx={{
-                                                                                color: dueColor,
-                                                                                fontWeight:
-                                                                                    due.tone ===
-                                                                                    "overdue"
-                                                                                        ? 700
-                                                                                        : 500,
-                                                                                flexShrink: 0,
-                                                                                minWidth: 90,
-                                                                                textAlign: "right",
-                                                                            }}
-                                                                        >
-                                                                            {due.text}
-                                                                        </Typography>
-                                                                    </Stack>
-                                                                </Card>
-                                                            );
-                                                        })}
+                                                        {focusUpNext.map((task) => (
+                                                            <DashboardTaskRow
+                                                                key={task.id}
+                                                                task={task}
+                                                                sprintName={sprintNameFor(
+                                                                    task.sprintId
+                                                                )}
+                                                                onClick={() =>
+                                                                    handleTaskClick(
+                                                                        Number(task.id)
+                                                                    )
+                                                                }
+                                                            />
+                                                        ))}
                                                     </Stack>
                                                 )}
                                             </Box>
@@ -3663,189 +3440,16 @@ export const TaskHomeContent = ({
                                                 {t.tasks.dashboard.topWeight.subtitle}
                                             </Typography>
                                             <Stack spacing={0.75}>
-                                                {topByWeightRows.map(({ task, weight }) => {
-                                                    const wb = weightBand(weight);
-                                                    const due = formatDueLabel(task.dueDate);
-                                                    const dueColor =
-                                                        due.tone === "overdue"
-                                                            ? "#ef4444"
-                                                            : due.tone === "today" ||
-                                                                due.tone === "soon"
-                                                              ? "#f59e0b"
-                                                              : textMuted;
-                                                    const sc =
-                                                        STATUS_COLORS[task.effectiveStatus] ||
-                                                        STATUS_COLORS.Open;
-                                                    return (
-                                                        <Card
-                                                            key={task.id}
-                                                            variant="outlined"
-                                                            sx={{
-                                                                p: 1.25,
-                                                                cursor: "pointer",
-                                                                background: cardBg,
-                                                                borderColor: cardBorder,
-                                                                transition: "all 0.2s ease",
-                                                                "&:hover": {
-                                                                    borderColor: wb.color,
-                                                                    background: isDark
-                                                                        ? "rgba(255,255,255,0.04)"
-                                                                        : "rgba(255,255,255,0.9)",
-                                                                },
-                                                            }}
-                                                            onClick={() =>
-                                                                handleTaskClick(Number(task.id))
-                                                            }
-                                                        >
-                                                            <Stack
-                                                                alignItems="center"
-                                                                direction="row"
-                                                                spacing={1.5}
-                                                            >
-                                                                <AppTooltip
-                                                                    title={`${fmt(
-                                                                        t.tasks.table
-                                                                            .weightTooltip,
-                                                                        {
-                                                                            weight,
-                                                                            max: MAX_TASK_WEIGHT,
-                                                                        }
-                                                                    )} · ${t.tasks.table.weightBands[wb.band]}`}
-                                                                >
-                                                                    <Box
-                                                                        sx={{
-                                                                            width: 30,
-                                                                            height: 30,
-                                                                            borderRadius: "8px",
-                                                                            flexShrink: 0,
-                                                                            display: "flex",
-                                                                            alignItems: "center",
-                                                                            justifyContent:
-                                                                                "center",
-                                                                            fontWeight: 700,
-                                                                            fontSize: "0.8rem",
-                                                                            color: "white",
-                                                                            backgroundColor:
-                                                                                wb.color,
-                                                                        }}
-                                                                    >
-                                                                        {weight}
-                                                                    </Box>
-                                                                </AppTooltip>
-                                                                <Stack
-                                                                    alignItems="center"
-                                                                    direction="row"
-                                                                    spacing={0.75}
-                                                                    sx={{ flex: 1, minWidth: 0 }}
-                                                                >
-                                                                    <CopyableTaskIdText
-                                                                        level="body-xs"
-                                                                        task={task}
-                                                                        sx={{
-                                                                            fontWeight: 600,
-                                                                            color: textMuted,
-                                                                            flexShrink: 0,
-                                                                        }}
-                                                                    />
-                                                                    {task.isMilestone === true && (
-                                                                        <FlagRoundedIcon
-                                                                            sx={{
-                                                                                fontSize: 12,
-                                                                                color: "#f97316",
-                                                                                flexShrink: 0,
-                                                                            }}
-                                                                        />
-                                                                    )}
-                                                                    <Typography
-                                                                        level="body-sm"
-                                                                        sx={{
-                                                                            fontWeight: 500,
-                                                                            color: textPrimary,
-                                                                            overflow: "hidden",
-                                                                            textOverflow:
-                                                                                "ellipsis",
-                                                                            whiteSpace: "nowrap",
-                                                                        }}
-                                                                    >
-                                                                        {task.title ||
-                                                                            t.tasks.dashboard
-                                                                                .untitledTask}
-                                                                    </Typography>
-                                                                </Stack>
-                                                                {task.assigneeName && (
-                                                                    <Typography
-                                                                        level="body-xs"
-                                                                        sx={{
-                                                                            color: textSecondary,
-                                                                            flexShrink: 0,
-                                                                            maxWidth: 120,
-                                                                            overflow: "hidden",
-                                                                            textOverflow:
-                                                                                "ellipsis",
-                                                                            whiteSpace: "nowrap",
-                                                                            display: {
-                                                                                xs: "none",
-                                                                                sm: "block",
-                                                                            },
-                                                                        }}
-                                                                    >
-                                                                        {task.assigneeName}
-                                                                    </Typography>
-                                                                )}
-                                                                {/* Sprint — left of the status chip. */}
-                                                                <Box
-                                                                    sx={{
-                                                                        display: {
-                                                                            xs: "none",
-                                                                            sm: "inline-flex",
-                                                                        },
-                                                                    }}
-                                                                >
-                                                                    <SprintChip
-                                                                        name={sprintNameFor(
-                                                                            task.sprintId
-                                                                        )}
-                                                                    />
-                                                                </Box>
-                                                                <Chip
-                                                                    size="sm"
-                                                                    variant="soft"
-                                                                    startDecorator={getStatusIcon(
-                                                                        task.effectiveStatus,
-                                                                        12
-                                                                    )}
-                                                                    sx={{
-                                                                        fontSize: "0.65rem",
-                                                                        backgroundColor: sc.bg,
-                                                                        color: sc.text,
-                                                                        flexShrink: 0,
-                                                                        display: {
-                                                                            xs: "none",
-                                                                            sm: "inline-flex",
-                                                                        },
-                                                                    }}
-                                                                >
-                                                                    {task.effectiveStatus}
-                                                                </Chip>
-                                                                <Typography
-                                                                    level="body-xs"
-                                                                    sx={{
-                                                                        color: dueColor,
-                                                                        fontWeight:
-                                                                            due.tone === "overdue"
-                                                                                ? 700
-                                                                                : 500,
-                                                                        flexShrink: 0,
-                                                                        minWidth: 90,
-                                                                        textAlign: "right",
-                                                                    }}
-                                                                >
-                                                                    {due.text}
-                                                                </Typography>
-                                                            </Stack>
-                                                        </Card>
-                                                    );
-                                                })}
+                                                {topByWeightRows.map(({ task }) => (
+                                                    <DashboardTaskRow
+                                                        key={task.id}
+                                                        sprintName={sprintNameFor(task.sprintId)}
+                                                        task={task}
+                                                        onClick={() =>
+                                                            handleTaskClick(Number(task.id))
+                                                        }
+                                                    />
+                                                ))}
                                             </Stack>
                                         </Box>
                                     )}
