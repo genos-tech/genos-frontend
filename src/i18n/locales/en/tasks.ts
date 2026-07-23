@@ -483,6 +483,20 @@ export const tasks = {
     },
 
     // Filter labels (TaskFilterMenu).
+    // Hover help on the filter bar's "?" — the rules aren't guessable
+    // from the chips, especially the milestone one. Kept OUT of
+    // `filters`, which is indexed as a flat label map (`filterLabel`).
+    filterHelp: {
+        title: "How filtering works",
+        combine:
+            "Filters combine: a row has to match every category you've narrowed (status, tag, priority, effort, milestone, member).",
+        rootRows:
+            "The list shows top-level rows — root tasks and milestones. Expand a row to see what's underneath it.",
+        milestoneRescue:
+            "A milestone is shown when it matches OR when one of its tasks does — so a milestone with no tags still appears if a task under it has the tag you picked. It opens automatically to show the matching tasks.",
+        subtasks:
+            "Sub-tasks under a task don't do the same: a matching sub-task won't pull in its parent task.",
+    },
     filters: {
         all: "All",
         open: "Open",
