@@ -20,6 +20,7 @@ import { updateTaskFromTable } from "../../services/updateTaskFromTable";
 import { FilterProps } from "../../types/TaskTableTypes";
 import { buildComparator } from "../../utils/sortTask";
 import { formatTaskDisplayId } from "../../utils/taskDisplayId";
+import { taskFilterStorageKey } from "../../utils/taskFilterStorage";
 import { statuses } from "../../utils/taskMeta";
 import { TaskFilterMenu } from "../table/TaskFilterMenu";
 import { ColumnConfig, SprintBoardColumn } from "./SprintBoardColumn";
@@ -533,6 +534,10 @@ export const SprintBoard = (props: SprintBoardProps) => {
                     teamMembers={teamMembers}
                     useSM={useSM}
                     useTM={useTM}
+                    filterStorageKey={taskFilterStorageKey(
+                        "board",
+                        usePM.currentProject?.projectId
+                    )}
                     hideStatusFilter
                 />
                 {/* Show child tasks toggle — only when no milestone
@@ -631,14 +636,14 @@ export const SprintBoard = (props: SprintBoardProps) => {
                     <LazyTaskDiagram
                         myself={myself}
                         open={true}
-                        projectId={Number(
-                            diagramTask.projectId ?? usePM.currentProject?.projectId
-                        )}
                         rootLabel={`${formatTaskDisplayId(diagramTask)} · ${diagramTask.title || "Untitled"}`}
                         rootTaskId={Number(diagramTask.rootTaskId ?? diagramTask.id)}
                         usePM={usePM}
                         useSM={useSM}
                         useTM={useTM}
+                        projectId={Number(
+                            diagramTask.projectId ?? usePM.currentProject?.projectId
+                        )}
                         onClose={() => setDiagramTask(null)}
                     />
                 )}

@@ -42,6 +42,14 @@ import {
     predefinedStatusFilters,
     taskTypes,
 } from "../../types/TaskTableTypes";
+import {
+    clearStoredFilters,
+    readStoredFilters,
+    rehydrateFilters,
+    rehydrateKeys,
+    StoredTaskFilters,
+    writeStoredFilters,
+} from "../../utils/taskFilterStorage";
 
 // Default status selection = the "ongoing" statuses (Open, WIP, Blocked,
 // Pending) — everything except Closed / Expired / Deleted. Derived by label
@@ -117,6 +125,13 @@ type TaskFilterMenuProps = {
     // this menu but has no columns to configure) omits it, so the
     // gear stays hidden there.
     onOpenColumnSettings?: () => void;
+    // Optional: when set, the filter selection is persisted under this
+    // localStorage key and restored on mount. `TaskHomeLayout` mounts the
+    // table and the board conditionally, so without this every trip via
+    // the dashboard resets the bar to its defaults. Omitted by the legacy
+    // `ProjectTaskTable` call site, which then keeps the old
+    // reset-on-mount behaviour.
+    filterStorageKey?: string;
 };
 
 export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
@@ -131,7 +146,50 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         setIsMemberFilterActive,
         hideStatusFilter,
         onOpenColumnSettings,
+        filterStorageKey,
     } = props;
+
+    // Selection restored from localStorage for the CURRENT key. Read
+    // eagerly on the first render so the lazy `useState` initializers
+    // below paint the restored selection immediately rather than
+    // flashing the defaults for a frame.
+    //
+    // The key is per-project, so it changes when the user switches
+    // projects — the effect further down re-reads and re-applies for the
+    // new project. This ref only ever holds the mount-time snapshot.
+    const storedFiltersRef = React.useRef<Partial<StoredTaskFilters> | null>(null);
+    if (storedFiltersRef.current === null) {
+        storedFiltersRef.current = filterStorageKey
+            ? (readStoredFilters(filterStorageKey) ?? {})
+            : {};
+    }
+    const stored = storedFiltersRef.current ?? {};
+
+    // Persist the six-tuple the user just chose.
+    //
+    // Called ONLY from the `handleClose*` handlers and `resetFilters` —
+    // i.e. explicit user intent. A blanket effect over the selection
+    // state would fire during mount while the async dimensions (tags)
+    // are still at their defaults, writing "All" over the stored tag
+    // selection before the restore below ever gets to read it.
+    const persistFilters = (
+        statusSel: FilterProps[],
+        tagsSel: FilterProps[],
+        prioritySel: FilterProps[],
+        effortSel: FilterProps[],
+        milestoneSel: MilestoneFilterKey[],
+        memberSel: MemberFilterKey[]
+    ) => {
+        if (!filterStorageKey) return;
+        writeStoredFilters(filterStorageKey, {
+            effortLevels: effortSel.map((f) => f.label),
+            memberKeys: memberSel,
+            milestoneKeys: milestoneSel,
+            priorities: prioritySel.map((f) => f.label),
+            status: statusSel.map((f) => f.label),
+            tags: tagsSel.map((f) => f.label),
+        });
+    };
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const styles = isDark ? TaskFilterMenuStyles.dark : TaskFilterMenuStyles.light;
@@ -143,8 +201,13 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         f.labelKey ? t.tasks.filters[f.labelKey] : f.label;
 
     // Status filter — when status filter is hidden (e.g. sprint board), default to "All"
-    const [selectedStatus, setSelectedStatus] = React.useState<FilterProps[]>(
-        hideStatusFilter ? [predefinedStatusFilters[0]] : defaultStatusFilters
+    // Restored from storage where available. The board passes no storage
+    // key for status (it hides the filter and pins it to "All"), so this
+    // falls through to the default there.
+    const [selectedStatus, setSelectedStatus] = React.useState<FilterProps[]>(() =>
+        hideStatusFilter
+            ? [predefinedStatusFilters[0]]
+            : rehydrateFilters(stored.status, predefinedStatusFilters, defaultStatusFilters)
     );
     const [anchorElStatusFilter, setAnchorElStatusFilter] = React.useState<null | HTMLElement>(
         null
@@ -178,6 +241,14 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         }
 
         applyFilters(
+            newStatuses,
+            selectedTags,
+            selectedPriorities,
+            selectedEffortLevels,
+            selectedMilestoneKeys,
+            selectedMemberKeys
+        );
+        persistFilters(
             newStatuses,
             selectedTags,
             selectedPriorities,
@@ -227,18 +298,107 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
             selectedMilestoneKeys,
             selectedMemberKeys
         );
+        persistFilters(
+            selectedStatus,
+            newTags,
+            selectedPriorities,
+            selectedEffortLevels,
+            selectedMilestoneKeys,
+            selectedMemberKeys
+        );
     };
 
+    // Tags are the one dimension whose options arrive asynchronously AND
+    // whose effect force-resets the selection, so it can't be restored by
+    // a lazy initializer — it would be overwritten the moment the project
+    // tags load. (It also means the selection was being dropped without a
+    // remount whenever `currentProject`'s identity churned.)
+    //
+    // Tracked BY KEY rather than as a one-shot boolean: the key carries
+    // the project id, so a project switch makes this effect restore that
+    // project's tags instead of resetting to "All". It's also
+    // order-independent — whichever of this effect and the project-switch
+    // effect below runs first, the mismatch is what triggers the restore,
+    // so neither can leave the other holding a stale selection.
+    const restoredTagsForKeyRef = React.useRef<string | undefined | null>(null);
     React.useEffect(() => {
-        if (predefinedTagsFilters.length > 0) {
-            setSelectedTags([predefinedTagsFilters[0]]);
+        if (predefinedTagsFilters.length === 0) return;
+
+        if (restoredTagsForKeyRef.current !== filterStorageKey) {
+            restoredTagsForKeyRef.current = filterStorageKey;
+            const storedForKey = filterStorageKey ? readStoredFilters(filterStorageKey) : null;
+            const restored = rehydrateFilters(storedForKey?.tags, predefinedTagsFilters, [
+                predefinedTagsFilters[0],
+            ]);
+            setSelectedTags(restored);
+            // The reactive `applyFilters` effect below doesn't watch
+            // `selectedTags`, so a restore that changes the selection has
+            // to re-run the pipeline itself or the table would show
+            // unfiltered rows under a filtered-looking chip.
+            if (restored[0]?.label !== predefinedTagsFilters[0].label) {
+                applyFilters(
+                    selectedStatus,
+                    restored,
+                    selectedPriorities,
+                    selectedEffortLevels,
+                    selectedMilestoneKeys,
+                    selectedMemberKeys
+                );
+            }
+            return;
         }
-    }, [predefinedTagsFilters]);
+        setSelectedTags([predefinedTagsFilters[0]]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [predefinedTagsFilters, filterStorageKey]);
+
+    // Project switch: re-restore the dimensions that a lazy initializer
+    // only covered at mount. `TaskFilterMenu` stays mounted across a
+    // project change, so without this the previous project's status /
+    // priority / effort / milestone / member selection would linger —
+    // and worse, the next `persistFilters` would write it under the NEW
+    // project's key.
+    //
+    // Skips its own first run: the lazy initializers already restored
+    // this key, and re-applying would fire a redundant `applyFilters`
+    // before the task list has even loaded.
+    const restoredKeyRef = React.useRef<string | undefined | null>(filterStorageKey);
+    React.useEffect(() => {
+        if (restoredKeyRef.current === filterStorageKey) return;
+        restoredKeyRef.current = filterStorageKey;
+
+        const next = filterStorageKey ? readStoredFilters(filterStorageKey) : null;
+        const nextStatus = hideStatusFilter
+            ? [predefinedStatusFilters[0]]
+            : rehydrateFilters(next?.status, predefinedStatusFilters, defaultStatusFilters);
+        const nextPriorities = rehydrateFilters(next?.priorities, predefinedPriorityFilters, [
+            predefinedPriorityFilters[0],
+        ]);
+        const nextEffort = rehydrateFilters(next?.effortLevels, predefinedEffortLevelFilters, [
+            predefinedEffortLevelFilters[0],
+        ]);
+        const nextMilestones = (rehydrateKeys(next?.milestoneKeys) as
+            | MilestoneFilterKey[]
+            | null) ?? [MILESTONE_ALL];
+        const nextMembers = (rehydrateKeys(next?.memberKeys) as MemberFilterKey[] | null) ?? [
+            MEMBER_ALL,
+        ];
+
+        setSelectedStatus(nextStatus);
+        setSelectedPriorities(nextPriorities);
+        setSelectedEffortLevels(nextEffort);
+        setSelectedMilestoneKeys(nextMilestones);
+        setSelectedMemberKeys(nextMembers);
+        // Tags are restored by the effect above (their options load
+        // asynchronously), which is keyed on the same storage key.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [filterStorageKey]);
 
     // Priority filter
-    const [selectedPriorities, setSelectedPriorities] = React.useState<FilterProps[]>([
-        predefinedPriorityFilters[0],
-    ]);
+    const [selectedPriorities, setSelectedPriorities] = React.useState<FilterProps[]>(() =>
+        rehydrateFilters(stored.priorities, predefinedPriorityFilters, [
+            predefinedPriorityFilters[0],
+        ])
+    );
     const [anchorElPriorityFilter, setAnchorElPriorityFilter] = React.useState<null | HTMLElement>(
         null
     );
@@ -280,12 +440,22 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
             selectedMilestoneKeys,
             selectedMemberKeys
         );
+        persistFilters(
+            selectedStatus,
+            selectedTags,
+            newPriorities,
+            selectedEffortLevels,
+            selectedMilestoneKeys,
+            selectedMemberKeys
+        );
     };
 
     // Effort level filter
-    const [selectedEffortLevels, setSelectedEffortLevels] = React.useState<FilterProps[]>([
-        predefinedEffortLevelFilters[0],
-    ]);
+    const [selectedEffortLevels, setSelectedEffortLevels] = React.useState<FilterProps[]>(() =>
+        rehydrateFilters(stored.effortLevels, predefinedEffortLevelFilters, [
+            predefinedEffortLevelFilters[0],
+        ])
+    );
     const [anchorElEffortLevelFilter, setAnchorElEffortLevelFilter] =
         React.useState<null | HTMLElement>(null);
     const openEffortLevelFilter = Boolean(anchorElEffortLevelFilter);
@@ -323,6 +493,14 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         }
 
         applyFilters(
+            selectedStatus,
+            selectedTags,
+            selectedPriorities,
+            newEffortLevels,
+            selectedMilestoneKeys,
+            selectedMemberKeys
+        );
+        persistFilters(
             selectedStatus,
             selectedTags,
             selectedPriorities,
@@ -406,8 +584,11 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
             else next.add(key);
             return next;
         });
+    // Stale ids (other project, soft-deleted milestone) are dropped by
+    // the prune effect below once the live milestone set loads.
     const [selectedMilestoneKeys, setSelectedMilestoneKeys] = React.useState<MilestoneFilterKey[]>(
-        [MILESTONE_ALL]
+        () =>
+            (rehydrateKeys(stored.milestoneKeys) as MilestoneFilterKey[] | null) ?? [MILESTONE_ALL]
     );
     const [anchorElMilestoneFilter, setAnchorElMilestoneFilter] =
         React.useState<null | HTMLElement>(null);
@@ -456,6 +637,14 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         }
 
         applyFilters(
+            selectedStatus,
+            selectedTags,
+            selectedPriorities,
+            selectedEffortLevels,
+            next,
+            selectedMemberKeys
+        );
+        persistFilters(
             selectedStatus,
             selectedTags,
             selectedPriorities,
@@ -691,9 +880,11 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
 
     // Member filter — multi-select over the team's members. Same
     // all / none / id shape as the milestone filter above.
-    const [selectedMemberKeys, setSelectedMemberKeys] = React.useState<MemberFilterKey[]>([
-        MEMBER_ALL,
-    ]);
+    // Same deal as milestones: the prune effect below drops a stored id
+    // for someone who is no longer on the team.
+    const [selectedMemberKeys, setSelectedMemberKeys] = React.useState<MemberFilterKey[]>(
+        () => (rehydrateKeys(stored.memberKeys) as MemberFilterKey[] | null) ?? [MEMBER_ALL]
+    );
     const [anchorElMemberFilter, setAnchorElMemberFilter] = React.useState<null | HTMLElement>(
         null
     );
@@ -729,6 +920,14 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
             setAnchorElMemberFilter(null);
         }
         applyFilters(
+            selectedStatus,
+            selectedTags,
+            selectedPriorities,
+            selectedEffortLevels,
+            selectedMilestoneKeys,
+            next
+        );
+        persistFilters(
             selectedStatus,
             selectedTags,
             selectedPriorities,
@@ -1041,6 +1240,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
             [MILESTONE_ALL],
             [MEMBER_ALL]
         );
+        if (filterStorageKey) clearStoredFilters(filterStorageKey);
     };
 
     useEffect(() => {
