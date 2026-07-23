@@ -4,6 +4,7 @@ import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import DirectionsRunRoundedIcon from "@mui/icons-material/DirectionsRunRounded";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
+import HelpOutlineRoundedIcon from "@mui/icons-material/HelpOutlineRounded";
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import KeyboardArrowDownRoundedIcon from "@mui/icons-material/KeyboardArrowDownRounded";
 import KeyboardArrowRightRoundedIcon from "@mui/icons-material/KeyboardArrowRightRounded";
@@ -42,6 +43,10 @@ import {
     predefinedStatusFilters,
     taskTypes,
 } from "../../types/TaskTableTypes";
+import {
+    selectMilestoneRowsForSelection,
+    selectMilestonesWithMatchingChildren,
+} from "../../utils/milestoneChildFilter";
 import {
     clearStoredFilters,
     readStoredFilters,
@@ -132,6 +137,12 @@ type TaskFilterMenuProps = {
     // `ProjectTaskTable` call site, which then keeps the old
     // reset-on-mount behaviour.
     filterStorageKey?: string;
+    // Optional: backing-task ids of milestones that have at least one
+    // matching direct child. The task table force-expands these so the
+    // matching task renders instead of hiding behind a chevron. Empty
+    // when no filter is narrowing. Omitted by the sprint board, which is
+    // flat and has nothing to expand.
+    setMilestoneAutoExpandIds?: (ids: Set<string>) => void;
 };
 
 export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
@@ -147,6 +158,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         hideStatusFilter,
         onOpenColumnSettings,
         filterStorageKey,
+        setMilestoneAutoExpandIds,
     } = props;
 
     // Selection restored from localStorage for the CURRENT key. Read
@@ -1209,10 +1221,75 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
             }
         }
 
+        // --- Milestone rescue: a milestone survives when ITS TASKS do ---
+        //
+        // Every row above was judged on its own metadata, so a milestone
+        // carrying no tags (or a different status / priority / effort /
+        // assignee) was dropped even when the tasks under it matched —
+        // and those tasks vanished with it, because a task only renders
+        // beneath its milestone row.
+        //
+        // `childIdSet` is already exactly "non-root rows that passed
+        // every dimension", so the rescue reads parent links only and
+        // can't drift from the predicates above.
+        const milestonesWithMatchingChildren = selectMilestonesWithMatchingChildren(
+            useTM.allTasks,
+            childIdSet
+        );
+        if (milestonesWithMatchingChildren.size > 0) {
+            const alreadyVisible = new Set(
+                filteredTop.map((t) => (t.id != null ? String(t.id) : ""))
+            );
+            for (const task of useTM.allTasks) {
+                if (task.isMilestone !== true || task.id == null) continue;
+                const id = String(task.id);
+                if (alreadyVisible.has(id)) continue;
+                if (!milestonesWithMatchingChildren.has(id)) continue;
+                // Never resurrect an outdated milestone through the back
+                // door — it stays hidden unless the user opted into it,
+                // exactly as the main loop's guard above decides.
+                if (
+                    task.milestoneId != null &&
+                    outdatedMilestoneIds.has(task.milestoneId) &&
+                    task.milestoneId !== scopeTarget &&
+                    !milestoneIdSet.has(task.milestoneId)
+                ) {
+                    continue;
+                }
+                filteredTop.push(task);
+            }
+        }
+
         setCurrentDisplayingTasks(filteredTop);
 
         if (setVisibleChildTaskIds) {
             setVisibleChildTaskIds(childIdSet);
+        }
+
+        // Auto-expand ONLY the milestones picked in the milestone filter.
+        //
+        // Narrowing to a milestone is a statement about wanting to see
+        // that milestone's work, so opening it saves a click with no
+        // other purpose. Every other filter deliberately leaves rows
+        // closed: expanding on a tag / status / priority / effort /
+        // member filter fires across the whole list at once and reorders
+        // what the user is reading, which is disruptive rather than
+        // helpful. A milestone rescued by one of its tasks therefore
+        // appears closed too — the chevron is the user's to press.
+        if (setMilestoneAutoExpandIds) {
+            // BOTH ways of narrowing to a milestone count: this dropdown,
+            // and the sidebar's Milestones folder
+            // (`useTM.tableMilestoneFilterId`). They're the same gesture
+            // from the user's side — "show me this milestone's work" — so
+            // they get the same result. An empty set (nothing picked
+            // either way) leaves every row as the user left it.
+            const expandTargets = new Set<number>(milestoneIdSet);
+            if (milestoneScopeActive && scopeTarget != null) {
+                expandTargets.add(scopeTarget);
+            }
+            setMilestoneAutoExpandIds(
+                selectMilestoneRowsForSelection(useTM.allTasks, expandTargets)
+            );
         }
 
         if (setIsMilestoneFilterActive) {
@@ -1366,6 +1443,66 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                     >
                         Filters
                     </Typography>
+
+                    {/* How-it-works explainer. The rules aren't guessable
+                        from the chips alone — particularly that a
+                        milestone rides in on its tasks, and that
+                        sub-tasks don't get the same treatment. */}
+                    <AppTooltip
+                        title={
+                            <Box sx={{ maxWidth: 300, py: 0.5 }}>
+                                <Typography
+                                    sx={{
+                                        display: "block",
+                                        fontWeight: 700,
+                                        fontSize: "12px",
+                                        mb: 0.75,
+                                    }}
+                                >
+                                    {t.tasks.filterHelp.title}
+                                </Typography>
+                                <Typography
+                                    sx={{ display: "block", fontSize: "11.5px", mb: 0.75 }}
+                                >
+                                    {t.tasks.filterHelp.combine}
+                                </Typography>
+                                <Typography
+                                    sx={{ display: "block", fontSize: "11.5px", mb: 0.75 }}
+                                >
+                                    {t.tasks.filterHelp.rootRows}
+                                </Typography>
+                                <Typography
+                                    sx={{ display: "block", fontSize: "11.5px", mb: 0.75 }}
+                                >
+                                    {t.tasks.filterHelp.milestoneRescue}
+                                </Typography>
+                                <Typography
+                                    sx={{ display: "block", fontSize: "11.5px", mb: 0.75 }}
+                                >
+                                    {t.tasks.filterHelp.subtasks}
+                                </Typography>
+                                <Typography sx={{ display: "block", fontSize: "11.5px" }}>
+                                    {t.tasks.filterHelp.milestoneExpand}
+                                </Typography>
+                            </Box>
+                        }
+                    >
+                        <IconButton
+                            aria-label={t.tasks.filterHelp.title}
+                            size="small"
+                            sx={{
+                                ml: 0.25,
+                                color: styles.mutedText,
+                                "&:hover": {
+                                    color: isDark ? "#a78bfa" : "#6d28d9",
+                                    background: styles.buttonHoverBg,
+                                },
+                            }}
+                        >
+                            <HelpOutlineRoundedIcon sx={{ fontSize: 16 }} />
+                        </IconButton>
+                    </AppTooltip>
+
                     {/* Column-customizer trigger — only rendered when the
                         host (DraggableTaskTable) wires it up. The sprint
                         board uses this same menu but doesn't have

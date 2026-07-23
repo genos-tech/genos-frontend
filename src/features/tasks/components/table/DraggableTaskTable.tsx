@@ -413,6 +413,15 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
     // not run yet; treat as permissive so the table is usable on
     // first paint without flashing children in and out.
     const [visibleChildTaskIds, setVisibleChildTaskIds] = useState<Set<string> | null>(null);
+    // Milestones the user picked in the MILESTONE filter. Force-expanded
+    // below, because narrowing to a milestone is a statement about wanting
+    // to see that milestone's work. Deliberately empty for every other
+    // filter: expanding on a tag / status / priority / effort / member
+    // filter fires across the whole list at once and reorders what the
+    // user is reading.
+    const [milestoneAutoExpandIds, setMilestoneAutoExpandIds] = useState<Set<string>>(
+        () => new Set()
+    );
     // True while the Member filter is narrowed to specific members. When on,
     // the table splices the (dimmed, non-interactive) ancestor chain of every
     // matching subtask back into the tree so dependencies stay visible even
@@ -616,9 +625,15 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         // Force ghost-ancestor chains open so the matching subtask beneath
         // them actually renders — the user can't be asked to expand a row
         // they can't click. No-op when the member filter is inactive.
+        // Two sources of forced expansion. Ghost ancestors are opened
+        // because the user CAN'T click them (they're dimmed placeholders
+        // around a matching subtask). A milestone picked in the milestone
+        // filter is opened because that selection is itself the request to
+        // see its tasks.
+        const forcedOpen = [...ghostInfo.ancestorIds, ...milestoneAutoExpandIds];
         const effectiveExpanded =
-            ghostInfo.ancestorIds.size > 0
-                ? new Set<string>([...expandedRows, ...ghostInfo.ancestorIds])
+            forcedOpen.length > 0
+                ? new Set<string>([...expandedRows, ...forcedOpen])
                 : expandedRows;
 
         const insertWithChildren = (task: TaskTableProps, depth: number) => {
@@ -643,7 +658,14 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
             insertWithChildren(row, 0);
         }
         return result;
-    }, [currentDisplayingTasks, expandedRows, childrenByParentEffective, ghostInfo, sortTasks]);
+    }, [
+        currentDisplayingTasks,
+        expandedRows,
+        childrenByParentEffective,
+        ghostInfo,
+        milestoneAutoExpandIds,
+        sortTasks,
+    ]);
 
     // Close a pristine quick-add row whose anchor row left the visible
     // tree (filtered out, ancestor collapsed, project switch). A dirty
@@ -1466,6 +1488,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                     predefinedTagsFilters={predefinedTagsFilters}
                     setCurrentDisplayingTasks={setCurrentDisplayingTasksSorted}
                     setIsMemberFilterActive={setIsMemberFilterActive}
+                    setMilestoneAutoExpandIds={setMilestoneAutoExpandIds}
                     setVisibleChildTaskIds={setVisibleChildTaskIds}
                     teamMembers={teamMembers}
                     useSM={useSM}
