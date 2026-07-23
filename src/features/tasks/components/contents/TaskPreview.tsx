@@ -227,10 +227,22 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         // `syncCard = true`: this is the metadata-save path, so rebuild the PM
         // task-card header + broadcast it so every PM viewer's card updates
         // live (the body autosave / switch / close saves pass false).
+        //
+        // Keyed on `taskUpdateSeq`, NOT on the `taskUpdated` boolean. React
+        // coalesces `setTaskUpdated(true)` while the flag is already true, so
+        // an edit made while a previous save was still in flight produced no
+        // state change and this effect never re-ran — the edit was applied to
+        // local state (so the preview looked right) but never PUT. That is
+        // the intermittent "status reverts in the table, and on reopen":
+        // nothing had reverted, the change was simply never saved. The
+        // counter changes on every save request, so none can be swallowed.
+        // The same coalescing hazard is documented for attachments in the
+        // effect below, which worked around it for that one field only.
         if (taskEditState.taskUpdated === true) {
             sendUpdatedTask(false, true);
         }
-    }, [taskEditState.taskUpdated]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [taskEditState.taskUpdateSeq]);
 
     // Re-trigger the save when the attachment list still contains
     // negative-id rows after a save just completed. This handles the

@@ -31,7 +31,21 @@ export const TaskPreviewPanel = (props: TaskPreviewPanelProps) => {
         props;
     const { mode } = useColorScheme();
 
-    if (!useNM.currentTaskNoteChain || !useNM.isTaskVisibleInNote || !useTM.currentPreviewTask) {
+    // A MILESTONE preview leaves `currentPreviewTask` undefined and routes
+    // through `currentPreviewKind` instead — `TaskPreview` has its own
+    // milestone branch for that. Requiring `currentPreviewTask` therefore
+    // unmounted this whole panel the moment the user opened a milestone
+    // from here (e.g. clicking "Parent task" up to a milestone backing
+    // row), which read as "the milestone doesn't open AND the task I was
+    // looking at closes". Accept either shape, matching the gates the task
+    // page and the chat page already use.
+    const hasMilestonePreview =
+        useTM.currentPreviewKind === "milestone" && useTM.currentPreviewMilestoneId != null;
+    if (
+        !useNM.currentTaskNoteChain ||
+        !useNM.isTaskVisibleInNote ||
+        (!useTM.currentPreviewTask && !hasMilestonePreview)
+    ) {
         return null;
     }
 

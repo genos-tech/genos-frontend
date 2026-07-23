@@ -45,6 +45,7 @@ import { createEmptyTaskNote } from "../../features/notes/task-notes/services/cr
 import { deleteTaskNote } from "../../features/notes/task-notes/services/deleteTaskNote";
 import { loadTaskNoteMeta } from "../../features/notes/task-notes/services/loadTaskNoteMeta";
 import { moveTaskNote as moveTaskNoteApi } from "../../features/notes/task-notes/services/moveTaskNote";
+import { onTaskTouched } from "../../features/tasks/services/taskEvents";
 import { UserProps } from "../../types/admin";
 import {
     ChatNoteMetaProps,
@@ -821,6 +822,35 @@ export const useNoteManagement = (
     getTaskNoteMetaRef.current = getTaskNoteMeta;
     const applyAgentNoteUpdateRef = useRef(applyAgentNoteUpdate);
     applyAgentNoteUpdateRef.current = applyAgentNoteUpdate;
+
+    // Keep the task-note sidebar's FOLDERS honest after a task's relations
+    // change.
+    //
+    // The sidebar groups task notes by Project → Milestone → Task, and those
+    // ancestry fields (`milestoneId` / `milestoneTitle` / `parentTaskId`)
+    // are SERVER fields on the note meta — not joined client-side from
+    // `allTasks`. So re-parenting a task (new milestone, new parent, moved
+    // sprint) left its note filed under the old folder until a page reload,
+    // because nothing re-fetched the meta.
+    //
+    // Subscribing to the shared task-touched bus covers every surface that
+    // saves through `useSendUpdatedTask` — preview, modal, inline table
+    // edits — rather than patching one call site. The `taskNoteMeta` guard
+    // keeps this rare: only a task that actually HAS a note can move a
+    // folder, so an ordinary task edit costs one in-memory scan and no
+    // request.
+    const taskNoteMetaRef = useRef(taskNoteMeta);
+    taskNoteMetaRef.current = taskNoteMeta;
+    useEffect(() => {
+        return onTaskTouched(({ taskId, kind }) => {
+            if (kind !== "update") return;
+            const hasNote = taskNoteMetaRef.current.some(
+                (n) => Number(n.taskId) === Number(taskId)
+            );
+            if (!hasNote) return;
+            void getTaskNoteMetaRef.current();
+        });
+    }, []);
     useEffect(() => {
         const handler = (e: Event) => {
             void getMyNoteMetaRef.current();

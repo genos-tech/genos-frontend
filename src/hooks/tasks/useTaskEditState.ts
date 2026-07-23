@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
 
 import { TaskEditStateManagement } from "../../types/taskEditState";
@@ -20,7 +20,18 @@ export const useTaskEditState = (
     const [uploadedFiles, setUploadedFiles] = useState<AttachmentFileProps[]>(
         currentTask?.attachments || []
     );
-    const [taskUpdated, setTaskUpdated] = useState(false);
+    const [taskUpdated, setTaskUpdatedState] = useState(false);
+    // See `taskUpdateSeq` in TaskEditState: a `setTaskUpdated(true)` while
+    // the flag is already true is coalesced by React, so a boolean-edge
+    // effect misses it and that edit never reaches the server. The counter
+    // gives every save REQUEST its own identity, so consumers can key on a
+    // value that always changes. Callers keep calling `setTaskUpdated(true)`
+    // exactly as before.
+    const [taskUpdateSeq, setTaskUpdateSeq] = useState(0);
+    const setTaskUpdated = useCallback((value: boolean) => {
+        setTaskUpdatedState(value);
+        if (value) setTaskUpdateSeq((n) => n + 1);
+    }, []);
     const [startIntervalUpdatingTask, setStartIntervalUpdatingTask] = useState(false);
     const [taskStatusUpdated, setTaskStatusUpdated] = useState(false);
     const [taskBodyEdited, setTaskBodyEdited] = useState(false);
@@ -49,6 +60,7 @@ export const useTaskEditState = (
         // State values
         uploadedFiles,
         taskUpdated,
+        taskUpdateSeq,
         startIntervalUpdatingTask,
         taskStatusUpdated,
         taskBodyEdited,
