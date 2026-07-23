@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
     countCompletedToday,
-    formatCompletedTime,
+    formatCompletedAt,
     isCompletedToday,
     localDateOf,
     selectCompletedToday,
@@ -123,14 +123,34 @@ describe("countCompletedToday", () => {
     });
 });
 
-describe("formatCompletedTime", () => {
-    it("renders zero-padded local HH:mm", () => {
+describe("formatCompletedAt", () => {
+    // Date AND time: on the All tab a group's date is when the work was
+    // PLANNED, so a bare clock time has nothing to anchor it to when an
+    // item was ticked off days later.
+    it("renders the local date followed by a zero-padded 24h HH:mm", () => {
         const d = new Date();
+        d.setMonth(6, 23); // July 23 — month is 0-indexed
         d.setHours(9, 5, 0, 0);
-        expect(formatCompletedTime(d.toISOString())).toBe("09:05");
+
+        const out = formatCompletedAt(d.toISOString());
+        const expectedDate = d.toLocaleDateString(undefined, {
+            month: "short",
+            day: "numeric",
+        });
+        expect(out).toBe(`${expectedDate} 09:05`);
+        // The time half stays fixed-width 24h so the stamp keeps its
+        // `tabular-nums` alignment down the column — a locale clock would
+        // swing between "14:05" and "2:05 PM".
+        expect(out.endsWith(" 09:05")).toBe(true);
+    });
+
+    it("keeps the 24h clock past noon", () => {
+        const d = new Date();
+        d.setHours(14, 30, 0, 0);
+        expect(formatCompletedAt(d.toISOString()).endsWith(" 14:30")).toBe(true);
     });
 
     it("returns empty string for an unparseable timestamp", () => {
-        expect(formatCompletedTime("not-a-date")).toBe("");
+        expect(formatCompletedAt("not-a-date")).toBe("");
     });
 });
