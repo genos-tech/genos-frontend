@@ -41,11 +41,25 @@ export const isCompletedToday = (item: TodoItemProps, today = getLocalCurrentDat
     return localDateOf(item.tsCompletedAt) === today;
 };
 
-/** Short local clock time ("14:05") for the row's completion stamp. */
-export const formatCompletedTime = (iso: string): string => {
+/**
+ * Local completion stamp for a todo row — date AND time ("Jul 23 14:05").
+ *
+ * The date is load-bearing rather than decoration: on the All tab a
+ * group's date is when the work was PLANNED, which is often not when it
+ * was ticked off, so a bare clock time couldn't be placed. The year is
+ * left to the row's tooltip, which carries the full timestamp.
+ *
+ * The date is locale-aware (matching `formatDueLabel`, the app's other
+ * short-date renderer) while the time stays a fixed zero-padded 24h
+ * `HH:mm`: it sits in a `tabular-nums` column, and a locale clock would
+ * swing between "14:05" and "2:05 PM" and break that alignment.
+ */
+export const formatCompletedAt = (iso: string): string => {
     const d = new Date(iso);
     if (Number.isNaN(d.getTime())) return "";
-    return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+    const date = d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+    const time = `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+    return `${date} ${time}`;
 };
 
 /**

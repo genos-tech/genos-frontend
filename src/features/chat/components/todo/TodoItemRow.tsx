@@ -16,7 +16,7 @@ import { UIStateManagementState } from "../../../../hooks/common/useUIStateManag
 import { UserProps } from "../../../../types/admin";
 import { TodoCategoryProps, TodoItemProps } from "../../../../types/chat";
 import { extractYYYYMMDDHHMM } from "../../../../utils/dateUtils";
-import { formatCompletedTime } from "../../utils/todoCompletion";
+import { formatCompletedAt } from "../../utils/todoCompletion";
 import { useLinkifyPaste } from "./titleLinks";
 import { TodoItemMoreMenu } from "./TodoItemMoreMenu";
 import { TodoNotesEditor } from "./TodoNotesEditor";
@@ -395,12 +395,16 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
                         {title ? renderTitleWithLinks(title, urlLinkModal) : "Untitled todo"}
                     </Box>
                 )}
-                {/* Completion time. `tsCompletedAt` was already persisted
-                    and serialized server-side but never surfaced, so
-                    "what did I finish today?" was unanswerable from the
-                    list — the whole reason the Completed Today tab
-                    exists. Time only: the owning group already states
-                    the date. */}
+                {/* When this was completed. `tsCompletedAt` was already
+                    persisted and serialized server-side but never
+                    surfaced, so "what did I finish today?" was
+                    unanswerable from the list — the whole reason the
+                    Completed Today tab exists.
+                    Date AND time, because the group's own date is when
+                    the work was PLANNED: on the All tab an item ticked
+                    off days later would otherwise show a clock time with
+                    nothing to anchor it to. The tooltip carries the full
+                    timestamp including the year. */}
                 {item.isCompleted && item.tsCompletedAt && (
                     <AppTooltip title={`Completed ${extractYYYYMMDDHHMM(item.tsCompletedAt)}`}>
                         <Box
@@ -412,7 +416,7 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
                                 color: isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.35)",
                             }}
                         >
-                            {formatCompletedTime(item.tsCompletedAt)}
+                            {formatCompletedAt(item.tsCompletedAt)}
                         </Box>
                     </AppTooltip>
                 )}
