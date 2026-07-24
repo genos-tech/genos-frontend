@@ -426,6 +426,27 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
         </Typography>
     );
 
+    // Dropdown option row for tag-type fields (built-in Tags + custom
+    // tag). Renders the option as its colored ProjectTagChip so options
+    // read the same as the selected chips; `aria-selected` (set by MUI on
+    // already-picked options in the multi-select) gets the accent bg.
+    const tagOptionRowSx = {
+        py: 0.5,
+        px: 1,
+        mx: 0.5,
+        my: 0.25,
+        borderRadius: "6px",
+        display: "flex",
+        alignItems: "center",
+        cursor: "pointer",
+        "&:hover": {
+            backgroundColor: mode === "dark" ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
+        },
+        '&[aria-selected="true"]': {
+            backgroundColor: mode === "dark" ? "rgba(167,139,250,0.15)" : "rgba(124,58,237,0.08)",
+        },
+    } as const;
+
     // One cell of a `cf_<id>` column. Editing mirrors the built-in
     // cells per type: text ≈ title (buffered, commit on blur/Enter),
     // date ≈ dueDate (commit on change), tag ≈ tags (multi buffer,
@@ -516,6 +537,23 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                     {children}
                                 </Paper>
                             )}
+                            renderOption={(optionProps, option) => {
+                                const { key, ...restProps } = stripOwnerState(optionProps);
+                                return (
+                                    <Box
+                                        key={key}
+                                        component="li"
+                                        {...restProps}
+                                        sx={tagOptionRowSx}
+                                    >
+                                        <ProjectTagChip
+                                            isDark={mode === "dark"}
+                                            label={option.label}
+                                            tagColor={option.color}
+                                        />
+                                    </Box>
+                                );
+                            }}
                             renderInput={(params) => (
                                 <TextField
                                     {...params}
@@ -1261,6 +1299,23 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                         {children}
                                     </Paper>
                                 )}
+                                renderOption={(optionProps, option) => {
+                                    const { key, ...restProps } = stripOwnerState(optionProps);
+                                    return (
+                                        <Box
+                                            key={key}
+                                            component="li"
+                                            {...restProps}
+                                            sx={tagOptionRowSx}
+                                        >
+                                            <ProjectTagChip
+                                                isDark={mode === "dark"}
+                                                label={option.tagName}
+                                                tagColor={option.tagColor}
+                                            />
+                                        </Box>
+                                    );
+                                }}
                                 renderInput={(params) => (
                                     <TextField
                                         {...params}
