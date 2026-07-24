@@ -27,11 +27,12 @@ import { getFirstLine } from "../utils/common";
  *      patches `currentMainChat.messages` / `currentSubChat.messages`
  *      automatically — no `setCurrentChat` call needed here.
  *
- *   3. `useCM.funcSetAllChats()` refreshes the chat-list ordering so
- *      the just-active channel floats to the top. (The chat list
- *      itself is also v3-backed by `loadV3Chats`.)
+ *   3. The sidebar re-sorts from the same store change: the echo/ack
+ *      bumps the channel's `latestMessage`, and the chat-list
+ *      subscription in useChatManagement re-derives on the resulting
+ *      `channelsVersion` bump — no explicit list refresh needed.
  *
- * Unused params (`socket`, `myself`, `setCurrentChat`) are kept on the
+ * Unused params (`socket`, `useCM`, `setCurrentChat`) are kept on the
  * signature for back-compat with existing callers (MainChatPaneHeader,
  * bnChatEditor). They were load-bearing on the legacy path; on v3 the
  * pending queue + live subscription handle the work they did.
@@ -39,7 +40,7 @@ import { getFirstLine } from "../utils/common";
 export const sendChatMessage = async ({
     chat,
     content,
-    useCM,
+    myself,
 }: {
     socket: Socket;
     chat: ChatProps;
@@ -67,7 +68,23 @@ export const sendChatMessage = async ({
         return false;
     }
     try {
-        await channelService.send(chat.chatId, content, { bodyText });
+        // `echo` renders the message in the pane IMMEDIATELY (optimistic
+        // local row keyed by the correlation id) instead of after the
+        // socket→Flask→Django ack round-trip; channelService swaps it
+        // for the server row on ack and removes it if the send fails
+        // (bnChatEditor then restores the composer text).
+        await channelService.send(chat.chatId, content, {
+            bodyText,
+            echo: {
+                sender: {
+                    avatarImgPath: myself.avatarImgPath || null,
+                    isSystemUser: false,
+                    userEmail: myself.userEmail,
+                    userId: myself.userId,
+                    userName: myself.userName,
+                },
+            },
+        });
     } catch (e) {
         // The send failed — server rejected it, the ack timed out, or the
         // socket server couldn't reach Django. channelService keeps the
@@ -79,9 +96,10 @@ export const sendChatMessage = async ({
         emitRequestError("messageSendFailed");
         return false;
     }
-    // Refresh the chat-list so the just-active channel re-sorts to
-    // top. The live-update subscription keeps the open pane in sync;
-    // this only catches the sidebar.
-    await useCM.funcSetAllChats();
+    // No explicit chat-list refresh here anymore: the optimistic echo /
+    // ack path bumps the channel's `latestMessage` in the store, and the
+    // `channelsVersion`-gated subscription in useChatManagement re-sorts
+    // the sidebar from that — the old `funcSetAllChats()` added a full
+    // REST `GET /channels/` + a second list re-derive to every send.
     return true;
 };

@@ -348,9 +348,23 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
         clearDraft();
         let sent = true;
         try {
+            // `echo`: optimistic local row so the reply renders in the
+            // thread pane immediately instead of after the server ack
+            // round-trip. channelService swaps it for the server row on
+            // ack and removes it on failure (the restore below then
+            // puts the text back in the composer).
             await channelService.send(channelUuid, content, {
                 parentId: threadRootUuid,
                 bodyText,
+                echo: {
+                    sender: {
+                        avatarImgPath: myself.avatarImgPath || null,
+                        isSystemUser: false,
+                        userEmail: myself.userEmail,
+                        userId: myself.userId,
+                        userName: myself.userName,
+                    },
+                },
             });
         } catch (e) {
             console.error("[bnThreadEditor] channelService.send failed:", e);

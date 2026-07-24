@@ -39,7 +39,12 @@ const makeArgs = (chatId: string = VALID_UUID) => ({
     socket: {} as never,
     chat: { chatId, chatType: 2 } as never,
     content: [{ type: "paragraph", content: [{ type: "text", text: "hi", styles: {} }] }],
-    myself: {} as never,
+    myself: {
+        userId: "user-me",
+        userName: "Me",
+        userEmail: "m@x",
+        avatarImgPath: "",
+    } as never,
     useCM: { funcSetAllChats: vi.fn().mockResolvedValue(undefined) } as never,
     setCurrentChat: vi.fn(),
 });
@@ -51,7 +56,7 @@ const capture = () => {
 };
 
 describe("sendChatMessage", () => {
-    it("returns true and refreshes the chat list on a successful send", async () => {
+    it("returns true and sends with an optimistic echo on a successful send", async () => {
         vi.mocked(channelService.send).mockResolvedValue({} as never);
         const { kinds, unsub } = capture();
         const args = makeArgs();
@@ -59,12 +64,18 @@ describe("sendChatMessage", () => {
         const ok = await sendChatMessage(args);
 
         expect(ok).toBe(true);
+        // The echo opt-in carries the sender so the pane can paint the
+        // bubble immediately; channelService owns the reconcile.
         expect(channelService.send).toHaveBeenCalledWith(
             VALID_UUID,
             args.content,
-            expect.any(Object)
+            expect.objectContaining({
+                echo: { sender: expect.objectContaining({ userId: "user-me" }) },
+            })
         );
-        expect(args.useCM.funcSetAllChats).toHaveBeenCalledTimes(1);
+        // No explicit chat-list refresh anymore: the store's latestMessage
+        // bump + the channelsVersion-gated sidebar subscription re-sort it.
+        expect(args.useCM.funcSetAllChats).not.toHaveBeenCalled();
         expect(kinds).toEqual([]);
         unsub();
     });

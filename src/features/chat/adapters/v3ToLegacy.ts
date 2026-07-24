@@ -612,6 +612,82 @@ export function v3MessagesToLegacy(args: {
 }
 
 /**
+ * Identity-caching wrapper around `v3MessagesToLegacy`.
+ *
+ * The live-update bridges in `useChatManagement` re-adapt the whole
+ * channel slice on every store notify that touches it. The plain
+ * adapter rebuilds a fresh `MessageProps` object for EVERY row, so the
+ * `React.memo` on `MessageBubble` (which compares `prev.message ===
+ * next.message`) failed for every visible bubble on every event — one
+ * incoming message re-rendered the entire visible window of BlockNote-
+ * backed bubbles.
+ *
+ * This factory returns an `adapt()` closure that caches each adapted
+ * row keyed by message UUID and reuses it while (a) the source v3
+ * `Message` object reference is unchanged (channelService replaces the
+ * object on any row mutation) and (b) the row's flag bit is unchanged.
+ * When nothing changed at all, the previous OUTPUT ARRAY is returned
+ * by reference, letting `setCurrentMainChat` (and `useMemo` consumers
+ * like `indexMap`) skip entirely.
+ *
+ * One instance per (channel, surface) — the subscription effects in
+ * `useChatManagement` create one per arm, so the cache lifetime matches
+ * the open pane and never leaks across channels.
+ */
+export function createCachedMessagesAdapter(): (args: {
+    messages: readonly Message[];
+    channelId: string;
+    chatType: number;
+    flaggedMessageIds?: { has(id: string): boolean };
+    retentionCutoff?: string;
+}) => MessageProps[] {
+    const cache = new Map<string, { src: Message; flagged: boolean; out: MessageProps }>();
+    let lastResult: MessageProps[] | null = null;
+    return (args) => {
+        const { messages, channelId, chatType, flaggedMessageIds, retentionCutoff } = args;
+        const cutoffMs = retentionCutoff ? Date.parse(retentionCutoff) : NaN;
+        const isPm = chatType === 3;
+        const out: MessageProps[] = [];
+        for (const m of messages) {
+            if (m.isThreadReply) continue;
+            if (m.deletedAt) continue;
+            if (!Number.isNaN(cutoffMs) && m.tsSent && Date.parse(m.tsSent) < cutoffMs) continue;
+            const flagged = flaggedMessageIds?.has(m.id) ?? false;
+            const hit = cache.get(m.id);
+            let adapted: MessageProps;
+            if (hit && hit.src === m && hit.flagged === flagged) {
+                adapted = hit.out;
+            } else {
+                adapted = v3MessageToLegacy({
+                    message: m,
+                    channelId,
+                    chatType,
+                    flaggedMessageIds,
+                });
+                cache.set(m.id, { flagged, out: adapted, src: m });
+            }
+            // Same PM orphan-row filter as `v3MessagesToLegacy` — on the
+            // RESOLVED taskId, see the rationale there.
+            if (isPm && adapted.taskId == null) continue;
+            out.push(adapted);
+        }
+        out.sort((a, b) => (a.tsSent || "").localeCompare(b.tsSent || ""));
+        if (lastResult && lastResult.length === out.length) {
+            let identical = true;
+            for (let i = 0; i < out.length; i++) {
+                if (out[i] !== lastResult[i]) {
+                    identical = false;
+                    break;
+                }
+            }
+            if (identical) return lastResult;
+        }
+        lastResult = out;
+        return out;
+    };
+}
+
+/**
  * Full-shape v3 thread reply → legacy `ThreadMessageProps`. Carries
  * the v3 message UUID through `messageIdWithChatIdAndThreadId` so the
  * thread-pane click handlers (delete / edit / react) can reach it
@@ -737,6 +813,72 @@ export function v3ThreadMessagesToLegacy(args: {
         }),
         ...replies,
     ];
+}
+
+/**
+ * Identity-caching wrapper around `v3ThreadMessagesToLegacy` — same
+ * mechanics and rationale as `createCachedMessagesAdapter`, for the
+ * thread pane's `[root, ...replies]` shape. One instance per open
+ * thread (the subscription effect in `useChatManagement` creates one
+ * per arm).
+ */
+export function createCachedThreadMessagesAdapter(): (args: {
+    messages: readonly Message[];
+    channelId: string;
+    threadRootUuid: string;
+    chatType: number;
+    flaggedMessageIds?: { has(id: string): boolean };
+}) => ThreadMessageProps[] {
+    const cache = new Map<string, { src: Message; flagged: boolean; out: ThreadMessageProps }>();
+    let lastResult: ThreadMessageProps[] | null = null;
+    return (args) => {
+        const { messages, channelId, threadRootUuid, chatType, flaggedMessageIds } = args;
+        const adaptOne = (m: Message): ThreadMessageProps => {
+            const flagged = flaggedMessageIds?.has(m.id) ?? false;
+            const hit = cache.get(m.id);
+            if (hit && hit.src === m && hit.flagged === flagged) return hit.out;
+            const adapted = v3ThreadMessageToLegacy({
+                channelId,
+                chatType,
+                flaggedMessageIds,
+                message: m,
+                threadRootUuid,
+            });
+            cache.set(m.id, { flagged, out: adapted, src: m });
+            return adapted;
+        };
+
+        let root: Message | undefined;
+        for (const m of messages) {
+            if (m.id === threadRootUuid) {
+                root = m;
+                break;
+            }
+        }
+        if (!root || root.deletedAt) return [];
+
+        const replies: ThreadMessageProps[] = [];
+        for (const m of messages) {
+            if (!m.isThreadReply) continue;
+            if (m.parentId !== threadRootUuid) continue;
+            if (m.deletedAt) continue;
+            replies.push(adaptOne(m));
+        }
+        replies.sort((a, b) => (a.tsSent || "").localeCompare(b.tsSent || ""));
+        const out = [adaptOne(root), ...replies];
+        if (lastResult && lastResult.length === out.length) {
+            let identical = true;
+            for (let i = 0; i < out.length; i++) {
+                if (out[i] !== lastResult[i]) {
+                    identical = false;
+                    break;
+                }
+            }
+            if (identical) return lastResult;
+        }
+        lastResult = out;
+        return out;
+    };
 }
 
 /**

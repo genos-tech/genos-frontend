@@ -958,17 +958,31 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
 //     `setTodoFromMessageBubble`): all useState setters from chatHome,
 //     stable across renders.
 //
-// `message` and `chat` are compared by reference — they're cloned via
-// `{...prev, ...next}` everywhere they're mutated in chat state, so any
-// real content change produces a new reference. Primitives (`variant`,
-// `isFocused`, `isSimpleBubble`) and `myself.userId` cover the remaining
-// render-affecting state. `isScrolling` is deliberately NOT a prop
-// anymore: it flipped on every scroll start/stop and re-rendered every
-// visible bubble twice per gesture — scroll-time hover suppression now
-// lives on the row wrapper in `MessageListRenderer`.
+// `message` is compared by reference — the identity-caching adapter
+// (`createCachedMessagesAdapter`) reuses the same object for a row until
+// its content or flag bit actually changes, so a real change produces a
+// new reference and an untouched row keeps its old one.
+//
+// `chat` is compared by its render-affecting FIELDS, not by reference:
+// the live-update bridge patches `currentMainChat` with `{...prev,
+// messages}` on every arrival, so the chat object's identity changes
+// whenever ANY message in the channel changes — a reference compare
+// here re-rendered every visible bubble (each mounting a BlockNote
+// view) per incoming event. The bubble reads only chatId / chatType /
+// chatName / dmPartnerUser off `chat` (never `chat.messages`), and all
+// four are carried over by the patch spread, so field equality is
+// exact. Primitives (`variant`, `isFocused`, `isSimpleBubble`) and
+// `myself.userId` cover the remaining render-affecting state.
+// `isScrolling` is deliberately NOT a prop anymore: it flipped on every
+// scroll start/stop and re-rendered every visible bubble twice per
+// gesture — scroll-time hover suppression now lives on the row wrapper
+// in `MessageListRenderer`.
 const areEqual = (prev: MessageBubbleProps, next: MessageBubbleProps): boolean =>
     prev.message === next.message &&
-    prev.chat === next.chat &&
+    prev.chat.chatId === next.chat.chatId &&
+    prev.chat.chatType === next.chat.chatType &&
+    prev.chat.chatName === next.chat.chatName &&
+    prev.chat.dmPartnerUser === next.chat.dmPartnerUser &&
     prev.variant === next.variant &&
     prev.isFocused === next.isFocused &&
     prev.isSimpleBubble === next.isSimpleBubble &&
