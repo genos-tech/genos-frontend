@@ -1,13 +1,16 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { keyframes } from "@emotion/react";
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import FolderOpenIcon from "@mui/icons-material/FolderOpen";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import PublicIcon from "@mui/icons-material/Public";
+import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import {
     Alert,
     Box,
     Button,
     Checkbox,
+    Chip,
     Input,
     Modal,
     ModalDialog,
@@ -15,13 +18,15 @@ import {
     Typography,
 } from "@mui/joy";
 
+import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
-import { useTranslation } from "../../../../i18n";
+import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { replaceSpacesWithUnderscore } from "../../../../utils/stringHelper";
 import { joinTeam } from "../../../admin/services/joinTeam";
+import { popTeamMembers } from "../../../admin/services/popTeamMembers";
 import { signUp } from "../../../admin/services/signup";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
@@ -53,6 +58,59 @@ export const ModalCreateProject: React.FC<Props> = ({
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [isPrivate, setIsPrivate] = useState(false);
     const [projectName, setProjectName] = useState("");
+
+    // Initial-member selection — same picker UX as ModalCreateGM. The
+    // creator is always joined (below); these are additional teammates
+    // to add to the project on creation.
+    const [teamMembers, setTeamMembers] = useState<UserProps[]>([]);
+    const [selectedMembers, setSelectedMembers] = useState<UserProps[]>([]);
+    const [searchQuery, setSearchQuery] = useState("");
+
+    // Load the team roster when the modal opens, excluding the creator
+    // (they're joined unconditionally). `popTeamMembers` is self-contained
+    // so this modal needs no extra props (mirrors ModalCreateGM's fallback).
+    useEffect(() => {
+        if (!usePM.openCreateProject || !myself.userId) return;
+        let cancelled = false;
+        popTeamMembers(myself).then((members) => {
+            if (!cancelled) setTeamMembers(members.filter((m) => m.userId !== myself.userId));
+        });
+        return () => {
+            cancelled = true;
+        };
+    }, [usePM.openCreateProject, myself]);
+
+    // Reset the picker (and errors) whenever the modal closes.
+    useEffect(() => {
+        if (!usePM.openCreateProject) {
+            setSelectedMembers([]);
+            setSearchQuery("");
+            setErrorMessage(null);
+        }
+    }, [usePM.openCreateProject]);
+
+    const filteredMembers = useMemo(() => {
+        if (!searchQuery.trim()) return teamMembers;
+        const query = searchQuery.toLowerCase();
+        return teamMembers.filter(
+            (m) =>
+                m.userName.toLowerCase().includes(query) ||
+                m.userEmail.toLowerCase().includes(query)
+        );
+    }, [teamMembers, searchQuery]);
+
+    const handleToggleMember = (member: UserProps) => {
+        setSelectedMembers((prev) =>
+            prev.some((m) => m.userId === member.userId)
+                ? prev.filter((m) => m.userId !== member.userId)
+                : [...prev, member]
+        );
+    };
+
+    const handleRemoveMember = (memberId: string) => {
+        setSelectedMembers((prev) => prev.filter((m) => m.userId !== memberId));
+    };
+
     const handleCreateProject = () => {
         if (projectName.trim()) {
             createProject();
@@ -138,6 +196,43 @@ export const ModalCreateProject: React.FC<Props> = ({
                             );
 
                             if (prjJoinTeamRes && meJoinTeamRes && createProjectData.project_id) {
+                                // Add the selected initial members. Each is a
+                                // separate POST /project/join/ (the endpoint
+                                // takes one attendee_id); the Django
+                                // `_sync_pm_channel_member` signal mirrors each
+                                // into the project's PM channel automatically.
+                                // Independent — a per-member failure doesn't
+                                // sink the others or the creation itself.
+                                for (const member of selectedMembers) {
+                                    try {
+                                        const memberJoinRes = await fetch(
+                                            `${base_url}/project/join/`,
+                                            {
+                                                method: "POST",
+                                                headers: {
+                                                    "Content-Type": "application/json",
+                                                    Authorization: `Bearer ${accessToken}`,
+                                                },
+                                                body: JSON.stringify({
+                                                    team_id: myself.teamId,
+                                                    project_id: createProjectData.project_id,
+                                                    attendee_id: member.userId,
+                                                }),
+                                            }
+                                        );
+                                        if (!memberJoinRes.ok) {
+                                            console.error(
+                                                `[ModalCreateProject] member join failed for ${member.userId}:`,
+                                                memberJoinRes.status
+                                            );
+                                        }
+                                    } catch (e) {
+                                        console.error(
+                                            `[ModalCreateProject] member join threw for ${member.userId}:`,
+                                            e
+                                        );
+                                    }
+                                }
                                 const newProject = {
                                     projectId: createProjectData.project_id,
                                     projectName: createProjectData.project_name,
@@ -335,6 +430,179 @@ export const ModalCreateProject: React.FC<Props> = ({
                             : t.tasks.modals.createProject.publicProject}
                     </Typography>
                 </Box>
+
+                {/* Add members (optional) — same picker UX as GM creation */}
+                <Typography
+                    level="body-xs"
+                    sx={{ mb: 1, color: "rgba(255,255,255,0.5)", fontWeight: 600 }}
+                >
+                    {t.tasks.modals.createProject.addMembersLabel}
+                </Typography>
+
+                {/* Selected Members Chips */}
+                {selectedMembers.length > 0 && (
+                    <Box
+                        sx={{
+                            display: "flex",
+                            flexWrap: "wrap",
+                            gap: 0.5,
+                            mb: 2,
+                            p: 1.5,
+                            borderRadius: "10px",
+                            backgroundColor: "rgba(124,58,237,0.1)",
+                            border: "1px solid rgba(124,58,237,0.2)",
+                        }}
+                    >
+                        {selectedMembers.map((member) => (
+                            <Chip
+                                key={member.userId}
+                                color="primary"
+                                size="sm"
+                                variant="soft"
+                                endDecorator={
+                                    <CloseRoundedIcon
+                                        sx={{ fontSize: 14, cursor: "pointer" }}
+                                        onClick={() => handleRemoveMember(member.userId)}
+                                    />
+                                }
+                                sx={{
+                                    "--Chip-gap": "4px",
+                                    backgroundColor: "rgba(124,58,237,0.2)",
+                                }}
+                            >
+                                {member.userName}
+                            </Chip>
+                        ))}
+                    </Box>
+                )}
+
+                {/* Member Search */}
+                <Input
+                    placeholder={t.tasks.modals.createProject.searchMembersPlaceholder}
+                    value={searchQuery}
+                    startDecorator={
+                        <SearchRoundedIcon sx={{ color: "rgba(255, 255, 255, 0.4)" }} />
+                    }
+                    sx={{
+                        mb: 1,
+                        "--Input-focusedThickness": "1px",
+                        "--Input-focusedHighlight": "rgba(124,58,237,0.5)",
+                        backgroundColor: "rgba(255, 255, 255, 0.05)",
+                        border: "1px solid rgba(255, 255, 255, 0.1)",
+                        borderRadius: "10px",
+                        color: "#e0e0e0",
+                        transition: "all 0.2s ease",
+                        "&:hover": { borderColor: "rgba(124,58,237,0.3)" },
+                        "& input::placeholder": { color: "rgba(255, 255, 255, 0.4)" },
+                    }}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                />
+
+                {/* Member List */}
+                <Box
+                    sx={{
+                        maxHeight: "200px",
+                        overflowY: "auto",
+                        mb: 1,
+                        borderRadius: "10px",
+                        backgroundColor: "rgba(255, 255, 255, 0.02)",
+                        border: "1px solid rgba(255, 255, 255, 0.05)",
+                    }}
+                >
+                    {filteredMembers.length === 0 ? (
+                        <Typography
+                            level="body-sm"
+                            sx={{ p: 3, textAlign: "center", color: "rgba(255, 255, 255, 0.4)" }}
+                        >
+                            {searchQuery
+                                ? t.tasks.modals.createProject.noMembersMatchingSearch
+                                : t.tasks.modals.createProject.noMembersAvailable}
+                        </Typography>
+                    ) : (
+                        filteredMembers.map((member) => {
+                            const isSelected = selectedMembers.some(
+                                (m) => m.userId === member.userId
+                            );
+                            return (
+                                <Box
+                                    key={member.userId}
+                                    sx={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 1.5,
+                                        p: 1.5,
+                                        cursor: "pointer",
+                                        borderBottom: "1px solid rgba(255, 255, 255, 0.05)",
+                                        transition: "all 0.15s ease",
+                                        backgroundColor: isSelected
+                                            ? "rgba(124,58,237,0.1)"
+                                            : "transparent",
+                                        "&:hover": {
+                                            backgroundColor: isSelected
+                                                ? "rgba(124,58,237,0.15)"
+                                                : "rgba(255, 255, 255, 0.05)",
+                                        },
+                                        "&:last-child": { borderBottom: "none" },
+                                    }}
+                                    onClick={() => handleToggleMember(member)}
+                                >
+                                    <Checkbox
+                                        checked={isSelected}
+                                        color="primary"
+                                        sx={{ pointerEvents: "none" }}
+                                        variant="soft"
+                                    />
+                                    <UserAvatar
+                                        clickable={false}
+                                        showPulseDot={false}
+                                        userId={member.userId}
+                                    />
+                                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                                        <Typography
+                                            level="body-sm"
+                                            sx={{
+                                                fontWeight: 500,
+                                                color: "rgba(255, 255, 255, 0.9)",
+                                                overflow: "hidden",
+                                                textOverflow: "ellipsis",
+                                                whiteSpace: "nowrap",
+                                            }}
+                                        >
+                                            {member.userName}
+                                        </Typography>
+                                        <Typography
+                                            level="body-xs"
+                                            sx={{
+                                                color: "rgba(255, 255, 255, 0.4)",
+                                                overflow: "hidden",
+                                                textOverflow: "ellipsis",
+                                                whiteSpace: "nowrap",
+                                            }}
+                                        >
+                                            {member.userEmail}
+                                        </Typography>
+                                    </Box>
+                                </Box>
+                            );
+                        })
+                    )}
+                </Box>
+
+                {/* Selected Count */}
+                <Typography
+                    level="body-xs"
+                    sx={{
+                        mb: 2,
+                        color:
+                            selectedMembers.length > 0
+                                ? "rgba(124,58,237,0.8)"
+                                : "rgba(255, 255, 255, 0.4)",
+                    }}
+                >
+                    {fmt(t.tasks.modals.createProject.membersSelected, {
+                        count: selectedMembers.length,
+                    })}
+                </Typography>
 
                 {/* Error Alert */}
                 {errorMessage && (

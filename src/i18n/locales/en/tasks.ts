@@ -177,6 +177,11 @@ export const tasks = {
             createButton: "Create Project",
             creationFailed: "Project Creation Failed",
             joinFailed: "Failed to join the created project",
+            addMembersLabel: "Add members (optional)",
+            searchMembersPlaceholder: "Search teammates...",
+            noMembersAvailable: "No teammates available",
+            noMembersMatchingSearch: "No teammates match your search",
+            membersSelected: "{count} member(s) selected",
         },
         deleteProject: {
             heading: "Delete Project?",
