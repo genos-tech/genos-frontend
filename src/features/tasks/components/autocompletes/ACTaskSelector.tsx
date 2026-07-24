@@ -327,12 +327,24 @@ export const ACTaskSelector = ({
                             },
                         }}
                         onChange={(_e, value) => {
-                            setSelectedTask(value);
                             if (value && value.id != null && selectedProject) {
                                 onPick({
                                     taskId: Number(value.id),
                                     project: selectedProject,
                                 });
+                                // Don't retain the picked task as the value:
+                                // adding it as a dependency immediately drops
+                                // it from `taskOptions` (excludeTaskIds), and
+                                // MUI warns when a controlled Autocomplete
+                                // value isn't among its options ("None of the
+                                // options match..."). The parent shows the new
+                                // dependency in its list, so the picker resets
+                                // to empty. (Pre-existing race, unrelated to
+                                // the status-sync change — surfaces most on
+                                // milestone picks.)
+                                setSelectedTask(null);
+                            } else {
+                                setSelectedTask(value);
                             }
                         }}
                     />
