@@ -1,13 +1,26 @@
-import { useRef } from "react";
+import { useMemo, useRef, useState } from "react";
 import AssignmentIcon from "@mui/icons-material/Assignment";
+import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
+import FilterListIcon from "@mui/icons-material/FilterList";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import LockOutlineIcon from "@mui/icons-material/LockOutline";
 import WorkIcon from "@mui/icons-material/Work";
-import { Avatar, Box, List, ListItem, ListItemContent, Typography } from "@mui/joy";
+import {
+    Avatar,
+    Box,
+    Divider,
+    IconButton,
+    List,
+    ListItem,
+    ListItemContent,
+    Menu,
+    Typography,
+} from "@mui/joy";
 import ListItemButton from "@mui/joy/ListItemButton";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
+import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
@@ -23,6 +36,7 @@ import { Toggler } from "./common";
 import { JoinProjectListItem } from "./projects_subs/JoinProjectListItem";
 import { MilestonesListItem } from "./projects_subs/MilestonesListItem";
 import { NewProjectListItem } from "./projects_subs/NewProjectListItem";
+import { distinctProjectLabels, filterAndSortProjects } from "./projectSidebarOrder";
 
 // Cover the full set used by `useTaskManagement.fetchProjectTasks` so the
 // stale read matches what the post-network refresh will pull from IDB.
@@ -74,6 +88,45 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
     // *after* B is selected, leaving the user staring at the wrong
     // project's rows until B's network fetch completed seconds later.
     const latestClickedProjectIdRef = useRef<number | null>(null);
+
+    // --- Project-label filter + always-on sort -------------------------
+    // The label filter (by `projectLabels`, the team-catalog labels applied
+    // to the PROJECT itself — NOT the per-task `projectTags`) and the sort
+    // are purely presentational: they reshape the displayed list without
+    // touching which projects are loaded.
+    const [activeLabelIds, setActiveLabelIds] = useState<number[]>([]);
+    const [filterAnchor, setFilterAnchor] = useState<HTMLElement | null>(null);
+
+    // Only joined projects render in this section (the map used to gate on
+    // `isJoined === true` inline); do it once up front so the filter/sort
+    // below operate on the same set.
+    const joinedProjects = useMemo(
+        () => usePM.teamProjects.filter((p) => p.isJoined === true),
+        [usePM.teamProjects]
+    );
+
+    // Distinct labels across the joined projects — the filter menu's options.
+    const allLabels = useMemo(() => distinctProjectLabels(joinedProjects), [joinedProjects]);
+
+    // Drop any selected id whose label no longer exists (label deleted, or
+    // the last project carrying it left) so the active count stays honest
+    // and a stale id can't hide every project.
+    const effectiveActiveIds = useMemo(
+        () => activeLabelIds.filter((id) => allLabels.some((l) => l.labelId === id)),
+        [activeLabelIds, allLabels]
+    );
+
+    // Filter (OR across selected labels) then sort by label(asc), name(asc).
+    const visibleProjects = useMemo(
+        () => filterAndSortProjects(joinedProjects, effectiveActiveIds),
+        [joinedProjects, effectiveActiveIds]
+    );
+
+    const filterActive = effectiveActiveIds.length > 0;
+    const toggleLabel = (labelId: number) =>
+        setActiveLabelIds((prev) =>
+            prev.includes(labelId) ? prev.filter((id) => id !== labelId) : [...prev, labelId]
+        );
 
     return (
         <ListItem nested>
@@ -134,6 +187,38 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                                 {t.tasks.sidebar.projects}
                             </Typography>
                         </ListItemContent>
+                        {/* Filter projects by label. Lives at the section
+                            level (filtering is list-wide, not per-project),
+                            next to the section's expand arrow. stopPropagation
+                            so opening the menu doesn't collapse the section. */}
+                        <AppTooltip title={t.tasks.sidebar.filterByLabel}>
+                            <IconButton
+                                color={filterActive ? "primary" : "neutral"}
+                                size="sm"
+                                variant={filterActive ? "soft" : "plain"}
+                                sx={{
+                                    "--IconButton-size": "26px",
+                                    minHeight: "26px",
+                                    borderRadius: "6px",
+                                    mr: 0.25,
+                                    px: filterActive ? 0.5 : 0,
+                                }}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setFilterAnchor(e.currentTarget);
+                                }}
+                            >
+                                <FilterListIcon sx={{ fontSize: 16 }} />
+                                {filterActive && (
+                                    <Typography
+                                        level="body-xs"
+                                        sx={{ ml: 0.25, fontWeight: 700, color: "inherit" }}
+                                    >
+                                        {effectiveActiveIds.length}
+                                    </Typography>
+                                )}
+                            </IconButton>
+                        </AppTooltip>
                         <KeyboardArrowDownIcon
                             sx={{
                                 fontSize: 18,
@@ -146,19 +231,28 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                 )}
             >
                 <List sx={{ gap: 0.25 }}>
-                    {usePM.teamProjects.map(
-                        (
-                            {
-                                projectId,
-                                projectName,
-                                projectTags,
-                                projectLabels,
-                                isPrivate,
-                                systemUserId,
-                                isJoined,
-                            },
-                            index
-                        ) => {
+                    {filterActive && visibleProjects.length === 0 && (
+                        <ListItem sx={{ pl: 4.5, py: 0.5 }}>
+                            <Typography
+                                level="body-xs"
+                                sx={{
+                                    fontStyle: "italic",
+                                    color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)",
+                                }}
+                            >
+                                {t.tasks.sidebar.noProjectsMatchFilter}
+                            </Typography>
+                        </ListItem>
+                    )}
+                    {visibleProjects.map(
+                        ({
+                            projectId,
+                            projectName,
+                            projectTags,
+                            projectLabels,
+                            isPrivate,
+                            systemUserId,
+                        }) => {
                             const isSelected = projectId === usePM.currentProject?.projectId;
                             // Resolve this project's PM chat (chatType 3) so we
                             // can show its uploaded avatar image. Same canonical
@@ -172,163 +266,158 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                             );
                             const avatarSrc = buildAvatarSrc(pmChat?.profileImagePath);
                             return (
-                                isJoined === true && (
-                                    <Toggler
-                                        key={`toggler-TeamProjects-${projectId}-${index}`}
-                                        defaultExpanded={false}
-                                        renderToggle={({ open, setOpen }) => (
-                                            <ListItemButton
-                                                selected={isSelected}
-                                                sx={{
-                                                    overflow: "hidden",
-                                                    borderRadius: "8px",
-                                                    py: 0.75,
-                                                    px: 1.25,
-                                                    ml: 4.5,
-                                                    gap: 1,
-                                                    transition: "all 0.15s ease",
+                                <Toggler
+                                    key={`toggler-TeamProjects-${projectId}`}
+                                    defaultExpanded={false}
+                                    renderToggle={({ open, setOpen }) => (
+                                        <ListItemButton
+                                            selected={isSelected}
+                                            sx={{
+                                                overflow: "hidden",
+                                                borderRadius: "8px",
+                                                py: 0.75,
+                                                px: 1.25,
+                                                ml: 4.5,
+                                                gap: 1,
+                                                transition: "all 0.15s ease",
+                                                "&:hover": {
+                                                    backgroundColor: isDark
+                                                        ? "rgba(255,255,255,0.04)"
+                                                        : "rgba(0,0,0,0.03)",
+                                                },
+                                                "&.Mui-selected": {
+                                                    backgroundColor: isDark
+                                                        ? "rgba(251,146,60,0.15)"
+                                                        : "rgba(234,88,12,0.1)",
                                                     "&:hover": {
                                                         backgroundColor: isDark
-                                                            ? "rgba(255,255,255,0.04)"
-                                                            : "rgba(0,0,0,0.03)",
+                                                            ? "rgba(251,146,60,0.2)"
+                                                            : "rgba(234,88,12,0.15)",
                                                     },
-                                                    "&.Mui-selected": {
-                                                        backgroundColor: isDark
-                                                            ? "rgba(251,146,60,0.15)"
-                                                            : "rgba(234,88,12,0.1)",
-                                                        "&:hover": {
-                                                            backgroundColor: isDark
-                                                                ? "rgba(251,146,60,0.2)"
-                                                                : "rgba(234,88,12,0.15)",
-                                                        },
-                                                    },
-                                                }}
-                                                onClick={() => {
-                                                    setOpen(!open);
-                                                    // Only if the clicked project id is not the same as the current one,
-                                                    // reset the project (and load tasks in the downstream step.)
-                                                    if (
-                                                        projectId !==
-                                                        usePM.currentProject?.projectId
-                                                    ) {
-                                                        // Close any task/milestone preview from the
-                                                        // previous project so we never carry stale
-                                                        // ids across project boundaries.
-                                                        useTM.closeTaskPreview();
-                                                        useTM.setTableMilestoneFilterId(null);
-                                                        // Switch out of the global "Home" dashboard
-                                                        // view when a specific project is opened.
-                                                        // Without this, clicking a project from the
-                                                        // Home view would leave the dashboard flag
-                                                        // on, and on mobile the dashboard would
-                                                        // remain showing instead of the project's
-                                                        // task list.
-                                                        useTM.setIsTaskDashboardVisible(false);
-                                                        useTM.setIsTaskTableVisible(true);
-                                                        // Reset the task table — the SWR read below
-                                                        // will repopulate it from IDB within ~10–50 ms
-                                                        // if we have cached rows for this project, so
-                                                        // the blank state is just a brief flash on
-                                                        // first visit (when IDB has nothing yet).
-                                                        useTM.setAllTasks([]);
+                                                },
+                                            }}
+                                            onClick={() => {
+                                                setOpen(!open);
+                                                // Only if the clicked project id is not the same as the current one,
+                                                // reset the project (and load tasks in the downstream step.)
+                                                if (
+                                                    projectId !== usePM.currentProject?.projectId
+                                                ) {
+                                                    // Close any task/milestone preview from the
+                                                    // previous project so we never carry stale
+                                                    // ids across project boundaries.
+                                                    useTM.closeTaskPreview();
+                                                    useTM.setTableMilestoneFilterId(null);
+                                                    // Switch out of the global "Home" dashboard
+                                                    // view when a specific project is opened.
+                                                    // Without this, clicking a project from the
+                                                    // Home view would leave the dashboard flag
+                                                    // on, and on mobile the dashboard would
+                                                    // remain showing instead of the project's
+                                                    // task list.
+                                                    useTM.setIsTaskDashboardVisible(false);
+                                                    useTM.setIsTaskTableVisible(true);
+                                                    // Reset the task table — the SWR read below
+                                                    // will repopulate it from IDB within ~10–50 ms
+                                                    // if we have cached rows for this project, so
+                                                    // the blank state is just a brief flash on
+                                                    // first visit (when IDB has nothing yet).
+                                                    useTM.setAllTasks([]);
 
-                                                        // Record this click before kicking off the
-                                                        // async read so a later click can claim the
-                                                        // ref and invalidate our pending paint.
-                                                        latestClickedProjectIdRef.current =
-                                                            projectId;
+                                                    // Record this click before kicking off the
+                                                    // async read so a later click can claim the
+                                                    // ref and invalidate our pending paint.
+                                                    latestClickedProjectIdRef.current = projectId;
 
-                                                        // Stale-while-revalidate: paint the IDB-cached
-                                                        // task set for the new project immediately so
-                                                        // the user sees rows without waiting for the
-                                                        // full network round-trip. The fresh fetch is
-                                                        // kicked off in parallel below; the existing
-                                                        // `tsTasksLoadedToIDB` effect in
-                                                        // useProjectTaskManagement will re-read IDB
-                                                        // once the network completes.
-                                                        //
-                                                        // Team-scope guard: IDB persists across team
-                                                        // switches, so without filtering on teamId we
-                                                        // could briefly render the previous team's
-                                                        // rows under a project that shares an id.
-                                                        //
-                                                        // Cross-project race guard: on rapid A → B
-                                                        // switches, A's IDB read can return after the
-                                                        // user has already clicked B. The ref check
-                                                        // drops the stale paint so we never flash
-                                                        // A's rows underneath B's selection.
-                                                        (async () => {
-                                                            const cached =
-                                                                await popSpecificProjectTasks(
-                                                                    projectId,
-                                                                    ALL_TASK_STATUSES
-                                                                );
-                                                            if (
-                                                                latestClickedProjectIdRef.current !==
-                                                                projectId
-                                                            ) {
-                                                                return;
-                                                            }
-                                                            const safeCached = cached.filter(
-                                                                (t) =>
-                                                                    String(t.teamId) ===
-                                                                    String(myself.teamId)
+                                                    // Stale-while-revalidate: paint the IDB-cached
+                                                    // task set for the new project immediately so
+                                                    // the user sees rows without waiting for the
+                                                    // full network round-trip. The fresh fetch is
+                                                    // kicked off in parallel below; the existing
+                                                    // `tsTasksLoadedToIDB` effect in
+                                                    // useProjectTaskManagement will re-read IDB
+                                                    // once the network completes.
+                                                    //
+                                                    // Team-scope guard: IDB persists across team
+                                                    // switches, so without filtering on teamId we
+                                                    // could briefly render the previous team's
+                                                    // rows under a project that shares an id.
+                                                    //
+                                                    // Cross-project race guard: on rapid A → B
+                                                    // switches, A's IDB read can return after the
+                                                    // user has already clicked B. The ref check
+                                                    // drops the stale paint so we never flash
+                                                    // A's rows underneath B's selection.
+                                                    (async () => {
+                                                        const cached =
+                                                            await popSpecificProjectTasks(
+                                                                projectId,
+                                                                ALL_TASK_STATUSES
                                                             );
-                                                            if (safeCached.length === 0) return;
-                                                            // Functional update so we never overwrite
-                                                            // a fresh network result that landed
-                                                            // before the IDB read returned (rare but
-                                                            // possible on a hot cache where the
-                                                            // network is faster than the worker).
-                                                            useTM.setAllTasks((prev) =>
-                                                                prev.length === 0
-                                                                    ? safeCached
-                                                                    : prev
-                                                            );
-                                                        })();
+                                                        if (
+                                                            latestClickedProjectIdRef.current !==
+                                                            projectId
+                                                        ) {
+                                                            return;
+                                                        }
+                                                        const safeCached = cached.filter(
+                                                            (t) =>
+                                                                String(t.teamId) ===
+                                                                String(myself.teamId)
+                                                        );
+                                                        if (safeCached.length === 0) return;
+                                                        // Functional update so we never overwrite
+                                                        // a fresh network result that landed
+                                                        // before the IDB read returned (rare but
+                                                        // possible on a hot cache where the
+                                                        // network is faster than the worker).
+                                                        useTM.setAllTasks((prev) =>
+                                                            prev.length === 0 ? safeCached : prev
+                                                        );
+                                                    })();
 
-                                                        (async () => {
-                                                            await usePM.loadProjectsAndTasks(
-                                                                projectId
-                                                            );
-                                                            // This will be executed in the loadProjectsAndTasks,
-                                                            // but somehow this needs to update the task table...
-                                                            usePM.setCurrentProject({
-                                                                projectId: projectId,
-                                                                projectName: projectName,
-                                                                projectTags: projectTags,
-                                                                projectLabels: projectLabels,
-                                                                isPrivate: isPrivate,
-                                                                systemUserId: systemUserId,
-                                                            });
-                                                        })();
-                                                    }
+                                                    (async () => {
+                                                        await usePM.loadProjectsAndTasks(
+                                                            projectId
+                                                        );
+                                                        // This will be executed in the loadProjectsAndTasks,
+                                                        // but somehow this needs to update the task table...
+                                                        usePM.setCurrentProject({
+                                                            projectId: projectId,
+                                                            projectName: projectName,
+                                                            projectTags: projectTags,
+                                                            projectLabels: projectLabels,
+                                                            isPrivate: isPrivate,
+                                                            systemUserId: systemUserId,
+                                                        });
+                                                    })();
+                                                }
+                                            }}
+                                        >
+                                            <Avatar
+                                                size="sm"
+                                                src={avatarSrc}
+                                                sx={{
+                                                    width: 20,
+                                                    height: 20,
+                                                    flexShrink: 0,
                                                 }}
                                             >
-                                                <Avatar
-                                                    size="sm"
-                                                    src={avatarSrc}
+                                                <AssignmentIcon
                                                     sx={{
-                                                        width: 20,
-                                                        height: 20,
-                                                        flexShrink: 0,
+                                                        fontSize: 14,
+                                                        color: isSelected
+                                                            ? isDark
+                                                                ? "#fb923c"
+                                                                : "#ea580c"
+                                                            : isDark
+                                                              ? "rgba(255,255,255,0.6)"
+                                                              : "rgba(0,0,0,0.5)",
                                                     }}
-                                                >
-                                                    <AssignmentIcon
-                                                        sx={{
-                                                            fontSize: 14,
-                                                            color: isSelected
-                                                                ? isDark
-                                                                    ? "#fb923c"
-                                                                    : "#ea580c"
-                                                                : isDark
-                                                                  ? "rgba(255,255,255,0.6)"
-                                                                  : "rgba(0,0,0,0.5)",
-                                                        }}
-                                                    />
-                                                </Avatar>
+                                                />
+                                            </Avatar>
 
-                                                {/* Team-scoped project labels, right after
+                                            {/* Team-scoped project labels, right after
                                                     the avatar. Capped at ONE chip + a `+N`
                                                     pill: the row is narrow and the project
                                                     NAME is what users scan for, so a second
@@ -336,72 +425,69 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                                                     Full list is on the chip's tooltip.
                                                     Renders nothing when unlabelled, so those
                                                     rows keep their previous layout. */}
-                                                <ProjectLabelChips
-                                                    labels={projectLabels ?? []}
-                                                    max={1}
-                                                />
+                                            <ProjectLabelChips
+                                                labels={projectLabels ?? []}
+                                                max={1}
+                                            />
 
-                                                {isPrivate === true && (
-                                                    <LockOutlineIcon
-                                                        sx={{
-                                                            fontSize: 14,
-                                                            mx: -0.5,
-                                                            color: isDark
-                                                                ? "rgba(255,255,255,0.4)"
-                                                                : "rgba(0,0,0,0.35)",
-                                                        }}
-                                                    />
-                                                )}
-
-                                                <Typography
-                                                    level="body-sm"
+                                            {isPrivate === true && (
+                                                <LockOutlineIcon
                                                     sx={{
-                                                        overflow: "hidden",
-                                                        textOverflow: "ellipsis",
-                                                        whiteSpace: "nowrap",
-                                                        flex: 1,
-                                                        fontWeight: isSelected ? 600 : 500,
-                                                        color: isSelected
-                                                            ? isDark
-                                                                ? "#fb923c"
-                                                                : "#ea580c"
-                                                            : isDark
-                                                              ? "rgba(255,255,255,0.8)"
-                                                              : "rgba(0,0,0,0.7)",
-                                                    }}
-                                                    noWrap
-                                                >
-                                                    {projectName}
-                                                </Typography>
-                                                <KeyboardArrowDownIcon
-                                                    sx={{
-                                                        fontSize: 16,
+                                                        fontSize: 14,
+                                                        mx: -0.5,
                                                         color: isDark
                                                             ? "rgba(255,255,255,0.4)"
                                                             : "rgba(0,0,0,0.35)",
-                                                        transition: "transform 0.2s ease",
-                                                        transform: open
-                                                            ? "rotate(180deg)"
-                                                            : "none",
                                                     }}
                                                 />
-                                            </ListItemButton>
-                                        )}
-                                    >
-                                        <MilestonesListItem
-                                            currentProjectId={projectId}
-                                            myself={myself}
-                                            setMyself={setMyself}
-                                            socket={socket}
-                                            useCM={useCM}
-                                            usePM={usePM}
-                                            useSM={useSM}
-                                            useTEM={useTEM}
-                                            useTM={useTM}
-                                            useUISM={useUISM}
-                                        />
-                                    </Toggler>
-                                )
+                                            )}
+
+                                            <Typography
+                                                level="body-sm"
+                                                sx={{
+                                                    overflow: "hidden",
+                                                    textOverflow: "ellipsis",
+                                                    whiteSpace: "nowrap",
+                                                    flex: 1,
+                                                    fontWeight: isSelected ? 600 : 500,
+                                                    color: isSelected
+                                                        ? isDark
+                                                            ? "#fb923c"
+                                                            : "#ea580c"
+                                                        : isDark
+                                                          ? "rgba(255,255,255,0.8)"
+                                                          : "rgba(0,0,0,0.7)",
+                                                }}
+                                                noWrap
+                                            >
+                                                {projectName}
+                                            </Typography>
+                                            <KeyboardArrowDownIcon
+                                                sx={{
+                                                    fontSize: 16,
+                                                    color: isDark
+                                                        ? "rgba(255,255,255,0.4)"
+                                                        : "rgba(0,0,0,0.35)",
+                                                    transition: "transform 0.2s ease",
+                                                    transform: open ? "rotate(180deg)" : "none",
+                                                }}
+                                            />
+                                        </ListItemButton>
+                                    )}
+                                >
+                                    <MilestonesListItem
+                                        currentProjectId={projectId}
+                                        myself={myself}
+                                        setMyself={setMyself}
+                                        socket={socket}
+                                        useCM={useCM}
+                                        usePM={usePM}
+                                        useSM={useSM}
+                                        useTEM={useTEM}
+                                        useTM={useTM}
+                                        useUISM={useUISM}
+                                    />
+                                </Toggler>
                             );
                         }
                     )}
@@ -411,6 +497,94 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                     <NewProjectListItem usePM={usePM} />
                 </List>
             </Toggler>
+
+            {/* Label filter dropdown. JOY Menu (not Material) — the Joy
+                theme has no `transitions.duration`, so a Material Menu's
+                Modal/Backdrop Fade crashes under this app. Rows are plain
+                Box (not MenuItem) so a click TOGGLES without closing the
+                menu — multi-select stays open; onClose (clickaway/escape)
+                is the only close. */}
+            <Menu
+                anchorEl={filterAnchor}
+                className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
+                open={Boolean(filterAnchor)}
+                placement="bottom-end"
+                size="sm"
+                sx={{ maxHeight: 320, minWidth: 210, overflowY: "auto", borderRadius: "10px" }}
+                onClose={() => setFilterAnchor(null)}
+            >
+                {allLabels.length === 0 ? (
+                    <Typography level="body-xs" sx={{ px: 1, py: 0.75, opacity: 0.7 }}>
+                        {t.tasks.sidebar.noLabels}
+                    </Typography>
+                ) : (
+                    allLabels.map((label) => {
+                        const selected = effectiveActiveIds.includes(label.labelId);
+                        return (
+                            <Box
+                                key={label.labelId}
+                                aria-checked={selected}
+                                role="menuitemcheckbox"
+                                sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 1,
+                                    px: 0.75,
+                                    py: 0.5,
+                                    borderRadius: "8px",
+                                    cursor: "pointer",
+                                    "&:hover": {
+                                        backgroundColor: "var(--joy-palette-neutral-plainHoverBg)",
+                                    },
+                                }}
+                                onClick={() => toggleLabel(label.labelId)}
+                            >
+                                <CheckRoundedIcon
+                                    sx={{ fontSize: 16, opacity: selected ? 1 : 0, flexShrink: 0 }}
+                                />
+                                <Box
+                                    sx={{
+                                        px: 0.75,
+                                        py: 0.15,
+                                        borderRadius: "5px",
+                                        backgroundColor: label.color,
+                                        color: label.textColor,
+                                        fontWeight: 600,
+                                        fontSize: "0.7rem",
+                                        maxWidth: 180,
+                                        overflow: "hidden",
+                                        textOverflow: "ellipsis",
+                                        whiteSpace: "nowrap",
+                                    }}
+                                >
+                                    {label.name}
+                                </Box>
+                            </Box>
+                        );
+                    })
+                )}
+                {filterActive && <Divider sx={{ my: 0.5 }} />}
+                {filterActive && (
+                    <Box
+                        role="menuitem"
+                        sx={{
+                            textAlign: "center",
+                            px: 0.75,
+                            py: 0.5,
+                            borderRadius: "8px",
+                            cursor: "pointer",
+                            fontSize: "0.8rem",
+                            color: isDark ? "rgba(255,255,255,0.75)" : "rgba(0,0,0,0.7)",
+                            "&:hover": {
+                                backgroundColor: "var(--joy-palette-neutral-plainHoverBg)",
+                            },
+                        }}
+                        onClick={() => setActiveLabelIds([])}
+                    >
+                        {t.tasks.sidebar.clearLabelFilter}
+                    </Box>
+                )}
+            </Menu>
         </ListItem>
     );
 };
