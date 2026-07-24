@@ -10,6 +10,7 @@ import { useHashMentionData } from "../../../context/HashMentionDataContext";
 import { purplePalette } from "../../../theme/purplePalette";
 import type { TaskProps, TaskTableProps } from "../../../types/tasks";
 import { getCachedOrFetchTaskStatus, type TaskStatusResult } from "../services/taskStatusCache";
+import { deriveDaysLeft } from "../utils/daysLeft";
 import { effortLevels, priorities, statuses } from "../utils/taskMeta";
 
 interface Props {
@@ -72,7 +73,8 @@ const vmFromTable = (t: TaskTableProps, projectName?: string): CardVM => ({
         : undefined,
     startDate: t.startDate,
     dueDate: t.dueDate,
-    daysLeft: t.daysLeft,
+    // Fresh from dueDate — the row's `daysLeft` is a stale server snapshot.
+    daysLeft: deriveDaysLeft(t.dueDate),
     tags: (t.tags ?? []).map((tag) => ({
         name: tag.tagName,
         color: tag.tagColor,
@@ -104,7 +106,8 @@ const vmFromFull = (t: TaskProps): CardVM => ({
     reporterName: t.reporter?.userName,
     startDate: t.startDate,
     dueDate: t.dueDate,
-    daysLeft: t.daysLeft,
+    // Fresh from dueDate — the row's `daysLeft` is a stale server snapshot.
+    daysLeft: deriveDaysLeft(t.dueDate),
     tags: (t.tags ?? []).map((tag) => ({
         name: tag.tagName,
         color: tag.tagColor,

@@ -47,6 +47,7 @@ import {
     resolveTagOptions,
     setCustomFieldValue,
 } from "../../utils/customFields";
+import { deriveDaysLeft } from "../../utils/daysLeft";
 import { formatTaskDisplayId } from "../../utils/taskDisplayId";
 import { effortLevels, priorities } from "../../utils/taskMeta";
 import { computeTaskWeight, MAX_TASK_WEIGHT, weightBand } from "../../utils/taskWeight";
@@ -2059,13 +2060,14 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                 );
             }
 
-            case "daysLeft":
-                // A task with no due date can't be "expired" — guard the
-                // chip on `dueDate` so a stale `daysLeft === -1` left
-                // behind by an earlier expired-state row (e.g. user just
-                // toggled the due date to TBD and the IDB write hasn't
-                // refreshed yet) doesn't mislabel an unscheduled task.
-                if (!task.dueDate) {
+            case "daysLeft": {
+                // Derive FRESH from `dueDate` — the row's `daysLeft` field is
+                // a server-snapshot (cached in Redis + IDB) that goes stale
+                // across a day boundary / on a cache hit. `null` = no or
+                // unparseable due date → dash (an unscheduled task can't be
+                // "expired"); `-1` = the overdue "Expired" sentinel.
+                const dl = deriveDaysLeft(task.dueDate);
+                if (dl === null) {
                     return (
                         <Typography
                             level="body-sm"
@@ -2078,7 +2080,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                         </Typography>
                     );
                 }
-                return task.daysLeft === -1 ? (
+                return dl === -1 ? (
                     <Chip
                         label="Expired"
                         size="small"
@@ -2095,18 +2097,19 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                         sx={{
                             fontWeight: 500,
                             color:
-                                (task.daysLeft ?? 0) <= 3
+                                dl <= 3
                                     ? "#f44336"
-                                    : (task.daysLeft ?? 0) <= 7
+                                    : dl <= 7
                                       ? "#ff9800"
                                       : mode === "dark"
                                         ? "#e0e0e0"
                                         : "#333",
                         }}
                     >
-                        {task.daysLeft}
+                        {dl}
                     </Typography>
                 );
+            }
 
             case "dueDate":
                 if (editingField === "dueDate") {
