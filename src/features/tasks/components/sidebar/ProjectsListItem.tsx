@@ -250,7 +250,7 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                                 size="sm"
                                 sx={{
                                     maxHeight: 320,
-                                    minWidth: 210,
+                                    minWidth: 147,
                                     overflowY: "auto",
                                     borderRadius: "10px",
                                 }}
@@ -292,7 +292,7 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                                                         color: label.textColor,
                                                         fontWeight: 600,
                                                         fontSize: "0.7rem",
-                                                        maxWidth: 180,
+                                                        maxWidth: 110,
                                                         overflow: "hidden",
                                                         textOverflow: "ellipsis",
                                                         whiteSpace: "nowrap",
