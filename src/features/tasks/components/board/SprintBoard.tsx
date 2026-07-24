@@ -197,10 +197,14 @@ export const SprintBoard = (props: SprintBoardProps) => {
         setPredefinedTagsFilters([allTagFilter, ...tagBasedFilters]);
     }, [usePM.currentProject?.projectTags]);
 
-    // Local state for board tasks organized by column
+    // Local state for board tasks organized by column. One bucket per
+    // entry in COLUMNS (incl. `blocked`) — a status without a bucket
+    // here is silently dropped by `dispatchToColumn`, which is exactly
+    // why Blocked cards never appeared on the board before.
     const [boardTasks, setBoardTasks] = useState<Record<string, TaskTableProps[]>>({
         open: [],
         wip: [],
+        blocked: [],
         pending: [],
         closed: [],
     });
@@ -225,6 +229,7 @@ export const SprintBoard = (props: SprintBoardProps) => {
         const organized: Record<string, TaskTableProps[]> = {
             open: [],
             wip: [],
+            blocked: [],
             pending: [],
             closed: [],
         };
@@ -234,6 +239,7 @@ export const SprintBoard = (props: SprintBoardProps) => {
             const status = task.status?.toLowerCase() || "open";
             if (status === "open") organized.open.push(task);
             else if (status === "wip") organized.wip.push(task);
+            else if (status === "blocked") organized.blocked.push(task);
             else if (status === "pending") organized.pending.push(task);
             else if (status === "closed") organized.closed.push(task);
         };
@@ -263,6 +269,7 @@ export const SprintBoard = (props: SprintBoardProps) => {
         // function call here is cheap.
         organized.open = sortColumn(organized.open);
         organized.wip = sortColumn(organized.wip);
+        organized.blocked = sortColumn(organized.blocked);
         organized.pending = sortColumn(organized.pending);
         organized.closed = sortColumn(organized.closed);
 
