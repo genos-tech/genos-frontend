@@ -2303,11 +2303,12 @@ const HistoryArchiveTurn = ({
                     )}
                 </Box>
             </Box>
-            {/* F1 — rate an archived answer. The archive doesn't know a
-                prior vote (the payload has no rating field yet), so the
-                thumbs start unrated; the backend upsert makes a re-vote
-                harmless. Hidden for error turns, which have no answer
-                worth rating. */}
+            {/* F1 — rate an archived answer, once. The archive payload
+                still has no rating field, but FeedbackThumbs persists the
+                vote per run_id in localStorage, so a run this device
+                already rated opens pre-selected + locked instead of
+                inviting a re-vote. Hidden for error turns, which have no
+                answer worth rating. */}
             {!turn.error && Boolean(onFeedback) && (
                 <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 0.25 }}>
                     <FeedbackThumbs

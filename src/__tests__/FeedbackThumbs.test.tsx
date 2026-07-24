@@ -1,15 +1,14 @@
 // FeedbackThumbs (F1) — the shared 👍/👎 component used by the
 // thread/note Ask modal and the Spotlight overlay. The contract under
-// test is the optimistic vote state machine: click applies the rating,
-// re-clicking the active thumb clears it (rating 0), and switching
-// thumbs replaces the vote — each transition calling onFeedback with
-// the run id + the applied rating (matching the backend's idempotent
-// upsert of rating ∈ {-1, 0, 1}).
+// test is the ONE-SHOT vote: the first click applies the rating and
+// locks both buttons, a persisted vote re-opens locked + pre-selected,
+// and a seeded rating (initialRating) also opens locked — so a user
+// rates a given answer exactly once per response.
 
 import { CssVarsProvider } from "@mui/joy/styles";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { FeedbackThumbs } from "../features/agentQA/FeedbackThumbs";
 
@@ -20,30 +19,69 @@ const renderThumbs = (props: Parameters<typeof FeedbackThumbs>[0]) =>
         </CssVarsProvider>
     );
 
+const isDisabled = (title: string) =>
+    (screen.getByTitle(title) as HTMLButtonElement).disabled === true;
+
 describe("FeedbackThumbs", () => {
-    it("submits 1 on thumbs-up, then 0 when the same thumb is re-clicked", async () => {
+    beforeEach(() => {
+        localStorage.clear();
+    });
+    afterEach(() => {
+        localStorage.clear();
+    });
+
+    it("submits 1 on thumbs-up, then locks both buttons", async () => {
         const user = userEvent.setup();
         const onFeedback = vi.fn();
         renderThumbs({ runId: "run-42", onFeedback });
 
         await user.click(screen.getByTitle("Good answer"));
+        expect(onFeedback).toHaveBeenCalledTimes(1);
         expect(onFeedback).toHaveBeenLastCalledWith("run-42", 1);
 
-        await user.click(screen.getByTitle("Good answer"));
-        expect(onFeedback).toHaveBeenLastCalledWith("run-42", 0);
+        // One-shot: both thumbs are now locked (can't re-vote / switch).
+        expect(isDisabled("Good answer")).toBe(true);
+        expect(isDisabled("Needs work")).toBe(true);
     });
 
-    it("submits -1 on thumbs-down, and switching thumbs replaces the vote", async () => {
+    it("submits -1 on thumbs-down, then locks both buttons", async () => {
         const user = userEvent.setup();
         const onFeedback = vi.fn();
         renderThumbs({ runId: "run-42", onFeedback });
 
         await user.click(screen.getByTitle("Needs work"));
+        expect(onFeedback).toHaveBeenCalledTimes(1);
         expect(onFeedback).toHaveBeenLastCalledWith("run-42", -1);
+        expect(isDisabled("Good answer")).toBe(true);
+        expect(isDisabled("Needs work")).toBe(true);
+    });
 
-        // Down → Up is a replacement, not a clear.
+    it("persists the vote so a re-mount opens locked (no re-vote)", async () => {
+        const user = userEvent.setup();
+        const onFeedback = vi.fn();
+        const { unmount } = renderThumbs({ runId: "run-99", onFeedback });
+
+        // Before voting the buttons are live.
+        expect(isDisabled("Good answer")).toBe(false);
         await user.click(screen.getByTitle("Good answer"));
-        expect(onFeedback).toHaveBeenLastCalledWith("run-42", 1);
+        expect(onFeedback).toHaveBeenCalledTimes(1);
+        unmount();
+
+        // Re-open (fresh mount, same run) — the persisted vote seeds the
+        // lock, so it opens disabled and pre-selected.
+        renderThumbs({ runId: "run-99", onFeedback });
+        expect(isDisabled("Good answer")).toBe(true);
+        expect(isDisabled("Needs work")).toBe(true);
+        expect(onFeedback).toHaveBeenCalledTimes(1);
+    });
+
+    it("opens locked when seeded via initialRating", () => {
+        const onFeedback = vi.fn();
+        renderThumbs({ runId: "run-7", onFeedback, initialRating: 1 });
+
+        expect(isDisabled("Good answer")).toBe(true);
+        expect(isDisabled("Needs work")).toBe(true);
+        expect(onFeedback).not.toHaveBeenCalled();
     });
 
     it("uses the provided labels", async () => {
