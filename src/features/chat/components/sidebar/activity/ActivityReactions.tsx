@@ -2,6 +2,7 @@ import React from "react";
 import { Box, Stack, Tooltip, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { EmojiGlyph } from "../../../../../components/ui/emoji/EmojiGlyph";
 import { useTranslation } from "../../../../../i18n";
 import { UserProps } from "../../../../../types/admin";
 import { ActivityMessageProps } from "../../../../../types/chat";
@@ -64,7 +65,11 @@ export const ActivityReactions: React.FC<ActivityReactionsProps> = ({
                         filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.1))",
                     }}
                 >
-                    {activity.latestReaction.emoji}
+                    {/* Custom emoji reactions are stored as `:name:`
+                        shortcodes; render through EmojiGlyph so they show
+                        the actual image instead of the raw text. Unicode
+                        emoji pass straight through. */}
+                    <EmojiGlyph emoji={activity.latestReaction.emoji} size={20} />
                 </Box>
             </Stack>
 
@@ -125,7 +130,9 @@ export const ActivityReactions: React.FC<ActivityReactionsProps> = ({
                                     },
                                 }}
                             >
-                                <span style={{ fontSize: "0.85rem", lineHeight: 1 }}>{emoji}</span>
+                                <span style={{ fontSize: "0.85rem", lineHeight: 1 }}>
+                                    <EmojiGlyph emoji={emoji} size={14} />
+                                </span>
                                 <Typography
                                     level="body-xs"
                                     sx={{
@@ -149,12 +156,31 @@ export const ActivityReactions: React.FC<ActivityReactionsProps> = ({
                     <Tooltip
                         placement="top"
                         size="sm"
-                        title={hidden.map(({ emoji, count }) => `${emoji} ${count}`).join("  ")}
                         variant="outlined"
                         sx={{
                             borderRadius: "8px",
                             fontSize: "0.75rem",
                         }}
+                        title={
+                            <Stack
+                                direction="row"
+                                spacing={0.75}
+                                sx={{ flexWrap: "wrap", gap: 0.25 }}
+                            >
+                                {hidden.map(({ emoji, count }, i) => (
+                                    <Box
+                                        key={`hidden-${i}`}
+                                        sx={{
+                                            display: "inline-flex",
+                                            alignItems: "center",
+                                            gap: 0.25,
+                                        }}
+                                    >
+                                        <EmojiGlyph emoji={emoji} size={14} /> {count}
+                                    </Box>
+                                ))}
+                            </Stack>
+                        }
                     >
                         <Box
                             sx={{
