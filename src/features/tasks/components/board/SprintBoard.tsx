@@ -7,6 +7,7 @@ import Typography from "@mui/joy/Typography";
 import { createTheme, THEME_ID, ThemeProvider } from "@mui/material/styles";
 import { Socket } from "socket.io-client";
 
+import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { useAuth } from "../../../../context/AuthContext";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { useTaskSortPreferences } from "../../../../hooks/common/useTaskSortPreferences";
@@ -19,6 +20,7 @@ import { LazyTaskDiagram } from "../../diagram/components/LazyTaskDiagram";
 import { updateTaskFromTable } from "../../services/updateTaskFromTable";
 import { FilterProps } from "../../types/TaskTableTypes";
 import { buildComparator } from "../../utils/sortTask";
+import { buildBoardDisplaySet } from "../../utils/sprintBoardDisplay";
 import { formatTaskDisplayId } from "../../utils/taskDisplayId";
 import { taskFilterStorageKey } from "../../utils/taskFilterStorage";
 import { statuses } from "../../utils/taskMeta";
@@ -124,26 +126,34 @@ export const SprintBoard = (props: SprintBoardProps) => {
     // when on, every non-root that matched the active filter is added
     // to the columns alongside the root rows already in `filteredTasks`.
     const [visibleChildTaskIds, setVisibleChildTaskIds] = useState<Set<string> | null>(null);
-    // When `Milestone: All` is selected the filter pipeline leaves
-    // every "no-milestone" subtask out of the board because the board
-    // shows only root rows by default — that's the right default to
-    // avoid drowning the user in nested cards, but it gives no way to
-    // see the full picture. This toggle is the escape hatch.
-    const [showAllChildTasks, setShowAllChildTasks] = useState<boolean>(false);
-    // Hide the "Show child tasks" toggle whenever a milestone scope is
-    // already active — through the dropdown filter
-    // (`isMilestoneFilterActive`, published by TaskFilterMenu) OR
-    // through the sidebar (`useTM.tableMilestoneFilterId`). In either
-    // case the milestone's children are already on the board, so the
-    // toggle would be a no-op (and the label "Show child tasks" would
-    // misleadingly imply there are extra cards hiding).
+    // Depth toggle. The board shows ONE layer by default (see the organize
+    // effect): milestone cards (+ orphan root tasks) when no milestone scope
+    // is active, or the scoped milestone's DIRECT tasks when it is. Turning
+    // this on reveals exactly ONE more layer — the milestones' tasks, or those
+    // tasks' subtasks — and stops there (2-depth max). Deeper descendants stay
+    // hidden. The label adapts: "Show tasks" (no scope) / "Show subtasks"
+    // (scoped). Replaces the old flatten-everything "Show child tasks" toggle.
+    const [expandExtraDepth, setExpandExtraDepth] = useState<boolean>(false);
     const [isMilestoneFilterActive, setIsMilestoneFilterActive] = useState<boolean>(false);
-    // When a Member filter is active the matching subtasks are already flat
-    // in `filteredTasks`, so the "Show child tasks" toggle is redundant —
-    // hide it (same reasoning as the milestone-scope case).
     const [isMemberFilterActive, setIsMemberFilterActive] = useState<boolean>(false);
-    const showChildTasksToggleVisible =
-        !isMilestoneFilterActive && !isMemberFilterActive && useTM.tableMilestoneFilterId == null;
+    // A milestone is "scoped" via the dropdown milestone filter
+    // (`isMilestoneFilterActive`, published by TaskFilterMenu) OR the sidebar's
+    // Milestones folder (`useTM.tableMilestoneFilterId`).
+    const scoped = isMilestoneFilterActive || useTM.tableMilestoneFilterId != null;
+    // Hide the depth toggle only under a Member filter, where the board shows
+    // flat assignee matches (fe #225) and a per-layer depth would be
+    // meaningless. It shows in BOTH the scoped and unscoped cases otherwise.
+    const depthToggleVisible = !isMemberFilterActive;
+    // Tooltip that spells out what's on the board NOW and what flipping the
+    // toggle will add/hide — adapts on both scope (tasks vs subtasks) and the
+    // current on/off state.
+    const depthTooltip = scoped
+        ? expandExtraDepth
+            ? t.tasks.board.depthTooltipSubtasksOn
+            : t.tasks.board.depthTooltipSubtasksOff
+        : expandExtraDepth
+          ? t.tasks.board.depthTooltipTasksOn
+          : t.tasks.board.depthTooltipTasksOff;
 
     // Per-column sort tiers. Sourced from the shared
     // `useTaskSortPreferences` hook so the Settings modal is the only
@@ -209,22 +219,10 @@ export const SprintBoard = (props: SprintBoardProps) => {
         closed: [],
     });
 
-    // Organize filtered tasks into board columns. `filteredTasks` is
-    // already the authoritative "what should be on the board" list:
-    // `TaskFilterMenu.applyFilters` includes the milestone's tasks and
-    // subtasks in `filteredTop` whenever a milestone filter (sidebar
-    // scope OR dropdown) is active, and otherwise keeps the list
-    // restricted to roots so the default view doesn't flood with
-    // every nested subtask in the project. The old local
-    // `parentTaskId === null` re-filter was clipping the milestone's
-    // children back out, which is exactly why dropdown-milestone
-    // selection previously rendered only the milestone backing card.
-    //
-    // The "Show child tasks" toggle is the explicit opt-in for the
-    // flooded view: when on, we merge in every non-root that passed
-    // the filter (`visibleChildTaskIds`). The merge is dedup-keyed by
-    // id so the milestone-filter case (where `filteredTasks` already
-    // contains matching non-roots) doesn't double-render.
+    // Organize the board's cards into status columns. The card SET is chosen
+    // by the depth model in `buildBoardDisplaySet` (pure + unit-tested — see
+    // its docstring and the toggle comment above); here we just bucket the
+    // result by status and sort each column.
     useEffect(() => {
         const organized: Record<string, TaskTableProps[]> = {
             open: [],
@@ -233,8 +231,6 @@ export const SprintBoard = (props: SprintBoardProps) => {
             pending: [],
             closed: [],
         };
-
-        const seenIds = new Set<string>();
         const dispatchToColumn = (task: TaskTableProps) => {
             const status = task.status?.toLowerCase() || "open";
             if (status === "open") organized.open.push(task);
@@ -244,25 +240,15 @@ export const SprintBoard = (props: SprintBoardProps) => {
             else if (status === "closed") organized.closed.push(task);
         };
 
-        for (const task of filteredTasks || []) {
-            const idKey = task.id != null ? String(task.id) : "";
-            if (idKey) {
-                if (seenIds.has(idKey)) continue;
-                seenIds.add(idKey);
-            }
-            dispatchToColumn(task);
-        }
-
-        if (showAllChildTasks && visibleChildTaskIds && visibleChildTaskIds.size > 0) {
-            for (const task of useTM.allTasks) {
-                if (task.id == null) continue;
-                const idKey = String(task.id);
-                if (seenIds.has(idKey)) continue;
-                if (!visibleChildTaskIds.has(idKey)) continue;
-                seenIds.add(idKey);
-                dispatchToColumn(task);
-            }
-        }
+        const display = buildBoardDisplaySet({
+            filteredTasks: filteredTasks || [],
+            visibleChildTaskIds,
+            allTasks: useTM.allTasks,
+            scoped,
+            memberFilterActive: isMemberFilterActive,
+            expandExtraDepth,
+        });
+        for (const task of display) dispatchToColumn(task);
 
         // Sort each column independently. `sortColumn` is a no-op when
         // `sortBy === "default"`, so paying for an extra useMemo +
@@ -274,7 +260,15 @@ export const SprintBoard = (props: SprintBoardProps) => {
         organized.closed = sortColumn(organized.closed);
 
         setBoardTasks(organized);
-    }, [filteredTasks, showAllChildTasks, visibleChildTaskIds, useTM.allTasks, sortColumn]);
+    }, [
+        filteredTasks,
+        visibleChildTaskIds,
+        useTM.allTasks,
+        sortColumn,
+        scoped,
+        isMemberFilterActive,
+        expandExtraDepth,
+    ]);
 
     // Sync the dragged task's new status onto the open preview pane so
     // the user immediately sees the change there. Mirrors the manual
@@ -549,39 +543,43 @@ export const SprintBoard = (props: SprintBoardProps) => {
                     )}
                     hideStatusFilter
                 />
-                {/* Show child tasks toggle — only when no milestone
-                    scope is active (dropdown or sidebar). Sort is now
-                    configured exclusively from the Settings modal; the
-                    toolbar used to host a Sort selector but the user
-                    asked to consolidate all sort UI in one place. */}
-                {showChildTasksToggleVisible && (
-                    <Stack
-                        alignItems="center"
-                        direction="row"
-                        spacing={1}
-                        sx={{
-                            px: 1.5,
-                            py: 0.5,
-                            flexShrink: 0,
-                        }}
-                    >
-                        <Switch
-                            checked={showAllChildTasks}
-                            size="sm"
-                            onChange={(event) => setShowAllChildTasks(event.target.checked)}
-                        />
-                        <Typography
-                            level="body-sm"
+                {/* Depth toggle — reveals one more layer (2-depth max). Label
+                    adapts on scope: "Show tasks" (no milestone scope, adds
+                    milestones' tasks) / "Show subtasks" (milestone scoped, adds
+                    the tasks' subtasks). Hidden under a Member filter. */}
+                {depthToggleVisible && (
+                    <AppTooltip placement="bottom-start" title={depthTooltip}>
+                        <Stack
+                            alignItems="center"
+                            direction="row"
+                            spacing={1}
                             sx={{
-                                cursor: "pointer",
-                                color:
-                                    mode === "dark" ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.65)",
+                                px: 1.5,
+                                py: 0.5,
+                                flexShrink: 0,
+                                width: "fit-content",
                             }}
-                            onClick={() => setShowAllChildTasks((prev) => !prev)}
                         >
-                            {t.tasks.board.showChildTasks}
-                        </Typography>
-                    </Stack>
+                            <Switch
+                                checked={expandExtraDepth}
+                                size="sm"
+                                onChange={(event) => setExpandExtraDepth(event.target.checked)}
+                            />
+                            <Typography
+                                level="body-sm"
+                                sx={{
+                                    cursor: "pointer",
+                                    color:
+                                        mode === "dark"
+                                            ? "rgba(255,255,255,0.7)"
+                                            : "rgba(0,0,0,0.65)",
+                                }}
+                                onClick={() => setExpandExtraDepth((prev) => !prev)}
+                            >
+                                {scoped ? t.tasks.board.showSubtasks : t.tasks.board.showTasks}
+                            </Typography>
+                        </Stack>
+                    </AppTooltip>
                 )}
                 <DragDropContext onDragEnd={handleDragEnd}>
                     <div style={getBoardContainerStyles(mode)}>

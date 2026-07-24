@@ -451,6 +451,19 @@ export const tasks = {
         daysLeft: "{count}d left",
         unassigned: "Unassigned",
         showChildTasks: "Show child tasks",
+        // Sprint-board depth toggle — label adapts on milestone scope.
+        showTasks: "Show tasks",
+        showSubtasks: "Show subtasks",
+        // Depth-toggle tooltips: describe what's on the board now + what the
+        // toggle adds/hides. Adapt on scope (tasks/subtasks) and on/off state.
+        depthTooltipTasksOff:
+            "Showing milestones and tasks that aren't in a milestone. Turn on to also show each milestone's tasks.",
+        depthTooltipTasksOn:
+            "Showing milestones, their tasks, and tasks that aren't in a milestone. Turn off to hide the milestones' tasks.",
+        depthTooltipSubtasksOff:
+            "Showing the milestone's tasks. Turn on to also show their subtasks.",
+        depthTooltipSubtasksOn:
+            "Showing the milestone's tasks and their subtasks. Turn off to hide the subtasks.",
         sortByLabel: "Sort by",
         sortDefault: "Default",
         sortDueDate: "Due date",
