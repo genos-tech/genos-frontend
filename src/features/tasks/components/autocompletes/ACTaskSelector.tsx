@@ -150,9 +150,14 @@ export const ACTaskSelector = ({
             const id = t.id != null ? Number(t.id) : NaN;
             if (Number.isNaN(id)) return false;
             if (excludeTaskIds.has(id)) return false;
-            // Hide soft-deleted; Closed stays selectable so users can
-            // record historical relationships.
-            return (t.status ?? "").toLowerCase() !== "deleted";
+            // Hide finished/removed rows — a dependency should point at
+            // live work. Closed and Deleted are both filtered out (per
+            // user request); the source endpoint already excludes
+            // Deleted on its full-load path, so this also guards the
+            // incremental/cache path. Trade-off: you can no longer add a
+            // dependency onto an already-Closed task.
+            const status = (t.status ?? "").toLowerCase();
+            return status !== "deleted" && status !== "closed";
         });
     }, [selectedProject, tasksByProject, excludeTaskIds]);
 
