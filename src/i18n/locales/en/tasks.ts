@@ -446,6 +446,9 @@ export const tasks = {
         daysLeft: "{count}d left",
         unassigned: "Unassigned",
         showChildTasks: "Show child tasks",
+        // Sprint-board depth toggle — label adapts on milestone scope.
+        showTasks: "Show tasks",
+        showSubtasks: "Show subtasks",
         sortByLabel: "Sort by",
         sortDefault: "Default",
         sortDueDate: "Due date",
