@@ -496,10 +496,31 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                     );
                                 })
                             }
+                            PaperComponent={({ children, ...paperProps }) => (
+                                <Paper
+                                    {...paperProps}
+                                    sx={{
+                                        backgroundColor: mode === "dark" ? "#1a1a2e" : "#ffffff",
+                                        borderRadius: "10px",
+                                        border:
+                                            mode === "dark"
+                                                ? "1px solid rgba(255, 255, 255, 0.1)"
+                                                : "1px solid rgba(0, 0, 0, 0.08)",
+                                        boxShadow:
+                                            mode === "dark"
+                                                ? "0 8px 32px rgba(0, 0, 0, 0.5)"
+                                                : "0 8px 32px rgba(0, 0, 0, 0.12)",
+                                        mt: 0.5,
+                                    }}
+                                >
+                                    {children}
+                                </Paper>
+                            )}
                             renderInput={(params) => (
                                 <TextField
                                     {...params}
                                     autoFocus
+                                    placeholder={selected.length === 0 ? "Select…" : ""}
                                     sx={{
                                         "& .MuiOutlinedInput-root": {
                                             borderRadius: "6px",
@@ -542,47 +563,202 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
         }
 
         if (def.fieldType === "member") {
+            // Mirrors the built-in Assignee cell exactly — same dropdown
+            // Paper, listbox scrollbar, accent-focus input, and rich
+            // option rows (avatar + name + email + hover + selected).
             if (editingField === editKey) {
                 const current = teamMembers.find((m) => String(m.userId) === storedString);
                 return (
                     <Autocomplete
                         blurOnSelect={true}
+                        clearOnBlur={false}
+                        getOptionLabel={(option) => `${option.userName} ${option.userEmail}`}
                         open={true}
                         options={teamMembers}
                         size="small"
                         value={current || null}
-                        getOptionLabel={(option) => `${option.userName} ${option.userEmail}`}
+                        filterOptions={(options, { inputValue }) => {
+                            const searchTerm = inputValue.toLowerCase();
+                            return options.filter(
+                                (option) =>
+                                    option.userName.toLowerCase().includes(searchTerm) ||
+                                    option.userEmail.toLowerCase().includes(searchTerm)
+                            );
+                        }}
                         isOptionEqualToValue={(option, val) => option.userId === val?.userId}
+                        ListboxProps={{
+                            sx: {
+                                maxHeight: 280,
+                                overflow: "auto",
+                                padding: "4px 0",
+                                "&::-webkit-scrollbar": {
+                                    width: "6px",
+                                },
+                                "&::-webkit-scrollbar-track": {
+                                    background: "transparent",
+                                },
+                                "&::-webkit-scrollbar-thumb": {
+                                    background:
+                                        mode === "dark"
+                                            ? "rgba(255, 255, 255, 0.15)"
+                                            : "rgba(0, 0, 0, 0.15)",
+                                    borderRadius: "3px",
+                                },
+                            },
+                        }}
+                        PaperComponent={({ children, ...props }) => (
+                            <Paper
+                                {...props}
+                                sx={{
+                                    backgroundColor: mode === "dark" ? "#1a1a2e" : "#ffffff",
+                                    backgroundImage:
+                                        mode === "dark"
+                                            ? "linear-gradient(rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01))"
+                                            : "none",
+                                    borderRadius: "10px",
+                                    border:
+                                        mode === "dark"
+                                            ? "1px solid rgba(255, 255, 255, 0.1)"
+                                            : "1px solid rgba(0, 0, 0, 0.08)",
+                                    boxShadow:
+                                        mode === "dark"
+                                            ? "0 8px 32px rgba(0, 0, 0, 0.5)"
+                                            : "0 8px 32px rgba(0, 0, 0, 0.12)",
+                                    mt: 0.5,
+                                    overflow: "hidden",
+                                }}
+                            >
+                                {children}
+                            </Paper>
+                        )}
                         renderInput={(params) => (
                             <TextField
                                 {...params}
-                                autoFocus
                                 placeholder={t.tasks.table.searchMembersPlaceholder}
-                                sx={{ minWidth: 160 }}
+                                sx={{
+                                    minWidth: 180,
+                                    "& .MuiOutlinedInput-root": {
+                                        borderRadius: "8px",
+                                        backgroundColor:
+                                            mode === "dark"
+                                                ? "rgba(255, 255, 255, 0.03)"
+                                                : "rgba(0, 0, 0, 0.01)",
+                                        "& fieldset": {
+                                            borderColor:
+                                                mode === "dark"
+                                                    ? "rgba(255, 255, 255, 0.15)"
+                                                    : "rgba(0, 0, 0, 0.12)",
+                                        },
+                                        "&:hover fieldset": {
+                                            borderColor: accent,
+                                        },
+                                        "&.Mui-focused fieldset": {
+                                            borderColor: accent,
+                                            borderWidth: "1.5px",
+                                        },
+                                    },
+                                    "& .MuiInputBase-input": {
+                                        color: mode === "dark" ? "#e8e8e8" : "#1a1a1a",
+                                        fontSize: "0.875rem",
+                                        padding: "6px 12px",
+                                        "&::placeholder": {
+                                            color:
+                                                mode === "dark"
+                                                    ? "rgba(255, 255, 255, 0.4)"
+                                                    : "rgba(0, 0, 0, 0.4)",
+                                            opacity: 1,
+                                        },
+                                    },
+                                }}
+                                autoFocus
                             />
                         )}
                         renderOption={(props, option) => {
+                            const isSelected = String(option.userId) === storedString;
                             const { key, ...restProps } = stripOwnerState(props);
                             return (
                                 <Box
                                     key={key}
                                     component="li"
                                     {...restProps}
-                                    sx={{ display: "flex", gap: 1, alignItems: "center" }}
+                                    sx={{
+                                        py: 1,
+                                        px: 1.5,
+                                        mx: 0.5,
+                                        my: 0.25,
+                                        borderRadius: "8px",
+                                        transition: "all 0.15s ease",
+                                        backgroundColor: isSelected
+                                            ? mode === "dark"
+                                                ? "rgba(167,139,250,0.15)"
+                                                : "rgba(124,58,237,0.08)"
+                                            : "transparent",
+                                        "&:hover": {
+                                            backgroundColor:
+                                                mode === "dark"
+                                                    ? "rgba(167,139,250,0.2)"
+                                                    : "rgba(124,58,237,0.12)",
+                                        },
+                                        display: "flex",
+                                        gap: 1.5,
+                                        alignItems: "center",
+                                        cursor: "pointer",
+                                    }}
                                 >
                                     <UserAvatar clickable={false} userId={option.userId} />
-                                    <Typography level="body-sm" noWrap>
-                                        {option.userName}
-                                    </Typography>
+                                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                                        <Typography
+                                            level="body-sm"
+                                            sx={{
+                                                fontWeight: isSelected ? 600 : 500,
+                                                color: mode === "dark" ? "#e8e8e8" : "#1a1a1a",
+                                                lineHeight: 1.3,
+                                                overflow: "hidden",
+                                                textOverflow: "ellipsis",
+                                                whiteSpace: "nowrap",
+                                            }}
+                                        >
+                                            {option.userName}
+                                        </Typography>
+                                        <Typography
+                                            level="body-xs"
+                                            sx={{
+                                                color:
+                                                    mode === "dark"
+                                                        ? "rgba(255, 255, 255, 0.5)"
+                                                        : "rgba(0, 0, 0, 0.5)",
+                                                fontSize: "0.7rem",
+                                                overflow: "hidden",
+                                                textOverflow: "ellipsis",
+                                                whiteSpace: "nowrap",
+                                            }}
+                                        >
+                                            {option.userEmail}
+                                        </Typography>
+                                    </Box>
                                 </Box>
                             );
                         }}
+                        sx={{
+                            "& .MuiAutocomplete-popupIndicator": {
+                                color:
+                                    mode === "dark"
+                                        ? "rgba(255, 255, 255, 0.5)"
+                                        : "rgba(0, 0, 0, 0.5)",
+                            },
+                            "& .MuiAutocomplete-clearIndicator": {
+                                color:
+                                    mode === "dark"
+                                        ? "rgba(255, 255, 255, 0.5)"
+                                        : "rgba(0, 0, 0, 0.5)",
+                            },
+                        }}
                         fullWidth
                         onChange={(_, newValue) => {
-                            void commitCustomField(
-                                def.fieldId,
-                                newValue ? String(newValue.userId) : null
-                            );
+                            if (newValue) {
+                                void commitCustomField(def.fieldId, String(newValue.userId));
+                                handleCancelEdit();
+                            }
                         }}
                         onClose={(_, reason) => {
                             if (reason === "blur" || reason === "escape") {
@@ -592,83 +768,136 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                     />
                 );
             }
+            // Read view mirrors the built-in Assignee cell: avatar + name,
+            // or the neutral "?" placeholder avatar + muted dash when unset.
             const memberName =
                 teamMembers.find((m) => String(m.userId) === storedString)?.userName ?? "";
             return (
                 <Box
-                    sx={{ ...customReadCellSx, flexWrap: "nowrap" }}
+                    sx={{
+                        display: "flex",
+                        gap: 1,
+                        alignItems: "center",
+                        cursor: "pointer",
+                        padding: "4px 8px",
+                        borderRadius: "6px",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                        transition: "background-color 0.15s ease",
+                        "&:hover": {
+                            backgroundColor:
+                                mode === "dark"
+                                    ? "rgba(255, 255, 255, 0.08)"
+                                    : "rgba(0, 0, 0, 0.04)",
+                        },
+                    }}
                     onClick={(e) => {
                         e.stopPropagation();
                         setEditingField(editKey);
                     }}
                 >
-                    {storedString === "" ? (
-                        emptyCellPlaceholder
-                    ) : (
-                        <>
-                            <UserAvatar
-                                clickable={false}
-                                showPulseDot={false}
-                                userId={storedString}
-                            />
-                            <Typography
-                                level="body-xs"
+                    <Box sx={{ position: "relative", display: "inline-flex" }}>
+                        {storedString !== "" ? (
+                            <UserAvatar userId={storedString} />
+                        ) : (
+                            <Avatar
+                                size="sm"
                                 sx={{
-                                    overflow: "hidden",
-                                    textOverflow: "ellipsis",
-                                    whiteSpace: "nowrap",
-                                    fontWeight: 500,
+                                    bgcolor:
+                                        mode === "dark"
+                                            ? "rgba(255,255,255,0.08)"
+                                            : "rgba(0,0,0,0.06)",
+                                    color:
+                                        mode === "dark"
+                                            ? "rgba(255,255,255,0.45)"
+                                            : "rgba(0,0,0,0.45)",
+                                    fontSize: "0.7rem",
                                 }}
                             >
+                                ?
+                            </Avatar>
+                        )}
+                    </Box>
+                    <Box sx={{ overflow: "hidden" }}>
+                        <Typography
+                            level="body-xs"
+                            sx={{
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                                fontWeight: 500,
+                                fontStyle: storedString !== "" ? "normal" : "italic",
+                                color:
+                                    storedString !== ""
+                                        ? undefined
+                                        : mode === "dark"
+                                          ? "rgba(255,255,255,0.5)"
+                                          : "rgba(0,0,0,0.5)",
+                            }}
+                        >
+                            {storedString !== "" ? (
                                 <ResolvedUserName
                                     fallbackName={memberName}
                                     userId={storedString}
                                 />
-                            </Typography>
-                        </>
-                    )}
+                            ) : (
+                                "—"
+                            )}
+                        </Typography>
+                    </Box>
                 </Box>
             );
         }
 
         if (def.fieldType === "date") {
+            // Mirrors the built-in Due Date cell: native date input on
+            // edit (buffered via editValue, commit on blur/Enter), and a
+            // hover-accent Typography read view with a "-" when unset.
             if (editingField === editKey) {
+                const commitDate = () =>
+                    void commitCustomField(def.fieldId, editValue.trim() || null);
                 return (
-                    <TextField
-                        autoFocus
-                        size="small"
+                    <input
                         type="date"
                         value={editValue}
-                        onBlur={handleCancelEdit}
-                        onChange={(e) => {
-                            void commitCustomField(def.fieldId, e.target.value || null);
+                        style={{
+                            width: "100%",
+                            padding: "6px 10px",
+                            fontSize: "0.875rem",
+                            border: `1px solid ${mode === "dark" ? "#555" : "#ccc"}`,
+                            borderRadius: "6px",
+                            backgroundColor: mode === "dark" ? "#1e1e1e" : "#fff",
+                            color: mode === "dark" ? "#e0e0e0" : "#333",
                         }}
+                        autoFocus
+                        onBlur={commitDate}
+                        onChange={(e) => setEditValue(e.target.value)}
                         onKeyDown={(e) => {
+                            if (e.key === "Enter") commitDate();
                             if (e.key === "Escape") handleCancelEdit();
                         }}
                     />
                 );
             }
             return (
-                <Box
-                    sx={{ ...customReadCellSx, justifyContent: "center" }}
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        handleStartEdit(editKey, storedString);
+                <Typography
+                    level="body-sm"
+                    sx={{
+                        cursor: "pointer",
+                        fontWeight: 500,
+                        "&:hover": {
+                            color: accent,
+                        },
                     }}
+                    onClick={() => handleStartEdit(editKey, storedString)}
                 >
-                    {storedString === "" ? (
-                        emptyCellPlaceholder
-                    ) : (
-                        <Typography level="body-sm" sx={{ fontSize: "0.8rem" }}>
-                            {storedString}
-                        </Typography>
-                    )}
-                </Box>
+                    {storedString !== "" ? storedString : "-"}
+                </Typography>
             );
         }
 
-        // text
+        // text — mirrors the built-in Title cell's input styling.
         if (editingField === editKey) {
             return (
                 <TextField
@@ -676,6 +905,16 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                     fullWidth
                     size="small"
                     value={editValue}
+                    sx={{
+                        "& .MuiInputBase-input": {
+                            color: mode === "dark" ? "white" : "black",
+                            fontSize: "0.875rem",
+                            padding: "6px 10px",
+                        },
+                        "& .MuiOutlinedInput-root": {
+                            borderRadius: "6px",
+                        },
+                    }}
                     onBlur={() => {
                         void commitCustomField(def.fieldId, editValue.trim() || null);
                     }}
