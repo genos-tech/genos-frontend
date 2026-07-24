@@ -117,7 +117,10 @@ export const MobileTaskList = ({ usePM, useTM }: MobileTaskListProps) => {
                             {/* Assignee avatar (or empty slot) */}
                             <Box sx={{ flexShrink: 0, mt: 0.25 }}>
                                 {task.assigneeId ? (
-                                    <UserAvatar userId={String(task.assigneeId)} />
+                                    <UserAvatar
+                                        showPulseDot={false}
+                                        userId={String(task.assigneeId)}
+                                    />
                                 ) : (
                                     <Box
                                         sx={{

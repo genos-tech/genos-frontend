@@ -296,6 +296,7 @@ export const ModalNoteHistory = ({
                                                 avatarSize={32}
                                                 myself={myself}
                                                 setMyself={setMyself}
+                                                showPulseDot={false}
                                                 socket={socket}
                                                 useCM={useCM}
                                                 useUISM={useUISM}

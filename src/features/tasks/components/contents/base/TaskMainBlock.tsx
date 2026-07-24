@@ -550,6 +550,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                         }}
                     >
                         <AvatarWithStatus
+                            showPulseDot={false}
                             // `assignee` is now nullable (a task can be
                             // unassigned). When null, render the empty
                             // placeholder avatar — `AvatarWithStatus`
@@ -603,6 +604,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             isYou={myself.userId === reporter.userId}
                             myself={myself}
                             setMyself={setMyself}
+                            showPulseDot={false}
                             socket={socket}
                             useCM={useCM}
                             useUISM={useUISM}
@@ -1119,6 +1121,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             <AvatarWithStatus
                                 myself={myself}
                                 setMyself={setMyself}
+                                showPulseDot={false}
                                 socket={socket}
                                 useCM={useCM}
                                 useUISM={useUISM}

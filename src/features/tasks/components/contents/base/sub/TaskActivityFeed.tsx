@@ -899,6 +899,7 @@ export const TaskActivityFeed = ({
                             isYou={actorId != null && String(myself.userId) === String(actorId)}
                             myself={myself}
                             setMyself={setMyself}
+                            showPulseDot={false}
                             socket={socket}
                             useCM={useCM}
                             useUISM={useUISM}

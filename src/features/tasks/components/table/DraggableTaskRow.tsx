@@ -743,7 +743,11 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                         cursor: "pointer",
                                     }}
                                 >
-                                    <UserAvatar clickable={false} userId={option.userId} />
+                                    <UserAvatar
+                                        clickable={false}
+                                        showPulseDot={false}
+                                        userId={option.userId}
+                                    />
                                     <Box sx={{ flex: 1, minWidth: 0 }}>
                                         <Typography
                                             level="body-sm"
@@ -837,7 +841,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                 >
                     <Box sx={{ position: "relative", display: "inline-flex" }}>
                         {storedString !== "" ? (
-                            <UserAvatar userId={storedString} />
+                            <UserAvatar showPulseDot={false} userId={storedString} />
                         ) : (
                             <Avatar
                                 size="sm"
@@ -1609,7 +1613,11 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                             cursor: "pointer",
                                         }}
                                     >
-                                        <UserAvatar clickable={false} userId={option.userId} />
+                                        <UserAvatar
+                                            clickable={false}
+                                            showPulseDot={false}
+                                            userId={option.userId}
+                                        />
                                         <Box sx={{ flex: 1, minWidth: 0 }}>
                                             <Typography
                                                 level="body-sm"
@@ -1699,7 +1707,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                     >
                         <Box sx={{ position: "relative", display: "inline-flex" }}>
                             {task.assigneeId ? (
-                                <UserAvatar userId={task.assigneeId} />
+                                <UserAvatar showPulseDot={false} userId={task.assigneeId} />
                             ) : (
                                 // Unassigned task — render a neutral
                                 // placeholder, NOT `myself`'s avatar (the

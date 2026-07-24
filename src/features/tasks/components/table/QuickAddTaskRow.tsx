@@ -467,7 +467,11 @@ export const QuickAddTaskRow = (props: QuickAddTaskRowProps) => {
                                         cursor: "pointer",
                                     }}
                                 >
-                                    <UserAvatar clickable={false} userId={option.userId} />
+                                    <UserAvatar
+                                        clickable={false}
+                                        showPulseDot={false}
+                                        userId={option.userId}
+                                    />
                                     <Typography
                                         level="body-sm"
                                         sx={{
