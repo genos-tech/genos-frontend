@@ -28,6 +28,9 @@ export type UpdateMilestoneInput = {
     // on the milestone's BACKING TASK row server-side; omit the key to
     // leave stored values untouched.
     customFieldValues?: Record<string, string | string[]>;
+    // Collaborator user ids. Stored on the milestone's BACKING TASK M2M
+    // server-side; omit to leave untouched, `[]` clears.
+    collaborators?: Array<number | string>;
 };
 
 export type MilestoneMentionContext = {
@@ -69,6 +72,7 @@ export const updateMilestone = async (
             if ("reporterId" in input) body.reporter_id = input.reporterId;
             if (input.customFieldValues !== undefined)
                 body.custom_field_values = input.customFieldValues;
+            if (input.collaborators !== undefined) body.collaborators = input.collaborators;
             const res = await api.patch(`/milestone/${input.milestoneId}/`, body);
 
             // If the description changed and the backend returned mention

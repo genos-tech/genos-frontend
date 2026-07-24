@@ -30,6 +30,9 @@ export type CreateMilestoneInput = {
     // Custom-field values picked in the create form — seeded onto the
     // milestone's backing task row server-side.
     customFieldValues?: Record<string, string | string[]>;
+    // Collaborator user ids picked in the create form — seeded onto the
+    // milestone's backing task M2M server-side.
+    collaborators?: Array<number | string>;
 };
 
 export const createMilestone = async (
@@ -61,6 +64,7 @@ export const createMilestone = async (
                 ...(input.customFieldValues != null
                     ? { custom_field_values: input.customFieldValues }
                     : {}),
+                ...(input.collaborators != null ? { collaborators: input.collaborators } : {}),
             });
             return res.data;
         }

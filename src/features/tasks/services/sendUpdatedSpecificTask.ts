@@ -89,6 +89,14 @@ export const sendUpdatedSpecificTask = async (
                 ...(updatedTask.customFieldValues != null
                     ? { custom_field_values: updatedTask.customFieldValues }
                     : {}),
+                // Collaborators (user-id array). Same omit-when-undefined
+                // guard as custom fields: `undefined` means a partial
+                // TaskProps that never loaded the field, so we OMIT the
+                // key (absent = no change) rather than send `[]` (which
+                // the backend reads as an explicit clear).
+                ...(updatedTask.collaborators != null
+                    ? { collaborators: updatedTask.collaborators.map((c) => c.userId) }
+                    : {}),
             });
 
             if (res) {

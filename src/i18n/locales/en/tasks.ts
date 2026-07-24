@@ -289,6 +289,7 @@ export const tasks = {
         noMilestoneLabel: "No milestone",
         sprintFallback: "Sprint",
         addAssignees: "Add assignees",
+        addCollaborators: "Add collaborators",
         tasksSuffix: " tasks",
     },
 
@@ -484,6 +485,7 @@ export const tasks = {
     fields: {
         assignee: "Assignee",
         reporter: "Reporter",
+        collaborators: "Collaborators",
         project: "Project",
         priority: "Priority",
         status: "Status",

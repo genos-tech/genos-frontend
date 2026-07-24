@@ -1081,7 +1081,8 @@ const milestoneToTaskProps = (
     fallbackUser: UserProps,
     attachments: TaskProps["attachments"] = [],
     assignee?: UserProps,
-    reporter?: UserProps
+    reporter?: UserProps,
+    collaborators: UserProps[] = []
 ): TaskProps => {
     const backingTaskId = (m.taskId ?? m.milestoneId) as number;
     // Milestones store only the priority / effort label + numeric code,
@@ -1099,6 +1100,7 @@ const milestoneToTaskProps = (
         body: (m.description as PartialBlock[]) ?? [],
         assignee: assignee ?? fallbackUser,
         reporter: reporter ?? fallbackUser,
+        collaborators,
         // Thread origin off the backing task (serialized on the
         // milestone payload) — v3 UUID strings riding the legacy
         // number-typed slots, same cast as everywhere else.
@@ -1166,6 +1168,32 @@ const milestoneAssigneesToUserProps = (m: Milestone, teamMembers: UserProps[]): 
                 userName: a.username || a.email || "",
                 userEmail: a.email || "",
                 avatarImgPath: a.profileImageUrl || "",
+                teamId: "",
+                teamName: "",
+                tsLastSeen: "",
+                tsJoined: "",
+            } as unknown as UserProps;
+        })
+        .filter((u): u is UserProps => u != null);
+};
+
+// Milestone collaborators ride the payload in the same embedded-user
+// shape as assignees; resolve them to UserProps the same way (prefer a
+// live team-member hit so avatar/status are populated, else synthesise).
+const milestoneCollaboratorsToUserProps = (
+    m: Milestone,
+    teamMembers: UserProps[]
+): UserProps[] => {
+    return (m.collaborators ?? [])
+        .map<UserProps | null>((c) => {
+            if (!c.userId) return null;
+            const found = teamMembers.find((u) => String(u.userId) === String(c.userId));
+            if (found) return found;
+            return {
+                userId: String(c.userId),
+                userName: c.username || c.email || "",
+                userEmail: c.email || "",
+                avatarImgPath: c.profileImageUrl || "",
                 teamId: "",
                 teamName: "",
                 tsLastSeen: "",
@@ -1439,7 +1467,8 @@ const MilestonePreviewInner = ({
                 myself,
                 backingTask?.attachments ?? [],
                 firstAssignee,
-                resolvedReporter
+                resolvedReporter,
+                milestoneCollaboratorsToUserProps(milestone, useTEM.teamMembers)
             )
         );
         setUploadedFiles(backingTask?.attachments ?? []);
@@ -1830,6 +1859,16 @@ const MilestonePreviewInner = ({
               : null;
         if (nextReporterId !== currentReporterId) {
             patch.reporterId = nextReporterId;
+        }
+        // Collaborators diff (backing-task M2M exposed on the milestone).
+        // Compare id SETS so reordering / identity churn doesn't trigger a
+        // spurious PATCH — only send when the membership actually changed.
+        const nextCollabIds = (next.collaborators ?? []).map((c) => String(c.userId)).sort();
+        const currentCollabIds = (milestone.collaborators ?? [])
+            .map((c) => String(c.userId))
+            .sort();
+        if (JSON.stringify(nextCollabIds) !== JSON.stringify(currentCollabIds)) {
+            patch.collaborators = (next.collaborators ?? []).map((c) => c.userId);
         }
         // No actual changes worth a network round-trip.
         if (Object.keys(patch).length <= 1) return;
