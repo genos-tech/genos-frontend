@@ -213,12 +213,17 @@ export const ModalManageCustomFields: React.FC<Props> = ({
     const border = isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)";
     const faint = isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)";
 
+    // Modal layer (page-hosted default 10010; host+10 when opened above a
+    // UrlLinkModal-hosted preview). Portaled popups inside — the
+    // field-type Select's listbox and the tag-option ColorPickerMenu —
+    // do NOT inherit this via a modal-root var, so each is lifted to
+    // `modalZ + 1` explicitly (per-component, never a body-sibling rule).
+    // See [[frontend-zindex-stacking-map]].
+    const modalZ = hostZIndex != null ? hostZIndex + 10 : 10010;
+    const popupZ = modalZ + 1;
+
     return (
-        <Modal
-            open={open}
-            sx={{ zIndex: hostZIndex != null ? hostZIndex + 10 : 10010 }}
-            onClose={onClose}
-        >
+        <Modal open={open} sx={{ zIndex: modalZ }} onClose={onClose}>
             <ModalDialog
                 className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                 size="md"
@@ -476,6 +481,7 @@ export const ModalManageCustomFields: React.FC<Props> = ({
                                                 }}
                                             />
                                             <ColorPickerMenu
+                                                zIndex={popupZ}
                                                 onSelectColor={(color) =>
                                                     setNewOptionColor({
                                                         chipColor: color.value,
@@ -535,6 +541,9 @@ export const ModalManageCustomFields: React.FC<Props> = ({
                     />
                     <Select
                         size="sm"
+                        // Listbox portals to <body>, so lift it above the
+                        // modal dialog or it opens invisibly behind it.
+                        slotProps={{ listbox: { sx: { zIndex: popupZ } } }}
                         sx={{ minWidth: 110 }}
                         value={newFieldType}
                         onChange={(_e, value) => {

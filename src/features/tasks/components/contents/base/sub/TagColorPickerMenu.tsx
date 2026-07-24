@@ -61,9 +61,17 @@ const COLORS: TagColorOption[] = BASE_COLORS.map((color) => ({
 
 type ColorPickerMenuProps = {
     onSelectColor: (color: TagColorOption) => void;
+    // Layer for the portaled Joy Menu. Defaults to 10010 (the tag-manage
+    // modal's layer). A host whose modal sits higher — e.g. the custom-
+    // fields manager opened above a UrlLinkModal preview — passes its own
+    // popup z so the palette clears the dialog. See [[frontend-zindex-stacking-map]].
+    zIndex?: number;
 };
 
-export const ColorPickerMenu: React.FC<ColorPickerMenuProps> = ({ onSelectColor }) => {
+export const ColorPickerMenu: React.FC<ColorPickerMenuProps> = ({
+    onSelectColor,
+    zIndex = 10010,
+}) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -98,7 +106,7 @@ export const ColorPickerMenu: React.FC<ColorPickerMenuProps> = ({ onSelectColor 
                 className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                 open={Boolean(anchorEl)}
                 placement="bottom-start"
-                sx={{ zIndex: 10010, maxHeight: "300px", overflowY: "scroll" }}
+                sx={{ zIndex, maxHeight: "300px", overflowY: "scroll" }}
                 onBlur={handleClose}
                 onClose={handleClose}
             >
