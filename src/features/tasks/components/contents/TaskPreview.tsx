@@ -9,6 +9,8 @@ import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import LocalOfferRoundedIcon from "@mui/icons-material/LocalOfferRounded";
 import NoteAltRoundedIcon from "@mui/icons-material/NoteAltRounded";
+import NotificationsActiveRoundedIcon from "@mui/icons-material/NotificationsActiveRounded";
+import NotificationsOffRoundedIcon from "@mui/icons-material/NotificationsOffRounded";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
 import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
@@ -34,6 +36,7 @@ import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprin
 import { useTaskEditState } from "../../../../hooks/tasks/useTaskEditState";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { fmt, useTranslation } from "../../../../i18n";
+import { useNotificationsContext } from "../../../../services/notifications/NotificationsContext";
 import { UserProps } from "../../../../types/admin";
 import { MessageProps, ThreadMessageProps } from "../../../../types/chat";
 import { TaskNoteProps } from "../../../../types/notes";
@@ -1255,6 +1258,11 @@ const MilestonePreviewInner = ({
     // carries the thread linkage on its backing task; open that thread
     // in the UrlLinkModal (same behavior as the task header's button).
     const urlLinkModal = useUrlLinkModal();
+    // Per-milestone notification mute. A milestone's comment notifications
+    // flow through its BACKING TASK (comments live on it), so the mute
+    // target is the backing task id — the same `targetType: "task"` the
+    // task header mutes, just resolved from `milestone.taskId`.
+    const notifCtx = useNotificationsContext();
 
     const milestone: Milestone | null = useMemo(() => {
         const projectId = usePM.currentProject?.projectId;
@@ -2288,6 +2296,43 @@ const MilestonePreviewInner = ({
                                     icon: <AddIcon sx={{ fontSize: 18 }} />,
                                     onClick: () => {
                                         usePM.setOpenCreateProject(true);
+                                    },
+                                },
+                                {
+                                    // Mutes the milestone's notifications by
+                                    // muting its backing task (where comments
+                                    // + their fan-out live) — same targetType
+                                    // /store the task header's mute uses.
+                                    id: "muteMilestone",
+                                    label:
+                                        notifCtx &&
+                                        milestone.taskId != null &&
+                                        notifCtx.isTargetMutedByKey("task", milestone.taskId)
+                                            ? t.services.notifications.muteButton.unmute
+                                            : t.services.notifications.muteButton.mute,
+                                    icon:
+                                        notifCtx &&
+                                        milestone.taskId != null &&
+                                        notifCtx.isTargetMutedByKey("task", milestone.taskId) ? (
+                                            <NotificationsOffRoundedIcon sx={{ fontSize: 18 }} />
+                                        ) : (
+                                            <NotificationsActiveRoundedIcon
+                                                sx={{ fontSize: 18 }}
+                                            />
+                                        ),
+                                    visible: !!notifCtx && milestone.taskId != null,
+                                    onClick: () => {
+                                        if (!notifCtx || milestone.taskId == null) return;
+                                        const id = String(milestone.taskId);
+                                        if (notifCtx.isTargetMutedByKey("task", id)) {
+                                            notifCtx.unmuteTarget("task", id);
+                                        } else {
+                                            notifCtx.muteTarget({
+                                                targetType: "task",
+                                                targetId: id,
+                                                label: milestone.title,
+                                            });
+                                        }
                                     },
                                 },
                                 {
