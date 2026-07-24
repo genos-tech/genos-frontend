@@ -97,6 +97,14 @@ export const TaskDependenciesBlock = ({
                     "[TaskDependenciesBlock] inline dependency remove failed:",
                     ref_.dependencyId
                 );
+            } else {
+                // Removing a blocker can auto-revert the blocked task
+                // "Blocked" -> "Open"; refresh both endpoints so the status
+                // chip / table update right away (same as the manage modal).
+                await useTM.refreshTaskStatuses([
+                    { taskId, projectId: taskContent.project?.projectId ?? null },
+                    { taskId: ref_.otherTaskId, projectId: ref_.projectId },
+                ]);
             }
         } finally {
             setRemovingDepId(null);

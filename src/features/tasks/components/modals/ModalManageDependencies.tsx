@@ -26,7 +26,7 @@ import { ProjectManagementState } from "../../../../hooks/common/useProjectManag
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
-import { TaskDependencyRef, TaskProps } from "../../../../types/tasks";
+import { ProjectProps, TaskDependencyRef, TaskProps } from "../../../../types/tasks";
 import { ACTaskSelector, StatusChip } from "../autocompletes/ACTaskSelector";
 
 type Props = {
@@ -187,7 +187,10 @@ export const ModalManageDependencies = ({
         return s;
     }, [taskId, deps]);
 
-    const handleAdd = async (kind: "blocking" | "blockedBy", picked: { taskId: number }) => {
+    const handleAdd = async (
+        kind: "blocking" | "blockedBy",
+        picked: { taskId: number; project?: ProjectProps }
+    ) => {
         if (taskId == null) return;
         setError(null);
         setBusy(true);
@@ -205,18 +208,35 @@ export const ModalManageDependencies = ({
             }
             if (kind === "blocking") setResetBlocking((n) => n + 1);
             else setResetBlockedBy((n) => n + 1);
+            // Reflect the backend's auto-"Blocked" transition immediately.
+            // Refresh BOTH endpoints — only the blocked one changes status,
+            // but this sidesteps any direction bookkeeping.
+            await useTM.refreshTaskStatuses([
+                { taskId, projectId: taskContent.project?.projectId ?? null },
+                { taskId: picked.taskId, projectId: picked.project?.projectId ?? null },
+            ]);
         } finally {
             setBusy(false);
         }
     };
 
-    const handleRemove = async (dependencyId: number) => {
+    const handleRemove = async (ref_: TaskDependencyRef) => {
         if (taskId == null) return;
         setError(null);
         setBusy(true);
         try {
-            const ok = await useTM.removeTaskDependency(dependencyId, taskId);
-            if (!ok) setError(depsT.modal.removeFailed);
+            const ok = await useTM.removeTaskDependency(ref_.dependencyId, taskId);
+            if (!ok) {
+                setError(depsT.modal.removeFailed);
+                return;
+            }
+            // Removing a blocker can auto-revert the blocked task
+            // "Blocked" -> "Open". Refresh both endpoints (focused + the
+            // other task) so whichever one changed reflects immediately.
+            await useTM.refreshTaskStatuses([
+                { taskId, projectId: taskContent.project?.projectId ?? null },
+                { taskId: ref_.otherTaskId, projectId: ref_.projectId },
+            ]);
         } finally {
             setBusy(false);
         }
@@ -409,8 +429,8 @@ type SectionProps = {
     busy: boolean;
     /** Lifts the picker's portaled listboxes above the dialog. */
     popupZIndex: number;
-    onAdd: (picked: { taskId: number }) => void;
-    onRemove: (dependencyId: number) => void;
+    onAdd: (picked: { taskId: number; project: ProjectProps }) => void;
+    onRemove: (ref_: TaskDependencyRef) => void;
 };
 
 const DependencySection = ({
@@ -476,7 +496,7 @@ const DependencySection = ({
                             isDark={isDark}
                             ref_={d}
                             removeTooltip={removeTooltip}
-                            onRemove={() => onRemove(d.dependencyId)}
+                            onRemove={() => onRemove(d)}
                         />
                     ))}
                 </Stack>
