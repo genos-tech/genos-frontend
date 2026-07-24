@@ -90,6 +90,9 @@ export type Milestone = {
     // Custom-field value map, read off the BACKING TASK row (the single
     // source of truth for these — see the API's _serialize_milestone).
     customFieldValues?: Record<string, string | string[]> | null;
+    // Collaborators, read off the BACKING TASK row (same source-of-truth
+    // pattern as customFieldValues). Same embedded-user shape as reporter.
+    collaborators?: MilestoneAssignee[];
     isDeleted: boolean;
     tsCreatedAt: string;
     tsUpdatedAt: string;

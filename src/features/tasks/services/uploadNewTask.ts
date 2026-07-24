@@ -138,6 +138,12 @@ export const uploadNewTask = async (props: uploadTaskProps): Promise<UploadNewTa
                     ...(taskContent.customFieldValues != null
                         ? { custom_field_values: taskContent.customFieldValues }
                         : {}),
+                    // Collaborators picked in the create form (user-id
+                    // array). Same omit-when-undefined contract as the
+                    // custom-field map above.
+                    ...(taskContent.collaborators != null
+                        ? { collaborators: taskContent.collaborators.map((c) => c.userId) }
+                        : {}),
                 }),
             });
 

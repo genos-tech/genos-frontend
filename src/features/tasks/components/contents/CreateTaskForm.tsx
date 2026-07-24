@@ -948,6 +948,9 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
             // Custom-field values picked in the form's CustomFieldsBlock
             // — seeded onto the backing task row server-side.
             customFieldValues: taskContent.customFieldValues,
+            // Collaborators picked in the form — seeded onto the backing
+            // task M2M server-side.
+            collaborators: (taskContent.collaborators ?? []).map((c) => c.userId),
         });
         setIsCreatingMilestone(false);
         if (created) {

@@ -37,6 +37,7 @@ import { StatusChip } from "../../autocompletes/ACTaskSelector";
 import { ACTaskStatus } from "../../autocompletes/ACTaskStatus";
 import { ACTeamProjects } from "../../autocompletes/ACTeamProjects";
 import { ACTeamUsers } from "../../autocompletes/ACTeamUsers";
+import { MultiMemberPicker } from "../../autocompletes/MultiMemberPicker";
 import { CopyableTaskIdChip } from "../../CopyableTaskId";
 import { ModalManageTags } from "../../modals/ModalManageTags";
 import { CustomFieldsBlock } from "./CustomFieldsBlock";
@@ -494,6 +495,15 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
     const taskIdNum = taskContent.id ?? null;
     const blocked = isCurrentlyBlocked(taskIdNum, useTM);
 
+    // Collaborators — additional members beside the single assignee.
+    // Rides the same setTaskContent + setTaskUpdated contract as every
+    // other field, so preview / create / milestone mounts all persist it
+    // through the shared save path with no extra wiring.
+    const handleCollaboratorsChange = (next: UserProps[]) => {
+        setTaskContent({ ...taskContent, collaborators: next });
+        setTaskUpdated?.(true);
+    };
+
     return (
         <Box
             sx={{
@@ -534,103 +544,133 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                     "--ListItem-paddingX": "0px",
                 }}
             >
-                {/* Assignee */}
-                <ListItem sx={{ display: "flex", alignItems: "center" }}>
-                    <FieldLabel isDark={isDark} required={isRequired("assignee")}>
-                        {t.tasks.fields.assignee}
-                    </FieldLabel>
-                    <Box
-                        sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 1,
-                            width: { xs: "auto", sm: "40%" },
-                            flex: { xs: 1, sm: "0 0 auto" },
-                            minWidth: 0,
-                        }}
-                    >
-                        <AvatarWithStatus
-                            showPulseDot={false}
-                            // `assignee` is now nullable (a task can be
-                            // unassigned). When null, render the empty
-                            // placeholder avatar — `AvatarWithStatus`
-                            // already handles `avatarUser=undefined`.
-                            isYou={!!assignee && myself.userId === assignee.userId}
-                            myself={myself}
-                            setMyself={setMyself}
-                            socket={socket}
-                            useCM={useCM}
-                            useUISM={useUISM}
-                            avatarUser={
-                                assignee ? useTEM.teamMemberProfiles[assignee.userId] : undefined
-                            }
-                        />
-                        <ACTeamUsers
-                            initialUser={taskContent.assignee}
-                            isAssignee={true}
-                            isOpenTeamMembersList={isOpenTeamMembersList}
-                            myself={myself}
-                            setIsOpenTeamMembersList={setIsOpenTeamMembersList}
-                            setMyself={setMyself}
-                            setTaskContent={setTaskContent}
-                            setTaskUpdated={setTaskUpdated}
-                            setUser={setAssignee}
-                            socket={socket}
-                            taskContent={taskContent}
-                            useCM={useCM}
-                            useTEM={useTEM}
-                            useUISM={useUISM}
-                        />
-                    </Box>
-                </ListItem>
+                {/* Assignee and Reporter Row — the two owner fields share
+                    one row (mirrors the Project/Tags grid below). Each half
+                    keeps its avatar + picker; `minWidth: 0` lets the picker
+                    shrink inside the half-column instead of pushing the row
+                    past a narrowed preview pane. */}
+                <Grid spacing={1} container>
+                    <Grid sm={6} xs={12}>
+                        <ListItem sx={{ display: "flex", alignItems: "center", p: 0 }}>
+                            <FieldLabel isDark={isDark} required={isRequired("assignee")}>
+                                {t.tasks.fields.assignee}
+                            </FieldLabel>
+                            <Box
+                                sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 1,
+                                    flex: 1,
+                                    minWidth: 0,
+                                }}
+                            >
+                                <AvatarWithStatus
+                                    showPulseDot={false}
+                                    // `assignee` is now nullable (a task can
+                                    // be unassigned). When null, render the
+                                    // empty placeholder avatar —
+                                    // `AvatarWithStatus` already handles
+                                    // `avatarUser=undefined`.
+                                    isYou={!!assignee && myself.userId === assignee.userId}
+                                    myself={myself}
+                                    setMyself={setMyself}
+                                    socket={socket}
+                                    useCM={useCM}
+                                    useUISM={useUISM}
+                                    avatarUser={
+                                        assignee
+                                            ? useTEM.teamMemberProfiles[assignee.userId]
+                                            : undefined
+                                    }
+                                />
+                                <ACTeamUsers
+                                    initialUser={taskContent.assignee}
+                                    isAssignee={true}
+                                    isOpenTeamMembersList={isOpenTeamMembersList}
+                                    myself={myself}
+                                    setIsOpenTeamMembersList={setIsOpenTeamMembersList}
+                                    setMyself={setMyself}
+                                    setTaskContent={setTaskContent}
+                                    setTaskUpdated={setTaskUpdated}
+                                    setUser={setAssignee}
+                                    socket={socket}
+                                    taskContent={taskContent}
+                                    useCM={useCM}
+                                    useTEM={useTEM}
+                                    useUISM={useUISM}
+                                />
+                            </Box>
+                        </ListItem>
+                    </Grid>
+                    <Grid sm={6} xs={12}>
+                        <ListItem sx={{ display: "flex", alignItems: "center", p: 0 }}>
+                            <FieldLabel isDark={isDark} required={isRequired("reporter")}>
+                                {t.tasks.fields.reporter}
+                            </FieldLabel>
+                            <Box
+                                sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 1,
+                                    flex: 1,
+                                    minWidth: 0,
+                                }}
+                            >
+                                <AvatarWithStatus
+                                    avatarUser={useTEM.teamMemberProfiles[reporter.userId]}
+                                    isYou={myself.userId === reporter.userId}
+                                    myself={myself}
+                                    setMyself={setMyself}
+                                    showPulseDot={false}
+                                    socket={socket}
+                                    useCM={useCM}
+                                    useUISM={useUISM}
+                                />
+                                <ACTeamUsers
+                                    initialUser={taskContent.reporter}
+                                    isAssignee={false}
+                                    isOpenTeamMembersList={isOpenTeamMembersList}
+                                    myself={myself}
+                                    setIsOpenTeamMembersList={setIsOpenTeamMembersList}
+                                    setMyself={setMyself}
+                                    setTaskContent={setTaskContent}
+                                    socket={socket}
+                                    setTaskUpdated={setTaskUpdated}
+                                    // Adapt the non-nullable reporter setter
+                                    // to the wider `setUser: UserProps | null`
+                                    // signature ACTeamUsers needs. The picker
+                                    // only emits null for the assignee branch
+                                    // (isAssignee=true), so this null is
+                                    // unreachable in practice.
+                                    taskContent={taskContent}
+                                    useCM={useCM}
+                                    useTEM={useTEM}
+                                    useUISM={useUISM}
+                                    setUser={(value) => {
+                                        if (value) setReporter(value);
+                                    }}
+                                />
+                            </Box>
+                        </ListItem>
+                    </Grid>
+                </Grid>
 
-                {/* Reporter */}
+                {/* Collaborators — additional members beside the assignee.
+                    Shown for both tasks and milestones (a milestone stores
+                    them on its backing task, same as its other metadata). */}
                 <ListItem sx={{ display: "flex", alignItems: "center" }}>
-                    <FieldLabel isDark={isDark} required={isRequired("reporter")}>
-                        {t.tasks.fields.reporter}
-                    </FieldLabel>
-                    <Box
-                        sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 1,
-                            width: { xs: "auto", sm: "40%" },
-                            flex: { xs: 1, sm: "0 0 auto" },
-                            minWidth: 0,
-                        }}
-                    >
-                        <AvatarWithStatus
-                            avatarUser={useTEM.teamMemberProfiles[reporter.userId]}
-                            isYou={myself.userId === reporter.userId}
+                    <FieldLabel isDark={isDark}>{t.tasks.fields.collaborators}</FieldLabel>
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <MultiMemberPicker
                             myself={myself}
+                            placeholder={t.tasks.picker.addCollaborators}
+                            selected={taskContent.collaborators ?? []}
                             setMyself={setMyself}
-                            showPulseDot={false}
                             socket={socket}
-                            useCM={useCM}
-                            useUISM={useUISM}
-                        />
-                        <ACTeamUsers
-                            initialUser={taskContent.reporter}
-                            isAssignee={false}
-                            isOpenTeamMembersList={isOpenTeamMembersList}
-                            myself={myself}
-                            setIsOpenTeamMembersList={setIsOpenTeamMembersList}
-                            setMyself={setMyself}
-                            setTaskContent={setTaskContent}
-                            socket={socket}
-                            setTaskUpdated={setTaskUpdated}
-                            // Adapt the non-nullable reporter setter to the
-                            // wider `setUser: UserProps | null` signature
-                            // ACTeamUsers needs. The picker only emits null
-                            // for the assignee branch (isAssignee=true), so
-                            // this null is unreachable in practice.
-                            taskContent={taskContent}
                             useCM={useCM}
                             useTEM={useTEM}
                             useUISM={useUISM}
-                            setUser={(value) => {
-                                if (value) setReporter(value);
-                            }}
+                            onChange={handleCollaboratorsChange}
                         />
                     </Box>
                 </ListItem>

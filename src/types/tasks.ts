@@ -203,6 +203,14 @@ export type TaskProps = {
     // creator) and stays non-nullable.
     assignee: UserProps | null;
     reporter: UserProps;
+    // Additional members working on the task beside the single
+    // `assignee`. Backend `TaskMaster.collaborators` is a M2M; the read
+    // endpoints always emit an array (empty when none). Optional here so
+    // partial TaskProps built by non-read callers can omit it — the save
+    // paths then OMIT the key rather than sending `[]` (which would clear
+    // the server-side set). Deliberately NOT on `TaskTableProps`: the
+    // table doesn't surface collaborators.
+    collaborators?: UserProps[];
     chatType: number | null;
     chatId: number | null;
     threadId: number | null;
