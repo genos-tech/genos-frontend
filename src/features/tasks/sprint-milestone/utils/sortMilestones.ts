@@ -19,7 +19,7 @@ import { Milestone, Sprint } from "../types";
 // Custom display order for the milestone status chip. Anything not
 // in this list is treated as "after Closed" so unknown / future
 // statuses don't silently bubble to the top.
-export const MILESTONE_STATUS_ORDER = ["Open", "WIP", "Pending", "Closed"] as const;
+export const MILESTONE_STATUS_ORDER = ["Open", "WIP", "Blocked", "Pending", "Closed"] as const;
 const MILESTONE_STATUS_LAST = MILESTONE_STATUS_ORDER.length;
 
 // Shared palette for the milestone status chip. Mirrors the table's
@@ -32,6 +32,9 @@ const MILESTONE_STATUS_LAST = MILESTONE_STATUS_ORDER.length;
 export const MILESTONE_STATUS_CHIP_COLORS: Record<string, { color: string; textColor: string }> = {
     Open: { color: "#0044c2", textColor: "#ffffff" },
     WIP: { color: "#ff8c00", textColor: "#ffffff" },
+    // Milestones auto-Block too now (dependency-driven) — without this a
+    // blocked milestone chip fell back to the Open tone.
+    Blocked: { color: "#e11d48", textColor: "#ffffff" },
     Pending: { color: "#b900ff", textColor: "#ffffff" },
     Closed: { color: "#1dc200", textColor: "#ffffff" },
     Deleted: { color: "#ff2323", textColor: "#ffffff" },

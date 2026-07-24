@@ -14,7 +14,7 @@
  */
 
 import { CssVarsProvider } from "@mui/joy/styles";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { TaskDependenciesBlock } from "../features/tasks/components/contents/base/TaskDependenciesBlock";
@@ -43,6 +43,7 @@ const dep = (dependencyId: number, otherTaskId: number, title: string): TaskDepe
 const renderBlock = (opts: { hostZIndex?: number } = {}) => {
     const removeTaskDependency = vi.fn(async () => true);
     const setCurrentPreviewTaskId = vi.fn();
+    const refreshTaskStatuses = vi.fn(async () => {});
     const useTM = {
         taskDependencies: {
             10: {
@@ -53,6 +54,7 @@ const renderBlock = (opts: { hostZIndex?: number } = {}) => {
         removeTaskDependency,
         setCurrentPreviewTaskId,
         addTaskDependency: vi.fn(),
+        refreshTaskStatuses,
     } as unknown as TaskManagementState;
     const usePM = {
         teamProjects: [],
@@ -76,7 +78,7 @@ const renderBlock = (opts: { hostZIndex?: number } = {}) => {
             />
         </CssVarsProvider>
     );
-    return { removeTaskDependency, setCurrentPreviewTaskId };
+    return { removeTaskDependency, setCurrentPreviewTaskId, refreshTaskStatuses };
 };
 
 describe("TaskDependenciesBlock inline remove", () => {
@@ -90,6 +92,21 @@ describe("TaskDependenciesBlock inline remove", () => {
         expect(removeTaskDependency).toHaveBeenCalledTimes(1);
         expect(removeTaskDependency).toHaveBeenCalledWith(501, 10);
         expect(setCurrentPreviewTaskId).not.toHaveBeenCalled();
+    });
+
+    it("refreshes both endpoints' status after a successful remove", async () => {
+        const { refreshTaskStatuses } = renderBlock();
+
+        // Unlink the first chip (the "blocking" dep to task 21, project 1).
+        fireEvent.click(screen.getAllByRole("button", { name: "Remove dependency" })[0]);
+
+        // Fires after the DELETE resolves — so the backend's auto-unblock
+        // (Blocked -> Open) is reflected in the table + preview at once.
+        await waitFor(() => expect(refreshTaskStatuses).toHaveBeenCalledTimes(1));
+        expect(refreshTaskStatuses).toHaveBeenCalledWith([
+            { taskId: 10, projectId: 1 },
+            { taskId: 21, projectId: 1 },
+        ]);
     });
 
     it("keeps the chip body navigating to the other task", () => {

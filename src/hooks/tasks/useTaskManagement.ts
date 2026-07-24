@@ -265,6 +265,14 @@ export interface TaskManagementState {
         focusedTaskId: number;
     }) => Promise<CreateTaskDependencyResult>;
     removeTaskDependency: (dependencyId: number, focusedTaskId: number) => Promise<boolean>;
+    // Re-pull the given tasks' STATUS from the server and patch it into
+    // `allTasks` + the open preview. Used after a dependency add/remove so
+    // the backend's auto-"Blocked" ↔ "Open" transition (fired synchronously
+    // by the dependency signal) is reflected in the UI right away, instead
+    // of only after the next full project-tasks sync.
+    refreshTaskStatuses: (
+        refs: { taskId: number; projectId: number | null | undefined }[]
+    ) => Promise<void>;
 
     // Functions
     loadTask: (projectId: number, taskId: number) => Promise<void>;
@@ -727,6 +735,63 @@ export const useTaskManagement = (
         [accessToken, loadTaskDependenciesFor]
     );
 
+    // Force-refetch each task's canonical status and patch it into local
+    // state. `forceRefresh` bypasses the IDB full-task cache (which would
+    // still hold the pre-dependency status) and re-hydrates it, so a page
+    // reload keeps the fresh status too. Status-only patches: never touches
+    // body / attachments / other fields, so an in-flight edit in the open
+    // preview isn't clobbered (mirrors the advisor guidance on the
+    // dependency-status sync). Best-effort per task — a failed refetch just
+    // leaves that row to self-heal on the next project-tasks sync.
+    const refreshTaskStatuses = useCallback(
+        async (
+            refs: { taskId: number; projectId: number | null | undefined }[]
+        ): Promise<void> => {
+            await Promise.all(
+                refs.map(async ({ taskId, projectId }) => {
+                    if (taskId == null || projectId == null) return;
+                    const loaded: TaskProps[] | undefined = await loadSpecificTask(
+                        myself,
+                        projectId,
+                        taskId,
+                        accessToken,
+                        { forceRefresh: true }
+                    );
+                    if (!loaded || loaded.length === 0) return;
+                    const fresh = loaded[0];
+                    const freshStatusLabel = fresh.status?.status ?? null;
+
+                    // 1) Patch the table row (drives table / filters / dashboard).
+                    setAllTasks((prev) => {
+                        const idx = prev.findIndex(
+                            (r) => r.id != null && String(r.id) === String(taskId)
+                        );
+                        if (idx === -1 || prev[idx].status === freshStatusLabel) return prev;
+                        const next = prev.slice();
+                        next[idx] = {
+                            ...next[idx],
+                            status: freshStatusLabel,
+                            updatedAt: fresh.updatedAt ?? next[idx].updatedAt,
+                        };
+                        return next;
+                    });
+
+                    // 2) Patch the open preview's status chip, status-only, and
+                    //    only when this task IS the open preview (identity guard
+                    //    against a switch landing before the refetch resolves).
+                    setCurrentPreviewTask((prev) =>
+                        prev &&
+                        String(prev.id) === String(taskId) &&
+                        prev.status?.status !== freshStatusLabel
+                            ? { ...prev, status: fresh.status }
+                            : prev
+                    );
+                })
+            );
+        },
+        [myself, accessToken]
+    );
+
     const fetchProjectTasks = async (projectId: number) => {
         setTsLastLoadProjectTasks(Date.now());
         setIsLoadingTasks(true);
@@ -942,6 +1007,7 @@ export const useTaskManagement = (
         loadTaskDependenciesFor,
         addTaskDependency,
         removeTaskDependency,
+        refreshTaskStatuses,
 
         // Functions
         loadTask,
