@@ -587,6 +587,19 @@ export const App = () => {
     // every store, navigator, and helper in scope at the same time.
     const openIntent = useCallback(
         (intent: NotificationIntent) => {
+            // Intents that ship their own reopen callback handle their own
+            // click. Agent-run-completion notices (Spotlight / thread / note
+            // Ask) set `onOpen` to reopen the exact surface the backgrounded
+            // run belongs to — e.g. Spotlight's `() => setIsOpen(true)`, which
+            // restores the finished answer from localStorage. These carry NO
+            // chat/task/note source, so without this branch they fall through
+            // to the `!src` inbox fallback below and wrongly dump the user in
+            // the inbox instead of reopening Spotlight.
+            if (intent.onOpen) {
+                intent.onOpen();
+                return;
+            }
+
             const src = intent.source;
 
             // Inbox: no source -> just switch services.
