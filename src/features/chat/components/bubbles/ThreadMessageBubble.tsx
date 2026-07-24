@@ -668,10 +668,21 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
 
 // Memoized export. See MessageBubble.tsx for the rationale on which props
 // the comparator considers — same reasoning applies here. `thread` plays
-// the role of `chat` for thread context; the rest mirrors MessageBubble.
+// the role of `chat` for thread context and, like `chat` there, is
+// compared by its render-affecting fields (this component reads only
+// chatId / threadId / chatType / chatName / dmPartnerUser / taskId /
+// displayId off it, never `thread.messages`) — the live-update bridge
+// gives the thread object a new identity on every reply arrival, so a
+// reference compare re-rendered every visible reply bubble per event.
 const areEqual = (prev: threadMessageBubbleProps, next: threadMessageBubbleProps): boolean =>
     prev.message === next.message &&
-    prev.thread === next.thread &&
+    prev.thread.chatId === next.thread.chatId &&
+    prev.thread.threadId === next.thread.threadId &&
+    prev.thread.chatType === next.thread.chatType &&
+    prev.thread.chatName === next.thread.chatName &&
+    prev.thread.dmPartnerUser === next.thread.dmPartnerUser &&
+    prev.thread.taskId === next.thread.taskId &&
+    prev.thread.displayId === next.thread.displayId &&
     prev.variant === next.variant &&
     prev.isFocused === next.isFocused &&
     prev.isSimpleBubble === next.isSimpleBubble &&

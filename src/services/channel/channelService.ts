@@ -49,6 +49,7 @@ import type {
     MessagesDeltaData,
     Pin,
     ReadCursor,
+    UserLite,
 } from "../../types/channel";
 
 /**
@@ -148,6 +149,14 @@ export interface PendingMessage {
     enqueuedAt: string;
     attempts: number;
     lastError: { code: string; message: string; at: string } | null;
+    /**
+     * Id of the optimistic local-echo Message row (== correlationId)
+     * rendered in `messagesByChannel` while this send is in flight.
+     * Null when the caller didn't request an echo (`opts.echo` absent)
+     * or after the echo has been reconciled away (replaced by the
+     * server row on ack/broadcast, or removed on failure/discard).
+     */
+    echoMessageId: string | null;
 }
 
 /**
@@ -209,11 +218,21 @@ export interface ChannelStoreSnapshot {
     /** Secondary index: which Flag (if any) covers `messageId`. */
     flagByMessageId: ReadonlyMap<string, Flag>;
     /** Monotonic version of the flags state. Bumps whenever a flag is
-     *  added, removed, or hydrated. `flags` / `flagByMessageId` Maps
-     *  are mutated in place for cheap writes, so subscribers that need
-     *  to dedup on flag-only changes track this counter instead of the
-     *  Map reference (which never changes). */
+     *  added, removed, or hydrated — AND when a message that carries an
+     *  active flag is upserted/mutated/deleted (the flagged-list derive
+     *  reads message content, so those changes must re-derive it too).
+     *  `flags` / `flagByMessageId` Maps are mutated in place for cheap
+     *  writes, so subscribers that need to dedup on flag-only changes
+     *  track this counter instead of the Map reference (which never
+     *  changes). */
     flagsVersion: number;
+    /** Monotonic version of the chat-LIST inputs: `channels`,
+     *  `membersByChannel`, and pins. Message-only events (reactions,
+     *  edits of non-latest rows, thread replies, read cursors that
+     *  don't change unread) leave it untouched, so subscribers that
+     *  derive the sidebar list can skip their O(channels) re-derive
+     *  on the (much more frequent) message traffic. */
+    channelsVersion: number;
     /** Cache-layer health. See `IdbHealth` for state semantics. */
     idbHealth: IdbHealth;
     /** Unconfirmed sends keyed by correlation_id. See `PendingMessage`. */
@@ -326,6 +345,9 @@ export class ChannelService {
      *  subscribers can detect flag-only changes without relying on Map
      *  reference identity (the Maps are mutated in place). */
     private _flagsVersion = 0;
+    /** Bumped on every `_channels` / `_members` / pin mutation — the
+     *  inputs the chat-list derive reads. See the snapshot field doc. */
+    private _channelsVersion = 0;
     /** IDB cache health tracking — see `IdbHealth` for the contract. */
     private _idbErrorCount = 0;
     private _lastIdbError: IdbHealth["lastError"] = null;
@@ -377,6 +399,7 @@ export class ChannelService {
             pinByChannelId: this._pinByChannelId,
             flagByMessageId: this._flagByMessageId,
             flagsVersion: this._flagsVersion,
+            channelsVersion: this._channelsVersion,
             idbHealth: {
                 status: this._idbErrorCount > 0 ? "degraded" : "ok",
                 lastError: this._lastIdbError,
@@ -431,6 +454,13 @@ export class ChannelService {
         this._version += 1;
         this._snapshot = this._buildSnapshot();
         for (const fn of this._listeners) fn();
+    }
+
+    /** Mark the chat-list inputs (`_channels` / `_members` / pins) as
+     *  changed. Call from every mutation of those maps, BEFORE the
+     *  `_notify()` that publishes it. Does not notify by itself. */
+    private _bumpChannels(): void {
+        this._channelsVersion += 1;
     }
 
     subscribe = (fn: () => void): (() => void) => {
@@ -507,6 +537,7 @@ export class ChannelService {
         this._pinByChannelId.clear();
         this._flagByMessageId.clear();
         this._flagsVersion += 1;
+        this._bumpChannels();
         this._pendingByChannel.clear();
         // Reject in-flight send promises so callers don't await forever
         // on requests that belong to the previous user's socket. The
@@ -713,6 +744,7 @@ export class ChannelService {
             `[ChannelService] dropped ${stale.length} channel(s) the server no longer lists:`,
             stale.map((c) => c.id)
         );
+        this._bumpChannels();
         this._notify();
     }
 
@@ -816,6 +848,7 @@ export class ChannelService {
         }
         const next = Array.from(byId.values());
         this._members.set(channelId, next);
+        this._bumpChannels();
         this._notify();
         // Persist each row — `_persistMember` is idempotent on member.id
         // so a duplicate write from a follow-up `channel.member_added`
@@ -1000,17 +1033,15 @@ export class ChannelService {
             await this._evictChannelMessages(channelId, "threads");
         }
 
-        // Apply messages. `handleMessageCreated` is idempotent
-        // (upsert by id), so re-applying the same row from a
-        // retried sync is a no-op. Soft-deleted rows arrive as
-        // tombstones (`deletedAt` set) and the upsert path
-        // overwrites the local copy correctly.
-        for (const m of msgsRes.data.messages ?? []) {
-            this.handleMessageCreated(m);
-        }
-        for (const m of threadsRes.data.messages ?? []) {
-            this.handleMessageCreated(m);
-        }
+        // Apply messages in ONE batch — single notify, single IDB
+        // transaction (see `ingestMessages`). The upsert is idempotent
+        // (by id), so re-applying the same row from a retried sync is a
+        // no-op. Soft-deleted rows arrive as tombstones (`deletedAt`
+        // set) and the upsert path overwrites the local copy correctly.
+        this.ingestMessages([
+            ...(msgsRes.data.messages ?? []),
+            ...(threadsRes.data.messages ?? []),
+        ]);
 
         // Apply hard-deletes. `data.deletes` is reserved for rows
         // that have been purged (not just soft-deleted) — usually
@@ -1118,6 +1149,7 @@ export class ChannelService {
             const next = arr.filter((m) => m.id !== messageId);
             if (next.length !== arr.length) {
                 this._messages.set(channelId, next);
+                if (this._flagByMessageId.has(messageId)) this._flagsVersion += 1;
                 this._notify();
             }
         }
@@ -1243,6 +1275,87 @@ export class ChannelService {
         }
     }
 
+    /**
+     * Build + insert the optimistic echo row for a pending send. In-
+     * memory only — never persisted to IDB (a reload must not resurrect
+     * an unconfirmed message; the reconnect flush re-sends the pending
+     * entry instead). The provisional `seq` is tail+1 so unread
+     * arithmetic stays sane until the server row replaces it.
+     */
+    private _insertEchoMessage(pending: PendingMessage, sender: UserLite): void {
+        const ch = this._channels.get(pending.channelId);
+        // Without the channel row we can't stamp a channelKind the
+        // adapters rely on — skip the echo; the ack path still renders.
+        if (!ch) return;
+        const arr = this._messages.get(pending.channelId) ?? [];
+        const tailSeq = arr.length > 0 ? arr[arr.length - 1].seq : (ch.latestMessage?.seq ?? 0);
+        const now = new Date().toISOString();
+        const echo: Message = {
+            id: pending.correlationId,
+            channelId: pending.channelId,
+            channelKind: ch.kind,
+            sender,
+            seq: (tailSeq || 0) + 1,
+            body: pending.body,
+            bodyText: pending.bodyText,
+            parentId: pending.parentId,
+            threadRootId: pending.parentId,
+            isThreadReply: pending.parentId != null,
+            replyCount: 0,
+            reactions: [],
+            mentions: [],
+            attachments: [],
+            metadata: pending.metadata,
+            taskId: null,
+            displayId: null,
+            taskStatus: null,
+            editedAt: null,
+            deletedAt: null,
+            tsSent: now,
+            tsUpdated: now,
+        };
+        pending.echoMessageId = echo.id;
+        this._upsertMessage(echo);
+        if (!echo.isThreadReply) this._bumpChannelLatest(echo);
+        // No unread bump (self-sent), no notify (the caller notifies).
+    }
+
+    /**
+     * Remove a pending send's echo row, if any. `replacement` is the
+     * server-issued row when the send succeeded — it takes over the
+     * channel's `latestMessage` slot if the echo held it; on failure/
+     * discard (no replacement) the slot falls back to the newest
+     * remaining top-level row so the sidebar preview doesn't keep a
+     * ghost. No notify — callers publish the whole reconcile at once.
+     */
+    private _clearEcho(correlationId: string, replacement?: Message): void {
+        const pending = this._pendingByCorrelationId.get(correlationId);
+        const echoId = pending?.echoMessageId;
+        if (!pending || !echoId) return;
+        pending.echoMessageId = null;
+        const arr = this._messages.get(pending.channelId);
+        if (arr) {
+            const next = arr.filter((m) => m.id !== echoId);
+            if (next.length !== arr.length) this._messages.set(pending.channelId, next);
+        }
+        const ch = this._channels.get(pending.channelId);
+        if (ch && ch.latestMessage?.id === echoId) {
+            let latest: Message | null = replacement ?? null;
+            if (!latest) {
+                const rest = this._messages.get(pending.channelId) ?? [];
+                for (let i = rest.length - 1; i >= 0; i--) {
+                    const m = rest[i];
+                    if (!m.isThreadReply && !m.deletedAt) {
+                        latest = m;
+                        break;
+                    }
+                }
+            }
+            this._channels.set(pending.channelId, { ...ch, latestMessage: latest });
+            this._bumpChannels();
+        }
+    }
+
     // ---- Socket mutations (each emits + awaits ack) ----------------------
 
     /**
@@ -1273,7 +1386,22 @@ export class ChannelService {
     send(
         channelId: string,
         body: unknown[],
-        opts: { bodyText?: string; parentId?: string; metadata?: Record<string, unknown> } = {}
+        opts: {
+            bodyText?: string;
+            parentId?: string;
+            metadata?: Record<string, unknown>;
+            /**
+             * Opt-in optimistic local echo: insert a synthetic Message
+             * row (id = correlationId, sender = `echo.sender`) into the
+             * store immediately so the pane paints the message without
+             * waiting for the server ack round-trip. Reconciled by
+             * `_clearEcho` on ack/broadcast (replaced by the server
+             * row) or on failure/discard (removed; the caller restores
+             * the composer). Opt-in so structured sends (PM task cards,
+             * milestone posts) don't render a half-formed card.
+             */
+            echo?: { sender: UserLite };
+        } = {}
     ): Promise<Message> {
         const correlationId = randomCorrelationId();
         const pending: PendingMessage = {
@@ -1287,7 +1415,12 @@ export class ChannelService {
             enqueuedAt: new Date().toISOString(),
             attempts: 0,
             lastError: null,
+            echoMessageId: null,
         };
+        // Insert the echo row BEFORE `_upsertPending` so its notify
+        // publishes both the pending entry and the visible bubble in
+        // one pass.
+        if (opts.echo) this._insertEchoMessage(pending, opts.echo.sender);
         this._upsertPending(pending);
 
         return new Promise<Message>((resolve, reject) => {
@@ -1334,13 +1467,14 @@ export class ChannelService {
             );
             if (ack.ok) {
                 const msg = ack.data as Message;
-                // Render the server row immediately off the ack — BEFORE
-                // dropping the optimistic pending bubble — so the message
-                // doesn't flicker out in the gap between the ack and the
-                // `message.created` broadcast. `_upsertMessage` (inside
-                // handleMessageCreated) dedups by message id, so the
-                // later broadcast / resync can't duplicate it. Self-sent,
-                // so no unread bump; the #17 thread-reply guard applies.
+                // Swap the optimistic echo row for the server row in the
+                // SAME mutation pass (clear echo silently, then upsert +
+                // notify inside handleMessageCreated) so the bubble never
+                // flickers out between the two. `_upsertMessage` dedups
+                // by message id, so the later broadcast / resync can't
+                // duplicate it. Self-sent, so no unread bump; the #17
+                // thread-reply guard applies.
+                this._clearEcho(correlationId, msg);
                 this.handleMessageCreated(msg);
                 this._removePending(correlationId);
                 // The broadcast also dedupes off the correlation id, but
@@ -1367,6 +1501,10 @@ export class ChannelService {
     private _markPendingFailed(correlationId: string, code: string, message: string): void {
         const existing = this._pendingByCorrelationId.get(correlationId);
         if (!existing) return;
+        // The send failed — drop the optimistic bubble so the pane
+        // matches reality (the caller restores the composer text). The
+        // `_upsertPending` below publishes the removal via its notify.
+        this._clearEcho(correlationId);
         this._upsertPending({
             ...existing,
             status: "failed",
@@ -1405,6 +1543,7 @@ export class ChannelService {
      */
     discardPending(correlationId: string): void {
         if (!this._pendingByCorrelationId.has(correlationId)) return;
+        this._clearEcho(correlationId);
         this._removePending(correlationId);
         this._settlePending(correlationId, {
             ok: false,
@@ -2012,7 +2151,13 @@ export class ChannelService {
 
     // ---- Inbound socket event handlers (called by socketRouter) ----------
 
-    handleMessageCreated(message: Message): void {
+    /**
+     * Apply one created message to the in-memory store WITHOUT
+     * notifying or persisting. Shared by `handleMessageCreated` (single
+     * live event: notify + persist per row) and `ingestMessages` (sync/
+     * resync batches: one notify + one IDB transaction for the lot).
+     */
+    private _applyMessageCreated(message: Message): void {
         // The broadcast payload from the v3 server includes the
         // originating `correlation_id` (see `socketio_events_v3/
         // message_handlers.py` — the broadcast envelope wraps the
@@ -2024,6 +2169,7 @@ export class ChannelService {
         // optimistic bubble with the server-issued row.
         const corr = (message as Message & { correlation_id?: string }).correlation_id;
         if (corr && this._pendingByCorrelationId.has(corr)) {
+            this._clearEcho(corr, message);
             this._removePending(corr);
             this._settlePending(corr, { ok: true, message });
         }
@@ -2046,11 +2192,31 @@ export class ChannelService {
                 this._bumpUnread(message.channelId);
             }
         }
+    }
+
+    handleMessageCreated(message: Message): void {
+        this._applyMessageCreated(message);
         this._notify();
         void this._persistMessage(message);
         if (!message.isThreadReply) {
             void this._persistChannelLatest(message.channelId);
         }
+    }
+
+    /**
+     * Batch form of `handleMessageCreated` for sync/resync payloads.
+     * Applies every row to the in-memory store, then notifies ONCE and
+     * persists the lot in ONE IDB transaction — a channel sync used to
+     * fire a notify (→ every store subscriber re-derived, several of
+     * them writing App-root React state) plus a standalone IDB
+     * transaction per row, which is what made opening a busy channel
+     * stutter.
+     */
+    ingestMessages(messages: readonly Message[]): void {
+        if (messages.length === 0) return;
+        for (const m of messages) this._applyMessageCreated(m);
+        this._notify();
+        void this._persistMessagesBulk(messages);
     }
 
     handleMessageUpdated(message: Message): void {
@@ -2062,6 +2228,7 @@ export class ChannelService {
         const ch = this._channels.get(message.channelId);
         if (ch && ch.latestMessage && ch.latestMessage.id === message.id) {
             this._channels.set(message.channelId, { ...ch, latestMessage: message });
+            this._bumpChannels();
         }
         this._notify();
         void this._persistMessage(message);
@@ -2117,6 +2284,7 @@ export class ChannelService {
                 m.id === event.id ? { ...m, deletedAt: new Date().toISOString() } : m
             );
             this._messages.set(event.channelId, next);
+            if (this._flagByMessageId.has(event.id)) this._flagsVersion += 1;
         }
         this._notify();
         void this._persistDeletedById(event.id, event.channelId);
@@ -2186,6 +2354,7 @@ export class ChannelService {
                     }
                 }
                 this._channels.set(cursor.channelId, { ...ch, unreadCount: unread });
+                this._bumpChannels();
             }
         }
         this._notify();
@@ -2194,6 +2363,7 @@ export class ChannelService {
 
     handleChannelCreated(channel: Channel): void {
         this._channels.set(channel.id, channel);
+        this._bumpChannels();
         if (!this._messages.has(channel.id)) this._messages.set(channel.id, []);
         // Auto-subscribe to the new channel room so subsequent message
         // events flow through. If the socket lost the auto-join (e.g.
@@ -2206,6 +2376,52 @@ export class ChannelService {
         }
         this._notify();
         void this._persistChannel(channel);
+    }
+
+    /**
+     * Batch form of `handleChannelCreated` for the chat-list refresh
+     * path (`loadV3Chats`). One notify + one IDB transaction for the
+     * whole list — pushing each row through `handleChannelCreated`
+     * fired a notify, an IDB transaction AND a `channel.subscribe`
+     * socket emit per channel on EVERY list refresh (boot, post-send,
+     * chat-switch timer), N× the work for an unchanged list.
+     *
+     * The recovery `channel.subscribe` emit is kept, but only for
+     * channels this client didn't already hold — the connect handler
+     * joins every existing channel's room server-side, so only rows
+     * DISCOVERED via the list (created mid-session, broadcast missed)
+     * can be missing their room join.
+     */
+    ingestChannels(channels: readonly Channel[]): void {
+        if (channels.length === 0) return;
+        const discovered: Channel[] = [];
+        for (const c of channels) {
+            if (!this._channels.has(c.id)) discovered.push(c);
+            this._channels.set(c.id, c);
+            if (!this._messages.has(c.id)) this._messages.set(c.id, []);
+        }
+        if (this.socket?.connected) {
+            for (const c of discovered) {
+                void this.subscribeChannel(c.id).catch(() => {
+                    /* room may already be joined; silent */
+                });
+            }
+        }
+        this._bumpChannels();
+        this._notify();
+        void this._persistChannelsBulk(channels);
+    }
+
+    private async _persistChannelsBulk(channels: readonly Channel[]) {
+        try {
+            const db = await initDB();
+            const tx = db.transaction(STORES.CHANNELS, "readwrite");
+            const store = tx.objectStore(STORES.CHANNELS);
+            for (const c of channels) void store.put(c);
+            await tx.done;
+        } catch (e) {
+            this._recordIdbError("_persistChannelsBulk", e);
+        }
     }
 
     /**
@@ -2230,7 +2446,10 @@ export class ChannelService {
                 changed = true;
             }
         }
-        if (changed) this._notify();
+        if (changed) {
+            this._bumpChannels();
+            this._notify();
+        }
     }
 
     /**
@@ -2260,6 +2479,7 @@ export class ChannelService {
             ownerId: channel.ownerId,
             tsUpdated: channel.tsUpdated,
         });
+        this._bumpChannels();
         this._notify();
         void this._persistChannel(this._channels.get(channel.id)!);
     }
@@ -2270,6 +2490,7 @@ export class ChannelService {
             ? existing
             : [...existing, event.member];
         this._members.set(event.channelId, next);
+        this._bumpChannels();
         // If I'M the one being added (e.g. a peer's invite, or a
         // recovery path where `channel.created` was missed), the
         // primary subscribe path runs through `channel.created` →
@@ -2296,6 +2517,7 @@ export class ChannelService {
         const existing = this._members.get(event.channelId) ?? [];
         const next = existing.filter((m) => m.userId !== event.userId);
         this._members.set(event.channelId, next);
+        this._bumpChannels();
         // If it was ME being removed, drop the channel from the list
         // AND leave the socket room. Without the unsubscribe, the
         // backend keeps emitting `message.created` / `reaction.added`
@@ -2385,8 +2607,9 @@ export class ChannelService {
             const threadMessages = env.data?.thread_messages ?? [];
             const deletes = env.data?.deletes ?? [];
 
-            for (const m of messages) this.handleMessageCreated(m);
-            for (const m of threadMessages) this.handleMessageCreated(m);
+            // Batched: one notify + one IDB transaction per envelope
+            // instead of one of each per row (see `ingestMessages`).
+            this.ingestMessages([...messages, ...threadMessages]);
             for (const id of deletes) this.handleMessageHardDelete(channelId, id);
 
             if (env.server_time) {
@@ -2466,6 +2689,7 @@ export class ChannelService {
                 if (!f.completedAt) this._flagByMessageId.set(f.messageId, f);
             }
             if (flagRows.length > 0) this._flagsVersion += 1;
+            this._bumpChannels();
         } catch (e) {
             // IDB failure is non-fatal — the app keeps working off the
             // live socket stream + REST cold reads. Record so the dev
@@ -2506,6 +2730,11 @@ export class ChannelService {
             next = prev.map((m, i) => (i === idx ? message : m));
         }
         this._messages.set(message.channelId, next);
+        // The flagged-messages derive reads message content, so a write
+        // to a message that carries an active flag must re-derive it —
+        // this is also what resolves a previously-orphaned flag the
+        // moment its message lands in the store.
+        if (this._flagByMessageId.has(message.id)) this._flagsVersion += 1;
     }
 
     private _mutateMessage(channelId: string, messageId: string, fn: (m: Message) => Message) {
@@ -2513,6 +2742,7 @@ export class ChannelService {
         if (!arr) return;
         const next = arr.map((m) => (m.id === messageId ? fn(m) : m));
         this._messages.set(channelId, next);
+        if (this._flagByMessageId.has(messageId)) this._flagsVersion += 1;
     }
 
     private _bumpChannelLatest(message: Message) {
@@ -2525,6 +2755,7 @@ export class ChannelService {
                 latestMessage: message,
                 tsUpdated: message.tsSent,
             });
+            this._bumpChannels();
         }
     }
 
@@ -2532,6 +2763,7 @@ export class ChannelService {
         const ch = this._channels.get(channelId);
         if (!ch) return;
         this._channels.set(channelId, { ...ch, unreadCount: ch.unreadCount + 1 });
+        this._bumpChannels();
     }
 
     // ---- Pin / Flag store helpers ---------------------------------------
@@ -2548,6 +2780,7 @@ export class ChannelService {
         if (previous && previous.id !== pin.id) this._pins.delete(previous.id);
         this._pins.set(pin.id, pin);
         this._pinByChannelId.set(pin.channelId, pin);
+        this._bumpChannels();
         this._notify();
         void this._persistPin(pin, previous?.id !== pin.id ? previous?.id : undefined);
     }
@@ -2557,6 +2790,7 @@ export class ChannelService {
         if (!existing) return;
         this._pins.delete(existing.id);
         this._pinByChannelId.delete(channelId);
+        this._bumpChannels();
         this._notify();
         void this._persistPinDelete(existing.id);
     }
@@ -2657,6 +2891,36 @@ export class ChannelService {
         } catch (e) {
             this._recordIdbError("_persistMessage", e);
         }
+    }
+
+    /**
+     * Persist a batch of messages in ONE readwrite transaction (vs one
+     * transaction per row via `_persistMessage`), then refresh each
+     * affected channel's persisted row once so the cached `latestMessage`
+     * denorm survives a reload. Same `taskKey` projection as the
+     * single-row path.
+     */
+    private async _persistMessagesBulk(messages: readonly Message[]) {
+        try {
+            const db = await initDB();
+            const tx = db.transaction(STORES.MESSAGES_V3, "readwrite");
+            const store = tx.objectStore(STORES.MESSAGES_V3);
+            for (const message of messages) {
+                const taskKey =
+                    (message.metadata as { taskId?: string | number } | null)?.taskId != null
+                        ? String((message.metadata as { taskId: string | number }).taskId)
+                        : "";
+                void store.put({ ...message, taskKey });
+            }
+            await tx.done;
+        } catch (e) {
+            this._recordIdbError("_persistMessagesBulk", e);
+        }
+        const channelIds = new Set<string>();
+        for (const m of messages) {
+            if (!m.isThreadReply) channelIds.add(m.channelId);
+        }
+        for (const id of channelIds) void this._persistChannelLatest(id);
     }
 
     private async _persistDeletedById(id: string, channelId: string) {

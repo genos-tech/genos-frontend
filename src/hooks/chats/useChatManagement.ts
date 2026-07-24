@@ -2,10 +2,10 @@ import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import {
+    createCachedMessagesAdapter,
+    createCachedThreadMessagesAdapter,
     v3ChannelsToLegacyChats,
     v3FlagsToLegacy,
-    v3MessagesToLegacy,
-    v3ThreadMessagesToLegacy,
 } from "../../features/chat/adapters/v3ToLegacy";
 import { popActivityMessages } from "../../features/chat/components/sidebar/activity/services/popActivityMessages";
 import { loadV3Chats } from "../../features/chat/services/loadV3Chats";
@@ -675,12 +675,25 @@ export const useChatManagement = (
             }
         }, 500);
         return () => clearTimeout(timerId);
-        // Intentional: `funcSetAllChats` is re-derived on every render
-        // and isn't memoized; including it in the dep array would re-arm
-        // the timer continuously. Only the main/sub chat selection
-        // should trigger a refresh.
+        // Key on the chat IDENTITY (id + type), NOT the whole
+        // `currentMainChat` / `currentSubChat` objects. The live-update
+        // bridges below patch those objects (`{...prev, messages}`) on
+        // every message arrival, so depending on the object identity
+        // re-armed this timer — and thus fired a full `GET /channels/`
+        // (via `funcSetAllChats`) plus re-wrote the last-chat
+        // localStorage keys — 500ms after every received message. This
+        // effect only needs to run when the user actually SWITCHES
+        // chats: the sidebar itself now stays live off the
+        // `channelsVersion`-gated subscription below, and the persisted
+        // last-chat id only changes on a switch. `funcSetAllChats` is
+        // still intentionally excluded (it re-binds every render).
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [currentMainChat, currentSubChat]);
+    }, [
+        currentMainChat?.chatId,
+        currentMainChat?.chatType,
+        currentSubChat?.chatId,
+        currentSubChat?.chatType,
+    ]);
 
     // v3 live-update bridge: subscribe to channelService for the
     // currently-open main chat. Whenever a v3 socket event mutates
@@ -712,6 +725,13 @@ export const useChatManagement = (
         // `flagsVersion` bumps on every flag mutation instead.
         let lastSliceRef: readonly unknown[] | undefined;
         let lastFlagsVersion = -1;
+        // Identity-caching adapter: unchanged rows keep their object
+        // identity across re-adapts so the per-bubble `React.memo`
+        // holds for everything except the row that actually changed —
+        // and a no-op re-adapt returns the SAME array, letting the
+        // setState below bail without a render.
+        const adapt = createCachedMessagesAdapter();
+        const myUserId = myself.userId || "";
         const apply = () => {
             const snapshot = channelService.getSnapshot();
             const messagesSlice = snapshot.messagesByChannel.get(channelId);
@@ -720,7 +740,7 @@ export const useChatManagement = (
             lastSliceRef = messagesSlice;
             lastFlagsVersion = snapshot.flagsVersion;
             if (!messagesSlice) return;
-            const legacyMessages = v3MessagesToLegacy({
+            const legacyMessages = adapt({
                 channelId,
                 chatType,
                 flaggedMessageIds: snapshot.flagByMessageId,
@@ -733,7 +753,17 @@ export const useChatManagement = (
                 // different channel. Only patch if the chat that was
                 // open when this effect armed is still open.
                 if (!prev || prev.chatId !== channelId) return prev;
-                return { ...prev, messages: legacyMessages };
+                // Stable-output bail: nothing visible changed.
+                if (prev.messages === legacyMessages) return prev;
+                // Auto-follow policy for this patch: our own send should
+                // pull the pane to the newest bubble; everything else
+                // (arrivals from others, edits, reactions) must NOT yank
+                // a reader who has scrolled up — `notMove: true` defers
+                // to the near-bottom check in the scroll hook.
+                const grew = legacyMessages.length > prev.messages.length;
+                const tail = grew ? legacyMessages[legacyMessages.length - 1] : undefined;
+                const selfAppended = !!tail && tail.sender.userId === myUserId;
+                return { ...prev, messages: legacyMessages, notMove: !selfAppended };
             });
         };
         // Subscribe first; channelService runs the callback on every
@@ -743,6 +773,9 @@ export const useChatManagement = (
         const unsubscribe = channelService.subscribe(apply);
         apply();
         return unsubscribe;
+        // `myself.userId` is intentionally read at arm time only — it
+        // can't change while the same chat stays open.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentMainChat?.chatId, currentMainChat?.chatType]);
 
     // Sub-pane mirror of the above. SubChatPane renders an independent
@@ -756,6 +789,8 @@ export const useChatManagement = (
         if (!channelId || chatType == null) return;
         let lastSliceRef: readonly unknown[] | undefined;
         let lastFlagsVersion = -1;
+        const adapt = createCachedMessagesAdapter();
+        const myUserId = myself.userId || "";
         const apply = () => {
             const snapshot = channelService.getSnapshot();
             const messagesSlice = snapshot.messagesByChannel.get(channelId);
@@ -764,7 +799,7 @@ export const useChatManagement = (
             lastSliceRef = messagesSlice;
             lastFlagsVersion = snapshot.flagsVersion;
             if (!messagesSlice) return;
-            const legacyMessages = v3MessagesToLegacy({
+            const legacyMessages = adapt({
                 channelId,
                 chatType,
                 flaggedMessageIds: snapshot.flagByMessageId,
@@ -773,12 +808,18 @@ export const useChatManagement = (
             });
             setCurrentSubChat((prev) => {
                 if (!prev || prev.chatId !== channelId) return prev;
-                return { ...prev, messages: legacyMessages };
+                if (prev.messages === legacyMessages) return prev;
+                const grew = legacyMessages.length > prev.messages.length;
+                const tail = grew ? legacyMessages[legacyMessages.length - 1] : undefined;
+                const selfAppended = !!tail && tail.sender.userId === myUserId;
+                return { ...prev, messages: legacyMessages, notMove: !selfAppended };
             });
         };
         const unsubscribe = channelService.subscribe(apply);
         apply();
         return unsubscribe;
+        // Same arm-time read of `myself.userId` as the main-chat bridge.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentSubChat?.chatId, currentSubChat?.chatType]);
 
     // Thread-pane mirror of the above. When the user has a thread
@@ -800,6 +841,7 @@ export const useChatManagement = (
         if (!channelUuid || !threadRootUuid || chatType == null) return;
         let lastSliceRef: readonly unknown[] | undefined;
         let lastFlagsVersion = -1;
+        const adapt = createCachedThreadMessagesAdapter();
         const apply = () => {
             const snapshot = channelService.getSnapshot();
             const messagesSlice = snapshot.messagesByChannel.get(channelUuid);
@@ -808,7 +850,7 @@ export const useChatManagement = (
             lastSliceRef = messagesSlice;
             lastFlagsVersion = snapshot.flagsVersion;
             if (!messagesSlice) return;
-            const legacyThreadMessages = v3ThreadMessagesToLegacy({
+            const legacyThreadMessages = adapt({
                 channelId: channelUuid,
                 chatType,
                 flaggedMessageIds: snapshot.flagByMessageId,
@@ -822,6 +864,8 @@ export const useChatManagement = (
                 // still open.
                 if (String(prev.chatId) !== channelUuid) return prev;
                 if (String(prev.threadId) !== threadRootUuid) return prev;
+                // Stable-output bail — see the main-chat bridge.
+                if (prev.messages === legacyThreadMessages) return prev;
                 return { ...prev, messages: legacyThreadMessages };
             });
         };
@@ -842,18 +886,32 @@ export const useChatManagement = (
     // place for back-compat — they no longer overwrite the v3-derived
     // list because this effect re-applies on every channelService notify.
     useEffect(() => {
-        // Dedup on the monotonic `version` counter: it bumps on every
-        // notify, including ones that mutate `_flags` / `_messages` in
-        // place (their Map references never change). `flagsVersion`
-        // alone would miss the "message arrives → previously-orphaned
-        // flag now resolves" edge case, since `v3FlagsToLegacy` reads
-        // `messagesByChannel` too. Cost is one `v3FlagsToLegacy()` per
-        // notify; flag count is small, negligible.
-        let lastVersion = -1;
+        // Dedup on `flagsVersion` + `channelsVersion` — NOT the global
+        // `version` counter, which bumps on every notify and made this
+        // derive (two full `v3FlagsToLegacy` scans + two App-root
+        // setStates with fresh array identities) run for every
+        // reaction / thread-reply / non-flagged-edit event.
+        //
+        // `flagsVersion` covers flag add/remove/complete AND — via the
+        // `_flagByMessageId.has()` checks in channelService's message
+        // write paths — any write to a message that carries an active
+        // flag (the "message arrives → previously-orphaned flag now
+        // resolves" edge). `channelsVersion` covers the OTHER input
+        // `v3FlagsToLegacy` reads: channel metadata (a flagged row shows
+        // its channel's name + DM partner), so a GM rename / member
+        // change must re-derive it too. Both counters skip reactions
+        // and thread replies, which the flagged list doesn't render.
+        let lastFlagsVersion = -1;
+        let lastChannelsVersion = -1;
         const apply = () => {
             const snapshot = channelService.getSnapshot();
-            if (snapshot.version === lastVersion) return;
-            lastVersion = snapshot.version;
+            if (
+                snapshot.flagsVersion === lastFlagsVersion &&
+                snapshot.channelsVersion === lastChannelsVersion
+            )
+                return;
+            lastFlagsVersion = snapshot.flagsVersion;
+            lastChannelsVersion = snapshot.channelsVersion;
             const common = {
                 flags: snapshot.flags,
                 channels: snapshot.channels,
@@ -879,11 +937,17 @@ export const useChatManagement = (
     // to channelService and re-derive on every notify so the unread
     // counts stay live.
     useEffect(() => {
-        let lastVersion = -1;
+        // Dedup on `channelsVersion` — bumps only when the chat-list
+        // inputs (channels / members / pins) actually change. Message
+        // traffic that doesn't move a channel's latest/unread (thread
+        // replies, reactions, edits of older rows) no longer re-derives
+        // the whole sidebar list + rewrites `allChats` (whose identity
+        // churn re-rendered every consumer) on each event.
+        let lastChannelsVersion = -1;
         const apply = () => {
             const snapshot = channelService.getSnapshot();
-            if (snapshot.version === lastVersion) return;
-            lastVersion = snapshot.version;
+            if (snapshot.channelsVersion === lastChannelsVersion) return;
+            lastChannelsVersion = snapshot.channelsVersion;
             const next = v3ChannelsToLegacyChats({
                 channels: snapshot.channels.values(),
                 pinByChannelId: snapshot.pinByChannelId,

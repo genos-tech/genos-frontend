@@ -48,11 +48,13 @@ export async function loadV3Chats(currentUserId: string | null): Promise<AllChat
     if (channelService.hasAccessToken()) {
         try {
             // `listChannels` is a pure REST GET — it doesn't auto-upsert.
-            // We push each row through `handleChannelCreated` so the
-            // in-memory store + IDB stay current, and subsequent reads
-            // off the snapshot see the same data the wire response had.
+            // `ingestChannels` lands the whole list in one pass (single
+            // store notify + single IDB transaction) so a routine list
+            // refresh doesn't fan out N per-channel notifies to every
+            // store subscriber the way per-row `handleChannelCreated`
+            // calls did.
             const fresh = await channelService.listChannels();
-            for (const c of fresh) channelService.handleChannelCreated(c);
+            channelService.ingestChannels(fresh);
             // The upsert above only ADDS. Drop anything the server no longer
             // lists, or a channel that disappeared without a live
             // `channel.member_removed` event stays in the sidebar forever —

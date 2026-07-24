@@ -332,6 +332,167 @@ describe("channelService reactive store", () => {
         promise.catch(() => undefined);
     });
 
+    it("send({echo}) renders an optimistic row immediately and swaps it for the server row", async () => {
+        svc.handleChannelCreated(makeChannel({ id: "ch-1" }));
+        const sender = {
+            userId: "user-me",
+            userName: "Me",
+            userEmail: "m@x",
+            avatarImgPath: null,
+            isSystemUser: false,
+        };
+
+        // Socket down → the send queues, but the echo row must render NOW.
+        const promise = svc.send("ch-1", [{ t: "p" }], { bodyText: "hi", echo: { sender } });
+        const snap = svc.getSnapshot();
+        const pending = (snap.pendingByChannel.get("ch-1") ?? [])[0];
+        expect(pending?.echoMessageId).toBe(pending?.correlationId);
+        const arr = snap.messagesByChannel.get("ch-1") ?? [];
+        expect(arr.map((m) => m.id)).toEqual([pending!.correlationId]);
+        expect(arr[0]?.bodyText).toBe("hi");
+        expect(arr[0]?.sender?.userId).toBe("user-me");
+        // Sidebar preview follows the echo…
+        expect(snap.channels.get("ch-1")?.latestMessage?.id).toBe(pending!.correlationId);
+        // …but nothing was persisted (IDB is stubbed off here anyway; the
+        // contract is that the echo never reaches `_persistMessage`) and
+        // unread did not bump for a self-sent row.
+        expect(snap.channels.get("ch-1")?.unreadCount).toBe(0);
+
+        // The broadcast (or delayed ack catch-up) carries the same
+        // correlation id → echo replaced by the server row, no duplicate.
+        const serverRow = {
+            ...makeMessage({
+                id: "m-server",
+                bodyText: "hi",
+                tsSent: "2026-01-01T00:00:09Z",
+                sender,
+            }),
+            correlation_id: pending!.correlationId,
+        };
+        svc.handleMessageCreated(serverRow as never);
+
+        const after = svc.getSnapshot();
+        const afterArr = after.messagesByChannel.get("ch-1") ?? [];
+        expect(afterArr.map((m) => m.id)).toEqual(["m-server"]);
+        expect(after.channels.get("ch-1")?.latestMessage?.id).toBe("m-server");
+        expect(after.pendingByChannel.get("ch-1")).toBeUndefined();
+        await expect(promise).resolves.toMatchObject({ id: "m-server" });
+    });
+
+    it("discardPending removes the optimistic echo row and repairs latestMessage", async () => {
+        svc.handleChannelCreated(makeChannel({ id: "ch-1" }));
+        svc.handleMessageCreated(makeMessage({ id: "m-real", tsSent: "2026-01-01T00:00:01Z" }));
+        const sender = {
+            userId: "user-me",
+            userName: "Me",
+            userEmail: "m@x",
+            avatarImgPath: null,
+            isSystemUser: false,
+        };
+        const promise = svc.send("ch-1", [{ t: "p" }], { bodyText: "oops", echo: { sender } });
+        promise.catch(() => undefined);
+        const corr = (svc.getSnapshot().pendingByChannel.get("ch-1") ?? [])[0]!.correlationId;
+        expect(svc.getSnapshot().channels.get("ch-1")?.latestMessage?.id).toBe(corr);
+
+        svc.discardPending(corr);
+
+        const after = svc.getSnapshot();
+        expect((after.messagesByChannel.get("ch-1") ?? []).map((m) => m.id)).toEqual(["m-real"]);
+        // latestMessage falls back to the newest surviving top-level row.
+        expect(after.channels.get("ch-1")?.latestMessage?.id).toBe("m-real");
+        await expect(promise).rejects.toMatchObject({ code: "DISCARDED" });
+    });
+
+    it("ingestMessages applies a batch under a single notify", () => {
+        svc.handleChannelCreated(makeChannel({ id: "ch-1" }));
+        const fn = vi.fn();
+        const unsub = svc.subscribe(fn);
+
+        svc.ingestMessages([
+            makeMessage({ id: "b-1", tsSent: "2026-01-01T00:00:01Z" }),
+            makeMessage({ id: "b-2", tsSent: "2026-01-01T00:00:02Z" }),
+            makeMessage({ id: "b-3", tsSent: "2026-01-01T00:00:03Z" }),
+        ]);
+
+        expect(fn).toHaveBeenCalledTimes(1);
+        const arr = svc.getSnapshot().messagesByChannel.get("ch-1") ?? [];
+        expect(arr.map((m) => m.id)).toEqual(["b-1", "b-2", "b-3"]);
+        unsub();
+    });
+
+    it("ingestChannels lands a list under a single notify and bumps channelsVersion", () => {
+        const fn = vi.fn();
+        const unsub = svc.subscribe(fn);
+        const before = svc.getSnapshot().channelsVersion;
+
+        svc.ingestChannels([
+            makeChannel({ id: "ch-a" }),
+            makeChannel({ id: "ch-b" }),
+            makeChannel({ id: "ch-c" }),
+        ]);
+
+        expect(fn).toHaveBeenCalledTimes(1);
+        expect(svc.getSnapshot().channels.size).toBe(3);
+        expect(svc.getSnapshot().channelsVersion).toBeGreaterThan(before);
+        unsub();
+    });
+
+    it("channelsVersion ignores message-only events but tracks latest/unread changes", () => {
+        svc.handleChannelCreated(makeChannel({ id: "ch-1" }));
+        svc.handleMessageCreated(makeMessage({ id: "m-1", tsSent: "2026-01-01T00:00:01Z" }));
+        const afterCreate = svc.getSnapshot().channelsVersion;
+
+        // A reaction touches only the message — the chat list shouldn't
+        // re-derive for it.
+        svc.handleReactionAdded({
+            messageId: "m-1",
+            channelId: "ch-1",
+            channelKind: ChannelKind.GM,
+            reaction: {
+                id: "r-1",
+                emoji: "👍",
+                user: {
+                    userId: "user-b",
+                    userName: "Bee",
+                    userEmail: "b@x",
+                    avatarImgPath: null,
+                    isSystemUser: false,
+                },
+                tsSent: "2026-01-01T00:00:02Z",
+            },
+        });
+        expect(svc.getSnapshot().channelsVersion).toBe(afterCreate);
+
+        // A newer message moves the channel's latest → the list must see it.
+        svc.handleMessageCreated(makeMessage({ id: "m-2", tsSent: "2026-01-01T00:00:05Z" }));
+        expect(svc.getSnapshot().channelsVersion).toBeGreaterThan(afterCreate);
+    });
+
+    it("flagsVersion bumps when a flagged message's row is rewritten", () => {
+        svc.handleChannelCreated(makeChannel({ id: "ch-1" }));
+        const m = makeMessage({ id: "m-flagged", tsSent: "2026-01-01T00:00:01Z" });
+        svc.handleMessageCreated(m);
+        svc.handleFlagAdded({
+            id: "f-1",
+            messageId: "m-flagged",
+            channelId: "ch-1",
+            userId: "user-me",
+            completedAt: null,
+            tsCreated: "2026-01-01T00:00:02Z",
+        } as never);
+        const before = svc.getSnapshot().flagsVersion;
+
+        // Content update of the flagged message → the flagged-list derive
+        // must re-run (it renders message content).
+        svc.handleMessageUpdated({ ...m, bodyText: "edited" });
+        expect(svc.getSnapshot().flagsVersion).toBeGreaterThan(before);
+
+        // An unrelated message write must NOT bump it.
+        const mid = svc.getSnapshot().flagsVersion;
+        svc.handleMessageCreated(makeMessage({ id: "m-plain", tsSent: "2026-01-01T00:00:03Z" }));
+        expect(svc.getSnapshot().flagsVersion).toBe(mid);
+    });
+
     it("markRead() resolves to a no-op instead of rejecting when the socket is not connected", async () => {
         // Regression: read.advance is best-effort + forward-only, so a
         // disconnected emit must NOT reject. Previously it threw
