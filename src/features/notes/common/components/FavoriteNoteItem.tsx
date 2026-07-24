@@ -6,6 +6,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { useTranslation } from "../../../../i18n";
 import { ChatNoteMetaProps, MyNoteMetaProps, TaskNoteMetaProps } from "../../../../types/notes";
+import { formatTaskDisplayId } from "../../../tasks/utils/taskDisplayId";
 import { useNoteUnread } from "../context/NoteUnreadContext";
 
 interface FavoriteNoteItemProps {
@@ -62,8 +63,16 @@ function FavoriteNoteItemComponent({ note, noteType, useNM }: FavoriteNoteItemPr
     const getSubLabel = (): string | null => {
         if (noteType === 2) {
             const taskNote = note as TaskNoteMetaProps;
+            // Human-readable task id ("PRJ-123"), not the raw "#123".
+            // `formatTaskDisplayId` falls back to "#<taskId>" only when
+            // the backend didn't send `displayId` (project without a
+            // code / pre-migration row).
+            const displayId = formatTaskDisplayId({
+                taskId: taskNote.taskId,
+                displayId: taskNote.displayId,
+            });
             return taskNote.projectName || taskNote.taskTitle
-                ? `${taskNote.projectName || ""} ${taskNote.taskTitle ? `#${taskNote.taskId}` : ""}`.trim()
+                ? `${taskNote.projectName || ""} ${taskNote.taskTitle ? displayId : ""}`.trim()
                 : null;
         }
         if (noteType === 3) {
