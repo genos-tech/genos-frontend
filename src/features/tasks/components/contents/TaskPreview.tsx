@@ -1051,6 +1051,10 @@ export const TaskPreview = (props: TaskPreviewProps) => {
 const STATUS_COLOR: Record<string, string> = {
     Open: "#0044c2",
     WIP: "#ff8c00",
+    // Milestones auto-Block too now (dependency-driven). Without this the
+    // chip fell through to the grey "#94a3b8" fallback; match the task
+    // "Blocked" tone from taskMeta.statuses.
+    Blocked: "#e11d48",
     Pending: "#b900ff",
     Closed: "#1dc200",
     Deleted: "#94a3b8",
@@ -1312,6 +1316,22 @@ const MilestonePreviewInner = ({
             useSM.refreshMilestone(milestoneId);
         }
     }, [milestoneId]);
+
+    // Re-pull the milestone when its BACKING TASK's dependency edges
+    // change. A dependency add/remove auto-flips the milestone's status
+    // (Blocked ↔ Open) server-side (task_blocking.sync_blocked_status),
+    // but this preview reads its own /milestone/ payload — the task table
+    // updates via useTM.refreshTaskStatuses, yet this separate path only
+    // surfaces the new status on a refetch. Keyed on the edges object,
+    // which gets a fresh identity when add/remove reloads it.
+    const backingDepsKey =
+        milestone?.taskId != null ? useTM.taskDependencies[milestone.taskId] : undefined;
+    useEffect(() => {
+        if (milestoneId !== -1) {
+            useSM.refreshMilestone(milestoneId);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [backingDepsKey]);
 
     // The milestone's backing task carries comments / notes /
     // attachments / body. We hold a fresh copy in local state because
