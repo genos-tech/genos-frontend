@@ -256,8 +256,11 @@ export const ModalManageDependencies = ({
                 variant="outlined"
                 sx={{
                     width: { xs: "calc(100vw - 24px)", md: "auto" },
-                    minWidth: { xs: 0, md: 620 },
-                    maxWidth: { xs: "100vw", md: 780 },
+                    // ~+30% wider than the original 620/780 so the two
+                    // dependency sections and the cross-project picker
+                    // rows breathe (user request). xs stays full-width.
+                    minWidth: { xs: 0, md: 806 },
+                    maxWidth: { xs: "100vw", md: 1014 },
                     maxHeight: { xs: "calc(100dvh - 32px)", md: "85vh" },
                     overflowY: "auto",
                     p: 0,
