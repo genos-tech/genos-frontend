@@ -934,25 +934,58 @@ export const App = () => {
         [handleSpotlightSelect, urlLinkModal]
     );
 
+    // Which top-level service the user is actually viewing. Drives both the
+    // keep-alive Home mounting below AND notification active-surface
+    // suppression (next effect). Derived from the URL because the Homes are
+    // keep-alive — `currentMainChat` etc. stay set on a backgrounded chat
+    // page, so the route is the only honest "what am I looking at".
+    const activeService = useMemo<"chat" | "tasks" | "notes" | "inbox" | null>(() => {
+        const p = location.pathname;
+        if (p.includes("/workspace/chat")) return "chat";
+        if (p.includes("/workspace/tasks")) return "tasks";
+        if (p.includes("/workspace/notes")) return "notes";
+        if (p.includes("/workspace/inbox")) return "inbox";
+        return null;
+    }, [location.pathname]);
+
     // Tell the manager which chat / thread / task is currently in view so it
-    // can suppress notifications for that surface.
+    // can suppress notifications for that surface — but ONLY for the service
+    // the user is actually ON. The Homes are keep-alive, so `currentMainChat`
+    // stays set to the last-open chat even after navigating to the task page;
+    // without this route gate that chat counted as the "active surface"
+    // forever and its incoming messages were silently swallowed as
+    // `ignored-active-surface`. Product rule: suppress only when the current
+    // SERVICE matches the notification's service (and the specific object is
+    // open) — a notification for a DIFFERENT service always gets through.
+    // See [[keepalive-homes-global-flag-leak]].
     useEffect(() => {
-        const current = useCM.currentThreadChat
-            ? {
-                  chatId: String(useCM.currentThreadChat.chatId),
-                  chatType: useCM.currentThreadChat.chatType,
-                  threadId: useCM.currentThreadChat.threadId,
-              }
-            : useCM.currentMainChat
-              ? {
-                    chatId: String(useCM.currentMainChat.chatId),
-                    chatType: useCM.currentMainChat.chatType,
-                }
-              : useTM.currentPreviewTaskId
-                ? { taskId: useTM.currentPreviewTaskId }
-                : null;
+        const current =
+            activeService === "chat"
+                ? useCM.currentThreadChat
+                    ? {
+                          chatId: String(useCM.currentThreadChat.chatId),
+                          chatType: useCM.currentThreadChat.chatType,
+                          threadId: useCM.currentThreadChat.threadId,
+                      }
+                    : useCM.currentMainChat
+                      ? {
+                            chatId: String(useCM.currentMainChat.chatId),
+                            chatType: useCM.currentMainChat.chatType,
+                        }
+                      : null
+                : activeService === "tasks"
+                  ? useTM.currentPreviewTaskId
+                      ? { taskId: useTM.currentPreviewTaskId }
+                      : null
+                  : null;
         useNotif.setActiveSurface(current);
-    }, [useCM.currentMainChat, useCM.currentThreadChat, useTM.currentPreviewTaskId, useNotif]);
+    }, [
+        activeService,
+        useCM.currentMainChat,
+        useCM.currentThreadChat,
+        useTM.currentPreviewTaskId,
+        useNotif,
+    ]);
 
     // WebSocket synchronization. Keys sorted per `sort-keys`.
     webSocketSync({
@@ -976,15 +1009,8 @@ export const App = () => {
     // their heavy subtrees (Notes' BlockNote/Yjs editors, the Tasks table, the
     // chat panels) — that rebuild was the multi-second navigation freeze.
     // Inbox stays route-driven (it is light and uses nested <Routes>/useParams).
-    const activeService = useMemo<"chat" | "tasks" | "notes" | "inbox" | null>(() => {
-        const p = location.pathname;
-        if (p.includes("/workspace/chat")) return "chat";
-        if (p.includes("/workspace/tasks")) return "tasks";
-        if (p.includes("/workspace/notes")) return "notes";
-        if (p.includes("/workspace/inbox")) return "inbox";
-        return null;
-    }, [location.pathname]);
-
+    // `activeService` is derived once, higher up (it also gates notification
+    // active-surface suppression).
     const [mountedHomes, setMountedHomes] = useState<ReadonlySet<string>>(() => new Set());
     // Include the active heavy service synchronously so its first visit paints
     // immediately, without one blank frame before the effect below commits.
