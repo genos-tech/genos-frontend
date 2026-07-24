@@ -7,6 +7,7 @@ import Typography from "@mui/joy/Typography";
 import { createTheme, THEME_ID, ThemeProvider } from "@mui/material/styles";
 import { Socket } from "socket.io-client";
 
+import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { useAuth } from "../../../../context/AuthContext";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { useTaskSortPreferences } from "../../../../hooks/common/useTaskSortPreferences";
@@ -143,6 +144,16 @@ export const SprintBoard = (props: SprintBoardProps) => {
     // flat assignee matches (fe #225) and a per-layer depth would be
     // meaningless. It shows in BOTH the scoped and unscoped cases otherwise.
     const depthToggleVisible = !isMemberFilterActive;
+    // Tooltip that spells out what's on the board NOW and what flipping the
+    // toggle will add/hide — adapts on both scope (tasks vs subtasks) and the
+    // current on/off state.
+    const depthTooltip = scoped
+        ? expandExtraDepth
+            ? t.tasks.board.depthTooltipSubtasksOn
+            : t.tasks.board.depthTooltipSubtasksOff
+        : expandExtraDepth
+          ? t.tasks.board.depthTooltipTasksOn
+          : t.tasks.board.depthTooltipTasksOff;
 
     // Per-column sort tiers. Sourced from the shared
     // `useTaskSortPreferences` hook so the Settings modal is the only
@@ -537,33 +548,38 @@ export const SprintBoard = (props: SprintBoardProps) => {
                     milestones' tasks) / "Show subtasks" (milestone scoped, adds
                     the tasks' subtasks). Hidden under a Member filter. */}
                 {depthToggleVisible && (
-                    <Stack
-                        alignItems="center"
-                        direction="row"
-                        spacing={1}
-                        sx={{
-                            px: 1.5,
-                            py: 0.5,
-                            flexShrink: 0,
-                        }}
-                    >
-                        <Switch
-                            checked={expandExtraDepth}
-                            size="sm"
-                            onChange={(event) => setExpandExtraDepth(event.target.checked)}
-                        />
-                        <Typography
-                            level="body-sm"
+                    <AppTooltip placement="bottom-start" title={depthTooltip}>
+                        <Stack
+                            alignItems="center"
+                            direction="row"
+                            spacing={1}
                             sx={{
-                                cursor: "pointer",
-                                color:
-                                    mode === "dark" ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.65)",
+                                px: 1.5,
+                                py: 0.5,
+                                flexShrink: 0,
+                                width: "fit-content",
                             }}
-                            onClick={() => setExpandExtraDepth((prev) => !prev)}
                         >
-                            {scoped ? t.tasks.board.showSubtasks : t.tasks.board.showTasks}
-                        </Typography>
-                    </Stack>
+                            <Switch
+                                checked={expandExtraDepth}
+                                size="sm"
+                                onChange={(event) => setExpandExtraDepth(event.target.checked)}
+                            />
+                            <Typography
+                                level="body-sm"
+                                sx={{
+                                    cursor: "pointer",
+                                    color:
+                                        mode === "dark"
+                                            ? "rgba(255,255,255,0.7)"
+                                            : "rgba(0,0,0,0.65)",
+                                }}
+                                onClick={() => setExpandExtraDepth((prev) => !prev)}
+                            >
+                                {scoped ? t.tasks.board.showSubtasks : t.tasks.board.showTasks}
+                            </Typography>
+                        </Stack>
+                    </AppTooltip>
                 )}
                 <DragDropContext onDragEnd={handleDragEnd}>
                     <div style={getBoardContainerStyles(mode)}>
