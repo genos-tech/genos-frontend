@@ -1302,7 +1302,15 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
     };
 
     const resetFilters = () => {
-        setSelectedStatus(defaultStatusFilters);
+        // Status reset differs by surface. Where the status filter is
+        // shown (the task table), reset to the "ongoing" default
+        // (Open/WIP/Blocked/Pending). Where it's HIDDEN (the sprint
+        // board), the board pins status to "All" (its columns are the
+        // status view, so a status filter makes no sense) — reset must
+        // return to that "All", or Closed/Deleted cards silently vanish
+        // after a Reset. Mirrors the mount-time initializer above.
+        const resetStatus = hideStatusFilter ? [predefinedStatusFilters[0]] : defaultStatusFilters;
+        setSelectedStatus(resetStatus);
         setSelectedTags([predefinedTagsFilters[0]]);
         setSelectedPriorities([predefinedPriorityFilters[0]]);
         setSelectedEffortLevels([predefinedEffortLevelFilters[0]]);
@@ -1310,7 +1318,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         setSelectedMemberKeys([MEMBER_ALL]);
         setPastMilestonesExpanded(false);
         applyFilters(
-            defaultStatusFilters,
+            resetStatus,
             [predefinedTagsFilters[0]],
             [predefinedPriorityFilters[0]],
             [predefinedEffortLevelFilters[0]],
