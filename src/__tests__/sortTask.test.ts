@@ -1,3 +1,4 @@
+import dayjs from "dayjs";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -12,6 +13,10 @@ import { TaskTableProps } from "../types/tasks";
 // the rest of the (large) TaskTableProps surface is irrelevant here.
 const task = (props: Partial<TaskTableProps> & { id: string }): TaskTableProps =>
     props as unknown as TaskTableProps;
+
+// ISO due date `n` days from today, so the daysLeft sort (which now
+// derives from `dueDate`, not the stale server `daysLeft`) yields `n`.
+const inDays = (n: number): string => dayjs().add(n, "day").format("YYYY-MM-DD");
 
 describe("buildTierComparator", () => {
     it("returns 0 when every tier ties, so callers can apply their own fallback", () => {
@@ -106,8 +111,8 @@ describe("sortTableTasks", () => {
 
     it("falls back to the due-date rule for milestones the tiers leave tied", () => {
         const rows = [
-            milestone({ id: "1", priority: "High", daysLeft: 30 }),
-            milestone({ id: "2", priority: "High", daysLeft: 2 }),
+            milestone({ id: "1", priority: "High", dueDate: inDays(30) }),
+            milestone({ id: "2", priority: "High", dueDate: inDays(2) }),
         ];
         const sorted = sortTableTasks(rows, [{ field: "priority", direction: "desc" }]);
         expect(sorted.map((r) => r.id)).toEqual(["2", "1"]);
@@ -115,9 +120,9 @@ describe("sortTableTasks", () => {
 
     it("keeps the built-in milestone rule as the whole ordering when no tier is set", () => {
         const rows = [
-            milestone({ id: "1", daysLeft: 30 }),
-            milestone({ id: "2", daysLeft: null }),
-            milestone({ id: "3", daysLeft: 2 }),
+            milestone({ id: "1", dueDate: inDays(30) }),
+            milestone({ id: "2" }), // no due date → sorts last
+            milestone({ id: "3", dueDate: inDays(2) }),
         ];
         const sorted = sortTableTasks(rows, []);
         expect(sorted.map((r) => r.id)).toEqual(["3", "1", "2"]);

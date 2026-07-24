@@ -1,6 +1,7 @@
 import dayjs from "dayjs";
 
 import { TaskTableProps } from "../../../types/tasks";
+import { deriveDaysLeft } from "./daysLeft";
 import { computeTaskWeight } from "./taskWeight";
 
 /**
@@ -95,7 +96,10 @@ export const fieldValue = (task: TaskTableProps, field: string): number | string
         case "id":
             return numericId(task.id);
         case "daysLeft":
-            return task.daysLeft ?? null;
+            // Fresh from dueDate — the row's server `daysLeft` is a stale
+            // fetch-time snapshot; sorting on it would order rows by
+            // yesterday's counts while the cell shows today's.
+            return deriveDaysLeft(task.dueDate);
         case "title":
             return lowerStr(task.title);
         case "assigneeId":
@@ -281,8 +285,10 @@ export const sortTableTasks = (tasks: TaskTableProps[], tiers: SortTier[]): Task
         // daysLeft ascending so expired milestones top the list, then
         // due-soon, with unscheduled (null) milestones at the bottom of
         // the milestone group (still above tasks — that's the pin step).
-        const aDays = a.daysLeft ?? null;
-        const bDays = b.daysLeft ?? null;
+        // Derive fresh from dueDate (not the stale server `daysLeft`) so
+        // the sort matches the freshly-rendered table cell.
+        const aDays = deriveDaysLeft(a.dueDate);
+        const bDays = deriveDaysLeft(b.dueDate);
         const daysTier = nullTier(aDays, bDays);
         if (daysTier !== 0) return daysTier;
         if (aDays != null && bDays != null && aDays !== bDays) {

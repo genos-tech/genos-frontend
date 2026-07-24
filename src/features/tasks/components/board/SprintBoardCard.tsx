@@ -15,6 +15,7 @@ import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
 import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TagListProps, TaskTableProps } from "../../../../types/tasks";
+import { deriveDaysLeft } from "../../utils/daysLeft";
 import { CopyableTaskIdText } from "../CopyableTaskId";
 import { ProjectTagChip } from "../ProjectTagChip";
 
@@ -114,6 +115,9 @@ const SprintBoardCardImpl = ({
     const assigneeName = useResolvedUserName(task.assigneeId, task.assigneeName || "");
 
     const [isHovered, setIsHovered] = React.useState(false);
+
+    // Fresh from dueDate — the row's `daysLeft` is a stale server snapshot.
+    const freshDaysLeft = deriveDaysLeft(task.dueDate);
 
     const getDaysLeftColor = (daysLeft: number | null) => {
         if (daysLeft === null) return mode === "dark" ? "#888" : "#666";
@@ -362,11 +366,11 @@ const SprintBoardCardImpl = ({
                                     display: "flex",
                                     alignItems: "center",
                                     gap: 0.25,
-                                    color: getDaysLeftColor(task.daysLeft),
+                                    color: getDaysLeftColor(freshDaysLeft),
                                     padding: "2px 6px",
                                     borderRadius: 4,
                                     backgroundColor:
-                                        task.daysLeft !== null && task.daysLeft <= 0
+                                        freshDaysLeft !== null && freshDaysLeft <= 0
                                             ? mode === "dark"
                                                 ? "rgba(239, 68, 68, 0.15)"
                                                 : "rgba(239, 68, 68, 0.1)"
@@ -378,7 +382,7 @@ const SprintBoardCardImpl = ({
                                     level="body-xs"
                                     sx={{ fontWeight: 600, fontSize: "0.6rem" }}
                                 >
-                                    {formatDaysLeft(task.daysLeft)}
+                                    {formatDaysLeft(freshDaysLeft)}
                                 </Typography>
                             </Box>
                         )}
