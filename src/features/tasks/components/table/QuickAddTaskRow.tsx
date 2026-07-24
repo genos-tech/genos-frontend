@@ -21,12 +21,14 @@ import { fmt, useTranslation } from "../../../../i18n";
 import { LimitReachedError } from "../../../../services/limitErrors";
 import { UserProps } from "../../../../types/admin";
 import { TagListProps, TaskTableProps } from "../../../../types/tasks";
+import { stripOwnerState } from "../../../../utils/joyAutocomplete";
 import {
     applyRuleDefaults,
     getMissingRequiredFields,
     TaskFieldRules,
 } from "../../utils/taskFieldRules";
 import { effortLevels, priorities } from "../../utils/taskMeta";
+import { ProjectTagChip } from "../ProjectTagChip";
 import {
     DEPTH_BORDER_COLORS,
     DEPTH_COLORS_DARK,
@@ -663,6 +665,44 @@ export const QuickAddTaskRow = (props: QuickAddTaskRowProps) => {
                                 }}
                             />
                         )}
+                        renderOption={(optionProps, option) => {
+                            const { key, ...restProps } = stripOwnerState(optionProps);
+                            return (
+                                <Box
+                                    key={key}
+                                    component="li"
+                                    {...restProps}
+                                    sx={{
+                                        py: 0.5,
+                                        px: 1,
+                                        mx: 0.5,
+                                        my: 0.25,
+                                        borderRadius: "6px",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        cursor: "pointer",
+                                        "&:hover": {
+                                            backgroundColor:
+                                                mode === "dark"
+                                                    ? "rgba(255,255,255,0.06)"
+                                                    : "rgba(0,0,0,0.04)",
+                                        },
+                                        '&[aria-selected="true"]': {
+                                            backgroundColor:
+                                                mode === "dark"
+                                                    ? "rgba(167,139,250,0.15)"
+                                                    : "rgba(124,58,237,0.08)",
+                                        },
+                                    }}
+                                >
+                                    <ProjectTagChip
+                                        isDark={mode === "dark"}
+                                        label={option.tagName}
+                                        tagColor={option.tagColor}
+                                    />
+                                </Box>
+                            );
+                        }}
                         renderTags={(value, getTagProps) =>
                             value.map((tag, index) => {
                                 // Pull `key` out of the spread — React 19

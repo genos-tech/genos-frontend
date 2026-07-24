@@ -28,6 +28,11 @@ import { ColumnDef, defaultColumns, FIXED_LEADING_FIELDS } from "./DraggableTask
 type Props = {
     open: boolean;
     onClose: () => void;
+    /** The current project's custom-field columns (`cf_<id>` keys),
+     *  already in ColumnDef shape. They join the toggleable list so
+     *  visibility + order are customizable exactly like built-ins;
+     *  their labels are the user-defined field names (no i18n key). */
+    customColumns?: ColumnDef[];
 };
 
 // One row in the 2-tier sort UI. Migrated from `SettingsModal` so the
@@ -136,7 +141,7 @@ const setTierAtIndex = (current: SortTier[], index: 0 | 1, next: SortTier | null
  * falls back to the order and `hidden` flags declared in
  * `DraggableTaskTable.defaultColumns`.
  */
-export const TaskTableColumnSettings = ({ open, onClose }: Props) => {
+export const TaskTableColumnSettings = ({ open, onClose, customColumns }: Props) => {
     const { t } = useTranslation();
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
@@ -145,13 +150,18 @@ export const TaskTableColumnSettings = ({ open, onClose }: Props) => {
     const { sprintBoardSortTiers, setSprintBoardSortTiers, tableSortTiers, setTableSortTiers } =
         useTaskSortPreferences();
 
+    // Built-ins + the host's custom-field columns — must match the set
+    // DraggableTaskTable resolves, or the two lists would disagree
+    // about what's rearrangeable.
+    const allColumns = [...defaultColumns, ...(customColumns ?? [])];
+
     // Toggleable columns in their current displayed order. Mirrors the
     // resolution logic in `DraggableTaskTable.visibleColumns` so users
     // see exactly what they're rearranging.
     const byField = new Map<string, ColumnDef>(
-        defaultColumns.map((c): [string, ColumnDef] => [c.field, c])
+        allColumns.map((c): [string, ColumnDef] => [c.field, c])
     );
-    const toggleableInDefaultOrder = defaultColumns.filter(
+    const toggleableInDefaultOrder = allColumns.filter(
         (c) => !FIXED_LEADING_FIELDS.includes(c.field)
     );
     const seen = new Set<string>();

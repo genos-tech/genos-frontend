@@ -34,9 +34,19 @@ import { UIStateManagementState } from "../../../../hooks/common/useUIStateManag
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
-import { TagListProps, TaskTableProps } from "../../../../types/tasks";
+import {
+    CustomFieldOption,
+    ProjectCustomFieldDef,
+    TagListProps,
+    TaskTableProps,
+} from "../../../../types/tasks";
 import { stripOwnerState } from "../../../../utils/joyAutocomplete";
 import { PrStatusCell } from "../../../integrations/components/PrStatusCell";
+import {
+    parseCustomFieldColKey,
+    resolveTagOptions,
+    setCustomFieldValue,
+} from "../../utils/customFields";
 import { formatTaskDisplayId } from "../../utils/taskDisplayId";
 import { effortLevels, priorities } from "../../utils/taskMeta";
 import { computeTaskWeight, MAX_TASK_WEIGHT, weightBand } from "../../utils/taskWeight";
@@ -191,6 +201,10 @@ export type DraggableTaskRowProps = {
     teamMembers: UserProps[];
     /** The focused project's tags — options for the inline tags-cell editor. */
     projectTags: TagListProps[];
+    /** The project's custom field definitions, for `cf_<id>` columns.
+     *  Identity-stable per project (module store) — compared by
+     *  reference in `areEqual` like `projectTags`. */
+    customFieldDefs: ProjectCustomFieldDef[];
     onRowUpdate: (task: TaskTableProps) => Promise<TaskTableProps>;
     // Parent-owned debounced preview switch. Replaces the older
     // `onRowDoubleClick(taskId)` callback — the parent now coalesces
@@ -260,6 +274,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
         isSelected,
         isGhost = false,
         projectTags,
+        customFieldDefs,
         useTM,
         useTEM,
         useCM,
@@ -361,6 +376,22 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
         setEditTags(task.tags ?? []);
     };
 
+    // Custom tag-type fields get their own multi-value buffer (options
+    // are CustomFieldOption, not TagListProps) — committed on blur like
+    // the tags cell; Escape reverts via the shared revertTagsRef.
+    const [editCustomOptions, setEditCustomOptions] = useState<CustomFieldOption[]>([]);
+
+    // Commit one custom field's value and persist through the shared
+    // row-update pipeline (same PUT path as every other inline edit).
+    const commitCustomField = async (fieldId: number, value: string | string[] | null) => {
+        setEditingField(null);
+        setEditValue("");
+        await onRowUpdate({
+            ...task,
+            customFieldValues: setCustomFieldValue(task.customFieldValues, fieldId, value),
+        });
+    };
+
     // Commit the accumulated tag selection once (on blur / Enter), not on
     // every toggle. Recompute `concatTags` locally so the tag filter reacts
     // immediately; `updateTaskFromTable` persists the same set via the task PUT.
@@ -369,6 +400,599 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
             editTags.length > 0 ? "/" + editTags.map((tg) => tg.tagName).join("/") + "/" : null;
         setEditingField(null);
         await onRowUpdate({ ...task, tags: editTags, concatTags: nextConcat });
+    };
+
+    // Shared "click to edit" read-view shell for custom-field cells —
+    // same hover treatment as the tags/assignee cells.
+    const customReadCellSx = {
+        display: "flex",
+        gap: 0.5,
+        flexWrap: "wrap" as const,
+        alignItems: "center",
+        width: "100%",
+        minHeight: 24,
+        cursor: "pointer",
+        borderRadius: "6px",
+        px: 0.5,
+        transition: "background-color 0.15s ease",
+        "&:hover": {
+            backgroundColor: mode === "dark" ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
+        },
+    };
+
+    const emptyCellPlaceholder = (
+        <Typography sx={{ fontSize: "0.72rem", color: mode === "dark" ? "#6b7280" : "#9ca3af" }}>
+            -
+        </Typography>
+    );
+
+    // Dropdown option row for tag-type fields (built-in Tags + custom
+    // tag). Renders the option as its colored ProjectTagChip so options
+    // read the same as the selected chips; `aria-selected` (set by MUI on
+    // already-picked options in the multi-select) gets the accent bg.
+    const tagOptionRowSx = {
+        py: 0.5,
+        px: 1,
+        mx: 0.5,
+        my: 0.25,
+        borderRadius: "6px",
+        display: "flex",
+        alignItems: "center",
+        cursor: "pointer",
+        "&:hover": {
+            backgroundColor: mode === "dark" ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
+        },
+        '&[aria-selected="true"]': {
+            backgroundColor: mode === "dark" ? "rgba(167,139,250,0.15)" : "rgba(124,58,237,0.08)",
+        },
+    } as const;
+
+    // One cell of a `cf_<id>` column. Editing mirrors the built-in
+    // cells per type: text ≈ title (buffered, commit on blur/Enter),
+    // date ≈ dueDate (commit on change), tag ≈ tags (multi buffer,
+    // commit on blur), member ≈ assignee (commit on select). All
+    // persistence funnels through `commitCustomField` → onRowUpdate.
+    const renderCustomFieldCell = (def: ProjectCustomFieldDef) => {
+        const editKey = `cf_${def.fieldId}`;
+        const stored = task.customFieldValues?.[String(def.fieldId)];
+        const storedString = typeof stored === "string" ? stored : "";
+        const accent = mode === "dark" ? "#a78bfa" : "#7c3aed";
+
+        if (def.fieldType === "tag") {
+            const selected = resolveTagOptions(def, stored);
+            if (editingField === editKey) {
+                return (
+                    <Box
+                        sx={{ width: "100%" }}
+                        onClick={(e) => e.stopPropagation()}
+                        onMouseDown={(e) => e.stopPropagation()}
+                    >
+                        <Autocomplete
+                            autoHighlight
+                            disableCloseOnSelect
+                            multiple
+                            openOnFocus
+                            getOptionLabel={(option: CustomFieldOption) => option.label}
+                            isOptionEqualToValue={(option, val) => option.id === val?.id}
+                            options={def.options}
+                            size="small"
+                            sx={{ width: "100%", minWidth: 160 }}
+                            value={editCustomOptions}
+                            onChange={(_, newValue) => setEditCustomOptions(newValue)}
+                            onBlur={() => {
+                                if (revertTagsRef.current) {
+                                    revertTagsRef.current = false;
+                                    return;
+                                }
+                                void commitCustomField(
+                                    def.fieldId,
+                                    editCustomOptions.map((o) => o.id)
+                                );
+                            }}
+                            onKeyDown={(e) => {
+                                if (e.key === "Escape") {
+                                    e.stopPropagation();
+                                    revertTagsRef.current = true;
+                                    handleCancelEdit();
+                                }
+                            }}
+                            renderTags={(tagValue, getTagProps) =>
+                                tagValue.map((option, idx) => {
+                                    const { key, ...chipProps } = getTagProps({ index: idx });
+                                    return (
+                                        <Chip
+                                            key={key}
+                                            {...chipProps}
+                                            label={option.label}
+                                            size="small"
+                                            sx={{
+                                                height: 20,
+                                                fontSize: "0.7rem",
+                                                fontWeight: 600,
+                                                color: mode === "dark" ? "white" : "black",
+                                                borderColor: alpha(option.color, 0.6),
+                                                backgroundColor: alpha(option.color, 0.12),
+                                            }}
+                                        />
+                                    );
+                                })
+                            }
+                            PaperComponent={({ children, ...paperProps }) => (
+                                <Paper
+                                    {...paperProps}
+                                    sx={{
+                                        backgroundColor: mode === "dark" ? "#1a1a2e" : "#ffffff",
+                                        borderRadius: "10px",
+                                        border:
+                                            mode === "dark"
+                                                ? "1px solid rgba(255, 255, 255, 0.1)"
+                                                : "1px solid rgba(0, 0, 0, 0.08)",
+                                        boxShadow:
+                                            mode === "dark"
+                                                ? "0 8px 32px rgba(0, 0, 0, 0.5)"
+                                                : "0 8px 32px rgba(0, 0, 0, 0.12)",
+                                        mt: 0.5,
+                                    }}
+                                >
+                                    {children}
+                                </Paper>
+                            )}
+                            renderOption={(optionProps, option) => {
+                                const { key, ...restProps } = stripOwnerState(optionProps);
+                                return (
+                                    <Box
+                                        key={key}
+                                        component="li"
+                                        {...restProps}
+                                        sx={tagOptionRowSx}
+                                    >
+                                        <ProjectTagChip
+                                            isDark={mode === "dark"}
+                                            label={option.label}
+                                            tagColor={option.color}
+                                        />
+                                    </Box>
+                                );
+                            }}
+                            renderInput={(params) => (
+                                <TextField
+                                    {...params}
+                                    autoFocus
+                                    placeholder={selected.length === 0 ? "Select…" : ""}
+                                    sx={{
+                                        "& .MuiOutlinedInput-root": {
+                                            borderRadius: "6px",
+                                            fontSize: "0.8rem",
+                                            padding: "2px 6px",
+                                            "&:hover fieldset": { borderColor: accent },
+                                            "&.Mui-focused fieldset": {
+                                                borderColor: accent,
+                                                borderWidth: "1.5px",
+                                            },
+                                        },
+                                    }}
+                                />
+                            )}
+                        />
+                    </Box>
+                );
+            }
+            return (
+                <Box
+                    sx={customReadCellSx}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        setEditCustomOptions(selected);
+                        setEditingField(editKey);
+                    }}
+                >
+                    {selected.length === 0
+                        ? emptyCellPlaceholder
+                        : selected.map((option) => (
+                              <ProjectTagChip
+                                  key={option.id}
+                                  isDark={mode === "dark"}
+                                  label={option.label}
+                                  tagColor={option.color}
+                              />
+                          ))}
+                </Box>
+            );
+        }
+
+        if (def.fieldType === "member") {
+            // Mirrors the built-in Assignee cell exactly — same dropdown
+            // Paper, listbox scrollbar, accent-focus input, and rich
+            // option rows (avatar + name + email + hover + selected).
+            if (editingField === editKey) {
+                const current = teamMembers.find((m) => String(m.userId) === storedString);
+                return (
+                    <Autocomplete
+                        blurOnSelect={true}
+                        clearOnBlur={false}
+                        getOptionLabel={(option) => `${option.userName} ${option.userEmail}`}
+                        open={true}
+                        options={teamMembers}
+                        size="small"
+                        value={current || null}
+                        filterOptions={(options, { inputValue }) => {
+                            const searchTerm = inputValue.toLowerCase();
+                            return options.filter(
+                                (option) =>
+                                    option.userName.toLowerCase().includes(searchTerm) ||
+                                    option.userEmail.toLowerCase().includes(searchTerm)
+                            );
+                        }}
+                        isOptionEqualToValue={(option, val) => option.userId === val?.userId}
+                        ListboxProps={{
+                            sx: {
+                                maxHeight: 280,
+                                overflow: "auto",
+                                padding: "4px 0",
+                                "&::-webkit-scrollbar": {
+                                    width: "6px",
+                                },
+                                "&::-webkit-scrollbar-track": {
+                                    background: "transparent",
+                                },
+                                "&::-webkit-scrollbar-thumb": {
+                                    background:
+                                        mode === "dark"
+                                            ? "rgba(255, 255, 255, 0.15)"
+                                            : "rgba(0, 0, 0, 0.15)",
+                                    borderRadius: "3px",
+                                },
+                            },
+                        }}
+                        PaperComponent={({ children, ...props }) => (
+                            <Paper
+                                {...props}
+                                sx={{
+                                    backgroundColor: mode === "dark" ? "#1a1a2e" : "#ffffff",
+                                    backgroundImage:
+                                        mode === "dark"
+                                            ? "linear-gradient(rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01))"
+                                            : "none",
+                                    borderRadius: "10px",
+                                    border:
+                                        mode === "dark"
+                                            ? "1px solid rgba(255, 255, 255, 0.1)"
+                                            : "1px solid rgba(0, 0, 0, 0.08)",
+                                    boxShadow:
+                                        mode === "dark"
+                                            ? "0 8px 32px rgba(0, 0, 0, 0.5)"
+                                            : "0 8px 32px rgba(0, 0, 0, 0.12)",
+                                    mt: 0.5,
+                                    overflow: "hidden",
+                                }}
+                            >
+                                {children}
+                            </Paper>
+                        )}
+                        renderInput={(params) => (
+                            <TextField
+                                {...params}
+                                placeholder={t.tasks.table.searchMembersPlaceholder}
+                                sx={{
+                                    minWidth: 180,
+                                    "& .MuiOutlinedInput-root": {
+                                        borderRadius: "8px",
+                                        backgroundColor:
+                                            mode === "dark"
+                                                ? "rgba(255, 255, 255, 0.03)"
+                                                : "rgba(0, 0, 0, 0.01)",
+                                        "& fieldset": {
+                                            borderColor:
+                                                mode === "dark"
+                                                    ? "rgba(255, 255, 255, 0.15)"
+                                                    : "rgba(0, 0, 0, 0.12)",
+                                        },
+                                        "&:hover fieldset": {
+                                            borderColor: accent,
+                                        },
+                                        "&.Mui-focused fieldset": {
+                                            borderColor: accent,
+                                            borderWidth: "1.5px",
+                                        },
+                                    },
+                                    "& .MuiInputBase-input": {
+                                        color: mode === "dark" ? "#e8e8e8" : "#1a1a1a",
+                                        fontSize: "0.875rem",
+                                        padding: "6px 12px",
+                                        "&::placeholder": {
+                                            color:
+                                                mode === "dark"
+                                                    ? "rgba(255, 255, 255, 0.4)"
+                                                    : "rgba(0, 0, 0, 0.4)",
+                                            opacity: 1,
+                                        },
+                                    },
+                                }}
+                                autoFocus
+                            />
+                        )}
+                        renderOption={(props, option) => {
+                            const isSelected = String(option.userId) === storedString;
+                            const { key, ...restProps } = stripOwnerState(props);
+                            return (
+                                <Box
+                                    key={key}
+                                    component="li"
+                                    {...restProps}
+                                    sx={{
+                                        py: 1,
+                                        px: 1.5,
+                                        mx: 0.5,
+                                        my: 0.25,
+                                        borderRadius: "8px",
+                                        transition: "all 0.15s ease",
+                                        backgroundColor: isSelected
+                                            ? mode === "dark"
+                                                ? "rgba(167,139,250,0.15)"
+                                                : "rgba(124,58,237,0.08)"
+                                            : "transparent",
+                                        "&:hover": {
+                                            backgroundColor:
+                                                mode === "dark"
+                                                    ? "rgba(167,139,250,0.2)"
+                                                    : "rgba(124,58,237,0.12)",
+                                        },
+                                        display: "flex",
+                                        gap: 1.5,
+                                        alignItems: "center",
+                                        cursor: "pointer",
+                                    }}
+                                >
+                                    <UserAvatar clickable={false} userId={option.userId} />
+                                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                                        <Typography
+                                            level="body-sm"
+                                            sx={{
+                                                fontWeight: isSelected ? 600 : 500,
+                                                color: mode === "dark" ? "#e8e8e8" : "#1a1a1a",
+                                                lineHeight: 1.3,
+                                                overflow: "hidden",
+                                                textOverflow: "ellipsis",
+                                                whiteSpace: "nowrap",
+                                            }}
+                                        >
+                                            {option.userName}
+                                        </Typography>
+                                        <Typography
+                                            level="body-xs"
+                                            sx={{
+                                                color:
+                                                    mode === "dark"
+                                                        ? "rgba(255, 255, 255, 0.5)"
+                                                        : "rgba(0, 0, 0, 0.5)",
+                                                fontSize: "0.7rem",
+                                                overflow: "hidden",
+                                                textOverflow: "ellipsis",
+                                                whiteSpace: "nowrap",
+                                            }}
+                                        >
+                                            {option.userEmail}
+                                        </Typography>
+                                    </Box>
+                                </Box>
+                            );
+                        }}
+                        sx={{
+                            "& .MuiAutocomplete-popupIndicator": {
+                                color:
+                                    mode === "dark"
+                                        ? "rgba(255, 255, 255, 0.5)"
+                                        : "rgba(0, 0, 0, 0.5)",
+                            },
+                            "& .MuiAutocomplete-clearIndicator": {
+                                color:
+                                    mode === "dark"
+                                        ? "rgba(255, 255, 255, 0.5)"
+                                        : "rgba(0, 0, 0, 0.5)",
+                            },
+                        }}
+                        fullWidth
+                        onChange={(_, newValue) => {
+                            if (newValue) {
+                                void commitCustomField(def.fieldId, String(newValue.userId));
+                                handleCancelEdit();
+                            }
+                        }}
+                        onClose={(_, reason) => {
+                            if (reason === "blur" || reason === "escape") {
+                                handleCancelEdit();
+                            }
+                        }}
+                    />
+                );
+            }
+            // Read view mirrors the built-in Assignee cell: avatar + name,
+            // or the neutral "?" placeholder avatar + muted dash when unset.
+            const memberName =
+                teamMembers.find((m) => String(m.userId) === storedString)?.userName ?? "";
+            return (
+                <Box
+                    sx={{
+                        display: "flex",
+                        gap: 1,
+                        alignItems: "center",
+                        cursor: "pointer",
+                        padding: "4px 8px",
+                        borderRadius: "6px",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                        transition: "background-color 0.15s ease",
+                        "&:hover": {
+                            backgroundColor:
+                                mode === "dark"
+                                    ? "rgba(255, 255, 255, 0.08)"
+                                    : "rgba(0, 0, 0, 0.04)",
+                        },
+                    }}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        setEditingField(editKey);
+                    }}
+                >
+                    <Box sx={{ position: "relative", display: "inline-flex" }}>
+                        {storedString !== "" ? (
+                            <UserAvatar userId={storedString} />
+                        ) : (
+                            <Avatar
+                                size="sm"
+                                sx={{
+                                    bgcolor:
+                                        mode === "dark"
+                                            ? "rgba(255,255,255,0.08)"
+                                            : "rgba(0,0,0,0.06)",
+                                    color:
+                                        mode === "dark"
+                                            ? "rgba(255,255,255,0.45)"
+                                            : "rgba(0,0,0,0.45)",
+                                    fontSize: "0.7rem",
+                                }}
+                            >
+                                ?
+                            </Avatar>
+                        )}
+                    </Box>
+                    <Box sx={{ overflow: "hidden" }}>
+                        <Typography
+                            level="body-xs"
+                            sx={{
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                                fontWeight: 500,
+                                fontStyle: storedString !== "" ? "normal" : "italic",
+                                color:
+                                    storedString !== ""
+                                        ? undefined
+                                        : mode === "dark"
+                                          ? "rgba(255,255,255,0.5)"
+                                          : "rgba(0,0,0,0.5)",
+                            }}
+                        >
+                            {storedString !== "" ? (
+                                <ResolvedUserName
+                                    fallbackName={memberName}
+                                    userId={storedString}
+                                />
+                            ) : (
+                                "—"
+                            )}
+                        </Typography>
+                    </Box>
+                </Box>
+            );
+        }
+
+        if (def.fieldType === "date") {
+            // Mirrors the built-in Due Date cell: native date input on
+            // edit (buffered via editValue, commit on blur/Enter), and a
+            // hover-accent Typography read view with a "-" when unset.
+            if (editingField === editKey) {
+                const commitDate = () =>
+                    void commitCustomField(def.fieldId, editValue.trim() || null);
+                return (
+                    <input
+                        type="date"
+                        value={editValue}
+                        style={{
+                            width: "100%",
+                            padding: "6px 10px",
+                            fontSize: "0.875rem",
+                            border: `1px solid ${mode === "dark" ? "#555" : "#ccc"}`,
+                            borderRadius: "6px",
+                            backgroundColor: mode === "dark" ? "#1e1e1e" : "#fff",
+                            color: mode === "dark" ? "#e0e0e0" : "#333",
+                        }}
+                        autoFocus
+                        onBlur={commitDate}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") commitDate();
+                            if (e.key === "Escape") handleCancelEdit();
+                        }}
+                    />
+                );
+            }
+            return (
+                <Typography
+                    level="body-sm"
+                    sx={{
+                        cursor: "pointer",
+                        fontWeight: 500,
+                        "&:hover": {
+                            color: accent,
+                        },
+                    }}
+                    onClick={() => handleStartEdit(editKey, storedString)}
+                >
+                    {storedString !== "" ? storedString : "-"}
+                </Typography>
+            );
+        }
+
+        // text — mirrors the built-in Title cell's input styling.
+        if (editingField === editKey) {
+            return (
+                <TextField
+                    autoFocus
+                    fullWidth
+                    size="small"
+                    value={editValue}
+                    sx={{
+                        "& .MuiInputBase-input": {
+                            color: mode === "dark" ? "white" : "black",
+                            fontSize: "0.875rem",
+                            padding: "6px 10px",
+                        },
+                        "& .MuiOutlinedInput-root": {
+                            borderRadius: "6px",
+                        },
+                    }}
+                    onBlur={() => {
+                        void commitCustomField(def.fieldId, editValue.trim() || null);
+                    }}
+                    onChange={(e) => setEditValue(e.target.value)}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                            void commitCustomField(def.fieldId, editValue.trim() || null);
+                        } else if (e.key === "Escape") {
+                            handleCancelEdit();
+                        }
+                    }}
+                />
+            );
+        }
+        return (
+            <Box
+                sx={customReadCellSx}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    handleStartEdit(editKey, storedString);
+                }}
+            >
+                {storedString === "" ? (
+                    emptyCellPlaceholder
+                ) : (
+                    <Typography
+                        level="body-sm"
+                        title={storedString}
+                        sx={{
+                            fontSize: "0.8rem",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                        }}
+                    >
+                        {storedString}
+                    </Typography>
+                )}
+            </Box>
+        );
     };
 
     const renderCellContent = (column: ColumnDef) => {
@@ -675,6 +1299,23 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                         {children}
                                     </Paper>
                                 )}
+                                renderOption={(optionProps, option) => {
+                                    const { key, ...restProps } = stripOwnerState(optionProps);
+                                    return (
+                                        <Box
+                                            key={key}
+                                            component="li"
+                                            {...restProps}
+                                            sx={tagOptionRowSx}
+                                        >
+                                            <ProjectTagChip
+                                                isDark={mode === "dark"}
+                                                label={option.tagName}
+                                                tagColor={option.tagColor}
+                                            />
+                                        </Box>
+                                    );
+                                }}
                                 renderInput={(params) => (
                                     <TextField
                                         {...params}
@@ -1578,8 +2219,20 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                     </Typography>
                 );
 
-            default:
+            default: {
+                // Custom-field columns (`cf_<fieldId>`). A def can be
+                // missing when a saved column pref references a field
+                // deleted since (or another project's field) — render a
+                // plain dash; the column itself disappears on the next
+                // visibleColumns resolution.
+                const customFieldId = parseCustomFieldColKey(column.field);
+                if (customFieldId != null) {
+                    const def = customFieldDefs.find((d) => d.fieldId === customFieldId);
+                    if (!def) return emptyCellPlaceholder;
+                    return renderCustomFieldCell(def);
+                }
                 return <Typography level="body-sm">{String(value || "-")}</Typography>;
+            }
         }
     };
 
@@ -1930,6 +2583,7 @@ export const draggableTaskRowPropsAreEqual = (
     prev.sprintNamesById === next.sprintNamesById &&
     prev.isSelected === next.isSelected &&
     prev.projectTags === next.projectTags &&
+    prev.customFieldDefs === next.customFieldDefs &&
     (prev.isGhost ?? false) === (next.isGhost ?? false);
 
 export const DraggableTaskRow = memo(DraggableTaskRowImpl, draggableTaskRowPropsAreEqual);

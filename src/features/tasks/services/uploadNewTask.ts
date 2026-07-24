@@ -131,6 +131,13 @@ export const uploadNewTask = async (props: uploadTaskProps): Promise<UploadNewTa
                         ? { milestone: taskContent.milestoneId }
                         : {}),
                     ...(taskContent.sprintId != null ? { sprint: taskContent.sprintId } : {}),
+                    // Custom-field values picked in the create form.
+                    // Key included only when the form actually holds a
+                    // map (see sendUpdatedSpecificTask for the
+                    // undefined-means-omit contract).
+                    ...(taskContent.customFieldValues != null
+                        ? { custom_field_values: taskContent.customFieldValues }
+                        : {}),
                 }),
             });
 

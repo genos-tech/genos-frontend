@@ -18,6 +18,7 @@ import { useTaskSortPreferences } from "../../../../hooks/common/useTaskSortPref
 import { useTaskTableColumnPreferences } from "../../../../hooks/common/useTaskTableColumnPreferences";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
+import { useProjectCustomFields } from "../../../../hooks/tasks/useProjectCustomFields";
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
@@ -29,6 +30,7 @@ import { createQuickTask } from "../../services/createQuickTask";
 import { emitTaskTouched } from "../../services/taskEvents";
 import { updateTaskFromTable } from "../../services/updateTaskFromTable";
 import { FilterProps } from "../../types/TaskTableTypes";
+import { buildCustomFieldColumns, parseCustomFieldColKey } from "../../utils/customFields";
 import { deriveGhostAncestors } from "../../utils/ghostAncestors";
 import { sortTableTasks, SortTier } from "../../utils/sortTask";
 import { formatTaskDisplayId } from "../../utils/taskDisplayId";
@@ -679,6 +681,22 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         }
     }, [displayRows, quickAddParentId, closeQuickAdd]);
 
+    // Per-project custom fields → extra table columns. The store hook
+    // caches per project with in-flight dedupe, and `fields` keeps a
+    // stable identity until a definition actually changes — so the
+    // memos (and the TaskTableRows comparator) below don't churn.
+    const { fields: customFieldDefs } = useProjectCustomFields(
+        usePM.currentProject?.projectId ?? null
+    );
+    const customColumns = useMemo(
+        () => buildCustomFieldColumns(customFieldDefs),
+        [customFieldDefs]
+    );
+    // Built-ins + the current project's custom columns. This is the
+    // lookup set for width/resize resolution and the toggleable list —
+    // custom columns behave exactly like built-ins from here on.
+    const allColumns = useMemo(() => [...defaultColumns, ...customColumns], [customColumns]);
+
     // Column widths state - initialize from default column widths
     const [columnWidths, setColumnWidths] = useState<Record<string, number>>(() => {
         const widths: Record<string, number> = {};
@@ -694,6 +712,13 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
     const resizeStartX = useRef<number>(0);
     const resizeStartWidth = useRef<number>(0);
     const columnWidthsRef = useRef<Record<string, number>>(columnWidths);
+    // Live column set for the resize handlers — they're identity-stable
+    // useCallbacks (registered as document listeners), so they read the
+    // current columns through a ref instead of closing over `allColumns`.
+    const allColumnsRef = useRef<ColumnDef[]>(allColumns);
+    useEffect(() => {
+        allColumnsRef.current = allColumns;
+    }, [allColumns]);
 
     // Keep ref in sync with state
     useEffect(() => {
@@ -706,7 +731,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         if (!currentColumn) return;
 
         const delta = e.clientX - resizeStartX.current;
-        const column = defaultColumns.find((c) => c.field === currentColumn);
+        const column = allColumnsRef.current.find((c) => c.field === currentColumn);
         if (!column) return;
 
         const newWidth = Math.max(
@@ -754,7 +779,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
 
     // Get column width (dynamic or default)
     const getColumnWidth = (field: string): number => {
-        return columnWidths[field] || defaultColumns.find((c) => c.field === field)?.width || 100;
+        return columnWidths[field] || allColumns.find((c) => c.field === field)?.width || 100;
     };
 
     // Reset column widths to default
@@ -937,6 +962,10 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
     // user configured in Settings is preserved. Clicking the same
     // header twice toggles direction.
     const handleHeaderClick = (field: string) => {
+        // Custom-field columns are display-only for sorting — the sort
+        // pipeline (sortTask.ts fieldValue) has no resolver for them,
+        // so a click would set a tier that compares nothing.
+        if (parseCustomFieldColKey(field) != null) return;
         const currentPrimary = sortTiers[0];
         const direction: "asc" | "desc" =
             currentPrimary?.field === field && currentPrimary.direction === "asc" ? "desc" : "asc";
@@ -1080,6 +1109,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                     milestoneId: updated.milestoneId,
                     sprintId: updated.sprintId ?? updatedRow.sprintId,
                     isMilestone: true,
+                    customFieldValues: updated.customFieldValues ?? updatedRow.customFieldValues,
                 };
 
                 setCurrentDisplayingTasks((prev) =>
@@ -1403,7 +1433,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
 
     const visibleColumns = useMemo(() => {
         const byField = new Map<string, ColumnDef>(
-            defaultColumns.map((c): [string, ColumnDef] => [c.field, c])
+            allColumns.map((c): [string, ColumnDef] => [c.field, c])
         );
         // Fixed leading columns — never reorderable, never hideable.
         const fixedLeading = FIXED_LEADING_FIELDS.map((f: string) => byField.get(f)).filter(
@@ -1413,8 +1443,12 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         // Toggleable columns: start with the user's preferred order,
         // then append any defaults not yet in the user's list (so a
         // newly-added column shows up at the end with default
-        // visibility on first render after deploy).
-        const toggleableInDefaultOrder = defaultColumns.filter(
+        // visibility on first render after deploy). Custom-field
+        // columns ride the same machinery: their keys embed the server
+        // fieldId, so saved order/visibility survive reloads, and keys
+        // from OTHER projects simply miss the byField lookup and drop
+        // out here.
+        const toggleableInDefaultOrder = allColumns.filter(
             (c: ColumnDef) => !FIXED_LEADING_FIELDS.includes(c.field)
         );
         const seen = new Set<string>();
@@ -1448,13 +1482,14 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         return [...fixedLeading, ...orderedToggleable.filter(effectivelyVisible)].map((col) => ({
             ...col,
             // Resolve the translated label for this header at render
-            // time. Columns without a labelKey (only `__expand`) keep
-            // their empty headerName.
+            // time. Columns without a labelKey (`__expand` and the
+            // custom-field columns, whose header IS the user-defined
+            // field name) keep their headerName.
             headerName: col.headerLabelKey
                 ? t.tasks.table.columns[col.headerLabelKey]
                 : col.headerName,
         }));
-    }, [fieldOrder, visibilityOverrides, hasMilestoneInDisplay, t]);
+    }, [allColumns, fieldOrder, visibilityOverrides, hasMilestoneInDisplay, t]);
 
     // Create columns with dynamic widths for passing to rows. Memoized so
     // that React.memo on DraggableTaskRow isn't defeated by a fresh array
@@ -1500,6 +1535,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                     onOpenColumnSettings={() => setIsColumnSettingsOpen(true)}
                 />
                 <TaskTableColumnSettings
+                    customColumns={customColumns}
                     open={isColumnSettingsOpen}
                     onClose={() => setIsColumnSettingsOpen(false)}
                 />
@@ -1663,6 +1699,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                     <TaskTableRows
                                         childrenByParent={childrenByParentEffective}
                                         columns={columnsWithWidths}
+                                        customFieldDefs={customFieldDefs}
                                         depthMap={depthMap}
                                         displayRows={displayRows}
                                         expandedRows={expandedRows}

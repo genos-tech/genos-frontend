@@ -377,6 +377,8 @@ export const SprintBoard = (props: SprintBoardProps) => {
                     milestoneId: updated.milestoneId,
                     sprintId: updated.sprintId ?? updatedMovedTask.sprintId,
                     isMilestone: true,
+                    customFieldValues:
+                        updated.customFieldValues ?? updatedMovedTask.customFieldValues,
                 };
                 useTM.setAllTasks((prev) =>
                     prev.map((task: TaskTableProps) =>

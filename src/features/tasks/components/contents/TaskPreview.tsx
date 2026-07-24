@@ -62,6 +62,7 @@ import { uploadTaskAttachments } from "../../services/uploadTaskAttachments";
 import { sendMilestoneUpdatedMessage } from "../../sprint-milestone/services/sendMilestoneUpdatedMessage";
 import { Milestone } from "../../sprint-milestone/types";
 import { MILESTONE_STATUS_CHIP_COLORS } from "../../sprint-milestone/utils/sortMilestones";
+import { customFieldValuesEqual } from "../../utils/customFields";
 import { isNoMainPanelVisible } from "../../utils/mainPanelVisibility";
 import { getTaskKind } from "../../utils/taskKind";
 import { effortLevels, priorities } from "../../utils/taskMeta";
@@ -1146,6 +1147,11 @@ const milestoneToTaskProps = (
         // TaskProps shape.
         sprintId: m.sprintId ?? null,
         milestoneId: m.milestoneId,
+        // Custom-field values come off the backing task row via the
+        // milestone payload; `?? {}` (not undefined) so the preview's
+        // save path knows the map was LOADED — undefined would make
+        // persistFromTaskContent skip the diff entirely.
+        customFieldValues: m.customFieldValues ?? {},
     } as TaskProps;
 };
 
@@ -1640,6 +1646,7 @@ const MilestonePreviewInner = ({
                               : null,
                           milestoneId: updated.milestoneId,
                           sprintId: updated.sprintId ?? t.sprintId,
+                          customFieldValues: updated.customFieldValues ?? t.customFieldValues,
                       }
                     : t
             )
@@ -1792,6 +1799,16 @@ const MilestonePreviewInner = ({
         const nextSprintId = (next as unknown as { sprintId?: number | null }).sprintId;
         if (nextSprintId !== undefined && nextSprintId !== milestone.sprintId) {
             patch.sprintId = nextSprintId ?? null;
+        }
+        // Custom-field values (CustomFieldsBlock edits). Only diff when
+        // the working copy actually carries a map — undefined means the
+        // block never loaded, and PATCHing {} then would wipe stored
+        // values on the backing task.
+        if (
+            next.customFieldValues != null &&
+            !customFieldValuesEqual(next.customFieldValues, milestone.customFieldValues ?? {})
+        ) {
+            patch.customFieldValues = next.customFieldValues;
         }
         // Single-assignee: persist as a single-element list against the
         // milestone's multi-assignee API. An empty list clears it.

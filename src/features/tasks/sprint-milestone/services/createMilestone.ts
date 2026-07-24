@@ -27,6 +27,9 @@ export type CreateMilestoneInput = {
     links?: unknown;
     reporterId?: number | string | null;
     assigneeIds?: Array<number | string>;
+    // Custom-field values picked in the create form — seeded onto the
+    // milestone's backing task row server-side.
+    customFieldValues?: Record<string, string | string[]>;
 };
 
 export const createMilestone = async (
@@ -55,6 +58,9 @@ export const createMilestone = async (
                 tags: input.tags ?? null,
                 reporter_id: input.reporterId ?? null,
                 assignee_ids: input.assigneeIds ?? [],
+                ...(input.customFieldValues != null
+                    ? { custom_field_values: input.customFieldValues }
+                    : {}),
             });
             return res.data;
         }
