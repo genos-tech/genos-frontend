@@ -109,6 +109,7 @@ export const ACTeamUsers = (props: ACTeamUsersProps) => {
                         <ListItemContent sx={{ fontSize: "sm" }}>
                             <Stack direction="row" spacing={1}>
                                 <AvatarWithStatus
+                                    showPulseDot={false}
                                     key={`ac-render-option-user-search-avatar-${option.userName}-${option.userId}`}
                                     avatarUser={useTEM.teamMemberProfiles[option.userId]}
                                     useCM={useCM}

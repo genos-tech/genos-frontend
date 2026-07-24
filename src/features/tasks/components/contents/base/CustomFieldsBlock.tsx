@@ -239,7 +239,9 @@ const MemberFieldEditor = ({
     const selected = teamMembers.find((m) => String(m.userId) === stored) ?? null;
     return (
         <Stack alignItems="center" direction="row" spacing={1} sx={{ width: "100%", minWidth: 0 }}>
-            {stored !== "" && <UserAvatar clickable={false} userId={stored} />}
+            {stored !== "" && (
+                <UserAvatar clickable={false} showPulseDot={false} userId={stored} />
+            )}
             <Autocomplete
                 getOptionLabel={(option) => option.userName || option.userEmail || ""}
                 options={teamMembers}
@@ -261,7 +263,11 @@ const MemberFieldEditor = ({
                             spacing={1}
                             sx={{ minWidth: 0 }}
                         >
-                            <UserAvatar clickable={false} userId={option.userId} />
+                            <UserAvatar
+                                clickable={false}
+                                showPulseDot={false}
+                                userId={option.userId}
+                            />
                             <Box sx={{ minWidth: 0 }}>
                                 <Typography level="body-sm" noWrap>
                                     {option.userName}

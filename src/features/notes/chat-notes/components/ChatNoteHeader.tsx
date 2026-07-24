@@ -319,6 +319,7 @@ export const ChatNoteHeader = ({
                             isYou={false}
                             myself={myself}
                             setMyself={setMyself}
+                            showPulseDot={false}
                             socket={socket}
                             useCM={useCM}
                             useUISM={useUISM}

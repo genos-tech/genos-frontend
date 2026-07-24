@@ -231,7 +231,11 @@ export const ModalCustomizeTaskFields: React.FC<Props> = ({
                         <ListItemContent sx={{ fontSize: "sm" }}>
                             <Stack alignItems="center" direction="row" spacing={1}>
                                 {opt.userId ? (
-                                    <UserAvatar clickable={false} userId={opt.userId} />
+                                    <UserAvatar
+                                        clickable={false}
+                                        showPulseDot={false}
+                                        userId={opt.userId}
+                                    />
                                 ) : (
                                     <PersonRoundedIcon sx={{ fontSize: 20, color: textMuted }} />
                                 )}

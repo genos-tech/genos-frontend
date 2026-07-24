@@ -504,7 +504,7 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
 
                 <Stack alignItems="flex-start" direction="row" spacing={1.5}>
                     <Box sx={{ flexShrink: 0 }}>
-                        <UserAvatar userId={comment.senderId} />
+                        <UserAvatar showPulseDot={false} userId={comment.senderId} />
                     </Box>
 
                     <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -628,7 +628,7 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
 
                     <Stack alignItems="flex-start" direction="row" spacing={1.5}>
                         <Box sx={{ flexShrink: 0 }}>
-                            <UserAvatar userId={comment.senderId} />
+                            <UserAvatar showPulseDot={false} userId={comment.senderId} />
                         </Box>
                         <Box sx={{ flex: 1, minWidth: 0 }}>
                             <Stack alignItems="center" direction="row" spacing={1}>

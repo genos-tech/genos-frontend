@@ -462,6 +462,7 @@ export const NoteHeaderActions = ({
                                         isYou={String(m.userId) === String(myself.userId)}
                                         myself={myself}
                                         setMyself={setMyself}
+                                        showPulseDot={false}
                                         socket={socket}
                                         useCM={useCM}
                                         useUISM={useUISM}
