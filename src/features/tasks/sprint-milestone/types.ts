@@ -87,6 +87,9 @@ export type Milestone = {
     // Stored as `JSONField` server-side; expressed as `unknown` here to
     // match the existing `tags` convention (the consumer narrows it).
     links?: unknown | null;
+    // Custom-field value map, read off the BACKING TASK row (the single
+    // source of truth for these — see the API's _serialize_milestone).
+    customFieldValues?: Record<string, string | string[]> | null;
     isDeleted: boolean;
     tsCreatedAt: string;
     tsUpdatedAt: string;

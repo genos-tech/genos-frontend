@@ -34,9 +34,19 @@ import { UIStateManagementState } from "../../../../hooks/common/useUIStateManag
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
-import { TagListProps, TaskTableProps } from "../../../../types/tasks";
+import {
+    CustomFieldOption,
+    ProjectCustomFieldDef,
+    TagListProps,
+    TaskTableProps,
+} from "../../../../types/tasks";
 import { stripOwnerState } from "../../../../utils/joyAutocomplete";
 import { PrStatusCell } from "../../../integrations/components/PrStatusCell";
+import {
+    parseCustomFieldColKey,
+    resolveTagOptions,
+    setCustomFieldValue,
+} from "../../utils/customFields";
 import { formatTaskDisplayId } from "../../utils/taskDisplayId";
 import { effortLevels, priorities } from "../../utils/taskMeta";
 import { computeTaskWeight, MAX_TASK_WEIGHT, weightBand } from "../../utils/taskWeight";
@@ -191,6 +201,10 @@ export type DraggableTaskRowProps = {
     teamMembers: UserProps[];
     /** The focused project's tags — options for the inline tags-cell editor. */
     projectTags: TagListProps[];
+    /** The project's custom field definitions, for `cf_<id>` columns.
+     *  Identity-stable per project (module store) — compared by
+     *  reference in `areEqual` like `projectTags`. */
+    customFieldDefs: ProjectCustomFieldDef[];
     onRowUpdate: (task: TaskTableProps) => Promise<TaskTableProps>;
     // Parent-owned debounced preview switch. Replaces the older
     // `onRowDoubleClick(taskId)` callback — the parent now coalesces
@@ -260,6 +274,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
         isSelected,
         isGhost = false,
         projectTags,
+        customFieldDefs,
         useTM,
         useTEM,
         useCM,
@@ -361,6 +376,22 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
         setEditTags(task.tags ?? []);
     };
 
+    // Custom tag-type fields get their own multi-value buffer (options
+    // are CustomFieldOption, not TagListProps) — committed on blur like
+    // the tags cell; Escape reverts via the shared revertTagsRef.
+    const [editCustomOptions, setEditCustomOptions] = useState<CustomFieldOption[]>([]);
+
+    // Commit one custom field's value and persist through the shared
+    // row-update pipeline (same PUT path as every other inline edit).
+    const commitCustomField = async (fieldId: number, value: string | string[] | null) => {
+        setEditingField(null);
+        setEditValue("");
+        await onRowUpdate({
+            ...task,
+            customFieldValues: setCustomFieldValue(task.customFieldValues, fieldId, value),
+        });
+    };
+
     // Commit the accumulated tag selection once (on blur / Enter), not on
     // every toggle. Recompute `concatTags` locally so the tag filter reacts
     // immediately; `updateTaskFromTable` persists the same set via the task PUT.
@@ -369,6 +400,322 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
             editTags.length > 0 ? "/" + editTags.map((tg) => tg.tagName).join("/") + "/" : null;
         setEditingField(null);
         await onRowUpdate({ ...task, tags: editTags, concatTags: nextConcat });
+    };
+
+    // Shared "click to edit" read-view shell for custom-field cells —
+    // same hover treatment as the tags/assignee cells.
+    const customReadCellSx = {
+        display: "flex",
+        gap: 0.5,
+        flexWrap: "wrap" as const,
+        alignItems: "center",
+        width: "100%",
+        minHeight: 24,
+        cursor: "pointer",
+        borderRadius: "6px",
+        px: 0.5,
+        transition: "background-color 0.15s ease",
+        "&:hover": {
+            backgroundColor: mode === "dark" ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
+        },
+    };
+
+    const emptyCellPlaceholder = (
+        <Typography sx={{ fontSize: "0.72rem", color: mode === "dark" ? "#6b7280" : "#9ca3af" }}>
+            -
+        </Typography>
+    );
+
+    // One cell of a `cf_<id>` column. Editing mirrors the built-in
+    // cells per type: text ≈ title (buffered, commit on blur/Enter),
+    // date ≈ dueDate (commit on change), tag ≈ tags (multi buffer,
+    // commit on blur), member ≈ assignee (commit on select). All
+    // persistence funnels through `commitCustomField` → onRowUpdate.
+    const renderCustomFieldCell = (def: ProjectCustomFieldDef) => {
+        const editKey = `cf_${def.fieldId}`;
+        const stored = task.customFieldValues?.[String(def.fieldId)];
+        const storedString = typeof stored === "string" ? stored : "";
+        const accent = mode === "dark" ? "#a78bfa" : "#7c3aed";
+
+        if (def.fieldType === "tag") {
+            const selected = resolveTagOptions(def, stored);
+            if (editingField === editKey) {
+                return (
+                    <Box
+                        sx={{ width: "100%" }}
+                        onClick={(e) => e.stopPropagation()}
+                        onMouseDown={(e) => e.stopPropagation()}
+                    >
+                        <Autocomplete
+                            autoHighlight
+                            disableCloseOnSelect
+                            multiple
+                            openOnFocus
+                            getOptionLabel={(option: CustomFieldOption) => option.label}
+                            isOptionEqualToValue={(option, val) => option.id === val?.id}
+                            options={def.options}
+                            size="small"
+                            sx={{ width: "100%", minWidth: 160 }}
+                            value={editCustomOptions}
+                            onChange={(_, newValue) => setEditCustomOptions(newValue)}
+                            onBlur={() => {
+                                if (revertTagsRef.current) {
+                                    revertTagsRef.current = false;
+                                    return;
+                                }
+                                void commitCustomField(
+                                    def.fieldId,
+                                    editCustomOptions.map((o) => o.id)
+                                );
+                            }}
+                            onKeyDown={(e) => {
+                                if (e.key === "Escape") {
+                                    e.stopPropagation();
+                                    revertTagsRef.current = true;
+                                    handleCancelEdit();
+                                }
+                            }}
+                            renderTags={(tagValue, getTagProps) =>
+                                tagValue.map((option, idx) => {
+                                    const { key, ...chipProps } = getTagProps({ index: idx });
+                                    return (
+                                        <Chip
+                                            key={key}
+                                            {...chipProps}
+                                            label={option.label}
+                                            size="small"
+                                            sx={{
+                                                height: 20,
+                                                fontSize: "0.7rem",
+                                                fontWeight: 600,
+                                                color: mode === "dark" ? "white" : "black",
+                                                borderColor: alpha(option.color, 0.6),
+                                                backgroundColor: alpha(option.color, 0.12),
+                                            }}
+                                        />
+                                    );
+                                })
+                            }
+                            renderInput={(params) => (
+                                <TextField
+                                    {...params}
+                                    autoFocus
+                                    sx={{
+                                        "& .MuiOutlinedInput-root": {
+                                            borderRadius: "6px",
+                                            fontSize: "0.8rem",
+                                            padding: "2px 6px",
+                                            "&:hover fieldset": { borderColor: accent },
+                                            "&.Mui-focused fieldset": {
+                                                borderColor: accent,
+                                                borderWidth: "1.5px",
+                                            },
+                                        },
+                                    }}
+                                />
+                            )}
+                        />
+                    </Box>
+                );
+            }
+            return (
+                <Box
+                    sx={customReadCellSx}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        setEditCustomOptions(selected);
+                        setEditingField(editKey);
+                    }}
+                >
+                    {selected.length === 0
+                        ? emptyCellPlaceholder
+                        : selected.map((option) => (
+                              <ProjectTagChip
+                                  key={option.id}
+                                  isDark={mode === "dark"}
+                                  label={option.label}
+                                  tagColor={option.color}
+                              />
+                          ))}
+                </Box>
+            );
+        }
+
+        if (def.fieldType === "member") {
+            if (editingField === editKey) {
+                const current = teamMembers.find((m) => String(m.userId) === storedString);
+                return (
+                    <Autocomplete
+                        blurOnSelect={true}
+                        open={true}
+                        options={teamMembers}
+                        size="small"
+                        value={current || null}
+                        getOptionLabel={(option) => `${option.userName} ${option.userEmail}`}
+                        isOptionEqualToValue={(option, val) => option.userId === val?.userId}
+                        renderInput={(params) => (
+                            <TextField
+                                {...params}
+                                autoFocus
+                                placeholder={t.tasks.table.searchMembersPlaceholder}
+                                sx={{ minWidth: 160 }}
+                            />
+                        )}
+                        renderOption={(props, option) => {
+                            const { key, ...restProps } = stripOwnerState(props);
+                            return (
+                                <Box
+                                    key={key}
+                                    component="li"
+                                    {...restProps}
+                                    sx={{ display: "flex", gap: 1, alignItems: "center" }}
+                                >
+                                    <UserAvatar clickable={false} userId={option.userId} />
+                                    <Typography level="body-sm" noWrap>
+                                        {option.userName}
+                                    </Typography>
+                                </Box>
+                            );
+                        }}
+                        fullWidth
+                        onChange={(_, newValue) => {
+                            void commitCustomField(
+                                def.fieldId,
+                                newValue ? String(newValue.userId) : null
+                            );
+                        }}
+                        onClose={(_, reason) => {
+                            if (reason === "blur" || reason === "escape") {
+                                handleCancelEdit();
+                            }
+                        }}
+                    />
+                );
+            }
+            const memberName =
+                teamMembers.find((m) => String(m.userId) === storedString)?.userName ?? "";
+            return (
+                <Box
+                    sx={{ ...customReadCellSx, flexWrap: "nowrap" }}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        setEditingField(editKey);
+                    }}
+                >
+                    {storedString === "" ? (
+                        emptyCellPlaceholder
+                    ) : (
+                        <>
+                            <UserAvatar
+                                clickable={false}
+                                showPulseDot={false}
+                                userId={storedString}
+                            />
+                            <Typography
+                                level="body-xs"
+                                sx={{
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    whiteSpace: "nowrap",
+                                    fontWeight: 500,
+                                }}
+                            >
+                                <ResolvedUserName
+                                    fallbackName={memberName}
+                                    userId={storedString}
+                                />
+                            </Typography>
+                        </>
+                    )}
+                </Box>
+            );
+        }
+
+        if (def.fieldType === "date") {
+            if (editingField === editKey) {
+                return (
+                    <TextField
+                        autoFocus
+                        size="small"
+                        type="date"
+                        value={editValue}
+                        onBlur={handleCancelEdit}
+                        onChange={(e) => {
+                            void commitCustomField(def.fieldId, e.target.value || null);
+                        }}
+                        onKeyDown={(e) => {
+                            if (e.key === "Escape") handleCancelEdit();
+                        }}
+                    />
+                );
+            }
+            return (
+                <Box
+                    sx={{ ...customReadCellSx, justifyContent: "center" }}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        handleStartEdit(editKey, storedString);
+                    }}
+                >
+                    {storedString === "" ? (
+                        emptyCellPlaceholder
+                    ) : (
+                        <Typography level="body-sm" sx={{ fontSize: "0.8rem" }}>
+                            {storedString}
+                        </Typography>
+                    )}
+                </Box>
+            );
+        }
+
+        // text
+        if (editingField === editKey) {
+            return (
+                <TextField
+                    autoFocus
+                    fullWidth
+                    size="small"
+                    value={editValue}
+                    onBlur={() => {
+                        void commitCustomField(def.fieldId, editValue.trim() || null);
+                    }}
+                    onChange={(e) => setEditValue(e.target.value)}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                            void commitCustomField(def.fieldId, editValue.trim() || null);
+                        } else if (e.key === "Escape") {
+                            handleCancelEdit();
+                        }
+                    }}
+                />
+            );
+        }
+        return (
+            <Box
+                sx={customReadCellSx}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    handleStartEdit(editKey, storedString);
+                }}
+            >
+                {storedString === "" ? (
+                    emptyCellPlaceholder
+                ) : (
+                    <Typography
+                        level="body-sm"
+                        title={storedString}
+                        sx={{
+                            fontSize: "0.8rem",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                        }}
+                    >
+                        {storedString}
+                    </Typography>
+                )}
+            </Box>
+        );
     };
 
     const renderCellContent = (column: ColumnDef) => {
@@ -1578,8 +1925,20 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                     </Typography>
                 );
 
-            default:
+            default: {
+                // Custom-field columns (`cf_<fieldId>`). A def can be
+                // missing when a saved column pref references a field
+                // deleted since (or another project's field) — render a
+                // plain dash; the column itself disappears on the next
+                // visibleColumns resolution.
+                const customFieldId = parseCustomFieldColKey(column.field);
+                if (customFieldId != null) {
+                    const def = customFieldDefs.find((d) => d.fieldId === customFieldId);
+                    if (!def) return emptyCellPlaceholder;
+                    return renderCustomFieldCell(def);
+                }
                 return <Typography level="body-sm">{String(value || "-")}</Typography>;
+            }
         }
     };
 
@@ -1930,6 +2289,7 @@ export const draggableTaskRowPropsAreEqual = (
     prev.sprintNamesById === next.sprintNamesById &&
     prev.isSelected === next.isSelected &&
     prev.projectTags === next.projectTags &&
+    prev.customFieldDefs === next.customFieldDefs &&
     (prev.isGhost ?? false) === (next.isGhost ?? false);
 
 export const DraggableTaskRow = memo(DraggableTaskRowImpl, draggableTaskRowPropsAreEqual);

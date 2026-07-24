@@ -481,6 +481,36 @@ export const tasks = {
         milestone: "Milestone",
         dependencies: "Dependencies",
     },
+    customFields: {
+        heading: "Custom Fields",
+        manageTooltip: "Manage custom fields",
+        emptyHint: "No custom fields yet — use the gear icon to add one.",
+        tagPlaceholder: "Select…",
+        memberPlaceholder: "Select member…",
+        clearValue: "Clear",
+        manageHeading: "Manage Custom Fields",
+        manageDescription:
+            "Fields defined here apply to every task, sub-task and milestone in this project. Values appear in the task panel and as table columns.",
+        requestFailed: "The request failed. Please try again.",
+        noFieldsYet: "No custom fields defined for this project yet.",
+        deletePrompt: "Delete?",
+        deleteYes: "Yes",
+        deleteNo: "No",
+        renameTooltip: "Rename field",
+        deleteTooltip: "Delete field (values on tasks are kept but hidden)",
+        deleteOptionTooltip: "Remove option",
+        optionNamePlaceholder: "New option name",
+        optionPreviewName: "Preview",
+        addOption: "Add",
+        fieldNamePlaceholder: "New field name",
+        addField: "Add field",
+        types: {
+            tag: "Tag",
+            text: "Text",
+            date: "Date",
+            member: "Member",
+        },
+    },
 
     // Filter labels (TaskFilterMenu).
     // Hover help on the filter bar's "?" — the rules aren't guessable

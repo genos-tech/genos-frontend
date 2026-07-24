@@ -39,6 +39,7 @@ import { ACTeamProjects } from "../../autocompletes/ACTeamProjects";
 import { ACTeamUsers } from "../../autocompletes/ACTeamUsers";
 import { CopyableTaskIdChip } from "../../CopyableTaskId";
 import { ModalManageTags } from "../../modals/ModalManageTags";
+import { CustomFieldsBlock } from "./CustomFieldsBlock";
 import { DynamicURLManager } from "./sub/DynamicURLManager";
 import { TaskDueDateInput } from "./sub/TaskDueDateInput";
 import { TaskStartDateInput } from "./sub/TaskStartDateInput";
@@ -1034,6 +1035,21 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                     taskContent={taskContent}
                     usePM={usePM}
                     useTM={useTM}
+                />
+
+                {/* Custom fields — the project's owner/editor-defined
+                    metadata (tag / text / date / member). Values ride on
+                    `taskContent.customFieldValues` and persist through
+                    the same setTaskContent + setTaskUpdated contract as
+                    every built-in field, so preview, create form and
+                    milestone mounts all work without extra wiring. */}
+                <CustomFieldsBlock
+                    hostZIndex={hostZIndex}
+                    isDark={isDark}
+                    setTaskContent={setTaskContent}
+                    setTaskUpdated={setTaskUpdated}
+                    taskContent={taskContent}
+                    useTEM={useTEM}
                 />
 
                 {/* Parent Task (only if exists). Uses the same chip

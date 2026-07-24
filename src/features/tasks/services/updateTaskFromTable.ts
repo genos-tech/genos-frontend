@@ -80,6 +80,10 @@ export const updateTaskFromTable = async (
                     : null,
             tags: nextTags,
             concatTags: nextConcatTags ?? undefined,
+            // Row edits carry the desired map (the custom-field cells
+            // write it); other callers fall back to the freshly-loaded
+            // full task so the PUT can't wipe existing values.
+            customFieldValues: updatedRow.customFieldValues ?? fullTask.customFieldValues,
         };
 
         // Handle assignee update if it changed
@@ -113,6 +117,7 @@ export const updateTaskFromTable = async (
             ...updatedRow,
             tags: nextTags,
             concatTags: nextConcatTags,
+            customFieldValues: updatedTask.customFieldValues,
             assigneeId: newAssignee?.userId || updatedRow.assigneeId,
             assigneeName: newAssignee?.userName || updatedRow.assigneeName,
             assigneeEmail: newAssignee?.userEmail || updatedRow.assigneeEmail,

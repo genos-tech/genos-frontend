@@ -28,6 +28,39 @@ export type TagListProps = {
     tagTextColor: string;
 };
 
+// ── Per-project custom task fields ─────────────────────────────────
+// Definitions live on the project (ProjectCustomField server-side);
+// values ride on every task/milestone row as `customFieldValues`,
+// keyed by `String(fieldId)`.
+export type CustomFieldType = "tag" | "text" | "date" | "member";
+
+// One selectable option of a tag-type field. `id` is an opaque
+// client-minted string — VALUES store option ids, never labels, so
+// renaming/recoloring an option never rewrites task rows.
+export type CustomFieldOption = {
+    id: string;
+    label: string;
+    color: string;
+    textColor?: string;
+};
+
+export type ProjectCustomFieldDef = {
+    fieldId: number;
+    fieldName: string;
+    fieldType: CustomFieldType;
+    /** Only tag-type fields carry options; empty for the rest. */
+    options: CustomFieldOption[];
+    sortOrder: number;
+};
+
+// Value shapes by field type:
+//   tag    -> string[] of option ids
+//   text   -> string
+//   date   -> "YYYY-MM-DD"
+//   member -> user-id string
+export type CustomFieldValue = string | string[];
+export type CustomFieldValues = Record<string, CustomFieldValue>;
+
 // A TEAM-scoped label applied to whole PROJECTS, used to organize a
 // long project list ("Client Work", "Q3", "Internal").
 //
@@ -210,6 +243,11 @@ export type TaskProps = {
     // inside the milestone.
     milestoneId?: number | null;
     sprintId?: number | null;
+    // Values for the project's custom fields, keyed by String(fieldId).
+    // `undefined` means "not loaded" (e.g. a pre-deploy cache entry) —
+    // save paths must OMIT the key in that case rather than sending {}
+    // (which would clear the server-side map).
+    customFieldValues?: CustomFieldValues;
 };
 
 export type TaskTableProps = {
@@ -250,6 +288,8 @@ export type TaskTableProps = {
     // inside the milestone).
     milestoneId?: number | null;
     sprintId?: number | null;
+    // Values for the project's custom fields — see TaskProps.
+    customFieldValues?: CustomFieldValues;
 };
 
 export type TaskType = {

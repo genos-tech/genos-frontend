@@ -86,6 +86,10 @@ const syncMilestoneBackingTaskCaches = (milestone: Milestone): void => {
         isMilestone: true,
         milestoneId: milestone.milestoneId,
         sprintId: milestone.sprintId ?? null,
+        // Backing-task custom-field values ride the milestone payload
+        // (single source of truth is the backing row) — mirror them so
+        // the table's custom columns survive a cache read.
+        customFieldValues: milestone.customFieldValues ?? undefined,
     });
 };
 

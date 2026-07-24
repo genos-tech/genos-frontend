@@ -79,6 +79,16 @@ export const sendUpdatedSpecificTask = async (
                 // semantics (no bridge needed there).
                 milestone: updatedTask.milestoneId ?? null,
                 ...(updatedTask.sprintId != null ? { sprint: updatedTask.sprintId } : {}),
+                // Include the custom-field value map ONLY when the
+                // working copy actually carries one. `undefined` means
+                // "never loaded" (a pre-deploy IDB cache entry, a
+                // caller that built a partial TaskProps) — sending {}
+                // in that state would CLEAR the server-side values.
+                // The backend treats an absent key as "no change" and
+                // a dict as a wholesale replace (mirroring tags).
+                ...(updatedTask.customFieldValues != null
+                    ? { custom_field_values: updatedTask.customFieldValues }
+                    : {}),
             });
 
             if (res) {
@@ -220,6 +230,10 @@ export const sendUpdatedSpecificTask = async (
                     isMilestone: updatedTask.isMilestone ?? false,
                     milestoneId: updatedTask.milestoneId ?? null,
                     sprintId: updatedTask.sprintId ?? null,
+                    // Mirror custom-field values into the IDB row so
+                    // the table keeps showing a fresh edit across a
+                    // cache read (same rationale as startDate above).
+                    customFieldValues: updatedTask.customFieldValues,
                 });
             }
 

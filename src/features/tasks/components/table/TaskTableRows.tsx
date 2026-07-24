@@ -6,7 +6,7 @@ import { TeamManagementState } from "../../../../hooks/common/useTeamManagement"
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
-import { TagListProps, TaskTableProps } from "../../../../types/tasks";
+import { ProjectCustomFieldDef, TagListProps, TaskTableProps } from "../../../../types/tasks";
 import { TaskFieldRules } from "../../utils/taskFieldRules";
 import { DraggableTaskRow } from "./DraggableTaskRow";
 import { ColumnDef } from "./DraggableTaskTable";
@@ -21,6 +21,9 @@ export type TaskTableRowsProps = {
      *  assigned to the filtered member. Rendered dimmed + non-interactive. */
     ghostIds: Set<string>;
     columns: ColumnDef[];
+    /** The current project's custom field definitions — the row needs
+     *  them to resolve `cf_<id>` column values (tag options, types). */
+    customFieldDefs: ProjectCustomFieldDef[];
     expandedRows: Set<string>;
     sprintNamesById: Map<number, string>;
     mode: "light" | "dark" | undefined;
@@ -65,6 +68,7 @@ const TaskTableRowsImpl = (props: TaskTableRowsProps) => {
         childrenByParent,
         ghostIds,
         columns,
+        customFieldDefs,
         expandedRows,
         sprintNamesById,
         mode,
@@ -97,6 +101,7 @@ const TaskTableRowsImpl = (props: TaskTableRowsProps) => {
                 <Fragment key={task.id}>
                     <DraggableTaskRow
                         columns={columns}
+                        customFieldDefs={customFieldDefs}
                         depth={depthMap.get(String(task.id)) ?? 0}
                         expandedRows={expandedRows}
                         hasChildren={childrenByParent.has(String(task.id))}
@@ -182,6 +187,7 @@ export const taskTableRowsPropsAreEqual = (
     prev.childrenByParent === next.childrenByParent &&
     prev.ghostIds === next.ghostIds &&
     prev.columns === next.columns &&
+    prev.customFieldDefs === next.customFieldDefs &&
     prev.expandedRows === next.expandedRows &&
     prev.sprintNamesById === next.sprintNamesById &&
     prev.mode === next.mode &&

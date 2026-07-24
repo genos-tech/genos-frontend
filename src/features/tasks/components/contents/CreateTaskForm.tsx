@@ -945,6 +945,9 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
             links: taskContent.links || [],
             reporterId: myself.userId,
             assigneeIds: assignee?.userId ? [assignee.userId] : [],
+            // Custom-field values picked in the form's CustomFieldsBlock
+            // — seeded onto the backing task row server-side.
+            customFieldValues: taskContent.customFieldValues,
         });
         setIsCreatingMilestone(false);
         if (created) {
