@@ -244,10 +244,29 @@ export interface AgentModelEntry {
     used_today: number;
 }
 
+// One (provider, effort) row when the backend runs effort levels.
+// `model`/`model_label` are what the effort currently maps to;
+// daily_limit/used_today are that model's existing quota counters
+// (quota stays keyed on model ids server-side — this is a re-label).
+export interface AgentEffortEntry {
+    provider: string;
+    effort: "low" | "medium" | "high";
+    model: string;
+    model_label: string;
+    daily_limit: number | null;
+    used_today: number;
+}
+
 export interface AgentModels {
     tier: SubscriptionTier;
-    current: { provider: string; model: string };
+    // `effort` present only when the backend has AGENT_EFFORT_LEVELS on.
+    current: { provider: string; model: string; effort?: string };
     models: AgentModelEntry[];
+    // Present ⇔ the backend runs effort levels. Its PRESENCE is the
+    // render switch: effort picker when set, legacy model picker
+    // otherwise — which makes FE/API deploys skew-proof in both
+    // directions (no FE flag to coordinate).
+    efforts?: AgentEffortEntry[];
     // Cross-cutting per-tier daily quotas, mirroring AgentFeatures.
     // Folded into this payload so the Settings UI loads everything it
     // needs in one round-trip.

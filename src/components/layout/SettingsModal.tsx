@@ -310,7 +310,7 @@ const tierBadgeLabel = (tier: string, t: ReturnType<typeof useTranslation>["t"])
 // means the Gemini/Claude catalog + usage rows can't drift between the two
 // surfaces.
 export const LlmModelSection = () => {
-    const { data, loading, setChoice } = useLlmModelPreference();
+    const { data, loading, setChoice, setEffort } = useLlmModelPreference();
     const { t } = useTranslation();
 
     // Cluster the catalog by provider so the model dropdown can show
@@ -356,6 +356,25 @@ export const LlmModelSection = () => {
     const currentEntry = data.models.find(
         (m) => m.provider === currentProvider && m.model === currentModel
     );
+
+    // Effort mode iff the payload carries `efforts` (backend flag on).
+    // Payload-shape driven — no FE flag — so either side can deploy
+    // first and this section renders whatever the server supports.
+    const effortMode = Boolean(data.efforts && data.efforts.length > 0);
+    const currentEffort = data.current.effort || "medium";
+    const effortsForProvider = (data.efforts ?? []).filter((e) => e.provider === currentProvider);
+    const effortLabel = (e: string) =>
+        e === "low"
+            ? t.settings.llmModel.effortLow
+            : e === "high"
+              ? t.settings.llmModel.effortHigh
+              : t.settings.llmModel.effortMedium;
+    const effortNote = (e: string) =>
+        e === "low"
+            ? t.settings.llmModel.effortLowNote
+            : e === "high"
+              ? t.settings.llmModel.effortHighNote
+              : t.settings.llmModel.effortMediumNote;
 
     const providerLabel = (p: string) => {
         if (p === "gemini") return t.settings.llmModel.providerGemini;
@@ -418,12 +437,19 @@ export const LlmModelSection = () => {
                     value={currentProvider}
                     onChange={(_e, value) => {
                         if (!value || typeof value !== "string") return;
-                        // When the provider changes, default to that
-                        // provider's first model in the catalog rather
-                        // than leaving the previous (now-invalid) model
-                        // selected — the backend resolver would fall
-                        // back to the server default in that case, but
-                        // the picker would visually drift.
+                        if (effortMode) {
+                            // Effort carries across providers verbatim:
+                            // "Gemini, High" → "Claude, High" is the
+                            // least-surprise reading of a provider swap.
+                            void setEffort(value, currentEffort);
+                            return;
+                        }
+                        // Legacy: when the provider changes, default to
+                        // that provider's first model in the catalog
+                        // rather than leaving the previous (now-invalid)
+                        // model selected — the backend resolver would
+                        // fall back to the server default in that case,
+                        // but the picker would visually drift.
                         const firstModel = data.models.find((m) => m.provider === value);
                         if (firstModel) {
                             void setChoice(value, firstModel.model);
@@ -438,35 +464,68 @@ export const LlmModelSection = () => {
                 </Select>
             </Stack>
 
-            <Stack
-                alignItems="center"
-                direction="row"
-                justifyContent="space-between"
-                spacing={2}
-                sx={{ mb: 1.5 }}
-            >
-                <Box sx={{ minWidth: 0, flex: 1 }}>
-                    <Typography level="title-sm">{t.settings.llmModel.modelLabel}</Typography>
-                    <Typography level="body-xs">
-                        {currentEntry?.note || t.settings.llmModel.modelHelper}
-                    </Typography>
-                </Box>
-                <Select
-                    size="sm"
-                    sx={{ minWidth: 180 }}
-                    value={currentModel}
-                    onChange={(_e, value) => {
-                        if (!value || typeof value !== "string") return;
-                        void setChoice(currentProvider, value);
-                    }}
+            {effortMode ? (
+                <Stack
+                    alignItems="center"
+                    direction="row"
+                    justifyContent="space-between"
+                    spacing={2}
+                    sx={{ mb: 1.5 }}
                 >
-                    {modelsForProvider.map((m) => (
-                        <Option key={m.model} value={m.model}>
-                            <Typography level="body-sm">{m.label}</Typography>
-                        </Option>
-                    ))}
-                </Select>
-            </Stack>
+                    <Box sx={{ minWidth: 0, flex: 1 }}>
+                        <Typography level="title-sm">{t.settings.llmModel.effortLabel}</Typography>
+                        {/* The selected effort's description doubles as
+                            the helper line — this is the "diff of
+                            effort" the user reads to pick. */}
+                        <Typography level="body-xs">{effortNote(currentEffort)}</Typography>
+                    </Box>
+                    <Select
+                        size="sm"
+                        sx={{ minWidth: 180 }}
+                        value={currentEffort}
+                        onChange={(_e, value) => {
+                            if (!value || typeof value !== "string") return;
+                            void setEffort(currentProvider, value);
+                        }}
+                    >
+                        {(["low", "medium", "high"] as const).map((e) => (
+                            <Option key={e} value={e}>
+                                <Typography level="body-sm">{effortLabel(e)}</Typography>
+                            </Option>
+                        ))}
+                    </Select>
+                </Stack>
+            ) : (
+                <Stack
+                    alignItems="center"
+                    direction="row"
+                    justifyContent="space-between"
+                    spacing={2}
+                    sx={{ mb: 1.5 }}
+                >
+                    <Box sx={{ minWidth: 0, flex: 1 }}>
+                        <Typography level="title-sm">{t.settings.llmModel.modelLabel}</Typography>
+                        <Typography level="body-xs">
+                            {currentEntry?.note || t.settings.llmModel.modelHelper}
+                        </Typography>
+                    </Box>
+                    <Select
+                        size="sm"
+                        sx={{ minWidth: 180 }}
+                        value={currentModel}
+                        onChange={(_e, value) => {
+                            if (!value || typeof value !== "string") return;
+                            void setChoice(currentProvider, value);
+                        }}
+                    >
+                        {modelsForProvider.map((m) => (
+                            <Option key={m.model} value={m.model}>
+                                <Typography level="body-sm">{m.label}</Typography>
+                            </Option>
+                        ))}
+                    </Select>
+                </Stack>
+            )}
 
             <Divider sx={{ my: 1.5 }} />
 
@@ -510,27 +569,46 @@ export const LlmModelSection = () => {
                     </Typography>
                 </Stack>
                 <Divider sx={{ my: 0.5 }} />
-                {/* Only show per-model rows for the currently-selected
-                    provider — counters for the other provider's models
-                    still exist server-side, but they'd be noise here
-                    given the user can't switch to them without first
-                    changing the Provider dropdown. */}
-                {modelsForProvider.map((m) => (
-                    <Stack
-                        key={`${m.provider}-${m.model}`}
-                        alignItems="center"
-                        direction="row"
-                        justifyContent="space-between"
-                        spacing={1}
-                    >
-                        <Typography level="body-sm">{m.label}</Typography>
-                        <Typography level="body-sm" sx={{ color: "text.tertiary" }}>
-                            {m.daily_limit === null
-                                ? t.settings.llmModel.usageUnlimited
-                                : `${m.used_today} / ${m.daily_limit}`}
-                        </Typography>
-                    </Stack>
-                ))}
+                {/* Per-EFFORT usage rows when the backend runs effort
+                    levels ("High: 2/4 today") — the counters are the
+                    mapped model's, re-labeled by what the user actually
+                    picks. Legacy per-model rows otherwise. Either way,
+                    current provider only — other providers' counters
+                    would be noise behind a dropdown switch. */}
+                {effortMode &&
+                    effortsForProvider.map((e) => (
+                        <Stack
+                            key={`${e.provider}-${e.effort}`}
+                            alignItems="center"
+                            direction="row"
+                            justifyContent="space-between"
+                            spacing={1}
+                        >
+                            <Typography level="body-sm">{effortLabel(e.effort)}</Typography>
+                            <Typography level="body-sm" sx={{ color: "text.tertiary" }}>
+                                {e.daily_limit === null
+                                    ? t.settings.llmModel.usageUnlimited
+                                    : `${e.used_today} / ${e.daily_limit}`}
+                            </Typography>
+                        </Stack>
+                    ))}
+                {!effortMode &&
+                    modelsForProvider.map((m) => (
+                        <Stack
+                            key={`${m.provider}-${m.model}`}
+                            alignItems="center"
+                            direction="row"
+                            justifyContent="space-between"
+                            spacing={1}
+                        >
+                            <Typography level="body-sm">{m.label}</Typography>
+                            <Typography level="body-sm" sx={{ color: "text.tertiary" }}>
+                                {m.daily_limit === null
+                                    ? t.settings.llmModel.usageUnlimited
+                                    : `${m.used_today} / ${m.daily_limit}`}
+                            </Typography>
+                        </Stack>
+                    ))}
             </Stack>
 
             {data.tier === "free" && (

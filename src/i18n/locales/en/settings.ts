@@ -170,6 +170,17 @@ export const settings = {
         tierEnterprise: "Enterprise",
         upgradeNote: "Upgrade for higher daily limits on every model.",
         noModelsConfigured: "No models are configured for your account.",
+        // Effort levels (rendered when the backend serves `efforts`).
+        // The user picks Low/Medium/High instead of a model; the notes
+        // are the "diff of effort" they read to choose.
+        effortLabel: "Effort",
+        effortHelper: "How hard the AI works on each answer.",
+        effortLow: "Low",
+        effortMedium: "Medium",
+        effortHigh: "High",
+        effortLowNote: "Fastest — quick answers for simple questions.",
+        effortMediumNote: "Balanced speed and quality — right for most questions.",
+        effortHighNote: "Takes longer — deepest reasoning for complex questions.",
     },
     privacy: {
         heading: "Privacy & analytics",
