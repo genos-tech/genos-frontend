@@ -18,6 +18,10 @@ export interface UseLlmModelPreference {
     data: AgentModels | null;
     loading: boolean;
     setChoice: (provider: string, model: string) => Promise<void>;
+    // Effort-levels sibling of setChoice: PATCHes {provider, effort}
+    // WITHOUT a model key — the backend treats key presence as intent,
+    // so the saved legacy model (the rollback substrate) is untouched.
+    setEffort: (provider: string, effort: string) => Promise<void>;
     refresh: () => Promise<void>;
 }
 
@@ -79,5 +83,36 @@ export const useLlmModelPreference = (): UseLlmModelPreference => {
         [accessToken, data]
     );
 
-    return { data, loading, setChoice, refresh: load };
+    const setEffort = useCallback(
+        async (provider: string, effort: string) => {
+            const api = authApi(accessToken);
+            if (!api || !data) return;
+            const previous = data;
+            // Optimistic: settle `current` (incl. the mapped model, so
+            // any model-derived UI stays coherent) before the round-trip.
+            const mapped = data.efforts?.find(
+                (e) => e.provider === provider && e.effort === effort
+            );
+            setData((d) =>
+                d
+                    ? {
+                          ...d,
+                          current: {
+                              provider,
+                              model: mapped?.model ?? d.current.model,
+                              effort,
+                          },
+                      }
+                    : d
+            );
+            try {
+                await api.patch("/user/preferences/llm-model/", { provider, effort });
+            } catch {
+                setData(previous);
+            }
+        },
+        [accessToken, data]
+    );
+
+    return { data, loading, setChoice, setEffort, refresh: load };
 };

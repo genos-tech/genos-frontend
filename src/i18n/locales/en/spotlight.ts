@@ -74,7 +74,7 @@ export const spotlight = {
     },
     settings: {
         title: "Spotlight settings",
-        openTooltip: "Spotlight settings — model & AI answers",
+        openTooltip: "Spotlight settings — AI effort & answers",
     },
     approval: {
         titleWithTool: "Approval required: {toolName}",

@@ -438,6 +438,31 @@ describe("agentApi GET helpers", () => {
             expect(result).toEqual(models);
         });
 
+        it("passes an efforts-bearing payload through untouched", async () => {
+            // The effort-levels backend adds `current.effort` +
+            // `efforts[]`; their PRESENCE is what flips the Settings UI
+            // into effort mode, so the client must hand them through
+            // verbatim — no reshaping, no filtering.
+            const models = {
+                tier: "core",
+                current: { provider: "claude", model: "claude-sonnet-5", effort: "medium" },
+                models: [],
+                efforts: [
+                    {
+                        provider: "claude",
+                        effort: "medium",
+                        model: "claude-sonnet-5",
+                        model_label: "Claude Sonnet 5",
+                        daily_limit: 12,
+                        used_today: 3,
+                    },
+                ],
+                limits: { llm_ask: { used: 0, limit: 100 }, web_search: { used: 0, limit: 25 } },
+            };
+            vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse(models)));
+            expect(await fetchAgentModels("tok")).toEqual(models);
+        });
+
         it("returns null on not-ok", async () => {
             vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse({}, { ok: false })));
             expect(await fetchAgentModels("tok")).toBeNull();
