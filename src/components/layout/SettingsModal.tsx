@@ -67,7 +67,7 @@ import { useLlmModelPreference } from "../../hooks/common/useLlmModelPreference"
 import { useSpotlightPreferences } from "../../hooks/common/useSpotlightPreferences";
 import { ThemePreference, useThemePreference } from "../../hooks/common/useThemePreference";
 import { fmt, Locale, useTranslation } from "../../i18n";
-import { AgentFeatures, fetchAgentFeatures } from "../../services/agentApi";
+import { AgentFeatures, fetchAgentFeatures, SubscriptionTier } from "../../services/agentApi";
 import { NotificationSettingsPanel } from "../../services/notifications/NotificationSettingsPanel";
 import { getServiceShortcutModifierKeys, isMac } from "../../utils/platform";
 import { MentionGroupsPanel } from "./MentionGroupsPanel";
@@ -278,6 +278,31 @@ const DoubleClickTodoSection = () => {
     );
 };
 
+// Tier badge styling as a complete Record<SubscriptionTier, …>: the
+// compiler now forces a new tier to get a hue, where the previous
+// ternary chains silently fell through — `core` rendered as "Free"
+// until someone noticed. Same lesson as PlansHome's tier maps.
+const TIER_BADGE_COLOR: Record<SubscriptionTier, { bg: string; fg: string }> = {
+    free: { bg: "neutral.softBg", fg: "neutral.softColor" },
+    core: { bg: "primary.softBg", fg: "primary.softColor" },
+    pro: { bg: "primary.softBg", fg: "primary.softColor" },
+    max: { bg: "success.softBg", fg: "success.softColor" },
+    enterprise: { bg: "warning.softBg", fg: "warning.softColor" },
+};
+
+const tierBadgeLabel = (tier: string, t: ReturnType<typeof useTranslation>["t"]): string => {
+    const labels: Record<SubscriptionTier, string> = {
+        free: t.settings.llmModel.tierFree,
+        core: t.settings.llmModel.tierCore,
+        pro: t.settings.llmModel.tierPro,
+        max: t.settings.llmModel.tierMax,
+        enterprise: t.settings.llmModel.tierEnterprise,
+    };
+    // An unknown tier string (future server ahead of this client) falls
+    // back to the raw value rather than mislabeling it as Free.
+    return labels[tier as SubscriptionTier] ?? tier;
+};
+
 // Exported so the Spotlight overlay's dedicated settings modal
 // (`features/spotlight/SpotlightSettingsModal`) can reuse the exact same
 // model-picker without threading any props — the section is self-contained
@@ -354,36 +379,22 @@ export const LlmModelSection = () => {
                         px: 1,
                         py: 0.25,
                         borderRadius: "sm",
-                        // Tier ladder: free=neutral, pro=primary,
+                        // Tier ladder: free=neutral, core/pro=primary,
                         // max=success, enterprise=warning. Distinct hues
                         // so the upgrade ladder is visually obvious
-                        // without reading the label.
+                        // without reading the label. Maps, not ternary
+                        // chains — the old chains predated `core` and
+                        // silently rendered a core user as "Free".
                         bgcolor:
-                            data.tier === "enterprise"
-                                ? "warning.softBg"
-                                : data.tier === "max"
-                                  ? "success.softBg"
-                                  : data.tier === "pro"
-                                    ? "primary.softBg"
-                                    : "neutral.softBg",
+                            TIER_BADGE_COLOR[data.tier as SubscriptionTier]?.bg ??
+                            "neutral.softBg",
                         color:
-                            data.tier === "enterprise"
-                                ? "warning.softColor"
-                                : data.tier === "max"
-                                  ? "success.softColor"
-                                  : data.tier === "pro"
-                                    ? "primary.softColor"
-                                    : "neutral.softColor",
+                            TIER_BADGE_COLOR[data.tier as SubscriptionTier]?.fg ??
+                            "neutral.softColor",
                         fontWeight: 600,
                     }}
                 >
-                    {data.tier === "enterprise"
-                        ? t.settings.llmModel.tierEnterprise
-                        : data.tier === "max"
-                          ? t.settings.llmModel.tierMax
-                          : data.tier === "pro"
-                            ? t.settings.llmModel.tierPro
-                            : t.settings.llmModel.tierFree}
+                    {tierBadgeLabel(data.tier, t)}
                 </Typography>
             </Stack>
             <Typography level="body-xs" sx={{ mb: 1.5 }}>
