@@ -335,6 +335,10 @@ export const LlmModelSection = () => {
     const providerLabel = (p: string) => {
         if (p === "gemini") return t.settings.llmModel.providerGemini;
         if (p === "claude") return t.settings.llmModel.providerClaude;
+        if (p === "openai") return t.settings.llmModel.providerOpenai;
+        // Fall back to the raw id rather than hiding the option — a
+        // provider the server serves but we have no label for should
+        // still be selectable.
         return p;
     };
 

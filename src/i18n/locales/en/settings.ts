@@ -145,6 +145,7 @@ export const settings = {
         modelHelper: "Models on the selected provider.",
         providerGemini: "Google Gemini",
         providerClaude: "Anthropic Claude",
+        providerOpenai: "OpenAI GPT",
         usageHeading: "Today's usage",
         usageUnlimited: "Unlimited",
         // Aggregate counters shown above per-model rows.
