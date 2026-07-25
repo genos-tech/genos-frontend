@@ -19,17 +19,21 @@ import { SubscriptionTier } from "../../services/agentApi";
 import {
     BillingConfig,
     BillingPlans,
+    BillingSubscription,
     fetchBillingConfig,
     fetchBillingPlans,
+    fetchBillingSubscription,
     fetchTeamBillingConfig,
     openBillingPortal,
     openTeamBillingPortal,
     PlanPrice,
     PlanTier,
+    PurchasablePlan,
     startCheckout,
     startTeamCheckout,
     TeamBillingConfig,
 } from "../../services/billingApi";
+import { planCta } from "./planCta";
 
 /**
  * `/workspace/plans` — the tier comparison page.
@@ -40,14 +44,44 @@ import {
  * same payload (null price = Stripe dark or contact-sales → the card
  * renders limits without a price line).
  *
- * CTA logic mirrors `PlanUsageSection`: personal tier only (a
- * team-granted effective tier doesn't hide personal upgrades), free →
- * checkout buttons, an existing personal subscription → the customer
- * portal (plan switches go through Stripe with proration, never a
- * second checkout), enterprise → contact-sales mailto.
+ * CTA logic lives in `planCta.ts` (pure, unit-tested): personal tier
+ * only (a team-granted effective tier doesn't hide personal upgrades),
+ * free → checkout, an existing subscriber → Stripe customer-portal
+ * deep links for every switch and the cancel, enterprise →
+ * contact-sales mailto.
  */
 
 const CONTACT_SALES_MAILTO = "mailto:genos.support@gmail.com?subject=Genos%20Enterprise";
+
+// Self-serve plans, cheapest first — mirrors `PURCHASABLE_PLANS` in
+// genos-api `origin/services/stripe_billing.py`. Used for the team
+// per-seat price line; the personal CTA reads the tier list from the
+// API instead, so a plan the server hasn't priced never renders.
+const PURCHASABLE_PLANS: PurchasablePlan[] = ["core", "pro", "max"];
+
+// Per-plan CTA label keys. A map rather than a ternary so adding a
+// fourth plan is a one-line change and can never silently fall through
+// to the wrong plan's label.
+const UPGRADE_LABEL_KEY = {
+    core: "upgradeToCore",
+    pro: "upgradeToPro",
+    max: "upgradeToMax",
+} as const satisfies Record<PurchasablePlan, string>;
+
+const TEAM_UPGRADE_LABEL_KEY = {
+    core: "teamUpgradeToCore",
+    pro: "teamUpgradeToPro",
+    max: "teamUpgradeToMax",
+} as const satisfies Record<PurchasablePlan, string>;
+
+// Wording for a move DOWN the ladder. Neutral on purpose — "Downgrade"
+// names the direction rather than the action, and the button does the
+// same thing the upgrade one does.
+const SWITCH_LABEL_KEY = {
+    core: "switchToCore",
+    pro: "switchToPro",
+    max: "switchToMax",
+} as const satisfies Record<PurchasablePlan, string>;
 
 // Currencies Stripe stores without decimals — everything else is in
 // hundredths (cents). Only the ones plausibly configured here.
@@ -69,6 +103,7 @@ const formatPrice = (price: PlanPrice, locale: string): string | null => {
 
 const TIER_COLOR: Record<SubscriptionTier, "neutral" | "primary" | "success" | "warning"> = {
     free: "neutral",
+    core: "primary",
     pro: "primary",
     max: "success",
     enterprise: "warning",
@@ -80,6 +115,7 @@ export const PlansHome = () => {
     const [plans, setPlans] = useState<BillingPlans | null>(null);
     const [config, setConfig] = useState<BillingConfig | null>(null);
     const [teamConfig, setTeamConfig] = useState<TeamBillingConfig | null>(null);
+    const [subscription, setSubscription] = useState<BillingSubscription | null>(null);
     const [failed, setFailed] = useState(false);
     // Checkout/portal navigate away on success; stay busy until then.
     const [busy, setBusy] = useState(false);
@@ -100,6 +136,12 @@ export const PlansHome = () => {
         // section simply doesn't render.
         void fetchTeamBillingConfig(accessToken).then((cfg) => {
             if (!cancelled) setTeamConfig(cfg);
+        });
+        // Null for a free user, an operator-set tier, or any failure —
+        // the banner then falls back to its no-Stripe copy rather than
+        // showing a renewal date it doesn't have.
+        void fetchBillingSubscription(accessToken).then((sub) => {
+            if (!cancelled) setSubscription(sub);
         });
         return () => {
             cancelled = true;
@@ -135,67 +177,128 @@ export const PlansHome = () => {
 
     const tierLabel: Record<SubscriptionTier, string> = {
         free: p.tierFree,
+        core: p.tierCore,
         pro: p.tierPro,
         max: p.tierMax,
         enterprise: p.tierEnterprise,
     };
     const personalTier = config?.personal_tier ?? null;
 
+    // "Renews on X" / "Ends on X" for a live Stripe subscription.
+    // `cancel_at` wins over `current_period_end`: Stripe sets BOTH when a
+    // cancellation is scheduled, and cancel_at is the authoritative stop
+    // date — showing the period end there would promise a renewal that
+    // isn't coming. Same rule as PlanUsageSection.
+    const renewalLabel = () => {
+        if (!subscription) return null;
+        const willEnd = subscription.cancel_at_period_end || subscription.cancel_at !== null;
+        const endTs = subscription.cancel_at ?? subscription.current_period_end;
+        if (endTs == null) return null;
+        const dateLabel = new Date(endTs * 1000).toLocaleDateString(locale, {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+        });
+        return (
+            <Typography
+                color={willEnd ? "warning" : undefined}
+                level="body-sm"
+                sx={willEnd ? undefined : { color: "text.tertiary" }}
+            >
+                {`${willEnd ? p.planEnds : p.planRenews} ${dateLabel}`}
+            </Typography>
+        );
+    };
+
     const renderCta = (tier: PlanTier) => {
-        if (tier.tier === personalTier) {
-            return (
-                <Chip color="success" startDecorator={<CheckCircleRoundedIcon />} variant="soft">
-                    {p.currentPlan}
-                </Chip>
-            );
+        const cta = planCta({
+            cardTier: tier.tier,
+            personalTier: (personalTier as SubscriptionTier | null) ?? null,
+            billingEnabled: plans.billing_enabled && config !== null,
+            purchasable: tier.purchasable,
+            contactSales: tier.contact_sales,
+            subscription,
+        });
+        switch (cta.kind) {
+            case "none":
+                return null;
+            case "current":
+                return (
+                    <Chip
+                        color="success"
+                        startDecorator={<CheckCircleRoundedIcon />}
+                        variant="soft"
+                    >
+                        {p.currentPlan}
+                    </Chip>
+                );
+            case "contact":
+                return (
+                    <Button
+                        fullWidth
+                        component="a"
+                        href={CONTACT_SALES_MAILTO}
+                        size="sm"
+                        variant="outlined"
+                    >
+                        {p.contactUs}
+                    </Button>
+                );
+            case "checkout":
+                return (
+                    <Button
+                        fullWidth
+                        disabled={busy}
+                        size="sm"
+                        // Pro is the tier we expect most people to buy,
+                        // so it carries the solid (primary) treatment;
+                        // core and max flank it as soft.
+                        variant={cta.plan === "pro" ? "solid" : "soft"}
+                        onClick={() =>
+                            runBillingAction(() => startCheckout(accessToken!, cta.plan))
+                        }
+                    >
+                        {p[UPGRADE_LABEL_KEY[cta.plan]]}
+                    </Button>
+                );
+            // Both switch directions are the SAME portal call — Stripe
+            // prorates either way. Only the wording and the emphasis
+            // differ, so an upgrade still reads as the positive move.
+            case "upgrade":
+            case "downgrade":
+                return (
+                    <Button
+                        fullWidth
+                        disabled={busy}
+                        size="sm"
+                        variant={cta.kind === "upgrade" ? "solid" : "outlined"}
+                        onClick={() =>
+                            runBillingAction(() =>
+                                openBillingPortal(accessToken!, "update", cta.plan)
+                            )
+                        }
+                    >
+                        {cta.kind === "upgrade"
+                            ? p[UPGRADE_LABEL_KEY[cta.plan]]
+                            : p[SWITCH_LABEL_KEY[cta.plan]]}
+                    </Button>
+                );
+            case "cancel":
+                return (
+                    <Button
+                        fullWidth
+                        color="neutral"
+                        disabled={busy}
+                        size="sm"
+                        variant="outlined"
+                        onClick={() =>
+                            runBillingAction(() => openBillingPortal(accessToken!, "cancel"))
+                        }
+                    >
+                        {p.cancelPlan}
+                    </Button>
+                );
         }
-        if (tier.contact_sales) {
-            return (
-                <Button
-                    fullWidth
-                    component="a"
-                    href={CONTACT_SALES_MAILTO}
-                    size="sm"
-                    variant="outlined"
-                >
-                    {p.contactUs}
-                </Button>
-            );
-        }
-        if (!plans.billing_enabled || !tier.purchasable || !config) return null;
-        if (personalTier === "free") {
-            return (
-                <Button
-                    fullWidth
-                    disabled={busy}
-                    size="sm"
-                    variant={tier.tier === "pro" ? "solid" : "soft"}
-                    onClick={() =>
-                        runBillingAction(() =>
-                            startCheckout(accessToken!, tier.tier as "pro" | "max")
-                        )
-                    }
-                >
-                    {tier.tier === "pro" ? p.upgradeToPro : p.upgradeToMax}
-                </Button>
-            );
-        }
-        if (config.has_billing_account) {
-            // Existing personal subscription: switches happen in the
-            // portal with proration — never a second checkout.
-            return (
-                <Button
-                    fullWidth
-                    disabled={busy}
-                    size="sm"
-                    variant="outlined"
-                    onClick={() => runBillingAction(() => openBillingPortal(accessToken!))}
-                >
-                    {p.manageBilling}
-                </Button>
-            );
-        }
-        return null;
     };
 
     // Benefit-phrased checkmark rows, still fed by the enforcement
@@ -234,13 +337,14 @@ export const PlansHome = () => {
 
     const tagline: Record<SubscriptionTier, string> = {
         free: p.taglineFree,
+        core: p.taglineCore,
         pro: p.taglinePro,
         max: p.taglineMax,
         enterprise: p.taglineEnterprise,
     };
 
     return (
-        <Box sx={{ p: 3, maxWidth: 1200, mx: "auto" }}>
+        <Box sx={{ p: 3, maxWidth: 1440, mx: "auto" }}>
             <Stack alignItems="center" spacing={1} sx={{ mb: 4, mt: 1, textAlign: "center" }}>
                 <Typography level="h2">{p.plansHero}</Typography>
                 <Typography level="body-md" sx={{ color: "text.tertiary", maxWidth: 640 }}>
@@ -248,13 +352,89 @@ export const PlansHome = () => {
                 </Typography>
             </Stack>
 
+            {/* Manage-your-subscription banner.
+                Without this the ONLY route to a downgrade or a cancel was
+                the portal button buried on some OTHER tier's card, which
+                (a) reads as "switch to that plan" and (b) doesn't render
+                at all for an operator-set tier (`has_billing_account`
+                false) — leaving a paying-looking user with no visible way
+                out. The banner is the single answer to "how do I change
+                or cancel my plan", and it states plainly when there is
+                nothing to self-manage instead of offering a dead button. */}
+            {personalTier && (personalTier !== "free" || config?.has_billing_account) && (
+                <Card sx={{ mb: 3 }} variant="soft">
+                    <Stack
+                        alignItems={{ xs: "flex-start", sm: "center" }}
+                        direction={{ xs: "column", sm: "row" }}
+                        spacing={1.5}
+                        sx={{ width: "100%" }}
+                    >
+                        <Stack spacing={0.5} sx={{ flex: 1, minWidth: 0 }}>
+                            <Typography level="body-xs" sx={{ color: "text.tertiary" }}>
+                                {p.yourPlanHeading}
+                            </Typography>
+                            <Stack alignItems="center" direction="row" flexWrap="wrap" gap={1}>
+                                <Chip
+                                    color={TIER_COLOR[personalTier as SubscriptionTier]}
+                                    size="sm"
+                                    variant="soft"
+                                >
+                                    {tierLabel[personalTier as SubscriptionTier] ?? personalTier}
+                                </Chip>
+                                {config?.has_billing_account ? (
+                                    renewalLabel()
+                                ) : (
+                                    <Typography level="body-sm" sx={{ color: "text.tertiary" }}>
+                                        {p.planSetByAdmin}
+                                    </Typography>
+                                )}
+                            </Stack>
+                            {/* With a live subscription the cards below
+                                carry the switch/cancel buttons, so point
+                                at them; the generic hint (portal does
+                                everything) only applies when there's no
+                                subscription for those buttons to act on. */}
+                            <Typography level="body-xs" sx={{ color: "text.tertiary" }}>
+                                {!config?.has_billing_account
+                                    ? p.planSetByAdminHint
+                                    : subscription
+                                      ? p.planChangeHint
+                                      : p.manageBillingHint}
+                            </Typography>
+                            {subscription?.status === "past_due" && (
+                                <Typography color="danger" level="body-xs">
+                                    {p.pastDue}
+                                </Typography>
+                            )}
+                        </Stack>
+                        {config?.has_billing_account && (
+                            <Button
+                                disabled={busy}
+                                size="sm"
+                                variant="solid"
+                                onClick={() =>
+                                    runBillingAction(() => openBillingPortal(accessToken!))
+                                }
+                            >
+                                {p.manageBilling}
+                            </Button>
+                        )}
+                    </Stack>
+                </Card>
+            )}
+
             <Box
                 sx={{
                     display: "grid",
+                    // 5 tiers: a 4-column grid stranded Enterprise alone
+                    // on a second row. 3 columns gives a clean 3 + 2
+                    // (free/core/pro, then max/enterprise); very wide
+                    // viewports get all five across.
                     gridTemplateColumns: {
                         xs: "1fr",
                         sm: "repeat(2, 1fr)",
-                        lg: "repeat(4, 1fr)",
+                        lg: "repeat(3, 1fr)",
+                        xl: "repeat(5, 1fr)",
                     },
                     gap: 2,
                     alignItems: "stretch",
@@ -375,7 +555,7 @@ export const PlansHome = () => {
                     </Typography>
                     <Stack spacing={1.5}>
                         {teamConfig.teams.map((team) => {
-                            const seatPrice = (plan: "pro" | "max") => {
+                            const seatPrice = (plan: PurchasablePlan) => {
                                 const tierInfo = plans.tiers.find((t) => t.tier === plan);
                                 const label = tierInfo?.price
                                     ? formatPrice(tierInfo.price, locale)
@@ -413,56 +593,90 @@ export const PlansHome = () => {
                                         <Box sx={{ flex: 1 }} />
                                         {team.plan === "free" ? (
                                             <>
-                                                <Button
-                                                    disabled={busy}
-                                                    size="sm"
-                                                    variant="solid"
-                                                    onClick={() =>
-                                                        runBillingAction(() =>
-                                                            startTeamCheckout(
-                                                                accessToken!,
-                                                                team.team_id,
-                                                                "pro"
+                                                {PURCHASABLE_PLANS.map((plan) => (
+                                                    <Button
+                                                        key={plan}
+                                                        disabled={busy}
+                                                        size="sm"
+                                                        variant={plan === "pro" ? "solid" : "soft"}
+                                                        onClick={() =>
+                                                            runBillingAction(() =>
+                                                                startTeamCheckout(
+                                                                    accessToken!,
+                                                                    team.team_id,
+                                                                    plan
+                                                                )
                                                             )
-                                                        )
-                                                    }
-                                                >
-                                                    {p.teamUpgradeToPro}
-                                                </Button>
-                                                <Button
-                                                    disabled={busy}
-                                                    size="sm"
-                                                    variant="soft"
-                                                    onClick={() =>
-                                                        runBillingAction(() =>
-                                                            startTeamCheckout(
-                                                                accessToken!,
-                                                                team.team_id,
-                                                                "max"
-                                                            )
-                                                        )
-                                                    }
-                                                >
-                                                    {p.teamUpgradeToMax}
-                                                </Button>
+                                                        }
+                                                    >
+                                                        {p[TEAM_UPGRADE_LABEL_KEY[plan]]}
+                                                    </Button>
+                                                ))}
                                             </>
                                         ) : (
                                             team.has_billing_account && (
-                                                <Button
-                                                    disabled={busy}
-                                                    size="sm"
-                                                    variant="outlined"
-                                                    onClick={() =>
-                                                        runBillingAction(() =>
-                                                            openTeamBillingPortal(
-                                                                accessToken!,
-                                                                team.team_id
+                                                // A paying team had ONE
+                                                // generic portal button and
+                                                // therefore no visible answer
+                                                // to "switch plan" or "cancel"
+                                                // — same complaint as the
+                                                // personal cards. Switching
+                                                // uses the "switch" PICKER,
+                                                // not a per-plan deep link: a
+                                                // team row is one row for all
+                                                // tiers, so no button here
+                                                // could name a target plan
+                                                // honestly.
+                                                <>
+                                                    <Button
+                                                        disabled={busy}
+                                                        size="sm"
+                                                        variant="soft"
+                                                        onClick={() =>
+                                                            runBillingAction(() =>
+                                                                openTeamBillingPortal(
+                                                                    accessToken!,
+                                                                    team.team_id,
+                                                                    "switch"
+                                                                )
                                                             )
-                                                        )
-                                                    }
-                                                >
-                                                    {p.manageTeamBilling}
-                                                </Button>
+                                                        }
+                                                    >
+                                                        {p.changeTeamPlan}
+                                                    </Button>
+                                                    <Button
+                                                        color="neutral"
+                                                        disabled={busy}
+                                                        size="sm"
+                                                        variant="outlined"
+                                                        onClick={() =>
+                                                            runBillingAction(() =>
+                                                                openTeamBillingPortal(
+                                                                    accessToken!,
+                                                                    team.team_id,
+                                                                    "cancel"
+                                                                )
+                                                            )
+                                                        }
+                                                    >
+                                                        {p.cancelPlan}
+                                                    </Button>
+                                                    <Button
+                                                        disabled={busy}
+                                                        size="sm"
+                                                        variant="plain"
+                                                        onClick={() =>
+                                                            runBillingAction(() =>
+                                                                openTeamBillingPortal(
+                                                                    accessToken!,
+                                                                    team.team_id
+                                                                )
+                                                            )
+                                                        }
+                                                    >
+                                                        {p.manageTeamBilling}
+                                                    </Button>
+                                                </>
                                             )
                                         )}
                                     </Stack>
@@ -471,7 +685,7 @@ export const PlansHome = () => {
                                             level="body-xs"
                                             sx={{ color: "text.tertiary" }}
                                         >
-                                            {[seatPrice("pro"), seatPrice("max")]
+                                            {PURCHASABLE_PLANS.map(seatPrice)
                                                 .filter(Boolean)
                                                 .join(" · ")}
                                         </Typography>

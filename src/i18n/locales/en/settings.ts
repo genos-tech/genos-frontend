@@ -17,6 +17,7 @@ export const settings = {
         description: "Your current plan and how much of each limit you've used.",
         viaTeam: "via team {team}",
         tierFree: "Free",
+        tierCore: "Core",
         tierPro: "Pro",
         tierMax: "Max",
         tierEnterprise: "Enterprise",
@@ -35,8 +36,16 @@ export const settings = {
         upgradeComingSoon:
             "Self-serve upgrades are coming soon. Contact your workspace admin to change plans.",
         loadError: "Couldn't load your plan details. Please try again.",
+        upgradeToCore: "Upgrade to Core",
         upgradeToPro: "Upgrade to Pro",
         upgradeToMax: "Upgrade to Max",
+        switchToCore: "Switch to Core",
+        switchToPro: "Switch to Pro",
+        switchToMax: "Switch to Max",
+        cancelPlan: "Cancel plan",
+        changeTeamPlan: "Change plan",
+        planChangeHint:
+            "Pick any plan below to switch — Stripe prorates the difference. Cancelling keeps your plan until the end of the current billing period.",
         manageBilling: "Manage billing",
         manageBillingHint: "Change plan, payment method, or cancel via the secure Stripe portal.",
         upgradeHint: "Checkout is handled securely by Stripe.",
@@ -56,6 +65,10 @@ export const settings = {
         contactSales: "Contact sales",
         contactUs: "Contact us",
         currentPlan: "Current plan",
+        yourPlanHeading: "Your plan",
+        planSetByAdmin: "Set by your administrator",
+        planSetByAdminHint:
+            "This plan wasn't purchased through Stripe, so there's nothing to manage here. Contact your workspace admin or support to change it.",
         perDay: "{n} / day",
         perMonthCount: "{n} / month",
         premiumNote: "Daily caps for premium AI models also apply per plan.",
@@ -66,6 +79,7 @@ export const settings = {
         teamPlansSubheading:
             "One payer, every member benefits — billed per seat. Only the team owner sees this section.",
         teamSeats: "{n} seats",
+        teamUpgradeToCore: "Team Core",
         teamUpgradeToPro: "Team Pro",
         teamUpgradeToMax: "Team Max",
         manageTeamBilling: "Manage team billing",
@@ -75,6 +89,7 @@ export const settings = {
             "Start free and upgrade anytime. Every plan includes every feature — paid plans unlock more AI, unlimited history, and more room to create.",
         startForFree: "Start for free",
         taglineFree: "Get your chat, tasks, and notes in one place",
+        taglineCore: "Unlimited history and daily AI",
         taglinePro: "Make AI part of your everyday work",
         taglineMax: "Full power for AI-heavy days",
         taglineEnterprise: "For teams that need it all",
@@ -141,6 +156,7 @@ export const settings = {
         modelHelper: "Models on the selected provider.",
         providerGemini: "Google Gemini",
         providerClaude: "Anthropic Claude",
+        providerOpenai: "OpenAI GPT",
         usageHeading: "Today's usage",
         usageUnlimited: "Unlimited",
         // Aggregate counters shown above per-model rows.
@@ -148,6 +164,7 @@ export const settings = {
         webSearchLabel: "Web searches",
         // Tier badge labels — Free / Pro / Max.
         tierFree: "Free",
+        tierCore: "Core",
         tierPro: "Pro",
         tierMax: "Max",
         tierEnterprise: "Enterprise",

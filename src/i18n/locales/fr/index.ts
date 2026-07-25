@@ -205,6 +205,7 @@ export const fr: DeepPartial<Messages> = {
             description: "Votre forfait actuel et votre consommation de chaque limite.",
             viaTeam: "via l'équipe {team}",
             tierFree: "Gratuit",
+            tierCore: "Core",
             tierPro: "Pro",
             tierMax: "Max",
             tierEnterprise: "Enterprise",
@@ -223,8 +224,16 @@ export const fr: DeepPartial<Messages> = {
             upgradeComingSoon:
                 "La mise à niveau en libre-service arrive bientôt. Contactez l'administrateur de votre espace de travail pour changer de forfait.",
             loadError: "Impossible de charger les détails de votre forfait. Veuillez réessayer.",
+            upgradeToCore: "Passer à Core",
             upgradeToPro: "Passer à Pro",
             upgradeToMax: "Passer à Max",
+            switchToCore: "Basculer vers Core",
+            switchToPro: "Basculer vers Pro",
+            switchToMax: "Basculer vers Max",
+            cancelPlan: "Résilier l'abonnement",
+            changeTeamPlan: "Changer de forfait",
+            planChangeHint:
+                "Choisissez un forfait ci-dessous pour changer — Stripe calcule la différence au prorata. En cas de résiliation, votre forfait reste actif jusqu'à la fin de la période de facturation en cours.",
             manageBilling: "Gérer la facturation",
             manageBillingHint:
                 "Changez de forfait, de moyen de paiement ou résiliez via le portail sécurisé Stripe.",
@@ -246,6 +255,10 @@ export const fr: DeepPartial<Messages> = {
             contactSales: "Contacter les ventes",
             contactUs: "Nous contacter",
             currentPlan: "Forfait actuel",
+            yourPlanHeading: "Votre forfait",
+            planSetByAdmin: "Défini par votre administrateur",
+            planSetByAdminHint:
+                "Ce forfait n'a pas été acheté via Stripe : il n'y a rien à gérer ici. Contactez l'administrateur de votre espace ou le support pour le modifier.",
             perDay: "{n} / jour",
             perMonthCount: "{n} / mois",
             premiumNote:
@@ -257,6 +270,7 @@ export const fr: DeepPartial<Messages> = {
             teamPlansSubheading:
                 "Un payeur, tous les membres en profitent — facturé par siège. Seul le propriétaire de l'équipe voit cette section.",
             teamSeats: "{n} sièges",
+            teamUpgradeToCore: "Équipe Core",
             teamUpgradeToPro: "Équipe Pro",
             teamUpgradeToMax: "Équipe Max",
             manageTeamBilling: "Gérer la facturation de l'équipe",
@@ -265,6 +279,7 @@ export const fr: DeepPartial<Messages> = {
             plansHeroSub:
                 "Commencez gratuitement et changez de forfait à tout moment. Tous les forfaits incluent toutes les fonctionnalités — les forfaits payants débloquent plus d'IA, un historique illimité et plus d'espace pour créer.",
             taglineFree: "Chat, tâches et notes réunis au même endroit",
+            taglineCore: "Historique illimité et IA au quotidien",
             taglinePro: "Faites de l'IA votre alliée au quotidien",
             taglineMax: "Pleine puissance pour un usage intensif de l'IA",
             taglineEnterprise: "Pour les équipes qui veulent tout",

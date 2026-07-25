@@ -213,6 +213,7 @@ export const ja: DeepPartial<Messages> = {
             description: "現在のプランと、各上限の使用状況です。",
             viaTeam: "チーム {team} のプラン",
             tierFree: "フリー",
+            tierCore: "コア",
             tierPro: "プロ",
             tierMax: "マックス",
             tierEnterprise: "エンタープライズ",
@@ -231,8 +232,16 @@ export const ja: DeepPartial<Messages> = {
             upgradeComingSoon:
                 "セルフサービスでのアップグレードは近日提供予定です。プラン変更はワークスペース管理者にお問い合わせください。",
             loadError: "プラン情報を読み込めませんでした。もう一度お試しください。",
+            upgradeToCore: "コアにアップグレード",
             upgradeToPro: "プロにアップグレード",
             upgradeToMax: "マックスにアップグレード",
+            switchToCore: "コアに変更",
+            switchToPro: "プロに変更",
+            switchToMax: "マックスに変更",
+            cancelPlan: "プランを解約",
+            changeTeamPlan: "プランを変更",
+            planChangeHint:
+                "下のプランを選ぶと変更できます（差額は Stripe が日割り計算します）。解約しても、現在の請求期間の終了までは現在のプランをご利用いただけます。",
             manageBilling: "請求を管理",
             manageBillingHint:
                 "プラン変更・支払い方法・解約は Stripe の安全なポータルで行えます。",
@@ -252,6 +261,10 @@ export const ja: DeepPartial<Messages> = {
             contactSales: "お問い合わせ",
             contactUs: "お問い合わせ",
             currentPlan: "現在のプラン",
+            yourPlanHeading: "現在のプラン",
+            planSetByAdmin: "管理者によって設定されています",
+            planSetByAdminHint:
+                "このプランは Stripe で購入されたものではないため、ここで変更や解約はできません。ワークスペース管理者またはサポートにお問い合わせください。",
             perDay: "{n} / 日",
             perMonthCount: "{n} / 月",
             premiumNote: "プレミアム AI モデルには、プランごとの 1 日あたりの上限も適用されます。",
@@ -262,6 +275,7 @@ export const ja: DeepPartial<Messages> = {
             teamPlansSubheading:
                 "1 人が支払い、メンバー全員が利用できます（シート課金）。このセクションはチームオーナーにのみ表示されます。",
             teamSeats: "{n} シート",
+            teamUpgradeToCore: "チームコア",
             teamUpgradeToPro: "チームプロ",
             teamUpgradeToMax: "チームマックス",
             manageTeamBilling: "チームの請求を管理",
@@ -271,6 +285,7 @@ export const ja: DeepPartial<Messages> = {
                 "無料で始めて、いつでもアップグレードできます。どのプランでも全機能が使えます — 有料プランでは AI の回数、メッセージ履歴、作成できる量が大きく広がります。",
             startForFree: "無料で始める",
             taglineFree: "チャット・タスク・ノートを 1 か所に",
+            taglineCore: "無制限の履歴と毎日使える AI",
             taglinePro: "AI を毎日の仕事の相棒に",
             taglineMax: "上限を気にせず AI をフル活用",
             taglineEnterprise: "すべてを必要とするチームに",

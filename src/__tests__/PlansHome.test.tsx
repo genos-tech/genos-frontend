@@ -2,11 +2,12 @@
  * The `/workspace/plans` tier-comparison page.
  *
  * What matters: cards render straight from the `/billing/plans/`
- * payload (limits + Stripe prices), the CTA matrix mirrors
- * `PlanUsageSection` (free user → checkout buttons; existing personal
- * subscription → portal, never a second checkout; enterprise →
- * contact-sales), and a Stripe-dark backend still renders the
- * comparison with no buttons.
+ * payload (limits + Stripe prices), each card's CTA is wired to the
+ * right billing call (free viewer → checkout; subscriber → portal
+ * deep links, never a second checkout; enterprise → contact-sales),
+ * and a Stripe-dark backend still renders the comparison with no
+ * buttons. The CTA *decision* itself is unit-tested in
+ * `planCta.test.ts`; these tests pin the wiring.
  */
 import { CssVarsProvider } from "@mui/joy/styles";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
@@ -23,6 +24,7 @@ const billingApi = vi.hoisted(() => ({
     fetchBillingPlans: vi.fn(),
     fetchBillingConfig: vi.fn(),
     fetchTeamBillingConfig: vi.fn(),
+    fetchBillingSubscription: vi.fn(),
     startCheckout: vi.fn().mockResolvedValue(undefined),
     openBillingPortal: vi.fn().mockResolvedValue(undefined),
     startTeamCheckout: vi.fn().mockResolvedValue(undefined),
@@ -92,11 +94,44 @@ const PLANS: BillingPlans = {
     ],
 };
 
+const CORE_TIER: BillingPlans["tiers"][number] = {
+    tier: "core",
+    price: { amount: 1200, currency: "jpy", interval: "month" },
+    purchasable: true,
+    contact_sales: false,
+    limits: {
+        llm_ask_daily: 100,
+        web_search_daily: 25,
+        task_create_monthly: 1000,
+        note_create_monthly: 500,
+        message_retention_days: null,
+        upload_max_mb: 25,
+    },
+};
+
+// The real five-card ladder, for the switch/downgrade cases — those
+// need a rung BELOW the viewer's tier to aim at.
+const PLANS_WITH_CORE: BillingPlans = {
+    billing_enabled: true,
+    tiers: [PLANS.tiers[0], CORE_TIER, ...PLANS.tiers.slice(1)],
+};
+
+const ALL_PLANS = ["core", "pro", "max"];
+
 const config = (over: object = {}) => ({
     enabled: true,
     plans: ["pro", "max"],
     personal_tier: "free",
     has_billing_account: false,
+    ...over,
+});
+
+const subscription = (over: object = {}) => ({
+    plan: "pro",
+    status: "active",
+    cancel_at_period_end: false,
+    current_period_end: 1789000000,
+    cancel_at: null,
     ...over,
 });
 
@@ -114,6 +149,8 @@ describe("PlansHome", () => {
         billingApi.fetchBillingConfig.mockResolvedValue(config());
         // Default: viewer owns no teams — the section is absent.
         billingApi.fetchTeamBillingConfig.mockResolvedValue({ enabled: true, teams: [] });
+        // Default: no live Stripe subscription (free viewer).
+        billingApi.fetchBillingSubscription.mockResolvedValue(null);
     });
 
     it("renders all four cards with Stripe prices and limits", async () => {
@@ -143,17 +180,175 @@ describe("PlansHome", () => {
         await waitFor(() => expect(billingApi.startCheckout).toHaveBeenCalledWith("tok", "pro"));
     });
 
-    it("existing personal subscriber gets the portal, never a second checkout", async () => {
+    it("renders a Core checkout button and starts the core plan", async () => {
+        // Core is the cheapest paid rung; the CTA label comes from a
+        // per-plan map, so a wrong entry would silently mislabel or
+        // start checkout for the wrong plan.
+        billingApi.fetchBillingPlans.mockResolvedValue({
+            billing_enabled: true,
+            tiers: [
+                ...PLANS.tiers.slice(0, 1),
+                {
+                    tier: "core",
+                    price: { amount: 1200, currency: "jpy", interval: "month" },
+                    purchasable: true,
+                    contact_sales: false,
+                    limits: {
+                        llm_ask_daily: 100,
+                        web_search_daily: 25,
+                        task_create_monthly: 1000,
+                        note_create_monthly: 500,
+                        message_retention_days: null,
+                        upload_max_mb: 25,
+                    },
+                },
+                ...PLANS.tiers.slice(1),
+            ],
+        });
+        billingApi.fetchBillingConfig.mockResolvedValue(config({ plans: ["core", "pro", "max"] }));
+        renderPage();
+        const core = await screen.findByText("Upgrade to Core");
+        fireEvent.click(core);
+        await waitFor(() => expect(billingApi.startCheckout).toHaveBeenCalledWith("tok", "core"));
+    });
+
+    it("paid subscriber sees a manage-subscription banner with the renewal date", async () => {
+        // The banner is the ONLY obvious route to a downgrade or a
+        // cancel; before it existed a subscriber's only affordance was a
+        // portal button buried on another tier's card.
+        billingApi.fetchBillingConfig.mockResolvedValue(
+            config({ personal_tier: "max", has_billing_account: true })
+        );
+        billingApi.fetchBillingSubscription.mockResolvedValue({
+            plan: "max",
+            status: "active",
+            cancel_at_period_end: false,
+            current_period_end: 1789000000,
+            cancel_at: null,
+        });
+        renderPage();
+        expect(await screen.findByText("Your plan")).toBeTruthy();
+        expect(screen.getAllByText(/Renews on/).length).toBeGreaterThan(0);
+        const manage = screen.getAllByText("Manage billing")[0];
+        fireEvent.click(manage);
+        await waitFor(() => expect(billingApi.openBillingPortal).toHaveBeenCalledWith("tok"));
+        expect(billingApi.startCheckout).not.toHaveBeenCalled();
+    });
+
+    it("scheduled cancellation shows the end date, not a renewal", async () => {
+        // cancel_at wins over current_period_end — Stripe sets both, and
+        // showing "renews" for a cancelling subscription promises a
+        // charge that isn't coming.
+        billingApi.fetchBillingConfig.mockResolvedValue(
+            config({ personal_tier: "pro", has_billing_account: true })
+        );
+        billingApi.fetchBillingSubscription.mockResolvedValue({
+            plan: "pro",
+            status: "active",
+            cancel_at_period_end: true,
+            current_period_end: 1789000000,
+            cancel_at: 1789000000,
+        });
+        renderPage();
+        expect(await screen.findByText("Your plan")).toBeTruthy();
+        expect(screen.getAllByText(/Plan ends on/).length).toBeGreaterThan(0);
+        expect(screen.queryByText(/Renews on/)).toBeNull();
+    });
+
+    it("operator-set tier explains itself instead of offering a dead button", async () => {
+        // A tier set via `feature_access set-tier` has no Stripe
+        // customer, so there is genuinely nothing to self-manage. The
+        // banner must say so rather than render a portal button that
+        // would 4xx.
+        billingApi.fetchBillingConfig.mockResolvedValue(
+            config({ personal_tier: "max", has_billing_account: false })
+        );
+        billingApi.fetchBillingSubscription.mockResolvedValue(null);
+        renderPage();
+        expect(await screen.findByText("Your plan")).toBeTruthy();
+        expect(screen.getByText("Set by your administrator")).toBeTruthy();
+        expect(screen.queryByText("Manage billing")).toBeNull();
+    });
+
+    it("free user gets no subscription banner", async () => {
+        renderPage();
+        await screen.findByText("Upgrade to Pro");
+        expect(screen.queryByText("Your plan")).toBeNull();
+    });
+
+    it("subscriber with no live subscription gets the banner only", async () => {
+        // has_billing_account without a subscription (cancelled, or a
+        // tier set by hand) — there is no Stripe object for a per-card
+        // switch to target, so the cards stay bare.
         billingApi.fetchBillingConfig.mockResolvedValue(
             config({ personal_tier: "pro", has_billing_account: true })
         );
         renderPage();
         expect(await screen.findByText("Current plan")).toBeTruthy(); // pro card
-        expect(screen.queryByText("Upgrade to Pro")).toBeNull();
         expect(screen.queryByText("Upgrade to Max")).toBeNull();
-        const manage = screen.getByText("Manage billing"); // max card only
+        const manage = screen.getByText("Manage billing"); // the banner
         fireEvent.click(manage);
         await waitFor(() => expect(billingApi.openBillingPortal).toHaveBeenCalledWith("tok"));
+    });
+
+    it("subscriber gets per-card switch buttons, never a second checkout", async () => {
+        // The reported gap: once you subscribed, every button vanished
+        // and the only affordance left was a generic "Manage billing".
+        billingApi.fetchBillingPlans.mockResolvedValue(PLANS_WITH_CORE);
+        billingApi.fetchBillingConfig.mockResolvedValue(
+            config({ personal_tier: "pro", has_billing_account: true, plans: ALL_PLANS })
+        );
+        billingApi.fetchBillingSubscription.mockResolvedValue(subscription());
+        renderPage();
+
+        // Up the ladder reads as an upgrade, down as a neutral switch.
+        const up = await screen.findByText("Upgrade to Max");
+        expect(screen.getByText("Switch to Core")).toBeTruthy();
+        expect(screen.getByText("Current plan")).toBeTruthy(); // pro card
+        fireEvent.click(up);
+        await waitFor(() =>
+            expect(billingApi.openBillingPortal).toHaveBeenCalledWith("tok", "update", "max")
+        );
+        // The whole point of the portal route: no parallel subscription.
+        expect(billingApi.startCheckout).not.toHaveBeenCalled();
+    });
+
+    it("downgrading routes through the portal with the target plan", async () => {
+        billingApi.fetchBillingPlans.mockResolvedValue(PLANS_WITH_CORE);
+        billingApi.fetchBillingConfig.mockResolvedValue(
+            config({ personal_tier: "max", has_billing_account: true, plans: ALL_PLANS })
+        );
+        billingApi.fetchBillingSubscription.mockResolvedValue(subscription({ plan: "max" }));
+        renderPage();
+        fireEvent.click(await screen.findByText("Switch to Core"));
+        await waitFor(() =>
+            expect(billingApi.openBillingPortal).toHaveBeenCalledWith("tok", "update", "core")
+        );
+        expect(billingApi.startCheckout).not.toHaveBeenCalled();
+    });
+
+    it("the free card becomes the cancel action for a subscriber", async () => {
+        billingApi.fetchBillingConfig.mockResolvedValue(
+            config({ personal_tier: "pro", has_billing_account: true })
+        );
+        billingApi.fetchBillingSubscription.mockResolvedValue(subscription());
+        renderPage();
+        fireEvent.click(await screen.findByText("Cancel plan"));
+        await waitFor(() =>
+            expect(billingApi.openBillingPortal).toHaveBeenCalledWith("tok", "cancel")
+        );
+    });
+
+    it("hides the cancel button once a cancellation is scheduled", async () => {
+        billingApi.fetchBillingConfig.mockResolvedValue(
+            config({ personal_tier: "pro", has_billing_account: true })
+        );
+        billingApi.fetchBillingSubscription.mockResolvedValue(
+            subscription({ cancel_at_period_end: true, cancel_at: 1789000000 })
+        );
+        renderPage();
+        expect(await screen.findByText("Current plan")).toBeTruthy();
+        expect(screen.queryByText("Cancel plan")).toBeNull();
     });
 
     it("enterprise card links to contact-sales", async () => {

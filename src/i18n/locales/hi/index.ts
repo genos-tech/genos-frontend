@@ -205,6 +205,7 @@ export const hi: DeepPartial<Messages> = {
             description: "आपका वर्तमान प्लान और प्रत्येक सीमा का उपयोग।",
             viaTeam: "टीम {team} के ज़रिए",
             tierFree: "फ़्री",
+            tierCore: "कोर",
             tierPro: "प्रो",
             tierMax: "मैक्स",
             tierEnterprise: "एंटरप्राइज़",
@@ -223,8 +224,16 @@ export const hi: DeepPartial<Messages> = {
             upgradeComingSoon:
                 "सेल्फ़-सर्विस अपग्रेड जल्द आ रहा है। प्लान बदलने के लिए अपने वर्कस्पेस व्यवस्थापक से संपर्क करें।",
             loadError: "आपके प्लान का विवरण लोड नहीं हो सका। कृपया पुनः प्रयास करें।",
+            upgradeToCore: "कोर में अपग्रेड करें",
             upgradeToPro: "प्रो में अपग्रेड करें",
             upgradeToMax: "मैक्स में अपग्रेड करें",
+            switchToCore: "कोर पर स्विच करें",
+            switchToPro: "प्रो पर स्विच करें",
+            switchToMax: "मैक्स पर स्विच करें",
+            cancelPlan: "सदस्यता रद्द करें",
+            changeTeamPlan: "प्लान बदलें",
+            planChangeHint:
+                "बदलने के लिए नीचे कोई भी प्लान चुनें — अंतर की गणना Stripe यथानुपात करता है। रद्द करने पर भी आपका प्लान मौजूदा बिलिंग अवधि के अंत तक सक्रिय रहता है।",
             manageBilling: "बिलिंग प्रबंधित करें",
             manageBillingHint:
                 "प्लान बदलना, भुगतान विधि या रद्द करना — सब Stripe के सुरक्षित पोर्टल से करें।",
@@ -244,6 +253,10 @@ export const hi: DeepPartial<Messages> = {
             contactSales: "बिक्री से संपर्क करें",
             contactUs: "संपर्क करें",
             currentPlan: "वर्तमान प्लान",
+            yourPlanHeading: "आपका प्लान",
+            planSetByAdmin: "आपके एडमिन द्वारा सेट किया गया",
+            planSetByAdminHint:
+                "यह प्लान Stripe से नहीं खरीदा गया है, इसलिए इसे यहाँ मैनेज नहीं किया जा सकता। बदलने के लिए अपने वर्कस्पेस एडमिन या सपोर्ट से संपर्क करें।",
             perDay: "{n} / दिन",
             perMonthCount: "{n} / माह",
             premiumNote: "प्रीमियम AI मॉडलों पर भी प्लान के अनुसार दैनिक सीमाएँ लागू होती हैं।",
@@ -254,6 +267,7 @@ export const hi: DeepPartial<Messages> = {
             teamPlansSubheading:
                 "एक सदस्य भुगतान करता है, पूरी टीम लाभ पाती है — प्रति सीट बिलिंग। यह सेक्शन केवल टीम मालिक को दिखता है।",
             teamSeats: "{n} सीटें",
+            teamUpgradeToCore: "टीम कोर",
             teamUpgradeToPro: "टीम प्रो",
             teamUpgradeToMax: "टीम मैक्स",
             manageTeamBilling: "टीम बिलिंग प्रबंधित करें",
@@ -262,6 +276,7 @@ export const hi: DeepPartial<Messages> = {
             plansHeroSub:
                 "मुफ़्त में शुरू करें, कभी भी अपग्रेड करें। हर प्लान में सभी सुविधाएँ हैं — सशुल्क प्लान में अधिक AI, असीमित इतिहास और बनाने की अधिक सीमा मिलती है।",
             taglineFree: "चैट, टास्क और नोट्स एक ही जगह",
+            taglineCore: "असीमित हिस्ट्री और रोज़ाना AI",
             taglinePro: "AI को रोज़मर्रा के काम का हिस्सा बनाएँ",
             taglineMax: "AI के भारी उपयोग के लिए पूरी शक्ति",
             taglineEnterprise: "उन टीमों के लिए जिन्हें सब कुछ चाहिए",

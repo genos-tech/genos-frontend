@@ -17,7 +17,7 @@
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL;
 
-export type PurchasablePlan = "pro" | "max";
+export type PurchasablePlan = "core" | "pro" | "max";
 
 export interface BillingConfig {
     enabled: boolean;
@@ -62,9 +62,30 @@ export async function startCheckout(accessToken: string, plan: PurchasablePlan):
     window.location.assign(url);
 }
 
+/**
+ * Deep links into the Stripe customer portal.
+ *
+ * `update` lands on the confirm-this-switch screen for `plan`;
+ * `switch` lands on Stripe's own plan picker (for callers with no
+ * per-tier button to name a target from); `cancel` lands on the cancel
+ * screen; omitted opens the portal home (invoices, payment method,
+ * everything).
+ *
+ * This — NOT `startCheckout` — is how an existing subscriber changes
+ * plan. Checkout would open a second parallel subscription on the same
+ * customer. The backend degrades any flow the Stripe portal
+ * configuration refuses back to the portal home, so a caller never has
+ * to handle "this flow isn't available".
+ */
+export type PortalFlow = "update" | "switch" | "cancel";
+
 /** Open the Stripe customer portal (plan changes, cancel, invoices). */
-export async function openBillingPortal(accessToken: string): Promise<void> {
-    const url = await postForUrl("/billing/portal/", accessToken);
+export async function openBillingPortal(
+    accessToken: string,
+    flow?: PortalFlow,
+    plan?: PurchasablePlan
+): Promise<void> {
+    const url = await postForUrl("/billing/portal/", accessToken, { flow, plan });
     window.location.assign(url);
 }
 
@@ -76,7 +97,7 @@ export interface PlanPrice {
 }
 
 export interface PlanTier {
-    tier: "free" | "pro" | "max" | "enterprise";
+    tier: "free" | "core" | "pro" | "max" | "enterprise";
     price: PlanPrice | null; // null = unavailable (contact-sales / Stripe dark)
     purchasable: boolean;
     contact_sales: boolean;
@@ -132,7 +153,7 @@ export async function fetchPublicBillingPlans(): Promise<BillingPlans | null> {
 export interface TeamBillingTeam {
     team_id: string;
     team_name: string;
-    plan: "free" | "pro" | "max" | "enterprise";
+    plan: "free" | "core" | "pro" | "max" | "enterprise";
     seats: number;
     has_billing_account: boolean;
 }
@@ -172,15 +193,24 @@ export async function startTeamCheckout(
 }
 
 /** The TEAM's customer portal (owner-only): seats, plan, cancel, invoices. */
-export async function openTeamBillingPortal(accessToken: string, teamId: string): Promise<void> {
-    const url = await postForUrl("/billing/team/portal/", accessToken, { team_id: teamId });
+export async function openTeamBillingPortal(
+    accessToken: string,
+    teamId: string,
+    flow?: PortalFlow,
+    plan?: PurchasablePlan
+): Promise<void> {
+    const url = await postForUrl("/billing/team/portal/", accessToken, {
+        team_id: teamId,
+        flow,
+        plan,
+    });
     window.location.assign(url);
 }
 
 export interface BillingSubscription {
     // null = the subscription's price isn't mapped to a plan (env
     // misconfiguration server-side) — show the row, skip the plan name.
-    plan: "pro" | "max" | null;
+    plan: PurchasablePlan | null;
     status: "active" | "trialing" | "past_due" | "paused";
     cancel_at_period_end: boolean;
     current_period_end: number | null; // unix seconds

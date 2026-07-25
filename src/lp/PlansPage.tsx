@@ -60,12 +60,14 @@ function PlansPageInner() {
 
     const tierLabel: Record<string, string> = {
         free: p.tierFree,
+        core: p.tierCore,
         pro: p.tierPro,
         max: p.tierMax,
         enterprise: p.tierEnterprise,
     };
     const tagline: Record<string, string> = {
         free: p.taglineFree,
+        core: p.taglineCore,
         pro: p.taglinePro,
         max: p.taglineMax,
         enterprise: p.taglineEnterprise,
@@ -216,7 +218,7 @@ function PlansPageInner() {
 
                 {/* Pricing */}
                 <section className="px-4 pb-20 sm:px-6 lg:px-8">
-                    <div className="mx-auto max-w-7xl">
+                    <div className="mx-auto max-w-[1440px]">
                         {failed ? (
                             <div className="mx-auto max-w-xl rounded-[2rem] border border-violet-100 bg-white p-10 text-center shadow-lg shadow-violet-900/5 dark:border-white/10 dark:bg-white/5">
                                 <p className="text-lg font-black text-slate-950 dark:text-white">
@@ -235,7 +237,10 @@ function PlansPageInner() {
                                 <div className="h-10 w-10 animate-spin rounded-full border-4 border-violet-200 border-t-violet-600" />
                             </div>
                         ) : (
-                            <div className="grid items-stretch gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                            // 5 tiers: 4 columns stranded Enterprise alone on
+                            // row 2. 3 columns gives a clean 3 + 2; xl gets
+                            // all five across.
+                            <div className="grid items-stretch gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
                                 {plans.tiers.map((tier, index) => {
                                     const highlighted = tier.tier === "pro";
                                     const isFree = tier.tier === "free";

@@ -204,6 +204,7 @@ export const es: DeepPartial<Messages> = {
             description: "Tu plan actual y cuánto has usado de cada límite.",
             viaTeam: "vía equipo {team}",
             tierFree: "Gratis",
+            tierCore: "Core",
             tierPro: "Pro",
             tierMax: "Max",
             tierEnterprise: "Enterprise",
@@ -222,8 +223,16 @@ export const es: DeepPartial<Messages> = {
             upgradeComingSoon:
                 "Las mejoras autoservicio llegarán pronto. Contacta con el administrador de tu espacio de trabajo para cambiar de plan.",
             loadError: "No se pudieron cargar los detalles de tu plan. Inténtalo de nuevo.",
+            upgradeToCore: "Mejorar a Core",
             upgradeToPro: "Mejorar a Pro",
             upgradeToMax: "Mejorar a Max",
+            switchToCore: "Cambiar a Core",
+            switchToPro: "Cambiar a Pro",
+            switchToMax: "Cambiar a Max",
+            cancelPlan: "Cancelar suscripción",
+            changeTeamPlan: "Cambiar de plan",
+            planChangeHint:
+                "Elige cualquier plan de abajo para cambiar: Stripe prorratea la diferencia. Si cancelas, tu plan sigue activo hasta el final del periodo de facturación actual.",
             manageBilling: "Gestionar facturación",
             manageBillingHint:
                 "Cambia de plan, método de pago o cancela en el portal seguro de Stripe.",
@@ -246,6 +255,10 @@ export const es: DeepPartial<Messages> = {
             contactSales: "Contactar ventas",
             contactUs: "Contáctanos",
             currentPlan: "Plan actual",
+            yourPlanHeading: "Tu plan",
+            planSetByAdmin: "Establecido por tu administrador",
+            planSetByAdminHint:
+                "Este plan no se compró a través de Stripe, así que no hay nada que gestionar aquí. Contacta con el administrador de tu espacio o con soporte para cambiarlo.",
             perDay: "{n} / día",
             perMonthCount: "{n} / mes",
             premiumNote: "Los modelos de IA premium también tienen límites diarios por plan.",
@@ -256,6 +269,7 @@ export const es: DeepPartial<Messages> = {
             teamPlansSubheading:
                 "Uno paga y todos los miembros se benefician — facturado por puesto. Solo el propietario del equipo ve esta sección.",
             teamSeats: "{n} puestos",
+            teamUpgradeToCore: "Equipo Core",
             teamUpgradeToPro: "Equipo Pro",
             teamUpgradeToMax: "Equipo Max",
             manageTeamBilling: "Gestionar facturación del equipo",
@@ -264,6 +278,7 @@ export const es: DeepPartial<Messages> = {
             plansHeroSub:
                 "Empieza gratis y mejora cuando quieras. Todos los planes incluyen todas las funciones: los planes de pago desbloquean más IA, historial ilimitado y más espacio para crear.",
             taglineFree: "Tu chat, tareas y notas en un solo lugar",
+            taglineCore: "Historial ilimitado e IA a diario",
             taglinePro: "Haz de la IA parte de tu trabajo diario",
             taglineMax: "Máxima potencia para días intensivos de IA",
             taglineEnterprise: "Para equipos que lo necesitan todo",
