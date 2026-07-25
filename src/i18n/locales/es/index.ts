@@ -248,6 +248,10 @@ export const es: DeepPartial<Messages> = {
             contactSales: "Contactar ventas",
             contactUs: "Contáctanos",
             currentPlan: "Plan actual",
+            yourPlanHeading: "Tu plan",
+            planSetByAdmin: "Establecido por tu administrador",
+            planSetByAdminHint:
+                "Este plan no se compró a través de Stripe, así que no hay nada que gestionar aquí. Contacta con el administrador de tu espacio o con soporte para cambiarlo.",
             perDay: "{n} / día",
             perMonthCount: "{n} / mes",
             premiumNote: "Los modelos de IA premium también tienen límites diarios por plan.",

@@ -19,8 +19,10 @@ import { SubscriptionTier } from "../../services/agentApi";
 import {
     BillingConfig,
     BillingPlans,
+    BillingSubscription,
     fetchBillingConfig,
     fetchBillingPlans,
+    fetchBillingSubscription,
     fetchTeamBillingConfig,
     openBillingPortal,
     openTeamBillingPortal,
@@ -103,6 +105,7 @@ export const PlansHome = () => {
     const [plans, setPlans] = useState<BillingPlans | null>(null);
     const [config, setConfig] = useState<BillingConfig | null>(null);
     const [teamConfig, setTeamConfig] = useState<TeamBillingConfig | null>(null);
+    const [subscription, setSubscription] = useState<BillingSubscription | null>(null);
     const [failed, setFailed] = useState(false);
     // Checkout/portal navigate away on success; stay busy until then.
     const [busy, setBusy] = useState(false);
@@ -123,6 +126,12 @@ export const PlansHome = () => {
         // section simply doesn't render.
         void fetchTeamBillingConfig(accessToken).then((cfg) => {
             if (!cancelled) setTeamConfig(cfg);
+        });
+        // Null for a free user, an operator-set tier, or any failure —
+        // the banner then falls back to its no-Stripe copy rather than
+        // showing a renewal date it doesn't have.
+        void fetchBillingSubscription(accessToken).then((sub) => {
+            if (!cancelled) setSubscription(sub);
         });
         return () => {
             cancelled = true;
@@ -165,6 +174,32 @@ export const PlansHome = () => {
     };
     const personalTier = config?.personal_tier ?? null;
 
+    // "Renews on X" / "Ends on X" for a live Stripe subscription.
+    // `cancel_at` wins over `current_period_end`: Stripe sets BOTH when a
+    // cancellation is scheduled, and cancel_at is the authoritative stop
+    // date — showing the period end there would promise a renewal that
+    // isn't coming. Same rule as PlanUsageSection.
+    const renewalLabel = () => {
+        if (!subscription) return null;
+        const willEnd = subscription.cancel_at_period_end || subscription.cancel_at !== null;
+        const endTs = subscription.cancel_at ?? subscription.current_period_end;
+        if (endTs == null) return null;
+        const dateLabel = new Date(endTs * 1000).toLocaleDateString(locale, {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+        });
+        return (
+            <Typography
+                color={willEnd ? "warning" : undefined}
+                level="body-sm"
+                sx={willEnd ? undefined : { color: "text.tertiary" }}
+            >
+                {`${willEnd ? p.planEnds : p.planRenews} ${dateLabel}`}
+            </Typography>
+        );
+    };
+
     const renderCta = (tier: PlanTier) => {
         if (tier.tier === personalTier) {
             return (
@@ -204,21 +239,11 @@ export const PlansHome = () => {
                 </Button>
             );
         }
-        if (config.has_billing_account) {
-            // Existing personal subscription: switches happen in the
-            // portal with proration — never a second checkout.
-            return (
-                <Button
-                    fullWidth
-                    disabled={busy}
-                    size="sm"
-                    variant="outlined"
-                    onClick={() => runBillingAction(() => openBillingPortal(accessToken!))}
-                >
-                    {p.manageBilling}
-                </Button>
-            );
-        }
+        // A subscriber sees no per-card CTA: plan switches and cancels go
+        // through the portal, and that lives in the banner above. Putting
+        // a "Manage billing" button on each OTHER tier's card read as
+        // "switch to this plan" while actually opening the generic
+        // portal — a mislabel — and it duplicated the banner.
         return null;
     };
 
@@ -265,7 +290,7 @@ export const PlansHome = () => {
     };
 
     return (
-        <Box sx={{ p: 3, maxWidth: 1200, mx: "auto" }}>
+        <Box sx={{ p: 3, maxWidth: 1440, mx: "auto" }}>
             <Stack alignItems="center" spacing={1} sx={{ mb: 4, mt: 1, textAlign: "center" }}>
                 <Typography level="h2">{p.plansHero}</Typography>
                 <Typography level="body-md" sx={{ color: "text.tertiary", maxWidth: 640 }}>
@@ -273,13 +298,82 @@ export const PlansHome = () => {
                 </Typography>
             </Stack>
 
+            {/* Manage-your-subscription banner.
+                Without this the ONLY route to a downgrade or a cancel was
+                the portal button buried on some OTHER tier's card, which
+                (a) reads as "switch to that plan" and (b) doesn't render
+                at all for an operator-set tier (`has_billing_account`
+                false) — leaving a paying-looking user with no visible way
+                out. The banner is the single answer to "how do I change
+                or cancel my plan", and it states plainly when there is
+                nothing to self-manage instead of offering a dead button. */}
+            {personalTier && (personalTier !== "free" || config?.has_billing_account) && (
+                <Card sx={{ mb: 3 }} variant="soft">
+                    <Stack
+                        alignItems={{ xs: "flex-start", sm: "center" }}
+                        direction={{ xs: "column", sm: "row" }}
+                        spacing={1.5}
+                        sx={{ width: "100%" }}
+                    >
+                        <Stack spacing={0.5} sx={{ flex: 1, minWidth: 0 }}>
+                            <Typography level="body-xs" sx={{ color: "text.tertiary" }}>
+                                {p.yourPlanHeading}
+                            </Typography>
+                            <Stack alignItems="center" direction="row" flexWrap="wrap" gap={1}>
+                                <Chip
+                                    color={TIER_COLOR[personalTier as SubscriptionTier]}
+                                    size="sm"
+                                    variant="soft"
+                                >
+                                    {tierLabel[personalTier as SubscriptionTier] ?? personalTier}
+                                </Chip>
+                                {config?.has_billing_account ? (
+                                    renewalLabel()
+                                ) : (
+                                    <Typography level="body-sm" sx={{ color: "text.tertiary" }}>
+                                        {p.planSetByAdmin}
+                                    </Typography>
+                                )}
+                            </Stack>
+                            <Typography level="body-xs" sx={{ color: "text.tertiary" }}>
+                                {config?.has_billing_account
+                                    ? p.manageBillingHint
+                                    : p.planSetByAdminHint}
+                            </Typography>
+                            {subscription?.status === "past_due" && (
+                                <Typography color="danger" level="body-xs">
+                                    {p.pastDue}
+                                </Typography>
+                            )}
+                        </Stack>
+                        {config?.has_billing_account && (
+                            <Button
+                                disabled={busy}
+                                size="sm"
+                                variant="solid"
+                                onClick={() =>
+                                    runBillingAction(() => openBillingPortal(accessToken!))
+                                }
+                            >
+                                {p.manageBilling}
+                            </Button>
+                        )}
+                    </Stack>
+                </Card>
+            )}
+
             <Box
                 sx={{
                     display: "grid",
+                    // 5 tiers: a 4-column grid stranded Enterprise alone
+                    // on a second row. 3 columns gives a clean 3 + 2
+                    // (free/core/pro, then max/enterprise); very wide
+                    // viewports get all five across.
                     gridTemplateColumns: {
                         xs: "1fr",
                         sm: "repeat(2, 1fr)",
-                        lg: "repeat(4, 1fr)",
+                        lg: "repeat(3, 1fr)",
+                        xl: "repeat(5, 1fr)",
                     },
                     gap: 2,
                     alignItems: "stretch",

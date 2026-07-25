@@ -239,6 +239,10 @@ export const zh: DeepPartial<Messages> = {
             contactSales: "联系销售",
             contactUs: "联系我们",
             currentPlan: "当前套餐",
+            yourPlanHeading: "你的方案",
+            planSetByAdmin: "由管理员设置",
+            planSetByAdminHint:
+                "此方案并非通过 Stripe 购买，因此无法在此管理。如需更改，请联系工作区管理员或客服。",
             perDay: "{n} / 天",
             perMonthCount: "{n} / 月",
             premiumNote: "高级 AI 模型另有按套餐的每日上限。",

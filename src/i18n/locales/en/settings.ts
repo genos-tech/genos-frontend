@@ -58,6 +58,10 @@ export const settings = {
         contactSales: "Contact sales",
         contactUs: "Contact us",
         currentPlan: "Current plan",
+        yourPlanHeading: "Your plan",
+        planSetByAdmin: "Set by your administrator",
+        planSetByAdminHint:
+            "This plan wasn't purchased through Stripe, so there's nothing to manage here. Contact your workspace admin or support to change it.",
         perDay: "{n} / day",
         perMonthCount: "{n} / month",
         premiumNote: "Daily caps for premium AI models also apply per plan.",

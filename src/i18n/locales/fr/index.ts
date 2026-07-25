@@ -248,6 +248,10 @@ export const fr: DeepPartial<Messages> = {
             contactSales: "Contacter les ventes",
             contactUs: "Nous contacter",
             currentPlan: "Forfait actuel",
+            yourPlanHeading: "Votre forfait",
+            planSetByAdmin: "Défini par votre administrateur",
+            planSetByAdminHint:
+                "Ce forfait n'a pas été acheté via Stripe : il n'y a rien à gérer ici. Contactez l'administrateur de votre espace ou le support pour le modifier.",
             perDay: "{n} / jour",
             perMonthCount: "{n} / mois",
             premiumNote:

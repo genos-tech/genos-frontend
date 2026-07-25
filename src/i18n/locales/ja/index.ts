@@ -254,6 +254,10 @@ export const ja: DeepPartial<Messages> = {
             contactSales: "お問い合わせ",
             contactUs: "お問い合わせ",
             currentPlan: "現在のプラン",
+            yourPlanHeading: "現在のプラン",
+            planSetByAdmin: "管理者によって設定されています",
+            planSetByAdminHint:
+                "このプランは Stripe で購入されたものではないため、ここで変更や解約はできません。ワークスペース管理者またはサポートにお問い合わせください。",
             perDay: "{n} / 日",
             perMonthCount: "{n} / 月",
             premiumNote: "プレミアム AI モデルには、プランごとの 1 日あたりの上限も適用されます。",

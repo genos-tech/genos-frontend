@@ -246,6 +246,10 @@ export const hi: DeepPartial<Messages> = {
             contactSales: "बिक्री से संपर्क करें",
             contactUs: "संपर्क करें",
             currentPlan: "वर्तमान प्लान",
+            yourPlanHeading: "आपका प्लान",
+            planSetByAdmin: "आपके एडमिन द्वारा सेट किया गया",
+            planSetByAdminHint:
+                "यह प्लान Stripe से नहीं खरीदा गया है, इसलिए इसे यहाँ मैनेज नहीं किया जा सकता। बदलने के लिए अपने वर्कस्पेस एडमिन या सपोर्ट से संपर्क करें।",
             perDay: "{n} / दिन",
             perMonthCount: "{n} / माह",
             premiumNote: "प्रीमियम AI मॉडलों पर भी प्लान के अनुसार दैनिक सीमाएँ लागू होती हैं।",

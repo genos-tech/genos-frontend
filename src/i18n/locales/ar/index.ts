@@ -243,6 +243,10 @@ export const ar: DeepPartial<Messages> = {
             contactSales: "تواصل مع المبيعات",
             contactUs: "تواصل معنا",
             currentPlan: "الخطة الحالية",
+            yourPlanHeading: "خطتك",
+            planSetByAdmin: "تم تعيينها بواسطة المسؤول",
+            planSetByAdminHint:
+                "لم يتم شراء هذه الخطة عبر Stripe، لذا لا يمكن إدارتها هنا. تواصل مع مسؤول مساحة العمل أو الدعم لتغييرها.",
             perDay: "{n} / يوم",
             perMonthCount: "{n} / شهر",
             premiumNote: "تنطبق أيضًا حدود يومية لكل خطة على نماذج الذكاء الاصطناعي المتقدمة.",
