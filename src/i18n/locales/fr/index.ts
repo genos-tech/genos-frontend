@@ -227,6 +227,13 @@ export const fr: DeepPartial<Messages> = {
             upgradeToCore: "Passer à Core",
             upgradeToPro: "Passer à Pro",
             upgradeToMax: "Passer à Max",
+            switchToCore: "Basculer vers Core",
+            switchToPro: "Basculer vers Pro",
+            switchToMax: "Basculer vers Max",
+            cancelPlan: "Résilier l'abonnement",
+            changeTeamPlan: "Changer de forfait",
+            planChangeHint:
+                "Choisissez un forfait ci-dessous pour changer — Stripe calcule la différence au prorata. En cas de résiliation, votre forfait reste actif jusqu'à la fin de la période de facturation en cours.",
             manageBilling: "Gérer la facturation",
             manageBillingHint:
                 "Changez de forfait, de moyen de paiement ou résiliez via le portail sécurisé Stripe.",

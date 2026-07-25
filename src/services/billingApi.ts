@@ -62,9 +62,30 @@ export async function startCheckout(accessToken: string, plan: PurchasablePlan):
     window.location.assign(url);
 }
 
+/**
+ * Deep links into the Stripe customer portal.
+ *
+ * `update` lands on the confirm-this-switch screen for `plan`;
+ * `switch` lands on Stripe's own plan picker (for callers with no
+ * per-tier button to name a target from); `cancel` lands on the cancel
+ * screen; omitted opens the portal home (invoices, payment method,
+ * everything).
+ *
+ * This — NOT `startCheckout` — is how an existing subscriber changes
+ * plan. Checkout would open a second parallel subscription on the same
+ * customer. The backend degrades any flow the Stripe portal
+ * configuration refuses back to the portal home, so a caller never has
+ * to handle "this flow isn't available".
+ */
+export type PortalFlow = "update" | "switch" | "cancel";
+
 /** Open the Stripe customer portal (plan changes, cancel, invoices). */
-export async function openBillingPortal(accessToken: string): Promise<void> {
-    const url = await postForUrl("/billing/portal/", accessToken);
+export async function openBillingPortal(
+    accessToken: string,
+    flow?: PortalFlow,
+    plan?: PurchasablePlan
+): Promise<void> {
+    const url = await postForUrl("/billing/portal/", accessToken, { flow, plan });
     window.location.assign(url);
 }
 
@@ -172,8 +193,17 @@ export async function startTeamCheckout(
 }
 
 /** The TEAM's customer portal (owner-only): seats, plan, cancel, invoices. */
-export async function openTeamBillingPortal(accessToken: string, teamId: string): Promise<void> {
-    const url = await postForUrl("/billing/team/portal/", accessToken, { team_id: teamId });
+export async function openTeamBillingPortal(
+    accessToken: string,
+    teamId: string,
+    flow?: PortalFlow,
+    plan?: PurchasablePlan
+): Promise<void> {
+    const url = await postForUrl("/billing/team/portal/", accessToken, {
+        team_id: teamId,
+        flow,
+        plan,
+    });
     window.location.assign(url);
 }
 

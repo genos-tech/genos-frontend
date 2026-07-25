@@ -227,6 +227,13 @@ export const hi: DeepPartial<Messages> = {
             upgradeToCore: "कोर में अपग्रेड करें",
             upgradeToPro: "प्रो में अपग्रेड करें",
             upgradeToMax: "मैक्स में अपग्रेड करें",
+            switchToCore: "कोर पर स्विच करें",
+            switchToPro: "प्रो पर स्विच करें",
+            switchToMax: "मैक्स पर स्विच करें",
+            cancelPlan: "सदस्यता रद्द करें",
+            changeTeamPlan: "प्लान बदलें",
+            planChangeHint:
+                "बदलने के लिए नीचे कोई भी प्लान चुनें — अंतर की गणना Stripe यथानुपात करता है। रद्द करने पर भी आपका प्लान मौजूदा बिलिंग अवधि के अंत तक सक्रिय रहता है।",
             manageBilling: "बिलिंग प्रबंधित करें",
             manageBillingHint:
                 "प्लान बदलना, भुगतान विधि या रद्द करना — सब Stripe के सुरक्षित पोर्टल से करें।",

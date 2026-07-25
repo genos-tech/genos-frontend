@@ -235,6 +235,13 @@ export const ja: DeepPartial<Messages> = {
             upgradeToCore: "コアにアップグレード",
             upgradeToPro: "プロにアップグレード",
             upgradeToMax: "マックスにアップグレード",
+            switchToCore: "コアに変更",
+            switchToPro: "プロに変更",
+            switchToMax: "マックスに変更",
+            cancelPlan: "プランを解約",
+            changeTeamPlan: "プランを変更",
+            planChangeHint:
+                "下のプランを選ぶと変更できます（差額は Stripe が日割り計算します）。解約しても、現在の請求期間の終了までは現在のプランをご利用いただけます。",
             manageBilling: "請求を管理",
             manageBillingHint:
                 "プラン変更・支払い方法・解約は Stripe の安全なポータルで行えます。",

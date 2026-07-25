@@ -39,6 +39,13 @@ export const settings = {
         upgradeToCore: "Upgrade to Core",
         upgradeToPro: "Upgrade to Pro",
         upgradeToMax: "Upgrade to Max",
+        switchToCore: "Switch to Core",
+        switchToPro: "Switch to Pro",
+        switchToMax: "Switch to Max",
+        cancelPlan: "Cancel plan",
+        changeTeamPlan: "Change plan",
+        planChangeHint:
+            "Pick any plan below to switch — Stripe prorates the difference. Cancelling keeps your plan until the end of the current billing period.",
         manageBilling: "Manage billing",
         manageBillingHint: "Change plan, payment method, or cancel via the secure Stripe portal.",
         upgradeHint: "Checkout is handled securely by Stripe.",

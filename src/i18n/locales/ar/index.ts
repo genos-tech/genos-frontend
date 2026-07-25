@@ -225,6 +225,13 @@ export const ar: DeepPartial<Messages> = {
             upgradeToCore: "الترقية إلى كور",
             upgradeToPro: "الترقية إلى برو",
             upgradeToMax: "الترقية إلى ماكس",
+            switchToCore: "التبديل إلى كور",
+            switchToPro: "التبديل إلى برو",
+            switchToMax: "التبديل إلى ماكس",
+            cancelPlan: "إلغاء الاشتراك",
+            changeTeamPlan: "تغيير الخطة",
+            planChangeHint:
+                "اختر أي خطة أدناه للتبديل — تحتسب Stripe الفرق بالتناسب. عند الإلغاء تظل خطتك فعّالة حتى نهاية دورة الفوترة الحالية.",
             manageBilling: "إدارة الفوترة",
             manageBillingHint:
                 "غيّر الخطة أو طريقة الدفع أو ألغِ الاشتراك عبر بوابة Stripe الآمنة.",

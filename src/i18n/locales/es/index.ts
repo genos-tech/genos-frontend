@@ -226,6 +226,13 @@ export const es: DeepPartial<Messages> = {
             upgradeToCore: "Mejorar a Core",
             upgradeToPro: "Mejorar a Pro",
             upgradeToMax: "Mejorar a Max",
+            switchToCore: "Cambiar a Core",
+            switchToPro: "Cambiar a Pro",
+            switchToMax: "Cambiar a Max",
+            cancelPlan: "Cancelar suscripción",
+            changeTeamPlan: "Cambiar de plan",
+            planChangeHint:
+                "Elige cualquier plan de abajo para cambiar: Stripe prorratea la diferencia. Si cancelas, tu plan sigue activo hasta el final del periodo de facturación actual.",
             manageBilling: "Gestionar facturación",
             manageBillingHint:
                 "Cambia de plan, método de pago o cancela en el portal seguro de Stripe.",

@@ -223,6 +223,13 @@ export const zh: DeepPartial<Messages> = {
             upgradeToCore: "升级到核心版",
             upgradeToPro: "升级到专业版",
             upgradeToMax: "升级到旗舰版",
+            switchToCore: "切换到基础版",
+            switchToPro: "切换到专业版",
+            switchToMax: "切换到旗舰版",
+            cancelPlan: "取消订阅",
+            changeTeamPlan: "更改套餐",
+            planChangeHint:
+                "在下方选择任意套餐即可切换，差额由 Stripe 按比例计算。取消后，您仍可使用当前套餐直到本计费周期结束。",
             manageBilling: "管理账单",
             manageBillingHint: "通过 Stripe 安全门户更改套餐、付款方式或取消订阅。",
             upgradeHint: "付款由 Stripe 安全处理。",
