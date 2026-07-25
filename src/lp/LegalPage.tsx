@@ -75,8 +75,11 @@ const JA_ROWS: Row[] = [
         label: "販売価格",
         body: (
             <>
-                Pro プラン：月額 1,200 円（税込） / Max プラン：月額 2,500 円（税込）。
+                Core プラン：月額 1,200 円（税込） / Pro プラン：月額 2,500 円（税込） / Max
+                プラン：月額 4,900 円（税込）。
                 各プランの内容はアプリ内の「プランと料金」ページをご確認ください。
+                なお、価格改定前にご契約いただいたお客様は、プランを変更されるまで
+                従来の月額料金が引き続き適用されます。
             </>
         ),
     },
@@ -134,7 +137,7 @@ const EN_ROWS: Row[] = [
     },
     {
         label: "Pricing",
-        body: "Pro: ¥1,200 / month · Max: ¥2,500 / month (tax included). See the in-app Plans & pricing page for details.",
+        body: "Core: ¥1,200 / month · Pro: ¥2,500 / month · Max: ¥4,900 / month (tax included). See the in-app Plans & pricing page for details. Subscribers who signed up before the price change keep their original monthly rate until they change plans.",
     },
     {
         label: "Payment",

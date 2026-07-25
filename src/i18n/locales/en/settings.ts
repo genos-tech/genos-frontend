@@ -17,6 +17,7 @@ export const settings = {
         description: "Your current plan and how much of each limit you've used.",
         viaTeam: "via team {team}",
         tierFree: "Free",
+        tierCore: "Core",
         tierPro: "Pro",
         tierMax: "Max",
         tierEnterprise: "Enterprise",
@@ -35,6 +36,7 @@ export const settings = {
         upgradeComingSoon:
             "Self-serve upgrades are coming soon. Contact your workspace admin to change plans.",
         loadError: "Couldn't load your plan details. Please try again.",
+        upgradeToCore: "Upgrade to Core",
         upgradeToPro: "Upgrade to Pro",
         upgradeToMax: "Upgrade to Max",
         manageBilling: "Manage billing",
@@ -66,6 +68,7 @@ export const settings = {
         teamPlansSubheading:
             "One payer, every member benefits — billed per seat. Only the team owner sees this section.",
         teamSeats: "{n} seats",
+        teamUpgradeToCore: "Team Core",
         teamUpgradeToPro: "Team Pro",
         teamUpgradeToMax: "Team Max",
         manageTeamBilling: "Manage team billing",
@@ -75,6 +78,7 @@ export const settings = {
             "Start free and upgrade anytime. Every plan includes every feature — paid plans unlock more AI, unlimited history, and more room to create.",
         startForFree: "Start for free",
         taglineFree: "Get your chat, tasks, and notes in one place",
+        taglineCore: "Unlimited history and daily AI",
         taglinePro: "Make AI part of your everyday work",
         taglineMax: "Full power for AI-heavy days",
         taglineEnterprise: "For teams that need it all",
@@ -148,6 +152,7 @@ export const settings = {
         webSearchLabel: "Web searches",
         // Tier badge labels — Free / Pro / Max.
         tierFree: "Free",
+        tierCore: "Core",
         tierPro: "Pro",
         tierMax: "Max",
         tierEnterprise: "Enterprise",

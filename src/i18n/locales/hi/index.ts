@@ -205,6 +205,7 @@ export const hi: DeepPartial<Messages> = {
             description: "आपका वर्तमान प्लान और प्रत्येक सीमा का उपयोग।",
             viaTeam: "टीम {team} के ज़रिए",
             tierFree: "फ़्री",
+            tierCore: "कोर",
             tierPro: "प्रो",
             tierMax: "मैक्स",
             tierEnterprise: "एंटरप्राइज़",
@@ -223,6 +224,7 @@ export const hi: DeepPartial<Messages> = {
             upgradeComingSoon:
                 "सेल्फ़-सर्विस अपग्रेड जल्द आ रहा है। प्लान बदलने के लिए अपने वर्कस्पेस व्यवस्थापक से संपर्क करें।",
             loadError: "आपके प्लान का विवरण लोड नहीं हो सका। कृपया पुनः प्रयास करें।",
+            upgradeToCore: "कोर में अपग्रेड करें",
             upgradeToPro: "प्रो में अपग्रेड करें",
             upgradeToMax: "मैक्स में अपग्रेड करें",
             manageBilling: "बिलिंग प्रबंधित करें",
@@ -254,6 +256,7 @@ export const hi: DeepPartial<Messages> = {
             teamPlansSubheading:
                 "एक सदस्य भुगतान करता है, पूरी टीम लाभ पाती है — प्रति सीट बिलिंग। यह सेक्शन केवल टीम मालिक को दिखता है।",
             teamSeats: "{n} सीटें",
+            teamUpgradeToCore: "टीम कोर",
             teamUpgradeToPro: "टीम प्रो",
             teamUpgradeToMax: "टीम मैक्स",
             manageTeamBilling: "टीम बिलिंग प्रबंधित करें",
@@ -262,6 +265,7 @@ export const hi: DeepPartial<Messages> = {
             plansHeroSub:
                 "मुफ़्त में शुरू करें, कभी भी अपग्रेड करें। हर प्लान में सभी सुविधाएँ हैं — सशुल्क प्लान में अधिक AI, असीमित इतिहास और बनाने की अधिक सीमा मिलती है।",
             taglineFree: "चैट, टास्क और नोट्स एक ही जगह",
+            taglineCore: "असीमित हिस्ट्री और रोज़ाना AI",
             taglinePro: "AI को रोज़मर्रा के काम का हिस्सा बनाएँ",
             taglineMax: "AI के भारी उपयोग के लिए पूरी शक्ति",
             taglineEnterprise: "उन टीमों के लिए जिन्हें सब कुछ चाहिए",

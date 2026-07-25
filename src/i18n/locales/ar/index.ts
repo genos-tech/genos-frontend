@@ -203,6 +203,7 @@ export const ar: DeepPartial<Messages> = {
             description: "خطتك الحالية ومقدار ما استخدمته من كل حد.",
             viaTeam: "عبر فريق {team}",
             tierFree: "مجاني",
+            tierCore: "كور",
             tierPro: "برو",
             tierMax: "ماكس",
             tierEnterprise: "المؤسسات",
@@ -221,6 +222,7 @@ export const ar: DeepPartial<Messages> = {
             upgradeComingSoon:
                 "الترقية الذاتية قادمة قريبًا. تواصل مع مسؤول مساحة العمل لتغيير الخطة.",
             loadError: "تعذّر تحميل تفاصيل خطتك. يرجى المحاولة مرة أخرى.",
+            upgradeToCore: "الترقية إلى كور",
             upgradeToPro: "الترقية إلى برو",
             upgradeToMax: "الترقية إلى ماكس",
             manageBilling: "إدارة الفوترة",
@@ -251,6 +253,7 @@ export const ar: DeepPartial<Messages> = {
             teamPlansSubheading:
                 "يدفع شخص واحد ويستفيد جميع الأعضاء — فوترة لكل مقعد. هذا القسم يظهر لمالك الفريق فقط.",
             teamSeats: "{n} مقاعد",
+            teamUpgradeToCore: "فريق كور",
             teamUpgradeToPro: "فريق برو",
             teamUpgradeToMax: "فريق ماكس",
             manageTeamBilling: "إدارة فوترة الفريق",
@@ -259,6 +262,7 @@ export const ar: DeepPartial<Messages> = {
             plansHeroSub:
                 "ابدأ مجانًا وقم بالترقية في أي وقت. كل الخطط تشمل جميع الميزات — الخطط المدفوعة تفتح المزيد من الذكاء الاصطناعي وسجلًا غير محدود ومساحة أكبر للإنشاء.",
             taglineFree: "الدردشة والمهام والملاحظات في مكان واحد",
+            taglineCore: "سجل غير محدود وذكاء اصطناعي كل يوم",
             taglinePro: "اجعل الذكاء الاصطناعي جزءًا من عملك اليومي",
             taglineMax: "قوة كاملة للاستخدام المكثف للذكاء الاصطناعي",
             taglineEnterprise: "للفرق التي تحتاج إلى كل شيء",

@@ -45,10 +45,23 @@ import {
 
 const TIER_COLOR: Record<SubscriptionTier, "neutral" | "primary" | "success" | "warning"> = {
     free: "neutral",
+    core: "primary",
     pro: "primary",
     max: "success",
     enterprise: "warning",
 };
+
+// Self-serve plans, cheapest first — mirrors `PURCHASABLE_PLANS` in
+// genos-api `origin/services/stripe_billing.py`. Each button still
+// renders only if the server actually priced that plan
+// (`billing.plans`), so an unpriced plan never offers a dead checkout.
+const PURCHASABLE_PLANS = ["core", "pro", "max"] as const;
+
+const UPGRADE_LABEL_KEY = {
+    core: "upgradeToCore",
+    pro: "upgradeToPro",
+    max: "upgradeToMax",
+} as const;
 
 const UsageRow = ({
     label,
@@ -157,6 +170,7 @@ export const PlanUsageSection = ({ onNavigateAway }: { onNavigateAway?: () => vo
 
     const tierLabel = {
         free: p.tierFree,
+        core: p.tierCore,
         pro: p.tierPro,
         max: p.tierMax,
         enterprise: p.tierEnterprise,
@@ -300,34 +314,23 @@ export const PlanUsageSection = ({ onNavigateAway }: { onNavigateAway?: () => vo
                             Stripe account shows neither. */}
                         {billing.personal_tier === "free" && (
                             <>
-                                {billing.plans.includes("pro") && (
+                                {PURCHASABLE_PLANS.filter((plan) =>
+                                    billing.plans.includes(plan)
+                                ).map((plan) => (
                                     <Button
+                                        key={plan}
                                         disabled={billingBusy}
                                         size="sm"
-                                        variant="solid"
+                                        variant={plan === "pro" ? "solid" : "soft"}
                                         onClick={() =>
                                             runBillingAction(() =>
-                                                startCheckout(accessToken!, "pro")
+                                                startCheckout(accessToken!, plan)
                                             )
                                         }
                                     >
-                                        {p.upgradeToPro}
+                                        {p[UPGRADE_LABEL_KEY[plan]]}
                                     </Button>
-                                )}
-                                {billing.plans.includes("max") && (
-                                    <Button
-                                        disabled={billingBusy}
-                                        size="sm"
-                                        variant="soft"
-                                        onClick={() =>
-                                            runBillingAction(() =>
-                                                startCheckout(accessToken!, "max")
-                                            )
-                                        }
-                                    >
-                                        {p.upgradeToMax}
-                                    </Button>
-                                )}
+                                ))}
                             </>
                         )}
                         {/* The portal renders for ANYONE with a Stripe

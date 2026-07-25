@@ -204,6 +204,7 @@ export const es: DeepPartial<Messages> = {
             description: "Tu plan actual y cuánto has usado de cada límite.",
             viaTeam: "vía equipo {team}",
             tierFree: "Gratis",
+            tierCore: "Core",
             tierPro: "Pro",
             tierMax: "Max",
             tierEnterprise: "Enterprise",
@@ -222,6 +223,7 @@ export const es: DeepPartial<Messages> = {
             upgradeComingSoon:
                 "Las mejoras autoservicio llegarán pronto. Contacta con el administrador de tu espacio de trabajo para cambiar de plan.",
             loadError: "No se pudieron cargar los detalles de tu plan. Inténtalo de nuevo.",
+            upgradeToCore: "Mejorar a Core",
             upgradeToPro: "Mejorar a Pro",
             upgradeToMax: "Mejorar a Max",
             manageBilling: "Gestionar facturación",
@@ -256,6 +258,7 @@ export const es: DeepPartial<Messages> = {
             teamPlansSubheading:
                 "Uno paga y todos los miembros se benefician — facturado por puesto. Solo el propietario del equipo ve esta sección.",
             teamSeats: "{n} puestos",
+            teamUpgradeToCore: "Equipo Core",
             teamUpgradeToPro: "Equipo Pro",
             teamUpgradeToMax: "Equipo Max",
             manageTeamBilling: "Gestionar facturación del equipo",
@@ -264,6 +267,7 @@ export const es: DeepPartial<Messages> = {
             plansHeroSub:
                 "Empieza gratis y mejora cuando quieras. Todos los planes incluyen todas las funciones: los planes de pago desbloquean más IA, historial ilimitado y más espacio para crear.",
             taglineFree: "Tu chat, tareas y notas en un solo lugar",
+            taglineCore: "Historial ilimitado e IA a diario",
             taglinePro: "Haz de la IA parte de tu trabajo diario",
             taglineMax: "Máxima potencia para días intensivos de IA",
             taglineEnterprise: "Para equipos que lo necesitan todo",

@@ -26,6 +26,7 @@ import {
     openTeamBillingPortal,
     PlanPrice,
     PlanTier,
+    PurchasablePlan,
     startCheckout,
     startTeamCheckout,
     TeamBillingConfig,
@@ -48,6 +49,27 @@ import {
  */
 
 const CONTACT_SALES_MAILTO = "mailto:genos.support@gmail.com?subject=Genos%20Enterprise";
+
+// Self-serve plans, cheapest first — mirrors `PURCHASABLE_PLANS` in
+// genos-api `origin/services/stripe_billing.py`. Used for the team
+// per-seat price line; the personal CTA reads the tier list from the
+// API instead, so a plan the server hasn't priced never renders.
+const PURCHASABLE_PLANS: PurchasablePlan[] = ["core", "pro", "max"];
+
+// Per-plan CTA label keys. A map rather than a ternary so adding a
+// fourth plan is a one-line change and can never silently fall through
+// to the wrong plan's label.
+const UPGRADE_LABEL_KEY = {
+    core: "upgradeToCore",
+    pro: "upgradeToPro",
+    max: "upgradeToMax",
+} as const satisfies Record<PurchasablePlan, string>;
+
+const TEAM_UPGRADE_LABEL_KEY = {
+    core: "teamUpgradeToCore",
+    pro: "teamUpgradeToPro",
+    max: "teamUpgradeToMax",
+} as const satisfies Record<PurchasablePlan, string>;
 
 // Currencies Stripe stores without decimals — everything else is in
 // hundredths (cents). Only the ones plausibly configured here.
@@ -164,19 +186,19 @@ export const PlansHome = () => {
         }
         if (!plans.billing_enabled || !tier.purchasable || !config) return null;
         if (personalTier === "free") {
+            const plan = tier.tier as PurchasablePlan;
             return (
                 <Button
                     fullWidth
                     disabled={busy}
                     size="sm"
-                    variant={tier.tier === "pro" ? "solid" : "soft"}
-                    onClick={() =>
-                        runBillingAction(() =>
-                            startCheckout(accessToken!, tier.tier as "pro" | "max")
-                        )
-                    }
+                    // Pro is the tier we expect most people to buy, so it
+                    // carries the solid (primary) treatment; core and max
+                    // flank it as soft.
+                    variant={plan === "pro" ? "solid" : "soft"}
+                    onClick={() => runBillingAction(() => startCheckout(accessToken!, plan))}
                 >
-                    {tier.tier === "pro" ? p.upgradeToPro : p.upgradeToMax}
+                    {UPGRADE_LABEL_KEY[plan] ? p[UPGRADE_LABEL_KEY[plan]] : p.upgradeCta}
                 </Button>
             );
         }
@@ -375,7 +397,7 @@ export const PlansHome = () => {
                     </Typography>
                     <Stack spacing={1.5}>
                         {teamConfig.teams.map((team) => {
-                            const seatPrice = (plan: "pro" | "max") => {
+                            const seatPrice = (plan: PurchasablePlan) => {
                                 const tierInfo = plans.tiers.find((t) => t.tier === plan);
                                 const label = tierInfo?.price
                                     ? formatPrice(tierInfo.price, locale)
@@ -413,38 +435,25 @@ export const PlansHome = () => {
                                         <Box sx={{ flex: 1 }} />
                                         {team.plan === "free" ? (
                                             <>
-                                                <Button
-                                                    disabled={busy}
-                                                    size="sm"
-                                                    variant="solid"
-                                                    onClick={() =>
-                                                        runBillingAction(() =>
-                                                            startTeamCheckout(
-                                                                accessToken!,
-                                                                team.team_id,
-                                                                "pro"
+                                                {PURCHASABLE_PLANS.map((plan) => (
+                                                    <Button
+                                                        key={plan}
+                                                        disabled={busy}
+                                                        size="sm"
+                                                        variant={plan === "pro" ? "solid" : "soft"}
+                                                        onClick={() =>
+                                                            runBillingAction(() =>
+                                                                startTeamCheckout(
+                                                                    accessToken!,
+                                                                    team.team_id,
+                                                                    plan
+                                                                )
                                                             )
-                                                        )
-                                                    }
-                                                >
-                                                    {p.teamUpgradeToPro}
-                                                </Button>
-                                                <Button
-                                                    disabled={busy}
-                                                    size="sm"
-                                                    variant="soft"
-                                                    onClick={() =>
-                                                        runBillingAction(() =>
-                                                            startTeamCheckout(
-                                                                accessToken!,
-                                                                team.team_id,
-                                                                "max"
-                                                            )
-                                                        )
-                                                    }
-                                                >
-                                                    {p.teamUpgradeToMax}
-                                                </Button>
+                                                        }
+                                                    >
+                                                        {p[TEAM_UPGRADE_LABEL_KEY[plan]]}
+                                                    </Button>
+                                                ))}
                                             </>
                                         ) : (
                                             team.has_billing_account && (
@@ -471,7 +480,7 @@ export const PlansHome = () => {
                                             level="body-xs"
                                             sx={{ color: "text.tertiary" }}
                                         >
-                                            {[seatPrice("pro"), seatPrice("max")]
+                                            {PURCHASABLE_PLANS.map(seatPrice)
                                                 .filter(Boolean)
                                                 .join(" · ")}
                                         </Typography>

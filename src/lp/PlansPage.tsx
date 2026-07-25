@@ -60,12 +60,14 @@ function PlansPageInner() {
 
     const tierLabel: Record<string, string> = {
         free: p.tierFree,
+        core: p.tierCore,
         pro: p.tierPro,
         max: p.tierMax,
         enterprise: p.tierEnterprise,
     };
     const tagline: Record<string, string> = {
         free: p.taglineFree,
+        core: p.taglineCore,
         pro: p.taglinePro,
         max: p.taglineMax,
         enterprise: p.taglineEnterprise,

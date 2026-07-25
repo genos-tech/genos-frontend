@@ -195,7 +195,7 @@ export interface MonthlyQuotaBlock extends QuotaBlock {
     period: "month";
 }
 
-export type SubscriptionTier = "free" | "pro" | "max" | "enterprise";
+export type SubscriptionTier = "free" | "core" | "pro" | "max" | "enterprise";
 
 // The single fetch behind Settings → Plan & Usage: the user's
 // EFFECTIVE tier (own tier, or a paying team's plan — `tier_source`

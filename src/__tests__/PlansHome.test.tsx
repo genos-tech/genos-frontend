@@ -143,6 +143,38 @@ describe("PlansHome", () => {
         await waitFor(() => expect(billingApi.startCheckout).toHaveBeenCalledWith("tok", "pro"));
     });
 
+    it("renders a Core checkout button and starts the core plan", async () => {
+        // Core is the cheapest paid rung; the CTA label comes from a
+        // per-plan map, so a wrong entry would silently mislabel or
+        // start checkout for the wrong plan.
+        billingApi.fetchBillingPlans.mockResolvedValue({
+            billing_enabled: true,
+            tiers: [
+                ...PLANS.tiers.slice(0, 1),
+                {
+                    tier: "core",
+                    price: { amount: 1200, currency: "jpy", interval: "month" },
+                    purchasable: true,
+                    contact_sales: false,
+                    limits: {
+                        llm_ask_daily: 100,
+                        web_search_daily: 25,
+                        task_create_monthly: 1000,
+                        note_create_monthly: 500,
+                        message_retention_days: null,
+                        upload_max_mb: 25,
+                    },
+                },
+                ...PLANS.tiers.slice(1),
+            ],
+        });
+        billingApi.fetchBillingConfig.mockResolvedValue(config({ plans: ["core", "pro", "max"] }));
+        renderPage();
+        const core = await screen.findByText("Upgrade to Core");
+        fireEvent.click(core);
+        await waitFor(() => expect(billingApi.startCheckout).toHaveBeenCalledWith("tok", "core"));
+    });
+
     it("existing personal subscriber gets the portal, never a second checkout", async () => {
         billingApi.fetchBillingConfig.mockResolvedValue(
             config({ personal_tier: "pro", has_billing_account: true })

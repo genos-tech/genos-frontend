@@ -17,7 +17,7 @@
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL;
 
-export type PurchasablePlan = "pro" | "max";
+export type PurchasablePlan = "core" | "pro" | "max";
 
 export interface BillingConfig {
     enabled: boolean;
@@ -76,7 +76,7 @@ export interface PlanPrice {
 }
 
 export interface PlanTier {
-    tier: "free" | "pro" | "max" | "enterprise";
+    tier: "free" | "core" | "pro" | "max" | "enterprise";
     price: PlanPrice | null; // null = unavailable (contact-sales / Stripe dark)
     purchasable: boolean;
     contact_sales: boolean;
@@ -132,7 +132,7 @@ export async function fetchPublicBillingPlans(): Promise<BillingPlans | null> {
 export interface TeamBillingTeam {
     team_id: string;
     team_name: string;
-    plan: "free" | "pro" | "max" | "enterprise";
+    plan: "free" | "core" | "pro" | "max" | "enterprise";
     seats: number;
     has_billing_account: boolean;
 }
@@ -180,7 +180,7 @@ export async function openTeamBillingPortal(accessToken: string, teamId: string)
 export interface BillingSubscription {
     // null = the subscription's price isn't mapped to a plan (env
     // misconfiguration server-side) — show the row, skip the plan name.
-    plan: "pro" | "max" | null;
+    plan: PurchasablePlan | null;
     status: "active" | "trialing" | "past_due" | "paused";
     cancel_at_period_end: boolean;
     current_period_end: number | null; // unix seconds

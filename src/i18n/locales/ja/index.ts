@@ -213,6 +213,7 @@ export const ja: DeepPartial<Messages> = {
             description: "現在のプランと、各上限の使用状況です。",
             viaTeam: "チーム {team} のプラン",
             tierFree: "フリー",
+            tierCore: "コア",
             tierPro: "プロ",
             tierMax: "マックス",
             tierEnterprise: "エンタープライズ",
@@ -231,6 +232,7 @@ export const ja: DeepPartial<Messages> = {
             upgradeComingSoon:
                 "セルフサービスでのアップグレードは近日提供予定です。プラン変更はワークスペース管理者にお問い合わせください。",
             loadError: "プラン情報を読み込めませんでした。もう一度お試しください。",
+            upgradeToCore: "コアにアップグレード",
             upgradeToPro: "プロにアップグレード",
             upgradeToMax: "マックスにアップグレード",
             manageBilling: "請求を管理",
@@ -262,6 +264,7 @@ export const ja: DeepPartial<Messages> = {
             teamPlansSubheading:
                 "1 人が支払い、メンバー全員が利用できます（シート課金）。このセクションはチームオーナーにのみ表示されます。",
             teamSeats: "{n} シート",
+            teamUpgradeToCore: "チームコア",
             teamUpgradeToPro: "チームプロ",
             teamUpgradeToMax: "チームマックス",
             manageTeamBilling: "チームの請求を管理",
@@ -271,6 +274,7 @@ export const ja: DeepPartial<Messages> = {
                 "無料で始めて、いつでもアップグレードできます。どのプランでも全機能が使えます — 有料プランでは AI の回数、メッセージ履歴、作成できる量が大きく広がります。",
             startForFree: "無料で始める",
             taglineFree: "チャット・タスク・ノートを 1 か所に",
+            taglineCore: "無制限の履歴と毎日使える AI",
             taglinePro: "AI を毎日の仕事の相棒に",
             taglineMax: "上限を気にせず AI をフル活用",
             taglineEnterprise: "すべてを必要とするチームに",
