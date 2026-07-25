@@ -91,6 +91,7 @@ const formatPrice = (price: PlanPrice, locale: string): string | null => {
 
 const TIER_COLOR: Record<SubscriptionTier, "neutral" | "primary" | "success" | "warning"> = {
     free: "neutral",
+    core: "primary",
     pro: "primary",
     max: "success",
     enterprise: "warning",
@@ -157,6 +158,7 @@ export const PlansHome = () => {
 
     const tierLabel: Record<SubscriptionTier, string> = {
         free: p.tierFree,
+        core: p.tierCore,
         pro: p.tierPro,
         max: p.tierMax,
         enterprise: p.tierEnterprise,
@@ -256,6 +258,7 @@ export const PlansHome = () => {
 
     const tagline: Record<SubscriptionTier, string> = {
         free: p.taglineFree,
+        core: p.taglineCore,
         pro: p.taglinePro,
         max: p.taglineMax,
         enterprise: p.taglineEnterprise,
