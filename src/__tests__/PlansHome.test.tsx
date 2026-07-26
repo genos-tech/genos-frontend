@@ -145,6 +145,20 @@ const renderPage = () =>
 describe("PlansHome", () => {
     beforeEach(() => {
         vi.clearAllMocks();
+        // The display currency is inferred from the browser's TIME ZONE,
+        // so without this the assertions below depend on the machine
+        // running them — "usd" on a UTC CI box, "jpy" on a laptop in
+        // Tokyo. Pin it, the same way the API's ceiling tests had to stop
+        // reading AI_CEILING_* out of the ambient environment.
+        //
+        // Only `resolvedOptions` is stubbed: formatting still goes
+        // through the real Intl, so date and price rendering elsewhere in
+        // these tests is untouched.
+        const realOptions = new Intl.DateTimeFormat().resolvedOptions();
+        vi.spyOn(Intl.DateTimeFormat.prototype, "resolvedOptions").mockReturnValue({
+            ...realOptions,
+            timeZone: "America/New_York",
+        });
         billingApi.fetchBillingPlans.mockResolvedValue(PLANS);
         billingApi.fetchBillingConfig.mockResolvedValue(config());
         // Default: viewer owns no teams — the section is absent.

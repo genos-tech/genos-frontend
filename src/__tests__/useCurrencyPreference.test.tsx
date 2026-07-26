@@ -1,76 +1,102 @@
 /**
  * Which currency a visitor sees prices in.
  *
- * The distinction this is built around: **display** currency is free to
- * guess at and free to change; **billing** currency is fixed at checkout
- * and Stripe cannot change it afterwards. Nothing here touches the
- * second — a subscriber flipping the picker changes what the comparison
- * table quotes and nothing about their bill, because their real currency
- * is read off their Stripe subscription.
+ * Inferred from the browser's TIME ZONE — geography, not language.
+ * This used to derive from locale, which was wrong for currency
+ * specifically: plenty of people in Japan run their tools in English
+ * and were shown dollars for a product they'd be billed for in yen.
+ * Language is what you chose to read in; currency is about which market
+ * you're buying in.
+ *
+ * And the distinction the whole thing rests on: **display** currency is
+ * free to infer and free to change; **billing** currency is fixed at
+ * checkout and Stripe cannot change it afterwards. Nothing here touches
+ * the second — a subscriber flipping the picker changes what the
+ * comparison table quotes and nothing about their bill.
  */
 
 import { act, renderHook } from "@testing-library/react";
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import {
-    defaultCurrencyForLocale,
-    useCurrencyPreference,
-} from "../hooks/common/useCurrencyPreference";
+import { currencyForTimeZone, useCurrencyPreference } from "../hooks/common/useCurrencyPreference";
+
+/** Pretend the browser is in `tz`. */
+const inTimeZone = (tz: string) => {
+    vi.spyOn(Intl, "DateTimeFormat").mockImplementation(
+        () => ({ resolvedOptions: () => ({ timeZone: tz }) }) as unknown as Intl.DateTimeFormat
+    );
+};
 
 beforeEach(() => {
     window.localStorage.clear();
 });
 
-describe("defaultCurrencyForLocale", () => {
-    it("gives Japanese readers yen", () => {
-        expect(defaultCurrencyForLocale("ja")).toBe("jpy");
-        expect(defaultCurrencyForLocale("ja-JP")).toBe("jpy");
+afterEach(() => {
+    vi.restoreAllMocks();
+});
+
+describe("currencyForTimeZone", () => {
+    it("gives Japan yen", () => {
+        expect(currencyForTimeZone("Asia/Tokyo")).toBe("jpy");
     });
 
-    it("gives everyone else USD", () => {
-        // A US visitor reading "¥2,500" has to do arithmetic before they
-        // can judge the offer — friction at the worst possible moment.
-        for (const locale of ["en", "es", "fr", "zh", "ar", "hi"]) {
-            expect(defaultCurrencyForLocale(locale)).toBe("usd");
+    it("gives everywhere else USD", () => {
+        for (const tz of [
+            "America/New_York",
+            "America/Los_Angeles",
+            "Europe/London",
+            "Europe/Berlin",
+            "Asia/Singapore",
+            "Australia/Sydney",
+        ]) {
+            expect(currencyForTimeZone(tz), tz).toBe("usd");
         }
     });
 
-    it("derives from LOCALE, never from geography", () => {
-        // Locale is something the user chose. An IP is something that
-        // happens to them, and geo-guessing shows a travelling customer
-        // the wrong currency exactly when they are deciding to pay.
-        // Structural: the function takes a locale and nothing else.
-        expect(defaultCurrencyForLocale.length).toBe(1);
+    it("falls back to USD on an unknown or empty zone", () => {
+        expect(currencyForTimeZone("")).toBe("usd");
+        expect(currencyForTimeZone("Not/AZone")).toBe("usd");
+    });
+
+    it("does not confuse a nearby zone for Japan", () => {
+        // Same UTC offset as Tokyo, different market.
+        expect(currencyForTimeZone("Asia/Seoul")).toBe("usd");
     });
 });
 
 describe("useCurrencyPreference", () => {
-    it("follows the locale before the visitor has chosen", () => {
-        const { result } = renderHook(() => useCurrencyPreference("ja"));
+    it("infers yen for a visitor in Japan", () => {
+        inTimeZone("Asia/Tokyo");
+        const { result } = renderHook(() => useCurrencyPreference());
         expect(result.current.currency).toBe("jpy");
         expect(result.current.isExplicit).toBe(false);
     });
 
-    it("an explicit choice wins over the locale", () => {
-        const { result } = renderHook(() => useCurrencyPreference("ja"));
+    it("infers USD for a visitor outside Japan", () => {
+        inTimeZone("America/New_York");
+        const { result } = renderHook(() => useCurrencyPreference());
+        expect(result.current.currency).toBe("usd");
+    });
+
+    it("ignores the UI language", () => {
+        // The reason this changed. A Japanese engineer running the app
+        // in English is still buying in Japan.
+        inTimeZone("Asia/Tokyo");
+        const { result } = renderHook(() => useCurrencyPreference());
+        expect(result.current.currency).toBe("jpy");
+    });
+
+    it("an explicit choice wins over the detected one", () => {
+        inTimeZone("Asia/Tokyo");
+        const { result } = renderHook(() => useCurrencyPreference());
         act(() => result.current.setCurrency("usd"));
         expect(result.current.currency).toBe("usd");
         expect(result.current.isExplicit).toBe(true);
     });
 
-    it("an explicit choice survives a language switch", () => {
-        // Switching UI language must not silently re-quote the prices of
-        // someone who deliberately picked a currency.
-        const { result, rerender } = renderHook(({ locale }) => useCurrencyPreference(locale), {
-            initialProps: { locale: "en" },
-        });
-        act(() => result.current.setCurrency("jpy"));
-        rerender({ locale: "fr" });
-        expect(result.current.currency).toBe("jpy");
-    });
-
-    it("clearing the choice returns to following the locale", () => {
-        const { result } = renderHook(() => useCurrencyPreference("ja"));
+    it("clearing the choice returns to the detected one", () => {
+        inTimeZone("Asia/Tokyo");
+        const { result } = renderHook(() => useCurrencyPreference());
         act(() => result.current.setCurrency("usd"));
         act(() => result.current.setCurrency(null));
         expect(result.current.currency).toBe("jpy");
@@ -78,30 +104,41 @@ describe("useCurrencyPreference", () => {
     });
 
     it("persists the choice across a reload", () => {
-        const first = renderHook(() => useCurrencyPreference("en"));
+        inTimeZone("America/New_York");
+        const first = renderHook(() => useCurrencyPreference());
         act(() => first.result.current.setCurrency("jpy"));
         first.unmount();
 
-        const second = renderHook(() => useCurrencyPreference("en"));
+        const second = renderHook(() => useCurrencyPreference());
         expect(second.result.current.currency).toBe("jpy");
     });
 
     it("normalises the code to lowercase", () => {
-        // The server matches on lowercase codes; "USD" would fall back
-        // to the default and quietly show the wrong prices.
-        const { result } = renderHook(() => useCurrencyPreference("en"));
-        act(() => result.current.setCurrency("JPY"));
-        expect(result.current.currency).toBe("jpy");
+        // The server matches lowercase; "USD" would fall back to the
+        // default and quietly show the wrong prices.
+        inTimeZone("Asia/Tokyo");
+        const { result } = renderHook(() => useCurrencyPreference());
+        act(() => result.current.setCurrency("USD"));
+        expect(result.current.currency).toBe("usd");
+    });
+
+    it("falls back to USD when the browser exposes no time zone", () => {
+        vi.spyOn(Intl, "DateTimeFormat").mockImplementation(() => {
+            throw new Error("no Intl");
+        });
+        const { result } = renderHook(() => useCurrencyPreference());
+        expect(result.current.currency).toBe("usd");
     });
 
     it("still works when localStorage throws", () => {
         // Private browsing. The choice just does not survive a reload.
+        inTimeZone("Asia/Tokyo");
         const original = window.localStorage.getItem;
         window.localStorage.getItem = () => {
             throw new Error("denied");
         };
         try {
-            const { result } = renderHook(() => useCurrencyPreference("ja"));
+            const { result } = renderHook(() => useCurrencyPreference());
             expect(result.current.currency).toBe("jpy");
         } finally {
             window.localStorage.getItem = original;

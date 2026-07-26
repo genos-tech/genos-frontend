@@ -34,7 +34,7 @@ function PlansPageInner() {
     const [failed, setFailed] = useState(false);
     const year = useMemo(() => new Date().getFullYear(), []);
     // Display currency only — nobody is a subscriber on this page.
-    const { currency, setCurrency } = useCurrencyPreference(locale);
+    const { currency, setCurrency } = useCurrencyPreference();
 
     useEffect(() => {
         let cancelled = false;

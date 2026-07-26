@@ -102,7 +102,7 @@ export const PlansHome = () => {
     const { t, locale } = useTranslation();
     // Display currency. The subscription's REAL currency is read off
     // Stripe and is unaffected by this — see useCurrencyPreference.
-    const { currency, setCurrency } = useCurrencyPreference(locale);
+    const { currency, setCurrency } = useCurrencyPreference();
     const [plans, setPlans] = useState<BillingPlans | null>(null);
     const [config, setConfig] = useState<BillingConfig | null>(null);
     const [teamConfig, setTeamConfig] = useState<TeamBillingConfig | null>(null);
