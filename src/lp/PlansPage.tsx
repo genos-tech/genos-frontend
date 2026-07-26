@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowRight, Check, Mail, Moon, Sparkles, Sun } from "lucide-
 import { Link } from "react-router-dom";
 
 import { CurrencyPicker } from "../features/billing/CurrencyPicker";
+import { planBenefitRows } from "../features/billing/planBenefits";
 import { useCurrencyPreference } from "../hooks/common/useCurrencyPreference";
 import { fmt, I18nProvider, useTranslation } from "../i18n";
 import {
@@ -62,38 +63,6 @@ function PlansPageInner() {
         pro: p.taglinePro,
         max: p.taglineMax,
         enterprise: p.taglineEnterprise,
-    };
-
-    // Benefit-phrased rows, fed by the enforcement table exactly like
-    // PlansHome so the two pages can never disagree: history first, then
-    // AI volume, premium models (paid only), searches, tasks, notes.
-    const benefitRows = (tier: PlanTier): string[] => {
-        const L = tier.limits;
-        const n = (v: number) => v.toLocaleString(locale);
-        const rows = [
-            L.message_retention_days == null
-                ? p.benefitHistoryUnlimited
-                : fmt(p.benefitHistoryDays, { days: String(L.message_retention_days) }),
-            L.llm_ask_daily == null
-                ? p.benefitAiAsksUnlimited
-                : fmt(p.benefitAiAsks, { n: n(L.llm_ask_daily) }),
-        ];
-        if (tier.tier !== "free") rows.push(p.benefitPremiumModels);
-        rows.push(
-            L.web_search_daily == null
-                ? p.benefitWebSearchesUnlimited
-                : fmt(p.benefitWebSearches, { n: n(L.web_search_daily) }),
-            L.task_create_monthly == null
-                ? p.benefitTasksUnlimited
-                : fmt(p.benefitTasks, { n: n(L.task_create_monthly) }),
-            L.note_create_monthly == null
-                ? p.benefitNotesUnlimited
-                : fmt(p.benefitNotes, { n: n(L.note_create_monthly) })
-        );
-        if (L.upload_max_mb != null) {
-            rows.push(fmt(p.benefitUpload, { mb: String(L.upload_max_mb) }));
-        }
-        return rows;
     };
 
     const renderCta = (tier: PlanTier) => {
@@ -293,7 +262,7 @@ function PlansPageInner() {
                                             </div>
 
                                             <ul className="mt-5 flex-1 space-y-2.5">
-                                                {benefitRows(tier).map((row) => (
+                                                {planBenefitRows(tier, p, locale).map((row) => (
                                                     <li
                                                         key={row}
                                                         className="flex items-start gap-2.5 text-sm leading-6 text-slate-700 dark:text-slate-200"
