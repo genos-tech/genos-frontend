@@ -169,6 +169,24 @@ export const settings = {
         tierMax: "Max",
         tierEnterprise: "Enterprise",
         upgradeNote: "Upgrade for higher daily limits on every model.",
+        // --- Monthly AI credits (rendered when the backend serves a
+        // `credits` block, i.e. credits are the authoritative limit).
+        // These REPLACE the daily rows above rather than joining them:
+        // showing both would present two limits when only one applies.
+        creditsHeading: "AI credits",
+        creditsDescription:
+            "Your monthly AI allowance. Simple questions use fewer credits; deeper work uses more.",
+        creditsRemaining: "{balance} of {limit} credits left",
+        creditsUnlimited: "Unlimited AI credits on your plan.",
+        creditsResets: "Resets {when}",
+        creditsResetsToday: "Resets today",
+        creditsResetsTomorrow: "Resets tomorrow",
+        creditsResetsInDays: "Resets in {days} days",
+        // Shown once the balance can no longer cover a single request —
+        // the moment asking actually starts failing, which is not zero.
+        creditsLowWarning:
+            "Not enough credits left for another request. They reset {when}, or upgrade your plan to keep going.",
+        creditsUpgradeNote: "Upgrade for more AI credits each month.",
         noModelsConfigured: "No models are configured for your account.",
         // Effort levels (rendered when the backend serves `efforts`).
         // The user picks Low/Medium/High instead of a model; the notes

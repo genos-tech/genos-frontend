@@ -19,6 +19,7 @@ import {
     openBillingPortal,
     startCheckout,
 } from "../../../services/billingApi";
+import { CreditBalance } from "./CreditBalance";
 
 /**
  * Settings → Plan & Usage.
@@ -196,18 +197,33 @@ export const PlanUsageSection = ({ onNavigateAway }: { onNavigateAway?: () => vo
             </Typography>
 
             <Stack spacing={1.25}>
-                <UsageRow
-                    block={data.llm_ask}
-                    label={p.aiAsks}
-                    unlimitedLabel={p.unlimited}
-                    windowLabel={p.todaySuffix}
-                />
-                <UsageRow
-                    block={data.web_search}
-                    label={p.webSearches}
-                    unlimitedLabel={p.unlimited}
-                    windowLabel={p.todaySuffix}
-                />
+                {/* AI usage: the credit balance when credits are the
+                    authoritative limit, the daily ask/search counters
+                    otherwise. Never both — under credits those counters
+                    still increment (Free's abuse breaker reads one) but
+                    describe no limit the user is subject to, and two
+                    limits on screen when one applies is a worse answer
+                    than the old UI gave. Web search folds in: a search
+                    is priced into the request's credits, so a separate
+                    allowance would charge for it twice. */}
+                {data.credits ? (
+                    <CreditBalance credits={data.credits} hideUpgradeNote tier={data.tier} />
+                ) : (
+                    <>
+                        <UsageRow
+                            block={data.llm_ask}
+                            label={p.aiAsks}
+                            unlimitedLabel={p.unlimited}
+                            windowLabel={p.todaySuffix}
+                        />
+                        <UsageRow
+                            block={data.web_search}
+                            label={p.webSearches}
+                            unlimitedLabel={p.unlimited}
+                            windowLabel={p.todaySuffix}
+                        />
+                    </>
+                )}
                 {data.task_create && (
                     <UsageRow
                         block={data.task_create}
