@@ -10,6 +10,7 @@ import {
     PlanPrice,
     PlanTier,
 } from "../services/billingApi";
+import { formatPrice } from "../utils/currency";
 
 const APP_URL = "https://genosai.dev";
 const CONTACT_SALES_MAILTO = "mailto:genos.support@genosai.dev?subject=Genos%20Enterprise";
@@ -17,24 +18,8 @@ const CONTACT_SALES_MAILTO = "mailto:genos.support@genosai.dev?subject=Genos%20E
 // Stripe stores these currencies without decimals; everything else is
 // in hundredths (cents). Mirrors PlansHome so the marketing page and
 // the in-app page always agree on prices.
-const ZERO_DECIMAL_CURRENCIES = new Set(["jpy", "krw", "vnd"]);
-
 function cn(...classes: Array<string | false | undefined>) {
     return classes.filter(Boolean).join(" ");
-}
-
-function formatPrice(price: PlanPrice, locale: string): string | null {
-    if (price.amount == null) return null;
-    const divisor = ZERO_DECIMAL_CURRENCIES.has(price.currency.toLowerCase()) ? 1 : 100;
-    try {
-        return new Intl.NumberFormat(locale, {
-            style: "currency",
-            currency: price.currency.toUpperCase(),
-            maximumFractionDigits: divisor === 1 ? 0 : 2,
-        }).format(price.amount / divisor);
-    } catch {
-        return `${price.amount / divisor} ${price.currency.toUpperCase()}`;
-    }
 }
 
 function PlansPageInner() {

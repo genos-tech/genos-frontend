@@ -57,8 +57,14 @@ async function postForUrl(path: string, accessToken: string, body?: unknown): Pr
 }
 
 /** Create a Checkout Session and navigate the browser to it. */
-export async function startCheckout(accessToken: string, plan: PurchasablePlan): Promise<void> {
-    const url = await postForUrl("/billing/checkout/", accessToken, { plan });
+export async function startCheckout(
+    accessToken: string,
+    plan: PurchasablePlan,
+    currency?: string
+): Promise<void> {
+    // `currency` selects WHICH declared price is sold, never a
+    // conversion — the Stripe price already carries its own currency.
+    const url = await postForUrl("/billing/checkout/", accessToken, { plan, currency });
     window.location.assign(url);
 }
 
@@ -114,6 +120,18 @@ export interface PlanTier {
 export interface BillingPlans {
     billing_enabled: boolean;
     tiers: PlanTier[];
+    /**
+     * The currency these prices are quoted in. Comes from the server —
+     * echoing back what we asked for would let a misconfigured price id
+     * advertise the wrong currency, and Stripe is the authority on what
+     * a customer will actually be charged.
+     *
+     * Optional so a client can talk to a server that predates
+     * multi-currency without the page going blank.
+     */
+    currency?: string;
+    /** Currencies with prices actually configured, default first. */
+    supported_currencies?: string[];
 }
 
 /**
@@ -121,9 +139,13 @@ export interface BillingPlans {
  * from the backend's enforcement table so the page can never drift
  * from what the quota engine applies.
  */
-export async function fetchBillingPlans(accessToken: string): Promise<BillingPlans | null> {
+export async function fetchBillingPlans(
+    accessToken: string,
+    currency?: string
+): Promise<BillingPlans | null> {
     try {
-        const resp = await fetch(`${API_BASE}/billing/plans/`, {
+        const qs = currency ? `?currency=${encodeURIComponent(currency)}` : "";
+        const resp = await fetch(`${API_BASE}/billing/plans/${qs}`, {
             headers: { Authorization: `Bearer ${accessToken}` },
         });
         if (!resp.ok) return null;
@@ -183,11 +205,13 @@ export async function fetchTeamBillingConfig(
 export async function startTeamCheckout(
     accessToken: string,
     teamId: string,
-    plan: PurchasablePlan
+    plan: PurchasablePlan,
+    currency?: string
 ): Promise<void> {
     const url = await postForUrl("/billing/team/checkout/", accessToken, {
         team_id: teamId,
         plan,
+        currency,
     });
     window.location.assign(url);
 }
