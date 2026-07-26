@@ -14,9 +14,9 @@
 
 import { describe, expect, it } from "vitest";
 
+import { planBenefitRows } from "../features/billing/planBenefits";
 import { en } from "../i18n/locales/en";
 import type { PlanTier } from "../services/billingApi";
-import { planBenefitRows } from "../features/billing/planBenefits";
 
 const p = en.settings.planUsage;
 
