@@ -14,6 +14,7 @@ import {
 } from "@mui/joy";
 
 import { useAuth } from "../../context/AuthContext";
+import { useCurrencyPreference } from "../../hooks/common/useCurrencyPreference";
 import { fmt, useTranslation } from "../../i18n";
 import { SubscriptionTier } from "../../services/agentApi";
 import {
@@ -34,6 +35,7 @@ import {
     TeamBillingConfig,
 } from "../../services/billingApi";
 import { formatPrice } from "../../utils/currency";
+import { CurrencyPicker } from "./CurrencyPicker";
 import { planCta } from "./planCta";
 
 /**
@@ -97,6 +99,9 @@ const TIER_COLOR: Record<SubscriptionTier, "neutral" | "primary" | "success" | "
 export const PlansHome = () => {
     const { accessToken } = useAuth();
     const { t, locale } = useTranslation();
+    // Display currency. The subscription's REAL currency is read off
+    // Stripe and is unaffected by this — see useCurrencyPreference.
+    const { currency, setCurrency } = useCurrencyPreference(locale);
     const [plans, setPlans] = useState<BillingPlans | null>(null);
     const [config, setConfig] = useState<BillingConfig | null>(null);
     const [teamConfig, setTeamConfig] = useState<TeamBillingConfig | null>(null);
@@ -109,7 +114,7 @@ export const PlansHome = () => {
     useEffect(() => {
         if (!accessToken) return;
         let cancelled = false;
-        void fetchBillingPlans(accessToken).then((res) => {
+        void fetchBillingPlans(accessToken, currency).then((res) => {
             if (cancelled) return;
             setPlans(res);
             setFailed(res === null);
@@ -131,7 +136,11 @@ export const PlansHome = () => {
         return () => {
             cancelled = true;
         };
-    }, [accessToken]);
+        // `currency` is a dependency: the amounts in `plans` are quoted
+        // in whichever currency they were requested in, so switching
+        // has to re-ask the server rather than re-render stale numbers
+        // under a new symbol.
+    }, [accessToken, currency]);
 
     const p = t.settings.planUsage;
 
@@ -240,7 +249,7 @@ export const PlansHome = () => {
                         // core and max flank it as soft.
                         variant={cta.plan === "pro" ? "solid" : "soft"}
                         onClick={() =>
-                            runBillingAction(() => startCheckout(accessToken!, cta.plan))
+                            runBillingAction(() => startCheckout(accessToken!, cta.plan, currency))
                         }
                     >
                         {p[UPGRADE_LABEL_KEY[cta.plan]]}
@@ -335,6 +344,15 @@ export const PlansHome = () => {
                 <Typography level="body-md" sx={{ color: "text.tertiary", maxWidth: 640 }}>
                     {p.plansHeroSub}
                 </Typography>
+                {/* Renders nothing until a second currency is configured
+                    server-side, so this is invisible today and appears on
+                    its own once USD prices exist in Stripe. */}
+                <CurrencyPicker
+                    ariaLabel={p.currencyLabel}
+                    supported={plans?.supported_currencies}
+                    value={plans?.currency || currency}
+                    onChange={setCurrency}
+                />
             </Stack>
 
             {/* Manage-your-subscription banner.
@@ -589,7 +607,8 @@ export const PlansHome = () => {
                                                                 startTeamCheckout(
                                                                     accessToken!,
                                                                     team.team_id,
-                                                                    plan
+                                                                    plan,
+                                                                    currency
                                                                 )
                                                             )
                                                         }

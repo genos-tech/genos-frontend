@@ -87,6 +87,9 @@ export const settings = {
         plansHero: "Do more of your best work with Genos",
         plansHeroSub:
             "Start free and upgrade anytime. Every plan includes every feature — paid plans unlock more AI, unlimited history, and more room to create.",
+        // Accessible name for the currency switcher. The switcher only
+        // renders when more than one currency has prices configured.
+        currencyLabel: "Display prices in",
         startForFree: "Start for free",
         taglineFree: "Get your chat, tasks, and notes in one place",
         taglineCore: "Unlimited history and daily AI",

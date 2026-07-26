@@ -3,6 +3,8 @@ import { motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, Check, Mail, Moon, Sparkles, Sun } from "lucide-react";
 import { Link } from "react-router-dom";
 
+import { CurrencyPicker } from "../features/billing/CurrencyPicker";
+import { useCurrencyPreference } from "../hooks/common/useCurrencyPreference";
 import { fmt, I18nProvider, useTranslation } from "../i18n";
 import {
     BillingPlans,
@@ -30,10 +32,12 @@ function PlansPageInner() {
     const [plans, setPlans] = useState<BillingPlans | null>(null);
     const [failed, setFailed] = useState(false);
     const year = useMemo(() => new Date().getFullYear(), []);
+    // Display currency only — nobody is a subscriber on this page.
+    const { currency, setCurrency } = useCurrencyPreference(locale);
 
     useEffect(() => {
         let cancelled = false;
-        void fetchPublicBillingPlans().then((res) => {
+        void fetchPublicBillingPlans(currency).then((res) => {
             if (cancelled) return;
             setPlans(res);
             setFailed(res === null);
@@ -41,7 +45,9 @@ function PlansPageInner() {
         return () => {
             cancelled = true;
         };
-    }, []);
+        // Amounts are quoted in the currency they were requested in, so
+        // a switch has to re-ask rather than re-render stale numbers.
+    }, [currency]);
 
     const tierLabel: Record<string, string> = {
         free: p.tierFree,
@@ -198,6 +204,18 @@ function PlansPageInner() {
                         >
                             {p.plansHeroSub}
                         </motion.p>
+
+                        {/* Invisible until a second currency has prices
+                            configured server-side. */}
+                        <div className="mt-6 flex justify-center">
+                            <CurrencyPicker
+                                ariaLabel={p.currencyLabel}
+                                className="rounded-full border border-violet-200 bg-white/80 px-3 py-1.5 text-sm font-semibold text-slate-700 dark:border-white/15 dark:bg-white/5 dark:text-slate-200"
+                                supported={plans?.supported_currencies}
+                                value={plans?.currency || currency}
+                                onChange={setCurrency}
+                            />
+                        </div>
                     </div>
                 </section>
 

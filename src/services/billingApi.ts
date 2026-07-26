@@ -162,9 +162,10 @@ export async function fetchBillingPlans(
  * prices). Returns null on any failure so the page can show a clean
  * "couldn't load pricing" state rather than crashing.
  */
-export async function fetchPublicBillingPlans(): Promise<BillingPlans | null> {
+export async function fetchPublicBillingPlans(currency?: string): Promise<BillingPlans | null> {
     try {
-        const resp = await fetch(`${API_BASE}/billing/plans/`);
+        const qs = currency ? `?currency=${encodeURIComponent(currency)}` : "";
+        const resp = await fetch(`${API_BASE}/billing/plans/${qs}`);
         if (!resp.ok) return null;
         return (await resp.json()) as BillingPlans;
     } catch {
