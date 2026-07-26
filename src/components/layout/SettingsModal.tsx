@@ -71,6 +71,7 @@ import { AgentFeatures, fetchAgentFeatures, SubscriptionTier } from "../../servi
 import { NotificationSettingsPanel } from "../../services/notifications/NotificationSettingsPanel";
 import { getServiceShortcutModifierKeys, isMac } from "../../utils/platform";
 import { MentionGroupsPanel } from "./MentionGroupsPanel";
+import { CreditUsageSection } from "./settings/CreditBalance";
 import { PlanUsageSection } from "./settings/PlanUsageSection";
 import { TeamEmojiPanel } from "./TeamEmojiPanel";
 
@@ -361,6 +362,9 @@ export const LlmModelSection = () => {
     // Payload-shape driven — no FE flag — so either side can deploy
     // first and this section renders whatever the server supports.
     const effortMode = Boolean(data.efforts && data.efforts.length > 0);
+    // Same payload-shape convention: `credits` is present iff the
+    // backend runs credits as the authoritative limit.
+    const creditsMode = Boolean(data.credits);
     const currentEffort = data.current.effort || "medium";
     const effortsForProvider = (data.efforts ?? []).filter((e) => e.provider === currentProvider);
     const effortLabel = (e: string) =>
@@ -417,7 +421,12 @@ export const LlmModelSection = () => {
                 </Typography>
             </Stack>
             <Typography level="body-xs" sx={{ mb: 1.5 }}>
-                {t.settings.llmModel.description}
+                {/* The legacy copy promises "a separate daily quota per
+                    model" — untrue once credits rule, since the
+                    per-model caps stop being enforced. */}
+                {creditsMode
+                    ? t.settings.llmModel.creditsDescription
+                    : t.settings.llmModel.description}
             </Typography>
 
             <Stack
@@ -529,92 +538,106 @@ export const LlmModelSection = () => {
 
             <Divider sx={{ my: 1.5 }} />
 
-            <Typography level="title-sm" sx={{ mb: 1 }}>
-                {t.settings.llmModel.usageHeading}
-            </Typography>
-            <Stack spacing={0.75}>
-                {/* Cross-cutting tier quotas come first — "LLM asks" is
+            {/* Credits authoritative -> the balance IS the limit, and
+                every daily row below describes a cap the server no
+                longer enforces. Showing both would present two limits
+                when only one applies, so this REPLACES them rather than
+                joining them. Payload-shape switch: `credits` is served
+                only when the backend enforces it. */}
+            {creditsMode ? (
+                <CreditUsageSection credits={data.credits!} tier={data.tier} />
+            ) : (
+                <>
+                    <Typography level="title-sm" sx={{ mb: 1 }}>
+                        {t.settings.llmModel.usageHeading}
+                    </Typography>
+                    <Stack spacing={0.75}>
+                        {/* Cross-cutting tier quotas come first — "LLM asks" is
                     the total daily ask count regardless of model, and
                     "Web searches" is the Tavily-tool counter. Both
                     increment in parallel with the per-model rows
                     below them. */}
-                <Stack
-                    alignItems="center"
-                    direction="row"
-                    justifyContent="space-between"
-                    spacing={1}
-                >
-                    <Typography level="body-sm" sx={{ fontWeight: 600 }}>
-                        {t.settings.llmModel.llmAskLabel}
-                    </Typography>
-                    <Typography level="body-sm" sx={{ color: "text.tertiary" }}>
-                        {data.limits.llm_ask.limit === null
-                            ? t.settings.llmModel.usageUnlimited
-                            : `${data.limits.llm_ask.used} / ${data.limits.llm_ask.limit}`}
-                    </Typography>
-                </Stack>
-                <Stack
-                    alignItems="center"
-                    direction="row"
-                    justifyContent="space-between"
-                    spacing={1}
-                >
-                    <Typography level="body-sm" sx={{ fontWeight: 600 }}>
-                        {t.settings.llmModel.webSearchLabel}
-                    </Typography>
-                    <Typography level="body-sm" sx={{ color: "text.tertiary" }}>
-                        {data.limits.web_search.limit === null
-                            ? t.settings.llmModel.usageUnlimited
-                            : `${data.limits.web_search.used} / ${data.limits.web_search.limit}`}
-                    </Typography>
-                </Stack>
-                <Divider sx={{ my: 0.5 }} />
-                {/* Per-EFFORT usage rows when the backend runs effort
+                        <Stack
+                            alignItems="center"
+                            direction="row"
+                            justifyContent="space-between"
+                            spacing={1}
+                        >
+                            <Typography level="body-sm" sx={{ fontWeight: 600 }}>
+                                {t.settings.llmModel.llmAskLabel}
+                            </Typography>
+                            <Typography level="body-sm" sx={{ color: "text.tertiary" }}>
+                                {data.limits.llm_ask.limit === null
+                                    ? t.settings.llmModel.usageUnlimited
+                                    : `${data.limits.llm_ask.used} / ${data.limits.llm_ask.limit}`}
+                            </Typography>
+                        </Stack>
+                        <Stack
+                            alignItems="center"
+                            direction="row"
+                            justifyContent="space-between"
+                            spacing={1}
+                        >
+                            <Typography level="body-sm" sx={{ fontWeight: 600 }}>
+                                {t.settings.llmModel.webSearchLabel}
+                            </Typography>
+                            <Typography level="body-sm" sx={{ color: "text.tertiary" }}>
+                                {data.limits.web_search.limit === null
+                                    ? t.settings.llmModel.usageUnlimited
+                                    : `${data.limits.web_search.used} / ${data.limits.web_search.limit}`}
+                            </Typography>
+                        </Stack>
+                        <Divider sx={{ my: 0.5 }} />
+                        {/* Per-EFFORT usage rows when the backend runs effort
                     levels ("High: 2/4 today") — the counters are the
                     mapped model's, re-labeled by what the user actually
                     picks. Legacy per-model rows otherwise. Either way,
                     current provider only — other providers' counters
                     would be noise behind a dropdown switch. */}
-                {effortMode &&
-                    effortsForProvider.map((e) => (
-                        <Stack
-                            key={`${e.provider}-${e.effort}`}
-                            alignItems="center"
-                            direction="row"
-                            justifyContent="space-between"
-                            spacing={1}
-                        >
-                            <Typography level="body-sm">{effortLabel(e.effort)}</Typography>
-                            <Typography level="body-sm" sx={{ color: "text.tertiary" }}>
-                                {e.daily_limit === null
-                                    ? t.settings.llmModel.usageUnlimited
-                                    : `${e.used_today} / ${e.daily_limit}`}
-                            </Typography>
-                        </Stack>
-                    ))}
-                {!effortMode &&
-                    modelsForProvider.map((m) => (
-                        <Stack
-                            key={`${m.provider}-${m.model}`}
-                            alignItems="center"
-                            direction="row"
-                            justifyContent="space-between"
-                            spacing={1}
-                        >
-                            <Typography level="body-sm">{m.label}</Typography>
-                            <Typography level="body-sm" sx={{ color: "text.tertiary" }}>
-                                {m.daily_limit === null
-                                    ? t.settings.llmModel.usageUnlimited
-                                    : `${m.used_today} / ${m.daily_limit}`}
-                            </Typography>
-                        </Stack>
-                    ))}
-            </Stack>
+                        {effortMode &&
+                            effortsForProvider.map((e) => (
+                                <Stack
+                                    key={`${e.provider}-${e.effort}`}
+                                    alignItems="center"
+                                    direction="row"
+                                    justifyContent="space-between"
+                                    spacing={1}
+                                >
+                                    <Typography level="body-sm">
+                                        {effortLabel(e.effort)}
+                                    </Typography>
+                                    <Typography level="body-sm" sx={{ color: "text.tertiary" }}>
+                                        {e.daily_limit === null
+                                            ? t.settings.llmModel.usageUnlimited
+                                            : `${e.used_today} / ${e.daily_limit}`}
+                                    </Typography>
+                                </Stack>
+                            ))}
+                        {!effortMode &&
+                            modelsForProvider.map((m) => (
+                                <Stack
+                                    key={`${m.provider}-${m.model}`}
+                                    alignItems="center"
+                                    direction="row"
+                                    justifyContent="space-between"
+                                    spacing={1}
+                                >
+                                    <Typography level="body-sm">{m.label}</Typography>
+                                    <Typography level="body-sm" sx={{ color: "text.tertiary" }}>
+                                        {m.daily_limit === null
+                                            ? t.settings.llmModel.usageUnlimited
+                                            : `${m.used_today} / ${m.daily_limit}`}
+                                    </Typography>
+                                </Stack>
+                            ))}
+                    </Stack>
 
-            {data.tier === "free" && (
-                <Typography level="body-xs" sx={{ mt: 1.5, color: "text.tertiary" }}>
-                    {t.settings.llmModel.upgradeNote}
-                </Typography>
+                    {data.tier === "free" && (
+                        <Typography level="body-xs" sx={{ mt: 1.5, color: "text.tertiary" }}>
+                            {t.settings.llmModel.upgradeNote}
+                        </Typography>
+                    )}
+                </>
             )}
         </Sheet>
     );

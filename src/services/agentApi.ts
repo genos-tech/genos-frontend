@@ -197,6 +197,32 @@ export interface MonthlyQuotaBlock extends QuotaBlock {
 
 export type SubscriptionTier = "free" | "core" | "pro" | "max" | "enterprise";
 
+// Monthly AI credit balance. PRESENT ⇔ the backend runs credits as the
+// authoritative limit (`AI_CREDITS_AUTHORITATIVE`). Its presence is the
+// render switch — the same contract `AgentModels.efforts` uses, and for
+// the same reason: either side can deploy first, and a client showing a
+// credit balance while the server still enforces daily ask counts would
+// be lying about what actually limits the user.
+//
+// Values are WHOLE credits with 2 decimals, not milli — a request can
+// cost 0.11 credits, so rounding to integers would show "0 left" to
+// someone who can still ask. `unlimited` (enterprise) carries nulls
+// rather than omitting the block, which would read as "not on credits".
+export interface CreditsBlock {
+    unlimited: boolean;
+    balance: number | null;
+    limit: number | null;
+    used: number | null;
+    // ISO instant the allowance resets (first moment of next UTC month).
+    // A date rather than a day count so a page left open overnight
+    // can't disagree with the server about "days remaining".
+    period_end_iso: string;
+    // The most a single request can be charged. Below this, asking
+    // starts failing — which is the moment the UI needs to warn about,
+    // not zero.
+    per_request_max: number;
+}
+
 // The single fetch behind Settings → Plan & Usage: the user's
 // EFFECTIVE tier (own tier, or a paying team's plan — `tier_source`
 // says which, `tier_team` names the granting team) plus every
@@ -215,6 +241,11 @@ export interface AgentFeatures {
     note_create?: MonthlyQuotaBlock;
     message_retention_days?: number | null; // null = unlimited history
     upload_max_mb?: number | null; // null = no tier file cap
+    // Present ⇔ credits are authoritative. When set, `llm_ask` and
+    // `web_search` are still returned (old clients, and Free's abuse
+    // breaker still uses the ask counter) but no longer describe any
+    // limit the user is subject to — render credits instead.
+    credits?: CreditsBlock;
 }
 
 export async function fetchAgentFeatures(accessToken: string): Promise<AgentFeatures | null> {
@@ -274,6 +305,11 @@ export interface AgentModels {
         llm_ask: QuotaBlock;
         web_search: QuotaBlock;
     };
+    // Present ⇔ credits are authoritative — see `CreditsBlock`. When
+    // set, the per-model `daily_limit` / `used_today` rows describe caps
+    // the server no longer enforces, so the picker must stop showing
+    // them: a cap that does not apply is worse than no cap at all.
+    credits?: CreditsBlock;
 }
 
 export async function fetchAgentModels(accessToken: string): Promise<AgentModels | null> {
