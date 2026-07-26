@@ -69,12 +69,20 @@ export const CreditBalance = ({ credits, hideUpgradeNote, tier }: Props) => {
     }
 
     const balance = Math.max(credits.balance, 0);
-    const pctRemaining = credits.limit > 0 ? (balance / credits.limit) * 100 : 0;
-    // "Low" is not near-zero: it is the point where the balance can no
-    // longer cover ONE request's quoted maximum, which is exactly when
-    // asking begins to fail. Warning at 10% would be silent through the
-    // failures on a 10-credit plan.
-    const cannotAfford = balance < credits.per_request_max;
+    const used = Math.max(credits.limit - balance, 0);
+    // The bar fills with what has been USED, so a fresh month reads
+    // empty and fills as you spend. Matches the task/note quota bars in
+    // `PlanUsageSection` — same direction, same `used / limit` ratio,
+    // same at-cap colour — because two meters in one Settings modal
+    // filling in opposite directions is a misreading waiting to happen.
+    const pctUsed = credits.limit > 0 ? Math.min((used / credits.limit) * 100, 100) : 0;
+    // Two states, not one, mirroring what the server actually does.
+    // `empty` is the only one that refuses a request; `low` means the
+    // balance can no longer cover a request's quoted maximum, so a long
+    // one may be stopped partway. Warning at a PERCENTAGE would be
+    // silent through every stop on a 10-credit plan.
+    const empty = balance <= 0;
+    const low = !empty && balance < credits.per_request_max;
 
     return (
         <Stack spacing={1}>
@@ -97,17 +105,20 @@ export const CreditBalance = ({ credits, hideUpgradeNote, tier }: Props) => {
 
             <LinearProgress
                 determinate
-                color={cannotAfford ? "warning" : "primary"}
+                color={empty ? "warning" : "primary"}
                 size="sm"
                 sx={{ "--LinearProgress-radius": "6px" }}
-                value={Math.min(Math.max(pctRemaining, 0), 100)}
+                value={pctUsed}
             />
 
-            {cannotAfford && (
+            {(empty || low) && (
                 <Typography level="body-xs" sx={{ color: "warning.plainColor" }}>
-                    {fmt(t.settings.llmModel.creditsLowWarning, {
-                        when: resetLabel.toLowerCase(),
-                    })}
+                    {fmt(
+                        empty
+                            ? t.settings.llmModel.creditsEmptyWarning
+                            : t.settings.llmModel.creditsLowWarning,
+                        { when: resetLabel.toLowerCase() }
+                    )}
                 </Typography>
             )}
 

@@ -173,19 +173,25 @@ export const settings = {
         // `credits` block, i.e. credits are the authoritative limit).
         // These REPLACE the daily rows above rather than joining them:
         // showing both would present two limits when only one applies.
+        // Always "AI credits", never a bare "credits" — on its own the
+        // word raises the question it should answer (credits for what?).
         creditsHeading: "AI credits",
         creditsDescription:
-            "Your monthly AI allowance. Simple questions use fewer credits; deeper work uses more.",
-        creditsRemaining: "{balance} of {limit} credits left",
+            "Your monthly AI credits. Simple questions use fewer credits; deeper work uses more.",
+        creditsRemaining: "{balance} of {limit} AI credits left",
         creditsUnlimited: "Unlimited AI credits on your plan.",
         creditsResets: "Resets {when}",
         creditsResetsToday: "Resets today",
         creditsResetsTomorrow: "Resets tomorrow",
         creditsResetsInDays: "Resets in {days} days",
-        // Shown once the balance can no longer cover a single request —
-        // the moment asking actually starts failing, which is not zero.
+        // Two distinct states, because the server now treats them
+        // differently. Below one request's maximum you can still ask —
+        // the run just stops partway if it turns out to be expensive.
+        // At zero you cannot ask at all.
         creditsLowWarning:
-            "Not enough credits left for another request. They reset {when}, or upgrade your plan to keep going.",
+            "Running low — a long request may stop partway. Your AI credits reset {when}.",
+        creditsEmptyWarning:
+            "You're out of AI credits. They reset {when}, or upgrade your plan to keep going.",
         creditsUpgradeNote: "Upgrade for more AI credits each month.",
         noModelsConfigured: "No models are configured for your account.",
         // Effort levels (rendered when the backend serves `efforts`).
