@@ -12,6 +12,23 @@ import { Link } from "react-router-dom";
  * text; an English summary follows for non-Japanese readers. Public
  * and auth-free, like the other `lp/` pages.
  *
+ * Prices here are STATIC, and stay static now that Genos sells in more
+ * than one currency. Fetching them from /billing/plans/ would keep them
+ * from going stale, but a disclosure page that renders "loading…" — or
+ * renders nothing because a fetch failed — is a worse compliance
+ * outcome than one that is a release behind. 特商法 requires the price
+ * to BE THERE.
+ *
+ * The yen figures stay because 特商法 governs sales to consumers in
+ * Japan and those sales are in yen. Other currencies are pointed at the
+ * pricing page and checkout rather than enumerated: prices are declared
+ * per currency by hand (see genos-docs/operations/CURRENCY.md), so
+ * listing them here would be a second place to forget to update. When a
+ * non-Japanese market gets its own disclosure requirements, it needs
+ * its own section rather than more rows in this one.
+ *
+ * ⚠️ Changing the yen prices means changing them HERE and in Stripe.
+ *
  * Operator identity here mirrors what the landing page already
  * publishes (name + contact email); address/phone use the
  * disclose-on-request pattern permitted for individual sellers.
@@ -80,6 +97,10 @@ const JA_ROWS: Row[] = [
                 各プランの内容はアプリ内の「プランと料金」ページをご確認ください。
                 なお、価格改定前にご契約いただいたお客様は、プランを変更されるまで
                 従来の月額料金が引き続き適用されます。
+                <br />
+                日本円以外の通貨でご契約の場合、適用される通貨と金額は
+                「プランと料金」ページおよび決済画面に表示されるものとなります。
+                表示価格は各通貨ごとに個別に設定されており、為替レートによる 自動換算は行いません。
             </>
         ),
     },
@@ -137,7 +158,7 @@ const EN_ROWS: Row[] = [
     },
     {
         label: "Pricing",
-        body: "Core: ¥1,200 / month · Pro: ¥2,500 / month · Max: ¥4,900 / month (tax included). See the in-app Plans & pricing page for details. Subscribers who signed up before the price change keep their original monthly rate until they change plans.",
+        body: "Core: ¥1,200 / month · Pro: ¥2,500 / month · Max: ¥4,900 / month (tax included). Where a currency other than Japanese yen applies, the currency and amount charged are those shown on the Plans & pricing page and at checkout; prices are set separately per currency and are not converted at an exchange rate. See the in-app Plans & pricing page for details. Subscribers who signed up before the price change keep their original monthly rate until they change plans.",
     },
     {
         label: "Payment",
