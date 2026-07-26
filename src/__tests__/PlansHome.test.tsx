@@ -177,7 +177,12 @@ describe("PlansHome", () => {
         expect(screen.getByText("Upgrade to Max")).toBeTruthy();
         expect(screen.getByText("Current plan")).toBeTruthy(); // on the free card
         fireEvent.click(pro);
-        await waitFor(() => expect(billingApi.startCheckout).toHaveBeenCalledWith("tok", "pro"));
+        // The third argument is the DISPLAY currency the page was
+        // quoting — checkout must sell the price the visitor was
+        // looking at, not whatever the server defaults to.
+        await waitFor(() =>
+            expect(billingApi.startCheckout).toHaveBeenCalledWith("tok", "pro", "usd")
+        );
     });
 
     it("renders a Core checkout button and starts the core plan", async () => {
@@ -209,7 +214,9 @@ describe("PlansHome", () => {
         renderPage();
         const core = await screen.findByText("Upgrade to Core");
         fireEvent.click(core);
-        await waitFor(() => expect(billingApi.startCheckout).toHaveBeenCalledWith("tok", "core"));
+        await waitFor(() =>
+            expect(billingApi.startCheckout).toHaveBeenCalledWith("tok", "core", "usd")
+        );
     });
 
     it("paid subscriber sees a manage-subscription banner with the renewal date", async () => {
@@ -403,7 +410,12 @@ describe("PlansHome", () => {
         expect(screen.getByText(/¥1,200 × 3 seats \/ month/)).toBeTruthy();
         fireEvent.click(screen.getByText("Team Pro"));
         await waitFor(() =>
-            expect(billingApi.startTeamCheckout).toHaveBeenCalledWith("tok", "team-1", "pro")
+            expect(billingApi.startTeamCheckout).toHaveBeenCalledWith(
+                "tok",
+                "team-1",
+                "pro",
+                "usd"
+            )
         );
     });
 
