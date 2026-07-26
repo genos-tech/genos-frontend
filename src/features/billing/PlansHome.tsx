@@ -36,6 +36,7 @@ import {
 } from "../../services/billingApi";
 import { formatPrice } from "../../utils/currency";
 import { CurrencyPicker } from "./CurrencyPicker";
+import { planBenefitRows } from "./planBenefits";
 import { planCta } from "./planCta";
 
 /**
@@ -295,40 +296,6 @@ export const PlansHome = () => {
         }
     };
 
-    // Benefit-phrased checkmark rows, still fed by the enforcement
-    // table — selling order: history first (the classic upgrade
-    // trigger), then AI volume, premium models, and the rest.
-    const benefitRows = (tier: PlanTier): string[] => {
-        const L = tier.limits;
-        const n = (v: number) => v.toLocaleString(locale);
-        const rows = [
-            L.message_retention_days == null
-                ? p.benefitHistoryUnlimited
-                : fmt(p.benefitHistoryDays, { days: String(L.message_retention_days) }),
-            L.llm_ask_daily == null
-                ? p.benefitAiAsksUnlimited
-                : fmt(p.benefitAiAsks, { n: n(L.llm_ask_daily) }),
-        ];
-        // Free blocks opus-class models entirely; every paid tier
-        // includes them (with per-model daily caps).
-        if (tier.tier !== "free") rows.push(p.benefitPremiumModels);
-        rows.push(
-            L.web_search_daily == null
-                ? p.benefitWebSearchesUnlimited
-                : fmt(p.benefitWebSearches, { n: n(L.web_search_daily) }),
-            L.task_create_monthly == null
-                ? p.benefitTasksUnlimited
-                : fmt(p.benefitTasks, { n: n(L.task_create_monthly) }),
-            L.note_create_monthly == null
-                ? p.benefitNotesUnlimited
-                : fmt(p.benefitNotes, { n: n(L.note_create_monthly) })
-        );
-        if (L.upload_max_mb != null) {
-            rows.push(fmt(p.benefitUpload, { mb: String(L.upload_max_mb) }));
-        }
-        return rows;
-    };
-
     const tagline: Record<SubscriptionTier, string> = {
         free: p.taglineFree,
         core: p.taglineCore,
@@ -522,7 +489,7 @@ export const PlansHome = () => {
                             <Box sx={{ minHeight: 36 }}>{renderCta(tier)}</Box>
                             <Divider />
                             <Stack spacing={0.75} sx={{ flex: 1 }}>
-                                {benefitRows(tier).map((row) => (
+                                {planBenefitRows(tier, p, locale).map((row) => (
                                     <Typography
                                         key={row}
                                         level="body-sm"

@@ -100,11 +100,23 @@ export const settings = {
         freeForever: "Free forever",
         benefitHistoryUnlimited: "Unlimited message history",
         benefitHistoryDays: "{days}-day message history",
+        // --- AI allowance, two eras -------------------------------
+        // Credits replaced daily ask/search counts as the customer's
+        // limit. The plans page renders whichever the SERVER actually
+        // enforces (it sends `monthly_ai_credits` only when credits
+        // rule), so both sets stay until the daily era is retired.
         benefitAiAsks: "{n} AI asks every day",
         benefitAiAsksUnlimited: "Unlimited AI asks",
         benefitPremiumModels: "Premium AI models included",
         benefitWebSearches: "{n} AI web searches per day",
         benefitWebSearchesUnlimited: "Unlimited AI web searches",
+        // Credits era. Web search is no longer a separate allowance —
+        // it is priced into the request — so it gets no row of its own;
+        // saying "included" is the honest summary.
+        benefitAiCredits: "{n} AI credits every month",
+        benefitAiCreditsUnlimited: "Unlimited AI credits",
+        benefitCreditsExplainer: "Simple questions use fewer credits; deeper work uses more",
+        benefitWebSearchIncluded: "Web search included",
         benefitTasks: "{n} tasks per month",
         benefitTasksUnlimited: "Unlimited tasks",
         benefitNotes: "{n} notes per month",

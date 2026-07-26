@@ -114,6 +114,19 @@ export interface PlanTier {
         note_create_monthly: number | null;
         message_retention_days: number | null;
         upload_max_mb: number | null;
+        /**
+         * The plan's monthly AI credits. PRESENT ONLY when the server
+         * enforces credits — its presence is the render switch, the same
+         * payload-shape convention `credits` uses on /agent/features/.
+         *
+         * That is what stops this page advertising a limit the quota
+         * engine has stopped applying: under credits the daily ask and
+         * web-search caps still exist as numbers but bind nobody, so
+         * rendering them would be selling a limit that isn't one.
+         *
+         * `null` = unlimited (enterprise). Absent = the daily era.
+         */
+        monthly_ai_credits?: number | null;
     };
 }
 
