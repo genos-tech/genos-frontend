@@ -33,6 +33,7 @@ import {
     startTeamCheckout,
     TeamBillingConfig,
 } from "../../services/billingApi";
+import { formatPrice } from "../../utils/currency";
 import { planCta } from "./planCta";
 
 /**
@@ -85,22 +86,6 @@ const SWITCH_LABEL_KEY = {
 
 // Currencies Stripe stores without decimals — everything else is in
 // hundredths (cents). Only the ones plausibly configured here.
-const ZERO_DECIMAL_CURRENCIES = new Set(["jpy", "krw", "vnd"]);
-
-const formatPrice = (price: PlanPrice, locale: string): string | null => {
-    if (price.amount == null) return null;
-    const divisor = ZERO_DECIMAL_CURRENCIES.has(price.currency.toLowerCase()) ? 1 : 100;
-    try {
-        return new Intl.NumberFormat(locale, {
-            style: "currency",
-            currency: price.currency.toUpperCase(),
-            maximumFractionDigits: divisor === 1 ? 0 : 2,
-        }).format(price.amount / divisor);
-    } catch {
-        return `${price.amount / divisor} ${price.currency.toUpperCase()}`;
-    }
-};
-
 const TIER_COLOR: Record<SubscriptionTier, "neutral" | "primary" | "success" | "warning"> = {
     free: "neutral",
     core: "primary",
