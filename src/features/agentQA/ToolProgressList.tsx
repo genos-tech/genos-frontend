@@ -32,6 +32,12 @@ export const humanReadableCall = (e: ToolEvent): string => {
     return argPreview ? `${e.tool_name}(${argPreview})` : e.tool_name;
 };
 
+// "230ms" below a second, "1.8s" above — SI notation, deliberately not
+// localized (matches how every locale reads durations in tech UIs, so
+// the strip and the per-turn total can share it without label props).
+export const formatDurationMs = (ms: number): string =>
+    ms < 1000 ? `${Math.max(ms, 0)}ms` : `${(ms / 1000).toFixed(1)}s`;
+
 interface ToolProgressListProps {
     events: ToolEvent[];
     isDark: boolean;
@@ -119,6 +125,23 @@ const ToolProgressRow = ({ event, isDark }: { event: ToolEvent; isDark: boolean 
             >
                 {isError ? `${event.tool_name}: ${event.error}` : label}
             </Typography>
+            {/* Server-measured execution time (absent while pending, on
+                cache hits, and against older backends). Dim + tabular so
+                a column of steps reads like a profile. */}
+            {typeof event.duration_ms === "number" && (
+                <Typography
+                    level="body-xs"
+                    sx={{
+                        flexShrink: 0,
+                        whiteSpace: "nowrap",
+                        fontVariantNumeric: "tabular-nums",
+                        color: isDark ? DARK_TEXT_MEDIUM : "text.tertiary",
+                        opacity: isDark ? 0.8 : 1,
+                    }}
+                >
+                    {formatDurationMs(event.duration_ms)}
+                </Typography>
+            )}
         </Box>
     );
 };

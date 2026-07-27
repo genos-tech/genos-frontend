@@ -23,7 +23,7 @@ import { FeedbackThumbs } from "./FeedbackThumbs";
 import { markdownAnswerSx } from "./markdownAnswerSx";
 import type { AgentMentionRef } from "./mentions/types";
 import { SourceChips } from "./SourceChips";
-import { ToolProgressList } from "./ToolProgressList";
+import { formatDurationMs, ToolProgressList } from "./ToolProgressList";
 import type { AgentQALabels, CompletedTurn, UseAgentQAReturn } from "./types";
 
 interface AgentQAConversationProps {
@@ -224,6 +224,23 @@ const TurnRowInner = ({
                     </ReactMarkdown>
                     <SourceChips sources={chipSources} onSelectSource={onSelectSource} />
                 </Box>
+            )}
+            {/* Total response time (server-measured, from `done`).
+                Error turns skip it — their timing is noise. */}
+            {!turn.askError && typeof turn.elapsedMs === "number" && (
+                <Typography
+                    level="body-xs"
+                    sx={{
+                        mt: 0.25,
+                        fontVariantNumeric: "tabular-nums",
+                        color: "text.tertiary",
+                    }}
+                >
+                    {(labels.states.answeredIn ?? "Answered in {duration}").replace(
+                        "{duration}",
+                        formatDurationMs(turn.elapsedMs)
+                    )}
+                </Typography>
             )}
             {(showCopy || showRetry || showFeedback) && (
                 <Box

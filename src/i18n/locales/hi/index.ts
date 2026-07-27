@@ -1495,6 +1495,7 @@ export const hi: DeepPartial<Messages> = {
             backToSearchTooltip: "इस बातचीत को साफ़ करें और खोज व्यू पर वापस लौटें",
             turnLabelQ: "स",
             turnLabelA: "ज",
+            answeredIn: "{duration} में उत्तर दिया",
         },
         settings: {
             title: "स्पॉटलाइट सेटिंग्स",

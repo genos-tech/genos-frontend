@@ -87,6 +87,7 @@ const buildLabels = (t: ReturnType<typeof useTranslation>["t"]): AgentQALabels =
     states: {
         streaming: t.threadAsk.states.streaming,
         thinking: t.threadAsk.states.thinking,
+        answeredIn: t.threadAsk.states.answeredIn,
     },
     approval: {
         titleWithTool: t.threadAsk.approval.titleWithTool,

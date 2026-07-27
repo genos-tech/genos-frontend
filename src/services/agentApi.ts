@@ -10,14 +10,18 @@
 //
 // NDJSON event types:
 //   {"type": "tool_call_start", "step", "tool_name", "arguments"}
-//   {"type": "tool_call_result", "step", "tool_name", "summary"}
-//   {"type": "tool_call_error",  "step", "tool_name", "error"}
+//   {"type": "tool_call_result", "step", "tool_name", "summary", "duration_ms"?}
+//   {"type": "tool_call_error",  "step", "tool_name", "error", "duration_ms"?}
 //   {"type": "tool_call_pending_approval",
 //        "step", "tool_name", "arguments", "approval_token", "run_id"}
 //   {"type": "sources", "sources": [...]}
 //   {"type": "answer_delta", "text": "..."}
-//   {"type": "done", "session_id": "..."}   ← session_id added in Phase 8
+//   {"type": "done", "session_id": "...", "elapsed_ms"?}   ← session_id added in Phase 8
 //   {"type": "error", "message": "..."}
+//
+// `duration_ms` (per-tool execution wall time) and `elapsed_ms` (whole
+// stream wall time) are server-measured and OPTIONAL — older backends
+// don't send them, and cache-hit results never carry a duration.
 //
 // Why fetch instead of axios: axios doesn't expose the response body
 // as a ReadableStream in the browser. Native fetch + the body reader
@@ -50,12 +54,21 @@ export interface ToolCallResultPayload {
     tool_name: string;
     summary: string;
     note?: ToolResultNoteRef;
+    // Server-measured execution time for THIS call. The client can't
+    // time it from event arrival: parallel batches emit every start
+    // before any result, so arrival deltas would pin the whole batch
+    // wall-clock on the first call. Absent on older backends and on
+    // session-cache hits (nothing executed).
+    duration_ms?: number;
 }
 
 export interface ToolCallErrorPayload {
     step: number;
     tool_name: string;
     error: string;
+    // See ToolCallResultPayload.duration_ms. Absent when no tool ran
+    // (unknown tool, user-rejected write) and on older backends.
+    duration_ms?: number;
 }
 
 export interface PendingApprovalPayload {
@@ -69,7 +82,7 @@ export interface PendingApprovalPayload {
 export type AgentEvent =
     | { type: "sources"; sources: SpotlightResult[] }
     | { type: "answer_delta"; text: string }
-    | { type: "done"; session_id?: string; run_id?: string }
+    | { type: "done"; session_id?: string; run_id?: string; elapsed_ms?: number }
     | { type: "error"; message: string }
     | ({ type: "tool_call_start" } & ToolCallStartPayload)
     | ({ type: "tool_call_result" } & ToolCallResultPayload)
@@ -79,7 +92,10 @@ export type AgentEvent =
 interface BaseStreamHandlers {
     onSources: (sources: SpotlightResult[]) => void;
     onDelta: (text: string) => void;
-    onDone: (sessionId?: string, runId?: string) => void;
+    // `elapsedMs` = the stream's total wall time, server-measured
+    // (undefined on older backends). On a /decide/ resume it covers the
+    // resumed segment only — the human approval wait isn't counted.
+    onDone: (sessionId?: string, runId?: string, elapsedMs?: number) => void;
     onError: (message: string) => void;
     onToolStart?: (payload: ToolCallStartPayload) => void;
     onToolResult?: (payload: ToolCallResultPayload) => void;
@@ -706,7 +722,7 @@ function dispatchLine(line: string, h: BaseStreamHandlers): boolean {
             if (evt.text) h.onDelta(evt.text);
             return false;
         case "done":
-            h.onDone(evt.session_id, evt.run_id);
+            h.onDone(evt.session_id, evt.run_id, evt.elapsed_ms);
             return true; // terminal: clean finish
         case "error":
             h.onError(evt.message || getMessages().services.agent.unknownError);
@@ -724,6 +740,7 @@ function dispatchLine(line: string, h: BaseStreamHandlers): boolean {
                 tool_name: evt.tool_name,
                 summary: evt.summary,
                 note: evt.note,
+                duration_ms: evt.duration_ms,
             });
             return false;
         case "tool_call_error":
@@ -731,6 +748,7 @@ function dispatchLine(line: string, h: BaseStreamHandlers): boolean {
                 step: evt.step,
                 tool_name: evt.tool_name,
                 error: evt.error,
+                duration_ms: evt.duration_ms,
             });
             return false;
         case "tool_call_pending_approval":

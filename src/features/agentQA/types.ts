@@ -21,6 +21,10 @@ export interface ToolEvent {
     summary?: string;
     error?: string;
     status: ToolEventStatus;
+    // Server-measured execution time, copied from the result/error
+    // stream event. Absent while pending, on session-cache hits, and
+    // against older backends — the strip shows a time only when set.
+    duration_ms?: number;
 }
 
 // Live state of the in-flight (or just-finished) turn.
@@ -53,6 +57,10 @@ export interface AskState {
     // finishes; optional so the un-migrated Spotlight loop (which reuses
     // this type) compiles without threading it.
     runId?: string | null;
+    // Total server-side wall time of the stream that finished this turn,
+    // from the `done` event's `elapsed_ms`. Null/absent until then (and
+    // against older backends). Powers the "Answered in Xs" line.
+    elapsedMs?: number | null;
     // Structured @/# mentions sent WITH this ask. Held so the completed
     // turn can carry them and Retry re-sends the identical refs instead
     // of degrading to plain text.
@@ -77,6 +85,8 @@ export interface CompletedTurn {
     // them verbatim (labels are advisory; the server re-resolves + ACL-
     // checks on every ask, so a stale ref degrades to a silent drop).
     mentions?: AgentMentionRef[];
+    // Total response time snapshot from AskState.elapsedMs (see there).
+    elapsedMs?: number | null;
 }
 
 // Soft cap on how many completed turns we hold in client memory. The
@@ -126,6 +136,10 @@ export interface AgentQALabels {
     states: {
         streaming: string;
         thinking: string;
+        // "Answered in {duration}" template for the per-turn total time
+        // footnote. Optional so existing label sets don't break; the
+        // conversation falls back to plain English.
+        answeredIn?: string;
     };
     approval: {
         // ICU-template-ish string with `{toolName}` placeholder.

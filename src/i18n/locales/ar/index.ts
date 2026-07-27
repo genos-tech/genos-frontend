@@ -1482,6 +1482,7 @@ export const ar: DeepPartial<Messages> = {
             backToSearchTooltip: "امسح هذه المحادثة وعد إلى عرض البحث",
             turnLabelQ: "س",
             turnLabelA: "ج",
+            answeredIn: "تمت الإجابة في {duration}",
         },
         settings: {
             title: "إعدادات Spotlight",

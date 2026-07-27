@@ -67,6 +67,7 @@ import {
     citedChipSources,
     DARK_TEXT_STRONG,
     FeedbackThumbs,
+    formatDurationMs,
     markdownAnswerSx,
     MentionHighlightOverlay,
     MentionSuggestionDropdown,
@@ -1293,6 +1294,7 @@ const ConversationPanel = memo(
                                 askDisabled={askDisabled}
                                 askedQuery={turn.askedQuery}
                                 askError={turn.askError}
+                                elapsedMs={turn.elapsedMs}
                                 isCurrent={false}
                                 isDark={isDark}
                                 mentions={turn.mentions}
@@ -1312,6 +1314,7 @@ const ConversationPanel = memo(
                                 askDisabled={askDisabled}
                                 askedQuery={ask.askedQuery}
                                 askError={ask.askError}
+                                elapsedMs={ask.elapsedMs}
                                 isDark={isDark}
                                 isStreaming={ask.isStreaming}
                                 mentions={ask.askedMentions}
@@ -1353,6 +1356,10 @@ interface TurnViewProps {
     isStreaming?: boolean;
     pendingApproval?: PendingApprovalPayload | null;
     isDark: boolean;
+    // Total server-side response time from the `done` event — powers the
+    // "Answered in Xs" footnote. Null/absent for error/cancelled turns
+    // and against older backends (the line simply doesn't render).
+    elapsedMs?: number | null;
     // Chips and inline citations share the preview handler — quick-look
     // modal on top of Spotlight, navigate fallback (see Props.onPreview).
     onPreview: (r: SpotlightResult) => void;
@@ -1463,6 +1470,7 @@ const TurnViewInner = ({
     isStreaming,
     pendingApproval,
     isDark,
+    elapsedMs,
     mentions,
     onPreview,
     onApprove,
@@ -1796,6 +1804,26 @@ const TurnViewInner = ({
                                 </Box>
                             );
                         })()}
+
+                    {/* Total response time (server-measured, from the
+                        `done` event). Only for finished, non-error turns —
+                        while streaming the spinner is the signal, and an
+                        errored turn's timing is noise. */}
+                    {typeof elapsedMs === "number" && !isStreaming && !askError && (
+                        <Typography
+                            level="body-xs"
+                            sx={{
+                                mt: 0.5,
+                                fontVariantNumeric: "tabular-nums",
+                                color: isDark ? DARK_TEXT_SOFT : undefined,
+                                opacity: isDark ? 0.9 : 0.6,
+                            }}
+                        >
+                            {fmt(ts.conversation.answeredIn, {
+                                duration: formatDurationMs(elapsedMs),
+                            })}
+                        </Typography>
+                    )}
                 </Box>
             </Box>
 

@@ -535,6 +535,7 @@ export const useSpotlight = ({
                     askError: prev.askError,
                     runId: prev.runId ?? null,
                     mentions: prev.askedMentions,
+                    elapsedMs: prev.elapsedMs ?? null,
                 };
                 setTurns((prevTurns) => {
                     const next = [...prevTurns, snapshot];
@@ -574,7 +575,7 @@ export const useSpotlight = ({
                         stillCurrent(prev) ? { ...prev, answer: prev.answer + text } : prev
                     );
                 },
-                onDone: (sessionId?: string, runId?: string) => {
+                onDone: (sessionId?: string, runId?: string, elapsedMs?: number) => {
                     setAsk((prev) =>
                         stillCurrent(prev)
                             ? {
@@ -584,6 +585,9 @@ export const useSpotlight = ({
                                   // run_id keys the 👍/👎 feedback POST (F1);
                                   // without it the thumbs stay hidden.
                                   ...(runId ? { runId } : {}),
+                                  // Total response time for the "Answered
+                                  // in Xs" line (absent on old backends).
+                                  ...(typeof elapsedMs === "number" ? { elapsedMs } : {}),
                               }
                             : prev
                     );
@@ -635,11 +639,13 @@ export const useSpotlight = ({
                     tool_name,
                     summary,
                     note,
+                    duration_ms,
                 }: {
                     step: number;
                     tool_name: string;
                     summary: string;
                     note?: import("../../services/agentApi").ToolResultNoteRef;
+                    duration_ms?: number;
                 }) => {
                     setAsk((prev) => {
                         if (!stillCurrent(prev)) return prev;
@@ -649,7 +655,7 @@ export const useSpotlight = ({
                                 te.step === step &&
                                 te.tool_name === tool_name &&
                                 te.status === "pending"
-                                    ? { ...te, status: "done" as const, summary }
+                                    ? { ...te, status: "done" as const, summary, duration_ms }
                                     : te
                             ),
                         };
@@ -684,10 +690,12 @@ export const useSpotlight = ({
                     step,
                     tool_name,
                     error,
+                    duration_ms,
                 }: {
                     step: number;
                     tool_name: string;
                     error: string;
+                    duration_ms?: number;
                 }) => {
                     setAsk((prev) => {
                         if (!stillCurrent(prev)) return prev;
@@ -697,7 +705,7 @@ export const useSpotlight = ({
                                 te.step === step &&
                                 te.tool_name === tool_name &&
                                 te.status === "pending"
-                                    ? { ...te, status: "error" as const, error }
+                                    ? { ...te, status: "error" as const, error, duration_ms }
                                     : te
                             ),
                         };

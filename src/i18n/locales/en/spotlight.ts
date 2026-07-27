@@ -54,6 +54,7 @@ export const spotlight = {
         backToSearchTooltip: "Clear this conversation and return to the search view",
         turnLabelQ: "Q",
         turnLabelA: "A",
+        answeredIn: "Answered in {duration}",
     },
     history: {
         header: "History",
