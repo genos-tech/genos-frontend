@@ -163,24 +163,6 @@ export interface DecideAgentArgs extends BaseStreamHandlers {
     signal?: AbortSignal;
 }
 
-export interface AgentUsage {
-    used: number;
-    limit: number | null; // null = unlimited
-    is_unlimited: boolean;
-}
-
-export async function fetchAgentUsage(accessToken: string): Promise<AgentUsage | null> {
-    try {
-        const resp = await fetch(`${API_BASE}/agent/usage/`, {
-            headers: { Authorization: `Bearer ${accessToken}` },
-        });
-        if (!resp.ok) return null;
-        return (await resp.json()) as AgentUsage;
-    } catch {
-        return null;
-    }
-}
-
 // One quota dimension's snapshot — `null` limit means unlimited for
 // this tier. Reused across endpoints (AgentFeatures, AgentModels) so
 // the frontend handles all three quota types uniformly.

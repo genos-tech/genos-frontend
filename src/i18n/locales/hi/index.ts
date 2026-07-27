@@ -1503,9 +1503,6 @@ export const hi: DeepPartial<Messages> = {
         approval: {
             titleWithTool: "मंज़ूरी ज़रूरी: {toolName}",
         },
-        usage: {
-            asksToday: "आज {used} / {limit} प्रश्न",
-        },
         entitySubtitle: {
             dm: "डायरेक्ट मेसेज",
             gm: "ग्रुप चैट",

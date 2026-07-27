@@ -1499,9 +1499,6 @@ export const es: DeepPartial<Messages> = {
         approval: {
             titleWithTool: "Aprobación requerida: {toolName}",
         },
-        usage: {
-            asksToday: "{used} / {limit} consultas hoy",
-        },
         entitySubtitle: {
             dm: "Mensaje directo",
             gm: "Chat de grupo",

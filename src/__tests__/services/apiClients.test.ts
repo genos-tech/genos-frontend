@@ -7,7 +7,6 @@ import {
     fetchAgentModels,
     fetchAgentSessionDetail,
     fetchAgentSessions,
-    fetchAgentUsage,
     fetchNoteSummary,
     fetchThreadSummary,
 } from "../../services/agentApi";
@@ -362,34 +361,6 @@ describe("searchApi.searchSpotlight", () => {
 // agentApi — simple JSON GET helpers
 // ===========================================================================
 describe("agentApi GET helpers", () => {
-    describe("fetchAgentUsage", () => {
-        it("GETs /agent/usage/ with bearer auth and returns parsed json", async () => {
-            const usage = { used: 3, limit: 10, is_unlimited: false };
-            const fetchMock = vi.fn().mockResolvedValue(jsonResponse(usage));
-            vi.stubGlobal("fetch", fetchMock);
-
-            const result = await fetchAgentUsage("tok");
-
-            expect(fetchMock).toHaveBeenCalledWith(`${API_BASE}/agent/usage/`, {
-                headers: { Authorization: "Bearer tok" },
-            });
-            expect(result).toEqual(usage);
-        });
-
-        it("returns null when response not ok", async () => {
-            vi.stubGlobal(
-                "fetch",
-                vi.fn().mockResolvedValue(jsonResponse({}, { ok: false, status: 500 }))
-            );
-            expect(await fetchAgentUsage("tok")).toBeNull();
-        });
-
-        it("returns null when fetch throws", async () => {
-            vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("offline")));
-            expect(await fetchAgentUsage("tok")).toBeNull();
-        });
-    });
-
     describe("fetchAgentFeatures", () => {
         it("GETs /agent/features/ and returns json", async () => {
             const features = {

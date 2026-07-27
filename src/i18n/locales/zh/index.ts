@@ -1471,9 +1471,6 @@ export const zh: DeepPartial<Messages> = {
         approval: {
             titleWithTool: "需要确认：{toolName}",
         },
-        usage: {
-            asksToday: "今日已用 {used} / {limit} 次提问",
-        },
         entitySubtitle: {
             dm: "私信",
             gm: "群聊",

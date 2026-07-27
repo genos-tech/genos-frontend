@@ -1612,9 +1612,6 @@ export const ja: DeepPartial<Messages> = {
         approval: {
             titleWithTool: "承認が必要：{toolName}",
         },
-        usage: {
-            asksToday: "本日 {used} / {limit} 件の質問",
-        },
         entitySubtitle: {
             dm: "ダイレクトメッセージ",
             gm: "グループチャット",

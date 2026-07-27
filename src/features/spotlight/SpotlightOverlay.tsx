@@ -47,7 +47,6 @@ import type {
     AgentSessionDetail,
     AgentSessionSummary,
     AgentSessionTurn,
-    AgentUsage,
     PendingApprovalPayload,
 } from "../../services/agentApi";
 import type { MentionGroup } from "../../services/mentionGroupsApi";
@@ -126,7 +125,6 @@ interface Props {
     onFeedback?: (runId: string, rating: number) => void;
     ask: AskState;
     turns: CompletedTurn[];
-    dailyUsage: AgentUsage | null;
     // From Settings → Spotlight → AI answers. When false, the Ask
     // button and Enter shortcut are disabled with an explanatory
     // tooltip and Spotlight stays a pure search overlay.
@@ -208,7 +206,6 @@ export const SpotlightOverlay = ({
     onFeedback,
     ask,
     turns,
-    dailyUsage,
     aiAnswersEnabled,
     historyMode,
     historySessions,
@@ -716,37 +713,6 @@ export const SpotlightOverlay = ({
                                 }
                             }}
                         />
-                        {/* Daily usage pill — hidden for unlimited users.
-                        Also hidden on mobile so the Ask button stays
-                        on-row; the limit still applies, just isn't
-                        chrome at 390px. */}
-                        {dailyUsage && !dailyUsage.is_unlimited && (
-                            <Typography
-                                level="body-sm"
-                                sx={{
-                                    display: { xs: "none", sm: "block" },
-                                    whiteSpace: "nowrap",
-                                    fontVariantNumeric: "tabular-nums",
-                                    opacity:
-                                        dailyUsage.used >= (dailyUsage.limit ?? Infinity)
-                                            ? 1
-                                            : isDark
-                                              ? 1
-                                              : 0.65,
-                                    color:
-                                        dailyUsage.used >= (dailyUsage.limit ?? Infinity)
-                                            ? "warning.500"
-                                            : isDark
-                                              ? DARK_TEXT_MEDIUM
-                                              : undefined,
-                                }}
-                            >
-                                {fmt(t.spotlight.usage.asksToday, {
-                                    used: dailyUsage.used,
-                                    limit: dailyUsage.limit ?? 0,
-                                })}
-                            </Typography>
-                        )}
                         {ask.isStreaming && (
                             <Button
                                 color="danger"

@@ -30,7 +30,6 @@ vi.mock("../services/agentApi", async (importOriginal) => {
         decideAgent: vi.fn(),
         fetchAgentSessionDetail: vi.fn(async () => null),
         fetchAgentSessions: vi.fn(async () => []),
-        fetchAgentUsage: vi.fn(async () => null),
         submitAgentFeedback: vi.fn(async () => true),
     };
 });
@@ -175,7 +174,6 @@ const overlayProps = () => ({
     onNewConversation: vi.fn(),
     ask: { ...EMPTY_ASK_STATE },
     turns: [],
-    dailyUsage: null,
     aiAnswersEnabled: true,
     historyMode: "closed" as const,
     historySessions: [],
