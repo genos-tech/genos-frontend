@@ -846,7 +846,7 @@ describe("agentApi.askAgentStream", () => {
                     '{"type":"sources","sources":[{"id":"r1"}]}\n',
                     '{"type":"answer_delta","text":"Hello "}\n',
                     '{"type":"answer_delta","text":"world"}\n',
-                    '{"type":"done","session_id":"S42","run_id":"R42"}\n',
+                    '{"type":"done","session_id":"S42","run_id":"R42","elapsed_ms":1234}\n',
                 ])
             );
         vi.stubGlobal("fetch", fetchMock);
@@ -857,8 +857,9 @@ describe("agentApi.askAgentStream", () => {
         expect(h.onSources).toHaveBeenCalledWith([{ id: "r1" }]);
         expect(h.onDelta).toHaveBeenNthCalledWith(1, "Hello ");
         expect(h.onDelta).toHaveBeenNthCalledWith(2, "world");
-        // onDone now receives (session_id, run_id) — run_id is the F1 feedback target.
-        expect(h.onDone).toHaveBeenCalledWith("S42", "R42");
+        // onDone receives (session_id, run_id, elapsed_ms) — run_id is the F1
+        // feedback target, elapsed_ms the server-side total response time.
+        expect(h.onDone).toHaveBeenCalledWith("S42", "R42", 1234);
         expect(h.onError).not.toHaveBeenCalled();
     });
 
@@ -874,7 +875,7 @@ describe("agentApi.askAgentStream", () => {
         await askAgentStream({ ...h, query: "q", teamId: "t", accessToken: "tok" });
 
         expect(h.onDelta).toHaveBeenCalledWith("x");
-        expect(h.onDone).toHaveBeenCalledWith(undefined, undefined);
+        expect(h.onDone).toHaveBeenCalledWith(undefined, undefined, undefined);
     });
 
     it("dispatches tool_call_* and pending_approval events (pending is terminal)", async () => {
@@ -883,8 +884,8 @@ describe("agentApi.askAgentStream", () => {
             .mockResolvedValue(
                 streamResponse([
                     '{"type":"tool_call_start","step":1,"tool_name":"search","arguments":{"q":"x"}}\n',
-                    '{"type":"tool_call_result","step":1,"tool_name":"search","summary":"ok"}\n',
-                    '{"type":"tool_call_error","step":2,"tool_name":"write","error":"denied"}\n',
+                    '{"type":"tool_call_result","step":1,"tool_name":"search","summary":"ok","duration_ms":456}\n',
+                    '{"type":"tool_call_error","step":2,"tool_name":"write","error":"denied","duration_ms":7}\n',
                     '{"type":"tool_call_pending_approval","step":3,"tool_name":"write","arguments":{"a":1},"approval_token":"AT","run_id":"RID"}\n',
                 ])
             );
@@ -902,11 +903,13 @@ describe("agentApi.askAgentStream", () => {
             step: 1,
             tool_name: "search",
             summary: "ok",
+            duration_ms: 456,
         });
         expect(h.onToolError).toHaveBeenCalledWith({
             step: 2,
             tool_name: "write",
             error: "denied",
+            duration_ms: 7,
         });
         expect(h.onPendingApproval).toHaveBeenCalledWith({
             step: 3,
@@ -972,7 +975,7 @@ describe("agentApi.askAgentStream", () => {
 
         expect(h.onError).toHaveBeenCalledTimes(1);
         expect(h.onError).toHaveBeenCalledWith("Malformed NDJSON line: garbage");
-        expect(h.onDone).toHaveBeenCalledWith(undefined, undefined);
+        expect(h.onDone).toHaveBeenCalledWith(undefined, undefined, undefined);
     });
 
     it("reports streamEndedUnexpectedly when no terminal event arrives", async () => {
@@ -998,7 +1001,7 @@ describe("agentApi.askAgentStream", () => {
 
         await askAgentStream({ ...h, query: "q", teamId: "t", accessToken: "tok" });
 
-        expect(h.onDone).toHaveBeenCalledWith(undefined, undefined);
+        expect(h.onDone).toHaveBeenCalledWith(undefined, undefined, undefined);
         expect(h.onError).not.toHaveBeenCalled();
     });
 
@@ -1177,7 +1180,7 @@ describe("agentApi.decideAgent", () => {
             approval_token: "TOKEN",
             decision: "reject",
         });
-        expect(h.onDone).toHaveBeenCalledWith("S1", undefined);
+        expect(h.onDone).toHaveBeenCalledWith("S1", undefined, undefined);
     });
 });
 

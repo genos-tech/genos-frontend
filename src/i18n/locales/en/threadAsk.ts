@@ -42,6 +42,7 @@ export const threadAsk = {
     states: {
         streaming: "streaming…",
         thinking: "Thinking…",
+        answeredIn: "Answered in {duration}",
     },
     actions: {
         approve: "Approve",

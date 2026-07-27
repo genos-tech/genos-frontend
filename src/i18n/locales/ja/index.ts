@@ -1604,6 +1604,7 @@ export const ja: DeepPartial<Messages> = {
             backToSearchTooltip: "この会話をクリアして検索ビューに戻る",
             turnLabelQ: "Q",
             turnLabelA: "A",
+            answeredIn: "{duration} で回答",
         },
         settings: {
             title: "スポットライト設定",

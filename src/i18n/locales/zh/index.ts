@@ -1463,6 +1463,7 @@ export const zh: DeepPartial<Messages> = {
             backToSearchTooltip: "清除此对话并返回搜索视图",
             turnLabelQ: "问",
             turnLabelA: "答",
+            answeredIn: "用时 {duration} 回答",
         },
         settings: {
             title: "Spotlight 设置",

@@ -1506,6 +1506,7 @@ export const fr: DeepPartial<Messages> = {
             backToSearchTooltip: "Effacer cette conversation et revenir à la vue de recherche",
             turnLabelQ: "Q",
             turnLabelA: "R",
+            answeredIn: "Répondu en {duration}",
         },
         settings: {
             title: "Paramètres de Spotlight",

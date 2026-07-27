@@ -19,7 +19,7 @@ export { FeedbackThumbs } from "./FeedbackThumbs";
 export { DARK_TEXT_STRONG, markdownAnswerSx } from "./markdownAnswerSx";
 export { markdownToBlocks } from "./markdownToBlocks";
 export { SourceChips } from "./SourceChips";
-export { humanReadableCall, ToolProgressList } from "./ToolProgressList";
+export { formatDurationMs, humanReadableCall, ToolProgressList } from "./ToolProgressList";
 export { MentionHighlightOverlay } from "./mentions/MentionHighlightOverlay";
 export { MentionSuggestionDropdown } from "./mentions/MentionSuggestionDropdown";
 export {

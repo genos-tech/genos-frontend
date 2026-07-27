@@ -80,6 +80,7 @@ const buildLabels = (t: ReturnType<typeof useTranslation>["t"]): AgentQALabels =
     states: {
         streaming: t.noteAsk.states.streaming,
         thinking: t.noteAsk.states.thinking,
+        answeredIn: t.noteAsk.states.answeredIn,
     },
     approval: {
         titleWithTool: t.noteAsk.approval.titleWithTool,
