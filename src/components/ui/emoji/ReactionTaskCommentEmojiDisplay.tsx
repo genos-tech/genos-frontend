@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import SentimentSatisfiedAltIcon from "@mui/icons-material/SentimentSatisfiedAlt";
 import { Box, Button, Chip, IconButton, useColorScheme } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
+import { useQuickReactionsPreference } from "../../../hooks/common/useQuickReactionsPreference";
 import { fmt, useTranslation } from "../../../i18n";
 import { UserProps } from "../../../types/admin";
 import { GroupedReactionProps, ReactionProps } from "../../../types/common";
@@ -65,17 +66,21 @@ export const ReactionTaskCommentEmojiDisplay = (props: ReactionEmojiProps) => {
     const { mode } = useColorScheme();
     const { t } = useTranslation();
     const isDark = mode === "dark";
-    const [baseEmojiList, setBaseEmojiList] = useState<string[]>(["👀", "👍", "✅"]);
+    // Same user-picked quick reactions as the chat/thread bubbles
+    // (Settings → Chat), so the hover row is consistent everywhere.
+    const { emojis: quickReactions } = useQuickReactionsPreference();
     const [groupedReactions, setGroupedReactions] = useState<GroupedReactionProps[]>(
         groupEmojis(reactions)
     );
     const displayed = groupedReactions.slice(0, 10);
     const hidden = groupedReactions.slice(10);
 
-    useEffect(() => {
-        const groupedReactionEmojis: string[] = groupedReactions.map((item) => item.emoji);
-        setBaseEmojiList(baseEmojiList.filter((emoji) => !groupedReactionEmojis.includes(emoji)));
-    }, [groupedReactions]);
+    // Derived, not state — see the note in `EmojiReaction`: the previous
+    // self-narrowing filter permanently dropped an emoji from the row.
+    const baseEmojiList = useMemo(() => {
+        const reacted = new Set(groupedReactions.map((item) => item.emoji));
+        return quickReactions.filter((emoji) => !reacted.has(emoji));
+    }, [quickReactions, groupedReactions]);
 
     useEffect(() => {
         const _groupedReactions = groupEmojis(reactions);
@@ -190,9 +195,9 @@ export const ReactionTaskCommentEmojiDisplay = (props: ReactionEmojiProps) => {
                 <>
                     {groupedReactions.length < 3 && (
                         <>
-                            {baseEmojiList.map((emoji, index) => (
+                            {baseEmojiList.map((emoji) => (
                                 <Button
-                                    key={`default-emoji-${index}`}
+                                    key={`default-emoji-${emoji}`}
                                     size="sm"
                                     variant="plain"
                                     sx={{
@@ -206,7 +211,9 @@ export const ReactionTaskCommentEmojiDisplay = (props: ReactionEmojiProps) => {
                                     }}
                                     onClick={() => handleAddReaction(emoji)}
                                 >
-                                    {emoji}
+                                    {/* Team custom emoji (":name:") must render as an
+                                        image, not the literal shortcode. */}
+                                    <EmojiGlyph emoji={emoji} />
                                 </Button>
                             ))}
                         </>

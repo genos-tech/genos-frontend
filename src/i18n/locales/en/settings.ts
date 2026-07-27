@@ -154,6 +154,15 @@ export const settings = {
         styleBubble: "Bubble",
         styleCompact: "Compact",
     },
+    quickReactions: {
+        heading: "Quick reactions",
+        description:
+            "The three one-click emoji offered when you hover a chat message, thread reply, or task comment.",
+        label: "Emoji",
+        helper: "Click a slot to change it. Team custom emoji can be used too.",
+        slotTooltip: "Change this emoji",
+        reset: "Reset",
+    },
     doubleClickTodo: {
         heading: "Double-click action",
         description: "Choose what happens when you double-click a message bubble.",

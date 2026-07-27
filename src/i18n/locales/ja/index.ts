@@ -336,6 +336,15 @@ export const ja: DeepPartial<Messages> = {
             styleBubble: "バブル",
             styleCompact: "コンパクト",
         },
+        quickReactions: {
+            heading: "クイックリアクション",
+            description:
+                "チャットのメッセージ、スレッドの返信、タスクコメントにカーソルを合わせたときに表示される、ワンクリックで押せる3つの絵文字です。",
+            label: "絵文字",
+            helper: "枠をクリックすると変更できます。チームのカスタム絵文字も使えます。",
+            slotTooltip: "この絵文字を変更",
+            reset: "リセット",
+        },
         doubleClickTodo: {
             heading: "ダブルクリックの動作",
             description: "メッセージのバブルをダブルクリックしたときの動作を選択します。",
