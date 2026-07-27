@@ -266,7 +266,7 @@ export const SignUpForm = () => {
                                 background: styles.inputBg,
                                 "&:hover": {
                                     borderColor: styles.accentColor,
-                                    background: `${styles.accentColor}10`,
+                                    background: `rgba(${styles.accentColorRgb}, 0.063)`,
                                 },
                             }}
                             fullWidth
@@ -313,7 +313,7 @@ export const SignUpForm = () => {
                                             background: styles.inputBg,
                                             "&:hover": {
                                                 borderColor: styles.accentColor,
-                                                background: `${styles.accentColor}10`,
+                                                background: `rgba(${styles.accentColorRgb}, 0.063)`,
                                             },
                                         }}
                                         fullWidth
@@ -334,7 +334,7 @@ export const SignUpForm = () => {
                                             background: styles.inputBg,
                                             "&:hover": {
                                                 borderColor: styles.accentColor,
-                                                background: `${styles.accentColor}10`,
+                                                background: `rgba(${styles.accentColorRgb}, 0.063)`,
                                             },
                                         }}
                                         fullWidth

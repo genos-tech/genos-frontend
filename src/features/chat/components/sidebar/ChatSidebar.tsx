@@ -79,35 +79,35 @@ export const NAV_ITEMS = [
         icon: PersonRoundedIcon,
         labelKey: "navDM" as const,
         shortLabelKey: "navDMShort" as const,
-        colorScheme: { dark: "#a78bfa", light: "#7c3aed" },
+        colorScheme: { dark: "var(--gp-brandalt-400)", light: "var(--gp-brand-700)" },
     },
     {
         type: CHAT_PANE_TYPES.GM,
         icon: GroupsRoundedIcon,
         labelKey: "navGM" as const,
         shortLabelKey: "navGMShort" as const,
-        colorScheme: { dark: "#a78bfa", light: "#7c3aed" },
+        colorScheme: { dark: "var(--gp-brandalt-400)", light: "var(--gp-brand-700)" },
     },
     {
         type: CHAT_PANE_TYPES.PM,
         icon: AccountTreeRoundedIcon,
         labelKey: "navPM" as const,
         shortLabelKey: "navPMShort" as const,
-        colorScheme: { dark: "#a78bfa", light: "#7c3aed" },
+        colorScheme: { dark: "var(--gp-brandalt-400)", light: "var(--gp-brand-700)" },
     },
     {
         type: CHAT_PANE_TYPES.FLAGGED,
         icon: FlagRoundedIcon,
         labelKey: "navFlagged" as const,
         shortLabelKey: "navFlaggedShort" as const,
-        colorScheme: { dark: "#a78bfa", light: "#7c3aed" },
+        colorScheme: { dark: "var(--gp-brandalt-400)", light: "var(--gp-brand-700)" },
     },
     {
         type: CHAT_PANE_TYPES.ACTIVITY,
         icon: NotificationsActiveRoundedIcon,
         labelKey: "navActivity" as const,
         shortLabelKey: "navActivityShort" as const,
-        colorScheme: { dark: "#a78bfa", light: "#7c3aed" },
+        colorScheme: { dark: "var(--gp-brandalt-400)", light: "var(--gp-brand-700)" },
     },
 ];
 
@@ -358,8 +358,8 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                         width: "60%",
                         height: "40%",
                         background: isDark
-                            ? "radial-gradient(ellipse at top right, rgba(124,58,237,0.04) 0%, transparent 60%)"
-                            : "radial-gradient(ellipse at top right, rgba(124,58,237,0.03) 0%, transparent 60%)",
+                            ? "radial-gradient(ellipse at top right, rgba(var(--gp-brand-700-rgb), 0.04) 0%, transparent 60%)"
+                            : "radial-gradient(ellipse at top right, rgba(var(--gp-brand-700-rgb), 0.03) 0%, transparent 60%)",
                         pointerEvents: "none",
                     }}
                 />
@@ -529,8 +529,8 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                     transition: "all 0.2s ease",
                                     background: showOnlyUnreadItems
                                         ? isDark
-                                            ? "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)"
-                                            : "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)"
+                                            ? "linear-gradient(135deg, var(--gp-brand-700) 0%, var(--gp-brand-800) 100%)"
+                                            : "linear-gradient(135deg, var(--gp-brand-700) 0%, var(--gp-brand-800) 100%)"
                                         : isDark
                                           ? "rgba(255,255,255,0.06)"
                                           : "rgba(0,0,0,0.04)",
@@ -543,8 +543,8 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                     "&:hover": {
                                         background: showOnlyUnreadItems
                                             ? isDark
-                                                ? "linear-gradient(135deg, #a78bfa 0%, #c084fc 100%)"
-                                                : "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)"
+                                                ? "linear-gradient(135deg, var(--gp-brandalt-400) 0%, var(--gp-brand-400) 100%)"
+                                                : "linear-gradient(135deg, var(--gp-brand-700) 0%, var(--gp-brand-800) 100%)"
                                             : isDark
                                               ? "rgba(255,255,255,0.1)"
                                               : "rgba(0,0,0,0.06)",
@@ -599,7 +599,9 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                         <GroupsIcon
                                             sx={{
                                                 fontSize: 18,
-                                                color: isDark ? "#a78bfa" : "#7c3aed",
+                                                color: isDark
+                                                    ? "var(--gp-brandalt-400)"
+                                                    : "var(--gp-brand-700)",
                                             }}
                                         />
                                         {t.chat.sidebar.newGroupMessageMenu}
@@ -615,7 +617,9 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                         <PeopleRoundedIcon
                                             sx={{
                                                 fontSize: 18,
-                                                color: isDark ? "#a78bfa" : "#7c3aed",
+                                                color: isDark
+                                                    ? "var(--gp-brandalt-400)"
+                                                    : "var(--gp-brand-700)",
                                             }}
                                         />
                                         {t.chat.sidebar.newDmWithFriendsMenu}
@@ -642,7 +646,9 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                             <DoneAllRoundedIcon
                                                 sx={{
                                                     fontSize: 18,
-                                                    color: isDark ? "#a78bfa" : "#7c3aed",
+                                                    color: isDark
+                                                        ? "var(--gp-brandalt-400)"
+                                                        : "var(--gp-brand-700)",
                                                 }}
                                             />
                                             {t.chat.sidebar.markFilteredActivitiesReadMenu}
@@ -671,7 +677,9 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                             <HistoryRoundedIcon
                                                 sx={{
                                                     fontSize: 18,
-                                                    color: isDark ? "#a78bfa" : "#7c3aed",
+                                                    color: isDark
+                                                        ? "var(--gp-brandalt-400)"
+                                                        : "var(--gp-brand-700)",
                                                 }}
                                             />
                                             {showPastFlagged
@@ -853,17 +861,19 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                         px: 1.25,
                                         py: 0.75,
                                         borderRadius: "8px",
-                                        color: isDark ? "#a78bfa" : "#7c3aed",
+                                        color: isDark
+                                            ? "var(--gp-brandalt-400)"
+                                            : "var(--gp-brand-700)",
                                         fontSize: "0.8rem",
                                         fontWeight: 600,
                                         background: isDark
-                                            ? "rgba(124,58,237,0.1)"
-                                            : "rgba(124,58,237,0.06)",
+                                            ? "rgba(var(--gp-brand-700-rgb), 0.1)"
+                                            : "rgba(var(--gp-brand-700-rgb), 0.06)",
                                         transition: "background 0.15s ease",
                                         "&:hover": {
                                             background: isDark
-                                                ? "rgba(124,58,237,0.18)"
-                                                : "rgba(124,58,237,0.12)",
+                                                ? "rgba(var(--gp-brand-700-rgb), 0.18)"
+                                                : "rgba(var(--gp-brand-700-rgb), 0.12)",
                                         },
                                     }}
                                     onClick={() => setShowPastFlagged(false)}

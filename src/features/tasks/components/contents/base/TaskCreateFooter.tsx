@@ -238,11 +238,11 @@ export const TaskCreateFooter = forwardRef<TaskCreateFooterHandle, TaskCreateFoo
                         transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                         "&:hover": {
                             background: isDark
-                                ? "rgba(232,121,195,0.12)"
-                                : "rgba(232,121,195,0.08)",
+                                ? "rgba(var(--gp-tint-danger-rgb), 0.12)"
+                                : "rgba(var(--gp-tint-danger-rgb), 0.08)",
                             borderColor: isDark
-                                ? "rgba(232,121,195,0.3)"
-                                : "rgba(232,121,195,0.25)",
+                                ? "rgba(var(--gp-tint-danger-rgb), 0.3)"
+                                : "rgba(var(--gp-tint-danger-rgb), 0.25)",
                             color: "#ef4444",
                         },
                         "&:active": {
@@ -302,26 +302,32 @@ export const TaskCreateFooter = forwardRef<TaskCreateFooterHandle, TaskCreateFoo
                                 ? isDark
                                     ? "rgba(255,255,255,0.08)"
                                     : "rgba(0,0,0,0.08)"
-                                : "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)",
+                                : "linear-gradient(135deg, var(--gp-brand-700) 0%, var(--gp-brand-800) 100%)",
                             color: isDisabled
                                 ? isDark
                                     ? "rgba(255,255,255,0.3)"
                                     : "rgba(0,0,0,0.3)"
                                 : "white",
-                            boxShadow: isDisabled ? "none" : "0 2px 8px rgba(124,58,237,0.3)",
+                            boxShadow: isDisabled
+                                ? "none"
+                                : "0 2px 8px rgba(var(--gp-brand-700-rgb), 0.3)",
                             transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                             "&:hover": {
                                 background: isDisabled
                                     ? isDark
                                         ? "rgba(255,255,255,0.08)"
                                         : "rgba(0,0,0,0.08)"
-                                    : "linear-gradient(135deg, #a78bfa 0%, #c084fc 100%)",
-                                boxShadow: isDisabled ? "none" : "0 4px 12px rgba(124,58,237,0.4)",
+                                    : "linear-gradient(135deg, var(--gp-brandalt-400) 0%, var(--gp-brand-400) 100%)",
+                                boxShadow: isDisabled
+                                    ? "none"
+                                    : "0 4px 12px rgba(var(--gp-brand-700-rgb), 0.4)",
                                 transform: isDisabled ? "none" : "translateY(-1px)",
                             },
                             "&:active": {
                                 transform: isDisabled ? "none" : "translateY(0)",
-                                boxShadow: isDisabled ? "none" : "0 2px 6px rgba(124,58,237,0.25)",
+                                boxShadow: isDisabled
+                                    ? "none"
+                                    : "0 2px 6px rgba(var(--gp-brand-700-rgb), 0.25)",
                             },
                             "&:disabled": {
                                 background: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)",

@@ -57,7 +57,9 @@ export const InboxTabHeader = ({ requestCount }: InboxTabHeaderProps) => {
                 py: 1.5,
                 borderBottom: "1px solid",
                 borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
-                background: isDark ? "rgba(20,14,34,0.6)" : "rgba(250,248,255,0.8)",
+                background: isDark
+                    ? "rgba(var(--gp-dark-surface-b-rgb), 0.6)"
+                    : "rgba(250,248,255,0.8)",
             }}
         >
             {tabs.map((tab) => {
@@ -76,20 +78,20 @@ export const InboxTabHeader = ({ requestCount }: InboxTabHeaderProps) => {
                             transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                             background: isActive
                                 ? isDark
-                                    ? "linear-gradient(135deg, rgba(124,58,237,0.18) 0%, rgba(139,92,246,0.12) 100%)"
-                                    : "linear-gradient(135deg, rgba(124,58,237,0.12) 0%, rgba(124,58,237,0.06) 100%)"
+                                    ? "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.18) 0%, rgba(var(--gp-brandalt-500-rgb), 0.12) 100%)"
+                                    : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.12) 0%, rgba(var(--gp-brand-700-rgb), 0.06) 100%)"
                                 : "transparent",
                             border: "1px solid",
                             borderColor: isActive
                                 ? isDark
-                                    ? "rgba(139,92,246,0.3)"
-                                    : "rgba(124,58,237,0.2)"
+                                    ? "rgba(var(--gp-brandalt-500-rgb), 0.3)"
+                                    : "rgba(var(--gp-brand-700-rgb), 0.2)"
                                 : "transparent",
                             "&:hover": {
                                 background: isActive
                                     ? isDark
-                                        ? "linear-gradient(135deg, rgba(124,58,237,0.22) 0%, rgba(139,92,246,0.16) 100%)"
-                                        : "linear-gradient(135deg, rgba(124,58,237,0.16) 0%, rgba(124,58,237,0.1) 100%)"
+                                        ? "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.22) 0%, rgba(var(--gp-brandalt-500-rgb), 0.16) 100%)"
+                                        : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.16) 0%, rgba(var(--gp-brand-700-rgb), 0.1) 100%)"
                                     : isDark
                                       ? "rgba(255,255,255,0.04)"
                                       : "rgba(0,0,0,0.03)",

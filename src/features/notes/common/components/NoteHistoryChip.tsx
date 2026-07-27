@@ -118,7 +118,9 @@ export const NoteHistoryChip = ({
                         },
                         "&:focus-visible": {
                             outline: `2px solid ${
-                                isDark ? "rgba(124,58,237,0.6)" : "rgba(124,58,237,0.5)"
+                                isDark
+                                    ? "rgba(var(--gp-brand-700-rgb), 0.6)"
+                                    : "rgba(var(--gp-brand-700-rgb), 0.5)"
                             }`,
                             outlineOffset: 2,
                         },

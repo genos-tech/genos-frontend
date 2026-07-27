@@ -58,11 +58,16 @@ export const ModalFolderName = (props: ModalFolderNameProps) => {
                             width: 34,
                             height: 34,
                             borderRadius: "10px",
-                            background: isDark ? "rgba(124,58,237,0.2)" : "rgba(124,58,237,0.1)",
+                            background: isDark
+                                ? "rgba(var(--gp-brand-700-rgb), 0.2)"
+                                : "rgba(var(--gp-brand-700-rgb), 0.1)",
                         }}
                     >
                         <FolderRoundedIcon
-                            sx={{ fontSize: 18, color: isDark ? "#a78bfa" : "#7c3aed" }}
+                            sx={{
+                                fontSize: 18,
+                                color: isDark ? "var(--gp-brandalt-400)" : "var(--gp-brand-700)",
+                            }}
                         />
                     </Box>
                     <Typography level="title-lg">

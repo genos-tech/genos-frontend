@@ -250,7 +250,10 @@ export const QuickAddTaskRow = (props: QuickAddTaskRowProps) => {
         }
     };
 
-    const accent = mode === "dark" ? "#a78bfa" : "#7c3aed";
+    const accent = mode === "dark" ? "var(--gp-brandalt-400)" : "var(--gp-brand-700)";
+    // rgba() rather than MUI's `alpha()`: the brand is a CSS variable and
+    // `alpha()` runs `decomposeColor`, which throws on a `var()`.
+    const accentRgb = mode === "dark" ? "var(--gp-brandalt-400-rgb)" : "var(--gp-brand-700-rgb)";
     const depthIdx = Math.min(depth, 3);
     const dimText = mode === "dark" ? "#666" : "#aaa";
 
@@ -694,8 +697,8 @@ export const QuickAddTaskRow = (props: QuickAddTaskRowProps) => {
                                         '&[aria-selected="true"]': {
                                             backgroundColor:
                                                 mode === "dark"
-                                                    ? "rgba(167,139,250,0.15)"
-                                                    : "rgba(124,58,237,0.08)",
+                                                    ? "rgba(var(--gp-brandalt-400-rgb), 0.15)"
+                                                    : "rgba(var(--gp-brand-700-rgb), 0.08)",
                                         },
                                     }}
                                 >
@@ -764,7 +767,7 @@ export const QuickAddTaskRow = (props: QuickAddTaskRowProps) => {
                 backgroundColor:
                     mode === "dark" ? DEPTH_COLORS_DARK[depthIdx] : DEPTH_COLORS_LIGHT[depthIdx],
                 // Subtle accent ring marks the row as an uncommitted draft.
-                boxShadow: `inset 0 0 0 1px ${alpha(accent, 0.25)}`,
+                boxShadow: `inset 0 0 0 1px rgba(${accentRgb}, 0.25)`,
             }}
             onKeyDown={(e) => {
                 // Escape discards. When a Select/Autocomplete popup is

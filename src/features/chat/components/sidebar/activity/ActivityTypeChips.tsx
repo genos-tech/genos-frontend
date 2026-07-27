@@ -24,7 +24,7 @@ const CHIP_COLORS = {
     reaction: { dark: "#fbbf24", light: "#f59e0b" },
     mention: { dark: "#f87171", light: "#ef4444" },
     project: { dark: "#60a5fa", light: "#3b82f6" },
-    task: { dark: "#c084fc", light: "#a855f7" },
+    task: { dark: "var(--gp-brand-400)", light: "var(--gp-brand-500)" },
     chatType: { dark: "#94a3b8", light: "#64748b" },
     thread: { dark: "#22d3ee", light: "#06b6d4" },
     // Surface-specific colors for the @mention surfaces that aren't
@@ -32,7 +32,7 @@ const CHIP_COLORS = {
     // distinct from generic "chat type" tags so the user can scan the
     // feed and tell where each mention came from at a glance.
     taskBody: { dark: "#fb923c", light: "#ea580c" },
-    personalNote: { dark: "#a78bfa", light: "#7c3aed" },
+    personalNote: { dark: "var(--gp-brandalt-400)", light: "var(--gp-brand-700)" },
     taskNote: { dark: "#34d399", light: "#10b981" },
     chatNote: { dark: "#38bdf8", light: "#0284c7" },
 } as const;

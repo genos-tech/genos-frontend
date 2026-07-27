@@ -54,7 +54,7 @@ export const ParentChildEdge = memo(
                 <BaseEdge
                     path={path}
                     style={{
-                        stroke: selected ? "#a78bfa" : "#7c3aed",
+                        stroke: selected ? "var(--gp-brandalt-400)" : "var(--gp-brand-700)",
                         strokeWidth: selected ? 2.5 : 1.75,
                         opacity: 0.85,
                         transition: "stroke 0.15s ease, stroke-width 0.15s ease",

@@ -216,9 +216,9 @@ export const ModalJoinProject: React.FC<Props> = ({
                     animation: `${fadeIn} 0.2s ease-out`,
                     background:
                         "linear-gradient(145deg, rgba(30, 30, 40, 0.95) 0%, rgba(20, 20, 28, 0.98) 100%)",
-                    border: `1px solid ${openJoinProject.isPrivate ? "rgba(168, 85, 247, 0.2)" : "rgba(168,85,247,0.2)"}`,
+                    border: `1px solid ${openJoinProject.isPrivate ? "rgba(var(--gp-brand-500-rgb), 0.2)" : "rgba(var(--gp-brand-500-rgb), 0.2)"}`,
                     borderRadius: "16px",
-                    boxShadow: `0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px ${openJoinProject.isPrivate ? "rgba(168, 85, 247, 0.1)" : "rgba(168,85,247,0.1)"}`,
+                    boxShadow: `0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px ${openJoinProject.isPrivate ? "rgba(var(--gp-brand-500-rgb), 0.1)" : "rgba(var(--gp-brand-500-rgb), 0.1)"}`,
                     width: { xs: "calc(100vw - 24px)", md: "auto" },
                     minWidth: { xs: 0, md: "360px" },
                     maxWidth: { xs: "100vw", md: "500px" },
@@ -238,9 +238,9 @@ export const ModalJoinProject: React.FC<Props> = ({
                         height: 56,
                         borderRadius: "14px",
                         background: openJoinProject.isPrivate
-                            ? "linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%)"
-                            : "linear-gradient(135deg, rgba(168,85,247,0.15) 0%, rgba(124,58,237,0.15) 100%)",
-                        border: `1px solid ${openJoinProject.isPrivate ? "rgba(168, 85, 247, 0.25)" : "rgba(168,85,247,0.25)"}`,
+                            ? "linear-gradient(135deg, rgba(var(--gp-brand-500-rgb), 0.15) 0%, rgba(var(--gp-brandalt-500-rgb), 0.15) 100%)"
+                            : "linear-gradient(135deg, rgba(var(--gp-brand-500-rgb), 0.15) 0%, rgba(var(--gp-brand-700-rgb), 0.15) 100%)",
+                        border: `1px solid ${openJoinProject.isPrivate ? "rgba(var(--gp-brand-500-rgb), 0.25)" : "rgba(var(--gp-brand-500-rgb), 0.25)"}`,
                         mx: "auto",
                         mb: 2,
                     }}
@@ -248,8 +248,8 @@ export const ModalJoinProject: React.FC<Props> = ({
                     <FolderSharedIcon
                         sx={{
                             color: openJoinProject.isPrivate
-                                ? "rgba(168, 85, 247, 0.9)"
-                                : "rgba(168,85,247,0.9)",
+                                ? "rgba(var(--gp-brand-500-rgb), 0.9)"
+                                : "rgba(var(--gp-brand-500-rgb), 0.9)",
                             fontSize: 28,
                         }}
                     />
@@ -268,12 +268,12 @@ export const ModalJoinProject: React.FC<Props> = ({
                     {openJoinProject.isPrivate ? (
                         <>
                             <LockOutlineIcon
-                                sx={{ color: "rgba(168, 85, 247, 0.7)", fontSize: 16 }}
+                                sx={{ color: "rgba(var(--gp-brand-500-rgb), 0.7)", fontSize: 16 }}
                             />
                             <Typography
                                 level="body-xs"
                                 sx={{
-                                    color: "rgba(168, 85, 247, 0.8)",
+                                    color: "rgba(var(--gp-brand-500-rgb), 0.8)",
                                     textTransform: "uppercase",
                                     letterSpacing: "0.1em",
                                 }}
@@ -283,11 +283,13 @@ export const ModalJoinProject: React.FC<Props> = ({
                         </>
                     ) : (
                         <>
-                            <PublicIcon sx={{ color: "rgba(168,85,247,0.7)", fontSize: 16 }} />
+                            <PublicIcon
+                                sx={{ color: "rgba(var(--gp-brand-500-rgb), 0.7)", fontSize: 16 }}
+                            />
                             <Typography
                                 level="body-xs"
                                 sx={{
-                                    color: "rgba(168,85,247,0.8)",
+                                    color: "rgba(var(--gp-brand-500-rgb), 0.8)",
                                     textTransform: "uppercase",
                                     letterSpacing: "0.1em",
                                 }}
@@ -317,8 +319,8 @@ export const ModalJoinProject: React.FC<Props> = ({
                     level="h3"
                     sx={{
                         background: openJoinProject.isPrivate
-                            ? "linear-gradient(135deg, #a855f7 0%, #8b5cf6 100%)"
-                            : "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)",
+                            ? "linear-gradient(135deg, var(--gp-brand-500) 0%, var(--gp-brandalt-500) 100%)"
+                            : "linear-gradient(135deg, var(--gp-brand-700) 0%, var(--gp-brand-800) 100%)",
                         WebkitBackgroundClip: "text",
                         WebkitTextFillColor: "transparent",
                         fontWeight: 700,
@@ -335,8 +337,8 @@ export const ModalJoinProject: React.FC<Props> = ({
                         sx={{
                             mb: 2,
                             borderRadius: "10px",
-                            backgroundColor: "rgba(232,121,195,0.1)",
-                            border: "1px solid rgba(232,121,195,0.3)",
+                            backgroundColor: "rgba(var(--gp-tint-danger-rgb), 0.1)",
+                            border: "1px solid rgba(var(--gp-tint-danger-rgb), 0.3)",
                             textAlign: "left",
                         }}
                     >
@@ -369,20 +371,20 @@ export const ModalJoinProject: React.FC<Props> = ({
                         }
                         sx={{
                             background: openJoinProject.isPrivate
-                                ? "linear-gradient(135deg, #a855f7 0%, #8b5cf6 100%)"
-                                : "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)",
+                                ? "linear-gradient(135deg, var(--gp-brand-500) 0%, var(--gp-brandalt-500) 100%)"
+                                : "linear-gradient(135deg, var(--gp-brand-700) 0%, var(--gp-brand-800) 100%)",
                             borderRadius: "10px",
                             px: 3,
                             fontWeight: 600,
                             boxShadow: openJoinProject.isPrivate
-                                ? "0 4px 15px rgba(168, 85, 247, 0.3)"
-                                : "0 4px 15px rgba(124, 58, 237, 0.3)",
+                                ? "0 4px 15px rgba(var(--gp-brand-500-rgb), 0.3)"
+                                : "0 4px 15px rgba(var(--gp-brand-700-rgb), 0.3)",
                             transition: "all 0.2s ease",
                             "&:hover": {
                                 transform: "translateY(-1px)",
                                 boxShadow: openJoinProject.isPrivate
-                                    ? "0 6px 20px rgba(168, 85, 247, 0.4)"
-                                    : "0 6px 20px rgba(168,85,247,0.4)",
+                                    ? "0 6px 20px rgba(var(--gp-brand-500-rgb), 0.4)"
+                                    : "0 6px 20px rgba(var(--gp-brand-500-rgb), 0.4)",
                             },
                         }}
                         onClick={handleJoinProject}

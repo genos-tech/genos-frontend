@@ -55,6 +55,11 @@ const base_url = import.meta.env.VITE_API_BASE_URL;
 const NAV_ACCENT = {
     dark: purplePalette.dark.accentSoft,
     light: purplePalette.light.accent,
+    // Triplet companions: the nav item's active gradient/border composes
+    // this accent at several alphas, and the palette is CSS variables now —
+    // `${color}20` would produce `var(--gp-dark-accent-soft)20`.
+    darkRgb: purplePalette.dark.accentSoftRgb,
+    lightRgb: purplePalette.light.accentRgb,
 };
 
 const NAV_ITEMS = [
@@ -130,7 +135,7 @@ export const Sidebar = (props: SidebarProps) => {
     // Solid bg color used to "cut out" badges and avatar borders against
     // the sidebar gradient — must match the gradient's start color so the
     // ring blends seamlessly into the surface behind it.
-    const sidebarBg = isDark ? "rgba(20,14,34,1)" : "rgba(252,250,255,1)";
+    const sidebarBg = isDark ? "rgba(var(--gp-dark-surface-b-rgb), 1)" : "rgba(252,250,255,1)";
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -245,7 +250,7 @@ export const Sidebar = (props: SidebarProps) => {
                 borderRight: "1px solid",
                 borderColor: palette.divider,
                 background: isDark
-                    ? "linear-gradient(180deg, rgba(20,14,34,1) 0%, rgba(11,10,22,1) 100%)"
+                    ? "linear-gradient(180deg, rgba(var(--gp-dark-surface-b-rgb), 1) 0%, rgba(11,10,22,1) 100%)"
                     : "linear-gradient(180deg, rgba(252,250,255,1) 0%, rgba(248,245,255,1) 100%)",
                 overflow: "hidden",
             }}
@@ -398,6 +403,9 @@ export const Sidebar = (props: SidebarProps) => {
                         const isActive = location.pathname.includes(item.path);
                         const badgeCount = getBadgeCount(item.id);
                         const color = isDark ? item.colorScheme.dark : item.colorScheme.light;
+                        const colorRgb = isDark
+                            ? item.colorScheme.darkRgb
+                            : item.colorScheme.lightRgb;
                         // Items with a dedicated letter shortcut show
                         // it directly; the rest fall back to the cycle
                         // gesture (which IS their only global way in).
@@ -435,20 +443,20 @@ export const Sidebar = (props: SidebarProps) => {
                                             transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                                             background: isActive
                                                 ? isDark
-                                                    ? `linear-gradient(135deg, ${color}20 0%, ${color}10 100%)`
-                                                    : `linear-gradient(135deg, ${color}15 0%, ${color}08 100%)`
+                                                    ? `linear-gradient(135deg, rgba(${colorRgb}, 0.125) 0%, rgba(${colorRgb}, 0.063) 100%)`
+                                                    : `linear-gradient(135deg, rgba(${colorRgb}, 0.082) 0%, rgba(${colorRgb}, 0.031) 100%)`
                                                 : "transparent",
                                             border: "1px solid",
                                             borderColor: isActive
                                                 ? isDark
-                                                    ? `${color}35`
-                                                    : `${color}25`
+                                                    ? `rgba(${colorRgb}, 0.208)`
+                                                    : `rgba(${colorRgb}, 0.145)`
                                                 : "transparent",
                                             "&:hover": {
                                                 background: isActive
                                                     ? isDark
-                                                        ? `linear-gradient(135deg, ${color}25 0%, ${color}15 100%)`
-                                                        : `linear-gradient(135deg, ${color}20 0%, ${color}12 100%)`
+                                                        ? `linear-gradient(135deg, rgba(${colorRgb}, 0.145) 0%, rgba(${colorRgb}, 0.082) 100%)`
+                                                        : `linear-gradient(135deg, rgba(${colorRgb}, 0.125) 0%, rgba(${colorRgb}, 0.071) 100%)`
                                                     : isDark
                                                       ? "rgba(255,255,255,0.04)"
                                                       : "rgba(0,0,0,0.03)",
@@ -467,15 +475,15 @@ export const Sidebar = (props: SidebarProps) => {
                                             sx={{
                                                 "& .MuiBadge-badge": {
                                                     background: isDark
-                                                        ? `linear-gradient(135deg, ${color} 0%, ${color}cc 100%)`
-                                                        : `linear-gradient(135deg, ${color} 0%, ${color}cc 100%)`,
+                                                        ? `linear-gradient(135deg, ${color} 0%, rgba(${colorRgb}, 0.8) 100%)`
+                                                        : `linear-gradient(135deg, ${color} 0%, rgba(${colorRgb}, 0.8) 100%)`,
                                                     color: "#fff",
                                                     fontWeight: 700,
                                                     fontSize: "0.6rem",
                                                     minWidth: 20,
                                                     height: 20,
                                                     pt: 0.25,
-                                                    boxShadow: `0 2px 6px ${color}40`,
+                                                    boxShadow: `0 2px 6px rgba(${colorRgb}, 0.251)`,
                                                     border: "2px solid",
                                                     borderColor: isDark
                                                         ? "rgba(18,18,22,1)"
@@ -493,8 +501,8 @@ export const Sidebar = (props: SidebarProps) => {
                                                     justifyContent: "center",
                                                     background: isActive
                                                         ? isDark
-                                                            ? `linear-gradient(135deg, ${color}25 0%, ${color}15 100%)`
-                                                            : `linear-gradient(135deg, ${color}18 0%, ${color}10 100%)`
+                                                            ? `linear-gradient(135deg, rgba(${colorRgb}, 0.145) 0%, rgba(${colorRgb}, 0.082) 100%)`
+                                                            : `linear-gradient(135deg, rgba(${colorRgb}, 0.094) 0%, rgba(${colorRgb}, 0.063) 100%)`
                                                         : isDark
                                                           ? "rgba(255,255,255,0.04)"
                                                           : "rgba(0,0,0,0.03)",

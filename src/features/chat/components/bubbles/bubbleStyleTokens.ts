@@ -18,8 +18,12 @@ export const COMPACT_TOOLBAR_OFFSET = {
 // only used by MessageBubble (root message of an open thread).
 export const BUBBLE_COLORS = {
     sent: {
-        dark: { bg: "#3b0764", border: "#7c3aed", text: "#f3e8ff" },
-        light: { bg: "#f5f3ff", border: "#c4b5fd", text: "#3b0764" },
+        dark: {
+            bg: "var(--gp-brand-950)",
+            border: "var(--gp-brand-700)",
+            text: "var(--gp-brand-100)",
+        },
+        light: { bg: "#f5f3ff", border: "var(--gp-brandalt-300)", text: "var(--gp-brand-950)" },
     },
     received: {
         dark: { bg: "#1f2937", border: "#374151", text: "#f3f4f6" },
@@ -30,8 +34,12 @@ export const BUBBLE_COLORS = {
         light: { bg: "#dcfce7", border: "#22c55e", text: "#14532d" },
     },
     threadActive: {
-        dark: { bg: "#4c1d95", border: "#a78bfa", text: "#f3e8ff" },
-        light: { bg: "#ede9fe", border: "#a78bfa", text: "#3b0764" },
+        dark: {
+            bg: "var(--gp-brandalt-900)",
+            border: "var(--gp-brandalt-400)",
+            text: "var(--gp-brand-100)",
+        },
+        light: { bg: "#ede9fe", border: "var(--gp-brandalt-400)", text: "var(--gp-brand-950)" },
     },
 } as const;
 
@@ -45,7 +53,7 @@ export const COMPACT_FOCUSED_BG = {
         light: "rgba(34,197,94,0.10)",
     },
     threadActive: {
-        dark: "rgba(167,139,250,0.18)",
-        light: "rgba(167,139,250,0.12)",
+        dark: "rgba(var(--gp-brandalt-400-rgb), 0.18)",
+        light: "rgba(var(--gp-brandalt-400-rgb), 0.12)",
     },
 } as const;

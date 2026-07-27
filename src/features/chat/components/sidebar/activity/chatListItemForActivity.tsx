@@ -60,7 +60,7 @@ const ACTIVITY_COLOR_SCHEMES = {
     reply: { dark: "#4ade80", light: "#22c55e" },
     reaction: { dark: "#fbbf24", light: "#f59e0b" },
     mention: { dark: "#f87171", light: "#ef4444" },
-    default: { dark: "#a78bfa", light: "#7c3aed" },
+    default: { dark: "var(--gp-brandalt-400)", light: "var(--gp-brand-700)" },
 } as const;
 
 type ChatListItemForActivityProps = {

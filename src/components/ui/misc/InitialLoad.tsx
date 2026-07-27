@@ -73,7 +73,7 @@ export const InitialLoad = (props: InitialLoadProps) => {
                 width: "100vw",
                 background: `
                     radial-gradient(ellipse at 20% 80%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
-                    radial-gradient(ellipse at 80% 20%, rgba(168, 85, 247, 0.12) 0%, transparent 50%),
+                    radial-gradient(ellipse at 80% 20%, rgba(var(--gp-brand-500-rgb), 0.12) 0%, transparent 50%),
                     radial-gradient(ellipse at 50% 50%, rgba(59, 130, 246, 0.08) 0%, transparent 70%),
                     linear-gradient(180deg, #0f0f14 0%, #1a1a24 50%, #12121a 100%)
                 `,
@@ -117,7 +117,7 @@ export const InitialLoad = (props: InitialLoadProps) => {
                     height: "250px",
                     borderRadius: "50%",
                     background:
-                        "radial-gradient(circle, rgba(168, 85, 247, 0.15) 0%, transparent 70%)",
+                        "radial-gradient(circle, rgba(var(--gp-brand-500-rgb), 0.15) 0%, transparent 70%)",
                     bottom: "15%",
                     right: "15%",
                     filter: "blur(50px)",
@@ -150,7 +150,8 @@ export const InitialLoad = (props: InitialLoadProps) => {
                                 width: "14px",
                                 height: "14px",
                                 borderRadius: "50%",
-                                background: "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
+                                background:
+                                    "linear-gradient(135deg, #6366f1 0%, var(--gp-brand-500) 100%)",
                                 boxShadow: "0 0 20px rgba(99, 102, 241, 0.5)",
                                 animation: `${dotPulse} 1.4s ease-in-out infinite`,
                                 animationDelay: `${i * 0.16}s`,

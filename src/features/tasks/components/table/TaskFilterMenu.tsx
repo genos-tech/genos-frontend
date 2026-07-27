@@ -1421,7 +1421,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                 mb: 1,
                 boxShadow: isDark
                     ? "0 4px 20px rgba(0,0,0,0.3)"
-                    : "0 4px 20px rgba(124,58,237,0.08)",
+                    : "0 4px 20px rgba(var(--gp-brand-700-rgb), 0.08)",
             }}
         >
             <Stack
@@ -1436,7 +1436,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                     <FilterListIcon
                         sx={{
                             fontSize: "18px",
-                            color: isDark ? "#a78bfa" : "#6d28d9",
+                            color: isDark ? "var(--gp-brandalt-400)" : "var(--gp-brand-800)",
                         }}
                     />
                     <Typography
@@ -1502,7 +1502,9 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                                 ml: 0.25,
                                 color: styles.mutedText,
                                 "&:hover": {
-                                    color: isDark ? "#a78bfa" : "#6d28d9",
+                                    color: isDark
+                                        ? "var(--gp-brandalt-400)"
+                                        : "var(--gp-brand-800)",
                                     background: styles.buttonHoverBg,
                                 },
                             }}
@@ -1525,7 +1527,9 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                                     ml: 0.25,
                                     color: styles.mutedText,
                                     "&:hover": {
-                                        color: isDark ? "#a78bfa" : "#6d28d9",
+                                        color: isDark
+                                            ? "var(--gp-brandalt-400)"
+                                            : "var(--gp-brand-800)",
                                         background: styles.buttonHoverBg,
                                     },
                                 }}

@@ -733,22 +733,24 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                                 border: "1px dashed",
                                 borderColor: isDraggingOver
                                     ? isDark
-                                        ? "rgba(167,139,250,0.8)"
-                                        : "rgba(124,58,237,0.7)"
+                                        ? "rgba(var(--gp-brandalt-400-rgb), 0.8)"
+                                        : "rgba(var(--gp-brand-700-rgb), 0.7)"
                                     : isDark
                                       ? "rgba(255,255,255,0.15)"
                                       : "rgba(0,0,0,0.12)",
                                 backgroundColor: isDraggingOver
                                     ? isDark
-                                        ? "rgba(124,58,237,0.15)"
-                                        : "rgba(124,58,237,0.08)"
+                                        ? "rgba(var(--gp-brand-700-rgb), 0.15)"
+                                        : "rgba(var(--gp-brand-700-rgb), 0.08)"
                                     : "transparent",
                                 color: isDark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.5)",
                                 "&:hover": {
                                     borderColor: isDark
-                                        ? "rgba(167,139,250,0.6)"
-                                        : "rgba(124,58,237,0.5)",
-                                    color: isDark ? "#a78bfa" : "#7c3aed",
+                                        ? "rgba(var(--gp-brandalt-400-rgb), 0.6)"
+                                        : "rgba(var(--gp-brand-700-rgb), 0.5)",
+                                    color: isDark
+                                        ? "var(--gp-brandalt-400)"
+                                        : "var(--gp-brand-700)",
                                 },
                             }}
                             onClick={() =>
@@ -1483,12 +1485,12 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                                     },
                                     "&.Mui-selected": {
                                         backgroundColor: isDark
-                                            ? "rgba(124,58,237,0.15)"
-                                            : "rgba(124,58,237,0.1)",
+                                            ? "rgba(var(--gp-brand-700-rgb), 0.15)"
+                                            : "rgba(var(--gp-brand-700-rgb), 0.1)",
                                         "&:hover": {
                                             backgroundColor: isDark
-                                                ? "rgba(124,58,237,0.2)"
-                                                : "rgba(124,58,237,0.15)",
+                                                ? "rgba(var(--gp-brand-700-rgb), 0.2)"
+                                                : "rgba(var(--gp-brand-700-rgb), 0.15)",
                                         },
                                     },
                                 }}

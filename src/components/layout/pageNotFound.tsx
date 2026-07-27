@@ -2,11 +2,12 @@ import React from "react";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import SearchOffRoundedIcon from "@mui/icons-material/SearchOffRounded";
 import { Box, Button, CssBaseline, Typography } from "@mui/joy";
-import { CssVarsProvider, useColorScheme } from "@mui/joy/styles";
+import { useColorScheme } from "@mui/joy/styles";
 import { useNavigate } from "react-router-dom";
 
 import { I18nProvider, useTranslation } from "../../i18n";
-import { purplePalette, purpleTheme } from "../../theme/purplePalette";
+import { ColorThemeProvider } from "../../theme/ColorThemeProvider";
+import { purplePalette } from "../../theme/purplePalette";
 
 const PageNotFoundContent: React.FC = () => {
     const navigate = useNavigate();
@@ -46,8 +47,8 @@ const PageNotFoundContent: React.FC = () => {
                     height: 300,
                     borderRadius: "50%",
                     background: isDark
-                        ? "radial-gradient(circle, rgba(124,58,237,0.10) 0%, transparent 70%)"
-                        : "radial-gradient(circle, rgba(124,58,237,0.14) 0%, transparent 70%)",
+                        ? "radial-gradient(circle, rgba(var(--gp-brand-700-rgb), 0.10) 0%, transparent 70%)"
+                        : "radial-gradient(circle, rgba(var(--gp-brand-700-rgb), 0.14) 0%, transparent 70%)",
                     filter: "blur(40px)",
                     pointerEvents: "none",
                 }}
@@ -61,8 +62,8 @@ const PageNotFoundContent: React.FC = () => {
                     height: 250,
                     borderRadius: "50%",
                     background: isDark
-                        ? "radial-gradient(circle, rgba(192,38,168,0.08) 0%, transparent 70%)"
-                        : "radial-gradient(circle, rgba(192,38,168,0.12) 0%, transparent 70%)",
+                        ? "radial-gradient(circle, rgba(var(--gp-tint-danger-alt-rgb), 0.08) 0%, transparent 70%)"
+                        : "radial-gradient(circle, rgba(var(--gp-tint-danger-alt-rgb), 0.12) 0%, transparent 70%)",
                     filter: "blur(40px)",
                     pointerEvents: "none",
                 }}
@@ -78,8 +79,8 @@ const PageNotFoundContent: React.FC = () => {
                     alignItems: "center",
                     justifyContent: "center",
                     background: isDark
-                        ? "linear-gradient(135deg, rgba(124,58,237,0.18) 0%, rgba(124,58,237,0.08) 100%)"
-                        : "linear-gradient(135deg, rgba(124,58,237,0.14) 0%, rgba(124,58,237,0.06) 100%)",
+                        ? "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.18) 0%, rgba(var(--gp-brand-700-rgb), 0.08) 100%)"
+                        : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.14) 0%, rgba(var(--gp-brand-700-rgb), 0.06) 100%)",
                     border: "1px solid",
                     borderColor: palette.borderStrong,
                     mb: 3,
@@ -105,8 +106,8 @@ const PageNotFoundContent: React.FC = () => {
                     fontSize: { xs: "6rem", md: "8rem" },
                     fontWeight: 800,
                     background: isDark
-                        ? "linear-gradient(135deg, #a78bfa 0%, #c084fc 50%, #e879c3 100%)"
-                        : "linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #c026a8 100%)",
+                        ? "linear-gradient(135deg, var(--gp-brandalt-400) 0%, var(--gp-brand-400) 50%, var(--gp-tint-danger) 100%)"
+                        : "linear-gradient(135deg, var(--gp-brand-700) 0%, var(--gp-brand-500) 50%, var(--gp-tint-danger-alt) 100%)",
                     backgroundClip: "text",
                     WebkitBackgroundClip: "text",
                     WebkitTextFillColor: "transparent",
@@ -160,8 +161,8 @@ const PageNotFoundContent: React.FC = () => {
                         background: palette.primaryButtonHover,
                         transform: "translateY(-2px)",
                         boxShadow: isDark
-                            ? "0 8px 28px rgba(124,58,237,0.45)"
-                            : "0 8px 28px rgba(124,58,237,0.35)",
+                            ? "0 8px 28px rgba(var(--gp-brand-700-rgb), 0.45)"
+                            : "0 8px 28px rgba(var(--gp-brand-700-rgb), 0.35)",
                     },
                     "&:active": {
                         transform: "translateY(0)",
@@ -177,11 +178,11 @@ const PageNotFoundContent: React.FC = () => {
 
 export const PageNotFound: React.FC = () => {
     return (
-        <CssVarsProvider theme={purpleTheme} disableTransitionOnChange>
+        <ColorThemeProvider>
             <CssBaseline />
             <I18nProvider>
                 <PageNotFoundContent />
             </I18nProvider>
-        </CssVarsProvider>
+        </ColorThemeProvider>
     );
 };

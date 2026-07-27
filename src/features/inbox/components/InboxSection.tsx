@@ -98,11 +98,11 @@ export const InboxSection = forwardRef<VirtuosoHandle, InboxSectionExtendedProps
                                         mx: 0.5,
                                         background: isSelected
                                             ? isDark
-                                                ? "rgba(139,92,246,0.08)"
-                                                : "rgba(124,58,237,0.06)"
+                                                ? "rgba(var(--gp-brandalt-500-rgb), 0.08)"
+                                                : "rgba(var(--gp-brand-700-rgb), 0.06)"
                                             : "transparent",
                                         outline: isSelected
-                                            ? `2px solid ${isDark ? "rgba(139,92,246,0.3)" : "rgba(124,58,237,0.2)"}`
+                                            ? `2px solid ${isDark ? "rgba(var(--gp-brandalt-500-rgb), 0.3)" : "rgba(var(--gp-brand-700-rgb), 0.2)"}`
                                             : "none",
                                         outlineOffset: "-2px",
                                         transition: "background 0.2s ease, outline 0.2s ease",
@@ -158,12 +158,12 @@ export const InboxSection = forwardRef<VirtuosoHandle, InboxSectionExtendedProps
                                 alignItems: "center",
                                 justifyContent: "center",
                                 background: isDark
-                                    ? "linear-gradient(135deg, rgba(124,58,237,0.12) 0%, rgba(139,92,246,0.08) 100%)"
-                                    : "linear-gradient(135deg, rgba(124,58,237,0.08) 0%, rgba(124,58,237,0.04) 100%)",
+                                    ? "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.12) 0%, rgba(var(--gp-brandalt-500-rgb), 0.08) 100%)"
+                                    : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.08) 0%, rgba(var(--gp-brand-700-rgb), 0.04) 100%)",
                                 border: "1px solid",
                                 borderColor: isDark
-                                    ? "rgba(139,92,246,0.15)"
-                                    : "rgba(124,58,237,0.1)",
+                                    ? "rgba(var(--gp-brandalt-500-rgb), 0.15)"
+                                    : "rgba(var(--gp-brand-700-rgb), 0.1)",
                                 mb: 2.5,
                                 position: "relative",
                                 "&::before": {
@@ -173,8 +173,8 @@ export const InboxSection = forwardRef<VirtuosoHandle, InboxSectionExtendedProps
                                     borderRadius: "50%",
                                     border: "1px dashed",
                                     borderColor: isDark
-                                        ? "rgba(139,92,246,0.15)"
-                                        : "rgba(124,58,237,0.12)",
+                                        ? "rgba(var(--gp-brandalt-500-rgb), 0.15)"
+                                        : "rgba(var(--gp-brand-700-rgb), 0.12)",
                                     animation: "rotate 20s linear infinite",
                                 },
                                 "@keyframes rotate": {

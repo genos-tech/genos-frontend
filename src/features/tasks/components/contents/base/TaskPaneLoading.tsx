@@ -68,7 +68,8 @@ export const TaskPaneLoading = ({ isDark, label }: TaskPaneLoadingProps) => (
                 left: 0,
                 right: 0,
                 height: "3px",
-                background: "linear-gradient(90deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%)",
+                background:
+                    "linear-gradient(90deg, #6366f1 0%, var(--gp-brandalt-500) 50%, var(--gp-brand-500) 100%)",
                 borderRadius: "16px 16px 0 0",
                 opacity: 0.8,
             }}
@@ -83,7 +84,8 @@ export const TaskPaneLoading = ({ isDark, label }: TaskPaneLoadingProps) => (
                         width: "10px",
                         height: "10px",
                         borderRadius: "50%",
-                        background: "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
+                        background:
+                            "linear-gradient(135deg, #6366f1 0%, var(--gp-brand-500) 100%)",
                         animation: `${dotPulse} 1.4s ease-in-out infinite`,
                         animationDelay: `${i * 0.16}s`,
                     }}

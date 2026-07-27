@@ -520,12 +520,12 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                     borderRadius: "16px",
                                     boxShadow: isDark
                                         ? "0 4px 20px rgba(0,0,0,0.3)"
-                                        : "0 4px 20px rgba(124,58,237,0.08)",
+                                        : "0 4px 20px rgba(var(--gp-brand-700-rgb), 0.08)",
                                     transition: "all 0.3s ease",
                                     "&:hover": {
                                         boxShadow: isDark
                                             ? "0 8px 30px rgba(0,0,0,0.4)"
-                                            : "0 8px 30px rgba(124,58,237,0.12)",
+                                            : "0 8px 30px rgba(var(--gp-brand-700-rgb), 0.12)",
                                     },
                                 }}
                             >
@@ -554,8 +554,8 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                 "&:hover": {
                                                     transform: "scale(1.02)",
                                                     boxShadow: isDark
-                                                        ? "0 0 50px rgba(124,58,237,0.5), 0 0 100px rgba(168,85,247,0.3)"
-                                                        : "0 0 50px rgba(124,58,237,0.3), 0 0 100px rgba(168,85,247,0.15)",
+                                                        ? "0 0 50px rgba(var(--gp-brand-700-rgb), 0.5), 0 0 100px rgba(var(--gp-brand-500-rgb), 0.3)"
+                                                        : "0 0 50px rgba(var(--gp-brand-700-rgb), 0.3), 0 0 100px rgba(var(--gp-brand-500-rgb), 0.15)",
                                                 },
                                             }}
                                         >
@@ -594,14 +594,14 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                         variant="soft"
                                                         sx={{
                                                             background: isDark
-                                                                ? "linear-gradient(135deg, rgba(124,58,237,0.3) 0%, rgba(168,85,247,0.3) 100%)"
-                                                                : "linear-gradient(135deg, rgba(124,58,237,0.15) 0%, rgba(168,85,247,0.15) 100%)",
+                                                                ? "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.3) 0%, rgba(var(--gp-brand-500-rgb), 0.3) 100%)"
+                                                                : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.15) 0%, rgba(var(--gp-brand-500-rgb), 0.15) 100%)",
                                                             border: `1px solid ${styles.border}`,
                                                             transition: "all 0.2s ease",
                                                             "&:hover": {
                                                                 background: isDark
-                                                                    ? "linear-gradient(135deg, rgba(124,58,237,0.5) 0%, rgba(168,85,247,0.5) 100%)"
-                                                                    : "linear-gradient(135deg, rgba(124,58,237,0.25) 0%, rgba(168,85,247,0.25) 100%)",
+                                                                    ? "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.5) 0%, rgba(var(--gp-brand-500-rgb), 0.5) 100%)"
+                                                                    : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.25) 0%, rgba(var(--gp-brand-500-rgb), 0.25) 100%)",
                                                                 transform: "scale(1.1)",
                                                             },
                                                         }}
@@ -736,7 +736,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                     <Typography
                                                         level="body-xs"
                                                         sx={{
-                                                            color: "rgba(232,121,195,0.9)",
+                                                            color: "rgba(var(--gp-tint-danger-rgb), 0.9)",
                                                             mt: 0.5,
                                                         }}
                                                     >
@@ -983,8 +983,8 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                                     borderColor:
                                                                         styles.accentColor,
                                                                     boxShadow: isDark
-                                                                        ? "0 0 0 2px rgba(124,58,237,0.2)"
-                                                                        : "0 0 0 2px rgba(124,58,237,0.1)",
+                                                                        ? "0 0 0 2px rgba(var(--gp-brand-700-rgb), 0.2)"
+                                                                        : "0 0 0 2px rgba(var(--gp-brand-700-rgb), 0.1)",
                                                                 },
                                                             }}
                                                             onChange={(e) =>
@@ -1002,7 +1002,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                         overflow: "auto",
                                                         background: isDark
                                                             ? "rgba(0,0,0,0.2)"
-                                                            : "rgba(124,58,237,0.03)",
+                                                            : "rgba(var(--gp-brand-700-rgb), 0.03)",
                                                         borderRadius: "12px",
                                                         border: `1px solid ${styles.border}`,
                                                         p: 1,
@@ -1107,15 +1107,15 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                             borderRadius: "20px",
                                                             background: gmProfile?.isPrivate
                                                                 ? isDark
-                                                                    ? "linear-gradient(135deg, rgba(232,121,195,0.2) 0%, rgba(192,38,168,0.2) 100%)"
-                                                                    : "linear-gradient(135deg, rgba(232,121,195,0.15) 0%, rgba(192,38,168,0.15) 100%)"
+                                                                    ? "linear-gradient(135deg, rgba(var(--gp-tint-danger-rgb), 0.2) 0%, rgba(var(--gp-tint-danger-alt-rgb), 0.2) 100%)"
+                                                                    : "linear-gradient(135deg, rgba(var(--gp-tint-danger-rgb), 0.15) 0%, rgba(var(--gp-tint-danger-alt-rgb), 0.15) 100%)"
                                                                 : isDark
-                                                                  ? "linear-gradient(135deg, rgba(192,132,252,0.2) 0%, rgba(168,85,247,0.2) 100%)"
-                                                                  : "linear-gradient(135deg, rgba(147,51,234,0.12) 0%, rgba(126,34,206,0.12) 100%)",
+                                                                  ? "linear-gradient(135deg, rgba(var(--gp-brand-400-rgb), 0.2) 0%, rgba(var(--gp-brand-500-rgb), 0.2) 100%)"
+                                                                  : "linear-gradient(135deg, rgba(var(--gp-brand-600-rgb), 0.12) 0%, rgba(var(--gp-brand-800-rgb), 0.12) 100%)",
                                                             border: `1px solid ${
                                                                 gmProfile?.isPrivate
-                                                                    ? "rgba(232,121,195,0.3)"
-                                                                    : "rgba(192,132,252,0.3)"
+                                                                    ? "rgba(var(--gp-tint-danger-rgb), 0.3)"
+                                                                    : "rgba(var(--gp-brand-400-rgb), 0.3)"
                                                             }`,
                                                         }}
                                                     >
@@ -1125,11 +1125,11 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                                 userSelect: "text",
                                                                 color: gmProfile?.isPrivate
                                                                     ? isDark
-                                                                        ? "#e879c3"
-                                                                        : "#c026a8"
+                                                                        ? "var(--gp-tint-danger)"
+                                                                        : "var(--gp-tint-danger-alt)"
                                                                     : isDark
-                                                                      ? "#c084fc"
-                                                                      : "#9333ea",
+                                                                      ? "var(--gp-brand-400)"
+                                                                      : "var(--gp-brand-600)",
                                                             }}
                                                         >
                                                             {gmProfile?.isPrivate
@@ -1159,8 +1159,8 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                             py: 0.5,
                                                             borderRadius: "8px",
                                                             background: isDark
-                                                                ? "rgba(124,58,237,0.1)"
-                                                                : "rgba(124,58,237,0.05)",
+                                                                ? "rgba(var(--gp-brand-700-rgb), 0.1)"
+                                                                : "rgba(var(--gp-brand-700-rgb), 0.05)",
                                                             border: `1px solid ${styles.border}`,
                                                         }}
                                                     >
@@ -1197,13 +1197,14 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                         }
                                                         sx={{
                                                             borderRadius: "10px",
-                                                            borderColor: "rgba(232,121,195,0.4)",
-                                                            color: "rgba(232,121,195,0.9)",
+                                                            borderColor:
+                                                                "rgba(var(--gp-tint-danger-rgb), 0.4)",
+                                                            color: "rgba(var(--gp-tint-danger-rgb), 0.9)",
                                                             "&:hover": {
                                                                 background:
-                                                                    "rgba(232,121,195,0.08)",
+                                                                    "rgba(var(--gp-tint-danger-rgb), 0.08)",
                                                                 borderColor:
-                                                                    "rgba(232,121,195,0.6)",
+                                                                    "rgba(var(--gp-tint-danger-rgb), 0.6)",
                                                             },
                                                         }}
                                                         onClick={() => setOpenLeaveConfirm(true)}

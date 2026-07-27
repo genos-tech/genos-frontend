@@ -106,8 +106,8 @@ export const ModalMoveToFolder = (props: ModalMoveToFolderProps) => {
         opacity: isDisabled ? 0.4 : 1,
         backgroundColor: isSelected
             ? isDark
-                ? "rgba(124,58,237,0.2)"
-                : "rgba(124,58,237,0.1)"
+                ? "rgba(var(--gp-brand-700-rgb), 0.2)"
+                : "rgba(var(--gp-brand-700-rgb), 0.1)"
             : "transparent",
     });
 
@@ -130,7 +130,10 @@ export const ModalMoveToFolder = (props: ModalMoveToFolderProps) => {
             >
                 <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 1 }}>
                     <DriveFileMoveRoundedIcon
-                        sx={{ fontSize: 20, color: isDark ? "#a78bfa" : "#7c3aed" }}
+                        sx={{
+                            fontSize: 20,
+                            color: isDark ? "var(--gp-brandalt-400)" : "var(--gp-brand-700)",
+                        }}
                     />
                     <Typography level="title-lg">{t.notes.folders.moveTitle}</Typography>
                 </Stack>

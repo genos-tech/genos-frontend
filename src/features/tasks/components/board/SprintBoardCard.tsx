@@ -37,11 +37,11 @@ const getCardStyles = (
     backgroundColor: isDragging
         ? mode === "dark"
             ? "#2a3a5a"
-            : "#f3e8ff"
+            : "var(--gp-brand-100)"
         : isSelected
           ? mode === "dark"
-              ? "#2e1065"
-              : "#f3e8ff"
+              ? "var(--gp-brandalt-950)"
+              : "var(--gp-brand-100)"
           : mode === "dark"
             ? "#1a1a24"
             : "#ffffff",
@@ -54,8 +54,8 @@ const getCardStyles = (
             : "0 12px 28px rgba(0, 0, 0, 0.18)"
         : isSelected
           ? mode === "dark"
-              ? "0 0 0 2px rgba(167,139,250,0.5), 0 4px 12px rgba(0, 0, 0, 0.3)"
-              : "0 0 0 2px rgba(124,58,237,0.4), 0 4px 12px rgba(0, 0, 0, 0.1)"
+              ? "0 0 0 2px rgba(var(--gp-brandalt-400-rgb), 0.5), 0 4px 12px rgba(0, 0, 0, 0.3)"
+              : "0 0 0 2px rgba(var(--gp-brand-700-rgb), 0.4), 0 4px 12px rgba(0, 0, 0, 0.1)"
           : isHovered
             ? mode === "dark"
                 ? "0 4px 12px rgba(0, 0, 0, 0.4)"
@@ -65,12 +65,12 @@ const getCardStyles = (
               : "0 1px 2px rgba(0, 0, 0, 0.05)",
     border: isDragging
         ? mode === "dark"
-            ? "1px solid rgba(167,139,250,0.3)"
-            : "1px solid rgba(124,58,237,0.3)"
+            ? "1px solid rgba(var(--gp-brandalt-400-rgb), 0.3)"
+            : "1px solid rgba(var(--gp-brand-700-rgb), 0.3)"
         : isSelected
           ? mode === "dark"
-              ? "1px solid rgba(167,139,250,0.4)"
-              : "1px solid rgba(124,58,237,0.3)"
+              ? "1px solid rgba(var(--gp-brandalt-400-rgb), 0.4)"
+              : "1px solid rgba(var(--gp-brand-700-rgb), 0.3)"
           : mode === "dark"
             ? "1px solid rgba(255, 255, 255, 0.05)"
             : "1px solid rgba(0, 0, 0, 0.04)",
@@ -230,14 +230,17 @@ const SprintBoardCardImpl = ({
                                             minHeight: 18,
                                             p: 0,
                                             borderRadius: "4px",
-                                            color: mode === "dark" ? "#a78bfa" : "#7c3aed",
+                                            color:
+                                                mode === "dark"
+                                                    ? "var(--gp-brandalt-400)"
+                                                    : "var(--gp-brand-700)",
                                             opacity: 0.75,
                                             "&:hover": {
                                                 opacity: 1,
                                                 backgroundColor:
                                                     mode === "dark"
-                                                        ? "rgba(167,139,250,0.15)"
-                                                        : "rgba(124,58,237,0.1)",
+                                                        ? "rgba(var(--gp-brandalt-400-rgb), 0.15)"
+                                                        : "rgba(var(--gp-brand-700-rgb), 0.1)",
                                             },
                                         }}
                                         onClick={(e) => {

@@ -61,6 +61,9 @@ export const BottomTabBar = (props: BottomTabBarProps) => {
     const isDark = mode === "dark";
     const palette = isDark ? purplePalette.dark : purplePalette.light;
     const accent = isDark ? purplePalette.dark.accentSoft : purplePalette.light.accent;
+    // Triplet companion — the palette is CSS variables, so alpha has to be
+    // composed via rgba() rather than appended as hex.
+    const accentRgb = isDark ? purplePalette.dark.accentSoftRgb : purplePalette.light.accentRgb;
 
     const getBadgeCount = (id: number): number => {
         if (id === 0) return useIM.unReadInboxItemCount;
@@ -83,7 +86,7 @@ export const BottomTabBar = (props: BottomTabBarProps) => {
                 borderTop: "1px solid",
                 borderColor: palette.divider,
                 background: isDark
-                    ? "linear-gradient(180deg, rgba(20,14,34,0.96) 0%, rgba(11,10,22,0.98) 100%)"
+                    ? "linear-gradient(180deg, rgba(var(--gp-dark-surface-b-rgb), 0.96) 0%, rgba(11,10,22,0.98) 100%)"
                     : "linear-gradient(180deg, rgba(252,250,255,0.96) 0%, rgba(248,245,255,0.98) 100%)",
                 backdropFilter: "blur(12px)",
                 paddingBottom: "env(safe-area-inset-bottom, 0)",
@@ -121,7 +124,7 @@ export const BottomTabBar = (props: BottomTabBarProps) => {
                             size="sm"
                             sx={{
                                 "& .MuiBadge-badge": {
-                                    background: `linear-gradient(135deg, ${accent} 0%, ${accent}cc 100%)`,
+                                    background: `linear-gradient(135deg, ${accent} 0%, rgba(${accentRgb}, 0.8) 100%)`,
                                     color: "#fff",
                                     fontWeight: 700,
                                     fontSize: "0.6rem",

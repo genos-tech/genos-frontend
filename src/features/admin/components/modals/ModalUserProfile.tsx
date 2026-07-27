@@ -326,13 +326,13 @@ export const UserProfile = (props: UserProfileProps) => {
                                     borderRadius: "16px",
                                     boxShadow: isDark
                                         ? "0 4px 20px rgba(0,0,0,0.3)"
-                                        : "0 4px 20px rgba(124,58,237,0.08)",
+                                        : "0 4px 20px rgba(var(--gp-brand-700-rgb), 0.08)",
                                     transition: "all 0.3s ease",
                                     p: { xs: 2, md: 3 },
                                     "&:hover": {
                                         boxShadow: isDark
                                             ? "0 8px 30px rgba(0,0,0,0.4)"
-                                            : "0 8px 30px rgba(124,58,237,0.12)",
+                                            : "0 8px 30px rgba(var(--gp-brand-700-rgb), 0.12)",
                                     },
                                 }}
                             >
@@ -363,8 +363,8 @@ export const UserProfile = (props: UserProfileProps) => {
                                                 "&:hover": {
                                                     transform: "scale(1.02)",
                                                     boxShadow: isDark
-                                                        ? "0 0 50px rgba(124,58,237,0.5), 0 0 100px rgba(139,92,246,0.3)"
-                                                        : "0 0 50px rgba(124,58,237,0.3), 0 0 100px rgba(139,92,246,0.15)",
+                                                        ? "0 0 50px rgba(var(--gp-brand-700-rgb), 0.5), 0 0 100px rgba(var(--gp-brandalt-500-rgb), 0.3)"
+                                                        : "0 0 50px rgba(var(--gp-brand-700-rgb), 0.3), 0 0 100px rgba(var(--gp-brandalt-500-rgb), 0.15)",
                                                 },
                                             }}
                                             onClick={() => setOpenUserProfile(true)}
@@ -399,14 +399,14 @@ export const UserProfile = (props: UserProfileProps) => {
                                                         variant="soft"
                                                         sx={{
                                                             background: isDark
-                                                                ? "linear-gradient(135deg, rgba(124,58,237,0.3) 0%, rgba(139,92,246,0.3) 100%)"
-                                                                : "linear-gradient(135deg, rgba(124,58,237,0.15) 0%, rgba(139,92,246,0.15) 100%)",
+                                                                ? "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.3) 0%, rgba(var(--gp-brandalt-500-rgb), 0.3) 100%)"
+                                                                : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.15) 0%, rgba(var(--gp-brandalt-500-rgb), 0.15) 100%)",
                                                             border: `1px solid ${styles.border}`,
                                                             transition: "all 0.2s ease",
                                                             "&:hover": {
                                                                 background: isDark
-                                                                    ? "linear-gradient(135deg, rgba(124,58,237,0.5) 0%, rgba(139,92,246,0.5) 100%)"
-                                                                    : "linear-gradient(135deg, rgba(124,58,237,0.25) 0%, rgba(139,92,246,0.25) 100%)",
+                                                                    ? "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.5) 0%, rgba(var(--gp-brandalt-500-rgb), 0.5) 100%)"
+                                                                    : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.25) 0%, rgba(var(--gp-brandalt-500-rgb), 0.25) 100%)",
                                                                 transform: "scale(1.1)",
                                                             },
                                                         }}
@@ -511,8 +511,8 @@ export const UserProfile = (props: UserProfileProps) => {
                                                     py: 0.75,
                                                     borderRadius: "8px",
                                                     background: isDark
-                                                        ? "rgba(124,58,237,0.1)"
-                                                        : "rgba(124,58,237,0.05)",
+                                                        ? "rgba(var(--gp-brand-700-rgb), 0.1)"
+                                                        : "rgba(var(--gp-brand-700-rgb), 0.05)",
                                                     border: `1px solid ${styles.border}`,
                                                     display: "inline-flex",
                                                     width: "fit-content",
@@ -562,8 +562,8 @@ export const UserProfile = (props: UserProfileProps) => {
                                                         py: 0.5,
                                                         borderRadius: "6px",
                                                         background: isDark
-                                                            ? "rgba(124,58,237,0.3)"
-                                                            : "rgba(124,58,237,0.05)",
+                                                            ? "rgba(var(--gp-brand-700-rgb), 0.3)"
+                                                            : "rgba(var(--gp-brand-700-rgb), 0.05)",
                                                         border: `1px solid ${styles.border}`,
                                                         overflow: "hidden",
                                                         width: "100%",
@@ -612,8 +612,8 @@ export const UserProfile = (props: UserProfileProps) => {
                                                         py: 0.5,
                                                         borderRadius: "6px",
                                                         background: isDark
-                                                            ? "rgba(124,58,237,0.3)"
-                                                            : "rgba(124,58,237,0.05)",
+                                                            ? "rgba(var(--gp-brand-700-rgb), 0.3)"
+                                                            : "rgba(var(--gp-brand-700-rgb), 0.05)",
                                                         border: `1px solid ${styles.border}`,
                                                         overflow: "hidden",
                                                         width: "100%",
@@ -699,8 +699,8 @@ export const UserProfile = (props: UserProfileProps) => {
                                                         py: 0.5,
                                                         borderRadius: "6px",
                                                         background: isDark
-                                                            ? "rgba(124,58,237,0.1)"
-                                                            : "rgba(124,58,237,0.05)",
+                                                            ? "rgba(var(--gp-brand-700-rgb), 0.1)"
+                                                            : "rgba(var(--gp-brand-700-rgb), 0.05)",
                                                         border: `1px solid ${styles.border}`,
                                                         width: "fit-content",
                                                     }}
@@ -764,19 +764,19 @@ export const UserProfile = (props: UserProfileProps) => {
                                         py: 0.75,
                                         borderRadius: "10px",
                                         background: isDark
-                                            ? "linear-gradient(135deg, rgba(124,58,237,0.2) 0%, rgba(139,92,246,0.2) 100%)"
-                                            : "linear-gradient(135deg, rgba(124,58,237,0.1) 0%, rgba(139,92,246,0.1) 100%)",
+                                            ? "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.2) 0%, rgba(var(--gp-brandalt-500-rgb), 0.2) 100%)"
+                                            : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.1) 0%, rgba(var(--gp-brandalt-500-rgb), 0.1) 100%)",
                                         border: `1px solid ${styles.border}`,
                                         color: styles.valueColor,
                                         transition: "all 0.2s ease",
                                         "&:hover": {
                                             background: isDark
-                                                ? "linear-gradient(135deg, rgba(124,58,237,0.4) 0%, rgba(139,92,246,0.4) 100%)"
-                                                : "linear-gradient(135deg, rgba(124,58,237,0.2) 0%, rgba(139,92,246,0.2) 100%)",
+                                                ? "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.4) 0%, rgba(var(--gp-brandalt-500-rgb), 0.4) 100%)"
+                                                : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.2) 0%, rgba(var(--gp-brandalt-500-rgb), 0.2) 100%)",
                                             transform: "translateY(-2px)",
                                             boxShadow: isDark
-                                                ? "0 4px 12px rgba(124,58,237,0.3)"
-                                                : "0 4px 12px rgba(124,58,237,0.2)",
+                                                ? "0 4px 12px rgba(var(--gp-brand-700-rgb), 0.3)"
+                                                : "0 4px 12px rgba(var(--gp-brand-700-rgb), 0.2)",
                                         },
                                     }}
                                     onClick={() => {

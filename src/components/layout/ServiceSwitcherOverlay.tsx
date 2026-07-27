@@ -62,6 +62,7 @@ export const ServiceSwitcherOverlay = ({
     if (previewIndex === null) return null;
 
     const accent = isDark ? purplePalette.dark.accentSoft : purplePalette.light.accent;
+    const accentRgb = isDark ? purplePalette.dark.accentSoftRgb : purplePalette.light.accentRgb;
 
     return (
         <Box
@@ -88,12 +89,14 @@ export const ServiceSwitcherOverlay = ({
                     gap: 1.5,
                     backdropFilter: "blur(20px) saturate(180%)",
                     WebkitBackdropFilter: "blur(20px) saturate(180%)",
-                    background: isDark ? "rgba(30,20,46,0.82)" : "rgba(250,248,255,0.85)",
+                    background: isDark
+                        ? "rgba(var(--gp-dark-surface-a-rgb), 0.82)"
+                        : "rgba(250,248,255,0.85)",
                     border: "1px solid",
                     borderColor: palette.border,
                     boxShadow: isDark
-                        ? "0 24px 60px rgba(0,0,0,0.55), 0 0 40px rgba(124,58,237,0.18)"
-                        : "0 24px 60px rgba(124,58,237,0.18)",
+                        ? "0 24px 60px rgba(0,0,0,0.55), 0 0 40px rgba(var(--gp-brand-700-rgb), 0.18)"
+                        : "0 24px 60px rgba(var(--gp-brand-700-rgb), 0.18)",
                 }}
             >
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
@@ -119,13 +122,13 @@ export const ServiceSwitcherOverlay = ({
                                     border: "1.5px solid",
                                     borderColor: isActive
                                         ? isDark
-                                            ? `${accent}80`
-                                            : `${accent}70`
+                                            ? `rgba(${accentRgb}, 0.502)`
+                                            : `rgba(${accentRgb}, 0.439)`
                                         : "transparent",
                                     background: isActive
                                         ? isDark
-                                            ? `linear-gradient(135deg, ${accent}30 0%, ${accent}18 100%)`
-                                            : `linear-gradient(135deg, ${accent}22 0%, ${accent}12 100%)`
+                                            ? `linear-gradient(135deg, rgba(${accentRgb}, 0.188) 0%, rgba(${accentRgb}, 0.094) 100%)`
+                                            : `linear-gradient(135deg, rgba(${accentRgb}, 0.133) 0%, rgba(${accentRgb}, 0.071) 100%)`
                                         : "transparent",
                                 }}
                             >
@@ -139,8 +142,8 @@ export const ServiceSwitcherOverlay = ({
                                         justifyContent: "center",
                                         background: isActive
                                             ? isDark
-                                                ? `linear-gradient(135deg, ${accent}35 0%, ${accent}20 100%)`
-                                                : `linear-gradient(135deg, ${accent}28 0%, ${accent}15 100%)`
+                                                ? `linear-gradient(135deg, rgba(${accentRgb}, 0.208) 0%, rgba(${accentRgb}, 0.125) 100%)`
+                                                : `linear-gradient(135deg, rgba(${accentRgb}, 0.157) 0%, rgba(${accentRgb}, 0.082) 100%)`
                                             : isDark
                                               ? "rgba(255,255,255,0.06)"
                                               : "rgba(0,0,0,0.04)",

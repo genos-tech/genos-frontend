@@ -349,13 +349,17 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                 color: isDark ? "rgba(255,255,255,0.8)" : "rgba(0,0,0,0.7)",
                             },
                             [`&.${tabClasses.selected}`]: {
-                                color: isDark ? "#a78bfa" : "#7c3aed",
+                                color: isDark ? "var(--gp-brandalt-400)" : "var(--gp-brand-700)",
                                 fontWeight: 600,
-                                bgcolor: isDark ? "rgba(139,92,246,0.1)" : "rgba(124,58,237,0.08)",
+                                bgcolor: isDark
+                                    ? "rgba(var(--gp-brandalt-500-rgb), 0.1)"
+                                    : "rgba(var(--gp-brand-700-rgb), 0.08)",
                                 "&::after": {
                                     height: "2px",
                                     borderRadius: "2px 2px 0 0",
-                                    bgcolor: isDark ? "#a78bfa" : "#7c3aed",
+                                    bgcolor: isDark
+                                        ? "var(--gp-brandalt-400)"
+                                        : "var(--gp-brand-700)",
                                 },
                             },
                         },
@@ -378,16 +382,16 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                         background:
                                             tabIndex === index
                                                 ? isDark
-                                                    ? "rgba(139,92,246,0.2)"
-                                                    : "rgba(124,58,237,0.15)"
+                                                    ? "rgba(var(--gp-brandalt-500-rgb), 0.2)"
+                                                    : "rgba(var(--gp-brand-700-rgb), 0.15)"
                                                 : isDark
                                                   ? "rgba(255,255,255,0.08)"
                                                   : "rgba(0,0,0,0.06)",
                                         color:
                                             tabIndex === index
                                                 ? isDark
-                                                    ? "#a78bfa"
-                                                    : "#7c3aed"
+                                                    ? "var(--gp-brandalt-400)"
+                                                    : "var(--gp-brand-700)"
                                                 : isDark
                                                   ? "rgba(255,255,255,0.5)"
                                                   : "rgba(0,0,0,0.5)",
@@ -617,22 +621,24 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                             justifyContent: "center",
                                             gap: 1,
                                             background: isDark
-                                                ? "linear-gradient(135deg, rgba(139,92,246,0.1) 0%, rgba(124,58,237,0.08) 100%)"
-                                                : "linear-gradient(135deg, rgba(124,58,237,0.08) 0%, rgba(124,58,237,0.06) 100%)",
+                                                ? "linear-gradient(135deg, rgba(var(--gp-brandalt-500-rgb), 0.1) 0%, rgba(var(--gp-brand-700-rgb), 0.08) 100%)"
+                                                : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.08) 0%, rgba(var(--gp-brand-700-rgb), 0.06) 100%)",
                                             border: "1px solid",
                                             borderColor: isDark
-                                                ? "rgba(139,92,246,0.2)"
-                                                : "rgba(124,58,237,0.15)",
-                                            color: isDark ? "#a78bfa" : "#7c3aed",
+                                                ? "rgba(var(--gp-brandalt-500-rgb), 0.2)"
+                                                : "rgba(var(--gp-brand-700-rgb), 0.15)",
+                                            color: isDark
+                                                ? "var(--gp-brandalt-400)"
+                                                : "var(--gp-brand-700)",
                                             fontWeight: 600,
                                             transition: "all 0.2s ease",
                                             "&:hover": {
                                                 background: isDark
-                                                    ? "linear-gradient(135deg, rgba(139,92,246,0.15) 0%, rgba(124,58,237,0.12) 100%)"
-                                                    : "linear-gradient(135deg, rgba(124,58,237,0.12) 0%, rgba(124,58,237,0.1) 100%)",
+                                                    ? "linear-gradient(135deg, rgba(var(--gp-brandalt-500-rgb), 0.15) 0%, rgba(var(--gp-brand-700-rgb), 0.12) 100%)"
+                                                    : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.12) 0%, rgba(var(--gp-brand-700-rgb), 0.1) 100%)",
                                                 borderColor: isDark
-                                                    ? "rgba(139,92,246,0.3)"
-                                                    : "rgba(124,58,237,0.25)",
+                                                    ? "rgba(var(--gp-brandalt-500-rgb), 0.3)"
+                                                    : "rgba(var(--gp-brand-700-rgb), 0.25)",
                                             },
                                         }}
                                         onClick={async () => {
@@ -700,11 +706,11 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                 transition: "all 0.2s ease",
                                 "&:hover": {
                                     borderColor: isDark
-                                        ? "rgba(139,92,246,0.3)"
-                                        : "rgba(124,58,237,0.2)",
+                                        ? "rgba(var(--gp-brandalt-500-rgb), 0.3)"
+                                        : "rgba(var(--gp-brand-700-rgb), 0.2)",
                                     background: isDark
-                                        ? "rgba(139,92,246,0.03)"
-                                        : "rgba(124,58,237,0.02)",
+                                        ? "rgba(var(--gp-brandalt-500-rgb), 0.03)"
+                                        : "rgba(var(--gp-brand-700-rgb), 0.02)",
                                 },
                             }}
                             onDragOver={(e) => e.preventDefault()}
@@ -813,8 +819,8 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                                 top: -8,
                                                 right: -8,
                                                 background: isDark
-                                                    ? "rgba(232,121,195,0.2)"
-                                                    : "rgba(232,121,195,0.15)",
+                                                    ? "rgba(var(--gp-tint-danger-rgb), 0.2)"
+                                                    : "rgba(var(--gp-tint-danger-rgb), 0.15)",
                                                 borderRadius: "50%",
                                                 width: 20,
                                                 height: 20,
@@ -822,7 +828,8 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                                 minHeight: 20,
                                                 zIndex: 6,
                                                 "&:hover": {
-                                                    background: "rgba(232,121,195,0.3)",
+                                                    background:
+                                                        "rgba(var(--gp-tint-danger-rgb), 0.3)",
                                                 },
                                                 "&.Mui-disabled": {
                                                     opacity: 0.4,
@@ -916,7 +923,8 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                                 minHeight: 24,
                                                 zIndex: 6,
                                                 "&:hover": {
-                                                    background: "rgba(232,121,195,0.7)",
+                                                    background:
+                                                        "rgba(var(--gp-tint-danger-rgb), 0.7)",
                                                 },
                                                 "&.Mui-disabled": {
                                                     opacity: 0.4,
@@ -975,18 +983,20 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                     py: 0.8,
                                     gap: 1,
                                     background: isDark
-                                        ? "linear-gradient(135deg, rgba(139,92,246,0.12) 0%, rgba(124,58,237,0.1) 100%)"
-                                        : "linear-gradient(135deg, rgba(124,58,237,0.1) 0%, rgba(124,58,237,0.08) 100%)",
+                                        ? "linear-gradient(135deg, rgba(var(--gp-brandalt-500-rgb), 0.12) 0%, rgba(var(--gp-brand-700-rgb), 0.1) 100%)"
+                                        : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.1) 0%, rgba(var(--gp-brand-700-rgb), 0.08) 100%)",
                                     border: "1px solid",
                                     borderColor: isDark
-                                        ? "rgba(139,92,246,0.2)"
-                                        : "rgba(124,58,237,0.15)",
-                                    color: isDark ? "#a78bfa" : "#7c3aed",
+                                        ? "rgba(var(--gp-brandalt-500-rgb), 0.2)"
+                                        : "rgba(var(--gp-brand-700-rgb), 0.15)",
+                                    color: isDark
+                                        ? "var(--gp-brandalt-400)"
+                                        : "var(--gp-brand-700)",
                                     transition: "all 0.2s ease",
                                     "&:hover": {
                                         background: isDark
-                                            ? "linear-gradient(135deg, rgba(139,92,246,0.18) 0%, rgba(124,58,237,0.15) 100%)"
-                                            : "linear-gradient(135deg, rgba(124,58,237,0.15) 0%, rgba(124,58,237,0.12) 100%)",
+                                            ? "linear-gradient(135deg, rgba(var(--gp-brandalt-500-rgb), 0.18) 0%, rgba(var(--gp-brand-700-rgb), 0.15) 100%)"
+                                            : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.15) 0%, rgba(var(--gp-brand-700-rgb), 0.12) 100%)",
                                     },
                                 }}
                                 onClick={() => inputRef.current?.click()}

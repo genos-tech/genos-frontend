@@ -150,16 +150,16 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                 border: "1px solid",
                 borderColor: isHovered
                     ? isDark
-                        ? "rgba(139,92,246,0.25)"
-                        : "rgba(124,58,237,0.15)"
+                        ? "rgba(var(--gp-brandalt-500-rgb), 0.25)"
+                        : "rgba(var(--gp-brand-700-rgb), 0.15)"
                     : isDark
                       ? "rgba(255,255,255,0.06)"
                       : "rgba(0,0,0,0.06)",
                 borderRadius: "14px",
                 boxShadow: isHovered
                     ? isDark
-                        ? "0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(139,92,246,0.1)"
-                        : "0 8px 32px rgba(0,0,0,0.08), 0 0 0 1px rgba(124,58,237,0.05)"
+                        ? "0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(var(--gp-brandalt-500-rgb), 0.1)"
+                        : "0 8px 32px rgba(0,0,0,0.08), 0 0 0 1px rgba(var(--gp-brand-700-rgb), 0.05)"
                     : isDark
                       ? "0 2px 8px rgba(0,0,0,0.2)"
                       : "0 2px 8px rgba(0,0,0,0.04)",
@@ -181,8 +181,8 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                         right: 0,
                         height: "1px",
                         background: isDark
-                            ? "linear-gradient(90deg, transparent 0%, rgba(139,92,246,0.5) 50%, transparent 100%)"
-                            : "linear-gradient(90deg, transparent 0%, rgba(124,58,237,0.3) 50%, transparent 100%)",
+                            ? "linear-gradient(90deg, transparent 0%, rgba(var(--gp-brandalt-500-rgb), 0.5) 50%, transparent 100%)"
+                            : "linear-gradient(90deg, transparent 0%, rgba(var(--gp-brand-700-rgb), 0.3) 50%, transparent 100%)",
                     }}
                 />
             )}
@@ -394,8 +394,8 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                                             background: palette.primaryButtonHover,
                                             transform: "translateY(-1px)",
                                             boxShadow: isDark
-                                                ? "0 6px 16px rgba(124,58,237,0.5)"
-                                                : "0 6px 16px rgba(124,58,237,0.4)",
+                                                ? "0 6px 16px rgba(var(--gp-brand-700-rgb), 0.5)"
+                                                : "0 6px 16px rgba(var(--gp-brand-700-rgb), 0.4)",
                                         },
                                         "&:active": {
                                             transform: "translateY(0)",

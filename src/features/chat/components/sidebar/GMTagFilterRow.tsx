@@ -73,8 +73,8 @@ export const GMTagFilterRow = ({ selectedTagIds, setSelectedTagIds }: GMTagFilte
         "&:hover": {
             background: isActive
                 ? isDark
-                    ? "linear-gradient(135deg, rgba(124,58,237,0.22) 0%, rgba(139,92,246,0.16) 100%)"
-                    : "linear-gradient(135deg, rgba(124,58,237,0.16) 0%, rgba(124,58,237,0.1) 100%)"
+                    ? "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.22) 0%, rgba(var(--gp-brandalt-500-rgb), 0.16) 100%)"
+                    : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.16) 0%, rgba(var(--gp-brand-700-rgb), 0.1) 100%)"
                 : isDark
                   ? "rgba(255,255,255,0.04)"
                   : "rgba(0,0,0,0.03)",
@@ -82,14 +82,14 @@ export const GMTagFilterRow = ({ selectedTagIds, setSelectedTagIds }: GMTagFilte
         alignItems: "center",
         background: isActive
             ? isDark
-                ? "linear-gradient(135deg, rgba(124,58,237,0.18) 0%, rgba(139,92,246,0.12) 100%)"
-                : "linear-gradient(135deg, rgba(124,58,237,0.12) 0%, rgba(124,58,237,0.06) 100%)"
+                ? "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.18) 0%, rgba(var(--gp-brandalt-500-rgb), 0.12) 100%)"
+                : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.12) 0%, rgba(var(--gp-brand-700-rgb), 0.06) 100%)"
             : "transparent",
         border: "1px solid",
         borderColor: isActive
             ? isDark
-                ? "rgba(139,92,246,0.25)"
-                : "rgba(124,58,237,0.15)"
+                ? "rgba(var(--gp-brandalt-500-rgb), 0.25)"
+                : "rgba(var(--gp-brand-700-rgb), 0.15)"
             : "transparent",
         borderRadius: "6px",
         cursor: "pointer",
@@ -104,8 +104,8 @@ export const GMTagFilterRow = ({ selectedTagIds, setSelectedTagIds }: GMTagFilte
     const chipIconSx = (isActive: boolean) => ({
         color: isActive
             ? isDark
-                ? "#a78bfa"
-                : "#7c3aed"
+                ? "var(--gp-brandalt-400)"
+                : "var(--gp-brand-700)"
             : isDark
               ? "rgba(255,255,255,0.45)"
               : "rgba(0,0,0,0.4)",
@@ -220,7 +220,9 @@ export const GMTagFilterRow = ({ selectedTagIds, setSelectedTagIds }: GMTagFilte
                             <Box
                                 sx={{
                                     alignItems: "center",
-                                    background: isDark ? "#a78bfa" : "#7c3aed",
+                                    background: isDark
+                                        ? "var(--gp-brandalt-400)"
+                                        : "var(--gp-brand-700)",
                                     borderRadius: "999px",
                                     color: "#fff",
                                     display: "flex",
@@ -283,8 +285,8 @@ export const GMTagFilterRow = ({ selectedTagIds, setSelectedTagIds }: GMTagFilte
                                             alignItems: "center",
                                             color: isChecked
                                                 ? isDark
-                                                    ? "#a78bfa"
-                                                    : "#7c3aed"
+                                                    ? "var(--gp-brandalt-400)"
+                                                    : "var(--gp-brand-700)"
                                                 : "transparent",
                                             display: "flex",
                                             justifyContent: "center",
@@ -319,8 +321,8 @@ export const GMTagFilterRow = ({ selectedTagIds, setSelectedTagIds }: GMTagFilte
                                                 "--IconButton-size": "22px",
                                                 color: tag.isDefaultVisible
                                                     ? isDark
-                                                        ? "#a78bfa"
-                                                        : "#7c3aed"
+                                                        ? "var(--gp-brandalt-400)"
+                                                        : "var(--gp-brand-700)"
                                                     : isDark
                                                       ? "rgba(255,255,255,0.35)"
                                                       : "rgba(0,0,0,0.3)",
@@ -351,7 +353,9 @@ export const GMTagFilterRow = ({ selectedTagIds, setSelectedTagIds }: GMTagFilte
                                     borderTopColor: isDark
                                         ? "rgba(255,255,255,0.06)"
                                         : "rgba(0,0,0,0.06)",
-                                    color: isDark ? "#a78bfa" : "#7c3aed",
+                                    color: isDark
+                                        ? "var(--gp-brandalt-400)"
+                                        : "var(--gp-brand-700)",
                                     fontSize: "0.8rem",
                                     fontWeight: 600,
                                     gap: 1,
@@ -380,7 +384,12 @@ export const GMTagFilterRow = ({ selectedTagIds, setSelectedTagIds }: GMTagFilte
                             onClick={() => setOpenManage(true)}
                         >
                             <LabelOutlinedIcon
-                                sx={{ color: isDark ? "#a78bfa" : "#7c3aed", fontSize: 16 }}
+                                sx={{
+                                    color: isDark
+                                        ? "var(--gp-brandalt-400)"
+                                        : "var(--gp-brand-700)",
+                                    fontSize: 16,
+                                }}
                             />
                             {t.chat.sidebar.gmTagManageMenu}
                         </MenuItem>

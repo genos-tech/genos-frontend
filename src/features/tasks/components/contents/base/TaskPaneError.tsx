@@ -108,7 +108,8 @@ export const TaskPaneError = ({
                     fontWeight: 600,
                     borderRadius: "10px",
                     px: 2.5,
-                    background: "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)",
+                    background:
+                        "linear-gradient(135deg, var(--gp-brand-700) 0%, var(--gp-brand-800) 100%)",
                 }}
                 onClick={onRetry}
             >

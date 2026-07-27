@@ -28,8 +28,8 @@ export const SelectChatPanel = ({ setMainChatPanelSize }: SelectChatPanelProps) 
                     alignItems: "center",
                     width: "100%",
                     background: isDark
-                        ? "radial-gradient(ellipse at center, rgba(124,58,237,0.03) 0%, transparent 70%)"
-                        : "radial-gradient(ellipse at center, rgba(124,58,237,0.04) 0%, transparent 70%)",
+                        ? "radial-gradient(ellipse at center, rgba(var(--gp-brand-700-rgb), 0.03) 0%, transparent 70%)"
+                        : "radial-gradient(ellipse at center, rgba(var(--gp-brand-700-rgb), 0.04) 0%, transparent 70%)",
                     position: "relative",
                     overflow: "hidden",
                 }}
@@ -42,8 +42,8 @@ export const SelectChatPanel = ({ setMainChatPanelSize }: SelectChatPanelProps) 
                         height: 300,
                         borderRadius: "50%",
                         background: isDark
-                            ? "radial-gradient(circle, rgba(139,92,246,0.04) 0%, transparent 70%)"
-                            : "radial-gradient(circle, rgba(139,92,246,0.05) 0%, transparent 70%)",
+                            ? "radial-gradient(circle, rgba(var(--gp-brandalt-500-rgb), 0.04) 0%, transparent 70%)"
+                            : "radial-gradient(circle, rgba(var(--gp-brandalt-500-rgb), 0.05) 0%, transparent 70%)",
                         top: "20%",
                         right: "15%",
                         pointerEvents: "none",
@@ -56,8 +56,8 @@ export const SelectChatPanel = ({ setMainChatPanelSize }: SelectChatPanelProps) 
                         height: 200,
                         borderRadius: "50%",
                         background: isDark
-                            ? "radial-gradient(circle, rgba(124,58,237,0.03) 0%, transparent 70%)"
-                            : "radial-gradient(circle, rgba(124,58,237,0.04) 0%, transparent 70%)",
+                            ? "radial-gradient(circle, rgba(var(--gp-brand-700-rgb), 0.03) 0%, transparent 70%)"
+                            : "radial-gradient(circle, rgba(var(--gp-brand-700-rgb), 0.04) 0%, transparent 70%)",
                         bottom: "25%",
                         left: "20%",
                         pointerEvents: "none",
@@ -84,20 +84,20 @@ export const SelectChatPanel = ({ setMainChatPanelSize }: SelectChatPanelProps) 
                             alignItems: "center",
                             justifyContent: "center",
                             background: isDark
-                                ? "linear-gradient(135deg, rgba(124,58,237,0.12) 0%, rgba(139,92,246,0.12) 100%)"
-                                : "linear-gradient(135deg, rgba(124,58,237,0.08) 0%, rgba(139,92,246,0.08) 100%)",
+                                ? "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.12) 0%, rgba(var(--gp-brandalt-500-rgb), 0.12) 100%)"
+                                : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.08) 0%, rgba(var(--gp-brandalt-500-rgb), 0.08) 100%)",
                             border: isDark
-                                ? "1px solid rgba(124,58,237,0.15)"
-                                : "1px solid rgba(124,58,237,0.1)",
+                                ? "1px solid rgba(var(--gp-brand-700-rgb), 0.15)"
+                                : "1px solid rgba(var(--gp-brand-700-rgb), 0.1)",
                             boxShadow: isDark
                                 ? "0 8px 32px rgba(0,0,0,0.2)"
-                                : "0 8px 32px rgba(124,58,237,0.08)",
+                                : "0 8px 32px rgba(var(--gp-brand-700-rgb), 0.08)",
                         }}
                     >
                         <ChatBubbleOutlineRoundedIcon
                             sx={{
                                 fontSize: 36,
-                                color: isDark ? "#a78bfa" : "#7c3aed",
+                                color: isDark ? "var(--gp-brandalt-400)" : "var(--gp-brand-700)",
                                 opacity: 0.8,
                             }}
                         />

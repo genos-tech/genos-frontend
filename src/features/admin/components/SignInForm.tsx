@@ -305,7 +305,7 @@ export const SignInForm = () => {
                                         background: styles.inputBg,
                                         "&:hover": {
                                             borderColor: styles.accentColor,
-                                            background: `${styles.accentColor}10`,
+                                            background: `rgba(${styles.accentColorRgb}, 0.063)`,
                                         },
                                     }}
                                     fullWidth
@@ -326,7 +326,7 @@ export const SignInForm = () => {
                                         background: styles.inputBg,
                                         "&:hover": {
                                             borderColor: styles.accentColor,
-                                            background: `${styles.accentColor}10`,
+                                            background: `rgba(${styles.accentColorRgb}, 0.063)`,
                                         },
                                     }}
                                     fullWidth
@@ -477,7 +477,7 @@ export const SignInForm = () => {
                                     "&:hover": {
                                         background: styles.buttonHover,
                                         transform: "translateY(-2px)",
-                                        boxShadow: `${styles.buttonShadow}, 0 8px 24px rgba(124,58,237,0.3)`,
+                                        boxShadow: `${styles.buttonShadow}, 0 8px 24px rgba(var(--gp-brand-700-rgb), 0.3)`,
                                     },
                                 }}
                                 fullWidth
@@ -511,7 +511,7 @@ export const SignInForm = () => {
                                 color: styles.linkColor,
                                 transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                                 "&:hover": {
-                                    background: `${styles.accentColor}15`,
+                                    background: `rgba(${styles.accentColorRgb}, 0.082)`,
                                     borderColor: styles.accentColor,
                                     transform: "translateY(-2px)",
                                 },
@@ -668,7 +668,7 @@ export const SignInForm = () => {
                             color: styles.linkColor,
                             "&:hover": {
                                 borderColor: styles.accentColor,
-                                background: `${styles.accentColor}15`,
+                                background: `rgba(${styles.accentColorRgb}, 0.082)`,
                             },
                         }}
                         onClick={() => {

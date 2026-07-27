@@ -86,8 +86,11 @@ export const MilestoneNodeCard = memo((props: NodeProps) => {
             ? `linear-gradient(rgba(255,255,255,0.18), rgba(255,255,255,0.18)), ${P.surfaceElevated}`
             : `linear-gradient(rgba(0,0,0,0.10), rgba(0,0,0,0.10)), ${P.surfaceElevated}`
         : P.surfaceElevated;
+    // Pre-composed ring tokens rather than `alpha(P.accent, …)`: the palette
+    // is CSS variables now and MUI's `alpha()` runs `decomposeColor`, which
+    // throws on a `var()`. The per-mode alphas live in the token.
     const currentRing = isCurrentPreview
-        ? `0 0 0 2px ${alpha(P.accent, isDark ? 0.85 : 0.7)}, 0 0 22px ${alpha(P.accent, isDark ? 0.35 : 0.25)}`
+        ? `0 0 0 2px ${P.accentRingStrong}, 0 0 22px ${P.accentRingSoft}`
         : null;
 
     const meta = statusMeta(task.status);

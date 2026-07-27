@@ -21,7 +21,7 @@ export const InboxHeader = () => {
                 borderBottom: "1px solid",
                 borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
                 background: isDark
-                    ? "linear-gradient(135deg, rgba(30,20,46,0.95) 0%, rgba(22,16,36,0.98) 100%)"
+                    ? "linear-gradient(135deg, rgba(var(--gp-dark-surface-a-rgb), 0.95) 0%, rgba(22,16,36,0.98) 100%)"
                     : "linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(250,248,255,1) 100%)",
                 backdropFilter: "blur(12px)",
                 position: "relative",
@@ -51,8 +51,8 @@ export const InboxHeader = () => {
                     alignItems: "center",
                     justifyContent: "center",
                     background: isDark
-                        ? "linear-gradient(135deg, rgba(124,58,237,0.2) 0%, rgba(139,92,246,0.15) 100%)"
-                        : "linear-gradient(135deg, rgba(124,58,237,0.12) 0%, rgba(124,58,237,0.08) 100%)",
+                        ? "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.2) 0%, rgba(var(--gp-brandalt-500-rgb), 0.15) 100%)"
+                        : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.12) 0%, rgba(var(--gp-brand-700-rgb), 0.08) 100%)",
                     mr: 1.5,
                 }}
             >
@@ -73,7 +73,7 @@ export const InboxHeader = () => {
                         letterSpacing: "-0.01em",
                         background: isDark
                             ? "linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.85) 100%)"
-                            : "linear-gradient(135deg, #2e1065 0%, #4c1d95 100%)",
+                            : "linear-gradient(135deg, var(--gp-brandalt-950) 0%, var(--gp-brandalt-900) 100%)",
                         WebkitBackgroundClip: "text",
                         WebkitTextFillColor: "transparent",
                         backgroundClip: "text",

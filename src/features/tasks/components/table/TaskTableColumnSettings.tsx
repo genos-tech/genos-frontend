@@ -320,8 +320,8 @@ export const TaskTableColumnSettings = ({ open, onClose, customColumns }: Props)
                                                                     : "rgba(0,0,0,0.06)",
                                                                 background: snapshot.isDragging
                                                                     ? isDark
-                                                                        ? "rgba(167,139,250,0.12)"
-                                                                        : "rgba(124,58,237,0.08)"
+                                                                        ? "rgba(var(--gp-brandalt-400-rgb), 0.12)"
+                                                                        : "rgba(var(--gp-brand-700-rgb), 0.08)"
                                                                     : "transparent",
                                                                 transition:
                                                                     "background-color 0.1s ease",

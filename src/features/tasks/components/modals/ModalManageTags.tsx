@@ -173,10 +173,10 @@ export const ModalManageTags: React.FC<Props> = ({
                     animation: `${fadeIn} 0.2s ease-out`,
                     background:
                         "linear-gradient(145deg, rgba(30, 30, 40, 0.95) 0%, rgba(20, 20, 28, 0.98) 100%)",
-                    border: "1px solid rgba(124,58,237,0.2)",
+                    border: "1px solid rgba(var(--gp-brand-700-rgb), 0.2)",
                     borderRadius: "16px",
                     boxShadow:
-                        "0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(124,58,237,0.1)",
+                        "0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(var(--gp-brand-700-rgb), 0.1)",
                     width: { xs: "calc(100vw - 24px)", md: "auto" },
                     minWidth: { xs: 0, md: "400px" },
                     maxWidth: { xs: "100vw", md: "600px" },
@@ -196,16 +196,19 @@ export const ModalManageTags: React.FC<Props> = ({
                             height: 40,
                             borderRadius: "10px",
                             background:
-                                "linear-gradient(135deg, rgba(124,58,237,0.2) 0%, rgba(139, 92, 246, 0.2) 100%)",
-                            border: "1px solid rgba(124,58,237,0.3)",
+                                "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.2) 0%, rgba(var(--gp-brandalt-500-rgb), 0.2) 100%)",
+                            border: "1px solid rgba(var(--gp-brand-700-rgb), 0.3)",
                         }}
                     >
-                        <LocalOfferIcon sx={{ color: "rgba(139, 92, 246, 0.9)", fontSize: 22 }} />
+                        <LocalOfferIcon
+                            sx={{ color: "rgba(var(--gp-brandalt-500-rgb), 0.9)", fontSize: 22 }}
+                        />
                     </Box>
                     <Typography
                         level="h4"
                         sx={{
-                            background: "linear-gradient(135deg, #ddd6fe 0%, #c4b5fd 100%)",
+                            background:
+                                "linear-gradient(135deg, var(--gp-brandalt-200) 0%, var(--gp-brandalt-300) 100%)",
                             WebkitBackgroundClip: "text",
                             WebkitTextFillColor: "transparent",
                             fontWeight: 600,
@@ -233,8 +236,8 @@ export const ModalManageTags: React.FC<Props> = ({
                         sx={{
                             mb: 2,
                             borderRadius: "10px",
-                            backgroundColor: "rgba(232,121,195,0.1)",
-                            border: "1px solid rgba(232,121,195,0.3)",
+                            backgroundColor: "rgba(var(--gp-tint-danger-rgb), 0.1)",
+                            border: "1px solid rgba(var(--gp-tint-danger-rgb), 0.3)",
                         }}
                     >
                         {errorMessage}
@@ -271,12 +274,12 @@ export const ModalManageTags: React.FC<Props> = ({
                                 borderRadius: "10px",
                                 backgroundColor:
                                     editingTag === tag.tagName
-                                        ? "rgba(124,58,237,0.08)"
+                                        ? "rgba(var(--gp-brand-700-rgb), 0.08)"
                                         : "rgba(255,255,255,0.02)",
                                 border: "1px solid",
                                 borderColor:
                                     editingTag === tag.tagName
-                                        ? "rgba(124,58,237,0.2)"
+                                        ? "rgba(var(--gp-brand-700-rgb), 0.2)"
                                         : "rgba(255,255,255,0.05)",
                                 transition: "all 0.15s ease",
                                 "&:hover": {
@@ -337,8 +340,8 @@ export const ModalManageTags: React.FC<Props> = ({
                                             size="sm"
                                             variant="plain"
                                             sx={{
-                                                color: "rgba(124,58,237,0.8)",
-                                                "&:hover": { color: "#7c3aed" },
+                                                color: "rgba(var(--gp-brand-700-rgb), 0.8)",
+                                                "&:hover": { color: "var(--gp-brand-700)" },
                                             }}
                                             onClick={() => saveEdit(tag.tagName)}
                                         >
@@ -384,7 +387,10 @@ export const ModalManageTags: React.FC<Props> = ({
                                         >
                                             <Typography
                                                 level="body-xs"
-                                                sx={{ color: "rgba(232,121,195,0.8)", mr: 0.5 }}
+                                                sx={{
+                                                    color: "rgba(var(--gp-tint-danger-rgb), 0.8)",
+                                                    mr: 0.5,
+                                                }}
                                             >
                                                 {t.tasks.modals.manageTags.deletePrompt}
                                             </Typography>
@@ -426,7 +432,7 @@ export const ModalManageTags: React.FC<Props> = ({
                                                     sx={{
                                                         color: "rgba(255,255,255,0.4)",
                                                         "&:hover": {
-                                                            color: "rgba(124,58,237,0.9)",
+                                                            color: "rgba(var(--gp-brand-700-rgb), 0.9)",
                                                         },
                                                     }}
                                                     onClick={() => startEdit(tag)}
@@ -443,7 +449,7 @@ export const ModalManageTags: React.FC<Props> = ({
                                                     sx={{
                                                         color: "rgba(255,255,255,0.4)",
                                                         "&:hover": {
-                                                            color: "rgba(232,121,195,0.9)",
+                                                            color: "rgba(var(--gp-tint-danger-rgb), 0.9)",
                                                         },
                                                     }}
                                                     onClick={() => {

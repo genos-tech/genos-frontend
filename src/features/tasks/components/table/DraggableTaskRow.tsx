@@ -104,10 +104,12 @@ const getTableRowStyles = (
 
     const getBackgroundColor = () => {
         if (isDragging) {
-            return mode === "dark" ? "#2e1065" : "#f3e8ff";
+            return mode === "dark" ? "var(--gp-brandalt-950)" : "var(--gp-brand-100)";
         }
         if (isSelected) {
-            return mode === "dark" ? "rgba(124,58,237,0.15)" : "rgba(124,58,237,0.08)";
+            return mode === "dark"
+                ? "rgba(var(--gp-brand-700-rgb), 0.15)"
+                : "rgba(var(--gp-brand-700-rgb), 0.08)";
         }
         return mode === "dark" ? DEPTH_COLORS_DARK[depthIdx] : DEPTH_COLORS_LIGHT[depthIdx];
     };
@@ -124,8 +126,8 @@ const getTableRowStyles = (
         backgroundColor: getBackgroundColor(),
         borderLeft: isSelected
             ? mode === "dark"
-                ? "3px solid #a78bfa"
-                : "3px solid #7c3aed"
+                ? "3px solid var(--gp-brandalt-400)"
+                : "3px solid var(--gp-brand-700)"
             : rowDepth > 0
               ? `3px solid ${DEPTH_BORDER_COLORS[depthIdx]}`
               : "3px solid transparent",
@@ -135,8 +137,8 @@ const getTableRowStyles = (
                 : "0 8px 24px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)"
             : isSelected
               ? mode === "dark"
-                  ? "inset 0 0 0 1px rgba(167,139,250,0.2)"
-                  : "inset 0 0 0 1px rgba(124,58,237,0.1)"
+                  ? "inset 0 0 0 1px rgba(var(--gp-brandalt-400-rgb), 0.2)"
+                  : "inset 0 0 0 1px rgba(var(--gp-brand-700-rgb), 0.1)"
               : "none",
         borderRadius: isDragging ? 6 : 0,
         // Don't use transitions when dragging - it interferes with drag positioning
@@ -178,8 +180,8 @@ const getDragHandleStyles = (
     opacity: isDragging ? 1 : 0.3,
     color: isDragging
         ? mode === "dark"
-            ? "#a78bfa"
-            : "#7c3aed"
+            ? "var(--gp-brandalt-400)"
+            : "var(--gp-brand-700)"
         : mode === "dark"
           ? "#888"
           : "#666",
@@ -188,8 +190,8 @@ const getDragHandleStyles = (
     borderRadius: 4,
     backgroundColor: isDragging
         ? mode === "dark"
-            ? "rgba(167,139,250,0.15)"
-            : "rgba(124,58,237,0.1)"
+            ? "rgba(var(--gp-brandalt-400-rgb), 0.15)"
+            : "rgba(var(--gp-brand-700-rgb), 0.1)"
         : "transparent",
 });
 
@@ -444,7 +446,10 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
             backgroundColor: mode === "dark" ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
         },
         '&[aria-selected="true"]': {
-            backgroundColor: mode === "dark" ? "rgba(167,139,250,0.15)" : "rgba(124,58,237,0.08)",
+            backgroundColor:
+                mode === "dark"
+                    ? "rgba(var(--gp-brandalt-400-rgb), 0.15)"
+                    : "rgba(var(--gp-brand-700-rgb), 0.08)",
         },
     } as const;
 
@@ -457,7 +462,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
         const editKey = `cf_${def.fieldId}`;
         const stored = task.customFieldValues?.[String(def.fieldId)];
         const storedString = typeof stored === "string" ? stored : "";
-        const accent = mode === "dark" ? "#a78bfa" : "#7c3aed";
+        const accent = mode === "dark" ? "var(--gp-brandalt-400)" : "var(--gp-brand-700)";
 
         if (def.fieldType === "tag") {
             const selected = resolveTagOptions(def, stored);
@@ -729,14 +734,14 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                         transition: "all 0.15s ease",
                                         backgroundColor: isSelected
                                             ? mode === "dark"
-                                                ? "rgba(167,139,250,0.15)"
-                                                : "rgba(124,58,237,0.08)"
+                                                ? "rgba(var(--gp-brandalt-400-rgb), 0.15)"
+                                                : "rgba(var(--gp-brand-700-rgb), 0.08)"
                                             : "transparent",
                                         "&:hover": {
                                             backgroundColor:
                                                 mode === "dark"
-                                                    ? "rgba(167,139,250,0.2)"
-                                                    : "rgba(124,58,237,0.12)",
+                                                    ? "rgba(var(--gp-brandalt-400-rgb), 0.2)"
+                                                    : "rgba(var(--gp-brand-700-rgb), 0.12)",
                                         },
                                         display: "flex",
                                         gap: 1.5,
@@ -1051,15 +1056,15 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                             color: isMilestoneRow
                                 ? "#f97316"
                                 : mode === "dark"
-                                  ? "#a78bfa"
-                                  : "#7c3aed",
+                                  ? "var(--gp-brandalt-400)"
+                                  : "var(--gp-brand-700)",
                             fontWeight: 600,
                             "&:hover": {
                                 backgroundColor: isMilestoneRow
                                     ? "rgba(249, 115, 22, 0.12)"
                                     : mode === "dark"
-                                      ? "rgba(167,139,250,0.15)"
-                                      : "rgba(124,58,237,0.1)",
+                                      ? "rgba(var(--gp-brandalt-400-rgb), 0.15)"
+                                      : "rgba(var(--gp-brand-700-rgb), 0.1)",
                             },
                         }}
                         onClick={(e) => {
@@ -1074,8 +1079,8 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                 color: isMilestoneRow
                                     ? "#f97316"
                                     : mode === "dark"
-                                      ? "#a78bfa"
-                                      : "#7c3aed",
+                                      ? "var(--gp-brandalt-400)"
+                                      : "var(--gp-brand-700)",
                             }}
                         >
                             {formatTaskDisplayId(task)}
@@ -1142,7 +1147,10 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                     borderRadius: "6px",
                                 },
                                 "&:hover .MuiOutlinedInput-notchedOutline": {
-                                    borderColor: mode === "dark" ? "#a78bfa" : "#7c3aed",
+                                    borderColor:
+                                        mode === "dark"
+                                            ? "var(--gp-brandalt-400)"
+                                            : "var(--gp-brand-700)",
                                 },
                             }}
                             onClose={handleCancelEdit}
@@ -1225,7 +1233,8 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
 
             case "tags": {
                 const tags = task.tags || [];
-                const tagAccent = mode === "dark" ? "#a78bfa" : "#7c3aed";
+                const tagAccent =
+                    mode === "dark" ? "var(--gp-brandalt-400)" : "var(--gp-brand-700)";
                 if (editingField === "tags") {
                     return (
                         // Stop mouse events reaching the row (drag / preview).
@@ -1436,8 +1445,8 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                 color: isMilestoneRow
                                     ? "#f97316"
                                     : mode === "dark"
-                                      ? "#a78bfa"
-                                      : "#7c3aed",
+                                      ? "var(--gp-brandalt-400)"
+                                      : "var(--gp-brand-700)",
                             },
                         }}
                         onClick={() => handleStartEdit("title", task.title || "")}
@@ -1555,11 +1564,15 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                             },
                                             "&:hover fieldset": {
                                                 borderColor:
-                                                    mode === "dark" ? "#a78bfa" : "#7c3aed",
+                                                    mode === "dark"
+                                                        ? "var(--gp-brandalt-400)"
+                                                        : "var(--gp-brand-700)",
                                             },
                                             "&.Mui-focused fieldset": {
                                                 borderColor:
-                                                    mode === "dark" ? "#a78bfa" : "#7c3aed",
+                                                    mode === "dark"
+                                                        ? "var(--gp-brandalt-400)"
+                                                        : "var(--gp-brand-700)",
                                                 borderWidth: "1.5px",
                                             },
                                         },
@@ -1599,14 +1612,14 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                             transition: "all 0.15s ease",
                                             backgroundColor: isSelected
                                                 ? mode === "dark"
-                                                    ? "rgba(167,139,250,0.15)"
-                                                    : "rgba(124,58,237,0.08)"
+                                                    ? "rgba(var(--gp-brandalt-400-rgb), 0.15)"
+                                                    : "rgba(var(--gp-brand-700-rgb), 0.08)"
                                                 : "transparent",
                                             "&:hover": {
                                                 backgroundColor:
                                                     mode === "dark"
-                                                        ? "rgba(167,139,250,0.2)"
-                                                        : "rgba(124,58,237,0.12)",
+                                                        ? "rgba(var(--gp-brandalt-400-rgb), 0.2)"
+                                                        : "rgba(var(--gp-brand-700-rgb), 0.12)",
                                             },
                                             display: "flex",
                                             gap: 1.5,
@@ -1822,7 +1835,10 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                     borderRadius: "6px",
                                 },
                                 "&:hover .MuiOutlinedInput-notchedOutline": {
-                                    borderColor: mode === "dark" ? "#a78bfa" : "#7c3aed",
+                                    borderColor:
+                                        mode === "dark"
+                                            ? "var(--gp-brandalt-400)"
+                                            : "var(--gp-brand-700)",
                                 },
                             }}
                             onClose={handleCancelEdit}
@@ -1948,7 +1964,10 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                     borderRadius: "6px",
                                 },
                                 "&:hover .MuiOutlinedInput-notchedOutline": {
-                                    borderColor: mode === "dark" ? "#a78bfa" : "#7c3aed",
+                                    borderColor:
+                                        mode === "dark"
+                                            ? "var(--gp-brandalt-400)"
+                                            : "var(--gp-brand-700)",
                                 },
                             }}
                             onClose={handleCancelEdit}
@@ -2143,7 +2162,10 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                             cursor: "pointer",
                             fontWeight: 500,
                             "&:hover": {
-                                color: mode === "dark" ? "#a78bfa" : "#7c3aed",
+                                color:
+                                    mode === "dark"
+                                        ? "var(--gp-brandalt-400)"
+                                        : "var(--gp-brand-700)",
                             },
                         }}
                         onClick={() =>
@@ -2181,14 +2203,23 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                         title={name}
                         sx={{
                             maxWidth: "100%",
+                            // Composed with rgba() rather than MUI's `alpha()`:
+                            // brand colors are CSS variables now, and
+                            // `alpha()` runs `decomposeColor`, which throws on
+                            // a `var()`.
                             backgroundColor:
-                                mode === "dark" ? alpha("#a78bfa", 0.18) : alpha("#7c3aed", 0.1),
-                            color: mode === "dark" ? "#c4b5fd" : "#5b21b6",
+                                mode === "dark"
+                                    ? "rgba(var(--gp-brandalt-400-rgb), 0.18)"
+                                    : "rgba(var(--gp-brand-700-rgb), 0.1)",
+                            color:
+                                mode === "dark" ? "var(--gp-brandalt-300)" : "var(--gp-brand-900)",
                             fontWeight: 600,
                             fontSize: "0.72rem",
                             borderRadius: "6px",
                             border: `1px solid ${
-                                mode === "dark" ? alpha("#a78bfa", 0.32) : alpha("#7c3aed", 0.22)
+                                mode === "dark"
+                                    ? "rgba(var(--gp-brandalt-400-rgb), 0.32)"
+                                    : "rgba(var(--gp-brand-700-rgb), 0.22)"
                             }`,
                             // Italicize the fallback so the user can tell at a
                             // glance that the sprint hasn't been loaded yet.
@@ -2277,19 +2308,26 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                 // Two-stop palette so the pulse can breathe between a
                 // calm and a bright accent — feels alive instead of
                 // just "highlighted".
-                const accent = isDark ? "#a78bfa" : "#7c3aed";
-                const accentHot = isDark ? "#c4b5fd" : "#a855f7";
-                const pulseBgLow = isDark ? "rgba(167,139,250,0.08)" : "rgba(124,58,237,0.05)";
-                const pulseBgHigh = isDark ? "rgba(167,139,250,0.22)" : "rgba(124,58,237,0.16)";
+                const accent = isDark ? "var(--gp-brandalt-400)" : "var(--gp-brand-700)";
+                const accentHot = isDark ? "var(--gp-brandalt-300)" : "var(--gp-brand-500)";
+                const accentHotRgb = isDark
+                    ? "var(--gp-brandalt-300-rgb)"
+                    : "var(--gp-brand-500-rgb)";
+                const pulseBgLow = isDark
+                    ? "rgba(var(--gp-brandalt-400-rgb), 0.08)"
+                    : "rgba(var(--gp-brand-700-rgb), 0.05)";
+                const pulseBgHigh = isDark
+                    ? "rgba(var(--gp-brandalt-400-rgb), 0.22)"
+                    : "rgba(var(--gp-brand-700-rgb), 0.16)";
                 const pulseShadowLow = isDark
-                    ? "inset 0 0 0 2px rgba(167,139,250,0.6), 0 0 8px rgba(167,139,250,0.25)"
-                    : "inset 0 0 0 2px rgba(124,58,237,0.55), 0 0 6px rgba(124,58,237,0.2)";
+                    ? "inset 0 0 0 2px rgba(var(--gp-brandalt-400-rgb), 0.6), 0 0 8px rgba(var(--gp-brandalt-400-rgb), 0.25)"
+                    : "inset 0 0 0 2px rgba(var(--gp-brand-700-rgb), 0.55), 0 0 6px rgba(var(--gp-brand-700-rgb), 0.2)";
                 const pulseShadowHigh = isDark
-                    ? "inset 0 0 0 2px #c4b5fd, 0 0 26px rgba(167,139,250,0.65), 0 0 12px rgba(196,181,253,0.5)"
-                    : "inset 0 0 0 2px #a855f7, 0 0 22px rgba(124,58,237,0.55), 0 0 10px rgba(168,85,247,0.45)";
+                    ? "inset 0 0 0 2px var(--gp-brandalt-300), 0 0 26px rgba(var(--gp-brandalt-400-rgb), 0.65), 0 0 12px rgba(var(--gp-brandalt-300-rgb), 0.5)"
+                    : "inset 0 0 0 2px var(--gp-brand-500), 0 0 22px rgba(var(--gp-brand-700-rgb), 0.55), 0 0 10px rgba(var(--gp-brand-500-rgb), 0.45)";
                 const shimmerGradient = isDark
-                    ? "linear-gradient(90deg, transparent 0%, transparent 35%, rgba(196,181,253,0.35) 50%, transparent 65%, transparent 100%)"
-                    : "linear-gradient(90deg, transparent 0%, transparent 35%, rgba(168,85,247,0.28) 50%, transparent 65%, transparent 100%)";
+                    ? "linear-gradient(90deg, transparent 0%, transparent 35%, rgba(var(--gp-brandalt-300-rgb), 0.35) 50%, transparent 65%, transparent 100%)"
+                    : "linear-gradient(90deg, transparent 0%, transparent 35%, rgba(var(--gp-brand-500-rgb), 0.28) 50%, transparent 65%, transparent 100%)";
                 return (
                     <Box
                         // `react-beautiful-dnd`'s `innerRef` is a callback
@@ -2420,11 +2458,11 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                     "@keyframes dropToNestBreathe": {
                                         "0%, 100%": {
                                             transform: "translateY(-50%) scale(1)",
-                                            boxShadow: `0 4px 10px rgba(0,0,0,0.2), 0 0 0 0 ${accentHot}55`,
+                                            boxShadow: `0 4px 10px rgba(0,0,0,0.2), 0 0 0 0 rgba(${accentHotRgb}, 0.333)`,
                                         },
                                         "50%": {
                                             transform: "translateY(-50%) scale(1.06)",
-                                            boxShadow: `0 6px 16px rgba(0,0,0,0.28), 0 0 0 6px ${accentHot}00`,
+                                            boxShadow: `0 6px 16px rgba(0,0,0,0.28), 0 0 0 6px rgba(${accentHotRgb}, 0.0)`,
                                         },
                                     },
                                 }}
@@ -2468,7 +2506,10 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                             p: 0,
                                             borderRadius: "4px",
                                             opacity: 0,
-                                            color: mode === "dark" ? "#a78bfa" : "#7c3aed",
+                                            color:
+                                                mode === "dark"
+                                                    ? "var(--gp-brandalt-400)"
+                                                    : "var(--gp-brand-700)",
                                             transition: "opacity 0.2s ease",
                                         }}
                                         onClick={(e) => {
@@ -2494,7 +2535,10 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                         // wrapper Box's sx (same zero-re-render CSS
                                         // pattern as the drag handle).
                                         opacity: 0,
-                                        color: mode === "dark" ? "#a78bfa" : "#7c3aed",
+                                        color:
+                                            mode === "dark"
+                                                ? "var(--gp-brandalt-400)"
+                                                : "var(--gp-brand-700)",
                                         transition: "opacity 0.2s ease",
                                     }}
                                     onClick={(e) => {

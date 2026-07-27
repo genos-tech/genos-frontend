@@ -269,7 +269,7 @@ export const ModalManageProjectLabels = ({
                 }}
             >
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2 }}>
-                    <LocalOfferIcon sx={{ fontSize: 22, color: "#8b5cf6" }} />
+                    <LocalOfferIcon sx={{ fontSize: 22, color: "var(--gp-brandalt-500)" }} />
                     <Typography level="h4" sx={{ fontWeight: 600, flex: 1 }}>
                         {t.admin.projectLabels.manageHeading}
                     </Typography>

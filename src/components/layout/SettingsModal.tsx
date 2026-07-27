@@ -66,7 +66,10 @@ import { ThemePreference, useThemePreference } from "../../hooks/common/useTheme
 import { fmt, Locale, useTranslation } from "../../i18n";
 import { SubscriptionTier } from "../../services/agentApi";
 import { NotificationSettingsPanel } from "../../services/notifications/NotificationSettingsPanel";
+import { useColorTheme } from "../../theme/ColorThemeProvider";
+import { THEME_IDS, themeSwatch } from "../../theme/themePalettes";
 import { getServiceShortcutModifierKeys, isMac } from "../../utils/platform";
+import { AppTooltip } from "../ui/AppTooltip";
 import { MentionGroupsPanel } from "./MentionGroupsPanel";
 import { CreditUsageSection } from "./settings/CreditBalance";
 import { PlanUsageSection } from "./settings/PlanUsageSection";
@@ -144,6 +147,67 @@ const SIDEBAR_TAB_SX = {
 
 const SIDEBAR_TAB_ICON_SX = { fontSize: 18, flexShrink: 0 } as const;
 
+/**
+ * Color-theme swatches. Each dot is painted with the accent that theme
+ * actually renders in the CURRENT light/dark mode, so what you see on the
+ * dot is what you get when you pick it.
+ *
+ * Selecting writes `data-theme` on `<html>` — the whole app repaints with
+ * no reload and no re-render (see `theme/ColorThemeProvider`).
+ */
+const ColorThemeRow = () => {
+    const { themeId, setThemeId } = useColorTheme();
+    const { mode } = useColorScheme();
+    const { t } = useTranslation();
+    const isDark = mode === "dark";
+
+    return (
+        <Stack alignItems="center" direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1 }}>
+            {THEME_IDS.map((id) => {
+                const selected = id === themeId;
+                return (
+                    <AppTooltip key={id} size="sm" title={t.settings.appearance.colorThemes[id]}>
+                        <IconButton
+                            aria-label={t.settings.appearance.colorThemes[id]}
+                            aria-pressed={selected}
+                            size="sm"
+                            variant="plain"
+                            sx={{
+                                width: 32,
+                                height: 32,
+                                borderRadius: "50%",
+                                padding: 0,
+                                minWidth: 0,
+                                // Selected state is a ring around the dot
+                                // rather than a checkmark on top of it — the
+                                // swatch stays legible at 20px.
+                                boxShadow: selected
+                                    ? `0 0 0 2px var(--joy-palette-background-surface), 0 0 0 4px ${themeSwatch(id, isDark)}`
+                                    : "none",
+                                "&:hover": { backgroundColor: "transparent" },
+                            }}
+                            onClick={() => setThemeId(id)}
+                        >
+                            <Box
+                                sx={{
+                                    width: 20,
+                                    height: 20,
+                                    borderRadius: "50%",
+                                    backgroundColor: themeSwatch(id, isDark),
+                                    border: "1px solid",
+                                    borderColor: isDark
+                                        ? "rgba(255,255,255,0.18)"
+                                        : "rgba(0,0,0,0.14)",
+                                }}
+                            />
+                        </IconButton>
+                    </AppTooltip>
+                );
+            })}
+        </Stack>
+    );
+};
+
 const AppearanceSection = () => {
     const { preference, setPreference } = useThemePreference();
     const { t } = useTranslation();
@@ -195,6 +259,20 @@ const AppearanceSection = () => {
                         </Stack>
                     </Option>
                 </Select>
+            </Stack>
+
+            <Divider sx={{ my: 1.5 }} />
+
+            <Stack alignItems="center" direction="row" justifyContent="space-between" spacing={2}>
+                <Box sx={{ minWidth: 0, flex: 1 }}>
+                    <Typography level="title-sm">
+                        {t.settings.appearance.colorThemeLabel}
+                    </Typography>
+                    <Typography level="body-xs">
+                        {t.settings.appearance.colorThemeHelper}
+                    </Typography>
+                </Box>
+                <ColorThemeRow />
             </Stack>
         </Sheet>
     );

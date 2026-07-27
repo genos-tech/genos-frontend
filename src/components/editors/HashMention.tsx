@@ -32,9 +32,9 @@ const TASK_PALETTE: MentionPalette = {
     text: "#2563eb",
 };
 const NOTE_PALETTE: MentionPalette = {
-    bg: "rgba(139, 92, 246, 0.15)",
-    bgHover: "rgba(139, 92, 246, 0.28)",
-    text: "#7c3aed",
+    bg: "rgba(var(--gp-brandalt-500-rgb), 0.15)",
+    bgHover: "rgba(var(--gp-brandalt-500-rgb), 0.28)",
+    text: "var(--gp-brand-700)",
 };
 const CHAT_PALETTE: MentionPalette = {
     bg: "rgba(20, 184, 166, 0.15)",

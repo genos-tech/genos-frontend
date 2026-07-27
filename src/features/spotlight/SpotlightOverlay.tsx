@@ -52,7 +52,7 @@ import type {
 import type { MentionGroup } from "../../services/mentionGroupsApi";
 import { purplePalette } from "../../theme/purplePalette";
 // Dark-mode text colors tuned for legibility against the translucent
-// purple sheet background (rgba(30,20,46,0.92)). These replace
+// purple sheet background (rgba(var(--gp-dark-surface-a-rgb), 0.92)). These replace
 // opacity-based dimming, which compounds with the bg translucency to
 // produce muddy, hard-to-read text.
 //
@@ -477,7 +477,9 @@ export const SpotlightOverlay = ({
                     borderRadius: "16px",
                     backdropFilter: "blur(20px) saturate(180%)",
                     WebkitBackdropFilter: "blur(20px) saturate(180%)",
-                    background: isDark ? "rgba(30,20,46,0.92)" : "rgba(250,248,255,0.96)",
+                    background: isDark
+                        ? "rgba(var(--gp-dark-surface-a-rgb), 0.92)"
+                        : "rgba(250,248,255,0.96)",
                     border: "1px solid",
                     borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
                     boxShadow: isDark
@@ -1161,7 +1163,9 @@ const ConversationPanel = memo(
                             py: 0.25,
                             px: 0.5,
                             borderRadius: 10,
-                            background: isDark ? "rgba(30,20,46,0.92)" : "rgba(250,248,255,0.96)",
+                            background: isDark
+                                ? "rgba(var(--gp-dark-surface-a-rgb), 0.92)"
+                                : "rgba(250,248,255,0.96)",
                             zIndex: 1,
                         }}
                     >
@@ -1432,8 +1436,8 @@ const CitationLink = ({ href, children, sourcesById, onPreview, isDark }: Citati
                         transition: "background 100ms ease",
                         "&:hover": {
                             background: isDark
-                                ? "rgba(167,139,250,0.18)"
-                                : "rgba(124,58,237,0.10)",
+                                ? "rgba(var(--gp-brandalt-400-rgb), 0.18)"
+                                : "rgba(var(--gp-brand-700-rgb), 0.10)",
                             textDecorationStyle: "solid",
                         },
                         "&:focus-visible": {
@@ -2032,11 +2036,11 @@ const HistoryListView = ({ sessions, isLoading, isDark, ts, onSelect }: HistoryL
                         transition: "background 100ms ease, border-color 100ms ease",
                         "&:hover": {
                             background: isDark
-                                ? "rgba(167,139,250,0.10)"
-                                : "rgba(124,58,237,0.05)",
+                                ? "rgba(var(--gp-brandalt-400-rgb), 0.10)"
+                                : "rgba(var(--gp-brand-700-rgb), 0.05)",
                             borderColor: isDark
-                                ? "rgba(167,139,250,0.30)"
-                                : "rgba(124,58,237,0.25)",
+                                ? "rgba(var(--gp-brandalt-400-rgb), 0.30)"
+                                : "rgba(var(--gp-brand-700-rgb), 0.25)",
                         },
                         "&:focus-visible": {
                             outline: "2px solid",

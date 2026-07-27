@@ -75,8 +75,8 @@ export const CitationAnchor = ({
                         transition: "background 100ms ease",
                         "&:hover": {
                             background: isDark
-                                ? "rgba(167,139,250,0.18)"
-                                : "rgba(124,58,237,0.10)",
+                                ? "rgba(var(--gp-brandalt-400-rgb), 0.18)"
+                                : "rgba(var(--gp-brand-700-rgb), 0.10)",
                             textDecorationStyle: "solid",
                         },
                         "&:focus-visible": {

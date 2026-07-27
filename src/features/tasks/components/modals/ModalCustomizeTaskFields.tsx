@@ -350,10 +350,10 @@ export const ModalCustomizeTaskFields: React.FC<Props> = ({
                     background: isDark
                         ? "linear-gradient(145deg, rgba(30, 30, 40, 0.95) 0%, rgba(20, 20, 28, 0.98) 100%)"
                         : "linear-gradient(145deg, #ffffff 0%, #fafaff 100%)",
-                    border: `1px solid ${isDark ? "rgba(124,58,237,0.2)" : "rgba(124,58,237,0.15)"}`,
+                    border: `1px solid ${isDark ? "rgba(var(--gp-brand-700-rgb), 0.2)" : "rgba(var(--gp-brand-700-rgb), 0.15)"}`,
                     borderRadius: "16px",
                     boxShadow: isDark
-                        ? "0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(124,58,237,0.1)"
+                        ? "0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(var(--gp-brand-700-rgb), 0.1)"
                         : "0 25px 50px -12px rgba(0, 0, 0, 0.18)",
                     width: { xs: "calc(100vw - 24px)", md: "auto" },
                     minWidth: { xs: 0, md: "640px" },
@@ -374,18 +374,20 @@ export const ModalCustomizeTaskFields: React.FC<Props> = ({
                             height: 40,
                             borderRadius: "10px",
                             background:
-                                "linear-gradient(135deg, rgba(124,58,237,0.2) 0%, rgba(139, 92, 246, 0.2) 100%)",
-                            border: "1px solid rgba(124,58,237,0.3)",
+                                "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.2) 0%, rgba(var(--gp-brandalt-500-rgb), 0.2) 100%)",
+                            border: "1px solid rgba(var(--gp-brand-700-rgb), 0.3)",
                         }}
                     >
-                        <TuneRoundedIcon sx={{ color: "rgba(139, 92, 246, 0.9)", fontSize: 22 }} />
+                        <TuneRoundedIcon
+                            sx={{ color: "rgba(var(--gp-brandalt-500-rgb), 0.9)", fontSize: 22 }}
+                        />
                     </Box>
                     <Typography
                         level="h4"
                         sx={{
                             background: isDark
-                                ? "linear-gradient(135deg, #ddd6fe 0%, #c4b5fd 100%)"
-                                : "linear-gradient(135deg, #6d28d9 0%, #7c3aed 100%)",
+                                ? "linear-gradient(135deg, var(--gp-brandalt-200) 0%, var(--gp-brandalt-300) 100%)"
+                                : "linear-gradient(135deg, var(--gp-brand-800) 0%, var(--gp-brand-700) 100%)",
                             WebkitBackgroundClip: "text",
                             WebkitTextFillColor: "transparent",
                             fontWeight: 600,
@@ -564,7 +566,8 @@ export const ModalCustomizeTaskFields: React.FC<Props> = ({
                             loading={isSaving}
                             sx={{
                                 borderRadius: "10px",
-                                background: "linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%)",
+                                background:
+                                    "linear-gradient(135deg, var(--gp-brand-700) 0%, var(--gp-brandalt-500) 100%)",
                             }}
                             onClick={handleSave}
                         >

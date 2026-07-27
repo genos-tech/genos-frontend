@@ -320,7 +320,7 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
                                         ? styles.menuItemActive
                                         : "transparent",
                                     border: isCurrentTeam
-                                        ? `1px solid ${styles.iconColor}30`
+                                        ? `1px solid rgba(${styles.iconColorRgb}, 0.188)`
                                         : "1px solid transparent",
                                     transition: "all 0.15s ease",
                                     "&:hover": {
@@ -340,7 +340,7 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
                                             borderRadius: "8px",
                                             background: isCurrentTeam
                                                 ? styles.accentGradient
-                                                : `${styles.iconColor}20`,
+                                                : `rgba(${styles.iconColorRgb}, 0.125)`,
                                             display: "flex",
                                             alignItems: "center",
                                             justifyContent: "center",

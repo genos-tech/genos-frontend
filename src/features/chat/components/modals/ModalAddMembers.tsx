@@ -213,10 +213,10 @@ export const ModalAddMembers: React.FC<Props> = ({
                     animation: `${fadeIn} 0.2s ease-out`,
                     background:
                         "linear-gradient(145deg, rgba(30, 30, 40, 0.95) 0%, rgba(20, 20, 28, 0.98) 100%)",
-                    border: "1px solid rgba(124,58,237,0.2)",
+                    border: "1px solid rgba(var(--gp-brand-700-rgb), 0.2)",
                     borderRadius: "16px",
                     boxShadow:
-                        "0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(124,58,237,0.1)",
+                        "0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(var(--gp-brand-700-rgb), 0.1)",
                     width: { xs: "calc(100vw - 24px)", md: "auto" },
                     minWidth: { xs: 0, md: "420px" },
                     maxWidth: { xs: "100vw", md: "500px" },
@@ -236,16 +236,19 @@ export const ModalAddMembers: React.FC<Props> = ({
                             height: 40,
                             borderRadius: "10px",
                             background:
-                                "linear-gradient(135deg, rgba(124,58,237,0.2) 0%, rgba(124,58,237,0.2) 100%)",
-                            border: "1px solid rgba(124,58,237,0.3)",
+                                "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.2) 0%, rgba(var(--gp-brand-700-rgb), 0.2) 100%)",
+                            border: "1px solid rgba(var(--gp-brand-700-rgb), 0.3)",
                         }}
                     >
-                        <PersonAddIcon sx={{ color: "rgba(124,58,237,0.9)", fontSize: 22 }} />
+                        <PersonAddIcon
+                            sx={{ color: "rgba(var(--gp-brand-700-rgb), 0.9)", fontSize: 22 }}
+                        />
                     </Box>
                     <Typography
                         level="h4"
                         sx={{
-                            background: "linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%)",
+                            background:
+                                "linear-gradient(135deg, var(--gp-brandalt-400) 0%, var(--gp-brand-700) 100%)",
                             WebkitBackgroundClip: "text",
                             WebkitTextFillColor: "transparent",
                             fontWeight: 600,
@@ -265,8 +268,8 @@ export const ModalAddMembers: React.FC<Props> = ({
                             mb: 2,
                             p: 1.5,
                             borderRadius: "10px",
-                            backgroundColor: "rgba(124,58,237,0.1)",
-                            border: "1px solid rgba(124,58,237,0.2)",
+                            backgroundColor: "rgba(var(--gp-brand-700-rgb), 0.1)",
+                            border: "1px solid rgba(var(--gp-brand-700-rgb), 0.2)",
                         }}
                     >
                         <AvatarWithStatus
@@ -295,8 +298,8 @@ export const ModalAddMembers: React.FC<Props> = ({
                             mb: 2,
                             p: 1.5,
                             borderRadius: "10px",
-                            backgroundColor: "rgba(124,58,237,0.1)",
-                            border: "1px solid rgba(124,58,237,0.2)",
+                            backgroundColor: "rgba(var(--gp-brand-700-rgb), 0.1)",
+                            border: "1px solid rgba(var(--gp-brand-700-rgb), 0.2)",
                         }}
                     >
                         <Typography
@@ -321,8 +324,8 @@ export const ModalAddMembers: React.FC<Props> = ({
                             mb: 2,
                             p: 1.5,
                             borderRadius: "10px",
-                            backgroundColor: "rgba(124,58,237,0.1)",
-                            border: "1px solid rgba(124,58,237,0.2)",
+                            backgroundColor: "rgba(var(--gp-brand-700-rgb), 0.1)",
+                            border: "1px solid rgba(var(--gp-brand-700-rgb), 0.2)",
                         }}
                     >
                         {selectedMembers.map((member) => (
@@ -353,7 +356,7 @@ export const ModalAddMembers: React.FC<Props> = ({
                                     // bare `color` / `backgroundColor`: the
                                     // variant styles read these, so there's no
                                     // cascade to fight.
-                                    "--variant-softBg": "rgba(124,58,237,0.2)",
+                                    "--variant-softBg": "rgba(var(--gp-brand-700-rgb), 0.2)",
                                     "--variant-softColor": "rgba(255,255,255,0.95)",
                                 }}
                             >
@@ -373,13 +376,13 @@ export const ModalAddMembers: React.FC<Props> = ({
                     sx={{
                         mb: 2,
                         "--Input-focusedThickness": "1px",
-                        "--Input-focusedHighlight": "rgba(124,58,237,0.5)",
+                        "--Input-focusedHighlight": "rgba(var(--gp-brand-700-rgb), 0.5)",
                         backgroundColor: "rgba(255, 255, 255, 0.05)",
                         border: "1px solid rgba(255, 255, 255, 0.1)",
                         borderRadius: "10px",
                         transition: "all 0.2s ease",
                         "&:hover": {
-                            borderColor: "rgba(124,58,237,0.3)",
+                            borderColor: "rgba(var(--gp-brand-700-rgb), 0.3)",
                         },
                     }}
                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -426,11 +429,11 @@ export const ModalAddMembers: React.FC<Props> = ({
                                         borderBottom: "1px solid rgba(255, 255, 255, 0.05)",
                                         transition: "all 0.15s ease",
                                         backgroundColor: isSelected
-                                            ? "rgba(124,58,237,0.1)"
+                                            ? "rgba(var(--gp-brand-700-rgb), 0.1)"
                                             : "transparent",
                                         "&:hover": {
                                             backgroundColor: isSelected
-                                                ? "rgba(124,58,237,0.15)"
+                                                ? "rgba(var(--gp-brand-700-rgb), 0.15)"
                                                 : "rgba(255, 255, 255, 0.05)",
                                         },
                                         "&:last-child": {
@@ -493,7 +496,7 @@ export const ModalAddMembers: React.FC<Props> = ({
                         mb: 2,
                         color:
                             selectedMembers.length >= 1
-                                ? "rgba(124,58,237,0.8)"
+                                ? "rgba(var(--gp-brand-700-rgb), 0.8)"
                                 : "rgba(255, 255, 255, 0.4)",
                     }}
                 >
@@ -509,14 +512,14 @@ export const ModalAddMembers: React.FC<Props> = ({
                         sx={{
                             mb: 2,
                             borderRadius: "10px",
-                            backgroundColor: "rgba(232,121,195,0.1)",
-                            border: "1px solid rgba(232,121,195,0.3)",
+                            backgroundColor: "rgba(var(--gp-tint-danger-rgb), 0.1)",
+                            border: "1px solid rgba(var(--gp-tint-danger-rgb), 0.3)",
                             // Same reason as the chips above: `danger` + the
                             // default `soft` variant resolves the text from the
                             // active palette — `danger-700` in light mode, i.e.
                             // dark red on this always-dark dialog. Pin it to the
                             // app's pink so it still reads as an error.
-                            "--variant-softColor": "rgba(232,121,195,0.95)",
+                            "--variant-softColor": "rgba(var(--gp-tint-danger-rgb), 0.95)",
                         }}
                     >
                         {errorMessage}
@@ -544,15 +547,16 @@ export const ModalAddMembers: React.FC<Props> = ({
                         disabled={selectedMembers.length === 0 || isLoading}
                         loading={isLoading}
                         sx={{
-                            background: "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)",
+                            background:
+                                "linear-gradient(135deg, var(--gp-brand-700) 0%, var(--gp-brand-800) 100%)",
                             borderRadius: "10px",
                             px: 3,
                             fontWeight: 600,
-                            boxShadow: "0 4px 15px rgba(124,58,237,0.3)",
+                            boxShadow: "0 4px 15px rgba(var(--gp-brand-700-rgb), 0.3)",
                             transition: "all 0.2s ease",
                             "&:hover": {
                                 transform: "translateY(-1px)",
-                                boxShadow: "0 6px 20px rgba(124,58,237,0.4)",
+                                boxShadow: "0 6px 20px rgba(var(--gp-brand-700-rgb), 0.4)",
                             },
                             "&:disabled": {
                                 background: "rgba(255, 255, 255, 0.1)",

@@ -126,12 +126,12 @@ function RecentNoteItemComponent({ note, noteType, useNM }: RecentNoteItemProps)
                     },
                     "&.Mui-selected": {
                         backgroundColor: isDark
-                            ? "rgba(124,58,237,0.12)"
-                            : "rgba(124,58,237,0.08)",
+                            ? "rgba(var(--gp-brand-700-rgb), 0.12)"
+                            : "rgba(var(--gp-brand-700-rgb), 0.08)",
                         "&:hover": {
                             backgroundColor: isDark
-                                ? "rgba(124,58,237,0.18)"
-                                : "rgba(124,58,237,0.12)",
+                                ? "rgba(var(--gp-brand-700-rgb), 0.18)"
+                                : "rgba(var(--gp-brand-700-rgb), 0.12)",
                         },
                     },
                 }}
@@ -190,7 +190,9 @@ function RecentNoteItemComponent({ note, noteType, useNM }: RecentNoteItemProps)
                             height: 8,
                             borderRadius: "50%",
                             flexShrink: 0,
-                            backgroundColor: isDark ? "#a78bfa" : "#7c3aed",
+                            backgroundColor: isDark
+                                ? "var(--gp-brandalt-400)"
+                                : "var(--gp-brand-700)",
                         }}
                     />
                 )}

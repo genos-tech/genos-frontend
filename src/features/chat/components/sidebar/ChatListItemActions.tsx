@@ -189,7 +189,12 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
                             }}
                         >
                             <PersonAddRoundedIcon
-                                sx={{ fontSize: 18, color: isDark ? "#a78bfa" : "#7c3aed" }}
+                                sx={{
+                                    fontSize: 18,
+                                    color: isDark
+                                        ? "var(--gp-brandalt-400)"
+                                        : "var(--gp-brand-700)",
+                                }}
                             />
                             {t.chat.listItem.addMembersMenu}
                         </MenuItem>
@@ -211,7 +216,12 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
                             }}
                         >
                             <SellOutlinedIcon
-                                sx={{ fontSize: 18, color: isDark ? "#a78bfa" : "#7c3aed" }}
+                                sx={{
+                                    fontSize: 18,
+                                    color: isDark
+                                        ? "var(--gp-brandalt-400)"
+                                        : "var(--gp-brand-700)",
+                                }}
                             />
                             {t.chat.listItem.manageTagsMenu}
                         </MenuItem>
@@ -232,7 +242,10 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
                         }}
                     >
                         <SplitscreenIcon
-                            sx={{ fontSize: 18, color: isDark ? "#a78bfa" : "#7c3aed" }}
+                            sx={{
+                                fontSize: 18,
+                                color: isDark ? "var(--gp-brandalt-400)" : "var(--gp-brand-700)",
+                            }}
                         />
                         {t.chat.listItem.openInSplitView}
                     </MenuItem>

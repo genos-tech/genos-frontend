@@ -63,7 +63,9 @@ export const FileUploadOverlay = ({
                 backdropFilter: "blur(6px)",
                 WebkitBackdropFilter: "blur(6px)",
                 border: "1px solid",
-                borderColor: isDark ? "rgba(139,92,246,0.25)" : "rgba(124,58,237,0.18)",
+                borderColor: isDark
+                    ? "rgba(var(--gp-brandalt-500-rgb), 0.25)"
+                    : "rgba(var(--gp-brand-700-rgb), 0.18)",
                 pointerEvents: "auto",
                 animation: "file-upload-overlay-fade 180ms ease-out",
                 "@keyframes file-upload-overlay-fade": {
@@ -79,7 +81,9 @@ export const FileUploadOverlay = ({
                     "--CircularProgress-trackColor": isDark
                         ? "rgba(255,255,255,0.08)"
                         : "rgba(0,0,0,0.06)",
-                    "--CircularProgress-progressColor": isDark ? "#a78bfa" : "#7c3aed",
+                    "--CircularProgress-progressColor": isDark
+                        ? "var(--gp-brandalt-400)"
+                        : "var(--gp-brand-700)",
                 }}
             />
             <Typography
@@ -176,14 +180,16 @@ export const UploadingTileBadge = ({
                         "--CircularProgress-trackColor": isDark
                             ? "rgba(255,255,255,0.12)"
                             : "rgba(0,0,0,0.08)",
-                        "--CircularProgress-progressColor": isDark ? "#a78bfa" : "#7c3aed",
+                        "--CircularProgress-progressColor": isDark
+                            ? "var(--gp-brandalt-400)"
+                            : "var(--gp-brand-700)",
                     }}
                 />
             ) : (
                 <CloudUploadRoundedIcon
                     sx={{
                         fontSize: 22,
-                        color: isDark ? "#a78bfa" : "#7c3aed",
+                        color: isDark ? "var(--gp-brandalt-400)" : "var(--gp-brand-700)",
                         opacity: 0.85,
                     }}
                 />
@@ -266,11 +272,13 @@ export const FileUploadStatusBadge = ({
                 py: 0.5,
                 borderRadius: "999px",
                 background: isDark
-                    ? "linear-gradient(135deg, rgba(99,102,241,0.22) 0%, rgba(139,92,246,0.22) 100%)"
-                    : "linear-gradient(135deg, rgba(99,102,241,0.12) 0%, rgba(139,92,246,0.12) 100%)",
+                    ? "linear-gradient(135deg, rgba(99,102,241,0.22) 0%, rgba(var(--gp-brandalt-500-rgb), 0.22) 100%)"
+                    : "linear-gradient(135deg, rgba(99,102,241,0.12) 0%, rgba(var(--gp-brandalt-500-rgb), 0.12) 100%)",
                 border: "1px solid",
-                borderColor: isDark ? "rgba(139,92,246,0.35)" : "rgba(124,58,237,0.25)",
-                color: isDark ? "#c4b5fd" : "#6d28d9",
+                borderColor: isDark
+                    ? "rgba(var(--gp-brandalt-500-rgb), 0.35)"
+                    : "rgba(var(--gp-brand-700-rgb), 0.25)",
+                color: isDark ? "var(--gp-brandalt-300)" : "var(--gp-brand-800)",
                 fontWeight: 600,
                 fontSize: "0.7rem",
                 boxShadow: isDark
@@ -292,7 +300,9 @@ export const FileUploadStatusBadge = ({
                     "--CircularProgress-trackThickness": "2px",
                     "--CircularProgress-progressThickness": "2px",
                     "--CircularProgress-trackColor": "transparent",
-                    "--CircularProgress-progressColor": isDark ? "#c4b5fd" : "#6d28d9",
+                    "--CircularProgress-progressColor": isDark
+                        ? "var(--gp-brandalt-300)"
+                        : "var(--gp-brand-800)",
                 }}
             />
             <Typography

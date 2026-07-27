@@ -215,7 +215,7 @@ export const ModalTaskDiagram = ({
                             right: 0,
                             height: "3px",
                             background:
-                                "linear-gradient(90deg, #a78bfa 0%, #8b5cf6 50%, #c084fc 100%)",
+                                "linear-gradient(90deg, var(--gp-brandalt-400) 0%, var(--gp-brandalt-500) 50%, var(--gp-brand-400) 100%)",
                             opacity: 0.85,
                             borderRadius: "16px 16px 0 0",
                         }}

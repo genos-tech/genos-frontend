@@ -215,7 +215,13 @@ export const ActivityAvatar: React.FC<ActivityAvatarProps> = ({
     if (activity.chatType === 6) {
         // Personal note mention (shared)
         return (
-            <Avatar size="sm" sx={{ background: "rgba(124, 58, 237, 0.15)", color: "#7c3aed" }}>
+            <Avatar
+                size="sm"
+                sx={{
+                    background: "rgba(var(--gp-brand-700-rgb), 0.15)",
+                    color: "var(--gp-brand-700)",
+                }}
+            >
                 <StickyNote2RoundedIcon />
             </Avatar>
         );

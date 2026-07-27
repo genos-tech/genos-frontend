@@ -361,7 +361,11 @@ const getResizeHandleStyles = (
     bottom: 0,
     width: 6,
     cursor: "col-resize",
-    backgroundColor: isResizing ? (mode === "dark" ? "#a78bfa" : "#7c3aed") : "transparent",
+    backgroundColor: isResizing
+        ? mode === "dark"
+            ? "var(--gp-brandalt-400)"
+            : "var(--gp-brand-700)"
+        : "transparent",
     transition: isResizing ? "none" : "background-color 0.15s ease",
     zIndex: 10,
 });
@@ -1622,7 +1626,10 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                         <span
                                             style={{
                                                 fontSize: "0.7rem",
-                                                color: mode === "dark" ? "#a78bfa" : "#7c3aed",
+                                                color:
+                                                    mode === "dark"
+                                                        ? "var(--gp-brandalt-400)"
+                                                        : "var(--gp-brand-700)",
                                                 flexShrink: 0,
                                             }}
                                         >
@@ -1644,8 +1651,8 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                             if (!resizingColumn) {
                                                 e.currentTarget.style.backgroundColor =
                                                     mode === "dark"
-                                                        ? "rgba(167,139,250,0.5)"
-                                                        : "rgba(124,58,237,0.3)";
+                                                        ? "rgba(var(--gp-brandalt-400-rgb), 0.5)"
+                                                        : "rgba(var(--gp-brand-700-rgb), 0.3)";
                                             }
                                         }}
                                         onMouseLeave={(e) => {
@@ -1758,7 +1765,10 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                         "--CircularProgress-size": "36px",
                                         "--CircularProgress-trackThickness": "3px",
                                         "--CircularProgress-progressThickness": "3px",
-                                        color: mode === "dark" ? "#a78bfa" : "#7c3aed",
+                                        color:
+                                            mode === "dark"
+                                                ? "var(--gp-brandalt-400)"
+                                                : "var(--gp-brand-700)",
                                     }}
                                 />
                                 <Typography

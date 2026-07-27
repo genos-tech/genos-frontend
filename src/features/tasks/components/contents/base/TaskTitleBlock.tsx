@@ -466,10 +466,12 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                             py: 0.5,
                             borderRadius: "8px",
                             background: isDark
-                                ? "linear-gradient(135deg, rgba(124,58,237,0.15) 0%, rgba(139,92,246,0.1) 100%)"
-                                : "linear-gradient(135deg, rgba(124,58,237,0.1) 0%, rgba(124,58,237,0.06) 100%)",
+                                ? "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.15) 0%, rgba(var(--gp-brandalt-500-rgb), 0.1) 100%)"
+                                : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.1) 0%, rgba(var(--gp-brand-700-rgb), 0.06) 100%)",
                             border: "1px solid",
-                            borderColor: isDark ? "rgba(139,92,246,0.2)" : "rgba(124,58,237,0.15)",
+                            borderColor: isDark
+                                ? "rgba(var(--gp-brandalt-500-rgb), 0.2)"
+                                : "rgba(var(--gp-brand-700-rgb), 0.15)",
                         }}
                     >
                         <Box
@@ -480,10 +482,10 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                 background: isDark
                                     ? isMilestone
                                         ? "linear-gradient(135deg, #ff8c00 0%, #ff6b00 100%)"
-                                        : "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)"
+                                        : "linear-gradient(135deg, var(--gp-brand-700) 0%, var(--gp-brand-800) 100%)"
                                     : isMilestone
                                       ? "linear-gradient(135deg, #ff8c00 0%, #ff6b00 100%)"
-                                      : "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)",
+                                      : "linear-gradient(135deg, var(--gp-brand-700) 0%, var(--gp-brand-800) 100%)",
                                 animation: "pulse 2s infinite",
                                 "@keyframes pulse": {
                                     "0%, 100%": { opacity: 1 },
@@ -499,10 +501,10 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                 color: isDark
                                     ? isMilestone
                                         ? "#ff8c00"
-                                        : "#a78bfa"
+                                        : "var(--gp-brandalt-400)"
                                     : isMilestone
                                       ? "#ff6b00"
-                                      : "#7c3aed",
+                                      : "var(--gp-brand-700)",
                                 textTransform: "uppercase",
                                 letterSpacing: "0.05em",
                             }}

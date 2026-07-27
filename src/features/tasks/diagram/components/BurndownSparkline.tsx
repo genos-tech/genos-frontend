@@ -67,7 +67,10 @@ export const BurndownSparkline = ({ data, total, tone, width = 220, height = 44 
             >
                 <svg height={height} width={width} aria-hidden>
                     <line
-                        stroke={P.textMuted}
+                        // `style`, not a `stroke=` attribute: palette values are
+                        // CSS variables, and SVG presentation attributes never
+                        // resolve `var()` (the line would render unpainted).
+                        style={{ stroke: P.textMuted }}
                         strokeDasharray="3 3"
                         strokeOpacity={0.55}
                         strokeWidth={1}

@@ -105,10 +105,10 @@ export const ModalCreateTag: React.FC<Props> = ({ myself, usePM, useTM }) => {
                     animation: `${fadeIn} 0.2s ease-out`,
                     background:
                         "linear-gradient(145deg, rgba(30, 30, 40, 0.95) 0%, rgba(20, 20, 28, 0.98) 100%)",
-                    border: "1px solid rgba(124,58,237,0.2)",
+                    border: "1px solid rgba(var(--gp-brand-700-rgb), 0.2)",
                     borderRadius: "16px",
                     boxShadow:
-                        "0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(124,58,237,0.1)",
+                        "0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(var(--gp-brand-700-rgb), 0.1)",
                     width: { xs: "calc(100vw - 24px)", md: "auto" },
                     minWidth: { xs: 0, md: "360px" },
                     maxWidth: { xs: "100vw", md: "500px" },
@@ -128,11 +128,13 @@ export const ModalCreateTag: React.FC<Props> = ({ myself, usePM, useTM }) => {
                             height: 40,
                             borderRadius: "10px",
                             background:
-                                "linear-gradient(135deg, rgba(124,58,237,0.2) 0%, rgba(16, 185, 129, 0.2) 100%)",
-                            border: "1px solid rgba(124,58,237,0.3)",
+                                "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.2) 0%, rgba(16, 185, 129, 0.2) 100%)",
+                            border: "1px solid rgba(var(--gp-brand-700-rgb), 0.3)",
                         }}
                     >
-                        <LocalOfferIcon sx={{ color: "rgba(124,58,237,0.9)", fontSize: 22 }} />
+                        <LocalOfferIcon
+                            sx={{ color: "rgba(var(--gp-brand-700-rgb), 0.9)", fontSize: 22 }}
+                        />
                     </Box>
                     <Typography
                         level="h4"
@@ -154,8 +156,8 @@ export const ModalCreateTag: React.FC<Props> = ({ myself, usePM, useTM }) => {
                         sx={{
                             mb: 2,
                             borderRadius: "10px",
-                            backgroundColor: "rgba(232,121,195,0.1)",
-                            border: "1px solid rgba(232,121,195,0.3)",
+                            backgroundColor: "rgba(var(--gp-tint-danger-rgb), 0.1)",
+                            border: "1px solid rgba(var(--gp-tint-danger-rgb), 0.3)",
                         }}
                     >
                         {errorTagCreateMessage}
@@ -170,14 +172,14 @@ export const ModalCreateTag: React.FC<Props> = ({ myself, usePM, useTM }) => {
                         sx={{
                             flex: 1,
                             "--Input-focusedThickness": "1px",
-                            "--Input-focusedHighlight": "rgba(124,58,237,0.5)",
+                            "--Input-focusedHighlight": "rgba(var(--gp-brand-700-rgb), 0.5)",
                             backgroundColor: "rgba(255, 255, 255, 0.05)",
                             border: "1px solid rgba(255, 255, 255, 0.1)",
                             borderRadius: "10px",
                             color: "#fff",
                             transition: "all 0.2s ease",
                             "&:hover": {
-                                borderColor: "rgba(124,58,237,0.3)",
+                                borderColor: "rgba(var(--gp-brand-700-rgb), 0.3)",
                             },
                         }}
                         onChange={(e) => setTagName(e.target.value)}
@@ -253,15 +255,16 @@ export const ModalCreateTag: React.FC<Props> = ({ myself, usePM, useTM }) => {
                     <Button
                         disabled={!tagName.trim()}
                         sx={{
-                            background: "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)",
+                            background:
+                                "linear-gradient(135deg, var(--gp-brand-700) 0%, var(--gp-brand-800) 100%)",
                             borderRadius: "10px",
                             px: 3,
                             fontWeight: 600,
-                            boxShadow: "0 4px 15px rgba(124,58,237,0.3)",
+                            boxShadow: "0 4px 15px rgba(var(--gp-brand-700-rgb), 0.3)",
                             transition: "all 0.2s ease",
                             "&:hover": {
                                 transform: "translateY(-1px)",
-                                boxShadow: "0 6px 20px rgba(124,58,237,0.4)",
+                                boxShadow: "0 6px 20px rgba(var(--gp-brand-700-rgb), 0.4)",
                             },
                             "&:disabled": {
                                 background: "rgba(255, 255, 255, 0.1)",

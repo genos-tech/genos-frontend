@@ -16,7 +16,7 @@ import { getLocalCurrentDate } from "../../../../utils/dateUtils";
 import { TodoCategorySection } from "./TodoCategorySection";
 
 const COLORS = {
-    today: { dark: "#a78bfa", light: "#7c3aed" },
+    today: { dark: "var(--gp-brandalt-400)", light: "var(--gp-brand-700)" },
     completed: { dark: "#22c55e", light: "#16a34a" },
 } as const;
 

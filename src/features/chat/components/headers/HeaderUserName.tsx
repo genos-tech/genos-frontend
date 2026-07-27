@@ -94,7 +94,9 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                     border: `1px solid ${styles.avatarBorder}`,
                     transition: "all 0.2s ease",
                     "&:hover": {
-                        background: isDark ? "rgba(124,58,237,0.15)" : "rgba(124,58,237,0.1)",
+                        background: isDark
+                            ? "rgba(var(--gp-brand-700-rgb), 0.15)"
+                            : "rgba(var(--gp-brand-700-rgb), 0.1)",
                     },
                 }}
             >
