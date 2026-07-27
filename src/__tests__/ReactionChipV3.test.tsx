@@ -58,13 +58,16 @@ const renderChips = (props: Record<string, unknown>) =>
         </CssVarsProvider>
     );
 
-// MUI Joy Chip puts the `onClick` on an inner action <button>, so click
-// that (clicking the label span — a sibling — wouldn't fire it).
+// A reaction chip IS the button now (`ReactionChip` renders
+// `<button aria-pressed>`), so there's no wrapper to reach through — the
+// old helper dug for `.MuiChip-root > button` because Joy's Chip nested an
+// action button inside a div.
 const clickChip = (container: HTMLElement, emoji: string) => {
-    const chip = [...container.querySelectorAll(".MuiChip-root")].find((c) =>
-        (c.textContent ?? "").startsWith(emoji)
+    const chip = [...container.querySelectorAll("button")].find((b) =>
+        (b.textContent ?? "").startsWith(emoji)
     );
-    fireEvent.click(chip?.querySelector("button") ?? (chip as Element));
+    if (!chip) throw new Error(`no reaction chip for ${emoji}`);
+    fireEvent.click(chip);
 };
 
 describe("ShowEmojiReaction chip toggle → channelService (v3)", () => {
@@ -160,10 +163,13 @@ describe("ShowEmojiReaction chip toggle → channelService (v3)", () => {
 
         // The chip's toggle payload stays the raw shortcode string —
         // the pipeline (socket → Django CharField) never sees an image.
-        const chip = [...container.querySelectorAll(".MuiChip-root")].find((c) =>
-            c.querySelector("img[title=':party-blob:']")
+        // Matched by the rendered <img> rather than text, since a custom
+        // emoji chip has no shortcode text to start with.
+        const chip = [...container.querySelectorAll("button")].find((b) =>
+            b.querySelector("img[title=':party-blob:']")
         );
-        fireEvent.click(chip?.querySelector("button") ?? (chip as Element));
+        if (!chip) throw new Error("no reaction chip for :party-blob:");
+        fireEvent.click(chip);
         expect(react).toHaveBeenCalledWith("v3-msg-3", "v3-ch-1", ChannelKind.GM, ":party-blob:");
 
         setTeamEmojiList([]);

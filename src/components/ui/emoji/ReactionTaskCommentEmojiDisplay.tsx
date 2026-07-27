@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import SentimentSatisfiedAltIcon from "@mui/icons-material/SentimentSatisfiedAlt";
-import { Box, Button, Chip, IconButton, useColorScheme } from "@mui/joy";
+import { Box, Button, IconButton, useColorScheme } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { useQuickReactionsPreference } from "../../../hooks/common/useQuickReactionsPreference";
@@ -11,6 +11,7 @@ import { TaskCommentProps } from "../../../types/tasks";
 import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
 import { AppTooltip } from "../AppTooltip";
 import { EmojiGlyph } from "./EmojiGlyph";
+import { MoreReactionsChip, ReactionChip } from "./ReactionChip";
 
 export const groupEmojis = (reactions: ReactionProps[]): GroupedReactionProps[] => {
     const map = new Map<string, { count: number; senders: UserProps[] }>();
@@ -141,10 +142,10 @@ export const ReactionTaskCommentEmojiDisplay = (props: ReactionEmojiProps) => {
     };
 
     return (
-        <Box display="flex">
-            {displayed.map(({ senders, emoji, count }, index) => (
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, alignItems: "center", mb: 0.5 }}>
+            {displayed.map(({ senders, emoji, count }) => (
                 <AppTooltip
-                    key={`tooltip-${index}`}
+                    key={`emoji-chip-${emoji}`}
                     title={fmt(
                         senders.length > 5
                             ? t.common.ui.emoji.multipleReacted
@@ -157,26 +158,12 @@ export const ReactionTaskCommentEmojiDisplay = (props: ReactionEmojiProps) => {
                         }
                     )}
                 >
-                    <Chip
-                        key={`emoji-chip-${emoji}-${index}`}
-                        color="neutral"
-                        size="sm"
-                        sx={{
-                            fontSize: "0.9rem",
-                            cursor: "pointer",
-                            px: 0.5,
-                            py: 0.5,
-                            mb: 1,
-                            mx: 0.2,
-                        }}
-                        variant={
-                            senders.some((u) => u.userId === myself.userId) ? "solid" : "outlined"
-                        }
+                    <ReactionChip
+                        count={count}
+                        emoji={emoji}
+                        mine={senders.some((u) => u.userId === myself.userId)}
                         onClick={() => handleAddReaction(emoji)}
-                    >
-                        <EmojiGlyph emoji={emoji} />
-                        {count}
-                    </Chip>
+                    />
                 </AppTooltip>
             ))}
 
@@ -185,9 +172,9 @@ export const ReactionTaskCommentEmojiDisplay = (props: ReactionEmojiProps) => {
                     size="sm"
                     title={hidden.map(({ emoji, count }) => `${emoji} ${count}`).join(" ")}
                 >
-                    <Chip size="sm" sx={{ fontSize: "0.8rem" }} variant="plain">
-                        {fmt(t.common.ui.emoji.moreLabel, { count: hidden.length })}
-                    </Chip>
+                    <MoreReactionsChip
+                        text={fmt(t.common.ui.emoji.moreLabel, { count: hidden.length })}
+                    />
                 </AppTooltip>
             )}
 
