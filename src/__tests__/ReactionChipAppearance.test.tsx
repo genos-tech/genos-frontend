@@ -21,10 +21,11 @@
  */
 
 import { CssVarsProvider } from "@mui/joy/styles";
-import { render } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import { ReactionChip } from "../components/ui/emoji/ReactionChip";
+import { AppTooltip } from "../components/ui/AppTooltip";
+import { MoreReactionsChip, ReactionChip } from "../components/ui/emoji/ReactionChip";
 
 const renderChip = (props: Partial<Parameters<typeof ReactionChip>[0]> = {}) =>
     render(
@@ -85,5 +86,71 @@ describe("ReactionChip", () => {
         const { container } = renderChip({ onClick });
         container.querySelector("button")!.click();
         expect(onClick).toHaveBeenCalledTimes(1);
+    });
+});
+
+/**
+ * Every chip is wrapped in `AppTooltip` (the "X and Y reacted" hover), and
+ * Joy's Tooltip works by CLONING its child to inject a ref, hover/focus
+ * listeners and a11y attributes. That interaction produced two regressions
+ * in a row, neither of which threw and neither of which the tests above
+ * could see — so it gets its own coverage, exercised through a real
+ * `AppTooltip` rather than by asserting the props in isolation.
+ *
+ *  1. The chip didn't forward a ref or spread the injected props, so the
+ *     tooltip never appeared anywhere in the app.
+ *  2. Fixing that by spreading naively clobbered `component="button"` —
+ *     Joy injects `component: undefined`, so the chip silently degraded to
+ *     a <div>: no button role, no keyboard activation.
+ */
+describe("chips inside AppTooltip", () => {
+    const renderTipped = () =>
+        render(
+            <CssVarsProvider>
+                <AppTooltip title="Alice and Bob reacted">
+                    <ReactionChip count={2} emoji="👍" mine onClick={vi.fn()} />
+                </AppTooltip>
+            </CssVarsProvider>
+        );
+
+    it("shows the senders tooltip on hover", async () => {
+        renderTipped();
+        fireEvent.mouseOver(screen.getByRole("button"));
+        await waitFor(() => expect(screen.getByText("Alice and Bob reacted")).toBeInTheDocument());
+    });
+
+    it("is still a real <button> once Tooltip has cloned it", () => {
+        const { container } = renderTipped();
+        // Joy injects `component: undefined`; if that wins, this is a div.
+        const el = container.querySelector("[aria-pressed]")!;
+        expect(el.tagName).toBe("BUTTON");
+        expect(el.getAttribute("type")).toBe("button");
+        expect(el.getAttribute("aria-pressed")).toBe("true");
+    });
+
+    it("still toggles when clicked through the tooltip wrapper", () => {
+        const onClick = vi.fn();
+        render(
+            <CssVarsProvider>
+                <AppTooltip title="Alice reacted">
+                    <ReactionChip count={1} emoji="👍" mine onClick={onClick} />
+                </AppTooltip>
+            </CssVarsProvider>
+        );
+        fireEvent.click(screen.getByRole("button"));
+        expect(onClick).toHaveBeenCalledTimes(1);
+    });
+
+    it("shows the overflow tooltip on the +N more chip too", async () => {
+        render(
+            <CssVarsProvider>
+                <AppTooltip title="🎉 4 🚀 2">
+                    <MoreReactionsChip text="+2 more" />
+                </AppTooltip>
+            </CssVarsProvider>
+        );
+
+        fireEvent.mouseOver(screen.getByText("+2 more"));
+        await waitFor(() => expect(screen.getByText("🎉 4 🚀 2")).toBeInTheDocument());
     });
 });
