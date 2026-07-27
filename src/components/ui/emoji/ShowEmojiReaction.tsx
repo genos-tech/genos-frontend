@@ -63,17 +63,17 @@ export const ShowEmojiReaction = (props: ShowEmojiReactionProps) => {
         setUniqueReactionEmojiCount,
     } = props;
     const { t } = useTranslation();
-    const [baseEmojiList, setBaseEmojiList] = useState<string[]>(["👀", "👍", "✅"]);
+    // This component renders reaction CHIPS only. It used to also carry a
+    // `baseEmojiList` quick-pick state (+ a filter effect), but the JSX
+    // never rendered it — the quick-pick row lives in `EmojiReaction`,
+    // which the bubbles mount alongside this. Removed rather than wired to
+    // the quick-reactions preference, so there's exactly one place drawing
+    // that row.
     const [groupedReactions, setGroupedReactions] = useState<GroupedReactionProps[]>(
         groupEmojis(reactions)
     );
     const displayed = groupedReactions.slice(0, 10);
     const hidden = groupedReactions.slice(10);
-
-    useEffect(() => {
-        const groupedReactionEmojis: string[] = groupedReactions.map((item) => item.emoji);
-        setBaseEmojiList(baseEmojiList.filter((emoji) => !groupedReactionEmojis.includes(emoji)));
-    }, [groupedReactions, reactions]);
 
     useEffect(() => {
         const _groupedReactions = groupEmojis(reactions);

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import BoltRoundedIcon from "@mui/icons-material/BoltRounded";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
@@ -61,12 +61,16 @@ import {
 } from "../../hooks/common/useBubbleStylePreference";
 import { useDoubleClickTodoPreference } from "../../hooks/common/useDoubleClickTodoPreference";
 import { useLlmModelPreference } from "../../hooks/common/useLlmModelPreference";
+import { useQuickReactionsPreference } from "../../hooks/common/useQuickReactionsPreference";
 import { useSpotlightPreferences } from "../../hooks/common/useSpotlightPreferences";
 import { ThemePreference, useThemePreference } from "../../hooks/common/useThemePreference";
 import { fmt, Locale, useTranslation } from "../../i18n";
 import { SubscriptionTier } from "../../services/agentApi";
 import { NotificationSettingsPanel } from "../../services/notifications/NotificationSettingsPanel";
 import { getServiceShortcutModifierKeys, isMac } from "../../utils/platform";
+import { AppTooltip } from "../ui/AppTooltip";
+import { EmojiGlyph } from "../ui/emoji/EmojiGlyph";
+import { EmojiPicker } from "../ui/emoji/EmojiPicker";
 import { MentionGroupsPanel } from "./MentionGroupsPanel";
 import { CreditUsageSection } from "./settings/CreditBalance";
 import { PlanUsageSection } from "./settings/PlanUsageSection";
@@ -244,6 +248,121 @@ const MessageLayoutSection = () => {
                     </Option>
                 </Select>
             </Stack>
+        </Sheet>
+    );
+};
+
+/**
+ * Settings → Chat → the three one-click reaction emoji shown when hovering
+ * a chat message, thread reply, or task comment. Slack-style: each slot is
+ * a button that opens the full emoji picker and replaces just that slot.
+ *
+ * Team custom emoji are selectable (`includeCustom` defaults on in
+ * `EmojiPicker`), which is why the slots render through `EmojiGlyph` — a
+ * custom pick is stored as its ":name:" shortcode and has to resolve to
+ * the image here exactly as it does on the bubbles.
+ */
+const QuickReactionsSection = () => {
+    const { emojis, setEmojiAt, reset } = useQuickReactionsPreference();
+    const { t } = useTranslation();
+    const { mode } = useColorScheme();
+    const isDark = mode === "dark";
+    // Which slot the picker is currently editing; null = picker closed.
+    const [editingSlot, setEditingSlot] = useState<number | null>(null);
+    // `HTMLElement`, not `HTMLButtonElement` — Joy's Button is polymorphic
+    // and types its ref as the anchor variant. Only `getBoundingClientRect`
+    // is read off it.
+    const slotRefs = useRef<Array<HTMLElement | null>>([]);
+    // Fixed-position coordinates for the picker, computed off the clicked
+    // slot so it opens anchored to that button rather than at a constant
+    // offset (the modal itself scrolls).
+    const [pickerPos, setPickerPos] = useState<{ top: number; left: number } | null>(null);
+
+    const openPicker = (index: number) => {
+        const anchor = slotRefs.current[index];
+        if (anchor) {
+            const rect = anchor.getBoundingClientRect();
+            const pickerHeight = 435;
+            const pickerWidth = 352;
+            // Prefer below the slot; flip above when there isn't room, and
+            // clamp horizontally so the picker never leaves the viewport.
+            const top =
+                window.innerHeight - rect.bottom > pickerHeight + 20
+                    ? rect.bottom + 8
+                    : Math.max(20, rect.top - pickerHeight - 8);
+            const left = Math.max(20, Math.min(rect.left, window.innerWidth - pickerWidth - 20));
+            setPickerPos({ top, left });
+        }
+        setEditingSlot(index);
+    };
+
+    return (
+        <Sheet sx={{ p: 2, borderRadius: "lg" }} variant="outlined">
+            <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 0.5 }}>
+                <EmojiEmotionsRoundedIcon />
+                <Typography level="title-md">{t.settings.quickReactions.heading}</Typography>
+            </Stack>
+            <Typography level="body-xs" sx={{ mb: 1.5 }}>
+                {t.settings.quickReactions.description}
+            </Typography>
+
+            <Stack alignItems="center" direction="row" justifyContent="space-between" spacing={2}>
+                <Box sx={{ minWidth: 0, flex: 1 }}>
+                    <Typography level="title-sm">{t.settings.quickReactions.label}</Typography>
+                    <Typography level="body-xs">{t.settings.quickReactions.helper}</Typography>
+                </Box>
+                <Stack alignItems="center" direction="row" spacing={1}>
+                    {emojis.map((emoji, index) => (
+                        <AppTooltip
+                            key={`quick-reaction-slot-${index}`}
+                            size="sm"
+                            title={t.settings.quickReactions.slotTooltip}
+                        >
+                            <Button
+                                ref={(el) => {
+                                    slotRefs.current[index] = el;
+                                }}
+                                size="sm"
+                                variant="outlined"
+                                sx={{
+                                    minWidth: 44,
+                                    height: 40,
+                                    fontSize: "20px",
+                                    lineHeight: 1,
+                                    borderRadius: "md",
+                                    "&:hover": {
+                                        backgroundColor: isDark ? "#3730a3" : "#e0e7ff",
+                                    },
+                                }}
+                                onClick={() => openPicker(index)}
+                            >
+                                <EmojiGlyph emoji={emoji} size={22} />
+                            </Button>
+                        </AppTooltip>
+                    ))}
+                    <Button size="sm" variant="plain" onClick={reset}>
+                        {t.settings.quickReactions.reset}
+                    </Button>
+                </Stack>
+            </Stack>
+
+            {editingSlot !== null && pickerPos !== null && (
+                <EmojiPicker
+                    pickerLeftPosition={pickerPos.left}
+                    pickerRightPosition="auto"
+                    pickerTopPosition={pickerPos.top}
+                    setSelectedEmoji={(emoji: string | null) => {
+                        // The picker also fires `null` on click-outside —
+                        // only a real pick should overwrite the slot.
+                        if (emoji) setEmojiAt(editingSlot, emoji);
+                    }}
+                    setShowEmojiPicker={(open: boolean) => {
+                        if (!open) setEditingSlot(null);
+                    }}
+                    showEmojiPicker={true}
+                    useFixedPosition={true}
+                />
+            )}
         </Sheet>
     );
 };
@@ -1352,6 +1471,7 @@ export const SettingsModal = ({
                     <TabPanel sx={{ px: 0, py: 2 }} value="chat">
                         <Stack spacing={2}>
                             <MessageLayoutSection />
+                            <QuickReactionsSection />
                             <DoubleClickTodoSection />
                         </Stack>
                     </TabPanel>
