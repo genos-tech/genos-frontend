@@ -1490,9 +1490,6 @@ export const ar: DeepPartial<Messages> = {
         approval: {
             titleWithTool: "الموافقة مطلوبة: {toolName}",
         },
-        usage: {
-            asksToday: "{used} / {limit} أسئلة اليوم",
-        },
         entitySubtitle: {
             dm: "رسالة مباشرة",
             gm: "محادثة جماعية",

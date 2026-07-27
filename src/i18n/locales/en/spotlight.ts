@@ -79,9 +79,6 @@ export const spotlight = {
     approval: {
         titleWithTool: "Approval required: {toolName}",
     },
-    usage: {
-        asksToday: "{used} / {limit} asks today",
-    },
     entitySubtitle: {
         dm: "Direct message",
         gm: "Group chat",

@@ -1125,7 +1125,6 @@ export const App = () => {
                                                     ask={spotlight.ask}
                                                     backToHistoryList={spotlight.backToHistoryList}
                                                     closeHistory={spotlight.closeHistory}
-                                                    dailyUsage={spotlight.dailyUsage}
                                                     error={spotlight.error}
                                                     filterServices={spotlight.filterServices}
                                                     historyDetail={spotlight.historyDetail}

@@ -38,11 +38,9 @@ import {
     decideAgent,
     fetchAgentSessionDetail,
     fetchAgentSessions,
-    fetchAgentUsage,
     submitAgentFeedback,
     type AgentSessionDetail,
     type AgentSessionSummary,
-    type AgentUsage,
     type PendingApprovalPayload,
 } from "../../services/agentApi";
 import { notifyAgentRunComplete } from "../../services/notifications/agentRunNotice";
@@ -143,7 +141,6 @@ export interface UseSpotlightReturn {
     showStoredAnswer: (result: SpotlightResult) => void;
     ask: AskState;
     turns: CompletedTurn[];
-    dailyUsage: AgentUsage | null;
     // Mirror of the AI-answers preference. The overlay reads this to
     // disable the Ask button and the Enter handler when the user has
     // turned the LLM path off in Settings.
@@ -188,7 +185,6 @@ export const useSpotlight = ({
     const [filterServices, setFilterServices] = useState<SpotlightFilterService[]>([]);
     const [ask, setAsk] = useState<AskState>(EMPTY_ASK_STATE);
     const [turns, setTurns] = useState<CompletedTurn[]>([]);
-    const [dailyUsage, setDailyUsage] = useState<AgentUsage | null>(null);
     // ----- History panel state (Phase ~4.6) -----
     // historyMode flips the conversation panel into a read-only archive
     // view. historySessions is the list, historyDetail is the selected
@@ -294,20 +290,6 @@ export const useSpotlight = ({
         document.addEventListener("keydown", handleKeyDown);
         return () => document.removeEventListener("keydown", handleKeyDown);
     }, []);
-
-    // ---- Fetch daily usage from the backend when the overlay opens. ----
-    // Re-fetches each open so the count is fresh after page navigations.
-    // Silently no-ops on failure — the backend enforces the limit regardless.
-    useEffect(() => {
-        if (!isOpen || !accessToken) return;
-        let cancelled = false;
-        fetchAgentUsage(accessToken).then((usage) => {
-            if (!cancelled) setDailyUsage(usage);
-        });
-        return () => {
-            cancelled = true;
-        };
-    }, [isOpen, accessToken]);
 
     // ---- Hydrate conversation from localStorage on mount / team change. ----
     // Restores up to MAX_STORED_TURNS prior turns + sessionId so a page
@@ -820,11 +802,6 @@ export const useSpotlight = ({
                 ...buildStreamHandlers(askedTurnId),
             });
 
-            // Optimistically increment the local usage counter so the UI
-            // reflects the new count without waiting for the next /usage/ fetch.
-            // The backend is the authoritative gate; this is display-only.
-            setDailyUsage((prev) => (prev ? { ...prev, used: prev.used + 1 } : prev));
-
             // Clear the input immediately after submitting. The question is
             // already captured in `ask.askedQuery` and visible in the
             // conversation history, so the input is ready for the next one.
@@ -1072,7 +1049,6 @@ export const useSpotlight = ({
         showStoredAnswer,
         ask,
         turns,
-        dailyUsage,
         aiAnswersEnabled: aiAnswers,
         historyMode,
         historySessions,

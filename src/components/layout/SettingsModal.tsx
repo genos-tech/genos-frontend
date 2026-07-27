@@ -4,7 +4,6 @@ import BoltRoundedIcon from "@mui/icons-material/BoltRounded";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
 import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
-import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import DarkModeRoundedIcon from "@mui/icons-material/DarkModeRounded";
 import EmojiEmotionsRoundedIcon from "@mui/icons-material/EmojiEmotionsRounded";
@@ -20,10 +19,8 @@ import PrivacyTipRoundedIcon from "@mui/icons-material/PrivacyTipRounded";
 import SettingsBrightnessRoundedIcon from "@mui/icons-material/SettingsBrightnessRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import ViewStreamRoundedIcon from "@mui/icons-material/ViewStreamRounded";
-import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 import WorkspacePremiumRoundedIcon from "@mui/icons-material/WorkspacePremiumRounded";
 import {
-    Alert,
     Box,
     Button,
     Divider,
@@ -67,7 +64,7 @@ import { useLlmModelPreference } from "../../hooks/common/useLlmModelPreference"
 import { useSpotlightPreferences } from "../../hooks/common/useSpotlightPreferences";
 import { ThemePreference, useThemePreference } from "../../hooks/common/useThemePreference";
 import { fmt, Locale, useTranslation } from "../../i18n";
-import { AgentFeatures, fetchAgentFeatures, SubscriptionTier } from "../../services/agentApi";
+import { SubscriptionTier } from "../../services/agentApi";
 import { NotificationSettingsPanel } from "../../services/notifications/NotificationSettingsPanel";
 import { getServiceShortcutModifierKeys, isMac } from "../../utils/platform";
 import { MentionGroupsPanel } from "./MentionGroupsPanel";
@@ -645,41 +642,10 @@ export const LlmModelSection = () => {
 
 // Exported for reuse by the Spotlight overlay's dedicated settings modal —
 // see the note on `LlmModelSection`. Also self-contained (reads
-// `useSpotlightPreferences` + probes the web-search feature gate itself).
+// `useSpotlightPreferences` internally).
 export const SpotlightSection = () => {
     const { aiAnswers, webSearch, setAiAnswers, setWebSearch } = useSpotlightPreferences();
-    const { accessToken } = useAuth();
     const { t } = useTranslation();
-
-    // Probe the backend feature gate so we can warn the user upfront
-    // when their account isn't approved for web search — without this,
-    // the only signal they get is a generic "subscribers only"
-    // ToolError mid-stream in the spotlight agent. `null` until the
-    // probe resolves; the warning row only renders once we actually
-    // know the answer (avoids a flash of "no access" while loading).
-    const [features, setFeatures] = useState<AgentFeatures | null>(null);
-    useEffect(() => {
-        if (!accessToken) return;
-        let cancelled = false;
-        fetchAgentFeatures(accessToken).then((f) => {
-            if (!cancelled) setFeatures(f);
-        });
-        return () => {
-            cancelled = true;
-        };
-    }, [accessToken]);
-
-    // Only nag the user when they've actually toggled web search on.
-    // After the tier rollout, "access" is "your tier has a non-zero
-    // daily quota" — most tiers do, but an admin could zero out a
-    // tier's `web_search_daily` and we want users to learn that
-    // upfront. `null` limit means unlimited (treated as access).
-    // Both the warning AND the confirmation are gated on
-    // `webSearch === true` so the row stays quiet by default.
-    const webSearchLimit = features?.web_search?.limit;
-    const hasWebSearchAccess = webSearchLimit === null || (webSearchLimit ?? 0) > 0;
-    const showAccessWarning = aiAnswers && webSearch && features !== null && !hasWebSearchAccess;
-    const showAccessGranted = aiAnswers && webSearch && features !== null && hasWebSearchAccess;
 
     return (
         <Sheet sx={{ p: 2, borderRadius: "lg" }} variant="outlined">
@@ -724,47 +690,6 @@ export const SpotlightSection = () => {
                     onChange={(e) => setWebSearch(e.target.checked)}
                 />
             </Stack>
-
-            {/* Per-user backend feature gate (`UserFeatureAccess`).
-                Tavily is metered, so web search is opt-in per account
-                regardless of this client-side toggle. Surface the
-                state inline so users learn about the gate up front
-                instead of hitting "subscribers only" mid-query. */}
-            {showAccessWarning && (
-                <Alert
-                    color="warning"
-                    size="sm"
-                    startDecorator={<WarningAmberRoundedIcon />}
-                    sx={{ mt: 1.5 }}
-                    variant="soft"
-                >
-                    <Box>
-                        <Typography level="body-sm" sx={{ fontWeight: 600 }}>
-                            Web search access required
-                        </Typography>
-                        <Typography level="body-xs">
-                            Your account isn't approved for web search yet. Contact your
-                            administrator to request access — the toggle is on, but the spotlight
-                            agent will skip web search until it's granted.
-                        </Typography>
-                    </Box>
-                </Alert>
-            )}
-            {showAccessGranted && (
-                <Alert
-                    color="success"
-                    size="sm"
-                    startDecorator={<CheckCircleRoundedIcon />}
-                    sx={{ mt: 1.5 }}
-                    variant="soft"
-                >
-                    <Typography level="body-sm">
-                        {features?.web_search.limit === null
-                            ? "Unlimited web searches on your tier."
-                            : `Today: ${features?.web_search.used ?? 0} / ${features?.web_search.limit ?? 0} web searches.`}
-                    </Typography>
-                </Alert>
-            )}
         </Sheet>
     );
 };
