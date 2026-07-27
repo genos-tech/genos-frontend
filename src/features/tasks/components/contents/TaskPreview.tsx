@@ -865,8 +865,8 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                                 right: 0,
                                 height: "3px",
                                 background: isDark
-                                    ? "linear-gradient(90deg, #6d28d9 0%, #7c3aed 50%, #9333ea 100%)"
-                                    : "linear-gradient(90deg, #a78bfa 0%, #8b5cf6 50%, #c084fc 100%)",
+                                    ? "linear-gradient(90deg, var(--gp-brand-800) 0%, var(--gp-brand-700) 50%, var(--gp-brand-600) 100%)"
+                                    : "linear-gradient(90deg, var(--gp-brandalt-400) 0%, var(--gp-brandalt-500) 50%, var(--gp-brand-400) 100%)",
                                 borderRadius: "16px 16px 0 0",
                                 opacity: 0.8,
                             }}
@@ -2050,7 +2050,7 @@ const MilestonePreviewInner = ({
                         right: 0,
                         height: 3,
                         background:
-                            "linear-gradient(90deg, #6d28d9 0%, #7c3aed 50%, #9333ea 100%)",
+                            "linear-gradient(90deg, var(--gp-brand-800) 0%, var(--gp-brand-700) 50%, var(--gp-brand-600) 100%)",
                         borderRadius: "16px 16px 0 0",
                     }}
                 />

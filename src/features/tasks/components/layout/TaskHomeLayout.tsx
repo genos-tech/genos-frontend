@@ -253,10 +253,13 @@ export const TaskHomeLayout = ({
 
     const renderNoProjectPanel = () => {
         const isDark = mode === "dark";
-        // Sidebar nav items use this purple palette (#a78bfa dark / #7c3aed
+        // Sidebar nav items use this purple palette (var(--gp-brandalt-400) dark / var(--gp-brand-700)
         // light); reuse it so the empty state feels native to the Tasks
         // service.
-        const accent = isDark ? "#a78bfa" : "#7c3aed";
+        const accent = isDark ? "var(--gp-brandalt-400)" : "var(--gp-brand-700)";
+        // Triplet companion: brand colors are CSS variables, so alpha is
+        // composed with rgba() — `rgba(${accentRgb}, 0.8)` would be invalid CSS.
+        const accentRgb = isDark ? "var(--gp-brandalt-400-rgb)" : "var(--gp-brand-700-rgb)";
 
         return (
             <>
@@ -273,8 +276,8 @@ export const TaskHomeLayout = ({
                             borderRight: "1px solid",
                             borderColor: ls.sidebarPanel.borderColor,
                             background: isDark
-                                ? `radial-gradient(1200px 600px at 50% 0%, ${accent}10 0%, transparent 60%)`
-                                : `radial-gradient(1200px 600px at 50% 0%, ${accent}0d 0%, transparent 60%)`,
+                                ? `radial-gradient(1200px 600px at 50% 0%, rgba(${accentRgb}, 0.063) 0%, transparent 60%)`
+                                : `radial-gradient(1200px 600px at 50% 0%, rgba(${accentRgb}, 0.051) 0%, transparent 60%)`,
                         }}
                     >
                         <Stack
@@ -296,7 +299,7 @@ export const TaskHomeLayout = ({
                                 backdropFilter: "blur(8px)",
                                 boxShadow: isDark
                                     ? "0 12px 40px rgba(0,0,0,0.35)"
-                                    : "0 12px 40px rgba(124,58,237,0.08)",
+                                    : "0 12px 40px rgba(var(--gp-brand-700-rgb), 0.08)",
                             }}
                         >
                             <Box
@@ -309,13 +312,15 @@ export const TaskHomeLayout = ({
                                     alignItems: "center",
                                     justifyContent: "center",
                                     background: isDark
-                                        ? `linear-gradient(135deg, ${accent}30 0%, ${accent}15 100%)`
-                                        : `linear-gradient(135deg, ${accent}20 0%, ${accent}10 100%)`,
+                                        ? `linear-gradient(135deg, rgba(${accentRgb}, 0.188) 0%, rgba(${accentRgb}, 0.082) 100%)`
+                                        : `linear-gradient(135deg, rgba(${accentRgb}, 0.125) 0%, rgba(${accentRgb}, 0.063) 100%)`,
                                     border: "1px solid",
-                                    borderColor: isDark ? `${accent}40` : `${accent}30`,
+                                    borderColor: isDark
+                                        ? `rgba(${accentRgb}, 0.251)`
+                                        : `rgba(${accentRgb}, 0.188)`,
                                     boxShadow: isDark
-                                        ? `0 8px 24px ${accent}25`
-                                        : `0 8px 24px ${accent}1f`,
+                                        ? `0 8px 24px rgba(${accentRgb}, 0.145)`
+                                        : `0 8px 24px rgba(${accentRgb}, 0.122)`,
                                 }}
                             >
                                 <WorkspacesRoundedIcon
@@ -353,13 +358,13 @@ export const TaskHomeLayout = ({
                                     py: 1.1,
                                     borderRadius: "12px",
                                     fontWeight: 600,
-                                    background: `linear-gradient(135deg, ${accent} 0%, ${accent}cc 100%)`,
-                                    boxShadow: `0 8px 20px ${accent}45`,
+                                    background: `linear-gradient(135deg, ${accent} 0%, rgba(${accentRgb}, 0.8) 100%)`,
+                                    boxShadow: `0 8px 20px rgba(${accentRgb}, 0.271)`,
                                     transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                                     "&:hover": {
-                                        background: `linear-gradient(135deg, ${accent} 0%, ${accent}dd 100%)`,
+                                        background: `linear-gradient(135deg, ${accent} 0%, rgba(${accentRgb}, 0.867) 100%)`,
                                         transform: "translateY(-1px)",
-                                        boxShadow: `0 12px 28px ${accent}55`,
+                                        boxShadow: `0 12px 28px rgba(${accentRgb}, 0.333)`,
                                     },
                                     "&:active": {
                                         transform: "translateY(0)",

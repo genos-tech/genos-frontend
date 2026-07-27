@@ -276,10 +276,12 @@ const EmptyState = ({
                     alignItems: "center",
                     justifyContent: "center",
                     background: isDark
-                        ? "linear-gradient(135deg, rgba(124,58,237,0.1) 0%, rgba(139,92,246,0.06) 100%)"
-                        : "linear-gradient(135deg, rgba(124,58,237,0.08) 0%, rgba(124,58,237,0.04) 100%)",
+                        ? "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.1) 0%, rgba(var(--gp-brandalt-500-rgb), 0.06) 100%)"
+                        : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.08) 0%, rgba(var(--gp-brand-700-rgb), 0.04) 100%)",
                     border: "1px solid",
-                    borderColor: isDark ? "rgba(139,92,246,0.12)" : "rgba(124,58,237,0.08)",
+                    borderColor: isDark
+                        ? "rgba(var(--gp-brandalt-500-rgb), 0.12)"
+                        : "rgba(var(--gp-brand-700-rgb), 0.08)",
                     mb: 2,
                     position: "relative",
                     "&::before": {
@@ -288,7 +290,9 @@ const EmptyState = ({
                         inset: -6,
                         borderRadius: "50%",
                         border: "1px dashed",
-                        borderColor: isDark ? "rgba(139,92,246,0.12)" : "rgba(124,58,237,0.1)",
+                        borderColor: isDark
+                            ? "rgba(var(--gp-brandalt-500-rgb), 0.12)"
+                            : "rgba(var(--gp-brand-700-rgb), 0.1)",
                         animation: "rotate 25s linear infinite",
                     },
                     "@keyframes rotate": {
@@ -300,7 +304,7 @@ const EmptyState = ({
                 <Icon
                     sx={{
                         fontSize: 28,
-                        color: isDark ? "#a78bfa" : "#7c3aed",
+                        color: isDark ? "var(--gp-brandalt-400)" : "var(--gp-brand-700)",
                         opacity: 0.7,
                     }}
                 />

@@ -152,8 +152,10 @@ const GroupOrProjectAvatar = ({
         sx={{
             width: AVATAR_SIZE,
             height: AVATAR_SIZE,
-            bgcolor: isDark ? "rgba(124,58,237,0.18)" : "rgba(124,58,237,0.12)",
-            color: isDark ? "#a78bfa" : "#7c3aed",
+            bgcolor: isDark
+                ? "rgba(var(--gp-brand-700-rgb), 0.18)"
+                : "rgba(var(--gp-brand-700-rgb), 0.12)",
+            color: isDark ? "var(--gp-brandalt-400)" : "var(--gp-brand-700)",
         }}
     >
         {fallback}
@@ -418,7 +420,7 @@ const SmallChip = ({
 
 const CHIP_COLORS = {
     thread: { light: "#0ea5e9", dark: "#38bdf8" },
-    milestone: { light: "#7c3aed", dark: "#a78bfa" },
+    milestone: { light: "var(--gp-brand-700)", dark: "var(--gp-brandalt-400)" },
 } as const;
 
 // Canonical task-status palette used everywhere else in the app

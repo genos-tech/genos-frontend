@@ -107,10 +107,12 @@ export const BubbleUserName = (props: BubbleUserNameTypes) => {
                     ? {
                           // Improved neutral chip with better contrast
                           background: isDark
-                              ? "linear-gradient(135deg, rgba(124,58,237,0.25) 0%, rgba(124,58,237,0.15) 100%)"
-                              : "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)",
-                          color: isDark ? "#f3e8ff" : "#ffffff",
-                          borderColor: isDark ? "rgba(124,58,237,0.4)" : "#6d28d9",
+                              ? "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.25) 0%, rgba(var(--gp-brand-700-rgb), 0.15) 100%)"
+                              : "linear-gradient(135deg, var(--gp-brand-700) 0%, var(--gp-brand-800) 100%)",
+                          color: isDark ? "var(--gp-brand-100)" : "#ffffff",
+                          borderColor: isDark
+                              ? "rgba(var(--gp-brand-700-rgb), 0.4)"
+                              : "var(--gp-brand-800)",
                       }
                     : customStyles),
             }}

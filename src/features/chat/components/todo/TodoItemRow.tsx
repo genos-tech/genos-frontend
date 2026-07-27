@@ -294,8 +294,12 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
     };
 
     // Purple accent family, matching the pane's header/footer styling.
-    const accentBg = isDark ? "rgba(167,139,250,0.14)" : "rgba(124,58,237,0.08)";
-    const accentRing = isDark ? "rgba(167,139,250,0.6)" : "rgba(124,58,237,0.45)";
+    const accentBg = isDark
+        ? "rgba(var(--gp-brandalt-400-rgb), 0.14)"
+        : "rgba(var(--gp-brand-700-rgb), 0.08)";
+    const accentRing = isDark
+        ? "rgba(var(--gp-brandalt-400-rgb), 0.6)"
+        : "rgba(var(--gp-brand-700-rgb), 0.45)";
 
     return (
         <Box

@@ -315,6 +315,17 @@ export const ja: DeepPartial<Messages> = {
             themeLight: "ライト",
             themeDark: "ダーク",
             themeSystem: "システム",
+            colorThemeLabel: "カラーテーマ",
+            colorThemeHelper: "アプリ全体のアクセントカラーを変更します。",
+            colorThemes: {
+                purple: "パープル",
+                blue: "ブルー",
+                teal: "ティール",
+                emerald: "エメラルド",
+                amber: "アンバー",
+                rose: "ローズ",
+                slate: "スレート",
+            },
         },
         messageLayout: {
             heading: "メッセージレイアウト",

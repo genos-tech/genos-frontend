@@ -368,7 +368,7 @@ export const JoinTeam = () => {
                                             width: 32,
                                             height: 32,
                                             borderRadius: "8px",
-                                            background: `linear-gradient(135deg, ${styles.accentColor}30 0%, ${styles.accentColor}10 100%)`,
+                                            background: `linear-gradient(135deg, rgba(${styles.accentColorRgb}, 0.188) 0%, rgba(${styles.accentColorRgb}, 0.063) 100%)`,
                                             display: "flex",
                                             alignItems: "center",
                                             justifyContent: "center",

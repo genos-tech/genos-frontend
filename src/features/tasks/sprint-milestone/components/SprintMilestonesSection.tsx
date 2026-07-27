@@ -74,7 +74,12 @@ export const SprintMilestonesSection = ({
     return (
         <Box>
             <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 2 }}>
-                <FlagRoundedIcon sx={{ fontSize: 18, color: isDark ? "#a78bfa" : "#7c3aed" }} />
+                <FlagRoundedIcon
+                    sx={{
+                        fontSize: 18,
+                        color: isDark ? "var(--gp-brandalt-400)" : "var(--gp-brand-700)",
+                    }}
+                />
                 <Typography
                     level="title-sm"
                     sx={{

@@ -53,7 +53,9 @@ export const MonthView = ({
     const weekLabels = useMemo(() => weekdayLabels(0), []);
     const todayKey = useMemo(() => dayKey(dayjs()), []);
 
-    const accent = isDark ? "rgba(124,58,237,0.85)" : "rgba(124,58,237,1)";
+    const accent = isDark
+        ? "rgba(var(--gp-brand-700-rgb), 0.85)"
+        : "rgba(var(--gp-brand-700-rgb), 1)";
     const cellBorder = isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)";
     const dimmedText = isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.35)";
 
@@ -123,16 +125,16 @@ export const MonthView = ({
                                 borderWidth: isToday ? "1.5px" : "1px",
                                 backgroundColor: isToday
                                     ? isDark
-                                        ? "rgba(124,58,237,0.16)"
-                                        : "rgba(124,58,237,0.08)"
+                                        ? "rgba(var(--gp-brand-700-rgb), 0.16)"
+                                        : "rgba(var(--gp-brand-700-rgb), 0.08)"
                                     : undefined,
                                 cursor: "pointer",
                                 opacity: inMonth ? 1 : 0.55,
                                 transition: "background-color 0.12s ease",
                                 "&:hover": {
                                     backgroundColor: isDark
-                                        ? "rgba(124,58,237,0.08)"
-                                        : "rgba(124,58,237,0.04)",
+                                        ? "rgba(var(--gp-brand-700-rgb), 0.08)"
+                                        : "rgba(var(--gp-brand-700-rgb), 0.04)",
                                 },
                             }}
                             onClick={(ev) => {

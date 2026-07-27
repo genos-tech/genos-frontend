@@ -142,8 +142,8 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
                     transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                     background: selected
                         ? isDark
-                            ? "linear-gradient(135deg, rgba(124,58,237,0.15) 0%, rgba(139,92,246,0.1) 100%)"
-                            : "linear-gradient(135deg, rgba(124,58,237,0.1) 0%, rgba(124,58,237,0.06) 100%)"
+                            ? "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.15) 0%, rgba(var(--gp-brandalt-500-rgb), 0.1) 100%)"
+                            : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.1) 0%, rgba(var(--gp-brand-700-rgb), 0.06) 100%)"
                         : isHovered
                           ? isDark
                               ? "rgba(255,255,255,0.04)"
@@ -152,24 +152,24 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
                     border: "1px solid",
                     borderColor: selected
                         ? isDark
-                            ? "rgba(139,92,246,0.2)"
-                            : "rgba(124,58,237,0.12)"
+                            ? "rgba(var(--gp-brandalt-500-rgb), 0.2)"
+                            : "rgba(var(--gp-brand-700-rgb), 0.12)"
                         : "transparent",
                     position: "relative",
                     overflow: "hidden",
                     "&:hover": {
                         background: selected
                             ? isDark
-                                ? "linear-gradient(135deg, rgba(124,58,237,0.18) 0%, rgba(139,92,246,0.12) 100%)"
-                                : "linear-gradient(135deg, rgba(124,58,237,0.12) 0%, rgba(124,58,237,0.08) 100%)"
+                                ? "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.18) 0%, rgba(var(--gp-brandalt-500-rgb), 0.12) 100%)"
+                                : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.12) 0%, rgba(var(--gp-brand-700-rgb), 0.08) 100%)"
                             : isDark
                               ? "rgba(255,255,255,0.05)"
                               : "rgba(0,0,0,0.04)",
                     },
                     "&.Mui-selected": {
                         background: isDark
-                            ? "linear-gradient(135deg, rgba(124,58,237,0.15) 0%, rgba(139,92,246,0.1) 100%)"
-                            : "linear-gradient(135deg, rgba(124,58,237,0.1) 0%, rgba(124,58,237,0.06) 100%)",
+                            ? "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.15) 0%, rgba(var(--gp-brandalt-500-rgb), 0.1) 100%)"
+                            : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.1) 0%, rgba(var(--gp-brand-700-rgb), 0.06) 100%)",
                     },
                 }}
                 onClick={() => {
@@ -190,8 +190,8 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
                             height: "60%",
                             borderRadius: "0 4px 4px 0",
                             background: isDark
-                                ? "linear-gradient(180deg, #7c3aed 0%, #6d28d9 100%)"
-                                : "linear-gradient(180deg, #7c3aed 0%, #6d28d9 100%)",
+                                ? "linear-gradient(180deg, var(--gp-brand-700) 0%, var(--gp-brand-800) 100%)"
+                                : "linear-gradient(180deg, var(--gp-brand-700) 0%, var(--gp-brand-800) 100%)",
                         }}
                     />
                 )}

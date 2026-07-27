@@ -6,7 +6,6 @@ import "./App.css";
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Box } from "@mui/joy";
 import CssBaseline from "@mui/joy/CssBaseline";
-import { CssVarsProvider } from "@mui/joy/styles";
 import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 
 import { CalendarModalProvider, useCalendarModalState } from "./context/CalendarModalContext";
@@ -85,7 +84,7 @@ import { canonicalSpotlightHref, milestoneIdFromEntityId } from "./utils/canonic
 import { parseInternalUrl } from "./utils/parseInternalUrl";
 
 import { I18nProvider } from "./i18n";
-import { purpleTheme } from "./theme/purplePalette";
+import { ColorThemeProvider } from "./theme/ColorThemeProvider";
 
 // Feature roots are code-split: BlockNote/Yjs (notes), the rich-text editor
 // in the chat preview, @hello-pangea/dnd + the task table/board, and the
@@ -1078,17 +1077,17 @@ export const App = () => {
 
     // if (isTooSmall) {
     //     return (
-    //         <CssVarsProvider theme={purpleTheme} disableTransitionOnChange>
+    //         <ColorThemeProvider>
     //             <CssBaseline />
     //             <I18nProvider>
     //                 <TooSmallScreen />
     //             </I18nProvider>
-    //         </CssVarsProvider>
+    //         </ColorThemeProvider>
     //     );
     // }
 
     return (
-        <CssVarsProvider theme={purpleTheme} disableTransitionOnChange>
+        <ColorThemeProvider>
             <CssBaseline />
             <I18nProvider>
                 {/* Blocks the tab when another tab takes over the single
@@ -1693,6 +1692,6 @@ export const App = () => {
                     </BubbleStylePreferenceProvider>
                 </ThemePreferenceProvider>
             </I18nProvider>
-        </CssVarsProvider>
+        </ColorThemeProvider>
     );
 };

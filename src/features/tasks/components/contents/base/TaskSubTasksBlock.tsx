@@ -255,15 +255,15 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                         fontWeight: 600,
                         gap: 0.5,
                         boxShadow: isDark
-                            ? "0 2px 8px rgba(124,58,237,0.4)"
-                            : "0 2px 8px rgba(124,58,237,0.3)",
+                            ? "0 2px 8px rgba(var(--gp-brand-700-rgb), 0.4)"
+                            : "0 2px 8px rgba(var(--gp-brand-700-rgb), 0.3)",
                         transition: "all 0.2s ease",
                         "&:hover": {
                             background: styles.createButtonHover,
                             transform: "translateY(-1px)",
                             boxShadow: isDark
-                                ? "0 4px 12px rgba(124,58,237,0.5)"
-                                : "0 4px 12px rgba(124,58,237,0.4)",
+                                ? "0 4px 12px rgba(var(--gp-brand-700-rgb), 0.5)"
+                                : "0 4px 12px rgba(var(--gp-brand-700-rgb), 0.4)",
                         },
                     }}
                     onClick={() => {
@@ -476,12 +476,12 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                             transition: "all 0.15s ease",
                             "&:hover": {
                                 borderColor: isDark
-                                    ? "rgba(167,139,250,0.6)"
-                                    : "rgba(124,58,237,0.5)",
-                                color: isDark ? "#a78bfa" : "#7c3aed",
+                                    ? "rgba(var(--gp-brandalt-400-rgb), 0.6)"
+                                    : "rgba(var(--gp-brand-700-rgb), 0.5)",
+                                color: isDark ? "var(--gp-brandalt-400)" : "var(--gp-brand-700)",
                                 backgroundColor: isDark
-                                    ? "rgba(124,58,237,0.06)"
-                                    : "rgba(124,58,237,0.04)",
+                                    ? "rgba(var(--gp-brand-700-rgb), 0.06)"
+                                    : "rgba(var(--gp-brand-700-rgb), 0.04)",
                             },
                         }}
                         onClick={() => {

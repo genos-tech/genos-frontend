@@ -22,36 +22,44 @@ import { HeaderUserName } from "./HeaderUserName";
 const ChatPaneHeaderStyles = {
     dark: {
         containerBg: "linear-gradient(135deg, rgba(30,32,44,0.95) 0%, rgba(20,22,34,0.98) 100%)",
-        containerBorder: "rgba(124,58,237,0.15)",
-        buttonBg: "linear-gradient(135deg, rgba(124,58,237,0.12) 0%, rgba(139,92,246,0.12) 100%)",
+        containerBorder: "rgba(var(--gp-brand-700-rgb), 0.15)",
+        buttonBg:
+            "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.12) 0%, rgba(var(--gp-brandalt-500-rgb), 0.12) 100%)",
         buttonHover:
-            "linear-gradient(135deg, rgba(124,58,237,0.22) 0%, rgba(139,92,246,0.22) 100%)",
-        buttonBorder: "rgba(124,58,237,0.3)",
-        primaryButtonBg: "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)",
-        primaryButtonHover: "linear-gradient(135deg, #a78bfa 0%, #c084fc 100%)",
-        dangerBg: "linear-gradient(135deg, rgba(232,121,195,0.12) 0%, rgba(192,38,168,0.12) 100%)",
+            "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.22) 0%, rgba(var(--gp-brandalt-500-rgb), 0.22) 100%)",
+        buttonBorder: "rgba(var(--gp-brand-700-rgb), 0.3)",
+        primaryButtonBg:
+            "linear-gradient(135deg, var(--gp-brand-700) 0%, var(--gp-brand-800) 100%)",
+        primaryButtonHover:
+            "linear-gradient(135deg, var(--gp-brandalt-400) 0%, var(--gp-brand-400) 100%)",
+        dangerBg:
+            "linear-gradient(135deg, rgba(var(--gp-tint-danger-rgb), 0.12) 0%, rgba(var(--gp-tint-danger-alt-rgb), 0.12) 100%)",
         dangerHover:
-            "linear-gradient(135deg, rgba(232,121,195,0.22) 0%, rgba(192,38,168,0.22) 100%)",
-        dangerBorder: "rgba(232,121,195,0.3)",
-        accentColor: "#a78bfa",
-        glowColor: "rgba(124,58,237,0.25)",
+            "linear-gradient(135deg, rgba(var(--gp-tint-danger-rgb), 0.22) 0%, rgba(var(--gp-tint-danger-alt-rgb), 0.22) 100%)",
+        dangerBorder: "rgba(var(--gp-tint-danger-rgb), 0.3)",
+        accentColor: "var(--gp-brandalt-400)",
+        glowColor: "rgba(var(--gp-brand-700-rgb), 0.25)",
     },
     light: {
         containerBg:
             "linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(238,242,255,0.5) 100%)",
-        containerBorder: "rgba(124,58,237,0.12)",
-        buttonBg: "linear-gradient(135deg, rgba(124,58,237,0.08) 0%, rgba(139,92,246,0.08) 100%)",
+        containerBorder: "rgba(var(--gp-brand-700-rgb), 0.12)",
+        buttonBg:
+            "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.08) 0%, rgba(var(--gp-brandalt-500-rgb), 0.08) 100%)",
         buttonHover:
-            "linear-gradient(135deg, rgba(124,58,237,0.15) 0%, rgba(139,92,246,0.15) 100%)",
-        buttonBorder: "rgba(124,58,237,0.2)",
-        primaryButtonBg: "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)",
-        primaryButtonHover: "linear-gradient(135deg, #a78bfa 0%, #c084fc 100%)",
-        dangerBg: "linear-gradient(135deg, rgba(232,121,195,0.08) 0%, rgba(192,38,168,0.08) 100%)",
+            "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.15) 0%, rgba(var(--gp-brandalt-500-rgb), 0.15) 100%)",
+        buttonBorder: "rgba(var(--gp-brand-700-rgb), 0.2)",
+        primaryButtonBg:
+            "linear-gradient(135deg, var(--gp-brand-700) 0%, var(--gp-brand-800) 100%)",
+        primaryButtonHover:
+            "linear-gradient(135deg, var(--gp-brandalt-400) 0%, var(--gp-brand-400) 100%)",
+        dangerBg:
+            "linear-gradient(135deg, rgba(var(--gp-tint-danger-rgb), 0.08) 0%, rgba(var(--gp-tint-danger-alt-rgb), 0.08) 100%)",
         dangerHover:
-            "linear-gradient(135deg, rgba(232,121,195,0.15) 0%, rgba(192,38,168,0.15) 100%)",
-        dangerBorder: "rgba(232,121,195,0.2)",
-        accentColor: "#7c3aed",
-        glowColor: "rgba(124,58,237,0.15)",
+            "linear-gradient(135deg, rgba(var(--gp-tint-danger-rgb), 0.15) 0%, rgba(var(--gp-tint-danger-alt-rgb), 0.15) 100%)",
+        dangerBorder: "rgba(var(--gp-tint-danger-rgb), 0.2)",
+        accentColor: "var(--gp-brand-700)",
+        glowColor: "rgba(var(--gp-brand-700-rgb), 0.15)",
     },
 };
 
@@ -131,7 +139,7 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
         "&:hover": {
             background: styles.dangerHover,
             transform: "translateY(-1px)",
-            boxShadow: "0 4px 12px rgba(232,121,195,0.2)",
+            boxShadow: "0 4px 12px rgba(var(--gp-tint-danger-rgb), 0.2)",
         },
     };
 
@@ -334,7 +342,9 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                         variant="plain"
                         onClick={() => useCM.setIsSubChatVisible(false)}
                     >
-                        <CloseRoundedIcon sx={{ fontSize: 18, color: "#c026a8" }} />
+                        <CloseRoundedIcon
+                            sx={{ fontSize: 18, color: "var(--gp-tint-danger-alt)" }}
+                        />
                     </IconButton>
                 </Tooltip>
             </Stack>

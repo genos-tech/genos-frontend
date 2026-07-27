@@ -110,12 +110,12 @@ function FavoriteNoteItemComponent({ note, noteType, useNM }: FavoriteNoteItemPr
                     },
                     "&.Mui-selected": {
                         backgroundColor: isDark
-                            ? "rgba(124,58,237,0.12)"
-                            : "rgba(124,58,237,0.08)",
+                            ? "rgba(var(--gp-brand-700-rgb), 0.12)"
+                            : "rgba(var(--gp-brand-700-rgb), 0.08)",
                         "&:hover": {
                             backgroundColor: isDark
-                                ? "rgba(124,58,237,0.18)"
-                                : "rgba(124,58,237,0.12)",
+                                ? "rgba(var(--gp-brand-700-rgb), 0.18)"
+                                : "rgba(var(--gp-brand-700-rgb), 0.12)",
                         },
                     },
                 }}
@@ -130,12 +130,12 @@ function FavoriteNoteItemComponent({ note, noteType, useNM }: FavoriteNoteItemPr
                         flexShrink: 0,
                         backgroundColor: hasUnread
                             ? isDark
-                                ? "#a78bfa"
-                                : "#7c3aed"
+                                ? "var(--gp-brandalt-400)"
+                                : "var(--gp-brand-700)"
                             : isSelected
                               ? isDark
-                                  ? "#a78bfa"
-                                  : "#6d28d9"
+                                  ? "var(--gp-brandalt-400)"
+                                  : "var(--gp-brand-800)"
                               : isDark
                                 ? "rgba(255,255,255,0.2)"
                                 : "rgba(0,0,0,0.15)",

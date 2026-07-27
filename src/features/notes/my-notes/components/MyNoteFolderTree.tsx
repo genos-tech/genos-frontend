@@ -73,13 +73,15 @@ function MyNoteFolderTreeComponent(props: MyNoteFolderTreeProps) {
                 transition: "all 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
                 backgroundColor: isDraggingOver
                     ? isDark
-                        ? "rgba(124,58,237,0.18)"
-                        : "rgba(124,58,237,0.1)"
+                        ? "rgba(var(--gp-brand-700-rgb), 0.18)"
+                        : "rgba(var(--gp-brand-700-rgb), 0.1)"
                     : isDark
                       ? "rgba(255,255,255,0.02)"
                       : "rgba(0,0,0,0.01)",
                 outline: isDraggingOver ? "1px dashed" : "none",
-                outlineColor: isDark ? "rgba(167,139,250,0.7)" : "rgba(124,58,237,0.5)",
+                outlineColor: isDark
+                    ? "rgba(var(--gp-brandalt-400-rgb), 0.7)"
+                    : "rgba(var(--gp-brand-700-rgb), 0.5)",
                 "&:hover": {
                     backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
                     "& .folder-menu-btn": {
@@ -114,7 +116,7 @@ function MyNoteFolderTreeComponent(props: MyNoteFolderTreeProps) {
             <FolderIcon
                 sx={{
                     fontSize: 14,
-                    color: isDark ? "#a78bfa" : "#7c3aed",
+                    color: isDark ? "var(--gp-brandalt-400)" : "var(--gp-brand-700)",
                     flexShrink: 0,
                 }}
             />

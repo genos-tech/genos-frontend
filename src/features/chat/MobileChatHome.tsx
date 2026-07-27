@@ -76,7 +76,7 @@ const MobileOverlay = ({
                 inset: 0,
                 zIndex: 1300,
                 background: isDark
-                    ? "linear-gradient(180deg, rgba(20,14,34,1) 0%, rgba(11,10,22,1) 100%)"
+                    ? "linear-gradient(180deg, rgba(var(--gp-dark-surface-b-rgb), 1) 0%, rgba(11,10,22,1) 100%)"
                     : "linear-gradient(180deg, rgba(252,250,255,1) 0%, rgba(248,245,255,1) 100%)",
                 display: "flex",
                 flexDirection: "column",

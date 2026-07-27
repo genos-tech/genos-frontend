@@ -33,10 +33,13 @@ type Props = {
 // Per-status icon + accent colour for the results list.
 const STATUS_META: Record<InviteResultStatus, { color: string; Icon: typeof InfoRoundedIcon }> = {
     sent: { color: "rgba(74,222,128,0.9)", Icon: CheckCircleRoundedIcon },
-    already_invited_resent: { color: "rgba(167,139,250,0.95)", Icon: MarkEmailReadRoundedIcon },
+    already_invited_resent: {
+        color: "rgba(var(--gp-brandalt-400-rgb), 0.95)",
+        Icon: MarkEmailReadRoundedIcon,
+    },
     already_member: { color: "rgba(255,255,255,0.6)", Icon: InfoRoundedIcon },
     invalid_email: { color: "rgba(251,191,36,0.95)", Icon: WarningAmberIcon },
-    failed: { color: "rgba(232,121,195,0.95)", Icon: ErrorOutlineRoundedIcon },
+    failed: { color: "rgba(var(--gp-tint-danger-rgb), 0.95)", Icon: ErrorOutlineRoundedIcon },
 };
 
 export const ModalInviteMembers = ({ open, teamId, onClose }: Props) => {
@@ -122,10 +125,10 @@ export const ModalInviteMembers = ({ open, teamId, onClose }: Props) => {
                     animation: `${fadeIn} 0.2s ease-out`,
                     background:
                         "linear-gradient(145deg, rgba(30, 30, 40, 0.97) 0%, rgba(20, 20, 28, 0.99) 100%)",
-                    border: "1px solid rgba(124,58,237,0.25)",
+                    border: "1px solid rgba(var(--gp-brand-700-rgb), 0.25)",
                     borderRadius: "16px",
                     boxShadow:
-                        "0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(124,58,237,0.12)",
+                        "0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(var(--gp-brand-700-rgb), 0.12)",
                     width: { xs: "calc(100vw - 24px)", md: "520px" },
                     minWidth: { xs: 0, md: "480px" },
                     maxWidth: "100vw",
@@ -142,14 +145,14 @@ export const ModalInviteMembers = ({ open, teamId, onClose }: Props) => {
                             height: 56,
                             borderRadius: "14px",
                             background:
-                                "linear-gradient(135deg, rgba(124,58,237,0.15) 0%, rgba(139,92,246,0.15) 100%)",
-                            border: "1px solid rgba(124,58,237,0.25)",
+                                "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.15) 0%, rgba(var(--gp-brandalt-500-rgb), 0.15) 100%)",
+                            border: "1px solid rgba(var(--gp-brand-700-rgb), 0.25)",
                             mx: "auto",
                             mb: 2,
                         }}
                     >
                         <PersonAddAltRoundedIcon
-                            sx={{ color: "rgba(167,139,250,0.95)", fontSize: 28 }}
+                            sx={{ color: "rgba(var(--gp-brandalt-400-rgb), 0.95)", fontSize: 28 }}
                         />
                     </Box>
                     <Typography
@@ -176,7 +179,7 @@ export const ModalInviteMembers = ({ open, teamId, onClose }: Props) => {
                                 maxHeight: 280,
                                 overflow: "auto",
                                 borderRadius: "10px",
-                                border: "1px solid rgba(124,58,237,0.2)",
+                                border: "1px solid rgba(var(--gp-brand-700-rgb), 0.2)",
                                 background: "rgba(0,0,0,0.15)",
                                 p: 1,
                                 mb: 2,
@@ -234,7 +237,7 @@ export const ModalInviteMembers = ({ open, teamId, onClose }: Props) => {
                             <Button
                                 sx={{
                                     background:
-                                        "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)",
+                                        "linear-gradient(135deg, var(--gp-brand-700) 0%, var(--gp-brand-800) 100%)",
                                     borderRadius: "10px",
                                     px: 3,
                                     fontWeight: 600,
@@ -261,9 +264,9 @@ export const ModalInviteMembers = ({ open, teamId, onClose }: Props) => {
                                             />
                                         }
                                         sx={{
-                                            background: "rgba(124,58,237,0.18)",
+                                            background: "rgba(var(--gp-brand-700-rgb), 0.18)",
                                             color: "rgba(255,255,255,0.92)",
-                                            border: "1px solid rgba(124,58,237,0.35)",
+                                            border: "1px solid rgba(var(--gp-brand-700-rgb), 0.35)",
                                         }}
                                     >
                                         {email}
@@ -301,7 +304,7 @@ export const ModalInviteMembers = ({ open, teamId, onClose }: Props) => {
                                 "--Input-placeholderColor": "rgba(255,255,255,0.5)",
                                 color: "rgba(255,255,255,0.92)",
                                 background: "rgba(0,0,0,0.3)",
-                                border: "1px solid rgba(124,58,237,0.25)",
+                                border: "1px solid rgba(var(--gp-brand-700-rgb), 0.25)",
                                 fontSize: "14px",
                                 "& input": { color: "rgba(255,255,255,0.92)" },
                             }}
@@ -334,8 +337,8 @@ export const ModalInviteMembers = ({ open, teamId, onClose }: Props) => {
                                 sx={{
                                     mt: 1.5,
                                     borderRadius: "10px",
-                                    backgroundColor: "rgba(232,121,195,0.1)",
-                                    border: "1px solid rgba(232,121,195,0.3)",
+                                    backgroundColor: "rgba(var(--gp-tint-danger-rgb), 0.1)",
+                                    border: "1px solid rgba(var(--gp-tint-danger-rgb), 0.3)",
                                 }}
                             >
                                 {errorMessage}
@@ -365,7 +368,7 @@ export const ModalInviteMembers = ({ open, teamId, onClose }: Props) => {
                                 loading={submitting}
                                 sx={{
                                     background:
-                                        "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)",
+                                        "linear-gradient(135deg, var(--gp-brand-700) 0%, var(--gp-brand-800) 100%)",
                                     borderRadius: "10px",
                                     px: 3,
                                     fontWeight: 600,

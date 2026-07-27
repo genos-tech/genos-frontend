@@ -32,7 +32,8 @@ export const RouteLoadingFallback = () => (
                         width: "10px",
                         height: "10px",
                         borderRadius: "50%",
-                        background: "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
+                        background:
+                            "linear-gradient(135deg, #6366f1 0%, var(--gp-brand-500) 100%)",
                         animation: `${dotPulse} 1.4s ease-in-out infinite`,
                         animationDelay: `${i * 0.16}s`,
                     }}

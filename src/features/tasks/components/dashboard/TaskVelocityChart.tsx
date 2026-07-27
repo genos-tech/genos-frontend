@@ -21,7 +21,7 @@ const SERIES = [
     { key: "created", color: { dark: "#60a5fa", light: "#3b82f6" } },
     { key: "started", color: { dark: "#fbbf24", light: "#f59e0b" } },
     { key: "closed", color: { dark: "#4ade80", light: "#22c55e" } },
-    { key: "updated", color: { dark: "#a78bfa", light: "#8b5cf6" } },
+    { key: "updated", color: { dark: "var(--gp-brandalt-400)", light: "var(--gp-brandalt-500)" } },
 ] as const;
 
 // Layout. The chart is RESPONSIVE: buckets stretch to fill the measured

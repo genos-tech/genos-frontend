@@ -507,10 +507,12 @@ export const MentionSuggestionMenu = <T extends DefaultReactSuggestionItem>(
                         py: 0.25,
                         borderRadius: "6px",
                         backgroundColor:
-                            i === selectedIndex ? "rgba(124,58,237,0.12)" : "transparent",
+                            i === selectedIndex
+                                ? "rgba(var(--gp-brand-700-rgb), 0.12)"
+                                : "transparent",
                         transition: "background-color 0.1s ease",
                         "&:hover": {
-                            backgroundColor: "rgba(124,58,237,0.08)",
+                            backgroundColor: "rgba(var(--gp-brand-700-rgb), 0.08)",
                         },
                     }}
                     onClick={() => onItemClick?.(item)}

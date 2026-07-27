@@ -29,17 +29,17 @@ export const TaskTableListItem = (props: TaskTableListItemProps) => {
                     transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                     "&:hover": {
                         backgroundColor: isDark
-                            ? "rgba(124,58,237,0.06)"
-                            : "rgba(124,58,237,0.04)",
+                            ? "rgba(var(--gp-brand-700-rgb), 0.06)"
+                            : "rgba(var(--gp-brand-700-rgb), 0.04)",
                     },
                     "&.Mui-selected": {
                         backgroundColor: isDark
-                            ? "rgba(124,58,237, 0.15)"
-                            : "rgba(124,58,237,0.1)",
+                            ? "rgba(var(--gp-brand-700-rgb), 0.15)"
+                            : "rgba(var(--gp-brand-700-rgb), 0.1)",
                         "&:hover": {
                             backgroundColor: isDark
-                                ? "rgba(124,58,237,0.2)"
-                                : "rgba(124,58,237,0.15)",
+                                ? "rgba(var(--gp-brand-700-rgb), 0.2)"
+                                : "rgba(var(--gp-brand-700-rgb), 0.15)",
                         },
                     },
                 }}
@@ -58,8 +58,8 @@ export const TaskTableListItem = (props: TaskTableListItemProps) => {
                         alignItems: "center",
                         justifyContent: "center",
                         backgroundColor: isDark
-                            ? "rgba(124,58,237,0.08)"
-                            : "rgba(124,58,237,0.05)",
+                            ? "rgba(var(--gp-brand-700-rgb), 0.08)"
+                            : "rgba(var(--gp-brand-700-rgb), 0.05)",
                         transition: "all 0.2s ease",
                     }}
                 >

@@ -106,10 +106,18 @@ export const TimelineView = ({
         return () => window.clearInterval(id);
     }, []);
 
-    const accent = isDark ? "rgba(124,58,237,0.85)" : "rgba(124,58,237,1)";
-    const eventBlue = isDark ? "rgba(124,58,237,0.32)" : "rgba(124,58,237,0.16)";
-    const eventBlueHover = isDark ? "rgba(124,58,237,0.45)" : "rgba(124,58,237,0.28)";
-    const eventBorder = isDark ? "rgba(124,58,237,0.7)" : "rgba(124,58,237,0.55)";
+    const accent = isDark
+        ? "rgba(var(--gp-brand-700-rgb), 0.85)"
+        : "rgba(var(--gp-brand-700-rgb), 1)";
+    const eventBlue = isDark
+        ? "rgba(var(--gp-brand-700-rgb), 0.32)"
+        : "rgba(var(--gp-brand-700-rgb), 0.16)";
+    const eventBlueHover = isDark
+        ? "rgba(var(--gp-brand-700-rgb), 0.45)"
+        : "rgba(var(--gp-brand-700-rgb), 0.28)";
+    const eventBorder = isDark
+        ? "rgba(var(--gp-brand-700-rgb), 0.7)"
+        : "rgba(var(--gp-brand-700-rgb), 0.55)";
     const eventGreen = isDark ? "rgba(34,197,94,0.32)" : "rgba(34,197,94,0.18)";
     const eventGreenBorder = isDark ? "rgba(34,197,94,0.7)" : "rgba(34,197,94,0.55)";
     const gridLine = isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)";

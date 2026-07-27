@@ -182,7 +182,10 @@ export const TaskVelocitySection = ({
                 >
                     <Stack alignItems="center" direction="row" spacing={1}>
                         <TrendingUpRoundedIcon
-                            sx={{ fontSize: 18, color: isDark ? "#a78bfa" : "#7c3aed" }}
+                            sx={{
+                                fontSize: 18,
+                                color: isDark ? "var(--gp-brandalt-400)" : "var(--gp-brand-700)",
+                            }}
                         />
                         <Box>
                             <Typography

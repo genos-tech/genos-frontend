@@ -188,7 +188,7 @@ export const TaskNodeCard = memo((props: NodeProps) => {
     // without nudging layout. Combined with whatever existing glow the
     // card already has so root + current cards still show their glow.
     const currentRing = isCurrentPreview
-        ? `0 0 0 2px ${alpha(P.accent, isDark ? 0.85 : 0.7)}, 0 0 22px ${alpha(P.accent, isDark ? 0.35 : 0.25)}`
+        ? `0 0 0 2px ${P.accentRingStrong}, 0 0 22px ${P.accentRingSoft}`
         : null;
     // "Assigned to viewer" ring — same additive box-shadow trick as
     // `currentRing`, but amber. Skipped when the card is already the

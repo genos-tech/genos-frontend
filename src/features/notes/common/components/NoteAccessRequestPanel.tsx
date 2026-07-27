@@ -69,12 +69,14 @@ export const NoteAccessRequestPanel = ({
                     p: 4,
                     borderRadius: "16px",
                     border: "1px solid",
-                    borderColor: isDark ? "rgba(168,85,247,0.2)" : "rgba(124,58,237,0.15)",
+                    borderColor: isDark
+                        ? "rgba(var(--gp-brand-500-rgb), 0.2)"
+                        : "rgba(var(--gp-brand-700-rgb), 0.15)",
                     background: isDark
                         ? "linear-gradient(145deg, rgba(30,30,40,0.95) 0%, rgba(20,20,28,0.98) 100%)"
                         : "linear-gradient(145deg, rgba(255,255,255,0.98) 0%, rgba(250,248,255,1) 100%)",
                     boxShadow: isDark
-                        ? "0 25px 50px -12px rgba(0,0,0,0.5), 0 0 40px rgba(168,85,247,0.1)"
+                        ? "0 25px 50px -12px rgba(0,0,0,0.5), 0 0 40px rgba(var(--gp-brand-500-rgb), 0.1)"
                         : "0 25px 50px -12px rgba(15,15,30,0.15)",
                 }}
             >
@@ -88,10 +90,12 @@ export const NoteAccessRequestPanel = ({
                         height: 56,
                         borderRadius: "14px",
                         background: isDark
-                            ? "linear-gradient(135deg, rgba(168,85,247,0.15) 0%, rgba(139,92,246,0.15) 100%)"
-                            : "linear-gradient(135deg, rgba(168,85,247,0.12) 0%, rgba(124,58,237,0.12) 100%)",
+                            ? "linear-gradient(135deg, rgba(var(--gp-brand-500-rgb), 0.15) 0%, rgba(var(--gp-brandalt-500-rgb), 0.15) 100%)"
+                            : "linear-gradient(135deg, rgba(var(--gp-brand-500-rgb), 0.12) 0%, rgba(var(--gp-brand-700-rgb), 0.12) 100%)",
                         border: "1px solid",
-                        borderColor: isDark ? "rgba(168,85,247,0.25)" : "rgba(124,58,237,0.2)",
+                        borderColor: isDark
+                            ? "rgba(var(--gp-brand-500-rgb), 0.25)"
+                            : "rgba(var(--gp-brand-700-rgb), 0.2)",
                         mx: "auto",
                         mb: 2,
                     }}
@@ -99,14 +103,18 @@ export const NoteAccessRequestPanel = ({
                     {sent ? (
                         <MarkEmailReadRoundedIcon
                             sx={{
-                                color: isDark ? "rgba(168,85,247,0.9)" : "#7c3aed",
+                                color: isDark
+                                    ? "rgba(var(--gp-brand-500-rgb), 0.9)"
+                                    : "var(--gp-brand-700)",
                                 fontSize: 28,
                             }}
                         />
                     ) : (
                         <StickyNote2RoundedIcon
                             sx={{
-                                color: isDark ? "rgba(168,85,247,0.9)" : "#7c3aed",
+                                color: isDark
+                                    ? "rgba(var(--gp-brand-500-rgb), 0.9)"
+                                    : "var(--gp-brand-700)",
                                 fontSize: 28,
                             }}
                         />
@@ -125,14 +133,18 @@ export const NoteAccessRequestPanel = ({
                 >
                     <LockOutlineIcon
                         sx={{
-                            color: isDark ? "rgba(168,85,247,0.7)" : "rgba(124,58,237,0.7)",
+                            color: isDark
+                                ? "rgba(var(--gp-brand-500-rgb), 0.7)"
+                                : "rgba(var(--gp-brand-700-rgb), 0.7)",
                             fontSize: 16,
                         }}
                     />
                     <Typography
                         level="body-xs"
                         sx={{
-                            color: isDark ? "rgba(168,85,247,0.8)" : "rgba(124,58,237,0.8)",
+                            color: isDark
+                                ? "rgba(var(--gp-brand-500-rgb), 0.8)"
+                                : "rgba(var(--gp-brand-700-rgb), 0.8)",
                             textTransform: "uppercase",
                             letterSpacing: "0.1em",
                         }}
@@ -179,15 +191,16 @@ export const NoteAccessRequestPanel = ({
                     <Button
                         endDecorator={<SendIcon sx={{ fontSize: 16 }} />}
                         sx={{
-                            background: "linear-gradient(135deg, #a855f7 0%, #8b5cf6 100%)",
+                            background:
+                                "linear-gradient(135deg, var(--gp-brand-500) 0%, var(--gp-brandalt-500) 100%)",
                             borderRadius: "10px",
                             px: 3,
                             fontWeight: 600,
-                            boxShadow: "0 4px 15px rgba(168,85,247,0.3)",
+                            boxShadow: "0 4px 15px rgba(var(--gp-brand-500-rgb), 0.3)",
                             transition: "all 0.2s ease",
                             "&:hover": {
                                 transform: "translateY(-1px)",
-                                boxShadow: "0 6px 20px rgba(168,85,247,0.4)",
+                                boxShadow: "0 6px 20px rgba(var(--gp-brand-500-rgb), 0.4)",
                             },
                         }}
                         onClick={handleSend}

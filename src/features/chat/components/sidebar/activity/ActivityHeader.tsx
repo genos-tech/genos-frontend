@@ -148,11 +148,11 @@ export const ActivityHeader: React.FC<ActivityHeaderProps> = ({
                             height: 8,
                             borderRadius: "50%",
                             background: isDark
-                                ? "linear-gradient(135deg, #a78bfa 0%, #c084fc 100%)"
-                                : "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)",
+                                ? "linear-gradient(135deg, var(--gp-brandalt-400) 0%, var(--gp-brand-400) 100%)"
+                                : "linear-gradient(135deg, var(--gp-brand-700) 0%, var(--gp-brand-800) 100%)",
                             boxShadow: isDark
-                                ? "0 0 8px rgba(167,139,250,0.5)"
-                                : "0 0 8px rgba(124,58,237,0.4)",
+                                ? "0 0 8px rgba(var(--gp-brandalt-400-rgb), 0.5)"
+                                : "0 0 8px rgba(var(--gp-brand-700-rgb), 0.4)",
                             flexShrink: 0,
                         }}
                     />

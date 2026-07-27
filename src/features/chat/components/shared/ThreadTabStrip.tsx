@@ -79,13 +79,13 @@ export const ThreadTabStrip = ({ value, onChange }: ThreadTabStripProps) => {
                             cursor: "pointer",
                             background: active
                                 ? isDark
-                                    ? "rgba(139,92,246,0.18)"
-                                    : "rgba(124,58,237,0.12)"
+                                    ? "rgba(var(--gp-brandalt-500-rgb), 0.18)"
+                                    : "rgba(var(--gp-brand-700-rgb), 0.12)"
                                 : "transparent",
                             color: active
                                 ? isDark
-                                    ? "#a78bfa"
-                                    : "#7c3aed"
+                                    ? "var(--gp-brandalt-400)"
+                                    : "var(--gp-brand-700)"
                                 : isDark
                                   ? "rgba(255,255,255,0.6)"
                                   : "rgba(0,0,0,0.6)",
@@ -98,8 +98,8 @@ export const ThreadTabStrip = ({ value, onChange }: ThreadTabStripProps) => {
                             "&:hover": {
                                 background: active
                                     ? isDark
-                                        ? "rgba(139,92,246,0.24)"
-                                        : "rgba(124,58,237,0.18)"
+                                        ? "rgba(var(--gp-brandalt-500-rgb), 0.24)"
+                                        : "rgba(var(--gp-brand-700-rgb), 0.18)"
                                     : isDark
                                       ? "rgba(255,255,255,0.06)"
                                       : "rgba(0,0,0,0.04)",

@@ -99,7 +99,7 @@ export const DiagramLegend = () => {
                                 sx={{
                                     width: 28,
                                     height: 2,
-                                    background: "#7c3aed",
+                                    background: "var(--gp-brand-700)",
                                     borderRadius: 1,
                                     flexShrink: 0,
                                 }}

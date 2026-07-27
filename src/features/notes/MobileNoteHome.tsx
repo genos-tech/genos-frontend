@@ -48,7 +48,7 @@ const MobileOverlay = ({
                 inset: 0,
                 zIndex: 1300,
                 background: isDark
-                    ? "linear-gradient(180deg, rgba(20,14,34,1) 0%, rgba(11,10,22,1) 100%)"
+                    ? "linear-gradient(180deg, rgba(var(--gp-dark-surface-b-rgb), 1) 0%, rgba(11,10,22,1) 100%)"
                     : "linear-gradient(180deg, rgba(252,250,255,1) 0%, rgba(248,245,255,1) 100%)",
                 display: "flex",
                 flexDirection: "column",
@@ -176,7 +176,9 @@ export const MobileNoteHome = (props: MobileNoteHomeProps) => {
                             py: 0.75,
                             borderBottom: "1px solid",
                             borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
-                            background: isDark ? "rgba(20,14,34,0.85)" : "rgba(252,250,255,0.85)",
+                            background: isDark
+                                ? "rgba(var(--gp-dark-surface-b-rgb), 0.85)"
+                                : "rgba(252,250,255,0.85)",
                             backdropFilter: "blur(8px)",
                             minHeight: "56px",
                             flexShrink: 0,

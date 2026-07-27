@@ -649,9 +649,9 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                                         fontWeight: 500,
                                         fontSize: "0.7rem",
                                         color: isDark
-                                            ? "rgba(243, 232, 255, 0.6)"
+                                            ? "rgba(var(--gp-brand-100-rgb), 0.6)"
                                             : isSent
-                                              ? "rgba(59, 7, 100, 0.55)"
+                                              ? "rgba(var(--gp-brand-950-rgb), 0.55)"
                                               : "rgba(17, 24, 39, 0.55)",
                                         letterSpacing: "0.02em",
                                     }}

@@ -116,23 +116,25 @@ export const BubbleUnderBar = (props: BubbleUnderBarTypes) => {
                             flexShrink: 0,
                             borderRadius: "8px",
                             border: "1px solid",
-                            borderColor: isDark ? "rgba(124,58,237,0.3)" : "rgba(124,58,237,0.25)",
+                            borderColor: isDark
+                                ? "rgba(var(--gp-brand-700-rgb), 0.3)"
+                                : "rgba(var(--gp-brand-700-rgb), 0.25)",
                             background: isDark
-                                ? "linear-gradient(135deg, rgba(124,58,237,0.15) 0%, rgba(124,58,237,0.08) 100%)"
-                                : "linear-gradient(135deg, rgba(124,58,237,0.12) 0%, rgba(124,58,237,0.05) 100%)",
+                                ? "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.15) 0%, rgba(var(--gp-brand-700-rgb), 0.08) 100%)"
+                                : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.12) 0%, rgba(var(--gp-brand-700-rgb), 0.05) 100%)",
                             cursor: "pointer",
                             transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                             "&:hover": {
                                 background: isDark
-                                    ? "linear-gradient(135deg, rgba(124,58,237,0.25) 0%, rgba(124,58,237,0.15) 100%)"
-                                    : "linear-gradient(135deg, rgba(124,58,237,0.2) 0%, rgba(124,58,237,0.1) 100%)",
+                                    ? "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.25) 0%, rgba(var(--gp-brand-700-rgb), 0.15) 100%)"
+                                    : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.2) 0%, rgba(var(--gp-brand-700-rgb), 0.1) 100%)",
                                 borderColor: isDark
-                                    ? "rgba(124,58,237,0.5)"
-                                    : "rgba(124,58,237,0.4)",
+                                    ? "rgba(var(--gp-brand-700-rgb), 0.5)"
+                                    : "rgba(var(--gp-brand-700-rgb), 0.4)",
                                 transform: "translateY(-1px)",
                                 boxShadow: isDark
-                                    ? "0 3px 10px rgba(124,58,237,0.2)"
-                                    : "0 3px 10px rgba(124,58,237,0.15)",
+                                    ? "0 3px 10px rgba(var(--gp-brand-700-rgb), 0.2)"
+                                    : "0 3px 10px rgba(var(--gp-brand-700-rgb), 0.15)",
                             },
                             "&:active": {
                                 transform: "translateY(0)",
@@ -145,7 +147,7 @@ export const BubbleUnderBar = (props: BubbleUnderBarTypes) => {
                             sx={{
                                 fontWeight: 600,
                                 fontSize: "0.7rem",
-                                color: isDark ? "#a78bfa" : "#6d28d9",
+                                color: isDark ? "var(--gp-brandalt-400)" : "var(--gp-brand-800)",
                                 letterSpacing: "0.01em",
                             }}
                         >

@@ -1171,8 +1171,8 @@ export const TaskHomeContent = ({
                                     alignItems: "center",
                                     justifyContent: "center",
                                     background: isDark
-                                        ? "linear-gradient(135deg, rgba(59,130,246,0.2) 0%, rgba(124,58,237,0.2) 100%)"
-                                        : "linear-gradient(135deg, rgba(59,130,246,0.15) 0%, rgba(124,58,237,0.15) 100%)",
+                                        ? "linear-gradient(135deg, rgba(59,130,246,0.2) 0%, rgba(var(--gp-brand-700-rgb), 0.2) 100%)"
+                                        : "linear-gradient(135deg, rgba(59,130,246,0.15) 0%, rgba(var(--gp-brand-700-rgb), 0.15) 100%)",
                                 }}
                             >
                                 <TrendingUpRoundedIcon
@@ -1404,21 +1404,25 @@ export const TaskHomeContent = ({
                                                 minWidth: { xs: 0, sm: 220 },
                                                 width: { xs: "100%", sm: "auto" },
                                                 fontWeight: 600,
-                                                color: isDark ? "#a78bfa" : "#7c3aed",
+                                                color: isDark
+                                                    ? "var(--gp-brandalt-400)"
+                                                    : "var(--gp-brand-700)",
                                                 backgroundColor: isDark
-                                                    ? "rgba(124,58,237,0.1)"
-                                                    : "rgba(124,58,237,0.08)",
+                                                    ? "rgba(var(--gp-brand-700-rgb), 0.1)"
+                                                    : "rgba(var(--gp-brand-700-rgb), 0.08)",
                                                 border: "1px solid",
                                                 borderColor: isDark
-                                                    ? "rgba(124,58,237,0.3)"
-                                                    : "rgba(124,58,237,0.2)",
+                                                    ? "rgba(var(--gp-brand-700-rgb), 0.3)"
+                                                    : "rgba(var(--gp-brand-700-rgb), 0.2)",
                                                 "&:hover": {
                                                     backgroundColor: isDark
-                                                        ? "rgba(124,58,237,0.15)"
-                                                        : "rgba(124,58,237,0.12)",
+                                                        ? "rgba(var(--gp-brand-700-rgb), 0.15)"
+                                                        : "rgba(var(--gp-brand-700-rgb), 0.12)",
                                                 },
                                                 "& .MuiSelect-indicator": {
-                                                    color: isDark ? "#a78bfa" : "#7c3aed",
+                                                    color: isDark
+                                                        ? "var(--gp-brandalt-400)"
+                                                        : "var(--gp-brand-700)",
                                                 },
                                             }}
                                             onChange={(_, value) => {
@@ -1609,15 +1613,19 @@ export const TaskHomeContent = ({
                                                         : "rgba(0,0,0,0.7)",
                                                 },
                                                 [`&.${tabClasses.selected}`]: {
-                                                    color: isDark ? "#a78bfa" : "#7c3aed",
+                                                    color: isDark
+                                                        ? "var(--gp-brandalt-400)"
+                                                        : "var(--gp-brand-700)",
                                                     fontWeight: 600,
                                                     bgcolor: isDark
-                                                        ? "rgba(139,92,246,0.1)"
-                                                        : "rgba(124,58,237,0.08)",
+                                                        ? "rgba(var(--gp-brandalt-500-rgb), 0.1)"
+                                                        : "rgba(var(--gp-brand-700-rgb), 0.08)",
                                                     "&::after": {
                                                         height: "2px",
                                                         borderRadius: "2px 2px 0 0",
-                                                        bgcolor: isDark ? "#a78bfa" : "#7c3aed",
+                                                        bgcolor: isDark
+                                                            ? "var(--gp-brandalt-400)"
+                                                            : "var(--gp-brand-700)",
                                                     },
                                                 },
                                             },
@@ -1647,16 +1655,16 @@ export const TaskHomeContent = ({
                                                         background:
                                                             activeTab === "mytasks"
                                                                 ? isDark
-                                                                    ? "rgba(139,92,246,0.2)"
-                                                                    : "rgba(124,58,237,0.15)"
+                                                                    ? "rgba(var(--gp-brandalt-500-rgb), 0.2)"
+                                                                    : "rgba(var(--gp-brand-700-rgb), 0.15)"
                                                                 : isDark
                                                                   ? "rgba(255,255,255,0.08)"
                                                                   : "rgba(0,0,0,0.06)",
                                                         color:
                                                             activeTab === "mytasks"
                                                                 ? isDark
-                                                                    ? "#a78bfa"
-                                                                    : "#7c3aed"
+                                                                    ? "var(--gp-brandalt-400)"
+                                                                    : "var(--gp-brand-700)"
                                                                 : isDark
                                                                   ? "rgba(255,255,255,0.5)"
                                                                   : "rgba(0,0,0,0.5)",
@@ -1724,13 +1732,13 @@ export const TaskHomeContent = ({
                                         sx={{
                                             flex: { xs: 1, md: "none" },
                                             background: isDark
-                                                ? "rgba(147,51,234,0.1)"
-                                                : "rgba(147,51,234,0.07)",
-                                            color: "#a855f7",
+                                                ? "rgba(var(--gp-brand-600-rgb), 0.1)"
+                                                : "rgba(var(--gp-brand-600-rgb), 0.07)",
+                                            color: "var(--gp-brand-500)",
                                             "&:hover": {
                                                 background: isDark
-                                                    ? "rgba(147,51,234,0.18)"
-                                                    : "rgba(147,51,234,0.14)",
+                                                    ? "rgba(var(--gp-brand-600-rgb), 0.18)"
+                                                    : "rgba(var(--gp-brand-600-rgb), 0.14)",
                                             },
                                         }}
                                         onClick={handleGoToBoard}
@@ -1786,11 +1794,11 @@ export const TaskHomeContent = ({
                                                                 variant="soft"
                                                                 sx={{
                                                                     backgroundColor: isDark
-                                                                        ? "rgba(124,58,237,0.15)"
-                                                                        : "rgba(124,58,237,0.1)",
+                                                                        ? "rgba(var(--gp-brand-700-rgb), 0.15)"
+                                                                        : "rgba(var(--gp-brand-700-rgb), 0.1)",
                                                                     color: isDark
-                                                                        ? "#a78bfa"
-                                                                        : "#7c3aed",
+                                                                        ? "var(--gp-brandalt-400)"
+                                                                        : "var(--gp-brand-700)",
                                                                 }}
                                                             >
                                                                 {selectedSprint.name}
@@ -1855,9 +1863,9 @@ export const TaskHomeContent = ({
                                                     }
                                                     sx={{
                                                         backgroundColor: isDark
-                                                            ? "rgba(147,51,234,0.12)"
-                                                            : "rgba(147,51,234,0.1)",
-                                                        color: "#a855f7",
+                                                            ? "rgba(var(--gp-brand-600-rgb), 0.12)"
+                                                            : "rgba(var(--gp-brand-600-rgb), 0.1)",
+                                                        color: "var(--gp-brand-500)",
                                                     }}
                                                 >
                                                     {sprintStats.milestones} Milestones
@@ -2294,12 +2302,12 @@ export const TaskHomeContent = ({
                                                         py: 1,
                                                         borderRadius: "10px",
                                                         background: isDark
-                                                            ? "rgba(139,92,246,0.12)"
-                                                            : "rgba(124,58,237,0.08)",
+                                                            ? "rgba(var(--gp-brandalt-500-rgb), 0.12)"
+                                                            : "rgba(var(--gp-brand-700-rgb), 0.08)",
                                                         border: "1px solid",
                                                         borderColor: isDark
-                                                            ? "rgba(139,92,246,0.3)"
-                                                            : "rgba(124,58,237,0.2)",
+                                                            ? "rgba(var(--gp-brandalt-500-rgb), 0.3)"
+                                                            : "rgba(var(--gp-brand-700-rgb), 0.2)",
                                                     }}
                                                 >
                                                     {/* Clickable: opens the member's profile
@@ -2324,8 +2332,8 @@ export const TaskHomeContent = ({
                                                             sx={{
                                                                 fontWeight: 700,
                                                                 color: isDark
-                                                                    ? "#a78bfa"
-                                                                    : "#7c3aed",
+                                                                    ? "var(--gp-brandalt-400)"
+                                                                    : "var(--gp-brand-700)",
                                                                 overflow: "hidden",
                                                                 textOverflow: "ellipsis",
                                                                 whiteSpace: "nowrap",
@@ -2381,14 +2389,16 @@ export const TaskHomeContent = ({
                                                 alignItems: "center",
                                                 justifyContent: "center",
                                                 background: isDark
-                                                    ? "rgba(139,92,246,0.1)"
-                                                    : "rgba(124,58,237,0.08)",
+                                                    ? "rgba(var(--gp-brandalt-500-rgb), 0.1)"
+                                                    : "rgba(var(--gp-brand-700-rgb), 0.08)",
                                             }}
                                         >
                                             <GroupsRoundedIcon
                                                 sx={{
                                                     fontSize: 28,
-                                                    color: isDark ? "#a78bfa" : "#7c3aed",
+                                                    color: isDark
+                                                        ? "var(--gp-brandalt-400)"
+                                                        : "var(--gp-brand-700)",
                                                 }}
                                             />
                                         </Box>
@@ -2521,7 +2531,7 @@ export const TaskHomeContent = ({
                                                         {
                                                             label: t.tasks.dashboard.kpiCompletion,
                                                             value: `${focusStats.completionPct}%`,
-                                                            color: "#a78bfa",
+                                                            color: "var(--gp-brandalt-400)",
                                                             icon: (
                                                                 <TrendingUpRoundedIcon
                                                                     sx={{ fontSize: 18 }}
@@ -2674,7 +2684,7 @@ export const TaskHomeContent = ({
                                                                         fontSize: "0.7rem",
                                                                         fontWeight: 600,
                                                                         backgroundColor: active
-                                                                            ? "#7c3aed"
+                                                                            ? "var(--gp-brand-700)"
                                                                             : isDark
                                                                               ? "rgba(255,255,255,0.06)"
                                                                               : "rgba(0,0,0,0.05)",
@@ -2683,7 +2693,7 @@ export const TaskHomeContent = ({
                                                                             : textSecondary,
                                                                         "&:hover": {
                                                                             backgroundColor: active
-                                                                                ? "#6d28d9"
+                                                                                ? "var(--gp-brand-800)"
                                                                                 : isDark
                                                                                   ? "rgba(255,255,255,0.1)"
                                                                                   : "rgba(0,0,0,0.08)",
@@ -3314,7 +3324,7 @@ export const TaskHomeContent = ({
                                         {renderDistributionCard(
                                             t.tasks.dashboard.effortDistribution,
                                             <TrendingUpRoundedIcon
-                                                sx={{ fontSize: 16, color: "#7c3aed" }}
+                                                sx={{ fontSize: 16, color: "var(--gp-brand-700)" }}
                                             />,
                                             effortBreakdown,
                                             effortColors
@@ -3408,7 +3418,7 @@ export const TaskHomeContent = ({
                                                                     fontSize: "0.7rem",
                                                                     fontWeight: 600,
                                                                     backgroundColor: active
-                                                                        ? "#7c3aed"
+                                                                        ? "var(--gp-brand-700)"
                                                                         : isDark
                                                                           ? "rgba(255,255,255,0.06)"
                                                                           : "rgba(0,0,0,0.05)",
@@ -3417,7 +3427,7 @@ export const TaskHomeContent = ({
                                                                         : textSecondary,
                                                                     "&:hover": {
                                                                         backgroundColor: active
-                                                                            ? "#6d28d9"
+                                                                            ? "var(--gp-brand-800)"
                                                                             : isDark
                                                                               ? "rgba(255,255,255,0.1)"
                                                                               : "rgba(0,0,0,0.08)",
@@ -4099,7 +4109,7 @@ export const TaskHomeContent = ({
                                                                     "—",
                                                                 color:
                                                                     tagStats.rows[0]?.tagColor ??
-                                                                    "#a78bfa",
+                                                                    "var(--gp-brandalt-400)",
                                                                 icon: (
                                                                     <FlagRoundedIcon
                                                                         sx={{ fontSize: 18 }}

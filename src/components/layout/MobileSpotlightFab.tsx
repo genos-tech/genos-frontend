@@ -19,6 +19,7 @@ export const MobileSpotlightFab = ({ onOpenSpotlight }: MobileSpotlightFabProps)
     if (!isMobile) return null;
     const isDark = mode === "dark";
     const accent = isDark ? purplePalette.dark.accent : purplePalette.light.accent;
+    const accentRgb = isDark ? purplePalette.dark.accentRgb : purplePalette.light.accentRgb;
 
     return (
         <IconButton
@@ -36,18 +37,18 @@ export const MobileSpotlightFab = ({ onOpenSpotlight }: MobileSpotlightFabProps)
                 width: 38,
                 height: 38,
                 borderRadius: "50%",
-                background: `linear-gradient(135deg, ${accent} 0%, ${accent}cc 100%)`,
+                background: `linear-gradient(135deg, ${accent} 0%, rgba(${accentRgb}, 0.8) 100%)`,
                 color: "#fff",
                 boxShadow: isDark
-                    ? `0 8px 24px ${accent}55, 0 2px 6px rgba(0,0,0,0.4)`
-                    : `0 8px 24px ${accent}55, 0 2px 6px rgba(0,0,0,0.15)`,
+                    ? `0 8px 24px rgba(${accentRgb}, 0.333), 0 2px 6px rgba(0,0,0,0.4)`
+                    : `0 8px 24px rgba(${accentRgb}, 0.333), 0 2px 6px rgba(0,0,0,0.15)`,
                 transition: "transform 0.15s ease, box-shadow 0.15s ease",
                 "&:hover": {
-                    background: `linear-gradient(135deg, ${accent} 0%, ${accent}dd 100%)`,
+                    background: `linear-gradient(135deg, ${accent} 0%, rgba(${accentRgb}, 0.867) 100%)`,
                     transform: "translateY(-2px)",
                     boxShadow: isDark
-                        ? `0 12px 28px ${accent}66, 0 2px 6px rgba(0,0,0,0.5)`
-                        : `0 12px 28px ${accent}66, 0 2px 6px rgba(0,0,0,0.2)`,
+                        ? `0 12px 28px rgba(${accentRgb}, 0.4), 0 2px 6px rgba(0,0,0,0.5)`
+                        : `0 12px 28px rgba(${accentRgb}, 0.4), 0 2px 6px rgba(0,0,0,0.2)`,
                 },
                 "&:active": {
                     transform: "translateY(0)",

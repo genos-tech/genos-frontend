@@ -1,10 +1,10 @@
 import { Box, CssBaseline, GlobalStyles, Typography } from "@mui/joy";
-import { CssVarsProvider, useColorScheme } from "@mui/joy/styles";
+import { useColorScheme } from "@mui/joy/styles";
 import { Outlet } from "react-router-dom";
 
 import { SignInFormStyles } from "../../../components/ui/styles/commonStyle";
 import { fmt, I18nProvider, useTranslation } from "../../../i18n";
-import { purpleTheme } from "../../../theme/purplePalette";
+import { ColorThemeProvider } from "../../../theme/ColorThemeProvider";
 import { AdminHeader } from "./Header";
 
 // Shared chrome for every admin-auth route (sign in, sign up, reset
@@ -63,8 +63,12 @@ const AuthShellInner = () => {
     );
 };
 
+// Signed-out routes follow the saved color theme too — the preference is
+// localStorage, so it's readable before auth, and someone who picked Teal
+// shouldn't get bounced back to purple at the sign-in screen. A brand-new
+// visitor has nothing stored and sees the default.
 export const AuthShell = () => (
-    <CssVarsProvider theme={purpleTheme} disableTransitionOnChange>
+    <ColorThemeProvider>
         <CssBaseline />
         <GlobalStyles
             styles={{
@@ -77,5 +81,5 @@ export const AuthShell = () => (
         <I18nProvider>
             <AuthShellInner />
         </I18nProvider>
-    </CssVarsProvider>
+    </ColorThemeProvider>
 );

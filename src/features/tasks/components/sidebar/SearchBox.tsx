@@ -162,7 +162,7 @@ export const TaskSidebarSearchBox = (props: TaskSidebarSearchBoxProps) => {
                                     isDark ? 0.35 : 0.6
                                 ),
                                 color: isDark
-                                    ? item.status.color || "#a78bfa"
+                                    ? item.status.color || "var(--gp-brandalt-400)"
                                     : item.status.textColor || item.status.color,
                                 border: "1px solid",
                                 borderColor: alpha(
@@ -216,10 +216,12 @@ export const TaskSidebarSearchBox = (props: TaskSidebarSearchBoxProps) => {
                 },
                 "&.Mui-focused": {
                     background: isDark ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.9)",
-                    borderColor: isDark ? "rgba(139,92,246,0.4)" : "rgba(124,58,237,0.3)",
+                    borderColor: isDark
+                        ? "rgba(var(--gp-brandalt-500-rgb), 0.4)"
+                        : "rgba(var(--gp-brand-700-rgb), 0.3)",
                     boxShadow: isDark
-                        ? "0 0 0 3px rgba(139,92,246,0.15)"
-                        : "0 0 0 3px rgba(124,58,237,0.1)",
+                        ? "0 0 0 3px rgba(var(--gp-brandalt-500-rgb), 0.15)"
+                        : "0 0 0 3px rgba(var(--gp-brand-700-rgb), 0.1)",
                 },
                 "& .MuiAutocomplete-input": {
                     fontSize: "0.85rem",

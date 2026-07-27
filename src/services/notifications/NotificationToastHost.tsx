@@ -73,8 +73,8 @@ export const NotificationToastHost = ({
                 // still drives the text / icon tint.
                 backgroundColor: isDark ? "#1f1d2c" : "#ffffff",
                 border: isDark
-                    ? "1px solid rgba(167,139,250,0.25)"
-                    : "1px solid rgba(124,58,237,0.18)",
+                    ? "1px solid rgba(var(--gp-brandalt-400-rgb), 0.25)"
+                    : "1px solid rgba(var(--gp-brand-700-rgb), 0.18)",
                 backdropFilter: "none",
             }}
             onClose={(_event, reason) => {

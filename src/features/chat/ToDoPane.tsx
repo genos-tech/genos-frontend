@@ -228,12 +228,17 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                 alignItems: "center",
                                 justifyContent: "center",
                                 background: isDark
-                                    ? "linear-gradient(135deg, rgba(124,58,237,0.2) 0%, rgba(139,92,246,0.2) 100%)"
-                                    : "linear-gradient(135deg, rgba(124,58,237,0.12) 0%, rgba(139,92,246,0.12) 100%)",
+                                    ? "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.2) 0%, rgba(var(--gp-brandalt-500-rgb), 0.2) 100%)"
+                                    : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.12) 0%, rgba(var(--gp-brandalt-500-rgb), 0.12) 100%)",
                             }}
                         >
                             <TaskAltRoundedIcon
-                                sx={{ fontSize: 20, color: isDark ? "#a78bfa" : "#7c3aed" }}
+                                sx={{
+                                    fontSize: 20,
+                                    color: isDark
+                                        ? "var(--gp-brandalt-400)"
+                                        : "var(--gp-brand-700)",
+                                }}
                             />
                         </Box>
                         <Stack spacing={0}>
@@ -273,13 +278,13 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                     fontWeight: 600,
                                     gap: 0.5,
                                     background: isDark
-                                        ? "linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%)"
-                                        : "linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%)",
+                                        ? "linear-gradient(135deg, var(--gp-brand-700) 0%, var(--gp-brandalt-500) 100%)"
+                                        : "linear-gradient(135deg, var(--gp-brand-700) 0%, var(--gp-brandalt-500) 100%)",
                                     color: "#fff",
                                     "&:hover": {
                                         background: isDark
-                                            ? "linear-gradient(135deg, #6d28d9 0%, #7c3aed 100%)"
-                                            : "linear-gradient(135deg, #6d28d9 0%, #7c3aed 100%)",
+                                            ? "linear-gradient(135deg, var(--gp-brand-800) 0%, var(--gp-brand-700) 100%)"
+                                            : "linear-gradient(135deg, var(--gp-brand-800) 0%, var(--gp-brand-700) 100%)",
                                     },
                                 }}
                                 onClick={handleCreateTodayGroup}
@@ -396,10 +401,12 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                         px: 2.5,
                         py: 2,
                         borderTop: "1px solid",
-                        borderColor: isDark ? "rgba(124,58,237,0.15)" : "rgba(124,58,237,0.1)",
+                        borderColor: isDark
+                            ? "rgba(var(--gp-brand-700-rgb), 0.15)"
+                            : "rgba(var(--gp-brand-700-rgb), 0.1)",
                         background: isDark
-                            ? "linear-gradient(135deg, rgba(124,58,237,0.08) 0%, rgba(168,85,247,0.08) 100%)"
-                            : "linear-gradient(135deg, rgba(124,58,237,0.06) 0%, rgba(168,85,247,0.06) 100%)",
+                            ? "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.08) 0%, rgba(var(--gp-brand-500-rgb), 0.08) 100%)"
+                            : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.06) 0%, rgba(var(--gp-brand-500-rgb), 0.06) 100%)",
                     }}
                 >
                     <Stack alignItems="center" direction="row" spacing={2}>
@@ -413,12 +420,17 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                 justifyContent: "center",
                                 flexShrink: 0,
                                 backgroundColor: isDark
-                                    ? "rgba(124,58,237,0.15)"
-                                    : "rgba(124,58,237,0.1)",
+                                    ? "rgba(var(--gp-brand-700-rgb), 0.15)"
+                                    : "rgba(var(--gp-brand-700-rgb), 0.1)",
                             }}
                         >
                             <TipsAndUpdatesRoundedIcon
-                                sx={{ fontSize: 22, color: isDark ? "#a78bfa" : "#7c3aed" }}
+                                sx={{
+                                    fontSize: 22,
+                                    color: isDark
+                                        ? "var(--gp-brandalt-400)"
+                                        : "var(--gp-brand-700)",
+                                }}
                             />
                         </Box>
                         <Box sx={{ flex: 1, minWidth: 0 }}>

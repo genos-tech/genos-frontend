@@ -45,11 +45,11 @@ const ENTITY_ICON_GRADIENT: Record<string, string> = {
     // the task diagram's milestone node border).
     milestone: "linear-gradient(135deg, #f59e0b 0%, #ea580c 100%)",
     note: "linear-gradient(135deg, #818cf8 0%, #6366f1 100%)",
-    project: "linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%)",
-    todo: "linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%)",
+    project: "linear-gradient(135deg, var(--gp-brandalt-400) 0%, var(--gp-brand-700) 100%)",
+    todo: "linear-gradient(135deg, var(--gp-brandalt-400) 0%, var(--gp-brand-700) 100%)",
     // Distinct violet→pink so a "Previous answer" row reads differently
     // from the live workspace entities above.
-    spotlight_answer: "linear-gradient(135deg, #c084fc 0%, #db2777 100%)",
+    spotlight_answer: "linear-gradient(135deg, var(--gp-brand-400) 0%, #db2777 100%)",
 };
 
 // Dark-mode text colors tuned for the translucent purple sheet behind
@@ -278,8 +278,8 @@ const SpotlightResultItemInner = ({ result, query, isHighlighted, onSelect }: Pr
                 border: "1px solid transparent",
                 background: isHighlighted
                     ? isDark
-                        ? "rgba(124,58,237,0.12)"
-                        : "rgba(124,58,237,0.06)"
+                        ? "rgba(var(--gp-brand-700-rgb), 0.12)"
+                        : "rgba(var(--gp-brand-700-rgb), 0.06)"
                     : "transparent",
                 cursor: "pointer",
                 textAlign: "left",

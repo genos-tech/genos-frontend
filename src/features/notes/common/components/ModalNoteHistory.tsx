@@ -265,14 +265,14 @@ export const ModalNoteHistory = ({
                                                 border: `1px solid ${
                                                     isSelected
                                                         ? isDark
-                                                            ? "rgba(124,58,237,0.4)"
-                                                            : "rgba(124,58,237,0.3)"
+                                                            ? "rgba(var(--gp-brand-700-rgb), 0.4)"
+                                                            : "rgba(var(--gp-brand-700-rgb), 0.3)"
                                                         : "transparent"
                                                 }`,
                                                 background: isSelected
                                                     ? isDark
-                                                        ? "rgba(124,58,237,0.12)"
-                                                        : "rgba(124,58,237,0.08)"
+                                                        ? "rgba(var(--gp-brand-700-rgb), 0.12)"
+                                                        : "rgba(var(--gp-brand-700-rgb), 0.08)"
                                                     : "transparent",
                                                 color: "inherit",
                                                 cursor: "pointer",
@@ -283,8 +283,8 @@ export const ModalNoteHistory = ({
                                                 "&:hover": {
                                                     background: isSelected
                                                         ? isDark
-                                                            ? "rgba(124,58,237,0.16)"
-                                                            : "rgba(124,58,237,0.1)"
+                                                            ? "rgba(var(--gp-brand-700-rgb), 0.16)"
+                                                            : "rgba(var(--gp-brand-700-rgb), 0.1)"
                                                         : isDark
                                                           ? "rgba(255,255,255,0.04)"
                                                           : "rgba(0,0,0,0.03)",

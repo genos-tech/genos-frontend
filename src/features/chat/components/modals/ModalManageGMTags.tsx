@@ -178,7 +178,10 @@ export const ModalManageGMTags = ({ open, setOpen }: ModalManageGMTagsProps) => 
                 <Stack alignItems="center" direction="row" justifyContent="space-between">
                     <Stack alignItems="center" direction="row" spacing={1}>
                         <LabelOutlinedIcon
-                            sx={{ color: isDark ? "#a78bfa" : "#7c3aed", fontSize: 20 }}
+                            sx={{
+                                color: isDark ? "var(--gp-brandalt-400)" : "var(--gp-brand-700)",
+                                fontSize: 20,
+                            }}
                         />
                         <Typography level="title-md" sx={{ fontWeight: 700 }}>
                             {t.chat.gmTags.manageTitle}
@@ -293,8 +296,8 @@ export const ModalManageGMTags = ({ open, setOpen }: ModalManageGMTagsProps) => 
                                         sx={{
                                             color: tag.isDefaultVisible
                                                 ? isDark
-                                                    ? "#a78bfa"
-                                                    : "#7c3aed"
+                                                    ? "var(--gp-brandalt-400)"
+                                                    : "var(--gp-brand-700)"
                                                 : undefined,
                                         }}
                                         onClick={() =>

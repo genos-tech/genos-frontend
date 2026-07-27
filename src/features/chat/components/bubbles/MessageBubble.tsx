@@ -779,8 +779,8 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
                                             ? `0 4px 20px rgba(34,197,94,0.2), inset 0 1px 0 rgba(255,255,255,0.05)`
                                             : `0 4px 20px rgba(22,163,74,0.15)`
                                         : isDark
-                                          ? `0 4px 20px rgba(124,58,237,0.2), inset 0 1px 0 rgba(255,255,255,0.05)`
-                                          : `0 4px 20px rgba(124,58,237,0.15)`
+                                          ? `0 4px 20px rgba(var(--gp-brand-700-rgb), 0.2), inset 0 1px 0 rgba(255,255,255,0.05)`
+                                          : `0 4px 20px rgba(var(--gp-brand-700-rgb), 0.15)`
                                     : isDark
                                       ? "0 2px 8px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.03)"
                                       : "0 2px 8px rgba(0,0,0,0.06)",

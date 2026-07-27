@@ -460,7 +460,10 @@ export const UserProfileStatus = ({
                 )}
             </Typography>
             {isSelfView && nameError && (
-                <Typography level="body-xs" sx={{ color: "rgba(232,121,195,0.9)", mt: 0.5 }}>
+                <Typography
+                    level="body-xs"
+                    sx={{ color: "rgba(var(--gp-tint-danger-rgb), 0.9)", mt: 0.5 }}
+                >
                     {nameError}
                 </Typography>
             )}

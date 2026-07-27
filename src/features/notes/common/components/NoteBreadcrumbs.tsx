@@ -73,11 +73,11 @@ const colorSchemes = {
     },
     danger: {
         // Palette dangerTint family (purple-pink). Currently unused preset.
-        bg: "linear-gradient(135deg, rgba(232,121,195,0.12) 0%, rgba(192,38,168,0.08) 100%)",
-        iconBg: "linear-gradient(135deg, #e879c3 0%, #c026a8 100%)",
-        text: "#c026a8",
-        hoverBg: "rgba(232,121,195,0.08)",
-        activeBg: "rgba(232,121,195,0.15)",
+        bg: "linear-gradient(135deg, rgba(var(--gp-tint-danger-rgb), 0.12) 0%, rgba(var(--gp-tint-danger-alt-rgb), 0.08) 100%)",
+        iconBg: "linear-gradient(135deg, var(--gp-tint-danger) 0%, var(--gp-tint-danger-alt) 100%)",
+        text: "var(--gp-tint-danger-alt)",
+        hoverBg: "rgba(var(--gp-tint-danger-rgb), 0.08)",
+        activeBg: "rgba(var(--gp-tint-danger-rgb), 0.15)",
     },
     neutral: {
         bg: "linear-gradient(135deg, rgba(107,114,128,0.12) 0%, rgba(75,85,99,0.08) 100%)",

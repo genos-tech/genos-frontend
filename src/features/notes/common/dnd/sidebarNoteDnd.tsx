@@ -179,7 +179,7 @@ export const DroppableNoteList = ({ containerId, kind, children }: DroppableNote
                     borderRadius: "8px",
                     transition: "background-color 0.15s ease",
                     backgroundColor: snapshot.isDraggingOver
-                        ? "rgba(124,58,237,0.08)"
+                        ? "rgba(var(--gp-brand-700-rgb), 0.08)"
                         : "transparent",
                 }}
             >
@@ -209,7 +209,9 @@ export const DraggableNoteRow = ({ kind, noteId, index, children }: DraggableNot
                 sx={{
                     opacity: snapshot.isDragging ? 0.85 : 1,
                     borderRadius: "8px",
-                    boxShadow: snapshot.isDragging ? "0 4px 16px rgba(124,58,237,0.35)" : "none",
+                    boxShadow: snapshot.isDragging
+                        ? "0 4px 16px rgba(var(--gp-brand-700-rgb), 0.35)"
+                        : "none",
                 }}
             >
                 {children}

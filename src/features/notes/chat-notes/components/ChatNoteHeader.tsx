@@ -587,7 +587,9 @@ export const ChatNoteHeader = ({
                             <CancelIcon
                                 sx={{
                                     fontSize: "20px",
-                                    color: isDark ? "#e879c3" : "#c026a8",
+                                    color: isDark
+                                        ? "var(--gp-tint-danger)"
+                                        : "var(--gp-tint-danger-alt)",
                                 }}
                             />
                         </IconButton>

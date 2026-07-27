@@ -61,7 +61,7 @@
     --code-dark-me-bg: rgba(255, 255, 255, 0.15);
     --code-dark-me-color: #fbbf24;
     --code-light-me-bg: rgba(99, 102, 241, 0.15);
-    --code-light-me-color: #7c3aed;
+    --code-light-me-color: var(--gp-brand-700);
 
     /* Bubble text colors for reference */
     --bubble-light-received-text: #111827;
@@ -473,7 +473,7 @@ input[type="checkbox"] {
 
 .bn-message-bubble-box-light-me code {
     background-color: rgba(99, 102, 241, 0.15) !important;
-    color: #7c3aed; /* Purple for code */
+    color: var(--gp-brand-700); /* Purple for code */
 }
 
 /* Dark mode - Received messages (dark gray background #1f2937) */

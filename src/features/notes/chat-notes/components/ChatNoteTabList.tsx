@@ -227,17 +227,21 @@ export const ChatNoteTabList = ({
                                     },
                                     "&.Mui-selected": {
                                         background: isDark
-                                            ? "linear-gradient(135deg, rgba(124,58,237,0.16) 0%, rgba(124,58,237,0.10) 100%)"
-                                            : "linear-gradient(135deg, rgba(124,58,237,0.12) 0%, rgba(124,58,237,0.06) 100%)",
+                                            ? "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.16) 0%, rgba(var(--gp-brand-700-rgb), 0.10) 100%)"
+                                            : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.12) 0%, rgba(var(--gp-brand-700-rgb), 0.06) 100%)",
                                         border: isDark
-                                            ? "1px solid rgba(124,58,237,0.28)"
-                                            : "1px solid rgba(124,58,237,0.20)",
-                                        color: isDark ? "#a78bfa" : "#6d28d9",
+                                            ? "1px solid rgba(var(--gp-brand-700-rgb), 0.28)"
+                                            : "1px solid rgba(var(--gp-brand-700-rgb), 0.20)",
+                                        color: isDark
+                                            ? "var(--gp-brandalt-400)"
+                                            : "var(--gp-brand-800)",
                                         boxShadow: isDark
                                             ? "0 2px 8px rgba(0,0,0,0.3)"
-                                            : "0 2px 8px rgba(124,58,237,0.18)",
+                                            : "0 2px 8px rgba(var(--gp-brand-700-rgb), 0.18)",
                                         "& .tab-icon": {
-                                            color: isDark ? "#a78bfa" : "#7c3aed",
+                                            color: isDark
+                                                ? "var(--gp-brandalt-400)"
+                                                : "var(--gp-brand-700)",
                                         },
                                         "& .close-btn": {
                                             opacity: 1,

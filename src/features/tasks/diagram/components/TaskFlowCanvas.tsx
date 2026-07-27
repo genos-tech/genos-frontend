@@ -31,6 +31,7 @@ import { useUrlLinkModal } from "../../../../hooks/common/UrlLinkModalContext";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
+import { useColorTheme } from "../../../../theme/ColorThemeProvider";
 import { purplePalette } from "../../../../theme/purplePalette";
 import { UserProps } from "../../../../types/admin";
 import { TaskTableProps } from "../../../../types/tasks";
@@ -518,6 +519,12 @@ const CanvasInner = ({
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const P = isDark ? purplePalette.dark : purplePalette.light;
+    // React Flow's Background and MiniMap write their `color` / `nodeColor`
+    // straight into SVG presentation attributes, which never resolve a
+    // `var()`. These two need the theme's RAW values — the documented
+    // exception to going through `purplePalette`.
+    const { raw: rawTheme } = useColorTheme();
+    const rawAccent = isDark ? rawTheme.dark.accent : rawTheme.light.accent;
     const { fitView } = useReactFlow();
     const dagreLayout = useDagreLayout();
     // True once React Flow has measured every node (real dimensions). We
@@ -1138,7 +1145,7 @@ const CanvasInner = ({
             flex: 1,
             position: "relative" as const,
             background: isDark
-                ? "linear-gradient(180deg, rgba(20,14,34,1) 0%, rgba(11,10,22,1) 100%)"
+                ? "linear-gradient(180deg, rgba(var(--gp-dark-surface-b-rgb), 1) 0%, rgba(11,10,22,1) 100%)"
                 : "linear-gradient(180deg, rgba(252,250,255,1) 0%, rgba(248,245,255,1) 100%)",
             "& .react-flow__attribution": { display: "none" },
             "& .react-flow__controls-button": {
@@ -1225,19 +1232,23 @@ const CanvasInner = ({
                 onReconnect={onReconnect}
             >
                 <Background
-                    color={isDark ? "rgba(124,58,237,0.2)" : "rgba(124,58,237,0.18)"}
+                    color={`rgba(${rawTheme.brandRgb}, ${isDark ? 0.2 : 0.18})`}
                     gap={20}
                     size={1}
                     variant={BackgroundVariant.Dots}
                 />
                 <Controls showInteractive={false} />
                 <MiniMap
-                    maskColor={isDark ? "rgba(20,14,34,0.65)" : "rgba(252,250,255,0.65)"}
+                    maskColor={
+                        isDark
+                            ? `rgba(${rawTheme.dark.surfaceBRgb}, 0.65)`
+                            : `rgba(${rawTheme.light.surfaceCRgb}, 0.65)`
+                    }
                     nodeColor={(n) => {
                         const d = n.data as unknown as TaskNodeData;
                         if (d?.isExternal) return "#94a3b8";
                         if (d?.isMilestone) return "#f97316";
-                        return P.accent;
+                        return rawAccent;
                     }}
                     pannable
                     zoomable

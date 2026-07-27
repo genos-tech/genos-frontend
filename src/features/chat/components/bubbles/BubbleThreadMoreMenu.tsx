@@ -340,8 +340,11 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
             label: t.chat.messageActions.deleteMessage,
             icon: <DeleteOutlineRoundedIcon sx={{ fontSize: 18 }} />,
             onClick: handleDeleteClick,
-            color: { light: "#c026a8", dark: "#e879c3" },
-            hoverBg: { light: "rgba(192,38,168,0.12)", dark: "rgba(232,121,195,0.18)" },
+            color: { light: "var(--gp-tint-danger-alt)", dark: "var(--gp-tint-danger)" },
+            hoverBg: {
+                light: "rgba(var(--gp-tint-danger-alt-rgb), 0.12)",
+                dark: "rgba(var(--gp-tint-danger-rgb), 0.18)",
+            },
             visible: canDelete,
             danger: true,
         },
@@ -520,26 +523,30 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
                     transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                     color: isOpen
                         ? isDark
-                            ? "#c4b5fd"
-                            : "#7c3aed"
+                            ? "var(--gp-brandalt-300)"
+                            : "var(--gp-brand-700)"
                         : isDark
                           ? "rgba(255,255,255,0.55)"
                           : "rgba(0,0,0,0.45)",
                     background: isOpen
                         ? isDark
-                            ? "rgba(124,58,237,0.22)"
-                            : "rgba(124,58,237,0.12)"
+                            ? "rgba(var(--gp-brand-700-rgb), 0.22)"
+                            : "rgba(var(--gp-brand-700-rgb), 0.12)"
                         : "transparent",
                     "&:hover": {
-                        background: isDark ? "rgba(124,58,237,0.28)" : "rgba(124,58,237,0.15)",
-                        color: isDark ? "#c4b5fd" : "#7c3aed",
+                        background: isDark
+                            ? "rgba(var(--gp-brand-700-rgb), 0.28)"
+                            : "rgba(var(--gp-brand-700-rgb), 0.15)",
+                        color: isDark ? "var(--gp-brandalt-300)" : "var(--gp-brand-700)",
                         transform: "scale(1.08)",
                     },
                     "&:focus-visible": {
-                        background: isDark ? "rgba(124,58,237,0.28)" : "rgba(124,58,237,0.15)",
-                        color: isDark ? "#c4b5fd" : "#7c3aed",
+                        background: isDark
+                            ? "rgba(var(--gp-brand-700-rgb), 0.28)"
+                            : "rgba(var(--gp-brand-700-rgb), 0.15)",
+                        color: isDark ? "var(--gp-brandalt-300)" : "var(--gp-brand-700)",
                         outline: "2px solid",
-                        outlineColor: isDark ? "#a78bfa" : "#7c3aed",
+                        outlineColor: isDark ? "var(--gp-brandalt-400)" : "var(--gp-brand-700)",
                         outlineOffset: "2px",
                     },
                     "&:active": {

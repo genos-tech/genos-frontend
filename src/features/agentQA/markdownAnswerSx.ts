@@ -27,7 +27,7 @@ export function markdownAnswerSx(isDark: boolean): Record<string, unknown> {
         "& ol": { listStyleType: "decimal" },
         "& li": { mb: 0.5, display: "list-item" },
         "& li:last-child": { mb: 0 },
-        "& li::marker": { color: isDark ? "#a78bfa" : "#7c3aed" },
+        "& li::marker": { color: isDark ? "var(--gp-brandalt-400)" : "var(--gp-brand-700)" },
         // nested lists — tighter than top-level
         "& li > ul, & li > ol": { my: 0.25, pl: 2 },
         // code blocks

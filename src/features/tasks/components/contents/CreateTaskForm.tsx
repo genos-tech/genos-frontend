@@ -1184,8 +1184,8 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                             right: 0,
                             height: "3px",
                             background: isDark
-                                ? "linear-gradient(90deg, #a78bfa 0%, #8b5cf6 50%, #c084fc 100%)"
-                                : "linear-gradient(90deg, #6d28d9 0%, #7c3aed 50%, #9333ea 100%)",
+                                ? "linear-gradient(90deg, var(--gp-brandalt-400) 0%, var(--gp-brandalt-500) 50%, var(--gp-brand-400) 100%)"
+                                : "linear-gradient(90deg, var(--gp-brand-800) 0%, var(--gp-brand-700) 50%, var(--gp-brand-600) 100%)",
                             borderRadius: "16px 16px 0 0",
                             opacity: 0.8,
                         }}
@@ -1620,7 +1620,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                                                 ? isDark
                                                     ? "rgba(255,255,255,0.08)"
                                                     : "rgba(0,0,0,0.08)"
-                                                : "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)",
+                                                : "linear-gradient(135deg, var(--gp-brand-700) 0%, var(--gp-brand-800) 100%)",
                                             color: isMilestoneSubmitDisabled
                                                 ? isDark
                                                     ? "rgba(255,255,255,0.3)"
@@ -1628,17 +1628,17 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                                                 : "white",
                                             boxShadow: isMilestoneSubmitDisabled
                                                 ? "none"
-                                                : "0 2px 8px rgba(124,58,237,0.3)",
+                                                : "0 2px 8px rgba(var(--gp-brand-700-rgb), 0.3)",
                                             transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                                             "&:hover": {
                                                 background: isMilestoneSubmitDisabled
                                                     ? isDark
                                                         ? "rgba(255,255,255,0.08)"
                                                         : "rgba(0,0,0,0.08)"
-                                                    : "linear-gradient(135deg, #a78bfa 0%, #c084fc 100%)",
+                                                    : "linear-gradient(135deg, var(--gp-brandalt-400) 0%, var(--gp-brand-400) 100%)",
                                                 boxShadow: isMilestoneSubmitDisabled
                                                     ? "none"
-                                                    : "0 4px 12px rgba(124,58,237,0.4)",
+                                                    : "0 4px 12px rgba(var(--gp-brand-700-rgb), 0.4)",
                                                 transform: isMilestoneSubmitDisabled
                                                     ? "none"
                                                     : "translateY(-1px)",
@@ -1649,7 +1649,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                                                     : "translateY(0)",
                                                 boxShadow: isMilestoneSubmitDisabled
                                                     ? "none"
-                                                    : "0 2px 6px rgba(124,58,237,0.25)",
+                                                    : "0 2px 6px rgba(var(--gp-brand-700-rgb), 0.25)",
                                             },
                                             "&:disabled": {
                                                 background: isDark

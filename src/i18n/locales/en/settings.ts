@@ -133,6 +133,17 @@ export const settings = {
         themeLight: "Light",
         themeDark: "Dark",
         themeSystem: "System",
+        colorThemeLabel: "Color theme",
+        colorThemeHelper: "Changes the accent color across the whole app.",
+        colorThemes: {
+            purple: "Purple",
+            blue: "Blue",
+            teal: "Teal",
+            emerald: "Emerald",
+            amber: "Amber",
+            rose: "Rose",
+            slate: "Slate",
+        },
     },
     messageLayout: {
         heading: "Message layout",
