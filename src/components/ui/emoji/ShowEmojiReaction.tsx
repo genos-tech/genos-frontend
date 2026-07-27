@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Box, Chip } from "@mui/joy";
+import { Box } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { fmt, useTranslation } from "../../../i18n";
@@ -11,7 +11,7 @@ import { MessageProps, ThreadMessageProps } from "../../../types/chat";
 import { GroupedReactionProps, ReactionProps } from "../../../types/common";
 import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
 import { AppTooltip } from "../AppTooltip";
-import { EmojiGlyph } from "./EmojiGlyph";
+import { MoreReactionsChip, ReactionChip } from "./ReactionChip";
 
 export const groupEmojis = (reactions: ReactionProps[]): GroupedReactionProps[] => {
     const map = new Map<string, { count: number; senders: UserProps[] }>();
@@ -139,10 +139,10 @@ export const ShowEmojiReaction = (props: ShowEmojiReactionProps) => {
     };
 
     return (
-        <Box display="flex">
-            {displayed.map(({ senders, emoji, count }, index) => (
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, alignItems: "center" }}>
+            {displayed.map(({ senders, emoji, count }) => (
                 <AppTooltip
-                    key={`tooltip-${index}`}
+                    key={`emoji-chip-${emoji}`}
                     title={fmt(
                         senders.length > 5
                             ? t.common.ui.emoji.multipleReacted
@@ -155,27 +155,12 @@ export const ShowEmojiReaction = (props: ShowEmojiReactionProps) => {
                         }
                     )}
                 >
-                    <Chip
-                        key={`emoji-chip-${emoji}-${index}`}
-                        size="sm"
-                        color={
-                            senders.some((u) => u.userId === myself.userId) ? "success" : "neutral"
-                        }
-                        sx={{
-                            fontSize: "0.9rem",
-                            cursor: "pointer",
-                            px: 0.5,
-                            py: 0.5,
-                            mx: 0.2,
-                        }}
-                        variant={
-                            senders.some((u) => u.userId === myself.userId) ? "solid" : "outlined"
-                        }
+                    <ReactionChip
+                        count={count}
+                        emoji={emoji}
+                        mine={senders.some((u) => u.userId === myself.userId)}
                         onClick={() => handleAddReaction(emoji)}
-                    >
-                        <EmojiGlyph emoji={emoji} />
-                        {count}
-                    </Chip>
+                    />
                 </AppTooltip>
             ))}
 
@@ -184,9 +169,9 @@ export const ShowEmojiReaction = (props: ShowEmojiReactionProps) => {
                     size="sm"
                     title={hidden.map(({ emoji, count }) => `${emoji} ${count}`).join(" ")}
                 >
-                    <Chip size="sm" sx={{ fontSize: "0.8rem" }} variant="plain">
-                        {fmt(t.common.ui.emoji.moreLabel, { count: hidden.length })}
-                    </Chip>
+                    <MoreReactionsChip
+                        text={fmt(t.common.ui.emoji.moreLabel, { count: hidden.length })}
+                    />
                 </AppTooltip>
             )}
         </Box>
