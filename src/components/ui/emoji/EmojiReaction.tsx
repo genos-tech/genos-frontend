@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import SentimentSatisfiedAltIcon from "@mui/icons-material/SentimentSatisfiedAlt";
 import { Box, Button, IconButton, useColorScheme } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
+import { useQuickReactionsPreference } from "../../../hooks/common/useQuickReactionsPreference";
 import { useTranslation } from "../../../i18n";
 import { channelService } from "../../../services/channel/channelService";
 import { notifyActionError } from "../../../services/requestErrorNotifier";
@@ -12,6 +13,7 @@ import { MessageProps, ThreadMessageProps } from "../../../types/chat";
 import { GroupedReactionProps, ReactionProps } from "../../../types/common";
 import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
 import { AppTooltip } from "../AppTooltip";
+import { EmojiGlyph } from "./EmojiGlyph";
 
 export const groupEmojis = (reactions: ReactionProps[]): GroupedReactionProps[] => {
     const map = new Map<string, { count: number; senders: UserProps[] }>();
@@ -69,15 +71,22 @@ export const EmojiReaction = (props: EmojiReactionProps) => {
     const { mode } = useColorScheme();
     const { t } = useTranslation();
     const isDark = mode === "dark";
-    const [baseEmojiList, setBaseEmojiList] = useState<string[]>(["👍", "👀", "✅"]);
+    // User-picked quick reactions (Settings → Chat). Falls back to the
+    // shipped defaults when the provider isn't mounted.
+    const { emojis: quickReactions } = useQuickReactionsPreference();
     const [groupedReactions, setGroupedReactions] = useState<GroupedReactionProps[]>(
         groupEmojis(reactions)
     );
 
-    useEffect(() => {
-        const groupedReactionEmojis: string[] = groupedReactions.map((item) => item.emoji);
-        setBaseEmojiList(baseEmojiList.filter((emoji) => !groupedReactionEmojis.includes(emoji)));
-    }, [groupedReactions, reactions]);
+    // Hide a quick pick that's already showing as a chip — it would be a
+    // duplicate button right next to the chip. DERIVED, not state: the old
+    // `setBaseEmojiList(baseEmojiList.filter(...))` narrowed its own state
+    // in place, so an emoji dropped once never came back when the reaction
+    // was removed, and changing the preference could never restore it.
+    const baseEmojiList = useMemo(() => {
+        const reacted = new Set(groupedReactions.map((item) => item.emoji));
+        return quickReactions.filter((emoji) => !reacted.has(emoji));
+    }, [quickReactions, groupedReactions]);
 
     useEffect(() => {
         const _groupedReactions = groupEmojis(reactions);
@@ -147,9 +156,9 @@ export const EmojiReaction = (props: EmojiReactionProps) => {
                 <>
                     {groupedReactions.length < 3 && (
                         <>
-                            {baseEmojiList.map((emoji, index) => (
+                            {baseEmojiList.map((emoji) => (
                                 <Button
-                                    key={`default-emoji-${index}`}
+                                    key={`default-emoji-${emoji}`}
                                     size="sm"
                                     variant="plain"
                                     sx={{
@@ -163,7 +172,10 @@ export const EmojiReaction = (props: EmojiReactionProps) => {
                                     }}
                                     onClick={() => handleAddReaction(emoji)}
                                 >
-                                    {emoji}
+                                    {/* EmojiGlyph, not raw text — a quick pick may be a
+                                        team custom emoji (":name:"), which has to render
+                                        as its image rather than the literal shortcode. */}
+                                    <EmojiGlyph emoji={emoji} />
                                 </Button>
                             ))}
                         </>
