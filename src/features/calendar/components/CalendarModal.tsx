@@ -38,7 +38,9 @@ import {
 } from "../../integrations/services/connections";
 import { redirectToOAuthConnect } from "../../integrations/services/oauth";
 import { isWritableCalendar, useCalendarSources } from "../hooks/useCalendarSources";
+import { eventLabel } from "../utils/eventLabel";
 import { CalendarView, visibleRange } from "../utils/monthGrid";
+import { isMultiDaySpan } from "../utils/multiDay";
 import { CalendarSourcePicker } from "./CalendarSourcePicker";
 import { MonthView } from "./MonthView";
 import { TimelineView } from "./TimelineView";
@@ -69,16 +71,26 @@ const eventEndInclusive = (e: CalendarEvent): Dayjs | null => {
     return null;
 };
 
-/** Bucket events into the days they intersect for the MonthView.
- *  Multi-day events appear in each day's bucket; out-of-range
- *  events are silently dropped. */
+/** Bucket events into the days they intersect. Out-of-range events are
+ *  silently dropped.
+ *
+ *  `skipSpans` excludes multi-day all-day events, which MonthView draws
+ *  as one continuous bar instead of a chip per day. Without it the same
+ *  event renders TWICE on every day it covers — once as the bar, once
+ *  as a chip.
+ *
+ *  Both variants are needed: the grid wants chips-only, while the "+N
+ *  more" popover is "everything on this day" and must still list the
+ *  spans. */
 const groupEventsByDay = (
     events: CalendarEvent[],
     from: Dayjs,
-    to: Dayjs
+    to: Dayjs,
+    { skipSpans }: { skipSpans: boolean }
 ): Record<string, CalendarEvent[]> => {
     const out: Record<string, CalendarEvent[]> = {};
     for (const e of events) {
+        if (skipSpans && isMultiDaySpan(e)) continue;
         const start = eventStart(e);
         if (!start) continue;
         const end = eventEndInclusive(e) ?? start;
@@ -182,10 +194,23 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
         [view, range.start, selectionFingerprint]
     );
 
+    // Chips only — multi-day spans are drawn as bars by MonthView.
     const eventsByDay = useMemo(
         () =>
             view === "month"
-                ? groupEventsByDay(events, range.start, range.end)
+                ? groupEventsByDay(events, range.start, range.end, { skipSpans: true })
+                : ({} as Record<string, CalendarEvent[]>),
+        [events, view, range.start, range.end]
+    );
+
+    // Everything covering each day, spans included. Drives the "+N more"
+    // popover, which promises "everything on this day" — a multi-day
+    // event must still be reachable there even though the grid shows it
+    // as a bar rather than a chip.
+    const allEventsByDay = useMemo(
+        () =>
+            view === "month"
+                ? groupEventsByDay(events, range.start, range.end, { skipSpans: false })
                 : ({} as Record<string, CalendarEvent[]>),
         [events, view, range.start, range.end]
     );
@@ -625,8 +650,11 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
                             ) : view === "month" ? (
                                 <MonthView
                                     colorBySource={colorBySource}
+                                    events={events}
+                                    busyLabel={t.calendar.busy}
                                     eventsByDay={eventsByDay}
                                     focused={anchor.startOf("month")}
+                                    freeBusySources={sources.freeBusySources}
                                     onCellClick={openCreateOn}
                                     onEventClick={openEdit}
                                     onShowMore={setPopoverDayKey}
@@ -634,8 +662,10 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
                             ) : (
                                 <TimelineView
                                     anchor={anchor}
+                                    busyLabel={t.calendar.busy}
                                     colorBySource={colorBySource}
                                     events={events}
+                                    freeBusySources={sources.freeBusySources}
                                     view={view}
                                     onCreateAt={openCreateAt}
                                     onEventClick={openEdit}
@@ -664,7 +694,7 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
                             </IconButton>
                         </Stack>
                         <Stack spacing={0.5}>
-                            {(popoverDayKey ? (eventsByDay[popoverDayKey] ?? []) : []).map(
+                            {(popoverDayKey ? (allEventsByDay[popoverDayKey] ?? []) : []).map(
                                 (e, idx) => {
                                     const color = e._source
                                         ? colorBySource[
@@ -700,7 +730,11 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
                                                 openEdit(e);
                                             }}
                                         >
-                                            {e.summary || "(no title)"}
+                                            {eventLabel(
+                                                e,
+                                                sources.freeBusySources,
+                                                t.calendar.busy
+                                            )}
                                         </Chip>
                                     );
                                 }

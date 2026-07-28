@@ -21,6 +21,7 @@ import {
     listCalendars,
     sourceKey,
 } from "../../integrations/services/calendar";
+import { FREE_BUSY_ROLES } from "../utils/eventLabel";
 import { assignSourceColors } from "../utils/sourceColors";
 
 const STORAGE_KEY = "genos-calendar-selected-sources";
@@ -69,6 +70,11 @@ export interface CalendarSourcesState {
     selectedSources: CalendarSource[];
     /** Base color per source key, for the grid and the legend. */
     colorBySource: Record<string, string>;
+    /** Source keys whose calendar is shared at Google's free/busy level.
+     *  Google strips event titles at that level, so the views render
+     *  "Busy" rather than "(no title)" — the blank is the sharing
+     *  setting working, not a missing value. */
+    freeBusySources: Set<string>;
     loading: boolean;
     /** True once a load has completed (success or failure). Lets the
      *  caller distinguish "no calendars yet" from "no calendars". */
@@ -216,6 +222,16 @@ export const useCalendarSources = (
         [calendars]
     );
 
+    const freeBusySources = useMemo(
+        () =>
+            new Set(
+                calendars
+                    .filter((c) => c.access_role && FREE_BUSY_ROLES.has(c.access_role))
+                    .map((c) => sourceKey(c.account_id, c.id))
+            ),
+        [calendars]
+    );
+
     const selectedSources = useMemo(
         () =>
             calendars
@@ -230,6 +246,7 @@ export const useCalendarSources = (
         selectedKeys,
         selectedSources,
         colorBySource,
+        freeBusySources,
         loading,
         loaded,
         error,

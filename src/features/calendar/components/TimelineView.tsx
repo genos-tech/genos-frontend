@@ -6,7 +6,9 @@ import dayjs, { Dayjs } from "dayjs";
 
 import { useTranslation } from "../../../i18n";
 import { CalendarEvent } from "../../integrations/services/calendar";
+import { eventLabel } from "../utils/eventLabel";
 import { CalendarView, timelineDays } from "../utils/monthGrid";
+import { isMultiDaySpan, layoutSpanSegments } from "../utils/multiDay";
 import { paletteForEvent } from "../utils/sourceColors";
 import {
     eventHeightPx,
@@ -41,6 +43,11 @@ interface TimelineViewProps {
      *  readable; the Meet indicator moved to the icon alone, since a
      *  green-for-Meet fill would collide with the source colors. */
     colorBySource: Record<string, string>;
+    /** Sources shared at Google's free/busy level, where Google strips
+     *  event titles before they reach us. */
+    freeBusySources: Set<string>;
+    /** Label for a title-less free/busy event. */
+    busyLabel: string;
 }
 
 /** "6 AM" / "12 PM" / "11 PM" — Google-style 12h labels. */
@@ -95,12 +102,24 @@ export const TimelineView = ({
     onCreateAt,
     onEventClick,
     colorBySource,
+    freeBusySources,
+    busyLabel,
 }: TimelineViewProps) => {
     const { mode } = useColorScheme();
     const { t } = useTranslation();
     const isDark = mode === "dark";
 
     const days = useMemo(() => timelineDays(view, anchor), [view, anchor]);
+
+    // Multi-day all-day events, laid out as bars across the visible day
+    // columns. No lane cap here: the all-day strip grows with its
+    // content rather than competing with a fixed cell height the way
+    // Month view's does.
+    const allDaySpans = useMemo(() => layoutSpanSegments(events, days), [events, days]);
+    const allDayLaneCount = useMemo(
+        () => allDaySpans.reduce((max, s) => Math.max(max, s.lane + 1), 0),
+        [allDaySpans]
+    );
     const todayKey = useMemo(() => dayjs().format("YYYY-MM-DD"), []);
 
     // Per-minute tick for the "Now" indicator. Setting an interval
@@ -200,10 +219,12 @@ export const TimelineView = ({
                 })}
             </Box>
 
-            {/* All-day strip — single fixed row above the hour
-                grid. Each column gets its own all-day list; events
-                that span multiple days appear in every column they
-                cover. */}
+            {/* All-day strip above the hour grid.
+                Multi-day events are drawn ONCE as a bar spanning the
+                columns they cover, rather than repeated per column —
+                same treatment as Month view, so a trip reads as one
+                continuous event in both. Single-day all-day events sit
+                in their own column beneath the bars. */}
             <Box
                 sx={{
                     display: "grid",
@@ -225,64 +246,165 @@ export const TimelineView = ({
                 >
                     {t.calendar.allDay}
                 </Box>
-                {days.map((d) => {
-                    const allDayEvents = events.filter(
-                        (e) => isAllDay(e) && allDayIntersects(e, d)
-                    );
-                    return (
-                        <Stack
-                            key={d.toString()}
-                            spacing={0.25}
+                {/* One cell covering every day column, holding both the
+                    spanning bars and the per-day singles. A nested grid
+                    is what lets a bar cross column boundaries — the
+                    outer grid's columns can't be spanned from inside a
+                    per-day Stack. */}
+                <Box
+                    sx={{
+                        gridColumn: `2 / ${days.length + 2}`,
+                        display: "grid",
+                        gridTemplateColumns: `repeat(${days.length}, minmax(0, 1fr))`,
+                        gridAutoRows: "min-content",
+                        rowGap: 0.25,
+                        py: 0.25,
+                    }}
+                >
+                    {/* Column separators, drawn behind the content so
+                        the bars can cross them. */}
+                    {days.map((d, i) => (
+                        <Box
+                            key={`sep-${d.toString()}`}
                             sx={{
-                                py: 0.25,
-                                px: 0.25,
+                                gridColumn: i + 1,
+                                gridRow: "1 / -1",
                                 borderLeft: `1px solid ${gridLine}`,
+                                pointerEvents: "none",
                             }}
-                        >
-                            {allDayEvents.map((e) => {
-                                const palette = paletteForEvent(e._source, colorBySource, isDark);
-                                return (
-                                    <Tooltip
-                                        key={e.id}
-                                        size="sm"
-                                        sx={{ borderRadius: "8px" }}
-                                        variant="outlined"
-                                        title={
-                                            e._source?.account_email
-                                                ? `${e.summary || "(no title)"} — ${e._source.account_email}`
-                                                : e.summary || "(no title)"
-                                        }
-                                    >
-                                        <Box
-                                            sx={{
-                                                cursor: "pointer",
-                                                backgroundColor: palette.fill,
-                                                color: palette.text,
-                                                borderLeft: `3px solid ${palette.base}`,
-                                                borderRadius: "4px",
-                                                px: 0.5,
-                                                py: 0.25,
-                                                fontSize: "0.72rem",
-                                                overflow: "hidden",
-                                                textOverflow: "ellipsis",
-                                                whiteSpace: "nowrap",
-                                                "&:hover": {
-                                                    backgroundColor: palette.fillHover,
-                                                },
-                                            }}
-                                            onClick={(ev) => {
-                                                ev.stopPropagation();
-                                                onEventClick(e);
-                                            }}
+                        />
+                    ))}
+
+                    {allDaySpans.map((segment) => {
+                        const palette = paletteForEvent(
+                            segment.event._source,
+                            colorBySource,
+                            isDark
+                        );
+                        const label = eventLabel(segment.event, freeBusySources, busyLabel);
+                        return (
+                            <Tooltip
+                                key={`span-${segment.event.id}`}
+                                size="sm"
+                                sx={{ borderRadius: "8px" }}
+                                variant="outlined"
+                                title={
+                                    segment.event._source?.account_email
+                                        ? `${label} — ${segment.event._source.account_email}`
+                                        : label
+                                }
+                            >
+                                <Box
+                                    sx={{
+                                        gridColumn: `${segment.startIndex + 1} / ${segment.endIndex + 2}`,
+                                        gridRow: segment.lane + 1,
+                                        mx: "2px",
+                                        cursor: "pointer",
+                                        backgroundColor: palette.fill,
+                                        color: palette.text,
+                                        px: 0.5,
+                                        py: 0.25,
+                                        fontSize: "0.72rem",
+                                        overflow: "hidden",
+                                        textOverflow: "ellipsis",
+                                        whiteSpace: "nowrap",
+                                        // Square the edge that runs past
+                                        // the visible window so it reads
+                                        // as continuing.
+                                        borderTopLeftRadius: segment.continuesBefore ? 0 : "4px",
+                                        borderBottomLeftRadius: segment.continuesBefore
+                                            ? 0
+                                            : "4px",
+                                        borderTopRightRadius: segment.continuesAfter ? 0 : "4px",
+                                        borderBottomRightRadius: segment.continuesAfter
+                                            ? 0
+                                            : "4px",
+                                        borderLeft: segment.continuesBefore
+                                            ? undefined
+                                            : `3px solid ${palette.base}`,
+                                        "&:hover": { backgroundColor: palette.fillHover },
+                                    }}
+                                    onClick={(ev) => {
+                                        ev.stopPropagation();
+                                        onEventClick(segment.event);
+                                    }}
+                                >
+                                    {segment.continuesBefore ? "← " : ""}
+                                    {label}
+                                    {segment.continuesAfter ? " →" : ""}
+                                </Box>
+                            </Tooltip>
+                        );
+                    })}
+
+                    {days.map((d, dayIndex) => {
+                        // Single-day all-day events only; the multi-day
+                        // ones are the bars above.
+                        const singles = events.filter(
+                            (e) => isAllDay(e) && !isMultiDaySpan(e) && allDayIntersects(e, d)
+                        );
+                        if (singles.length === 0) return null;
+                        return (
+                            <Stack
+                                key={d.toString()}
+                                spacing={0.25}
+                                sx={{
+                                    gridColumn: dayIndex + 1,
+                                    gridRow: allDayLaneCount + 1,
+                                    px: 0.25,
+                                    minWidth: 0,
+                                }}
+                            >
+                                {singles.map((e) => {
+                                    const palette = paletteForEvent(
+                                        e._source,
+                                        colorBySource,
+                                        isDark
+                                    );
+                                    const label = eventLabel(e, freeBusySources, busyLabel);
+                                    return (
+                                        <Tooltip
+                                            key={e.id}
+                                            size="sm"
+                                            sx={{ borderRadius: "8px" }}
+                                            variant="outlined"
+                                            title={
+                                                e._source?.account_email
+                                                    ? `${label} — ${e._source.account_email}`
+                                                    : label
+                                            }
                                         >
-                                            {e.summary || "(no title)"}
-                                        </Box>
-                                    </Tooltip>
-                                );
-                            })}
-                        </Stack>
-                    );
-                })}
+                                            <Box
+                                                sx={{
+                                                    cursor: "pointer",
+                                                    backgroundColor: palette.fill,
+                                                    color: palette.text,
+                                                    borderLeft: `3px solid ${palette.base}`,
+                                                    borderRadius: "4px",
+                                                    px: 0.5,
+                                                    py: 0.25,
+                                                    fontSize: "0.72rem",
+                                                    overflow: "hidden",
+                                                    textOverflow: "ellipsis",
+                                                    whiteSpace: "nowrap",
+                                                    "&:hover": {
+                                                        backgroundColor: palette.fillHover,
+                                                    },
+                                                }}
+                                                onClick={(ev) => {
+                                                    ev.stopPropagation();
+                                                    onEventClick(e);
+                                                }}
+                                            >
+                                                {label}
+                                            </Box>
+                                        </Tooltip>
+                                    );
+                                })}
+                            </Stack>
+                        );
+                    })}
+                </Box>
             </Box>
 
             {/* Hour grid — scrolls vertically, day columns share

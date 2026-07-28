@@ -33,6 +33,12 @@ export const calendar = {
     },
     allDay: "All day",
     nowLabel: "Now",
+    // Shown instead of "(no title)" for an event on a calendar shared at
+    // Google's "See only free/busy (hide details)" level. Google strips
+    // the title upstream, so nothing is missing — labelling it
+    // "(no title)" reads as a bug on our side rather than the sharing
+    // setting working as intended.
+    busy: "Busy",
     // Multi-account overlay: the side rail that picks which accounts
     // and calendars are drawn on the grid at once.
     sources: {
