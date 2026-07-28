@@ -33,6 +33,16 @@ const FAILURE_REASON_MESSAGES: Record<string, string> = {
     provider_error: "The OAuth provider returned an error. Please try again.",
     not_authenticated: "You need to be signed in to connect a third-party account.",
     already_connected_to_other_user: "This account is already connected to a different user.",
+    // Returned when someone tries to sign in with a provider account
+    // they attached for API access (e.g. a second Google account added
+    // just to see its calendar). Connecting an account deliberately does
+    // NOT make it a way to sign in, so the message points them back to
+    // the method they actually signed up with.
+    not_a_login_account:
+        "This account is connected for calendar access only, not for signing in. " +
+        "Use the account you originally signed up with.",
+    provider_already_connected:
+        "You already have an account connected for this provider. Disconnect it first.",
     unknown_provider: "Unknown OAuth provider.",
 };
 
