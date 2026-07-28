@@ -141,6 +141,19 @@ export interface CalendarEvent {
      *  goes to the default account and either 404s or, worse, hits a
      *  same-named event on the wrong calendar. */
     _source?: CalendarEventSource;
+    /** The id of the SERIES MASTER when this event is one occurrence of
+     *  a repeating series. Our list calls use `singleEvents=true`, so a
+     *  repeating event always arrives expanded into instances and the
+     *  master is never returned directly — editing or deleting the whole
+     *  series has to target this id instead of `id`. */
+    recurringEventId?: string;
+    /** When this instance was originally scheduled, before any per-
+     *  occurrence move. Present on instances only. */
+    originalStartTime?: CalendarEventDateTime;
+    /** RRULE lines. Present on the series MASTER only — an instance
+     *  carries none, which is why showing the current rule while editing
+     *  requires fetching the master. */
+    recurrence?: string[];
 }
 
 interface ErrorResponse {
@@ -376,6 +389,9 @@ export const createEvent = async (
         account_id?: string;
         calendar_id?: string;
         description?: string;
+        /** RRULE lines making this a repeating series. Omit (or send an
+         *  empty array) for a one-off event. */
+        recurrence?: string[];
         end: CalendarEventDateTime;
         start: CalendarEventDateTime;
         summary: string;
@@ -402,6 +418,16 @@ export const createEvent = async (
     }
 };
 
+/**
+ * PATCH an event.
+ *
+ * When `eventId` is a SERIES MASTER (i.e. you're editing "all events"),
+ * do NOT pass `start`/`end`. The modal holds the start/end of the
+ * INSTANCE the user opened, and sending those to the master moves the
+ * whole series onto that occurrence's date — open the third standup,
+ * fix a typo, choose "all events", and the series jumps two weeks
+ * forward.
+ */
 export const updateEvent = async (
     accessToken: string,
     eventId: string,
@@ -419,6 +445,10 @@ export const updateEvent = async (
         account_id: string;
         calendar_id: string;
         description: string;
+        /** Only meaningful against the series MASTER. OMIT when editing a
+         *  single occurrence — an empty array would end the repetition.
+         *  See `updateEvent`'s note on start/end for the companion trap. */
+        recurrence: string[];
         end: CalendarEventDateTime;
         start: CalendarEventDateTime;
         summary: string;

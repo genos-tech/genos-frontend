@@ -56,6 +56,8 @@ interface ModalInitial {
      *  the event's `_source` so an edit is authenticated against the
      *  account that actually holds the event. */
     account_id?: string;
+    /** Master id when the event is one occurrence of a series. */
+    recurring_event_id?: string;
     add_meet?: boolean;
     all_day?: boolean;
     attendees?: Array<{ email: string; displayName?: string }>;
@@ -170,6 +172,7 @@ const CalendarTab = ({
             // wrong account and 404s.
             account_id: event._source?.account_id,
             calendar_id: event._source?.calendar_id,
+            recurring_event_id: event.recurringEventId,
             add_meet: !!event.hangoutLink,
             all_day: isAllDay,
             // Pre-populate the attendee picker (drop `self` entries

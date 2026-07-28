@@ -16,6 +16,8 @@ import {
     Modal,
     ModalDialog,
     Option,
+    Radio,
+    RadioGroup,
     Select,
     Stack,
     Textarea,
@@ -25,11 +27,19 @@ import dayjs from "dayjs";
 
 import { useOptionalAvatarContext } from "../../../components/ui/avatars/AvatarContext";
 import { useTranslation } from "../../../i18n";
+import { RepeatPicker } from "../../calendar/components/RepeatPicker";
+import {
+    buildRecurrence,
+    DEFAULT_RECURRENCE,
+    parseRecurrence,
+    type RecurrenceSpec,
+} from "../../calendar/utils/rrule";
 import {
     CalendarEvent,
     CalendarSummary,
     createEvent,
     deleteEvent,
+    getEvent,
     sourceKey,
     updateEvent,
 } from "../services/calendar";
@@ -68,6 +78,10 @@ interface EventFormInitial {
     attendees?: Array<{ email: string; displayName?: string }>;
     /** Optional calendar id. Empty/undefined → primary. */
     calendar_id?: string;
+    /** Set when the event being edited is one occurrence of a repeating
+     *  series: the id of its MASTER. Editing or deleting the whole
+     *  series targets this instead of `editingEventId`. */
+    recurring_event_id?: string;
     /** Which connected Google account owns `calendar_id`. Required to
      *  edit an event that came from a non-default account: event ids
      *  are unique per calendar, not globally, so without the account
@@ -120,6 +134,7 @@ interface FormState {
     // last day. Otherwise they're "datetime-local" values as before.
     allDay: boolean;
     attendees: AttendeeOption[];
+    recurrence: RecurrenceSpec;
     accountId: string;
     calendarId: string;
     description: string;
@@ -147,6 +162,7 @@ const formFromInitial = (initial: EventFormInitial | undefined): FormState => {
             email: a.email,
             displayName: a.displayName || a.email,
         })),
+        recurrence: DEFAULT_RECURRENCE,
         accountId: initial?.account_id ?? "",
         calendarId: initial?.calendar_id ?? "",
         description: initial?.description ?? "",
@@ -191,6 +207,13 @@ export const CalendarEventModal = ({
     // (`google_reauth_required`). Surfaces a "Reconnect" button right
     // in the modal so the user can repair it without leaving the flow.
     const [needsReconnect, setNeedsReconnect] = useState(false);
+    // "this" edits/deletes the single occurrence; "all" targets the
+    // series master. Never inferred — guessing either way silently does
+    // something the user didn't ask for.
+    const [scope, setScope] = useState<"this" | "all">("this");
+
+    const masterId = initial?.recurring_event_id;
+    const isRecurring = !!masterId;
 
     // Team-member directory — sourced from `AvatarContext` so the
     // modal doesn't take a teamMembers prop. `useOptional` returns
@@ -244,8 +267,28 @@ export const CalendarEventModal = ({
             setLocalError(null);
             setNeedsReconnect(false);
             setDeleteConfirm(false);
+            setScope("this");
         }
     }, [open, initial, teamOptions]);
+
+    // An INSTANCE carries no `recurrence` of its own — only the master
+    // does — so showing the current rule means fetching the master. Its
+    // account/calendar are the instance's, which the caller forwards.
+    useEffect(() => {
+        if (!open || !masterId) return;
+        let cancelled = false;
+        void (async () => {
+            const master = await getEvent(accessToken, masterId, {
+                accountId: initial?.account_id,
+                calendarId: initial?.calendar_id,
+            });
+            if (cancelled || !master || typeof master === "string") return;
+            setForm((f) => ({ ...f, recurrence: parseRecurrence(master.recurrence) }));
+        })();
+        return () => {
+            cancelled = true;
+        };
+    }, [open, masterId, accessToken, initial?.account_id, initial?.calendar_id]);
 
     // Auto-revert the delete confirm state after a short window so a
     // stray "Delete" click doesn't sit primed indefinitely.
@@ -292,7 +335,8 @@ export const CalendarEventModal = ({
         setSubmitting(true);
         setLocalError(null);
         setNeedsReconnect(false);
-        const payload = {
+        // Fields that are the same whichever event this write targets.
+        const common = {
             add_meet: form.addMeet,
             // Only include attendees in the body when the user has
             // something selected. An empty list on PATCH would
@@ -310,20 +354,43 @@ export const CalendarEventModal = ({
             ...(form.calendarId ? { calendar_id: form.calendarId } : {}),
             ...(form.accountId ? { account_id: form.accountId } : {}),
             description: form.description || undefined,
-            // All-day events are date-only; Google's `end.date` is
-            // exclusive, so we submit the inclusive last day + 1. Timed
-            // events send a full dateTime as before.
+            summary: form.summary,
+        };
+        // All-day events are date-only; Google's `end.date` is
+        // exclusive, so we submit the inclusive last day + 1. Timed
+        // events send a full dateTime as before.
+        const timing = {
             end: form.allDay
                 ? { date: inclusiveToGoogleEnd(form.endISO) }
                 : { dateTime: fromLocalInputValue(form.endISO) },
             start: form.allDay
                 ? { date: form.startISO }
                 : { dateTime: fromLocalInputValue(form.startISO) },
-            summary: form.summary,
         };
+        const recurrence = buildRecurrence(form.recurrence, { allDay: form.allDay });
+
+        // Editing "all events" targets the series MASTER, and that
+        // payload must NOT carry start/end: the form holds the start/end
+        // of the INSTANCE the user opened, and sending those to the
+        // master moves the whole series onto that occurrence's date.
+        // Open the third standup, fix a typo, choose "all events" — and
+        // the series jumps two weeks forward.
+        //
+        // Conversely `recurrence` only means anything on the master, so
+        // a single-occurrence edit omits it entirely; sending [] there
+        // would silently end the repetition.
+        const targetsSeries = isRecurring && scope === "all";
+
         const result = editingEventId
-            ? await updateEvent(accessToken, editingEventId, payload, reportError)
-            : await createEvent(accessToken, payload, reportError);
+            ? targetsSeries
+                ? await updateEvent(accessToken, masterId!, { ...common, recurrence }, reportError)
+                : await updateEvent(
+                      accessToken,
+                      editingEventId,
+                      { ...common, ...timing },
+                      reportError
+                  )
+            : await createEvent(accessToken, { ...common, ...timing, recurrence }, reportError);
         setSubmitting(false);
         // A dead refresh token gets an inline reconnect button in
         // addition to the error text `reportError` already set.
@@ -353,9 +420,12 @@ export const CalendarEventModal = ({
         }
         setDeleting(true);
         setLocalError(null);
+        // Deleting the master removes every occurrence; deleting the
+        // instance cancels just this one.
+        const deleteTargetId = isRecurring && scope === "all" ? masterId! : editingEventId;
         const ok = await deleteEvent(
             accessToken,
-            editingEventId,
+            deleteTargetId,
             {
                 ...(form.calendarId ? { calendarId: form.calendarId } : {}),
                 ...(form.accountId ? { accountId: form.accountId } : {}),
@@ -541,6 +611,41 @@ export const CalendarEventModal = ({
                                 : t.calendar.attendees.helperText}
                         </FormHelperText>
                     </FormControl>
+                    {/* Scope choice, shown only for a repeating event and
+                        placed ABOVE the repeat controls because it
+                        governs what they do. Defaults to "this event":
+                        the narrower, reversible action. */}
+                    {isRecurring && (
+                        <FormControl>
+                            <FormLabel>{t.calendar.scope.label}</FormLabel>
+                            <RadioGroup
+                                orientation="horizontal"
+                                value={scope}
+                                onChange={(e) => setScope(e.target.value as "this" | "all")}
+                            >
+                                <Radio label={t.calendar.scope.thisEvent} size="sm" value="this" />
+                                <Radio label={t.calendar.scope.allEvents} size="sm" value="all" />
+                            </RadioGroup>
+                            <FormHelperText>
+                                {scope === "all"
+                                    ? t.calendar.scope.seriesTimingNote
+                                    : t.calendar.scope.editHelper}
+                            </FormHelperText>
+                        </FormControl>
+                    )}
+
+                    {/* Repeat rule. On an existing series it's only
+                        editable under the "all events" scope — the rule
+                        lives on the master, so changing it from a single
+                        occurrence would be a no-op the user couldn't
+                        see. */}
+                    <RepeatPicker
+                        disabled={isRecurring && scope !== "all"}
+                        startISO={form.startISO}
+                        value={form.recurrence}
+                        onChange={(recurrence) => setForm((f) => ({ ...f, recurrence }))}
+                    />
+
                     <Checkbox
                         checked={form.addMeet}
                         label={
@@ -571,7 +676,9 @@ export const CalendarEventModal = ({
                                 {deleting
                                     ? "Deleting…"
                                     : deleteConfirm
-                                      ? "Confirm delete?"
+                                      ? isRecurring && scope === "all"
+                                          ? "Delete all events?"
+                                          : "Confirm delete?"
                                       : "Delete"}
                             </Button>
                         )}
