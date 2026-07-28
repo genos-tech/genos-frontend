@@ -558,7 +558,9 @@ export const LlmModelSection = () => {
     // Same payload-shape convention: `credits` is present iff the
     // backend runs credits as the authoritative limit.
     const creditsMode = Boolean(data.credits);
-    const currentEffort = data.current.effort || "medium";
+    // Fallback mirrors the backend's DEFAULT_EFFORT ("low") — only hit
+    // when `current.effort` is missing from an older payload.
+    const currentEffort = data.current.effort || "low";
     const effortsForProvider = (data.efforts ?? []).filter((e) => e.provider === currentProvider);
     const effortLabel = (e: string) =>
         e === "low"
