@@ -171,6 +171,87 @@ describe("rewriteCitations — weak-model malformed citations", () => {
     });
 });
 
+// Un-prefixed chat tokens — VERBATIM malformations from real runs
+// (2026-07-28 screenshots): models copy a source's entity_id ("gm:<uuid>…",
+// no "chat:" prefix) straight into citations, sometimes with an invented
+// ":msg:<uuid>" tail, sometimes as the LINK LABEL. None of these may ever
+// reach the reader raw.
+describe("rewriteCitations — un-prefixed dm:/gm: chat tokens", () => {
+    it("strips a bare [gm:<uuid>:msg:<uuid>] token from the prose", () => {
+        const out = rewriteCitations(
+            "Reviewers are needed on the responsive nav PR " +
+                "[gm:8f5e4733-cee9-4769-8a7f-859b80fa6713:msg:9c17635a-6d4a-4af2-ad56-664070546e56].",
+            noSources
+        );
+        expect(out).toBe("Reviewers are needed on the responsive nav PR.");
+    });
+
+    it("resolves a bare un-prefixed token to the retrieved thread chip", () => {
+        const thread = src("chat", "gm:8f5e4733:thread:9c17635a", "Design crew");
+        const chips = citedChipSources("Ping the reviewers [gm:8f5e4733:msg:deadbeef].", [thread]);
+        expect(chips.map((s) => s.entity_id)).toEqual(["gm:8f5e4733:thread:9c17635a"]);
+    });
+
+    it("rewrites a link whose URL lacks the chat: prefix to the canonical key", () => {
+        const sources = buildSourcesById([src("chat", "dm:aa771315:thread:282012f2", "Bob DM")]);
+        const out = rewriteCitations(
+            "Per [the spike thread](dm:aa771315:thread:282012f2).",
+            sources
+        );
+        expect(out).toBe(
+            `Per [the spike thread](${CITATION_HREF_PREFIX}chat:dm:aa771315:thread:282012f2).`
+        );
+    });
+
+    it("swaps an un-prefixed raw-token LABEL for the source title", () => {
+        const sources = buildSourcesById([src("chat", "dm:aa771315:thread:282012f2", "Bob DM")]);
+        const out = rewriteCitations(
+            "See ([dm:aa771315:thread:282012f2](chat:dm:aa771315:thread:282012f2)).",
+            sources
+        );
+        expect(out).toBe(
+            `See ([Bob DM](${CITATION_HREF_PREFIX}chat:dm:aa771315:thread:282012f2)).`
+        );
+    });
+
+    it("treats a UUID-bearing prose label as a raw token (screenshot form)", () => {
+        // The label has spaces so the token-shaped regex misses it, but a
+        // UUID in a label is never grammatical prose.
+        const sources = buildSourcesById([
+            src(
+                "chat",
+                "dm:aa771315-3b1c-4916-8ed1-d79efe90bc37:thread:282012f2-9157-4512-a5cd-c9841fb44ca2",
+                "Bob DM"
+            ),
+        ]);
+        const out = rewriteCitations(
+            "Adopt a CSS-first approach (" +
+                "[dm:aa771315-3b1c-4916-8ed1-d79efe90bc37 thread 282012f2-9157-4512-a5cd-c9841fb44ca2]" +
+                "(chat:dm:aa771315-3b1c-4916-8ed1-d79efe90bc37:thread:282012f2-9157-4512-a5cd-c9841fb44ca2)).",
+            sources
+        );
+        expect(out).toBe(
+            `Adopt a CSS-first approach ([Bob DM](${CITATION_HREF_PREFIX}chat:dm:aa771315-3b1c-4916-8ed1-d79efe90bc37:thread:282012f2-9157-4512-a5cd-c9841fb44ca2)).`
+        );
+    });
+
+    it("drops an unresolvable un-prefixed raw-token link entirely", () => {
+        const out = rewriteCitations(
+            "Check ([gm:8f5e4733:msg:9c17635a](gm:8f5e4733:msg:9c17635a)).",
+            noSources
+        );
+        expect(out).toBe("Check ().");
+    });
+
+    it("leaves bracketed prose starting with a chat label untouched", () => {
+        // "pm:" followed by a space / non-hex char is prose, not an id.
+        const a = "A reminder [pm: sync with design] before we go.";
+        expect(rewriteCitations(a, noSources)).toBe(a);
+        const b = "The [dm:notes] convention stays.";
+        expect(rewriteCitations(b, noSources)).toBe(b);
+    });
+});
+
 describe("citedChipSources — msg-suffixed citations chip the parent source", () => {
     it("resolves the :msg: token to the retrieved thread and shows its chip", () => {
         const thread = src("chat", "dm:0738dbef:thread:8995bd1d", "Bob Martinez");
@@ -250,6 +331,17 @@ describe("citedChipSources — cited sources (inline + bare), uncited dropped", 
         const b = src("note", "note:personal:9");
         // e.g. "You have 2 tasks due this week." — prompt exempts aggregate stats from citation.
         expect(citedChipSources("You have 2 tasks due this week.", [a, b])).toEqual([]);
+    });
+
+    it("always keeps an operated (write-tool) source, even uncited", () => {
+        const operated = {
+            ...src("note", "note:personal:88", "Launch plan"),
+            operated: true,
+        } as SpotlightResult;
+        const uncited = src("task", "task:42");
+        // The model forgot the citation — the operated chip must survive.
+        const chips = citedChipSources("Done — I created the note.", [operated, uncited]);
+        expect(chips.map((s) => s.entity_id)).toEqual(["note:personal:88"]);
     });
 
     it("keeps every cited source, incl. a chat entity_id without the chat: prefix", () => {
