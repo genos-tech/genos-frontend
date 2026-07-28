@@ -1,8 +1,11 @@
-import { ReactNode, useEffect, useRef } from "react";
+import { ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
 import { Box, Stack, Tooltip, Typography } from "@mui/joy";
 
 import { useIsMobile } from "../../../../hooks/common/useIsMobile";
+import { useTranslation } from "../../../../i18n";
+import { collapseCrumbs, DEFAULT_VISIBLE_TAIL } from "../utils/collapseCrumbs";
 
 export interface BreadcrumbNode {
     noteId: number;
@@ -37,7 +40,20 @@ interface NoteBreadcrumbsProps {
     contextCrumbs?: ContextCrumb[] | null;
     /** Maximum characters to show before truncating (default: 14) */
     maxTitleLength?: number;
+    /** How many trailing crumbs stay visible when the trail is
+     *  collapsed — the parent and the current note by default. The root
+     *  badge is always shown on top of these. */
+    visibleTail?: number;
 }
+
+/** One entry in the combined trail. Context crumbs (containers) and note
+ *  nodes render differently but collapse as a single sequence: what the
+ *  user wants is the last two crumbs regardless of which kind they are,
+ *  and a note only one folder deep would otherwise hide its folder while
+ *  keeping nothing. */
+type TrailItem =
+    | { kind: "context"; id: string; crumb: ContextCrumb }
+    | { kind: "note"; id: string; node: BreadcrumbNode; isCurrent: boolean };
 
 // Static category-color presets. The first three keys (primary/success/
 // warning) are FUNCTIONAL carve-outs: each maps to a distinct note category
@@ -96,10 +112,38 @@ export const NoteBreadcrumbs = ({
     onNodeClick,
     contextCrumbs,
     maxTitleLength = 14,
+    visibleTail = DEFAULT_VISIBLE_TAIL,
 }: NoteBreadcrumbsProps) => {
     const isMobile = useIsMobile();
+    const { t } = useTranslation();
     const scheme = colorSchemes[color];
     const scrollContainerRef = useRef<HTMLDivElement>(null);
+    const [expanded, setExpanded] = useState(false);
+
+    // Containers and note nodes collapse as ONE sequence — see
+    // `TrailItem`. Built here so the collapse maths never has to know
+    // which kind an entry is.
+    const trail = useMemo<TrailItem[]>(() => {
+        const items: TrailItem[] = [];
+        for (const crumb of contextCrumbs ?? []) {
+            items.push({ kind: "context", id: `ctx-${crumb.key}`, crumb });
+        }
+        const chain = noteChain ?? [];
+        chain.forEach((node, index) => {
+            items.push({
+                kind: "note",
+                id: `note-${node.noteId}-${index}`,
+                node,
+                isCurrent: index === chain.length - 1,
+            });
+        });
+        return items;
+    }, [contextCrumbs, noteChain]);
+
+    const { hidden, visible } = useMemo(
+        () => collapseCrumbs(trail, visibleTail),
+        [trail, visibleTail]
+    );
 
     // Auto-scroll to the rightmost position when noteChain changes.
     // Must run before any early return so the hook order is stable across
@@ -109,12 +153,22 @@ export const NoteBreadcrumbs = ({
         if (scrollContainerRef.current) {
             scrollContainerRef.current.scrollLeft = scrollContainerRef.current.scrollWidth;
         }
+    }, [noteChain, contextCrumbs, expanded]);
+
+    // Expansion is transient: navigating to another note re-collapses,
+    // so the header doesn't stay permanently long after one peek at an
+    // unrelated deep note.
+    useEffect(() => {
+        setExpanded(false);
     }, [noteChain, contextCrumbs]);
 
     // Hidden on mobile per design — the compact mobile header already
     // shows the current note title; the full breadcrumb trail is
     // desktop chrome that would line-wrap awkwardly at 390px anyway.
     if (isMobile) return null;
+
+    const shown = expanded ? trail : visible;
+    const canExpand = hidden.length > 0;
 
     const truncateTitle = (title: string) => {
         if (title.length > maxTitleLength) {
@@ -199,35 +253,90 @@ export const NoteBreadcrumbs = ({
                 </Typography>
             </Box>
 
-            {/* Context Chain. The note's container ancestry, outermost-
-                first, shown as non-interactive labels ahead of the note
-                nodes: sidebar folders (My notes), Project→Task (task
-                notes), Channel→Thread (chat notes). A leading icon + muted
-                tone distinguishes them from the clickable note crumbs —
-                containers are context, not a view you open. */}
-            {contextCrumbs &&
-                contextCrumbs.map((crumb) => (
-                    <Stack key={crumb.key} alignItems="center" direction="row" spacing={0.5}>
-                        <ChevronRightIcon
+            {/* Show-more control, sitting between the root badge and the
+                surviving tail so the trail still reads left-to-right
+                once expanded. Only rendered when it would actually
+                reveal something. */}
+            {canExpand && !expanded && (
+                <Stack alignItems="center" direction="row" spacing={0.5}>
+                    <ChevronRightIcon sx={{ fontSize: 16, color: "neutral.400", opacity: 0.7 }} />
+                    <Tooltip
+                        placement="bottom"
+                        size="sm"
+                        variant="outlined"
+                        arrow
+                        sx={{
+                            maxWidth: 280,
+                            "& .MuiTooltip-arrow": { color: "background.level2" },
+                        }}
+                        title={
+                            // Names what's behind the control rather than
+                            // just counting it — "Documents / Specs / 2026"
+                            // tells the user whether it's worth opening.
+                            hidden
+                                .map((item) =>
+                                    item.kind === "context" ? item.crumb.label : item.node.title
+                                )
+                                .join("  /  ")
+                        }
+                    >
+                        <Typography
+                            aria-expanded={false}
+                            aria-label={t.notes.header.showHiddenCrumbs.replace(
+                                "{count}",
+                                String(hidden.length)
+                            )}
+                            component="button"
+                            level="body-sm"
                             sx={{
-                                fontSize: 16,
-                                color: "neutral.400",
-                                opacity: 0.7,
-                            }}
-                        />
-                        <Tooltip
-                            placement="bottom"
-                            size="sm"
-                            title={crumb.label}
-                            variant="outlined"
-                            sx={{
-                                maxWidth: 280,
-                                "& .MuiTooltip-arrow": {
-                                    color: "background.level2",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: 0.25,
+                                background: "transparent",
+                                border: "none",
+                                padding: "4px 8px",
+                                borderRadius: "6px",
+                                cursor: "pointer",
+                                fontWeight: 600,
+                                color: "text.tertiary",
+                                transition: "all 0.15s ease-out",
+                                "&:hover": {
+                                    color: scheme.text,
+                                    background: scheme.hoverBg,
+                                },
+                                "&:focus-visible": {
+                                    outline: `2px solid ${scheme.text}`,
+                                    outlineOffset: "2px",
                                 },
                             }}
-                            arrow
+                            onClick={() => setExpanded(true)}
                         >
+                            <MoreHorizRoundedIcon sx={{ fontSize: 16 }} />
+                            <span>{hidden.length}</span>
+                        </Typography>
+                    </Tooltip>
+                </Stack>
+            )}
+
+            {/* The trail itself. Context crumbs are non-interactive
+                container labels; note nodes are clickable. Both come from
+                one collapsed sequence so the "last two crumbs" rule holds
+                across the boundary between them. */}
+            {shown.map((item) => (
+                <Stack key={item.id} alignItems="center" direction="row" spacing={0.5}>
+                    <ChevronRightIcon sx={{ fontSize: 16, color: "neutral.400", opacity: 0.7 }} />
+                    <Tooltip
+                        placement="bottom"
+                        size="sm"
+                        variant="outlined"
+                        arrow
+                        sx={{
+                            maxWidth: 280,
+                            "& .MuiTooltip-arrow": { color: "background.level2" },
+                        }}
+                        title={item.kind === "context" ? item.crumb.label : item.node.title}
+                    >
+                        {item.kind === "context" ? (
                             <Box
                                 sx={{
                                     display: "inline-flex",
@@ -242,7 +351,7 @@ export const NoteBreadcrumbs = ({
                                     whiteSpace: "nowrap",
                                 }}
                             >
-                                {crumb.icon && (
+                                {item.crumb.icon && (
                                     <Box
                                         sx={{
                                             display: "inline-flex",
@@ -251,101 +360,61 @@ export const NoteBreadcrumbs = ({
                                             "& svg": { fontSize: 15 },
                                         }}
                                     >
-                                        {crumb.icon}
+                                        {item.crumb.icon}
                                     </Box>
                                 )}
-                                <span>{truncateTitle(crumb.label)}</span>
+                                <span>{truncateTitle(item.crumb.label)}</span>
                             </Box>
-                        </Tooltip>
-                    </Stack>
-                ))}
-
-            {/* Breadcrumb Chain */}
-            {noteChain &&
-                noteChain.map((node, index) => {
-                    const isLastItem = index === noteChain.length - 1;
-
-                    return (
-                        <Stack
-                            key={`breadcrumb-${node.noteId}-${index}`}
-                            alignItems="center"
-                            direction="row"
-                            spacing={0.5}
-                        >
-                            {/* Separator */}
-                            <ChevronRightIcon
+                        ) : (
+                            <Typography
+                                component="button"
+                                level="body-sm"
                                 sx={{
-                                    fontSize: 16,
-                                    color: "neutral.400",
-                                    opacity: 0.7,
-                                }}
-                            />
-
-                            {/* Breadcrumb Item */}
-                            <Tooltip
-                                placement="bottom"
-                                size="sm"
-                                title={node.title}
-                                variant="outlined"
-                                sx={{
-                                    maxWidth: 280,
-                                    "& .MuiTooltip-arrow": {
-                                        color: "background.level2",
+                                    background: item.isCurrent ? scheme.activeBg : "transparent",
+                                    border: "none",
+                                    padding: "4px 10px",
+                                    borderRadius: "6px",
+                                    cursor: "pointer",
+                                    fontWeight: item.isCurrent ? 600 : 500,
+                                    color: item.isCurrent ? scheme.text : "text.secondary",
+                                    transition: "all 0.15s ease-out",
+                                    position: "relative",
+                                    overflow: "hidden",
+                                    "&::before": {
+                                        content: '""',
+                                        position: "absolute",
+                                        inset: 0,
+                                        borderRadius: "6px",
+                                        background: scheme.hoverBg,
+                                        opacity: 0,
+                                        transition: "opacity 0.15s ease-out",
+                                    },
+                                    "&:hover": {
+                                        color: scheme.text,
+                                        "&::before": { opacity: 1 },
+                                    },
+                                    "&:active": {
+                                        transform: "scale(0.98)",
+                                        "&::before": {
+                                            background: scheme.activeBg,
+                                            opacity: 1,
+                                        },
+                                    },
+                                    "&:focus-visible": {
+                                        outline: `2px solid ${scheme.text}`,
+                                        outlineOffset: "2px",
                                     },
                                 }}
-                                arrow
+                                onClick={() => onNodeClick(item.node.noteId)}
                             >
-                                <Typography
-                                    component="button"
-                                    level="body-sm"
-                                    sx={{
-                                        background: isLastItem ? scheme.activeBg : "transparent",
-                                        border: "none",
-                                        padding: "4px 10px",
-                                        borderRadius: "6px",
-                                        cursor: "pointer",
-                                        fontWeight: isLastItem ? 600 : 500,
-                                        color: isLastItem ? scheme.text : "text.secondary",
-                                        transition: "all 0.15s ease-out",
-                                        position: "relative",
-                                        overflow: "hidden",
-                                        "&::before": {
-                                            content: '""',
-                                            position: "absolute",
-                                            inset: 0,
-                                            borderRadius: "6px",
-                                            background: scheme.hoverBg,
-                                            opacity: 0,
-                                            transition: "opacity 0.15s ease-out",
-                                        },
-                                        "&:hover": {
-                                            color: scheme.text,
-                                            "&::before": {
-                                                opacity: 1,
-                                            },
-                                        },
-                                        "&:active": {
-                                            transform: "scale(0.98)",
-                                            "&::before": {
-                                                background: scheme.activeBg,
-                                                opacity: 1,
-                                            },
-                                        },
-                                        "&:focus-visible": {
-                                            outline: `2px solid ${scheme.text}`,
-                                            outlineOffset: "2px",
-                                        },
-                                    }}
-                                    onClick={() => onNodeClick(node.noteId)}
-                                >
-                                    <span style={{ position: "relative", zIndex: 1 }}>
-                                        {truncateTitle(node.title)}
-                                    </span>
-                                </Typography>
-                            </Tooltip>
-                        </Stack>
-                    );
-                })}
+                                <span style={{ position: "relative", zIndex: 1 }}>
+                                    {truncateTitle(item.node.title)}
+                                </span>
+                            </Typography>
+                        )}
+                    </Tooltip>
+                </Stack>
+            ))}
         </Stack>
     );
 };
