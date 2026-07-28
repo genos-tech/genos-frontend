@@ -137,8 +137,27 @@ export const ThreadAskModal = ({
     const [saving, setSaving] = useState(false);
     const [saveError, setSaveError] = useState<string | null>(null);
     const [saveSuccess, setSaveSuccess] = useState(false);
+    // Fingerprint of what the last successful save contained. While the
+    // current content still matches it there is nothing new to save, so
+    // the button stays disabled — clicking twice would just create a
+    // duplicate note. Refreshing the summary or asking/clearing a
+    // follow-up changes the fingerprint and re-arms the button.
+    const [savedSignature, setSavedSignature] = useState<string | null>(null);
 
     const labels = useMemo(() => buildLabels(t), [t]);
+
+    const turns = state.agentQA.turns;
+    const saveSignature = useMemo(() => {
+        if (!state.summary) return null;
+        const lastTurn = turns.length > 0 ? turns[turns.length - 1] : null;
+        return [
+            state.summary.lastUpdatedIso,
+            state.summary.text.length,
+            turns.length,
+            lastTurn?.runId ?? "",
+        ].join("|");
+    }, [state.summary, turns]);
+    const alreadySaved = savedSignature !== null && savedSignature === saveSignature;
 
     const onSave = async () => {
         // The summary alone is saveable — Q&A turns are optional and the
@@ -173,6 +192,7 @@ export const ThreadAskModal = ({
                 aLabel: t.threadAsk.conversation.turnLabelA,
             });
             setSaveSuccess(true);
+            setSavedSignature(saveSignature);
         } catch (err) {
             setSaveError(err instanceof Error ? err.message : t.threadAsk.saveAsNote.failed);
         } finally {
@@ -358,7 +378,7 @@ export const ThreadAskModal = ({
                 {/* Footer */}
                 <Stack alignItems="center" direction="row" spacing={1}>
                     <Button
-                        disabled={saving || !state.summary}
+                        disabled={saving || !state.summary || alreadySaved}
                         startDecorator={<SaveRoundedIcon sx={{ fontSize: 16 }} />}
                         variant="solid"
                         onClick={onSave}
