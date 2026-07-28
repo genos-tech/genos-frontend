@@ -15,6 +15,8 @@ import {
     ListItemDecorator,
     Modal,
     ModalDialog,
+    Option,
+    Select,
     Stack,
     Textarea,
     Typography,
@@ -23,7 +25,14 @@ import dayjs from "dayjs";
 
 import { useOptionalAvatarContext } from "../../../components/ui/avatars/AvatarContext";
 import { useTranslation } from "../../../i18n";
-import { CalendarEvent, createEvent, deleteEvent, updateEvent } from "../services/calendar";
+import {
+    CalendarEvent,
+    CalendarSummary,
+    createEvent,
+    deleteEvent,
+    sourceKey,
+    updateEvent,
+} from "../services/calendar";
 import { dateOnly, googleEndToInclusive, inclusiveToGoogleEnd } from "../utils/allDayDates";
 import { ReconnectGoogleCalendarButton } from "./ReconnectGoogleCalendarButton";
 
@@ -59,6 +68,12 @@ interface EventFormInitial {
     attendees?: Array<{ email: string; displayName?: string }>;
     /** Optional calendar id. Empty/undefined → primary. */
     calendar_id?: string;
+    /** Which connected Google account owns `calendar_id`. Required to
+     *  edit an event that came from a non-default account: event ids
+     *  are unique per calendar, not globally, so without the account
+     *  the PATCH is authenticated as the wrong user and 404s. Omitted
+     *  → the server's default account. */
+    account_id?: string;
     description?: string;
     /** RFC3339 / ISO datetime string. */
     end?: string;
@@ -71,6 +86,12 @@ interface CalendarEventModalProps {
     accessToken: string;
     open: boolean;
     onClose: () => void;
+    /** Calendars the user can pick as the target when CREATING an
+     *  event, across every connected account. Read-only ones (shared
+     *  by a teammate) are listed but disabled — offering them would
+     *  produce a 403 at save time. Empty is fine: the modal then just
+     *  posts to the default account's primary calendar as before. */
+    calendars?: CalendarSummary[];
     /** When omitted, the modal opens in "create" mode with empty
      *  fields; the caller can pre-fill via this prop. When set, the
      *  fields are seeded from `initial` and submit calls `updateEvent`
@@ -99,6 +120,7 @@ interface FormState {
     // last day. Otherwise they're "datetime-local" values as before.
     allDay: boolean;
     attendees: AttendeeOption[];
+    accountId: string;
     calendarId: string;
     description: string;
     endISO: string;
@@ -125,6 +147,7 @@ const formFromInitial = (initial: EventFormInitial | undefined): FormState => {
             email: a.email,
             displayName: a.displayName || a.email,
         })),
+        accountId: initial?.account_id ?? "",
         calendarId: initial?.calendar_id ?? "",
         description: initial?.description ?? "",
         // All-day seeds date-only values, converting Google's exclusive
@@ -148,6 +171,7 @@ export const CalendarEventModal = ({
     accessToken,
     open,
     onClose,
+    calendars = [],
     initial,
     editingEventId,
     onSaved,
@@ -172,6 +196,15 @@ export const CalendarEventModal = ({
     // modal doesn't take a teamMembers prop. `useOptional` returns
     // null pre-auth (e.g. signin sandbox) so the picker just shows
     // an empty option list rather than crashing.
+    // Calendars the user may actually create on. "reader" /
+    // "freeBusyReader" — what a teammate's shared calendar normally
+    // grants — are filtered out rather than shown disabled: an option
+    // that can only fail isn't worth the row.
+    const writableCalendars = useMemo(
+        () => calendars.filter((c) => ["owner", "writer"].includes(c.access_role ?? "owner")),
+        [calendars]
+    );
+
     const avatarCtx = useOptionalAvatarContext();
     const teamOptions: AttendeeOption[] = useMemo(() => {
         if (!avatarCtx) return [];
@@ -275,6 +308,7 @@ export const CalendarEventModal = ({
                   }
                 : {}),
             ...(form.calendarId ? { calendar_id: form.calendarId } : {}),
+            ...(form.accountId ? { account_id: form.accountId } : {}),
             description: form.description || undefined,
             // All-day events are date-only; Google's `end.date` is
             // exclusive, so we submit the inclusive last day + 1. Timed
@@ -322,7 +356,10 @@ export const CalendarEventModal = ({
         const ok = await deleteEvent(
             accessToken,
             editingEventId,
-            form.calendarId ? { calendarId: form.calendarId } : {},
+            {
+                ...(form.calendarId ? { calendarId: form.calendarId } : {}),
+                ...(form.accountId ? { accountId: form.accountId } : {}),
+            },
             reportError
         );
         setDeleting(false);
@@ -358,6 +395,51 @@ export const CalendarEventModal = ({
                             onChange={(e) => setForm((f) => ({ ...f, summary: e.target.value }))}
                         />
                     </FormControl>
+                    {/* Target calendar. Only offered on CREATE: Google
+                        can't move an existing event between calendars
+                        with a PATCH (it needs a separate move call), so
+                        showing an editable picker here would silently
+                        do nothing. On edit the event's own calendar is
+                        displayed read-only instead. */}
+                    {writableCalendars.length > 1 && !editingEventId && (
+                        <FormControl>
+                            <FormLabel>{t.calendar.target.label}</FormLabel>
+                            <Select
+                                value={
+                                    form.accountId
+                                        ? sourceKey(form.accountId, form.calendarId)
+                                        : ""
+                                }
+                                onChange={(_e, next) => {
+                                    if (!next) return;
+                                    const picked = writableCalendars.find(
+                                        (c) => sourceKey(c.account_id, c.id) === next
+                                    );
+                                    if (!picked) return;
+                                    setForm((f) => ({
+                                        ...f,
+                                        accountId: picked.account_id,
+                                        calendarId: picked.id,
+                                    }));
+                                }}
+                            >
+                                {writableCalendars.map((c) => (
+                                    <Option
+                                        key={sourceKey(c.account_id, c.id)}
+                                        value={sourceKey(c.account_id, c.id)}
+                                    >
+                                        {/* Account email is part of the
+                                            label because two accounts
+                                            both have a calendar named
+                                            after the user. */}
+                                        {c.summary || c.id}
+                                        {c.account_email ? ` · ${c.account_email}` : ""}
+                                    </Option>
+                                ))}
+                            </Select>
+                            <FormHelperText>{t.calendar.target.helperText}</FormHelperText>
+                        </FormControl>
+                    )}
                     <Checkbox
                         checked={form.allDay}
                         label={<Typography level="body-sm">All day</Typography>}

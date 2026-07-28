@@ -1050,7 +1050,29 @@ const AutoSyncCalendarSection = () => {
         (async () => {
             const res = await listCalendars(accessToken);
             if (cancelled) return;
-            setNeedsReconnect(res === "google_reauth_required");
+            if (res === "google_reauth_required") {
+                setNeedsReconnect(true);
+                return;
+            }
+            if (!res || typeof res === "string") {
+                setNeedsReconnect(false);
+                return;
+            }
+            // Multi-account: the endpoint only returns the bare
+            // `google_reauth_required` discriminator when EVERY account
+            // is dead. This setting drives task auto-sync, which is
+            // pinned to the default account (server-side: login
+            // identity, else oldest — the first entry returned), so a
+            // healthy second account must not mask a dead default one.
+            const defaultAccount = res.accounts.find((a) => a.is_primary) ?? res.accounts[0];
+            setNeedsReconnect(
+                !!defaultAccount &&
+                    res.failed_accounts.some(
+                        (f) =>
+                            f.account_id === defaultAccount.id &&
+                            f.reason === "google_reauth_required"
+                    )
+            );
         })();
         return () => {
             cancelled = true;

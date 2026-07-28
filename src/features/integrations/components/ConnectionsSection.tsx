@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
@@ -8,7 +9,7 @@ import { AppTooltip } from "../../../components/ui/AppTooltip";
 import {
     Connection,
     ConnectionsResponse,
-    disconnectProvider,
+    disconnectAccount,
     hasCalendarScope,
     listConnections,
 } from "../services/connections";
@@ -31,7 +32,10 @@ interface ConnectionsSectionProps {
 export const ConnectionsSection = ({ accessToken }: ConnectionsSectionProps) => {
     const [data, setData] = useState<ConnectionsResponse | null>(null);
     const [loading, setLoading] = useState(true);
-    const [disconnecting, setDisconnecting] = useState<"google" | "github" | null>(null);
+    // Keyed by ACCOUNT id, not provider: a user can hold several
+    // Google accounts and only the one being removed should show a
+    // pending state.
+    const [disconnecting, setDisconnecting] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
 
     const reload = useCallback(async () => {
@@ -46,31 +50,44 @@ export const ConnectionsSection = ({ accessToken }: ConnectionsSectionProps) => 
         void reload();
     }, [reload]);
 
-    const connected = useMemo(() => {
-        const m: Partial<Record<"google" | "github", Connection>> = {};
-        for (const c of data?.connections || []) m[c.provider] = c;
-        return m;
-    }, [data]);
+    // Google is multi-account (work + personal), so it's a LIST.
+    // The previous shape — one Connection per provider — silently
+    // dropped every account after the first.
+    const googleAccounts = useMemo(
+        () => (data?.connections || []).filter((c) => c.provider === "google"),
+        [data]
+    );
+    const githubAccount = useMemo(
+        () => (data?.connections || []).find((c) => c.provider === "github"),
+        [data]
+    );
 
-    const handleDisconnect = async (provider: "google" | "github") => {
+    const handleDisconnect = async (accountId: string) => {
         setError(null);
-        setDisconnecting(provider);
-        const ok = await disconnectProvider(accessToken, provider, setError);
+        setDisconnecting(accountId);
+        const ok = await disconnectAccount(accessToken, accountId, setError);
         setDisconnecting(null);
         if (ok) void reload();
     };
 
-    const Row = ({
+    const startConnect = (provider: "google" | "github") => {
+        void redirectToOAuthConnect(provider, accessToken, undefined, setError);
+    };
+
+    /** One connected account, or an empty "Connect" affordance when
+     *  `connection` is undefined. */
+    const AccountRow = ({
+        connection,
         provider,
         label,
         icon,
     }: {
+        connection?: Connection;
         provider: "google" | "github";
         label: string;
         icon: React.ReactNode;
     }) => {
-        const c = connected[provider];
-        const isPrimary = c?.is_primary === true;
+        const isPrimary = connection?.is_primary === true;
         return (
             <Card sx={{ p: 2 }} variant="outlined">
                 <Stack alignItems="center" direction="row" spacing={2}>
@@ -84,15 +101,11 @@ export const ConnectionsSection = ({ accessToken }: ConnectionsSectionProps) => 
                                 </Chip>
                             )}
                         </Stack>
-                        {c ? (
-                            <Typography level="body-sm" sx={{ color: "text.secondary" }}>
-                                {c.provider_email || "(no email shared)"}
-                            </Typography>
-                        ) : (
-                            <Typography level="body-sm" sx={{ color: "text.secondary" }}>
-                                Not connected
-                            </Typography>
-                        )}
+                        <Typography level="body-sm" sx={{ color: "text.secondary" }} noWrap>
+                            {connection
+                                ? connection.provider_email || "(no email shared)"
+                                : "Not connected"}
+                        </Typography>
                     </Box>
                     {/* A Google account that came in via sign-in only
                         has openid/email/profile scopes — no calendar
@@ -100,55 +113,39 @@ export const ConnectionsSection = ({ accessToken }: ConnectionsSectionProps) => 
                         button that re-runs the OAuth flow under the
                         connect intent (broader scopes). The callback
                         upgrades scopes on the existing row. */}
-                    {c && provider === "google" && !hasCalendarScope(c) && (
+                    {connection && provider === "google" && !hasCalendarScope(connection) && (
                         <Button
                             color="primary"
                             variant="solid"
-                            onClick={() => {
-                                void redirectToOAuthConnect(
-                                    provider,
-                                    accessToken,
-                                    undefined,
-                                    setError
-                                );
-                            }}
+                            onClick={() => startConnect(provider)}
                         >
                             Grant Calendar access
                         </Button>
                     )}
-                    {c ? (
+                    {connection ? (
                         <AppTooltip
                             placement="left"
                             title={
                                 isPrimary
-                                    ? "You can't disconnect the provider you signed up with."
+                                    ? "You can't disconnect the account you signed up with."
                                     : ""
                             }
                         >
                             <span>
                                 <Button
                                     color="danger"
-                                    disabled={isPrimary || disconnecting === provider}
+                                    disabled={isPrimary || disconnecting === connection.id}
                                     variant="outlined"
-                                    onClick={() => handleDisconnect(provider)}
+                                    onClick={() => handleDisconnect(connection.id)}
                                 >
-                                    {disconnecting === provider ? "Disconnecting…" : "Disconnect"}
+                                    {disconnecting === connection.id
+                                        ? "Disconnecting…"
+                                        : "Disconnect"}
                                 </Button>
                             </span>
                         </AppTooltip>
                     ) : (
-                        <Button
-                            onClick={() => {
-                                void redirectToOAuthConnect(
-                                    provider,
-                                    accessToken,
-                                    undefined,
-                                    setError
-                                );
-                            }}
-                        >
-                            Connect
-                        </Button>
+                        <Button onClick={() => startConnect(provider)}>Connect</Button>
                     )}
                 </Stack>
             </Card>
@@ -206,12 +203,52 @@ export const ConnectionsSection = ({ accessToken }: ConnectionsSectionProps) => 
                 </Box>
             </Alert>
 
-            <Row
-                icon={<CalendarMonthRoundedIcon fontSize="inherit" sx={{ color: "#4285f4" }} />}
-                label="Google"
-                provider="google"
+            {googleAccounts.length === 0 ? (
+                <AccountRow
+                    icon={
+                        <CalendarMonthRoundedIcon fontSize="inherit" sx={{ color: "#4285f4" }} />
+                    }
+                    label="Google"
+                    provider="google"
+                />
+            ) : (
+                <>
+                    {googleAccounts.map((c) => (
+                        <AccountRow
+                            key={c.id}
+                            connection={c}
+                            icon={
+                                <CalendarMonthRoundedIcon
+                                    fontSize="inherit"
+                                    sx={{ color: "#4285f4" }}
+                                />
+                            }
+                            label="Google"
+                            provider="google"
+                        />
+                    ))}
+                    {/* Connecting a second Google account is the whole
+                        point of the multi-account calendar — work and
+                        personal side by side. The consent screen opens
+                        on Google's account chooser so the user picks a
+                        DIFFERENT account than the one they're signed
+                        into. */}
+                    <Button
+                        startDecorator={<AddRoundedIcon />}
+                        sx={{ alignSelf: "flex-start" }}
+                        variant="outlined"
+                        onClick={() => startConnect("google")}
+                    >
+                        Add another Google account
+                    </Button>
+                </>
+            )}
+            <AccountRow
+                connection={githubAccount}
+                icon={<GitHubIcon fontSize="inherit" />}
+                label="GitHub"
+                provider="github"
             />
-            <Row icon={<GitHubIcon fontSize="inherit" />} label="GitHub" provider="github" />
         </Stack>
     );
 };

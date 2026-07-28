@@ -33,6 +33,31 @@ export const calendar = {
     },
     allDay: "All day",
     nowLabel: "Now",
+    // Multi-account overlay: the side rail that picks which accounts
+    // and calendars are drawn on the grid at once.
+    sources: {
+        title: "Calendars",
+        addAccount: "Add Google account",
+        showAllFrom: "Show all calendars from this account",
+        hideAllFrom: "Hide all calendars from this account",
+        // Shown when Google returned no email for a connected account —
+        // rare, but the group still needs a heading.
+        unknownAccount: "Google account",
+        // Marks a calendar someone else shared with the user. They can
+        // see it but not create events on it.
+        sharedBadge: "Shared",
+        emptySelection: "No calendars selected. Tick one to see events.",
+        // One source failed while others loaded — shown as a dismissible
+        // inline note rather than replacing the whole grid.
+        partialFailure: "Some calendars couldn't be loaded.",
+        accountReauthNeeded: "{email} needs reconnecting.",
+        accountScopeNeeded: "{email} hasn't granted Calendar access.",
+    },
+    target: {
+        label: "Calendar",
+        helperText: "Which calendar this event is created on.",
+        readOnly: "You can't create events on this calendar.",
+    },
     attendees: {
         label: "Invite teammates",
         placeholder: "Search by name or email…",

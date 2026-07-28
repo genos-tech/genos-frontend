@@ -6,6 +6,7 @@ import dayjs, { Dayjs } from "dayjs";
 
 import { CalendarEvent } from "../../integrations/services/calendar";
 import { buildMonthGrid, weekdayLabels } from "../utils/monthGrid";
+import { paletteForEvent } from "../utils/sourceColors";
 
 const MAX_CHIPS_PER_CELL = 2;
 
@@ -31,6 +32,11 @@ interface MonthViewProps {
     /** Click on the "+N more" overflow chip → caller surfaces a
      *  per-day popover listing all events for that key. */
     onShowMore: (dayKey: string) => void;
+    /** Base color per `accountId:calendarId`. With several accounts
+     *  overlaid, color is the only thing distinguishing a work meeting
+     *  from a personal one, so chips are tinted per source rather than
+     *  all wearing the brand accent. */
+    colorBySource: Record<string, string>;
 }
 
 /**
@@ -45,6 +51,7 @@ export const MonthView = ({
     onCellClick,
     onEventClick,
     onShowMore,
+    colorBySource,
 }: MonthViewProps) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
@@ -176,43 +183,63 @@ export const MonthView = ({
                                 )}
                             </Stack>
                             <Stack spacing={0.25}>
-                                {visibleChips.map((e, idx) => (
-                                    <Tooltip
-                                        key={`${e.id}-${idx}`}
-                                        size="sm"
-                                        sx={{ borderRadius: "8px" }}
-                                        title={e.summary || "(no title)"}
-                                        variant="outlined"
-                                    >
-                                        <Chip
-                                            color={e.hangoutLink ? "success" : "primary"}
+                                {visibleChips.map((e, idx) => {
+                                    const palette = paletteForEvent(
+                                        e._source,
+                                        colorBySource,
+                                        isDark
+                                    );
+                                    return (
+                                        <Tooltip
+                                            key={`${e.id}-${idx}`}
                                             size="sm"
-                                            variant="soft"
-                                            startDecorator={
-                                                e.hangoutLink ? (
-                                                    <VideoCameraFrontRoundedIcon
-                                                        sx={{ fontSize: 12 }}
-                                                    />
-                                                ) : undefined
+                                            sx={{ borderRadius: "8px" }}
+                                            variant="outlined"
+                                            title={
+                                                e._source?.account_email
+                                                    ? `${e.summary || "(no title)"} — ${e._source.account_email}`
+                                                    : e.summary || "(no title)"
                                             }
-                                            sx={{
-                                                cursor: "pointer",
-                                                maxWidth: "100%",
-                                                "& .MuiChip-label, & > span": {
-                                                    overflow: "hidden",
-                                                    textOverflow: "ellipsis",
-                                                    whiteSpace: "nowrap",
-                                                },
-                                            }}
-                                            onClick={(ev) => {
-                                                ev.stopPropagation();
-                                                onEventClick(e);
-                                            }}
                                         >
-                                            {chipLabel(e)}
-                                        </Chip>
-                                    </Tooltip>
-                                ))}
+                                            <Chip
+                                                size="sm"
+                                                variant="soft"
+                                                startDecorator={
+                                                    e.hangoutLink ? (
+                                                        <VideoCameraFrontRoundedIcon
+                                                            sx={{ fontSize: 12 }}
+                                                        />
+                                                    ) : undefined
+                                                }
+                                                sx={{
+                                                    cursor: "pointer",
+                                                    maxWidth: "100%",
+                                                    backgroundColor: palette.fill,
+                                                    color: palette.text,
+                                                    // Solid left rule reads as the
+                                                    // calendar's identity even when
+                                                    // the soft fill is subtle.
+                                                    borderLeft: `3px solid ${palette.base}`,
+                                                    borderRadius: "4px",
+                                                    "&:hover": {
+                                                        backgroundColor: palette.fillHover,
+                                                    },
+                                                    "& .MuiChip-label, & > span": {
+                                                        overflow: "hidden",
+                                                        textOverflow: "ellipsis",
+                                                        whiteSpace: "nowrap",
+                                                    },
+                                                }}
+                                                onClick={(ev) => {
+                                                    ev.stopPropagation();
+                                                    onEventClick(e);
+                                                }}
+                                            >
+                                                {chipLabel(e)}
+                                            </Chip>
+                                        </Tooltip>
+                                    );
+                                })}
                                 {overflow > 0 && (
                                     <Chip
                                         color="neutral"

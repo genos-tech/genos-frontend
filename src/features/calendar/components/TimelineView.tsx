@@ -7,6 +7,7 @@ import dayjs, { Dayjs } from "dayjs";
 import { useTranslation } from "../../../i18n";
 import { CalendarEvent } from "../../integrations/services/calendar";
 import { CalendarView, timelineDays } from "../utils/monthGrid";
+import { paletteForEvent } from "../utils/sourceColors";
 import {
     eventHeightPx,
     eventTopPx,
@@ -35,6 +36,11 @@ interface TimelineViewProps {
     /** Click an event block (or all-day chip) → caller opens the
      *  edit modal for that event. */
     onEventClick: (event: CalendarEvent) => void;
+    /** Base color per `accountId:calendarId`. Blocks are tinted by the
+     *  calendar they belong to so a merged work+personal timeline stays
+     *  readable; the Meet indicator moved to the icon alone, since a
+     *  green-for-Meet fill would collide with the source colors. */
+    colorBySource: Record<string, string>;
 }
 
 /** "6 AM" / "12 PM" / "11 PM" — Google-style 12h labels. */
@@ -88,6 +94,7 @@ export const TimelineView = ({
     events,
     onCreateAt,
     onEventClick,
+    colorBySource,
 }: TimelineViewProps) => {
     const { mode } = useColorScheme();
     const { t } = useTranslation();
@@ -109,17 +116,11 @@ export const TimelineView = ({
     const accent = isDark
         ? "rgba(var(--gp-brand-700-rgb), 0.85)"
         : "rgba(var(--gp-brand-700-rgb), 1)";
-    const eventBlue = isDark
-        ? "rgba(var(--gp-brand-700-rgb), 0.32)"
-        : "rgba(var(--gp-brand-700-rgb), 0.16)";
-    const eventBlueHover = isDark
-        ? "rgba(var(--gp-brand-700-rgb), 0.45)"
-        : "rgba(var(--gp-brand-700-rgb), 0.28)";
-    const eventBorder = isDark
-        ? "rgba(var(--gp-brand-700-rgb), 0.7)"
-        : "rgba(var(--gp-brand-700-rgb), 0.55)";
-    const eventGreen = isDark ? "rgba(34,197,94,0.32)" : "rgba(34,197,94,0.18)";
-    const eventGreenBorder = isDark ? "rgba(34,197,94,0.7)" : "rgba(34,197,94,0.55)";
+    // Event fills used to be one brand blue (green for Meet events).
+    // Both are gone: with several calendars overlaid, colour has to
+    // carry which calendar an event belongs to, so it now comes from
+    // `paletteForEvent` per source and the Meet signal is the camera
+    // icon alone.
     const gridLine = isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)";
     const headerLine = isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.12)";
     const nowLine = isDark ? "rgba(239,68,68,0.85)" : "rgba(239,68,68,1)";
@@ -238,43 +239,47 @@ export const TimelineView = ({
                                 borderLeft: `1px solid ${gridLine}`,
                             }}
                         >
-                            {allDayEvents.map((e) => (
-                                <Tooltip
-                                    key={e.id}
-                                    size="sm"
-                                    sx={{ borderRadius: "8px" }}
-                                    title={e.summary || "(no title)"}
-                                    variant="outlined"
-                                >
-                                    <Box
-                                        sx={{
-                                            cursor: "pointer",
-                                            backgroundColor: e.hangoutLink
-                                                ? eventGreen
-                                                : eventBlue,
-                                            borderLeft: `3px solid ${
-                                                e.hangoutLink ? eventGreenBorder : eventBorder
-                                            }`,
-                                            borderRadius: "4px",
-                                            px: 0.5,
-                                            py: 0.25,
-                                            fontSize: "0.72rem",
-                                            overflow: "hidden",
-                                            textOverflow: "ellipsis",
-                                            whiteSpace: "nowrap",
-                                            "&:hover": {
-                                                backgroundColor: eventBlueHover,
-                                            },
-                                        }}
-                                        onClick={(ev) => {
-                                            ev.stopPropagation();
-                                            onEventClick(e);
-                                        }}
+                            {allDayEvents.map((e) => {
+                                const palette = paletteForEvent(e._source, colorBySource, isDark);
+                                return (
+                                    <Tooltip
+                                        key={e.id}
+                                        size="sm"
+                                        sx={{ borderRadius: "8px" }}
+                                        variant="outlined"
+                                        title={
+                                            e._source?.account_email
+                                                ? `${e.summary || "(no title)"} — ${e._source.account_email}`
+                                                : e.summary || "(no title)"
+                                        }
                                     >
-                                        {e.summary || "(no title)"}
-                                    </Box>
-                                </Tooltip>
-                            ))}
+                                        <Box
+                                            sx={{
+                                                cursor: "pointer",
+                                                backgroundColor: palette.fill,
+                                                color: palette.text,
+                                                borderLeft: `3px solid ${palette.base}`,
+                                                borderRadius: "4px",
+                                                px: 0.5,
+                                                py: 0.25,
+                                                fontSize: "0.72rem",
+                                                overflow: "hidden",
+                                                textOverflow: "ellipsis",
+                                                whiteSpace: "nowrap",
+                                                "&:hover": {
+                                                    backgroundColor: palette.fillHover,
+                                                },
+                                            }}
+                                            onClick={(ev) => {
+                                                ev.stopPropagation();
+                                                onEventClick(e);
+                                            }}
+                                        >
+                                            {e.summary || "(no title)"}
+                                        </Box>
+                                    </Tooltip>
+                                );
+                            })}
                         </Stack>
                     );
                 })}
@@ -371,12 +376,17 @@ export const TimelineView = ({
                                     const height = eventHeightPx(start, end, d);
                                     const widthPct = 100 / slot.columnCount;
                                     const leftPct = slot.column * widthPct;
+                                    const timedPalette = paletteForEvent(
+                                        event._source,
+                                        colorBySource,
+                                        isDark
+                                    );
                                     return (
                                         <Tooltip
                                             key={event.id}
                                             size="sm"
                                             sx={{ borderRadius: "8px" }}
-                                            title={`${event.summary || "(no title)"} · ${start.format("h:mm A")}–${end.format("h:mm A")}`}
+                                            title={`${event.summary || "(no title)"} · ${start.format("h:mm A")}–${end.format("h:mm A")}${event._source?.account_email ? ` — ${event._source.account_email}` : ""}`}
                                             variant="outlined"
                                         >
                                             <Box
@@ -386,14 +396,9 @@ export const TimelineView = ({
                                                     height,
                                                     left: `calc(${leftPct}% + 2px)`,
                                                     width: `calc(${widthPct}% - 4px)`,
-                                                    backgroundColor: event.hangoutLink
-                                                        ? eventGreen
-                                                        : eventBlue,
-                                                    borderLeft: `3px solid ${
-                                                        event.hangoutLink
-                                                            ? eventGreenBorder
-                                                            : eventBorder
-                                                    }`,
+                                                    backgroundColor: timedPalette.fill,
+                                                    color: timedPalette.text,
+                                                    borderLeft: `3px solid ${timedPalette.base}`,
                                                     borderRadius: "4px",
                                                     px: 0.5,
                                                     py: 0.25,
@@ -403,7 +408,7 @@ export const TimelineView = ({
                                                     flexDirection: "column",
                                                     gap: 0.25,
                                                     "&:hover": {
-                                                        backgroundColor: eventBlueHover,
+                                                        backgroundColor: timedPalette.fillHover,
                                                     },
                                                 }}
                                                 onClick={(ev) => {
