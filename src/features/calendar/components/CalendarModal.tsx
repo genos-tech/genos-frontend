@@ -144,7 +144,16 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
     // Per-(view, range-start, selection) cache. Switching views or
     // paging back to a previously-viewed window doesn't refetch.
     // Cleared on close so re-opening pulls fresh.
-    const cacheRef = useRef<Map<string, CalendarEvent[]>>(new Map());
+    // Failures are cached ALONGSIDE the items, not separately: a cache
+    // hit returns early, so keeping them apart left the banner showing
+    // failures from whichever window was fetched last while the user
+    // paged back to a healthy one.
+    const cacheRef = useRef<
+        Map<
+            string,
+            { items: CalendarEvent[]; failed: Array<{ accountId: string; reason: string }> }
+        >
+    >(new Map());
     const [events, setEvents] = useState<CalendarEvent[]>([]);
 
     const [popoverDayKey, setPopoverDayKey] = useState<string | null>(null);
@@ -219,7 +228,8 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
             if (useCache) {
                 const cached = cacheRef.current.get(key);
                 if (cached) {
-                    setEvents(cached);
+                    setEvents(cached.items);
+                    setFailedSourceKeys(cached.failed);
                     return;
                 }
             }
@@ -242,14 +252,13 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
                 return;
             }
             const items = res.items || [];
-            cacheRef.current.set(key, items);
+            const failed = res.failed_sources.map((f) => ({
+                accountId: f.account_id,
+                reason: f.reason,
+            }));
+            cacheRef.current.set(key, { items, failed });
             setEvents(items);
-            setFailedSourceKeys(
-                res.failed_sources.map((f) => ({
-                    accountId: f.account_id,
-                    reason: f.reason,
-                }))
-            );
+            setFailedSourceKeys(failed);
         },
         [accessToken, range.start, range.end, selectedSources]
     );

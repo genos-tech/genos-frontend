@@ -1028,6 +1028,12 @@ const AutoSyncCalendarSection = () => {
         (async () => {
             const res = await listConnections(accessToken);
             if (cancelled) return;
+            // Singular is correct here: this probe is about the account
+            // task auto-sync writes to, which is the server's DEFAULT
+            // account. That works only because `/integrations/me/`
+            // orders google rows the same way `default_account_for`
+            // does (login identity, then oldest) — the two orderings
+            // agreeing is load-bearing, not incidental.
             const google = findGoogleConnection(res);
             setGoogleConnected(!!google);
             setCalendarAuthorized(hasCalendarScope(google));

@@ -35,11 +35,11 @@ import { CalendarEventModal } from "./components/CalendarEventModal";
 import { ConnectionsSection } from "./components/ConnectionsSection";
 import { GithubRepoAccessSection } from "./components/GithubRepoAccessSection";
 import { ReconnectGoogleCalendarButton } from "./components/ReconnectGoogleCalendarButton";
-import { CalendarEvent, deleteEvent, listEvents } from "./services/calendar";
+import { CalendarEvent, deleteEvent, listEventsAggregate } from "./services/calendar";
 import {
     ConnectionsResponse,
-    findGoogleConnection,
-    hasCalendarScope,
+    findGoogleConnections,
+    hasAnyCalendarScope,
     listConnections,
 } from "./services/connections";
 import { GithubPullSummary, listMyPulls } from "./services/github";
@@ -47,10 +47,15 @@ import { redirectToOAuthConnect } from "./services/oauth";
 
 import { AppTooltip } from "../../components/ui/AppTooltip";
 import { useAuth } from "../../context/AuthContext";
+import { useCalendarSources } from "../calendar/hooks/useCalendarSources";
 
 type TabKey = "connections" | "calendar" | "github";
 
 interface ModalInitial {
+    /** Which connected Google account owns `calendar_id`. Carried from
+     *  the event's `_source` so an edit is authenticated against the
+     *  account that actually holds the event. */
+    account_id?: string;
     add_meet?: boolean;
     all_day?: boolean;
     attendees?: Array<{ email: string; displayName?: string }>;
@@ -93,6 +98,13 @@ const CalendarTab = ({
     const [modalInitial, setModalInitial] = useState<ModalInitial | undefined>(undefined);
     const [editingEventId, setEditingEventId] = useState<string | undefined>(undefined);
 
+    // Same source selection the calendar modal uses (it's shared through
+    // localStorage), so this list and the grid agree on which calendars
+    // the user cares about instead of this surface quietly showing only
+    // the default account.
+    const sources = useCalendarSources(accessToken, googleConnected && calendarAuthorized);
+    const { selectedSources } = sources;
+
     const refresh = useCallback(async () => {
         if (!googleConnected || !calendarAuthorized) {
             setLoading(false);
@@ -103,9 +115,13 @@ const CalendarTab = ({
         const now = new Date();
         const inThirtyDays = new Date(now);
         inThirtyDays.setDate(now.getDate() + 30);
-        const res = await listEvents(
+        const res = await listEventsAggregate(
             accessToken,
-            { from: now.toISOString(), to: inThirtyDays.toISOString() },
+            {
+                from: now.toISOString(),
+                to: inThirtyDays.toISOString(),
+                sources: selectedSources,
+            },
             setError
         );
         setLoading(false);
@@ -125,7 +141,7 @@ const CalendarTab = ({
         // prompt (connect, grant scope, etc.).
         if (!res || typeof res === "string") return;
         setEvents(res.items || []);
-    }, [accessToken, googleConnected, calendarAuthorized]);
+    }, [accessToken, googleConnected, calendarAuthorized, selectedSources]);
 
     useEffect(() => {
         void refresh();
@@ -149,6 +165,11 @@ const CalendarTab = ({
         // pass the date strings + flag so the modal opens in all-day mode.
         const isAllDay = !!event.start?.date && !event.start?.dateTime;
         setModalInitial({
+            // Event ids are unique per calendar, not globally, so an
+            // edit needs both halves of the source or it lands on the
+            // wrong account and 404s.
+            account_id: event._source?.account_id,
+            calendar_id: event._source?.calendar_id,
             add_meet: !!event.hangoutLink,
             all_day: isAllDay,
             // Pre-populate the attendee picker (drop `self` entries
@@ -168,7 +189,15 @@ const CalendarTab = ({
 
     const handleDelete = async (event: CalendarEvent) => {
         if (!confirm(`Delete event "${event.summary || event.id}"?`)) return;
-        const ok = await deleteEvent(accessToken, event.id, {}, setError);
+        const ok = await deleteEvent(
+            accessToken,
+            event.id,
+            {
+                ...(event._source?.calendar_id ? { calendarId: event._source.calendar_id } : {}),
+                ...(event._source?.account_id ? { accountId: event._source.account_id } : {}),
+            },
+            setError
+        );
         if (ok) void refresh();
     };
 
@@ -322,6 +351,7 @@ const CalendarTab = ({
 
             <CalendarEventModal
                 accessToken={accessToken}
+                calendars={sources.calendars}
                 editingEventId={editingEventId}
                 initial={modalInitial}
                 open={modalOpen}
@@ -610,9 +640,13 @@ export const IntegrationsHome = () => {
         void reload();
     }, [reload]);
 
-    const googleConnection = findGoogleConnection(data);
-    const googleConnected = !!googleConnection;
-    const googleCalendarAuthorized = hasCalendarScope(googleConnection);
+    // "Any connected Google account", not "the first one". With two
+    // accounts the first could be a sign-in-only row with no calendar
+    // scope, which would wrongly gate the whole tab behind a "grant
+    // access" prompt while the other account works fine.
+    const googleConnections = findGoogleConnections(data);
+    const googleConnected = googleConnections.length > 0;
+    const googleCalendarAuthorized = hasAnyCalendarScope(googleConnections);
     const githubConnected = !!data?.connections.find((c) => c.provider === "github");
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
