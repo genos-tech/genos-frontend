@@ -114,6 +114,10 @@ export const notes = {
         chatNotesLabel: "Chat Notes",
         // Breadcrumb container crumb for a chat note attached to a thread.
         threadCrumb: "Thread",
+        // Accessible name for the control that reveals the breadcrumbs
+        // folded away on a deeply nested note. The visible label is the
+        // count itself, which needs no translation.
+        showHiddenCrumbs: "Show {count} hidden breadcrumbs",
         newNote: "New Note",
         share: "Share",
         shareNoteAria: "Share note",
