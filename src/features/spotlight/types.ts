@@ -71,6 +71,14 @@ export interface SpotlightResult {
     // Both absent on every other entity type.
     answer_text?: string | null;
     answer_sources?: SpotlightResult[];
+
+    // True on sources the agent CREATED / UPDATED via an approved write
+    // tool this run (create_task, create_note, update_todo_item, …).
+    // The chip row always surfaces these, even when the answer's prose
+    // fails to cite them — the user must always get a clickable ref to
+    // what the agent changed (see `citedChipSources`). Absent on read /
+    // search sources and on older backends.
+    operated?: boolean;
 }
 
 export interface SearchResponse {

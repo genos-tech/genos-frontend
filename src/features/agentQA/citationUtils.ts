@@ -10,6 +10,16 @@
 import { todoHrefFromEntityId } from "../../utils/canonicalSpotlightHref";
 import { SpotlightResult } from "../spotlight/types";
 
+// Chat entity ids nest under a chat-label segment (`dm|gm|pm|mdm`) and
+// are stored WITHOUT the leading "chat:" prefix in the source payload
+// ("gm:<uuid>:thread:<t>", see `buildSourcesById`). Models copy that
+// un-prefixed form verbatim into citations ("[gm:<uuid>:msg:<id>]"),
+// so every pattern below accepts it alongside the canonical prefixed
+// vocabulary. The un-prefixed alternation requires the id to START
+// with a hex char (chat ids are UUIDs or ints) so bracketed prose like
+// "[pm:notes]" isn't swallowed.
+const _CHAT_LABEL_TOKEN = "(?:dm|gm|pm|mdm):[0-9a-fA-F]";
+
 // Matches `[type:id...]` tokens emitted by the LLM. Anchored to the
 // known entity prefixes so a free-form sentence with literal brackets
 // ("[reminder: ship by Friday]") doesn't trip the pattern. This set
@@ -18,7 +28,10 @@ import { SpotlightResult } from "../spotlight/types";
 // chat / task / note / project / todo / milestone. A type missing here
 // renders its raw `[todo:...]` token in the prose instead of being
 // stripped into a chip — the exact bug this list guards against.
-export const CITATION_PATTERN = /\[((?:chat|task|note|project|todo|milestone):[^\]\s]+)\]/g;
+export const CITATION_PATTERN = new RegExp(
+    `\\[((?:chat|task|note|project|todo|milestone):[^\\]\\s]+|${_CHAT_LABEL_TOKEN}[^\\]\\s]*)\\]`,
+    "g"
+);
 
 // Natural-prose citation form (§4.6 D5): `[descriptive prose](type:id)`.
 // The model is taught to emit this so the visible link TEXT is a
@@ -27,8 +40,10 @@ export const CITATION_PATTERN = /\[((?:chat|task|note|project|todo|milestone):[^
 // `type:id` token. Real markdown links (`[title](https://…)`) don't match
 // because the URL must start with a known entity prefix — they pass
 // through untouched and render as normal external links.
-export const CITATION_LINK_PATTERN =
-    /\[([^\]]+?)\]\(((?:chat|task|note|project|todo|milestone):[^)\s]+)\)/g;
+export const CITATION_LINK_PATTERN = new RegExp(
+    `\\[([^\\]]+?)\\]\\(((?:chat|task|note|project|todo|milestone):[^)\\s]+|${_CHAT_LABEL_TOKEN}[^)\\s]*)\\)`,
+    "g"
+);
 
 // Sentinel href scheme. ReactMarkdown's anchor override recognises this
 // prefix and renders a button that opens the entity instead of a
@@ -63,16 +78,42 @@ export const buildSourcesById = (sources: SpotlightResult[]): Map<string, Spotli
 // the `[token]` label out of that would shatter the link and leak the
 // naked `(spotlight-citation:…)` URL as visible text (the exact bug seen
 // with gemini-flash).
-const _CITATION_STRIP_PATTERN =
-    /[ \t]?\[(?:chat|task|note|project|todo|milestone):[^\]\s]+\](?!\()/g;
+const _CITATION_STRIP_PATTERN = new RegExp(
+    `[ \\t]?\\[(?:(?:chat|task|note|project|todo|milestone):[^\\]\\s]+|${_CHAT_LABEL_TOKEN}[^\\]\\s]*)\\](?!\\()`,
+    "g"
+);
 
 // A link LABEL that is itself a raw citation token (`[task:42](task:42)`)
 // — the tell of a model that ignored the natural-prose instruction. Such
 // labels are swapped for the source title (resolved) or dropped
 // (unresolved) instead of showing the user a raw id/UUID.
-const _RAW_TOKEN_LABEL = /^(?:chat|task|note|project|todo|milestone):\S+$/;
+const _RAW_TOKEN_LABEL = new RegExp(
+    `^(?:(?:chat|task|note|project|todo|milestone):\\S+|${_CHAT_LABEL_TOKEN}\\S*)$`
+);
+
+// A UUID anywhere in a link label is the same tell in a wordier form —
+// weak models emit labels like "dm:<uuid> thread <uuid>" (spaces, so
+// `_RAW_TOKEN_LABEL` misses it). No grammatical prose label contains a
+// raw UUID, so treat any such label as a raw token: swap for the source
+// title when resolved, drop when not.
+const _UUID_IN_LABEL =
+    /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/;
+
+// A raw-token-shaped label in either form — see `rewriteCitations`.
+const _isRawTokenLabel = (label: string): boolean =>
+    _RAW_TOKEN_LABEL.test(label.trim()) || _UUID_IN_LABEL.test(label);
+
+// Canonicalise an emitted token to the prefixed form `buildSourcesById`
+// maps: un-prefixed chat-label tokens ("gm:<uuid>…") gain the leading
+// "chat:". Every other token passes through unchanged.
+export const normalizeCitationToken = (token: string): string =>
+    /^(?:dm|gm|pm|mdm):/.test(token) ? `chat:${token}` : token;
 
 // Resolve a citation token to a retrieved source.
+//
+// The token is first canonicalised via `normalizeCitationToken`, so the
+// un-prefixed chat forms models copy from source entity_ids
+// ("gm:<uuid>:thread:<t>") resolve the same as `chat:gm:…`.
 //
 // Exact match for every entity type — the strict resolve-guard against
 // hallucinated ids stays intact (a `task:99` we never retrieved must NOT
@@ -93,9 +134,10 @@ const _RAW_TOKEN_LABEL = /^(?:chat|task|note|project|todo|milestone):\S+$/;
 // Returns the canonical map key alongside the source so callers rewrite
 // hrefs/chip filters in the form the anchor components look up.
 export const resolveCitationToken = (
-    token: string,
+    rawToken: string,
     sourcesById: Map<string, SpotlightResult>
 ): { key: string; source: SpotlightResult } | null => {
+    const token = normalizeCitationToken(rawToken);
     const exact = sourcesById.get(token);
     if (exact) return { key: token, source: exact };
     if (!token.startsWith("chat:")) return null;
@@ -156,7 +198,7 @@ export const rewriteCitations = (
         new RegExp(CITATION_LINK_PATTERN.source, "g"),
         (_full, label: string, token: string) => {
             const hit = resolveCitationToken(token, sourcesById);
-            const rawTokenLabel = _RAW_TOKEN_LABEL.test(label.trim());
+            const rawTokenLabel = _isRawTokenLabel(label);
             if (!hit) {
                 // Unresolved: prose labels survive as prose; raw-token
                 // labels are dropped entirely.
@@ -201,7 +243,7 @@ export const extractInlineCitedIds = (
     while ((m = re.exec(answer)) !== null) {
         const token = m[2];
         if (!sourcesById) {
-            ids.add(token);
+            ids.add(normalizeCitationToken(token));
             continue;
         }
         const hit = resolveCitationToken(token, sourcesById);
@@ -248,6 +290,12 @@ export const extractBareCitedIds = (answer: string): Set<string> => {
 // (e.g. an aggregate/summary reply the prompt exempts from per-item
 // citation) still shows an EMPTY chip row.
 //
+// EXCEPTION: `operated` sources (entities an approved WRITE tool created
+// or updated — the backend marks them) are always kept, cited or not.
+// "I created the note" with no clickable ref to the note is a broken
+// answer, and the model occasionally forgets the citation — the chip is
+// the guarantee the prose can't provide.
+//
 // Token normalisation matches `buildSourcesById` so a chat source whose
 // `entity_id` lacks the "chat:" prefix still matches the prefixed token
 // form the model emits.
@@ -268,8 +316,9 @@ export const citedChipSources = (
         const hit = resolveCitationToken(token, byId);
         if (hit) cited.add(hit.key);
     }
-    if (cited.size === 0) return [];
     return sources.filter((s) => {
+        if (s.operated) return true;
+        if (cited.size === 0) return false;
         const tokenKey = s.entity_id.startsWith(`${s.entity_type}:`)
             ? s.entity_id
             : `${s.entity_type}:${s.entity_id}`;
