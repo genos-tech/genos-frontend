@@ -110,6 +110,8 @@ const groupEventsByDay = (
 
 interface ModalInitial {
     account_id?: string;
+    /** Master id when the event is one occurrence of a series. */
+    recurring_event_id?: string;
     add_meet?: boolean;
     all_day?: boolean;
     attendees?: Array<{ email: string; displayName?: string }>;
@@ -418,6 +420,9 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
             // sent to the work account and 404.
             account_id: e._source?.account_id,
             calendar_id: e._source?.calendar_id,
+            // Present only on an occurrence of a repeating series; it's
+            // what lets the modal offer "this event / all events".
+            recurring_event_id: e.recurringEventId,
             add_meet: !!e.hangoutLink,
             all_day: isAllDay,
             // Pre-populate the attendee picker so the user sees

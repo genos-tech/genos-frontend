@@ -39,6 +39,47 @@ export const calendar = {
     // "(no title)" reads as a bug on our side rather than the sharing
     // setting working as intended.
     busy: "Busy",
+    // Recurring events. Google expands a series server-side, so what the
+    // user sees on the grid are individual occurrences of one rule.
+    repeat: {
+        label: "Repeat",
+        every: "Every",
+        onDays: "On days",
+        ends: "Ends",
+        endNever: "Never",
+        endOnDate: "On date",
+        endAfter: "After",
+        occurrences: "occurrences",
+        endOnDateHelper: "The last day the event can repeat on (inclusive).",
+        // Google falls back to the event's own weekday when no day is
+        // ticked, so this is guidance rather than an error.
+        noDaysHelper: "Repeats on the same weekday as the event.",
+        frequency: {
+            none: "Does not repeat",
+            daily: "Daily",
+            weekly: "Weekly",
+            monthly: "Monthly",
+            yearly: "Yearly",
+        },
+        unit: {
+            none: "",
+            daily: "days",
+            weekly: "weeks",
+            monthly: "months",
+            yearly: "years",
+        },
+    },
+    // Editing or deleting one occurrence of a series vs. the whole
+    // thing. Always an explicit choice — guessing either way silently
+    // does something the user did not ask for.
+    scope: {
+        label: "This is a repeating event",
+        thisEvent: "This event",
+        allEvents: "All events",
+        editHelper: "Choose whether your change applies to this occurrence or the whole series.",
+        seriesTimingNote:
+            "Editing all events won't move the series — change the date on a single occurrence instead.",
+    },
     // Multi-account overlay: the side rail that picks which accounts
     // and calendars are drawn on the grid at once.
     sources: {
