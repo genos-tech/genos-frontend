@@ -38,6 +38,7 @@ import {
 } from "../../integrations/services/connections";
 import { redirectToOAuthConnect } from "../../integrations/services/oauth";
 import { isWritableCalendar, useCalendarSources } from "../hooks/useCalendarSources";
+import { useStickyPeriodScroll } from "../hooks/useStickyPeriodScroll";
 import { eventLabel } from "../utils/eventLabel";
 import { CalendarView, visibleRange } from "../utils/monthGrid";
 import { isMultiDaySpan } from "../utils/multiDay";
@@ -326,6 +327,8 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
         void fetchEvents(cacheKey, false);
     }, [cacheKey, fetchEvents]);
 
+    const showGrid = !needsConnect && !needsScope;
+
     const stepBackward = () => {
         if (view === "month") setAnchor(anchor.subtract(1, "month"));
         else if (view === "week") setAnchor(anchor.subtract(7, "day"));
@@ -339,6 +342,16 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
         else setAnchor(anchor.add(1, "day"));
     };
     const jumpToday = () => setAnchor(dayjs().startOf(view === "month" ? "month" : "day"));
+
+    // Horizontal scroll pages through periods, using the same steppers
+    // as the chevrons so Month/Week/3-day/Day all move by their own
+    // unit. Deliberately "sticky" — see `utils/stickyScroll` for why a
+    // raw wheel-to-step mapping is unusable on a trackpad.
+    const gridScrollRef = useStickyPeriodScroll<HTMLDivElement>({
+        onPrev: stepBackward,
+        onNext: stepForward,
+        enabled: showGrid,
+    });
 
     const headerTitle = useMemo(() => {
         if (view === "month") return anchor.format("MMMM YYYY");
@@ -461,8 +474,6 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
             email: emailById.get(accountId) ?? t.calendar.sources.unknownAccount,
         }));
     }, [failedSourceKeys, sources.failedAccounts, googleAccounts, t]);
-
-    const showGrid = !needsConnect && !needsScope;
 
     return (
         <Modal open={open} onClose={onClose}>
@@ -630,11 +641,17 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
                             onToggleAccount={sources.setAccountSelected}
                         />
                         <Box
+                            ref={gridScrollRef}
                             sx={{
                                 flex: 1,
                                 minWidth: 0,
                                 display: "flex",
                                 flexDirection: "column",
+                                // The sticky-scroll handler owns
+                                // horizontal gestures here; keeping the
+                                // pane non-scrollable sideways means
+                                // there is nothing for it to fight.
+                                overflowX: "hidden",
                             }}
                         >
                             {selectedSources.length === 0 && sources.loaded ? (
