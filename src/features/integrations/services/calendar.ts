@@ -3,10 +3,84 @@ import axios from "axios";
 import { authApi } from "../../../services/api";
 
 export interface CalendarSummary {
+    /** Google's calendar id. Unique only WITHIN an account — two
+     *  accounts both have a calendar called "primary" — so never use it
+     *  alone as a React key or a selection key. Pair it with
+     *  `account_id` via `sourceKey`. */
     id: string;
+    /** Which connected Google account this calendar came from. */
+    account_id: string;
+    account_email: string | null;
     summary: string | null;
     primary: boolean;
     background_color?: string | null;
+    /** Google's access role: "owner" / "writer" / "reader" /
+     *  "freeBusyReader". Calendars a teammate shared read-only come
+     *  back as "reader", and the UI disables creating on them rather
+     *  than letting the user write and take a 403. */
+    access_role?: string | null;
+    /** Whether the calendar is ticked in the user's own Google Calendar
+     *  UI. Used as the default selection so the first open mirrors what
+     *  they already see on Google. */
+    selected?: boolean;
+}
+
+/** An account whose calendars couldn't be listed. Reported alongside
+ *  the calendars that DID load so one broken account degrades to a
+ *  banner instead of an empty picker. */
+export interface FailedAccount {
+    account_id: string;
+    reason: CalendarErrorKind | string;
+}
+
+export interface ConnectedCalendarAccount {
+    id: string;
+    email: string | null;
+    label: string;
+    is_primary: boolean;
+}
+
+export interface CalendarListResponse {
+    calendars: CalendarSummary[];
+    failed_accounts: FailedAccount[];
+    accounts: ConnectedCalendarAccount[];
+}
+
+/** Identifies one (account, calendar) pair — the unit the calendar
+ *  modal selects, colors, and fetches by. */
+export interface CalendarSource {
+    accountId: string;
+    calendarId: string;
+}
+
+/** Stable string form of a source, used as a React key, a selection-set
+ *  member, and the wire format for the aggregate endpoint's `sources`
+ *  param. Calendar ids can contain ":" so the account id goes FIRST and
+ *  the server splits on the first colon only. */
+export const sourceKey = (accountId: string, calendarId: string): string =>
+    `${accountId}:${calendarId}`;
+
+/** Where an aggregated event came from. Server-attached, because the
+ *  triple (account_id, calendar_id, id) is the only thing that
+ *  identifies an event: ids are unique per calendar rather than
+ *  globally, and the account decides which credential an edit is
+ *  authenticated with. */
+export interface CalendarEventSource {
+    account_id: string;
+    account_email: string | null;
+    calendar_id: string;
+}
+
+/** A source that failed to load in an aggregate fetch. */
+export interface FailedSource {
+    account_id: string;
+    calendar_id: string;
+    reason: string;
+}
+
+export interface AggregateEventsResponse {
+    items: CalendarEvent[];
+    failed_sources: FailedSource[];
 }
 
 export interface CalendarEventDateTime {
@@ -62,6 +136,11 @@ export interface CalendarEvent {
     start?: CalendarEventDateTime;
     status?: string;
     summary?: string;
+    /** Present only on events from the aggregate endpoint. Callers must
+     *  forward it when editing or deleting — without it the request
+     *  goes to the default account and either 404s or, worse, hits a
+     *  same-named event on the wrong calendar. */
+    _source?: CalendarEventSource;
 }
 
 interface ErrorResponse {
@@ -126,11 +205,20 @@ const errorReturn = <T extends CalendarConnectionError>(
     return (discriminators as readonly CalendarErrorKind[]).includes(kind) ? (kind as T) : null;
 };
 
+/** Build the `account_id` / `calendar_id` query params shared by the
+ *  single-source read/write endpoints. Undefined entries are dropped by
+ *  axios, and omitting `account_id` makes the server fall back to the
+ *  user's default account — the pre-multi-account behaviour. */
+const sourceParams = (opts: { calendarId?: string; accountId?: string }) => ({
+    ...(opts.calendarId ? { calendar_id: opts.calendarId } : {}),
+    ...(opts.accountId ? { account_id: opts.accountId } : {}),
+});
+
 export const listCalendars = async (
     accessToken: string,
     setErrorMessage?: (value: string) => void
 ): Promise<
-    | { calendars: CalendarSummary[] }
+    | CalendarListResponse
     | "google_not_connected"
     | "calendar_scope_missing"
     | "google_reauth_required"
@@ -139,8 +227,61 @@ export const listCalendars = async (
     try {
         const api = authApi(accessToken);
         if (!api) return null;
-        const res = await api.get<{ calendars: CalendarSummary[] }>("/calendar/list/");
+        const res = await api.get<CalendarListResponse>("/calendar/list/");
         return res.data;
+    } catch (error) {
+        return errorReturn(error, setErrorMessage, [
+            "google_not_connected",
+            "calendar_scope_missing",
+            "google_reauth_required",
+        ] as const);
+    }
+};
+
+/**
+ * Fetch events from several (account, calendar) pairs at once.
+ *
+ * This is what lets the calendar modal overlay a work account, a
+ * personal account, and any calendars teammates have shared — all in
+ * one grid. Two things the per-source `listEvents` can't do:
+ *
+ *   1. **Partial success.** Each source fails independently into
+ *      `failed_sources`. A revoked refresh token on the personal
+ *      account must never blank out the work calendar.
+ *   2. **One round trip**, so the client isn't reconciling N loading
+ *      states per repaint.
+ *
+ * An empty `sources` array short-circuits without a request — the user
+ * has deselected everything, and asking the server for nothing would
+ * return their default calendar, silently overriding that choice.
+ */
+export const listEventsAggregate = async (
+    accessToken: string,
+    opts: { from?: string; to?: string; sources: CalendarSource[]; maxResults?: number },
+    setErrorMessage?: (value: string) => void
+): Promise<
+    | AggregateEventsResponse
+    | "google_not_connected"
+    | "calendar_scope_missing"
+    | "google_reauth_required"
+    | null
+> => {
+    if (opts.sources.length === 0) return { items: [], failed_sources: [] };
+    try {
+        const api = authApi(accessToken);
+        if (!api) return null;
+        const res = await api.get<AggregateEventsResponse>("/calendar/events/aggregate/", {
+            params: {
+                from: opts.from,
+                to: opts.to,
+                sources: opts.sources.map((s) => sourceKey(s.accountId, s.calendarId)).join(","),
+                max_results: opts.maxResults,
+            },
+        });
+        return {
+            items: res.data.items ?? [],
+            failed_sources: res.data.failed_sources ?? [],
+        };
     } catch (error) {
         return errorReturn(error, setErrorMessage, [
             "google_not_connected",
@@ -153,7 +294,7 @@ export const listCalendars = async (
 export const getEvent = async (
     accessToken: string,
     eventId: string,
-    opts: { calendarId?: string } = {},
+    opts: { calendarId?: string; accountId?: string } = {},
     setErrorMessage?: (value: string) => void
 ): Promise<
     | CalendarEvent
@@ -167,7 +308,7 @@ export const getEvent = async (
         const api = authApi(accessToken);
         if (!api) return null;
         const res = await api.get<CalendarEvent>(`/calendar/events/${eventId}/`, {
-            params: opts.calendarId ? { calendar_id: opts.calendarId } : undefined,
+            params: sourceParams(opts),
         });
         return res.data;
     } catch (error) {
@@ -190,7 +331,7 @@ export const getEvent = async (
 
 export const listEvents = async (
     accessToken: string,
-    opts: { from?: string; to?: string; calendarId?: string },
+    opts: { from?: string; to?: string; calendarId?: string; accountId?: string },
     setErrorMessage?: (value: string) => void
 ): Promise<
     | { items: CalendarEvent[] }
@@ -206,7 +347,7 @@ export const listEvents = async (
             params: {
                 from: opts.from,
                 to: opts.to,
-                calendar_id: opts.calendarId,
+                ...sourceParams(opts),
             },
         });
         return res.data;
@@ -230,6 +371,9 @@ export const createEvent = async (
          *  the event to each attendee's calendar; the backend sets
          *  `sendUpdates=none` so no email invites go out. */
         attendees?: Array<{ email: string; displayName?: string }>;
+        /** Which connected Google account owns the target calendar.
+         *  Omit to use the user's default account. */
+        account_id?: string;
         calendar_id?: string;
         description?: string;
         end: CalendarEventDateTime;
@@ -272,6 +416,7 @@ export const updateEvent = async (
          *  `sendUpdates=none` when present to suppress email
          *  invites (chat-driven workflows do their own notify). */
         attendees: Array<{ email: string; displayName?: string }>;
+        account_id: string;
         calendar_id: string;
         description: string;
         end: CalendarEventDateTime;
@@ -303,14 +448,14 @@ export const updateEvent = async (
 export const deleteEvent = async (
     accessToken: string,
     eventId: string,
-    opts: { calendarId?: string } = {},
+    opts: { calendarId?: string; accountId?: string } = {},
     setErrorMessage?: (value: string) => void
 ): Promise<boolean> => {
     try {
         const api = authApi(accessToken);
         if (!api) return false;
         await api.delete(`/calendar/events/${eventId}/`, {
-            params: opts.calendarId ? { calendar_id: opts.calendarId } : undefined,
+            params: sourceParams(opts),
         });
         return true;
     } catch (error) {

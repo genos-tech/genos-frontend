@@ -24,15 +24,25 @@ import { useCalendarViewPreference } from "../../../hooks/common/useCalendarView
 import { useTranslation } from "../../../i18n";
 import { CalendarEventModal } from "../../integrations/components/CalendarEventModal";
 import { ReconnectGoogleCalendarButton } from "../../integrations/components/ReconnectGoogleCalendarButton";
-import { CalendarEvent, listEvents } from "../../integrations/services/calendar";
 import {
-    findGoogleConnection,
-    hasCalendarScope,
+    CalendarEvent,
+    listEventsAggregate,
+    sourceKey,
+} from "../../integrations/services/calendar";
+import {
+    findGoogleConnections,
+    hasAnyCalendarScope,
     listConnections,
+    type Connection,
     type ConnectionsResponse,
 } from "../../integrations/services/connections";
 import { redirectToOAuthConnect } from "../../integrations/services/oauth";
+import { isWritableCalendar, useCalendarSources } from "../hooks/useCalendarSources";
+import { useStickyPeriodScroll } from "../hooks/useStickyPeriodScroll";
+import { eventLabel } from "../utils/eventLabel";
 import { CalendarView, visibleRange } from "../utils/monthGrid";
+import { isMultiDaySpan } from "../utils/multiDay";
+import { CalendarSourcePicker } from "./CalendarSourcePicker";
 import { MonthView } from "./MonthView";
 import { TimelineView } from "./TimelineView";
 
@@ -62,16 +72,26 @@ const eventEndInclusive = (e: CalendarEvent): Dayjs | null => {
     return null;
 };
 
-/** Bucket events into the days they intersect for the MonthView.
- *  Multi-day events appear in each day's bucket; out-of-range
- *  events are silently dropped. */
+/** Bucket events into the days they intersect. Out-of-range events are
+ *  silently dropped.
+ *
+ *  `skipSpans` excludes multi-day all-day events, which MonthView draws
+ *  as one continuous bar instead of a chip per day. Without it the same
+ *  event renders TWICE on every day it covers — once as the bar, once
+ *  as a chip.
+ *
+ *  Both variants are needed: the grid wants chips-only, while the "+N
+ *  more" popover is "everything on this day" and must still list the
+ *  spans. */
 const groupEventsByDay = (
     events: CalendarEvent[],
     from: Dayjs,
-    to: Dayjs
+    to: Dayjs,
+    { skipSpans }: { skipSpans: boolean }
 ): Record<string, CalendarEvent[]> => {
     const out: Record<string, CalendarEvent[]> = {};
     for (const e of events) {
+        if (skipSpans && isMultiDaySpan(e)) continue;
         const start = eventStart(e);
         if (!start) continue;
         const end = eventEndInclusive(e) ?? start;
@@ -89,6 +109,7 @@ const groupEventsByDay = (
 };
 
 interface ModalInitial {
+    account_id?: string;
     add_meet?: boolean;
     all_day?: boolean;
     attendees?: Array<{ email: string; displayName?: string }>;
@@ -118,15 +139,34 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
     const [error, setError] = useState<string | null>(null);
     const [needsConnect, setNeedsConnect] = useState(false);
     const [needsScope, setNeedsScope] = useState(false);
-    // Connected + scoped on paper, but a live event fetch came back
-    // `google_reauth_required` — the stored refresh token is dead. The
-    // connection probe (DB scopes) can't see this; only the fetch can.
-    const [needsReconnect, setNeedsReconnect] = useState(false);
+    // Google accounts the user has connected. Held so per-account
+    // failures can be reported by email rather than by opaque id.
+    const [googleAccounts, setGoogleAccounts] = useState<Connection[]>([]);
+    // Sources whose fetch failed while others succeeded. Rendered as a
+    // banner ABOVE a still-populated grid: with two accounts overlaid,
+    // a dead refresh token on the personal one must not hide the work
+    // calendar. This is why the state is a list rather than the single
+    // `needsReconnect` boolean it replaced.
+    const [failedSourceKeys, setFailedSourceKeys] = useState<
+        Array<{ accountId: string; reason: string }>
+    >([]);
 
-    // Per-(view, range-start) cache. Switching views or paging
-    // back to a previously-viewed window doesn't refetch.
+    const sources = useCalendarSources(accessToken, open && !needsConnect);
+    const { selectedSources, colorBySource, calendars } = sources;
+
+    // Per-(view, range-start, selection) cache. Switching views or
+    // paging back to a previously-viewed window doesn't refetch.
     // Cleared on close so re-opening pulls fresh.
-    const cacheRef = useRef<Map<string, CalendarEvent[]>>(new Map());
+    // Failures are cached ALONGSIDE the items, not separately: a cache
+    // hit returns early, so keeping them apart left the banner showing
+    // failures from whichever window was fetched last while the user
+    // paged back to a healthy one.
+    const cacheRef = useRef<
+        Map<
+            string,
+            { items: CalendarEvent[]; failed: Array<{ accountId: string; reason: string }> }
+        >
+    >(new Map());
     const [events, setEvents] = useState<CalendarEvent[]>([]);
 
     const [popoverDayKey, setPopoverDayKey] = useState<string | null>(null);
@@ -137,12 +177,41 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
     const [editingEventId, setEditingEventId] = useState<string | undefined>(undefined);
 
     const range = useMemo(() => visibleRange(view, anchor, 0), [view, anchor]);
-    const cacheKey = useMemo(() => `${view}:${range.start.toISOString()}`, [view, range.start]);
 
+    // The selection is part of the cache identity — ticking another
+    // calendar has to invalidate the window the user is looking at, or
+    // they'd toggle a calendar on and see no change. Sorted so a
+    // reordering of the same set stays one cache entry.
+    const selectionFingerprint = useMemo(
+        () =>
+            selectedSources
+                .map((s) => sourceKey(s.accountId, s.calendarId))
+                .sort()
+                .join("|"),
+        [selectedSources]
+    );
+    const cacheKey = useMemo(
+        () => `${view}:${range.start.toISOString()}:${selectionFingerprint}`,
+        [view, range.start, selectionFingerprint]
+    );
+
+    // Chips only — multi-day spans are drawn as bars by MonthView.
     const eventsByDay = useMemo(
         () =>
             view === "month"
-                ? groupEventsByDay(events, range.start, range.end)
+                ? groupEventsByDay(events, range.start, range.end, { skipSpans: true })
+                : ({} as Record<string, CalendarEvent[]>),
+        [events, view, range.start, range.end]
+    );
+
+    // Everything covering each day, spans included. Drives the "+N more"
+    // popover, which promises "everything on this day" — a multi-day
+    // event must still be reachable there even though the grid shows it
+    // as a bar rather than a chip.
+    const allEventsByDay = useMemo(
+        () =>
+            view === "month"
+                ? groupEventsByDay(events, range.start, range.end, { skipSpans: false })
                 : ({} as Record<string, CalendarEvent[]>),
         [events, view, range.start, range.end]
     );
@@ -157,16 +226,19 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
         let cancelled = false;
         setNeedsConnect(false);
         setNeedsScope(false);
-        setNeedsReconnect(false);
-        (async () => {
+        void (async () => {
             const res: ConnectionsResponse | null = await listConnections(accessToken);
             if (cancelled) return;
-            const google = findGoogleConnection(res);
-            if (!google) {
+            const google = findGoogleConnections(res);
+            setGoogleAccounts(google);
+            if (google.length === 0) {
                 setNeedsConnect(true);
                 return;
             }
-            if (!hasCalendarScope(google)) {
+            // "Some account can read calendars", not "every account
+            // can": one unscoped account shouldn't present as though
+            // Calendar is unavailable when another one works.
+            if (!hasAnyCalendarScope(google)) {
                 setNeedsScope(true);
                 return;
             }
@@ -176,42 +248,63 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
         };
     }, [open, accessToken]);
 
-    useEffect(() => {
-        if (!open || !accessToken || needsConnect || needsScope) return;
-        const cached = cacheRef.current.get(cacheKey);
-        if (cached) {
-            setEvents(cached);
-            return;
-        }
-        let cancelled = false;
-        setLoading(true);
-        setError(null);
-        (async () => {
-            const res = await listEvents(
+    const fetchEvents = useCallback(
+        async (key: string, useCache: boolean) => {
+            if (!accessToken) return;
+            if (useCache) {
+                const cached = cacheRef.current.get(key);
+                if (cached) {
+                    setEvents(cached.items);
+                    setFailedSourceKeys(cached.failed);
+                    return;
+                }
+            }
+            setLoading(true);
+            setError(null);
+            const res = await listEventsAggregate(
                 accessToken,
-                { from: range.start.toISOString(), to: range.end.toISOString() },
+                {
+                    from: range.start.toISOString(),
+                    to: range.end.toISOString(),
+                    sources: selectedSources,
+                },
                 setError
             );
-            if (cancelled) return;
             setLoading(false);
-            if (res === "google_reauth_required") {
-                // Dead refresh token. Clear the generic error (already
-                // set by listEvents) so the reconnect prompt is the
-                // single, actionable message.
-                setError(null);
-                setNeedsReconnect(true);
+            if (!res || typeof res === "string") {
+                // Endpoint-level failure. `listEventsAggregate` already
+                // surfaced the message; per-source problems arrive via
+                // `failed_sources` instead and are handled below.
                 return;
             }
-            if (!res || typeof res === "string") return;
             const items = res.items || [];
-            cacheRef.current.set(cacheKey, items);
+            const failed = res.failed_sources.map((f) => ({
+                accountId: f.account_id,
+                reason: f.reason,
+            }));
+            cacheRef.current.set(key, { items, failed });
             setEvents(items);
+            setFailedSourceKeys(failed);
+        },
+        [accessToken, range.start, range.end, selectedSources]
+    );
+
+    useEffect(() => {
+        if (!open || !accessToken || needsConnect || needsScope) return;
+        // Wait for the calendar list before the first fetch: firing with
+        // an empty selection would ask the server for nothing and cache
+        // an empty result against this window.
+        if (!sources.loaded) return;
+        let cancelled = false;
+        void (async () => {
+            if (cancelled) return;
+            await fetchEvents(cacheKey, true);
         })();
         return () => {
             cancelled = true;
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [open, accessToken, needsConnect, needsScope, cacheKey]);
+    }, [open, accessToken, needsConnect, needsScope, cacheKey, sources.loaded]);
 
     useEffect(() => {
         if (!open) {
@@ -219,6 +312,7 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
             setEvents([]);
             setPopoverDayKey(null);
             setError(null);
+            setFailedSourceKeys([]);
             // Reset the anchor (so the user always reopens onto
             // "today") but preserve the view — the view is the
             // user's persistent preference (see
@@ -229,27 +323,11 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
     }, [open]);
 
     const refreshCurrent = useCallback(() => {
-        if (!accessToken) return;
         cacheRef.current.delete(cacheKey);
-        (async () => {
-            setLoading(true);
-            const res = await listEvents(
-                accessToken,
-                { from: range.start.toISOString(), to: range.end.toISOString() },
-                setError
-            );
-            setLoading(false);
-            if (res === "google_reauth_required") {
-                setError(null);
-                setNeedsReconnect(true);
-                return;
-            }
-            if (!res || typeof res === "string") return;
-            const items = res.items || [];
-            cacheRef.current.set(cacheKey, items);
-            setEvents(items);
-        })();
-    }, [accessToken, cacheKey, range.start, range.end]);
+        void fetchEvents(cacheKey, false);
+    }, [cacheKey, fetchEvents]);
+
+    const showGrid = !needsConnect && !needsScope;
 
     const stepBackward = () => {
         if (view === "month") setAnchor(anchor.subtract(1, "month"));
@@ -265,6 +343,16 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
     };
     const jumpToday = () => setAnchor(dayjs().startOf(view === "month" ? "month" : "day"));
 
+    // Horizontal scroll pages through periods, using the same steppers
+    // as the chevrons so Month/Week/3-day/Day all move by their own
+    // unit. Deliberately "sticky" — see `utils/stickyScroll` for why a
+    // raw wheel-to-step mapping is unusable on a trackpad.
+    const gridScrollRef = useStickyPeriodScroll<HTMLDivElement>({
+        onPrev: stepBackward,
+        onNext: stepForward,
+        enabled: showGrid,
+    });
+
     const headerTitle = useMemo(() => {
         if (view === "month") return anchor.format("MMMM YYYY");
         if (view === "day") return anchor.format("MMMM D, YYYY");
@@ -279,11 +367,26 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
         return `${start.format("MMM D")} – ${last.format("MMM D, YYYY")}`;
     }, [view, anchor, range.start, range.end]);
 
+    /** Default target for a newly created event: the first SELECTED
+     *  calendar the user can actually write to. Picking a read-only
+     *  shared calendar here would fail at save time with a 403, and
+     *  falling back to the account default would silently file the
+     *  event somewhere the user isn't looking. */
+    const defaultCreateTarget = useMemo(() => {
+        const writable = calendars.find(
+            (c) => sources.selectedKeys.has(sourceKey(c.account_id, c.id)) && isWritableCalendar(c)
+        );
+        return writable
+            ? { account_id: writable.account_id, calendar_id: writable.id }
+            : undefined;
+    }, [calendars, sources.selectedKeys]);
+
     const openCreateOn = (day: Dayjs) => {
         const at9 = day.hour(9).minute(0).second(0).millisecond(0);
         const at10 = at9.add(1, "hour");
         setEditingEventId(undefined);
         setEventModalInitial({
+            ...defaultCreateTarget,
             end: at10.toISOString(),
             start: at9.toISOString(),
         });
@@ -294,6 +397,7 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
         const end = start.add(1, "hour");
         setEditingEventId(undefined);
         setEventModalInitial({
+            ...defaultCreateTarget,
             end: end.toISOString(),
             start: start.toISOString(),
         });
@@ -307,6 +411,13 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
         // mode instead of showing empty datetime fields.
         const isAllDay = !!e.start?.date && !e.start?.dateTime;
         setEventModalInitial({
+            // Carry the event's origin through to the edit modal. Event
+            // ids are unique per calendar, not globally, and the account
+            // decides which credential the PATCH authenticates with —
+            // without both, an edit on the personal calendar would be
+            // sent to the work account and 404.
+            account_id: e._source?.account_id,
+            calendar_id: e._source?.calendar_id,
             add_meet: !!e.hangoutLink,
             all_day: isAllDay,
             // Pre-populate the attendee picker so the user sees
@@ -341,6 +452,29 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
         </Button>
     );
 
+    const startConnectFlow = useCallback(() => {
+        if (!accessToken) return;
+        void redirectToOAuthConnect("google", accessToken, undefined, () => undefined);
+    }, [accessToken]);
+
+    // Per-account failures, de-duplicated and resolved to an email so
+    // the banner can name which account needs attention.
+    const accountIssues = useMemo(() => {
+        const emailById = new Map(googleAccounts.map((a) => [a.id, a.label]));
+        const seen = new Map<string, string>();
+        for (const f of failedSourceKeys) {
+            if (!seen.has(f.accountId)) seen.set(f.accountId, f.reason);
+        }
+        for (const f of sources.failedAccounts) {
+            if (!seen.has(f.account_id)) seen.set(f.account_id, String(f.reason));
+        }
+        return [...seen.entries()].map(([accountId, reason]) => ({
+            accountId,
+            reason,
+            email: emailById.get(accountId) ?? t.calendar.sources.unknownAccount,
+        }));
+    }, [failedSourceKeys, sources.failedAccounts, googleAccounts, t]);
+
     return (
         <Modal open={open} onClose={onClose}>
             <ModalDialog
@@ -350,9 +484,10 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
                     // Wider to make room for the timeline views —
                     // 7 day columns plus the hour gutter need
                     // ~140px per column to keep overlapping event
-                    // blocks legible.
-                    width: { xs: "96vw", md: 1100 },
-                    maxWidth: 1200,
+                    // blocks legible. The extra ~240px over the
+                    // pre-multi-account width is the source rail.
+                    width: { xs: "96vw", md: 1340 },
+                    maxWidth: "96vw",
                     maxHeight: "92vh",
                     p: 2,
                     overflow: "hidden",
@@ -425,17 +560,7 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
                             sx={{ width: "100%" }}
                         >
                             <Box sx={{ flex: 1 }}>{t.calendar.connectPrompt}</Box>
-                            <Button
-                                size="sm"
-                                onClick={() =>
-                                    void redirectToOAuthConnect(
-                                        "google",
-                                        accessToken,
-                                        undefined,
-                                        () => undefined
-                                    )
-                                }
-                            >
+                            <Button size="sm" onClick={startConnectFlow}>
                                 {t.calendar.connectButton}
                             </Button>
                         </Stack>
@@ -451,61 +576,120 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
                             sx={{ width: "100%" }}
                         >
                             <Box sx={{ flex: 1 }}>{t.calendar.scopePrompt}</Box>
-                            <Button
-                                size="sm"
-                                onClick={() =>
-                                    void redirectToOAuthConnect(
-                                        "google",
-                                        accessToken,
-                                        undefined,
-                                        () => undefined
-                                    )
-                                }
-                            >
+                            <Button size="sm" onClick={startConnectFlow}>
                                 {t.calendar.grantButton}
                             </Button>
                         </Stack>
                     </Alert>
                 )}
 
-                {needsReconnect && accessToken && (
+                {/* Per-account trouble. Deliberately rendered ALONGSIDE
+                    the grid, not instead of it: the whole point of the
+                    multi-account view is that one broken account leaves
+                    the others readable. */}
+                {showGrid && accessToken && accountIssues.length > 0 && (
                     <Alert color="warning" sx={{ mb: 1.5, flexShrink: 0 }}>
-                        <Stack
-                            alignItems="center"
-                            direction="row"
-                            spacing={1.5}
-                            sx={{ width: "100%" }}
-                        >
-                            <Box sx={{ flex: 1 }}>{t.calendar.reauthPrompt}</Box>
-                            <ReconnectGoogleCalendarButton
-                                accessToken={accessToken}
-                                label={t.calendar.reconnectButton}
-                                size="sm"
-                            />
+                        <Stack spacing={0.5} sx={{ width: "100%" }}>
+                            {accountIssues.map((issue) => (
+                                <Stack
+                                    key={issue.accountId}
+                                    alignItems="center"
+                                    direction="row"
+                                    spacing={1.5}
+                                    sx={{ width: "100%" }}
+                                >
+                                    <Box sx={{ flex: 1 }}>
+                                        {issue.reason === "calendar_scope_missing"
+                                            ? t.calendar.sources.accountScopeNeeded.replace(
+                                                  "{email}",
+                                                  issue.email
+                                              )
+                                            : issue.reason === "google_reauth_required"
+                                              ? t.calendar.sources.accountReauthNeeded.replace(
+                                                    "{email}",
+                                                    issue.email
+                                                )
+                                              : t.calendar.sources.partialFailure}
+                                    </Box>
+                                    {(issue.reason === "google_reauth_required" ||
+                                        issue.reason === "calendar_scope_missing") && (
+                                        <ReconnectGoogleCalendarButton
+                                            accessToken={accessToken}
+                                            label={t.calendar.reconnectButton}
+                                            size="sm"
+                                        />
+                                    )}
+                                </Stack>
+                            ))}
                         </Stack>
                     </Alert>
                 )}
 
-                {!needsConnect && !needsScope && !needsReconnect && (
-                    <>
-                        {view === "month" ? (
-                            <MonthView
-                                eventsByDay={eventsByDay}
-                                focused={anchor.startOf("month")}
-                                onCellClick={openCreateOn}
-                                onEventClick={openEdit}
-                                onShowMore={setPopoverDayKey}
-                            />
-                        ) : (
-                            <TimelineView
-                                anchor={anchor}
-                                events={events}
-                                view={view}
-                                onCreateAt={openCreateAt}
-                                onEventClick={openEdit}
-                            />
-                        )}
-                    </>
+                {showGrid && (
+                    <Stack
+                        direction="row"
+                        spacing={1.5}
+                        sx={{ flex: 1, minHeight: 0, overflow: "hidden" }}
+                    >
+                        <CalendarSourcePicker
+                            calendars={sources.calendars}
+                            colorBySource={colorBySource}
+                            loading={sources.loading}
+                            selectedKeys={sources.selectedKeys}
+                            onAddAccount={startConnectFlow}
+                            onToggle={sources.toggleSource}
+                            onToggleAccount={sources.setAccountSelected}
+                        />
+                        <Box
+                            ref={gridScrollRef}
+                            sx={{
+                                flex: 1,
+                                minWidth: 0,
+                                display: "flex",
+                                flexDirection: "column",
+                                // The sticky-scroll handler owns
+                                // horizontal gestures here; keeping the
+                                // pane non-scrollable sideways means
+                                // there is nothing for it to fight.
+                                overflowX: "hidden",
+                            }}
+                        >
+                            {selectedSources.length === 0 && sources.loaded ? (
+                                <Stack
+                                    alignItems="center"
+                                    justifyContent="center"
+                                    sx={{ flex: 1, opacity: 0.65 }}
+                                >
+                                    <Typography level="body-sm">
+                                        {t.calendar.sources.emptySelection}
+                                    </Typography>
+                                </Stack>
+                            ) : view === "month" ? (
+                                <MonthView
+                                    colorBySource={colorBySource}
+                                    events={events}
+                                    busyLabel={t.calendar.busy}
+                                    eventsByDay={eventsByDay}
+                                    focused={anchor.startOf("month")}
+                                    freeBusySources={sources.freeBusySources}
+                                    onCellClick={openCreateOn}
+                                    onEventClick={openEdit}
+                                    onShowMore={setPopoverDayKey}
+                                />
+                            ) : (
+                                <TimelineView
+                                    anchor={anchor}
+                                    busyLabel={t.calendar.busy}
+                                    colorBySource={colorBySource}
+                                    events={events}
+                                    freeBusySources={sources.freeBusySources}
+                                    view={view}
+                                    onCreateAt={openCreateAt}
+                                    onEventClick={openEdit}
+                                />
+                            )}
+                        </Box>
+                    </Stack>
                 )}
 
                 {/* +N more popover — only meaningful in Month view
@@ -527,29 +711,50 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
                             </IconButton>
                         </Stack>
                         <Stack spacing={0.5}>
-                            {(popoverDayKey ? (eventsByDay[popoverDayKey] ?? []) : []).map(
-                                (e, idx) => (
-                                    <Chip
-                                        key={`${e.id}-${idx}`}
-                                        color={e.hangoutLink ? "success" : "primary"}
-                                        size="md"
-                                        sx={{ cursor: "pointer", justifyContent: "flex-start" }}
-                                        variant="soft"
-                                        startDecorator={
-                                            e.hangoutLink ? (
-                                                <VideoCameraFrontRoundedIcon
-                                                    sx={{ fontSize: 14 }}
-                                                />
-                                            ) : undefined
-                                        }
-                                        onClick={() => {
-                                            setPopoverDayKey(null);
-                                            openEdit(e);
-                                        }}
-                                    >
-                                        {e.summary || "(no title)"}
-                                    </Chip>
-                                )
+                            {(popoverDayKey ? (allEventsByDay[popoverDayKey] ?? []) : []).map(
+                                (e, idx) => {
+                                    const color = e._source
+                                        ? colorBySource[
+                                              sourceKey(
+                                                  e._source.account_id,
+                                                  e._source.calendar_id
+                                              )
+                                          ]
+                                        : undefined;
+                                    return (
+                                        <Chip
+                                            key={`${e.id}-${idx}`}
+                                            size="md"
+                                            variant="soft"
+                                            sx={{
+                                                cursor: "pointer",
+                                                justifyContent: "flex-start",
+                                                // Colored left rule ties the row
+                                                // back to its calendar in the rail.
+                                                borderLeft: color
+                                                    ? `3px solid ${color}`
+                                                    : undefined,
+                                            }}
+                                            startDecorator={
+                                                e.hangoutLink ? (
+                                                    <VideoCameraFrontRoundedIcon
+                                                        sx={{ fontSize: 14 }}
+                                                    />
+                                                ) : undefined
+                                            }
+                                            onClick={() => {
+                                                setPopoverDayKey(null);
+                                                openEdit(e);
+                                            }}
+                                        >
+                                            {eventLabel(
+                                                e,
+                                                sources.freeBusySources,
+                                                t.calendar.busy
+                                            )}
+                                        </Chip>
+                                    );
+                                }
                             )}
                         </Stack>
                     </ModalDialog>
@@ -558,6 +763,7 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
                 {accessToken && (
                     <CalendarEventModal
                         accessToken={accessToken}
+                        calendars={sources.calendars}
                         editingEventId={editingEventId}
                         initial={eventModalInitial}
                         open={eventModalOpen}
