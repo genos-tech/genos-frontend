@@ -181,6 +181,21 @@ describe("MonthView multi-day spans", () => {
         expect(onCellClick).not.toHaveBeenCalled();
     });
 
+    it("opens create when the empty cell surface is clicked", () => {
+        // Cell content (date number, the reserved bar strip, the chip
+        // stack's blank area) is `pointerEvents: none` so a click there
+        // still lands on the cell itself. If any of those started
+        // swallowing events, this is the affordance that would quietly
+        // stop working.
+        const { onCellClick } = renderMonth([]);
+        const cell = screen.getByText("15").closest(".MuiSheet-root");
+        expect(cell).toBeTruthy();
+
+        fireEvent.click(cell!);
+
+        expect(onCellClick).toHaveBeenCalledTimes(1);
+    });
+
     it("renders an empty month without crashing", () => {
         const { container } = renderMonth([]);
         expect(container).toBeTruthy();
