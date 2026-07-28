@@ -24,11 +24,14 @@ interface HarnessProps {
     onPrev: () => void;
     onNext: () => void;
     enabled?: boolean;
+    mounted?: boolean;
 }
 
-const Harness = ({ onPrev, onNext, enabled = true }: HarnessProps) => {
+const Harness = ({ onPrev, onNext, enabled = true, mounted = true }: HarnessProps) => {
     const ref = useStickyPeriodScroll<HTMLDivElement>({ onPrev, onNext, enabled });
-    return <div data-testid="grid" ref={ref} />;
+    // `mounted` models Joy's Modal, which renders NO children while
+    // closed — the grid node appears only once the user opens it.
+    return mounted ? <div data-testid="grid" ref={ref} /> : null;
 };
 
 /** Dispatches a real WheelEvent so `passive` and `preventDefault`
@@ -179,6 +182,52 @@ describe("useStickyPeriodScroll", () => {
         wheel(grid, { deltaX: STICKY_THRESHOLD_PX });
 
         expect(seen).toEqual([2]);
+    });
+
+    it("binds to a node that mounts AFTER the hook first runs", () => {
+        // The bug this exists for: `CalendarModal` is mounted
+        // permanently with an `open` prop, and Joy's Modal renders no
+        // children while closed. An effect reading `ref.current` runs
+        // once, finds null, and never runs again — so the listener was
+        // never attached and horizontal scroll silently did nothing.
+        const onNext = vi.fn();
+        const { rerender } = render(<Harness mounted={false} onNext={onNext} onPrev={vi.fn()} />);
+        expect(screen.queryByTestId("grid")).toBeNull();
+
+        // The user opens the modal.
+        rerender(<Harness mounted onNext={onNext} onPrev={vi.fn()} />);
+        wheel(screen.getByTestId("grid"), { deltaX: STICKY_THRESHOLD_PX });
+
+        expect(onNext).toHaveBeenCalledTimes(1);
+    });
+
+    it("rebinds across a close/reopen cycle", () => {
+        const onNext = vi.fn();
+        const { rerender } = render(<Harness mounted onNext={onNext} onPrev={vi.fn()} />);
+        wheel(screen.getByTestId("grid"), { deltaX: STICKY_THRESHOLD_PX });
+        expect(onNext).toHaveBeenCalledTimes(1);
+
+        // Close…
+        rerender(<Harness mounted={false} onNext={onNext} onPrev={vi.fn()} />);
+        // …and reopen. A fresh node needs a fresh binding.
+        rerender(<Harness mounted onNext={onNext} onPrev={vi.fn()} />);
+        wheel(screen.getByTestId("grid"), { deltaX: STICKY_THRESHOLD_PX });
+
+        expect(onNext).toHaveBeenCalledTimes(2);
+    });
+
+    it("clears a half-finished gesture when the node goes away", () => {
+        // Reopening mid-swipe must not inherit stale travel and page
+        // immediately.
+        const onNext = vi.fn();
+        const { rerender } = render(<Harness mounted onNext={onNext} onPrev={vi.fn()} />);
+        wheel(screen.getByTestId("grid"), { deltaX: STICKY_THRESHOLD_PX - 20 });
+
+        rerender(<Harness mounted={false} onNext={onNext} onPrev={vi.fn()} />);
+        rerender(<Harness mounted onNext={onNext} onPrev={vi.fn()} />);
+        wheel(screen.getByTestId("grid"), { deltaX: 30 });
+
+        expect(onNext).not.toHaveBeenCalled();
     });
 
     it("detaches on unmount", () => {
