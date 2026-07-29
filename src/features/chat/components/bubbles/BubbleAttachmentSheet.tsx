@@ -15,9 +15,27 @@ export const BubbleAttachmentSheet = (props: BubbleAttachmentSheetTypes) => {
 
     // Attachment color scheme (palette purple — single accent for the
     // attachment chip; not encoding attachment-type differences).
+    //
+    // Each accent carries two forms: the plain `var(--gp-…)` token for
+    // opaque use (the file icon) and its `-rgb` companion triplet for
+    // tints, which must be composed as `rgba(var(--…-rgb), α)`. These are
+    // theme tokens, not hex, so the previous hex-alpha concatenation
+    // produced `var(--gp-brand-700)15` — not a color — and CSS discarded
+    // the whole declaration, leaving the chip with no background, border
+    // or glow at all.
     const attachmentColor = {
-        dark: { primary: "var(--gp-brandalt-400)", secondary: "var(--gp-brand-700)" },
-        light: { primary: "var(--gp-brand-700)", secondary: "var(--gp-brand-800)" },
+        dark: {
+            primary: "var(--gp-brandalt-400)",
+            primaryRgb: "var(--gp-brandalt-400-rgb)",
+            secondary: "var(--gp-brand-700)",
+            secondaryRgb: "var(--gp-brand-700-rgb)",
+        },
+        light: {
+            primary: "var(--gp-brand-700)",
+            primaryRgb: "var(--gp-brand-700-rgb)",
+            secondary: "var(--gp-brand-800)",
+            secondaryRgb: "var(--gp-brand-800-rgb)",
+        },
     };
     const colors = isDark ? attachmentColor.dark : attachmentColor.light;
 
@@ -35,20 +53,24 @@ export const BubbleAttachmentSheet = (props: BubbleAttachmentSheetTypes) => {
                 ...(isSent ? { borderTopRightRadius: "4px" } : { borderTopLeftRadius: "4px" }),
                 // Background styling
                 background: isDark
-                    ? `linear-gradient(135deg, ${colors.primary}15 0%, ${colors.secondary}08 100%)`
-                    : `linear-gradient(135deg, ${colors.primary}10 0%, ${colors.secondary}05 100%)`,
+                    ? `linear-gradient(135deg, rgba(${colors.primaryRgb}, 0.08) 0%, rgba(${colors.secondaryRgb}, 0.03) 100%)`
+                    : `linear-gradient(135deg, rgba(${colors.primaryRgb}, 0.06) 0%, rgba(${colors.secondaryRgb}, 0.02) 100%)`,
                 // Border styling
                 border: "1px solid",
-                borderColor: isDark ? `${colors.primary}30` : `${colors.primary}20`,
+                borderColor: isDark
+                    ? `rgba(${colors.primaryRgb}, 0.19)`
+                    : `rgba(${colors.primaryRgb}, 0.13)`,
                 // Shadow
                 boxShadow: isDark
                     ? "0 2px 8px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.03)"
                     : "0 2px 8px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.5)",
                 "&:hover": {
-                    borderColor: isDark ? `${colors.primary}50` : `${colors.primary}35`,
+                    borderColor: isDark
+                        ? `rgba(${colors.primaryRgb}, 0.31)`
+                        : `rgba(${colors.primaryRgb}, 0.21)`,
                     boxShadow: isDark
-                        ? `0 4px 16px ${colors.primary}20, inset 0 1px 0 rgba(255,255,255,0.05)`
-                        : `0 4px 16px ${colors.primary}15, inset 0 1px 0 rgba(255,255,255,0.6)`,
+                        ? `0 4px 16px rgba(${colors.primaryRgb}, 0.13), inset 0 1px 0 rgba(255,255,255,0.05)`
+                        : `0 4px 16px rgba(${colors.primaryRgb}, 0.08), inset 0 1px 0 rgba(255,255,255,0.6)`,
                     transform: "translateY(-1px)",
                 },
                 "&:active": {
@@ -65,8 +87,8 @@ export const BubbleAttachmentSheet = (props: BubbleAttachmentSheetTypes) => {
                     width: "40%",
                     height: "100%",
                     background: isDark
-                        ? `radial-gradient(ellipse at top right, ${colors.primary}08 0%, transparent 70%)`
-                        : `radial-gradient(ellipse at top right, ${colors.primary}06 0%, transparent 70%)`,
+                        ? `radial-gradient(ellipse at top right, rgba(${colors.primaryRgb}, 0.03) 0%, transparent 70%)`
+                        : `radial-gradient(ellipse at top right, rgba(${colors.primaryRgb}, 0.02) 0%, transparent 70%)`,
                     pointerEvents: "none",
                 }}
             />
@@ -81,10 +103,12 @@ export const BubbleAttachmentSheet = (props: BubbleAttachmentSheetTypes) => {
                         width: 42,
                         height: 42,
                         background: isDark
-                            ? `linear-gradient(135deg, ${colors.primary}25 0%, ${colors.secondary}18 100%)`
-                            : `linear-gradient(135deg, ${colors.primary}20 0%, ${colors.secondary}12 100%)`,
+                            ? `linear-gradient(135deg, rgba(${colors.primaryRgb}, 0.15) 0%, rgba(${colors.secondaryRgb}, 0.09) 100%)`
+                            : `linear-gradient(135deg, rgba(${colors.primaryRgb}, 0.13) 0%, rgba(${colors.secondaryRgb}, 0.07) 100%)`,
                         border: "1px solid",
-                        borderColor: isDark ? `${colors.primary}35` : `${colors.primary}25`,
+                        borderColor: isDark
+                            ? `rgba(${colors.primaryRgb}, 0.21)`
+                            : `rgba(${colors.primaryRgb}, 0.15)`,
                     }}
                 >
                     <InsertDriveFileRoundedIcon

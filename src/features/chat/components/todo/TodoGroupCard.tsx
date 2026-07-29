@@ -15,9 +15,24 @@ import { TodoCategoryProps, TodoGroupProps } from "../../../../types/chat";
 import { getLocalCurrentDate } from "../../../../utils/dateUtils";
 import { TodoCategorySection } from "./TodoCategorySection";
 
+// Each color is carried twice: the plain value for opaque use and an
+// `…Rgb` "r, g, b" triplet for tints, composed as `rgba(<triplet>, α)`.
+// `today` is a THEME TOKEN, and a `var(--gp-…)` with hex-alpha appended
+// is not a color — CSS discarded those declarations outright, so the
+// today card lost its tint and accent bar.
 const COLORS = {
-    today: { dark: "var(--gp-brandalt-400)", light: "var(--gp-brand-700)" },
-    completed: { dark: "#22c55e", light: "#16a34a" },
+    today: {
+        dark: "var(--gp-brandalt-400)",
+        darkRgb: "var(--gp-brandalt-400-rgb)",
+        light: "var(--gp-brand-700)",
+        lightRgb: "var(--gp-brand-700-rgb)",
+    },
+    completed: {
+        dark: "#22c55e",
+        darkRgb: "34, 197, 94",
+        light: "#16a34a",
+        lightRgb: "22, 163, 74",
+    },
 } as const;
 
 interface TodoGroupCardProps {
@@ -103,15 +118,15 @@ export const TodoGroupCard = (props: TodoGroupCardProps) => {
                     border: "1px solid",
                     borderColor: isToday
                         ? isDark
-                            ? `${COLORS.today.dark}30`
-                            : `${COLORS.today.light}20`
+                            ? `rgba(${COLORS.today.darkRgb}, 0.19)`
+                            : `rgba(${COLORS.today.lightRgb}, 0.13)`
                         : isDark
                           ? "rgba(255,255,255,0.06)"
                           : "rgba(0,0,0,0.06)",
                     boxShadow: isToday
                         ? isDark
-                            ? `0 4px 20px ${COLORS.today.dark}15`
-                            : `0 4px 20px ${COLORS.today.light}12`
+                            ? `0 4px 20px rgba(${COLORS.today.darkRgb}, 0.08)`
+                            : `0 4px 20px rgba(${COLORS.today.lightRgb}, 0.07)`
                         : isDark
                           ? "0 2px 8px rgba(0,0,0,0.2)"
                           : "0 2px 8px rgba(0,0,0,0.04)",
@@ -127,8 +142,8 @@ export const TodoGroupCard = (props: TodoGroupCardProps) => {
                             width: "100%",
                             height: 3,
                             background: isDark
-                                ? `linear-gradient(90deg, ${COLORS.today.dark} 0%, ${COLORS.today.dark}60 100%)`
-                                : `linear-gradient(90deg, ${COLORS.today.light} 0%, ${COLORS.today.light}60 100%)`,
+                                ? `linear-gradient(90deg, ${COLORS.today.dark} 0%, rgba(${COLORS.today.darkRgb}, 0.38) 100%)`
+                                : `linear-gradient(90deg, ${COLORS.today.light} 0%, rgba(${COLORS.today.lightRgb}, 0.38) 100%)`,
                         }}
                     />
                 )}
@@ -164,8 +179,8 @@ export const TodoGroupCard = (props: TodoGroupCardProps) => {
                             fontWeight: 600,
                             background: group.isCompleted
                                 ? isDark
-                                    ? `${COLORS.completed.dark}25`
-                                    : `${COLORS.completed.light}15`
+                                    ? `rgba(${COLORS.completed.darkRgb}, 0.15)`
+                                    : `rgba(${COLORS.completed.lightRgb}, 0.08)`
                                 : isDark
                                   ? "rgba(255,255,255,0.06)"
                                   : "rgba(0,0,0,0.04)",

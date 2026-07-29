@@ -55,12 +55,41 @@ import { ActivityHeader } from "./ActivityHeader";
 //   (and `chatId === project_id`), MDM activities don't (`chatId === mdm_id`).
 // activityType = {1: message or comment, 2: reaction, 3: mention}
 
-// Activity type color schemes for visual distinction
+// Activity type color schemes for visual distinction.
+//
+// Each entry carries its color twice: the plain value for opaque use and
+// an `…Rgb` "r, g, b" triplet for tints, which are composed as
+// `rgba(<triplet>, α)`. The reply/reaction/mention rows are fixed
+// functional hex, but `default` is a THEME TOKEN — and a `var(--gp-…)`
+// with hex-alpha glued on ("…400)15") is not a color, so CSS dropped
+// those declarations entirely and default-type rows lost their tint,
+// border and accent bar. Composing through the triplet works for both
+// kinds uniformly.
 const ACTIVITY_COLOR_SCHEMES = {
-    reply: { dark: "#4ade80", light: "#22c55e" },
-    reaction: { dark: "#fbbf24", light: "#f59e0b" },
-    mention: { dark: "#f87171", light: "#ef4444" },
-    default: { dark: "var(--gp-brandalt-400)", light: "var(--gp-brand-700)" },
+    reply: {
+        dark: "#4ade80",
+        darkRgb: "74, 222, 128",
+        light: "#22c55e",
+        lightRgb: "34, 197, 94",
+    },
+    reaction: {
+        dark: "#fbbf24",
+        darkRgb: "251, 191, 36",
+        light: "#f59e0b",
+        lightRgb: "245, 158, 11",
+    },
+    mention: {
+        dark: "#f87171",
+        darkRgb: "248, 113, 113",
+        light: "#ef4444",
+        lightRgb: "239, 68, 68",
+    },
+    default: {
+        dark: "var(--gp-brandalt-400)",
+        darkRgb: "var(--gp-brandalt-400-rgb)",
+        light: "var(--gp-brand-700)",
+        lightRgb: "var(--gp-brand-700-rgb)",
+    },
 } as const;
 
 type ChatListItemForActivityProps = {
@@ -688,44 +717,44 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                         transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                         background: isSelected
                             ? isDark
-                                ? `linear-gradient(135deg, ${activityColor.dark}15 0%, ${activityColor.dark}08 100%)`
-                                : `linear-gradient(135deg, ${activityColor.light}12 0%, ${activityColor.light}05 100%)`
+                                ? `linear-gradient(135deg, rgba(${activityColor.darkRgb}, 0.08) 0%, rgba(${activityColor.darkRgb}, 0.03) 100%)`
+                                : `linear-gradient(135deg, rgba(${activityColor.lightRgb}, 0.07) 0%, rgba(${activityColor.lightRgb}, 0.02) 100%)`
                             : isDark
                               ? "rgba(255,255,255,0.02)"
                               : "rgba(0,0,0,0.01)",
                         border: "1px solid",
                         borderColor: isSelected
                             ? isDark
-                                ? `${activityColor.dark}30`
-                                : `${activityColor.light}25`
+                                ? `rgba(${activityColor.darkRgb}, 0.19)`
+                                : `rgba(${activityColor.lightRgb}, 0.15)`
                             : isDark
                               ? "rgba(255,255,255,0.04)"
                               : "rgba(0,0,0,0.04)",
                         boxShadow: isSelected
                             ? isDark
-                                ? `0 4px 16px ${activityColor.dark}15, inset 0 1px 0 ${activityColor.dark}10`
-                                : `0 4px 16px ${activityColor.light}12, inset 0 1px 0 ${activityColor.light}08`
+                                ? `0 4px 16px rgba(${activityColor.darkRgb}, 0.08), inset 0 1px 0 rgba(${activityColor.darkRgb}, 0.06)`
+                                : `0 4px 16px rgba(${activityColor.lightRgb}, 0.07), inset 0 1px 0 rgba(${activityColor.lightRgb}, 0.03)`
                             : "none",
                         "&:hover": {
                             background: isSelected
                                 ? isDark
-                                    ? `linear-gradient(135deg, ${activityColor.dark}20 0%, ${activityColor.dark}12 100%)`
-                                    : `linear-gradient(135deg, ${activityColor.light}15 0%, ${activityColor.light}08 100%)`
+                                    ? `linear-gradient(135deg, rgba(${activityColor.darkRgb}, 0.13) 0%, rgba(${activityColor.darkRgb}, 0.07) 100%)`
+                                    : `linear-gradient(135deg, rgba(${activityColor.lightRgb}, 0.08) 0%, rgba(${activityColor.lightRgb}, 0.03) 100%)`
                                 : isDark
                                   ? "rgba(255,255,255,0.05)"
                                   : "rgba(0,0,0,0.03)",
                             borderColor: isSelected
                                 ? isDark
-                                    ? `${activityColor.dark}40`
-                                    : `${activityColor.light}35`
+                                    ? `rgba(${activityColor.darkRgb}, 0.25)`
+                                    : `rgba(${activityColor.lightRgb}, 0.21)`
                                 : isDark
                                   ? "rgba(255,255,255,0.08)"
                                   : "rgba(0,0,0,0.08)",
                             transform: "translateY(-1px)",
                             boxShadow: isSelected
                                 ? isDark
-                                    ? `0 6px 20px ${activityColor.dark}20`
-                                    : `0 6px 20px ${activityColor.light}15`
+                                    ? `0 6px 20px rgba(${activityColor.darkRgb}, 0.13)`
+                                    : `0 6px 20px rgba(${activityColor.lightRgb}, 0.08)`
                                 : isDark
                                   ? "0 4px 12px rgba(0,0,0,0.3)"
                                   : "0 4px 12px rgba(0,0,0,0.08)",
@@ -747,11 +776,11 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                                 height: "60%",
                                 borderRadius: "0 4px 4px 0",
                                 background: isDark
-                                    ? `linear-gradient(180deg, ${activityColor.dark} 0%, ${activityColor.dark}80 100%)`
-                                    : `linear-gradient(180deg, ${activityColor.light} 0%, ${activityColor.light}80 100%)`,
+                                    ? `linear-gradient(180deg, ${activityColor.dark} 0%, rgba(${activityColor.darkRgb}, 0.5) 100%)`
+                                    : `linear-gradient(180deg, ${activityColor.light} 0%, rgba(${activityColor.lightRgb}, 0.5) 100%)`,
                                 boxShadow: isDark
-                                    ? `0 0 8px ${activityColor.dark}60`
-                                    : `0 0 8px ${activityColor.light}50`,
+                                    ? `0 0 8px rgba(${activityColor.darkRgb}, 0.38)`
+                                    : `0 0 8px rgba(${activityColor.lightRgb}, 0.31)`,
                             }}
                         />
                     )}
@@ -766,8 +795,8 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                                 width: "50%",
                                 height: "100%",
                                 background: isDark
-                                    ? `radial-gradient(ellipse at top right, ${activityColor.dark}08 0%, transparent 70%)`
-                                    : `radial-gradient(ellipse at top right, ${activityColor.light}06 0%, transparent 70%)`,
+                                    ? `radial-gradient(ellipse at top right, rgba(${activityColor.darkRgb}, 0.03) 0%, transparent 70%)`
+                                    : `radial-gradient(ellipse at top right, rgba(${activityColor.lightRgb}, 0.02) 0%, transparent 70%)`,
                                 pointerEvents: "none",
                             }}
                         />
@@ -805,8 +834,8 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                                     fontSize: "0.7rem",
                                     fontWeight: 600,
                                     color: isDark
-                                        ? `${activityColor.dark}cc`
-                                        : `${activityColor.light}cc`,
+                                        ? `rgba(${activityColor.darkRgb}, 0.8)`
+                                        : `rgba(${activityColor.lightRgb}, 0.8)`,
                                 }}
                             >
                                 {fmt(t.chat.activity.aggregatedEarlier, {
