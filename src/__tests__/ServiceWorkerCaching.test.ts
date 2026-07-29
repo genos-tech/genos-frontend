@@ -82,6 +82,7 @@ function loadWorker(fetchImpl: ReturnType<typeof vi.fn>) {
         },
         location: { origin: ORIGIN },
         registration: { showNotification: vi.fn(async () => undefined) },
+        navigator: { setAppBadge: vi.fn(async () => undefined) },
     };
     const src = readFileSync(SW_PATH, "utf-8");
     // eslint-disable-next-line no-new-func
@@ -253,6 +254,43 @@ describe("sw.js — lifecycle", () => {
 
         expect(Array.from(harness.stores.keys())).toEqual(["genos-shell-v1", "genos-assets-v1"]);
         expect(self.clients.claim).toHaveBeenCalled();
+    });
+
+    it("sets the app-icon badge from the server count on push", async () => {
+        const { listeners, self } = loadWorker(vi.fn());
+
+        listeners.get("push")!({
+            data: { json: () => ({ title: "Hi", body: "b", badge_count: 7 }) },
+            waitUntil: (p: Promise<unknown>) => p,
+        });
+
+        expect(self.navigator.setAppBadge).toHaveBeenCalledWith(7);
+    });
+
+    it("increments the badge locally when the server sends no count", async () => {
+        const { listeners, self } = loadWorker(vi.fn());
+        const push = () =>
+            listeners.get("push")!({
+                data: { json: () => ({ title: "Hi", body: "b" }) },
+                waitUntil: (p: Promise<unknown>) => p,
+            });
+
+        push();
+        push();
+
+        expect(self.navigator.setAppBadge).toHaveBeenNthCalledWith(1, 1);
+        expect(self.navigator.setAppBadge).toHaveBeenNthCalledWith(2, 2);
+    });
+
+    it("clears the badge when a notification is opened", async () => {
+        const { listeners, self } = loadWorker(vi.fn());
+
+        listeners.get("notificationclick")!({
+            notification: { close: vi.fn(), data: { url: "/workspace/chat" } },
+            waitUntil: (p: Promise<unknown>) => p,
+        });
+
+        expect(self.navigator.setAppBadge).toHaveBeenCalledWith(0);
     });
 
     it("still shows a push notification (caching must not break push)", async () => {
