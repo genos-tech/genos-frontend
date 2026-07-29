@@ -16,6 +16,7 @@ import {
     useHashMentionData,
 } from "../../context/HashMentionDataContext";
 import { TaskMentionHoverCard } from "../../features/tasks/components/TaskMentionHoverCard";
+import { TaskStatusChip } from "../../features/tasks/components/TaskStatusChip";
 import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
 import { AllChatProps } from "../../types/chat";
 import { ProjectProps, SearchTeamTasksResponse, TaskTableProps } from "../../types/tasks";
@@ -259,11 +260,17 @@ export const CreateHashProjectSpec = () =>
 
 // A two-line menu row mirroring the `@` menu's layout: a colored icon
 // disc, a bold name, and a muted subtitle (the entity kind / id).
+//
+// `trailing` is an optional right-aligned slot — task rows put their
+// status chip there. It sits OUTSIDE the name/subtitle column so the
+// title keeps ellipsizing against the remaining width rather than being
+// pushed out by the chip.
 const menuRow = (
     Icon: typeof TaskAltRoundedIcon,
     palette: MentionPalette,
     name: string,
-    subtitle: string
+    subtitle: string,
+    trailing?: ReactElement | null
 ): ReactElement => (
     <Box alignItems="center" display="flex" gap={1} sx={{ minWidth: 0, width: "100%" }}>
         <Box
@@ -304,6 +311,7 @@ const menuRow = (
                 {subtitle}
             </Typography>
         </Box>
+        {trailing}
     </Box>
 );
 
@@ -320,6 +328,13 @@ type MentionableTask = {
     displayId: string;
     title: string;
     projectName: string;
+    // Status label ("Open" / "WIP" / "Blocked" / …), rendered as the
+    // row's trailing chip. The two sources disagree on shape — the open
+    // project's table rows carry a bare string, the team search carries
+    // a `TaskStatusProps` object — so both are normalized to the label
+    // here. Empty string when unknown; the row then renders no chip
+    // rather than a misleading "Open".
+    status: string;
 };
 
 interface HashMenuCacheEntry {
@@ -376,6 +391,7 @@ export const HashMentionMenuItems = (
                 displayId: t.displayId || "",
                 title: t.title || "",
                 projectName: projectNameById.get(String(t.projectId)) || "",
+                status: t.status || "",
             })),
         ...data.teamTasks
             .filter((t) => t.taskId != null && t.projectId != null)
@@ -385,6 +401,7 @@ export const HashMentionMenuItems = (
                 displayId: t.displayId || "",
                 title: t.title || "",
                 projectName: projectNameById.get(String(t.projectId)) || t.projectName || "",
+                status: t.status?.status || "",
             })),
     ];
     const seenTaskKeys = new Set<string>();
@@ -417,7 +434,10 @@ export const HashMentionMenuItems = (
                     title || displayId,
                     t.projectName
                         ? `Task · ${displayId} · ${t.projectName}`
-                        : `Task · ${displayId}`
+                        : `Task · ${displayId}`,
+                    // The canonical dashboard status chip, so a status
+                    // reads identically here and in the task surfaces.
+                    t.status ? <TaskStatusChip iconSize={11} status={t.status} /> : null
                 ),
             };
         });

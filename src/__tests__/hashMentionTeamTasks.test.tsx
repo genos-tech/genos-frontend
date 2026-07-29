@@ -129,3 +129,75 @@ describe("HashMentionMenuItems — task sources", () => {
         expect(subtitleOf(items[0])).toBe("Task · MKT-9 · Marketing");
     });
 });
+
+/** The status chip lives in the row's `icon` tree; read its prop. */
+const statusOf = (item: { icon?: unknown }): string => {
+    const match = JSON.stringify(item.icon ?? {}).match(/"status":"([^"]*)"/);
+    return match ? match[1] : "";
+};
+
+/**
+ * The two task sources carry status in different shapes — the open
+ * project's table row as a bare string, the team search as a
+ * `TaskStatusProps` object. Both have to reach the same chip, or the
+ * status would show for tasks in other projects but not the open one.
+ */
+describe("HashMentionMenuItems — task status chip", () => {
+    it("shows the status of an open-project task (bare string source)", () => {
+        const items = HashMentionMenuItems(
+            newEditor(),
+            dataWith({ tasks: [openProjectTask({ status: "WIP" })] })
+        );
+
+        expect(statusOf(items[0])).toBe("WIP");
+    });
+
+    it("shows the status of a team task (TaskStatusProps source)", () => {
+        const items = HashMentionMenuItems(
+            newEditor(),
+            dataWith({
+                teamTasks: [
+                    teamTask({
+                        status: {
+                            code: 0,
+                            status: "Blocked",
+                            color: "#e11d48",
+                            textColor: "white",
+                        },
+                    }),
+                ],
+            })
+        );
+
+        expect(statusOf(items[0])).toBe("Blocked");
+    });
+
+    it("renders no chip when the status is unknown, rather than a wrong one", () => {
+        // `TaskStatusChip` falls back to Open's styling for an
+        // unrecognized label, so an absent status must render nothing at
+        // all instead of silently claiming the task is Open.
+        const items = HashMentionMenuItems(
+            newEditor(),
+            dataWith({ tasks: [openProjectTask({ status: null })] })
+        );
+
+        expect(statusOf(items[0])).toBe("");
+    });
+
+    it("leaves note / chat / project rows without a status chip", () => {
+        const items = HashMentionMenuItems(
+            newEditor(),
+            dataWith({
+                projects: [
+                    {
+                        projectId: 7,
+                        projectName: "Ops",
+                    } as unknown as HashMentionData["projects"][number],
+                ],
+            })
+        );
+
+        expect(items).toHaveLength(1);
+        expect(statusOf(items[0])).toBe("");
+    });
+});
