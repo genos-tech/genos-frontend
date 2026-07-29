@@ -1678,6 +1678,12 @@ export const ja: DeepPartial<Messages> = {
             install: "インストール",
             iosBody:
                 "共有ボタンから「ホーム画面に追加」を選んでください。iOSでは、インストールしたアプリでのみ通知が届きます。",
+            how: "手順",
+            howTitle: "iPhoneにGenosをインストール",
+            howStep1: "Safariのツールバーにある共有ボタンをタップします。",
+            howStep2: "下にスクロールして「ホーム画面に追加」を選びます。",
+            howNote:
+                "追加後はホーム画面のGenosを開いてサインインし、そこで通知を許可してください。iOSはインストール済みアプリにのみ通知を配信します。",
         },
         notifications: {
             permissionTitle: "通知はオフになっています",

@@ -1560,6 +1560,12 @@ export const fr: DeepPartial<Messages> = {
             install: "Installer",
             iosBody:
                 "Touchez le bouton Partager puis « Sur l'écran d'accueil ». Sur iOS, les notifications ne fonctionnent que dans l'app installée.",
+            how: "Comment ?",
+            howTitle: "Installer Genos sur votre iPhone",
+            howStep1: "Touchez le bouton Partager dans la barre d'outils de Safari.",
+            howStep2: "Faites défiler vers le bas et choisissez « Sur l'écran d'accueil ».",
+            howNote:
+                "Ouvrez ensuite Genos depuis l'écran d'accueil, connectez-vous et autorisez-y les notifications — iOS ne les envoie qu'à l'app installée.",
         },
         notifications: {
             permissionTitle: "Les notifications sont désactivées",
