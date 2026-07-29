@@ -73,41 +73,75 @@ const CHAT_PANE_TYPES = {
 // Note: MDM (Multi-user DM) is now integrated into DM section, not shown as separate nav item
 // Exported so the chat list keyboard-shortcut handler in `ChatList.tsx`
 // shares the same tab order — keep them in sync.
+//
+// `colorScheme` carries BOTH the plain `var(--gp-…)` reference (for
+// opaque fills) and its `-rgb` companion triplet. The alpha variants
+// below MUST compose through `rgba(var(--…-rgb), α)`: the old
+// `${colorScheme.dark}cc` hex-alpha concatenation yields the literal
+// string `var(--gp-brandalt-400)cc`, which is not a color — it
+// invalidated the whole `linear-gradient()` and dropped the unread
+// badge's background entirely, leaving white-on-white (the "the unread
+// chip disappeared" bug). See the note at the top of `purplePalette.ts`.
 export const NAV_ITEMS = [
     {
         type: CHAT_PANE_TYPES.DM,
         icon: PersonRoundedIcon,
         labelKey: "navDM" as const,
         shortLabelKey: "navDMShort" as const,
-        colorScheme: { dark: "var(--gp-brandalt-400)", light: "var(--gp-brand-700)" },
+        colorScheme: {
+            dark: "var(--gp-brandalt-400)",
+            light: "var(--gp-brand-700)",
+            darkRgb: "var(--gp-brandalt-400-rgb)",
+            lightRgb: "var(--gp-brand-700-rgb)",
+        },
     },
     {
         type: CHAT_PANE_TYPES.GM,
         icon: GroupsRoundedIcon,
         labelKey: "navGM" as const,
         shortLabelKey: "navGMShort" as const,
-        colorScheme: { dark: "var(--gp-brandalt-400)", light: "var(--gp-brand-700)" },
+        colorScheme: {
+            dark: "var(--gp-brandalt-400)",
+            light: "var(--gp-brand-700)",
+            darkRgb: "var(--gp-brandalt-400-rgb)",
+            lightRgb: "var(--gp-brand-700-rgb)",
+        },
     },
     {
         type: CHAT_PANE_TYPES.PM,
         icon: AccountTreeRoundedIcon,
         labelKey: "navPM" as const,
         shortLabelKey: "navPMShort" as const,
-        colorScheme: { dark: "var(--gp-brandalt-400)", light: "var(--gp-brand-700)" },
+        colorScheme: {
+            dark: "var(--gp-brandalt-400)",
+            light: "var(--gp-brand-700)",
+            darkRgb: "var(--gp-brandalt-400-rgb)",
+            lightRgb: "var(--gp-brand-700-rgb)",
+        },
     },
     {
         type: CHAT_PANE_TYPES.FLAGGED,
         icon: FlagRoundedIcon,
         labelKey: "navFlagged" as const,
         shortLabelKey: "navFlaggedShort" as const,
-        colorScheme: { dark: "var(--gp-brandalt-400)", light: "var(--gp-brand-700)" },
+        colorScheme: {
+            dark: "var(--gp-brandalt-400)",
+            light: "var(--gp-brand-700)",
+            darkRgb: "var(--gp-brandalt-400-rgb)",
+            lightRgb: "var(--gp-brand-700-rgb)",
+        },
     },
     {
         type: CHAT_PANE_TYPES.ACTIVITY,
         icon: NotificationsActiveRoundedIcon,
         labelKey: "navActivity" as const,
         shortLabelKey: "navActivityShort" as const,
-        colorScheme: { dark: "var(--gp-brandalt-400)", light: "var(--gp-brand-700)" },
+        colorScheme: {
+            dark: "var(--gp-brandalt-400)",
+            light: "var(--gp-brand-700)",
+            darkRgb: "var(--gp-brandalt-400-rgb)",
+            lightRgb: "var(--gp-brand-700-rgb)",
+        },
     },
 ];
 
@@ -441,16 +475,16 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                             sx={{
                                                 "& .MuiBadge-badge": {
                                                     background: isDark
-                                                        ? `linear-gradient(135deg, ${item.colorScheme.dark} 0%, ${item.colorScheme.dark}cc 100%)`
-                                                        : `linear-gradient(135deg, ${item.colorScheme.light} 0%, ${item.colorScheme.light}cc 100%)`,
+                                                        ? `linear-gradient(135deg, rgba(${item.colorScheme.darkRgb}, 1) 0%, rgba(${item.colorScheme.darkRgb}, 0.8) 100%)`
+                                                        : `linear-gradient(135deg, rgba(${item.colorScheme.lightRgb}, 1) 0%, rgba(${item.colorScheme.lightRgb}, 0.8) 100%)`,
                                                     color: "#fff",
                                                     fontWeight: 700,
                                                     fontSize: "0.65rem",
                                                     minWidth: 16,
                                                     height: 16,
                                                     boxShadow: isDark
-                                                        ? `0 2px 6px ${item.colorScheme.dark}40`
-                                                        : `0 2px 6px ${item.colorScheme.light}35`,
+                                                        ? `0 2px 6px rgba(${item.colorScheme.darkRgb}, 0.25)`
+                                                        : `0 2px 6px rgba(${item.colorScheme.lightRgb}, 0.21)`,
                                                 },
                                             }}
                                         >
@@ -467,20 +501,20 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                                         "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                                                     background: isActive
                                                         ? isDark
-                                                            ? `linear-gradient(135deg, ${item.colorScheme.dark}20 0%, ${item.colorScheme.dark}10 100%)`
-                                                            : `linear-gradient(135deg, ${item.colorScheme.light}15 0%, ${item.colorScheme.light}08 100%)`
+                                                            ? `linear-gradient(135deg, rgba(${item.colorScheme.darkRgb}, 0.13) 0%, rgba(${item.colorScheme.darkRgb}, 0.06) 100%)`
+                                                            : `linear-gradient(135deg, rgba(${item.colorScheme.lightRgb}, 0.08) 0%, rgba(${item.colorScheme.lightRgb}, 0.03) 100%)`
                                                         : "transparent",
                                                     border: "1px solid",
                                                     borderColor: isActive
                                                         ? isDark
-                                                            ? `${item.colorScheme.dark}35`
-                                                            : `${item.colorScheme.light}25`
+                                                            ? `rgba(${item.colorScheme.darkRgb}, 0.21)`
+                                                            : `rgba(${item.colorScheme.lightRgb}, 0.15)`
                                                         : "transparent",
                                                     "&:hover": {
                                                         background: isActive
                                                             ? isDark
-                                                                ? `linear-gradient(135deg, ${item.colorScheme.dark}25 0%, ${item.colorScheme.dark}15 100%)`
-                                                                : `linear-gradient(135deg, ${item.colorScheme.light}20 0%, ${item.colorScheme.light}12 100%)`
+                                                                ? `linear-gradient(135deg, rgba(${item.colorScheme.darkRgb}, 0.15) 0%, rgba(${item.colorScheme.darkRgb}, 0.08) 100%)`
+                                                                : `linear-gradient(135deg, rgba(${item.colorScheme.lightRgb}, 0.13) 0%, rgba(${item.colorScheme.lightRgb}, 0.07) 100%)`
                                                             : isDark
                                                               ? "rgba(255,255,255,0.06)"
                                                               : "rgba(0,0,0,0.04)",

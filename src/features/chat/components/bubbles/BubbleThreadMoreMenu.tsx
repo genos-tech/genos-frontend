@@ -46,6 +46,11 @@ type MenuItemConfig = {
     icon: React.ReactNode;
     onClick: () => void;
     color: { light: string; dark: string };
+    // "r, g, b" triplet companion to `color`, for tints composed as
+    // `rgba(<triplet>, α)`. Required because the delete row's color is a
+    // theme token (`var(--gp-tint-danger)`) — gluing hex alpha onto that
+    // yields a string CSS rejects, taking the whole declaration with it.
+    colorRgb: { light: string; dark: string };
     hoverBg: { light: string; dark: string };
     visible: boolean;
     danger?: boolean;
@@ -281,6 +286,7 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
             icon: <ContentCopyRoundedIcon sx={{ fontSize: 18 }} />,
             onClick: handleCopyLinkClick,
             color: { light: "#059669", dark: "#34d399" },
+            colorRgb: { light: "5, 150, 105", dark: "52, 211, 153" },
             hoverBg: { light: "rgba(5,150,105,0.12)", dark: "rgba(52,211,153,0.18)" },
             visible: true,
         },
@@ -293,6 +299,7 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
                 closeMenu();
             },
             color: { light: "#6366f1", dark: "#a5b4fc" },
+            colorRgb: { light: "99, 102, 241", dark: "165, 180, 252" },
             hoverBg: { light: "rgba(99,102,241,0.10)", dark: "rgba(99,102,241,0.20)" },
             visible: true,
             active: unwrapAll,
@@ -306,6 +313,7 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
                 closeMenu();
             },
             color: { light: "#6366f1", dark: "#a5b4fc" },
+            colorRgb: { light: "99, 102, 241", dark: "165, 180, 252" },
             hoverBg: { light: "rgba(99,102,241,0.10)", dark: "rgba(99,102,241,0.20)" },
             visible: true,
             active: unwrapCode,
@@ -320,6 +328,9 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
             color: isFlagged
                 ? { light: "#ef4444", dark: "#f87171" }
                 : { light: "#f59e0b", dark: "#fbbf24" },
+            colorRgb: isFlagged
+                ? { light: "239, 68, 68", dark: "248, 113, 113" }
+                : { light: "245, 158, 11", dark: "251, 191, 36" },
             hoverBg: isFlagged
                 ? { light: "rgba(239,68,68,0.12)", dark: "rgba(248,113,113,0.18)" }
                 : { light: "rgba(245,158,11,0.12)", dark: "rgba(251,191,36,0.18)" },
@@ -332,6 +343,7 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
             icon: <EditRoundedIcon sx={{ fontSize: 18 }} />,
             onClick: handleEditClick,
             color: { light: "#0891b2", dark: "#22d3ee" },
+            colorRgb: { light: "8, 145, 178", dark: "34, 211, 238" },
             hoverBg: { light: "rgba(8,145,178,0.12)", dark: "rgba(34,211,238,0.18)" },
             visible: isOwnMessage,
         },
@@ -341,6 +353,10 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
             icon: <DeleteOutlineRoundedIcon sx={{ fontSize: 18 }} />,
             onClick: handleDeleteClick,
             color: { light: "var(--gp-tint-danger-alt)", dark: "var(--gp-tint-danger)" },
+            colorRgb: {
+                light: "var(--gp-tint-danger-alt-rgb)",
+                dark: "var(--gp-tint-danger-rgb)",
+            },
             hoverBg: {
                 light: "rgba(var(--gp-tint-danger-alt-rgb), 0.12)",
                 dark: "rgba(var(--gp-tint-danger-rgb), 0.18)",
@@ -463,8 +479,8 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
                                           background:
                                               item.active || isFocused
                                                   ? isDark
-                                                      ? `${item.color.dark}15`
-                                                      : `${item.color.light}12`
+                                                      ? `rgba(${item.colorRgb.dark}, 0.08)`
+                                                      : `rgba(${item.colorRgb.light}, 0.07)`
                                                   : "transparent",
                                           transition: "all 0.15s ease",
                                           flexShrink: 0,
@@ -494,7 +510,7 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
                                               background: isDark
                                                   ? item.color.dark
                                                   : item.color.light,
-                                              boxShadow: `0 0 10px ${isDark ? item.color.dark : item.color.light}50`,
+                                              boxShadow: `0 0 10px rgba(${isDark ? item.colorRgb.dark : item.colorRgb.light}, 0.31)`,
                                               flexShrink: 0,
                                           }}
                                       />
