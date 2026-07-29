@@ -139,7 +139,7 @@ export const InboxBubble = (props: InboxBubbleProps) => {
         <Card
             variant="outlined"
             sx={{
-                p: 2,
+                p: { xs: 1.5, md: 2 },
                 background: isDark
                     ? isHovered
                         ? "linear-gradient(135deg, rgba(35,35,45,0.95) 0%, rgba(30,30,40,0.98) 100%)"
@@ -311,7 +311,14 @@ export const InboxBubble = (props: InboxBubbleProps) => {
 
                 {/* Action Buttons */}
                 {isRequest && (
-                    <Stack direction="row" justifyContent="flex-end" spacing={1}>
+                    <Stack
+                        direction="row"
+                        justifyContent="flex-end"
+                        spacing={1}
+                        // Approve/Reject labels are longer in several locales;
+                        // wrapping beats overflowing a 390px card.
+                        sx={{ flexWrap: "wrap", rowGap: 1 }}
+                    >
                         {isHandled ? (
                             <Button
                                 color={resolvedStatus === "rejected" ? "neutral" : "success"}

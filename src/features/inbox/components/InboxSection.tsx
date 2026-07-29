@@ -88,7 +88,9 @@ export const InboxSection = forwardRef<VirtuosoHandle, InboxSectionExtendedProps
                                 <Box
                                     key={`${itemKeyPrefix}-${item.itemId}`}
                                     sx={{
-                                        px: 2,
+                                        // Narrower gutters on a phone so the
+                                        // card keeps its readable width.
+                                        px: { xs: 1, md: 2 },
                                         py: 0.75,
                                         cursor: "pointer",
                                         animation: "fadeSlideIn 0.3s ease-out forwards",
