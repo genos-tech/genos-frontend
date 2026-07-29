@@ -58,7 +58,7 @@ import {
     TaskGraph,
     TaskNodeData,
 } from "../types";
-import { computeHiddenTaskIds } from "../utils/computeHiddenTaskIds";
+import { computeAnchoredExternalIds, computeHiddenTaskIds } from "../utils/computeHiddenTaskIds";
 import { computeHealth, getMilestoneWindow } from "../utils/scheduleStatus";
 import { sortDiagramTasks } from "../utils/sortDiagramTasks";
 import { DependencyEdge } from "./DependencyEdge";
@@ -294,7 +294,10 @@ const computeDescendantCounts = (
     return counts;
 };
 
-const buildNodesAndEdges = (
+// Exported for tests: the ghost-visibility rule is only meaningful in
+// terms of the nodes actually produced, so `DiagramHiddenTasks` drives
+// this rather than asserting on the helper alone.
+export const buildNodesAndEdges = (
     graph: TaskGraph,
     rootTaskId: number,
     // Task id of the preview pane the user opened the diagram from
@@ -394,18 +397,28 @@ const buildNodesAndEdges = (
     // task is hidden together with its entire subtree (open descendants
     // included), so hiding closed work never detaches an open subtask —
     // see `computeHiddenTaskIds` for the full rule and its unit tests.
-    // External (ghost) tasks aren't filtered for the Closed case: they're
-    // outside-tree references, and dependency edges touching a hidden
-    // internal task get dropped further down via the rendered-id set, so
-    // disconnected ghosts fall out on their own.
     const hiddenTaskIds = computeHiddenTaskIds(graph.tasks, rootTaskId, hideClosed);
     const visibleInternalTasks = graph.tasks.filter(
         (t) => t.id != null && !hiddenTaskIds.has(Number(t.id))
     );
-    // Deleted ghosts: synthesised from TaskDependencyRef which carries
-    // status in the same shape as internal rows, so the same predicate
-    // works.
-    const visibleExternalTasks = graph.externalTasks.filter((t) => !isDeletedStatus(t.status));
+    // Ghosts follow the tasks they were drawn for. Dropping a hidden
+    // task's dependency EDGES (further down, via the rendered-id set) was
+    // never enough on its own: the blocker CARD stayed behind, stranded
+    // in open space with no line to anything. Hiding a closed task now
+    // takes its external blockers with it, and showing closed tasks
+    // brings them back.
+    //
+    // Deleted ghosts are dropped outright, toggle or not: they're
+    // synthesised from TaskDependencyRef, which carries status in the
+    // same shape as internal rows, so the same predicate works.
+    const visibleInternalIds = new Set(visibleInternalTasks.map((t) => Number(t.id)));
+    const anchoredExternalIds = computeAnchoredExternalIds(
+        graph.dependencyEdges,
+        visibleInternalIds
+    );
+    const visibleExternalTasks = graph.externalTasks.filter(
+        (t) => !isDeletedStatus(t.status) && anchoredExternalIds.has(Number(t.id))
+    );
 
     // Pre-sort so each parent's sibling columns render ordered by task
     // id and so blocker/blocked sibling pairs sit adjacent (blocker
