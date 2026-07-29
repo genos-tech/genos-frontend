@@ -14,14 +14,48 @@ type Props = {
 };
 
 // One key per series. Order = draw order left→right within a bucket and
-// legend order. Colors are the same status-family hues the rest of the
-// dashboard uses (blue intake, amber in-progress, green done, neutral
-// touch) and read on both themes.
+// legend order.
+//
+// These four hues are FIXED and deliberately not theme-derived. Series
+// color is an identity channel: "which of the four measures is this bar".
+// `updated` used to read `var(--gp-brandalt-400)`, so on the blue theme it
+// resolved to the same blue as `created`, and on amber to the same amber
+// as `started` — two bars in one cluster wearing one color, which is the
+// one thing a categorical palette must never do. A user-selectable accent
+// cannot safely occupy a categorical slot.
+//
+// The set is a validated categorical palette, not a hand-pick. Both modes
+// clear every computable check under the STRICTER all-pairs pairlist —
+// the grouped cluster puts all four on screen together, so neighbours-only
+// isn't enough here:
+//
+//   light  CVD ΔE 13.0 (protan, worst pair) · normal-vision 19.6
+//   dark   CVD ΔE  6.9 (protan, worst pair) · normal-vision 19.3
+//
+// The predecessor did NOT clear this: amber↔green measured ΔE 5.7 under
+// protanopia on light — below the floor — so "started" and "closed" were
+// already indistinguishable for red-blind readers on every theme.
+//
+// Two warnings carry obligations, both met below:
+//   - dark's worst pair sits in the 6–8 band, legal only with secondary
+//     encoding → the 2px gap between bars (see `barGap`) plus the legend
+//     and per-bar tooltip.
+//   - yellow and magenta sit under 3:1 on a light surface (a documented
+//     property of these steps) → relief is the "In view — N created, N
+//     started, …" summary `TaskVelocitySection` already renders under the
+//     chart, so every value is readable without reading color. Keep it if
+//     you touch that section.
+//
+// Re-run before changing any value:
+//   node scripts/validate_palette.js "#2a78d6,#eda100,#008300,#e87ba4" \
+//        --mode light --surface "#ffffff" --pairs all
+//   node scripts/validate_palette.js "#3987e5,#c98500,#008300,#d55181" \
+//        --mode dark --surface "#0b0a16" --pairs all
 const SERIES = [
-    { key: "created", color: { dark: "#60a5fa", light: "#3b82f6" } },
-    { key: "started", color: { dark: "#fbbf24", light: "#f59e0b" } },
-    { key: "closed", color: { dark: "#4ade80", light: "#22c55e" } },
-    { key: "updated", color: { dark: "var(--gp-brandalt-400)", light: "var(--gp-brandalt-500)" } },
+    { key: "created", color: { dark: "#3987e5", light: "#2a78d6" } },
+    { key: "started", color: { dark: "#c98500", light: "#eda100" } },
+    { key: "closed", color: { dark: "#008300", light: "#008300" } },
+    { key: "updated", color: { dark: "#d55181", light: "#e87ba4" } },
 ] as const;
 
 // Layout. The chart is RESPONSIVE: buckets stretch to fill the measured
@@ -101,7 +135,10 @@ export const TaskVelocityChart = ({
 
     // Bar geometry derived from bucket width: a centered group of 4 bars
     // occupying ~68% of the bucket.
-    const barGap = Math.max(1, bucketW * 0.05);
+    // 2px floor, not 1: adjacent fills need a visible surface gap to read
+    // as separate marks, and it is the secondary encoding that makes the
+    // dark palette's worst pair legal (see SERIES).
+    const barGap = Math.max(2, bucketW * 0.05);
     const barW = Math.max(3, (bucketW * 0.68 - (SERIES.length - 1) * barGap) / SERIES.length);
     const groupW = barW * SERIES.length + barGap * (SERIES.length - 1);
     const groupPad = (bucketW - groupW) / 2;
@@ -135,7 +172,9 @@ export const TaskVelocityChart = ({
 
     return (
         <Box>
-            {/* Legend */}
+            {/* Legend — required for ≥2 series so identity is never
+                color-alone. The swatch is the only place color does
+                identity work; the text stays in ink tokens. */}
             <Stack direction="row" flexWrap="wrap" spacing={1.5} sx={{ mb: 1 }} useFlexGap>
                 {SERIES.map((s) => (
                     <Stack key={s.key} alignItems="center" direction="row" spacing={0.5}>
@@ -144,6 +183,7 @@ export const TaskVelocityChart = ({
                                 width: 10,
                                 height: 10,
                                 borderRadius: "2px",
+                                flexShrink: 0,
                                 backgroundColor: isDark ? s.color.dark : s.color.light,
                             }}
                         />
