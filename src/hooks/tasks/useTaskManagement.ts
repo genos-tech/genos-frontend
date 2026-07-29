@@ -158,10 +158,23 @@ export interface TaskManagementState {
     currentPreviewMilestoneId: number;
     setCurrentPreviewMilestoneId: (id: number) => void;
 
-    // Filter the task table to a single milestone (its backing task +
-    // children). `null` means no milestone-scoped filter.
+    // Filter the task table / sprint board to a single milestone (its
+    // backing task + children). `null` means no milestone-scoped filter.
+    //
+    // READ THIS as "the scope that applies right now": it reports null
+    // whenever the stored scope belongs to a project other than the one
+    // the user is currently in. A milestone exists in exactly one
+    // project, so a scope carried across a project switch matches
+    // nothing and empties the table — which is precisely the bug this
+    // shape prevents. The scope is stored WITH its project rather than
+    // cleared by whoever happens to switch projects; that clearing was
+    // spread across call sites and the ones that forgot (Recents, task
+    // search, URL navigation) produced an empty table.
     tableMilestoneFilterId: number | null;
-    setTableMilestoneFilterId: (id: number | null) => void;
+    /** Scope to a milestone, or `null` to clear. The project the
+     *  milestone belongs to is required — it is what lets the scope
+     *  deactivate itself when the user moves elsewhere. */
+    setTableMilestoneFilter: (value: { milestoneId: number; projectId: number } | null) => void;
 
     // Reset the task / milestone preview pane (closes the pane and
     // clears `currentPreview*` ids). Use this on project changes so the
@@ -285,7 +298,12 @@ export interface TaskManagementState {
 
 export const useTaskManagement = (
     myself: UserProps,
-    accessToken: string | null
+    accessToken: string | null,
+    /** The workspace's active project id. Optional: instances built
+     *  outside the task workspace (see `useServiceInitialization`) have
+     *  no project context and simply never invalidate the milestone
+     *  scope. */
+    currentProjectId?: number | null
 ): TaskManagementState => {
     // Task visible states
     const [isTaskPreviewVisible, setIsTaskPreviewVisible] = useState(false);
@@ -347,7 +365,25 @@ export const useTaskManagement = (
     const [currentPreviewTask, setCurrentPreviewTask] = useState<TaskProps | undefined>(undefined);
     const [currentPreviewKind, setCurrentPreviewKind] = useState<"task" | "milestone">("task");
     const [currentPreviewMilestoneId, _setCurrentPreviewMilestoneId] = useState<number>(-1);
-    const [tableMilestoneFilterId, setTableMilestoneFilterId] = useState<number | null>(null);
+    const [tableMilestoneFilter, setTableMilestoneFilter] = useState<{
+        milestoneId: number;
+        projectId: number;
+    } | null>(null);
+    // The scope applies only inside the project it was set for. Derived
+    // rather than cleared by an effect: comparing stored-against-current
+    // has no ordering hazard, where "clear when the project changes"
+    // would race the one flow that switches project and scopes in the
+    // same gesture (the sidebar's cross-project milestone click).
+    //
+    // `currentProjectId == null` means we have no project context — a
+    // useTM built outside the task workspace, or the brief gap during a
+    // switch while `loadProjectsAndTasks` runs. Treated as "don't
+    // invalidate", so a scope about to be legitimately set survives.
+    const tableMilestoneFilterId =
+        tableMilestoneFilter != null &&
+        (currentProjectId == null || tableMilestoneFilter.projectId === currentProjectId)
+            ? tableMilestoneFilter.milestoneId
+            : null;
 
     // Synchronous mirror of the LATEST selected preview task id. The async
     // loaders (`loadTask` / `loadUpdatedTask`) read this AFTER their await
@@ -940,7 +976,7 @@ export const useTaskManagement = (
         currentPreviewMilestoneId,
         setCurrentPreviewMilestoneId,
         tableMilestoneFilterId,
-        setTableMilestoneFilterId,
+        setTableMilestoneFilter,
         closeTaskPreview,
 
         // Task update state

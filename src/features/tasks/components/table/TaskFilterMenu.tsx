@@ -1933,7 +1933,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                                 color: isDark ? "#fb923c" : "#c2410c",
                             },
                         }}
-                        onDelete={() => useTM.setTableMilestoneFilterId(null)}
+                        onDelete={() => useTM.setTableMilestoneFilter(null)}
                     />
                 )}
 
