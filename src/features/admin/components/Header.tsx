@@ -2,7 +2,7 @@ import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import { Box, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
-import genosLogo from "../../../assets/genos_tech.png";
+import genosLogo from "../../../assets/genos-logo.png";
 import { ColorSchemeToggle } from "../../../components/layout/colorSchemeToggle";
 import { HeaderStyles } from "../../../components/ui/styles/commonStyle";
 import { useTranslation } from "../../../i18n";
@@ -38,8 +38,11 @@ export const AdminHeader = () => {
                         width: 44,
                         height: 44,
                         borderRadius: "12px",
-                        background: styles.logoBg,
-                        boxShadow: styles.logoShadow,
+                        // No plate behind the mark any more: `logoBg` is the
+                        // brand purple gradient, and the new logo is itself a
+                        // purple gradient disc — one on the other reads as a
+                        // smudge. The glow below keeps the depth the plate
+                        // used to provide.
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
@@ -48,16 +51,16 @@ export const AdminHeader = () => {
                         cursor: "pointer",
                         "&:hover": {
                             transform: "scale(1.05) rotate(-3deg)",
-                            boxShadow: `${styles.logoShadow}, 0 0 30px rgba(var(--gp-brand-700-rgb), 0.3)`,
+                            filter: "drop-shadow(0 0 12px rgba(var(--gp-brand-700-rgb), 0.45))",
                         },
                         "&::before": {
                             content: '""',
                             position: "absolute",
-                            inset: -2,
-                            borderRadius: "14px",
+                            inset: 4,
+                            borderRadius: "50%",
                             background: styles.logoBg,
-                            opacity: 0.3,
-                            filter: "blur(8px)",
+                            opacity: 0.35,
+                            filter: "blur(10px)",
                             zIndex: -1,
                         },
                     }}
@@ -66,10 +69,9 @@ export const AdminHeader = () => {
                         alt={t.admin.brand.logoAlt}
                         src={genosLogo}
                         style={{
-                            width: 38,
-                            height: 38,
+                            width: 44,
+                            height: 44,
                             objectFit: "contain",
-                            borderRadius: "50%",
                         }}
                     />
                 </Box>
