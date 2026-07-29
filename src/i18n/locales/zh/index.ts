@@ -1515,6 +1515,12 @@ export const zh: DeepPartial<Messages> = {
             body: "将 Genos 添加到主屏幕，访问更快，通知更可靠。",
             install: "安装",
             iosBody: "点按分享按钮，选择“添加到主屏幕”。在 iOS 上，只有安装后的应用才能接收通知。",
+            how: "怎么做？",
+            howTitle: "在 iPhone 上安装 Genos",
+            howStep1: "点按 Safari 工具栏中的分享按钮。",
+            howStep2: "向下滚动，选择“添加到主屏幕”。",
+            howNote:
+                "然后从主屏幕打开 Genos，登录并在其中允许通知——iOS 只向已安装的应用发送通知。",
         },
         notifications: {
             permissionTitle: "通知已关闭",

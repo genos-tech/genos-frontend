@@ -18,6 +18,14 @@ export const services = {
         install: "Install",
         iosBody:
             "Tap the Share button and choose “Add to Home Screen”. On iOS, notifications only work in the installed app.",
+        // iOS-only: no install API exists there, so the banner's action
+        // opens a step-by-step dialog instead of prompting.
+        how: "How?",
+        howTitle: "Install Genos on your iPhone",
+        howStep1: "Tap the Share button in Safari's toolbar.",
+        howStep2: "Scroll down and choose “Add to Home Screen”.",
+        howNote:
+            "Then open Genos from your home screen, sign in, and allow notifications there — iOS only delivers them to the installed app.",
     },
     notifications: {
         permissionTitle: "Notifications are off",
