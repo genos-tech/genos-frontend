@@ -37,15 +37,42 @@ const isPageHidden = (): boolean =>
     typeof document !== "undefined" && document.visibilityState === "hidden";
 
 // Categories the server actually delivers via Web Push (see the backend
-// `webpush_dispatch`). Currently chat + thread mentions (the MENTION
-// activities created on the message-create path). For these, a hidden-tab
-// page notification would DUPLICATE the push, so we suppress it. Keep this
+// `webpush_dispatch._PUSH_DEFAULTS`). For these, a hidden-tab page
+// notification would DUPLICATE the push, so we suppress it. Keep this
 // IN LOCKSTEP with the server: a category listed here that the server does
 // NOT push would get no hidden-tab notification at all; a pushed category
 // missing here would double-notify.
+//
+// This list used to hold only the two mention categories, and the drift
+// was load-bearing by accident: the server suppressed push for ~90s after
+// a tab hid, and the page's own notification was what covered that window.
+// Now that hiding clears presence immediately (`clearPresence`), push
+// fires right away — so the page raising its own card as well is a
+// straight duplicate, visible for the ~30s iOS keeps a backgrounded PWA's
+// JavaScript alive.
+//
+// "In lockstep" is harder than it reads, because the two sides don't use
+// the same words. The server's taxonomy is coarser, and mapping it onto
+// these keys is what the equivalences below record — get one wrong and
+// the failure is silent in one direction (a duplicate card) or invisible
+// in the other (no notification at all):
+//   server `mention_task` -> mention_task_body + mention_task_comment
+//   server `mention_note` -> mention_note_my + mention_note_task + mention_note_chat
+//   server `reactions`    -> no client category exists (reactions raise no
+//                            page intent, so nothing to suppress)
+//   server `agent_run_done` -> deliberately absent; see the note below.
 const PUSH_COVERED_CATEGORIES: ReadonlySet<NotificationCategory> = new Set([
     "mention_chat",
     "mention_thread",
+    "mention_task_body",
+    "mention_task_comment",
+    "mention_note_my",
+    "mention_note_task",
+    "mention_note_chat",
+    "thread_replies",
+    "task_comments",
+    "inbox",
+    "chats",
 ]);
 // NOT listed above, deliberately: `agent_run_done`. The server does push
 // it, so listing it looks right — but the server applies two gates this
