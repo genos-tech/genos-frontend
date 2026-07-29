@@ -1672,6 +1672,13 @@ export const ja: DeepPartial<Messages> = {
             streamInterrupted: "ストリームが中断されました：{message}",
             malformedNdjsonLine: "不正な NDJSON 行：{line}",
         },
+        pwaInstall: {
+            title: "Genosをインストール",
+            body: "ホーム画面にGenosを追加すると、すばやく開けて通知も確実に届きます。",
+            install: "インストール",
+            iosBody:
+                "共有ボタンから「ホーム画面に追加」を選んでください。iOSでは、インストールしたアプリでのみ通知が届きます。",
+        },
         notifications: {
             permissionTitle: "通知はオフになっています",
             permissionBody: "重要な更新を見逃さないように、ブラウザ通知を有効にしてください。",

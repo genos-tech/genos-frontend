@@ -1543,6 +1543,13 @@ export const hi: DeepPartial<Messages> = {
             streamInterrupted: "स्ट्रीम बाधित: {message}",
             malformedNdjsonLine: "गलत NDJSON लाइन: {line}",
         },
+        pwaInstall: {
+            title: "Genos इंस्टॉल करें",
+            body: "तेज़ ऐक्सेस और भरोसेमंद नोटिफिकेशन के लिए Genos को होम स्क्रीन पर जोड़ें।",
+            install: "इंस्टॉल करें",
+            iosBody:
+                "शेयर बटन दबाकर “होम स्क्रीन में जोड़ें” चुनें। iOS पर नोटिफिकेशन केवल इंस्टॉल किए गए ऐप में ही मिलते हैं।",
+        },
         notifications: {
             permissionTitle: "नोटिफिकेशन बंद हैं",
             permissionBody: "जब कुछ ज़रूरी हो तब अलर्ट पाने के लिए ब्राउज़र नोटिफिकेशन चालू करें।",

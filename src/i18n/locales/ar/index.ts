@@ -1529,6 +1529,13 @@ export const ar: DeepPartial<Messages> = {
             streamInterrupted: "تم قطع البث: {message}",
             malformedNdjsonLine: "سطر NDJSON غير صالح: {line}",
         },
+        pwaInstall: {
+            title: "تثبيت Genos",
+            body: "أضِف Genos إلى الشاشة الرئيسية لوصول أسرع وإشعارات موثوقة.",
+            install: "تثبيت",
+            iosBody:
+                "اضغط زر المشاركة ثم اختر «إضافة إلى الشاشة الرئيسية». على iOS لا تصل الإشعارات إلا في التطبيق المثبَّت.",
+        },
         notifications: {
             permissionTitle: "الإشعارات متوقفة",
             permissionBody: "فعّل إشعارات المتصفح لتتلقى تنبيهًا عند الحاجة إليك.",

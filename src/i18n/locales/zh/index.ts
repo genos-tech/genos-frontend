@@ -1510,6 +1510,12 @@ export const zh: DeepPartial<Messages> = {
             streamInterrupted: "数据流中断：{message}",
             malformedNdjsonLine: "NDJSON 数据格式错误：{line}",
         },
+        pwaInstall: {
+            title: "安装 Genos",
+            body: "将 Genos 添加到主屏幕，访问更快，通知更可靠。",
+            install: "安装",
+            iosBody: "点按分享按钮，选择“添加到主屏幕”。在 iOS 上，只有安装后的应用才能接收通知。",
+        },
         notifications: {
             permissionTitle: "通知已关闭",
             permissionBody: "开启浏览器通知，重要消息不会错过。",
