@@ -17,6 +17,7 @@ import {
 
 import { AppTooltip } from "../../components/ui/AppTooltip";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
+import { useIsMobile } from "../../hooks/common/useIsMobile";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UseTodoGroupsState } from "../../hooks/useTodoGroups";
@@ -59,6 +60,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
     const { mode } = useColorScheme();
     const { t } = useTranslation();
     const isDark = mode === "dark";
+    const isMobile = useIsMobile();
 
     const virtuosoRef = useRef<VirtuosoHandle | null>(null);
 
@@ -378,9 +380,20 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                         style={{
                             height: hostedInModal
                                 ? "100%"
-                                : useCM.isSubChatVisible
-                                  ? `${(currentWindowHeight - 250) * 0.43}px`
-                                  : `${currentWindowHeight - 250}px`,
+                                : isMobile
+                                  ? // `currentWindowHeight` comes from
+                                    // `window.innerHeight`, which iOS does NOT
+                                    // shrink when the keyboard opens — so on a
+                                    // phone this list stayed full height and
+                                    // pushed the input behind the keyboard.
+                                    // `--mobile-bottom-inset` is the tab bar,
+                                    // or the keyboard when that's taller.
+                                    // Split panes are desktop-only, so the
+                                    // 0.43 branch can't apply here.
+                                    "calc(100dvh - var(--mobile-bottom-inset, 60px) - 250px)"
+                                  : useCM.isSubChatVisible
+                                    ? `${(currentWindowHeight - 250) * 0.43}px`
+                                    : `${currentWindowHeight - 250}px`,
                         }}
                     />
                 ) : (
@@ -393,8 +406,11 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                 )}
             </Box>
 
-            {/* Pro Tip footer — dropped in the modal to give the list room. */}
-            {hostedInModal ? null : (
+            {/* Pro Tip footer — dropped in the modal, and on mobile, to give
+                the list room. It's a static hint about asking the agent; on a
+                phone it costs a permanent band of a short screen to say
+                something you only need to read once. */}
+            {hostedInModal || isMobile ? null : (
                 <Box
                     sx={{
                         mt: "auto",
