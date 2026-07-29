@@ -95,6 +95,9 @@ export const hi: DeepPartial<Messages> = {
             takingLonger: "उम्मीद से ज़्यादा समय लग रहा है?",
             sessionExpired: "हो सकता है आपका सेशन समाप्त हो गया हो",
             signInAgain: "फिर से साइन इन करें",
+            offlineTitle: "आप ऑफ़लाइन हैं",
+            offlineBody:
+                "अभी सर्वर से कनेक्ट नहीं हो पा रहा है। कनेक्शन लौटते ही यह अपने आप फिर से शुरू हो जाएगा।",
         },
         modalView: {
             chatUnavailable: "यह चैट उपलब्ध नहीं है।",

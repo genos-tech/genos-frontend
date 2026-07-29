@@ -93,6 +93,8 @@ export const zh: DeepPartial<Messages> = {
             takingLonger: "加载时间比预期长？",
             sessionExpired: "你的会话可能已过期",
             signInAgain: "重新登录",
+            offlineTitle: "你已离线",
+            offlineBody: "目前无法连接服务器。网络恢复后会自动继续。",
         },
         modalView: {
             chatUnavailable: "此聊天不可用。",

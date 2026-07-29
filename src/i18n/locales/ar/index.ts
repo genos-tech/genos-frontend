@@ -95,6 +95,9 @@ export const ar: DeepPartial<Messages> = {
             takingLonger: "هل يستغرق الأمر وقتًا أطول من المتوقع؟",
             sessionExpired: "قد تكون جلستك قد انتهت",
             signInAgain: "تسجيل الدخول مرة أخرى",
+            offlineTitle: "أنت غير متصل بالإنترنت",
+            offlineBody:
+                "يتعذر الوصول إلى الخادم حاليًا. سيستأنف Genos تلقائيًا فور عودة الاتصال.",
         },
         modalView: {
             chatUnavailable: "هذه المحادثة غير متاحة.",

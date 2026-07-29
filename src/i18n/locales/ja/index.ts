@@ -94,6 +94,8 @@ export const ja: DeepPartial<Messages> = {
             takingLonger: "時間がかかっていますか？",
             sessionExpired: "セッションの有効期限が切れている可能性があります",
             signInAgain: "再度サインイン",
+            offlineTitle: "オフラインです",
+            offlineBody: "現在サーバーに接続できません。接続が回復すると自動的に再開します。",
         },
         modalView: {
             chatUnavailable: "このチャットは利用できません。",

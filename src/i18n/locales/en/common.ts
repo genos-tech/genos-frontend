@@ -135,6 +135,12 @@ export const common = {
         takingLonger: "Taking longer than expected?",
         sessionExpired: "Your session may have expired",
         signInAgain: "Sign In Again",
+        // Shown instead of the two lines above when the device is
+        // offline — blaming the session there is wrong, and sign-in
+        // can't submit without a network anyway.
+        offlineTitle: "You're offline",
+        offlineBody:
+            "Genos can't reach the server right now. It will pick up on its own as soon as your connection returns.",
     },
     modalView: {
         chatUnavailable: "This chat isn't available.",
