@@ -11,14 +11,14 @@
  *   - Hidden by default.
  *   - Shown when `isHovered` (caller's onMouseEnter/Leave on the row)
  *     OR `forceShow` (caller passes true when the emoji popover is open
- *     so dismissing hover doesn't yank the popover anchor).
+ *     so dismissing hover doesn't yank the popover anchor)
+ *     OR the row's long-press opened it (touch devices have no hover
+ *     signal — `MessageRow` wires `useLongPress` into `visible` and
+ *     dismisses on any touch outside the row, mirroring the legacy
+ *     MessageBubble behavior).
  *
- * Touch-mode TODO: long-press handling. Touch devices have no hover
- * signal so the toolbar would never appear. The legacy code mirrors
- * the toolbar visibility off a separate `mobileToolbarOpen` set by
- * an on-bubble tap. That's a follow-on slice; for now this surface
- * targets the desktop hover UX and touch users can still react via
- * any existing reaction chips on the bubble.
+ * On coarse pointers the buttons render at tap-target size — the
+ * hover-sized 2px-padding buttons are precise-pointer furniture.
  *
  * Owner-gating: `isMine` controls whether the edit/delete buttons
  * render. The channelService also enforces ownership on the server,
@@ -49,9 +49,14 @@ export interface MessageRowHoverToolbarProps {
     onDelete: () => void;
 }
 
+// Static per session: pointer coarseness doesn't change out from under
+// a running page, and reading it once keeps BTN_STYLE a plain constant.
+const IS_COARSE_POINTER =
+    typeof window !== "undefined" && window.matchMedia?.("(pointer: coarse)").matches === true;
+
 const BTN_STYLE: React.CSSProperties = {
-    fontSize: 11,
-    padding: "2px 6px",
+    fontSize: IS_COARSE_POINTER ? 14 : 11,
+    padding: IS_COARSE_POINTER ? "6px 10px" : "2px 6px",
     border: "1px solid #ddd",
     borderRadius: 4,
     background: "#fff",

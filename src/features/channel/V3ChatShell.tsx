@@ -19,6 +19,7 @@ import { ChannelListV3 } from "./components/ChannelListV3";
 import { MessagesPaneV3 } from "./components/MessagesPaneV3";
 import { ThreadPanelV3 } from "./components/ThreadPanelV3";
 
+import { useIsMobile } from "../../hooks/common/useIsMobile";
 import { channelService } from "../../services/channel/channelService";
 
 // The rollout gates (`isV3ChatEnabled` / `useIsV3ChatEnabled` /
@@ -36,6 +37,7 @@ export function V3ChatShell() {
         rootMessageId?: string;
     }>();
     const navigate = useNavigate();
+    const isMobile = useIsMobile();
     const selected = channelId ?? null;
     const openThread = rootMessageId ?? null;
 
@@ -99,6 +101,47 @@ export function V3ChatShell() {
             cancelled = true;
         };
     }, [selected]);
+
+    // Below 900px the three panes become a URL-driven single-pane stack
+    // (the same pattern as `MobileChatHome`): list → channel → thread,
+    // each full-screen. The URL already carries the whole selection, so
+    // "back" is just navigation — browser back works for free, and the
+    // thread panel's existing Close button doubles as the back button.
+    //
+    // The bottom padding mirrors the mobile Homes: the BottomTabBar is
+    // fixed at the viewport bottom, and without the reservation it sits
+    // on top of the composer.
+    if (isMobile) {
+        return (
+            <div
+                data-testid="v3-chat-shell"
+                style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    height: "100%",
+                    minWidth: 0,
+                    fontFamily: "system-ui, sans-serif",
+                    paddingBottom: "var(--BottomTabBar-height, 60px)",
+                }}
+            >
+                {!selected ? (
+                    <ChannelListV3 fullWidth selectedChannelId={null} onSelect={setSelected} />
+                ) : openThread ? (
+                    <ThreadPanelV3
+                        channelId={selected}
+                        rootMessageId={openThread}
+                        onClose={closeThread}
+                    />
+                ) : (
+                    <MessagesPaneV3
+                        channelId={selected}
+                        onBack={() => navigate("/workspace/v3")}
+                        onOpenThread={openThreadFor}
+                    />
+                )}
+            </div>
+        );
+    }
 
     return (
         <div

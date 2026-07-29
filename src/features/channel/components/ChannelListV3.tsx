@@ -31,6 +31,10 @@ import { useChannelList } from "../hooks/useChannelList";
 interface ChannelListV3Props {
     selectedChannelId: string | null;
     onSelect: (channelId: string) => void;
+    /** Fill the container instead of the fixed 240px sidebar width —
+     *  used by the shell's mobile single-pane stack, where the list IS
+     *  the screen rather than a rail beside it. */
+    fullWidth?: boolean;
 }
 
 const KIND_LABEL: Record<ChannelKind, string> = {
@@ -58,7 +62,7 @@ function channelMatchesQuery(c: Channel, q: string): boolean {
     return !!preview && preview.includes(q);
 }
 
-export function ChannelListV3({ selectedChannelId, onSelect }: ChannelListV3Props) {
+export function ChannelListV3({ selectedChannelId, onSelect, fullWidth }: ChannelListV3Props) {
     const { channels, unreadByKind, totalUnread, isLoading } = useChannelList();
     const snapshot = useSyncExternalStore(
         channelService.subscribe,
@@ -116,8 +120,8 @@ export function ChannelListV3({ selectedChannelId, onSelect }: ChannelListV3Prop
                 display: "flex",
                 flexDirection: "column",
                 height: "100%",
-                width: 240,
-                borderRight: "1px solid #ddd",
+                width: fullWidth ? "100%" : 240,
+                borderRight: fullWidth ? "none" : "1px solid #ddd",
                 fontFamily: "system-ui, sans-serif",
             }}
         >
