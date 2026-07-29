@@ -52,6 +52,7 @@ import { UrlLinkModalProvider } from "./hooks/common/UrlLinkModalContext";
 import { useAnalyticsIdentity } from "./hooks/common/useAnalyticsIdentity";
 import { useAnalyticsPageviews } from "./hooks/common/useAnalyticsPageviews";
 import { AnalyticsPreferencesProvider } from "./hooks/common/useAnalyticsPreferences";
+import { useAppBadge } from "./hooks/common/useAppBadge";
 import { useAppInitialization } from "./hooks/common/useAppInitialization";
 import { BubbleStylePreferenceProvider } from "./hooks/common/useBubbleStylePreference";
 import { DoubleClickTodoPreferenceProvider } from "./hooks/common/useDoubleClickTodoPreference";
@@ -240,6 +241,11 @@ export const App = () => {
         myself,
         socketInstance,
     });
+
+    // Installed-app icon badge. Same two counts the mobile tab bar
+    // badges use, so the home-screen number and the in-app ones can't
+    // disagree. No-ops in a normal browser tab.
+    useAppBadge(useIM.unReadInboxItemCount + useCM.unReadChatAndActivityCounts);
 
     // Daily todo groups — one instance for the whole app: the chat todo
     // pane (prop-drilled through ChatHome) and the agent-input "#"

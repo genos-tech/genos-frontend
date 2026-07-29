@@ -132,6 +132,21 @@ self.addEventListener("fetch", (event) => {
     }
 });
 
+// App-icon badge (the counter chip on the installed app). The page owns
+// this while it's open; the worker keeps it moving while the app is
+// closed, which is the only time it can't be maintained in-app. The
+// server sends `badge_count` when it knows the number; absent that we
+// increment locally so the chip still reflects "something new".
+let localBadgeCount = 0;
+
+const setBadge = (count) => {
+    if (typeof self.navigator === "undefined") return;
+    if (typeof self.navigator.setAppBadge !== "function") return;
+    localBadgeCount = Math.max(0, count);
+    // Unsupported surfaces reject; never let that break push handling.
+    self.navigator.setAppBadge(localBadgeCount).catch(() => {});
+};
+
 self.addEventListener("push", (event) => {
     let data = {};
     try {
@@ -139,6 +154,7 @@ self.addEventListener("push", (event) => {
     } catch (e) {
         data = {};
     }
+    setBadge(typeof data.badge_count === "number" ? data.badge_count : localBadgeCount + 1);
     const title = data.title || "New notification";
     const options = {
         body: data.body || "",
@@ -163,6 +179,10 @@ self.addEventListener("push", (event) => {
 
 self.addEventListener("notificationclick", (event) => {
     event.notification.close();
+    // Opening the app hands badge ownership back to the page, which
+    // recomputes it from real unread counts on mount (`useAppBadge`).
+    // Clearing here avoids a stale number during the launch window.
+    setBadge(0);
     const rawUrl = (event.notification.data && event.notification.data.url) || "/";
     const targetUrl = new URL(rawUrl, self.location.origin).href;
 
