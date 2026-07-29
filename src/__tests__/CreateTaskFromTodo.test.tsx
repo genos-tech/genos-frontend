@@ -13,9 +13,15 @@ import { fireEvent, render, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ModalCreateTaskFromTodo } from "../features/chat/components/todo/ModalCreateTaskFromTodo";
+import { onTasksBulkChanged } from "../features/tasks/services/taskEvents";
 import { UserProps } from "../types/admin";
 
 vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
+
+const openModalByHref = vi.fn();
+vi.mock("../hooks/common/UrlLinkModalContext", () => ({
+    useUrlLinkModal: () => ({ openModalByHref }),
+}));
 
 const loadTeamProjects = vi.fn();
 const createQuickTask = vi.fn();
@@ -52,6 +58,7 @@ const renderModal = (over: { todoNotes?: never[] | null; todoTitle?: string } = 
 describe("ModalCreateTaskFromTodo", () => {
     beforeEach(() => {
         vi.clearAllMocks();
+        openModalByHref.mockClear();
         window.localStorage.clear();
         loadTeamProjects.mockResolvedValue([
             { projectId: 42, projectName: "Platform" },
@@ -134,6 +141,57 @@ describe("ModalCreateTaskFromTodo", () => {
 
         await waitFor(() => expect(createQuickTask).toHaveBeenCalledTimes(1));
         expect(createQuickTask.mock.calls[0][0].projectId).toBe(42);
+    });
+
+    it("opens the created task, so a successful create is visible", async () => {
+        // Nothing on the to-do surface lists tasks, so without this the
+        // modal closes and the create is indistinguishable from a no-op.
+        const { getByText } = renderModal();
+
+        await waitFor(() => expect(loadTeamProjects).toHaveBeenCalled());
+        fireEvent.click(getByText("Create task"));
+
+        await waitFor(() =>
+            expect(openModalByHref).toHaveBeenCalledWith("/workspace/tasks/project/42/task/101")
+        );
+    });
+
+    it("does not try to open anything when the id could not be read", async () => {
+        createQuickTask.mockResolvedValue({ taskId: null, displayId: null });
+        const { getByText, onClose } = renderModal();
+
+        await waitFor(() => expect(loadTeamProjects).toHaveBeenCalled());
+        fireEvent.click(getByText("Create task"));
+
+        await waitFor(() => expect(onClose).toHaveBeenCalled());
+        expect(openModalByHref).not.toHaveBeenCalled();
+    });
+
+    it("treats an untouched notes editor as no notes", async () => {
+        // BlockNote refuses an empty document, so an untouched editor
+        // still holds one empty paragraph — carrying that over would
+        // open the task to a blank body instead of the template.
+        const { getByText } = renderModal({
+            todoNotes: [{ type: "paragraph", content: [] }] as never[],
+        });
+
+        await waitFor(() => expect(loadTeamProjects).toHaveBeenCalled());
+        fireEvent.click(getByText("Create task"));
+
+        await waitFor(() => expect(createQuickTask).toHaveBeenCalledTimes(1));
+        expect(createQuickTask.mock.calls[0][0].content).toBeUndefined();
+    });
+
+    it("tells an open task surface for that project to refresh", async () => {
+        const { getByText } = renderModal();
+
+        await waitFor(() => expect(loadTeamProjects).toHaveBeenCalled());
+        const seen: Array<number | undefined> = [];
+        const off = onTasksBulkChanged((detail) => seen.push(detail.projectId));
+        fireEvent.click(getByText("Create task"));
+
+        await waitFor(() => expect(seen).toEqual([42]));
+        off();
     });
 
     it("surfaces a failure inline and keeps the modal open", async () => {

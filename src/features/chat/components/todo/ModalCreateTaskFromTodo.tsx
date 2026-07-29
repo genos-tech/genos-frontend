@@ -17,17 +17,38 @@ import {
 } from "@mui/joy";
 
 import { useAuth } from "../../../../context/AuthContext";
+import { useUrlLinkModal } from "../../../../hooks/common/UrlLinkModalContext";
 import { useTranslation } from "../../../../i18n";
 import { LimitReachedError } from "../../../../services/limitErrors";
 import { UserProps } from "../../../../types/admin";
 import { ProjectProps } from "../../../../types/tasks";
 import { createQuickTask } from "../../../tasks/services/createQuickTask";
 import { loadTeamProjects } from "../../../tasks/services/loadTeamProjects";
+import { emitTasksBulkChanged } from "../../../tasks/services/taskEvents";
 
 // Remembers the last project a to-do was promoted into. Most people
 // funnel their to-dos into the same project, and the picker defaulting
 // to it turns the flow into open-menu → Enter.
 const LAST_PROJECT_KEY = "genos-todo-to-task-last-project";
+
+/**
+ * Whether the to-do's notes are worth carrying over.
+ *
+ * BlockNote refuses an empty document, so an untouched notes editor
+ * still holds one empty paragraph. Treating that as real content would
+ * open the task to a blank body instead of the default template — the
+ * same "effectively empty" rule `TodoItemRow` applies when it decides
+ * whether to persist notes at all.
+ */
+const hasRealNotes = (notes: PartialBlock[] | null): boolean => {
+    if (!notes || notes.length === 0) return false;
+    if (notes.length > 1) return true;
+    const only = notes[0];
+    if (only.type !== "paragraph") return true;
+    const content = only.content;
+    if (!content) return false;
+    return !(Array.isArray(content) && content.length === 0);
+};
 
 type ModalCreateTaskFromTodoProps = {
     open: boolean;
@@ -63,6 +84,9 @@ export const ModalCreateTaskFromTodo = (props: ModalCreateTaskFromTodoProps) => 
     const { open, onClose, myself, todoTitle, todoNotes, onCreated } = props;
     const { accessToken } = useAuth();
     const { t } = useTranslation();
+    // Present on the chat surface (the to-do pane renders inside the
+    // provider); null on any surface without it, where we just close.
+    const urlLinkModal = useUrlLinkModal();
     const tc = t.chat.todoPane.createTask;
 
     const [projects, setProjects] = useState<ProjectProps[]>([]);
@@ -125,11 +149,27 @@ export const ModalCreateTaskFromTodo = (props: ModalCreateTaskFromTodoProps) => 
                 // Carry the to-do's notes over as the task body when it
                 // has any; otherwise createQuickTask's default template
                 // gives the user something to flesh out.
-                content: todoNotes && todoNotes.length > 0 ? todoNotes : undefined,
+                content: hasRealNotes(todoNotes) ? todoNotes : undefined,
             });
             localStorage.setItem(LAST_PROJECT_KEY, String(projectId));
+            // A task created from here lands outside every task-surface
+            // flow, so an already-open table / board / milestone list for
+            // that project would show stale data until a reload. This is
+            // the same project-scoped invalidator the agent's bulk writes
+            // use; the to-do pane has no `useTM` to set the usual flag.
+            emitTasksBulkChanged(projectId);
             onCreated?.(taskId);
             onClose();
+            // Open the new task. Without this the modal just closes and
+            // a successful create is indistinguishable from a no-op —
+            // there is no list on this surface for the row to appear in,
+            // so opening it is both the confirmation and the way to
+            // reach it. Same href shape the sub-task rows use.
+            if (taskId != null) {
+                urlLinkModal?.openModalByHref(
+                    `/workspace/tasks/project/${projectId}/task/${taskId}`
+                );
+            }
         } catch (err) {
             // Plan-limit rejections explain themselves; anything else
             // gets the generic copy.
