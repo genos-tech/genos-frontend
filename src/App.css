@@ -1107,6 +1107,57 @@ html,
     z-index: 13300 !important;
 }
 
+/* …and the side effect the 13300 lift above creates: an editor's floating
+   UI painting on top of a modal that covers the editor.
+
+   The mechanism is NOT z-index — it's that BlockNote never hit-tests. Its
+   side menu (the drag-handle + add-block buttons) is driven by
+   `findClosestEditorElement`, which measures the distance from the cursor
+   to each `.bn-editor`'s bounding rect and nothing else. Its mousemove
+   listener is on `pmView.root` (the document, capture phase), so moving
+   the mouse across a modal that happens to sit over an editor still
+   resolves to "hovering that editor" and shows the menu. The 13300 lift
+   is only what makes it visible: at 13300 it clears every app modal
+   (Joy's ~1300 default for SettingsModal, 10001 for ModalUserProfile,
+   10020–13200 for UrlLinkModal previews). Table handles share the defect;
+   the toolbars and suggestion menus need editor focus, so they can't
+   normally reach this state — they're listed for symmetry, since the
+   correct rule is "an occluded editor paints no floating UI at all".
+
+   Keyed on DOM order rather than a z-index, because no constant can work:
+   an editor BEHIND a modal needs its UI below ~1300, while an editor
+   INSIDE a UrlLinkModal-hosted note/task preview needs it above 10020 —
+   and both exist simultaneously. `editor.portalElement` is appended to
+   `document.body` at editor-mount time and Joy portals an open Modal to
+   `document.body` too, so relative order encodes exactly the fact we
+   need: a portal that PRECEDES an open modal root belongs to an editor
+   the modal is covering, while a modal-hosted editor mounts after its
+   host and is left alone. Self-correcting — Joy removes the modal root on
+   close (nothing in this app uses `keepMounted`), so the UI comes back
+   with no state to thread or invalidate.
+
+   `#root` also matches the `:has()` half of the selector but holds no
+   `.bn-*` floating UI (it all lives in the body-level portals), so the
+   descendant part makes it a no-op there. `!important` is required
+   because BlockNote's `GenericPopover` writes `display: flex` inline on
+   these same nodes. Browsers without `:has()` simply keep today's
+   behaviour. */
+body
+    > *:has(~ .MuiModal-root)
+    :is(
+        .bn-side-menu,
+        .bn-table-handle,
+        .bn-formatting-toolbar,
+        .bn-suggestion-menu,
+        .bn-grid-suggestion-menu,
+        .bn-link-toolbar,
+        .bn-floating-toolbar,
+        .bn-emoji-picker-popover,
+        .bn-menu-dropdown
+    ) {
+    display: none !important;
+}
+
 /* …and the counterpart the block above creates.
 
    BlockNote's comment popups — the reaction emoji picker and the
