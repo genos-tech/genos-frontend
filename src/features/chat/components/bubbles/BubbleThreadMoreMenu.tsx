@@ -46,6 +46,11 @@ type MenuItemConfig = {
     icon: React.ReactNode;
     onClick: () => void;
     color: { light: string; dark: string };
+    // "r, g, b" triplet companion to `color`, for tints composed as
+    // `rgba(<triplet>, α)`. Required because the delete row's color is a
+    // theme token (`var(--gp-tint-danger)`) — gluing hex alpha onto that
+    // yields a string CSS rejects, taking the whole declaration with it.
+    colorRgb: { light: string; dark: string };
     hoverBg: { light: string; dark: string };
     visible: boolean;
     danger?: boolean;
