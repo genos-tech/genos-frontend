@@ -70,9 +70,11 @@ import { SprintMilestonesSection } from "../../sprint-milestone/components/Sprin
 import { Milestone, Sprint } from "../../sprint-milestone/types";
 import { selectVisibleMilestones } from "../../sprint-milestone/utils/sortMilestones";
 import { PRIORITY_COLORS } from "../../utils/dashboardRowFormat";
+import { projectAvatarSrc } from "../../utils/projectAvatar";
 import { computeTaskWeight, dueBucket, DueBucket, effortPoints } from "../../utils/taskWeight";
 import { compareByUrgency, sortTopWeightRows, TopWeightSortMode } from "../../utils/topWeightSort";
 import { CopyableTaskIdText } from "../CopyableTaskId";
+import { ProjectIdentityRow } from "../ProjectIdentityRow";
 import { ProjectTagChip } from "../ProjectTagChip";
 import { getStatusIcon, STATUS_COLORS } from "../TaskStatusChip";
 import { AssignedMilestoneCard } from "./AssignedMilestoneCard";
@@ -1301,6 +1303,13 @@ export const TaskHomeContent = ({
                                             </Typography>
                                             <Select
                                                 indicator={<KeyboardArrowDownRoundedIcon />}
+                                                // The listbox rows carry the full project
+                                                // identity (avatar, labels, lock, name),
+                                                // but the CLOSED control keeps showing just
+                                                // the name in its accent styling — hence
+                                                // `renderValue` reading each Option's
+                                                // `label` rather than its rich children.
+                                                renderValue={(selected) => selected?.label ?? ""}
                                                 value={usePM.currentProject.projectId}
                                                 slotProps={{
                                                     listbox: {
@@ -1348,16 +1357,29 @@ export const TaskHomeContent = ({
                                                 {joinedProjects.map((project) => (
                                                     <Option
                                                         key={project.projectId}
+                                                        label={project.projectName}
                                                         value={project.projectId}
                                                         sx={{
-                                                            fontWeight:
+                                                            display: "flex",
+                                                            alignItems: "center",
+                                                            gap: 1,
+                                                            minWidth: 0,
+                                                        }}
+                                                    >
+                                                        <ProjectIdentityRow
+                                                            avatarSrc={projectAvatarSrc(
+                                                                project.projectId,
+                                                                useCM.allChats
+                                                            )}
+                                                            maxLabels={2}
+                                                            nameWeight={
                                                                 project.projectId ===
                                                                 usePM.currentProject?.projectId
                                                                     ? 700
-                                                                    : 500,
-                                                        }}
-                                                    >
-                                                        {project.projectName}
+                                                                    : 500
+                                                            }
+                                                            project={project}
+                                                        />
                                                     </Option>
                                                 ))}
                                             </Select>

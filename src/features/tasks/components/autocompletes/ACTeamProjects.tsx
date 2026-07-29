@@ -1,7 +1,12 @@
+import { Box } from "@mui/joy";
 import Autocomplete from "@mui/joy/Autocomplete";
 
+import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TaskProps } from "../../../../types/tasks";
+import { stripOwnerState } from "../../../../utils/joyAutocomplete";
+import { projectAvatarSrc } from "../../utils/projectAvatar";
+import { ProjectIdentityRow } from "../ProjectIdentityRow";
 
 type ACTeamProjectsProps = {
     taskContent: TaskProps;
@@ -21,6 +26,10 @@ type ACTeamProjectsProps = {
      * parent edge must survive a move, and the preview refetches after
      * the PUT. */
     resetMilestoneOnChange?: boolean;
+    /** Chat list, used to resolve each project's avatar from its PM
+     *  chat. Optional: without it the options still render, just with
+     *  the generic project icon instead of the uploaded image. */
+    useCM?: ChatManagementState;
 };
 export const ACTeamProjects = (props: ACTeamProjectsProps) => {
     const {
@@ -31,17 +40,40 @@ export const ACTeamProjects = (props: ACTeamProjectsProps) => {
         setIsOpenProjectList,
         setTaskUpdated,
         resetMilestoneOnChange = false,
+        useCM,
     } = props;
 
     return (
         <Autocomplete
             key={taskContent.id}
+            // Still the plain name: this is what type-to-filter matches
+            // on and what the closed input displays. The richer content
+            // below is presentation only.
             getOptionLabel={(option) => option.projectName}
             isOptionEqualToValue={(option, value) => option.projectId === value.projectId}
             options={usePM.teamProjects}
             size="sm"
             sx={{ width: "100%" }}
             value={taskContent.project?.projectId ? taskContent.project : undefined}
+            renderOption={(optionProps, option) => (
+                // `stripOwnerState`: Joy injects its internal
+                // `ownerState` into these props, and spreading them onto
+                // a bespoke <li> leaks it to the DOM — a React warning on
+                // every option render. See `utils/joyAutocomplete.ts` and
+                // the AutocompleteOwnerStateLeak canary test.
+                <Box
+                    component="li"
+                    {...stripOwnerState(optionProps)}
+                    key={option.projectId}
+                    sx={{ display: "flex", alignItems: "center", gap: 1, minWidth: 0 }}
+                >
+                    <ProjectIdentityRow
+                        avatarSrc={projectAvatarSrc(option.projectId, useCM?.allChats)}
+                        maxLabels={2}
+                        project={option}
+                    />
+                </Box>
+            )}
             onOpen={() => setIsOpenProjectList(!isOpenProjectList)}
             onChange={(event, value) => {
                 if (value !== null) {
