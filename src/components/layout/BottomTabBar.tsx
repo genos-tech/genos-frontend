@@ -90,6 +90,11 @@ export const BottomTabBar = (props: BottomTabBarProps) => {
                 right: 0,
                 bottom: 0,
                 zIndex: 1200,
+                // The variable is the bar's TOTAL footprint (60px of tabs +
+                // the home-indicator strip). `box-sizing: border-box` means
+                // the padding below comes out of this height, leaving the
+                // tabs their full 60px — before, the inset was subtracted
+                // from 60 and the icons had ~26px on a notched iPhone.
                 height: "var(--BottomTabBar-height, 60px)",
                 display: "flex",
                 alignItems: "stretch",
