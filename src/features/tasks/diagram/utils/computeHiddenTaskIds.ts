@@ -77,3 +77,40 @@ export const computeHiddenTaskIds = (
     for (const id of collapsed) hidden.add(id);
     return hidden;
 };
+
+/**
+ * Which EXTERNAL (ghost) task ids still have a reason to be on the
+ * canvas, given the internal tasks that survived `computeHiddenTaskIds`.
+ *
+ * A ghost only exists because some internal task depends on it — it is
+ * synthesised from that dependency, never fetched as a row of its own
+ * (see `loadTaskGraph`). So once every internal task it was drawn for is
+ * hidden, the ghost has nothing left to say.
+ *
+ * This is what makes "hide closed tasks" behave the way it reads. Closing
+ * a task hides it and its subtree, and the dependency EDGES to its
+ * external blockers disappear with it — but the blocker CARDS used to
+ * stay, stranded in open space with no line to anything. The user asked
+ * for the obvious thing: hide a closed task and its blockers go too;
+ * show closed tasks again and they come back.
+ *
+ * Anchoring is checked in BOTH directions — a ghost may be the blocker
+ * of a visible task or the one it blocks, and either is a live
+ * relationship worth drawing. Ghost-to-ghost edges anchor nothing and
+ * drop out, which is correct: with no visible endpoint there is no
+ * relationship to the tree being shown.
+ */
+export const computeAnchoredExternalIds = (
+    dependencyEdges: ReadonlyArray<{ blockerTaskId: number; blockedTaskId: number }>,
+    visibleInternalIds: ReadonlySet<number>
+): Set<number> => {
+    const anchored = new Set<number>();
+    for (const edge of dependencyEdges) {
+        if (visibleInternalIds.has(edge.blockedTaskId)) anchored.add(edge.blockerTaskId);
+        if (visibleInternalIds.has(edge.blockerTaskId)) anchored.add(edge.blockedTaskId);
+    }
+    // Internal ids land in here too (both endpoints of an all-internal
+    // edge). Harmless: callers intersect this with the ghost list, and
+    // no ghost shares an id with an internal task.
+    return anchored;
+};

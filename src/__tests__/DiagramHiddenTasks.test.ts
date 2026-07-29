@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { computeHiddenTaskIds } from "../features/tasks/diagram/utils/computeHiddenTaskIds";
+import { buildNodesAndEdges } from "../features/tasks/diagram/components/TaskFlowCanvas";
+import type { TaskGraph } from "../features/tasks/diagram/types";
+import {
+    computeAnchoredExternalIds,
+    computeHiddenTaskIds,
+} from "../features/tasks/diagram/utils/computeHiddenTaskIds";
 import { TaskTableProps } from "../types/tasks";
 
 // Minimal TaskTableProps factory — only the fields computeHiddenTaskIds
@@ -113,5 +118,134 @@ describe("computeHiddenTaskIds", () => {
         // closed non-root seeds so both collapse — the walk must terminate.
         const tasks = [task(1, "Open", null), task(2, "Closed", 3), task(3, "Closed", 2)];
         expect(hidden(tasks, 1, true)).toEqual([2, 3]);
+    });
+});
+
+/**
+ * Ghost (external) blocker cards follow the tasks they were drawn for.
+ *
+ * A ghost is synthesised from a dependency on an internal task, so once
+ * every internal task it relates to is hidden it has nothing to say.
+ * Before this, hiding a closed task dropped its dependency EDGES but left
+ * the blocker CARD stranded on the canvas with no line to anything.
+ */
+describe("computeAnchoredExternalIds", () => {
+    // 10, 11 = internal; 90, 91 = ghosts in another project.
+    const edges = [
+        // ghost 90 blocks internal 10
+        { blockerTaskId: 90, blockedTaskId: 10 },
+        // internal 11 blocks ghost 91
+        { blockerTaskId: 11, blockedTaskId: 91 },
+    ];
+    const anchored = (visible: number[]): number[] =>
+        [...computeAnchoredExternalIds(edges, new Set(visible))]
+            .filter((id) => id >= 90)
+            .sort((a, b) => a - b);
+
+    it("keeps a ghost whose blocked task is still visible", () => {
+        expect(anchored([10, 11])).toEqual([90, 91]);
+    });
+
+    it("drops a ghost once the task it blocks is hidden", () => {
+        // The closed-task case: 10 collapsed away, so its blocker goes.
+        expect(anchored([11])).toEqual([91]);
+    });
+
+    it("drops a ghost that a hidden task was blocking", () => {
+        // Anchoring counts both directions, so this side hides too.
+        expect(anchored([10])).toEqual([90]);
+    });
+
+    it("drops every ghost when the whole tree is hidden", () => {
+        expect(anchored([])).toEqual([]);
+    });
+
+    it("keeps a ghost anchored by any one of several tasks", () => {
+        // Shared blocker: still relevant while ONE dependent is visible.
+        const shared = [
+            { blockerTaskId: 90, blockedTaskId: 10 },
+            { blockerTaskId: 90, blockedTaskId: 11 },
+        ];
+        const ids = [...computeAnchoredExternalIds(shared, new Set([11]))];
+        expect(ids).toContain(90);
+    });
+
+    it("drops ghost-to-ghost edges, which anchor nothing", () => {
+        const ghostOnly = [{ blockerTaskId: 90, blockedTaskId: 91 }];
+        expect([...computeAnchoredExternalIds(ghostOnly, new Set([10]))]).toEqual([]);
+    });
+});
+
+/**
+ * End-to-end through the node builder: what the user actually sees on
+ * the canvas when a task in the milestone is closed.
+ *
+ * Tree: root 1 (Open) with children 2 (Closed) and 3 (Open). Task 2 is
+ * blocked by external ghost 90; task 3 by ghost 91. With "hide closed"
+ * on, BOTH task 2 and ghost 90 should be gone — before this, the edge
+ * vanished but ghost 90 stayed on the canvas as a stranded card.
+ */
+describe("buildNodesAndEdges — closed tasks take their blockers with them", () => {
+    const ghost = (id: number, status: string): TaskTableProps =>
+        ({ ...task(id, status, null), projectId: 99 }) as TaskTableProps;
+
+    const graph: TaskGraph = {
+        tasks: [task(1, "Open", null), task(2, "Closed", 1), task(3, "Open", 1)],
+        externalTasks: [ghost(90, "Open"), ghost(91, "Open")],
+        dependencyEdges: [
+            { dependencyId: 1, blockerTaskId: 90, blockedTaskId: 2, otherStatus: null },
+            { dependencyId: 2, blockerTaskId: 91, blockedTaskId: 3, otherStatus: null },
+        ],
+    } as unknown as TaskGraph;
+
+    const nodeIdsWith = (hideClosed: boolean): number[] =>
+        buildNodesAndEdges(
+            graph,
+            1,
+            null,
+            new Map(),
+            new Map(),
+            null,
+            {
+                onChange: () => undefined,
+                onAddSubtask: () => undefined,
+                onDelete: () => undefined,
+                onOpenPreview: () => undefined,
+            },
+            hideClosed,
+            null
+        )
+            .nodes.map((n) => Number(n.id))
+            .sort((a, b) => a - b);
+
+    it("hides the closed task AND the ghost that only blocked it", () => {
+        // 2 (closed) and 90 (its blocker) both gone; 91 stays because
+        // the task IT blocks is still open.
+        expect(nodeIdsWith(true)).toEqual([1, 3, 91]);
+    });
+
+    it("brings both back when closed tasks are shown", () => {
+        expect(nodeIdsWith(false)).toEqual([1, 2, 3, 90, 91]);
+    });
+
+    it("drops the dependency edge along with its endpoints", () => {
+        const { edges } = buildNodesAndEdges(
+            graph,
+            1,
+            null,
+            new Map(),
+            new Map(),
+            null,
+            {
+                onChange: () => undefined,
+                onAddSubtask: () => undefined,
+                onDelete: () => undefined,
+                onOpenPreview: () => undefined,
+            },
+            true,
+            null
+        );
+        expect(edges.some((e) => e.id === "d-1")).toBe(false);
+        expect(edges.some((e) => e.id === "d-2")).toBe(true);
     });
 });
