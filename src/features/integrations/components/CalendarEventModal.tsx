@@ -34,6 +34,7 @@ import {
     parseRecurrence,
     type RecurrenceSpec,
 } from "../../calendar/utils/rrule";
+import { endForNewStart, startForNewEnd } from "../../calendar/utils/timedRange";
 import {
     CalendarEvent,
     CalendarSummary,
@@ -181,6 +182,30 @@ const formFromInitial = (initial: EventFormInitial | undefined): FormState => {
             : toLocalInputValue(initial?.end),
         summary: initial?.summary ?? "",
     };
+};
+
+/**
+ * Start/end edits that keep the event's length.
+ *
+ * Picking a start drags the end along by the duration already on the
+ * form (9pm→10pm becomes 10pm→11pm; a 30-minute meeting stays 30
+ * minutes). Setting an end at or before the start backs the start up
+ * instead of saving a negative event.
+ *
+ * Timed events only — see `timedRange.ts` for why all-day, whose inputs
+ * hold date-only values, keeps its `min` constraint and submit clamp
+ * instead.
+ */
+const setStart = (form: FormState, startISO: string): FormState => {
+    if (form.allDay) return { ...form, startISO };
+    const endISO = endForNewStart(form.startISO, form.endISO, startISO);
+    return { ...form, startISO, endISO: endISO ?? form.endISO };
+};
+
+const setEnd = (form: FormState, endISO: string): FormState => {
+    if (form.allDay) return { ...form, endISO };
+    const startISO = startForNewEnd(form.startISO, form.endISO, endISO);
+    return { ...form, endISO, startISO: startISO ?? form.startISO };
 };
 
 export const CalendarEventModal = ({
@@ -520,7 +545,7 @@ export const CalendarEventModal = ({
                         <Input
                             type={form.allDay ? "date" : "datetime-local"}
                             value={form.startISO}
-                            onChange={(e) => setForm((f) => ({ ...f, startISO: e.target.value }))}
+                            onChange={(e) => setForm((f) => setStart(f, e.target.value))}
                         />
                     </FormControl>
                     <FormControl required>
@@ -531,7 +556,7 @@ export const CalendarEventModal = ({
                             slotProps={form.allDay ? { input: { min: form.startISO } } : undefined}
                             type={form.allDay ? "date" : "datetime-local"}
                             value={form.endISO}
-                            onChange={(e) => setForm((f) => ({ ...f, endISO: e.target.value }))}
+                            onChange={(e) => setForm((f) => setEnd(f, e.target.value))}
                         />
                         {form.allDay && (
                             <FormHelperText>Ends on this day (inclusive).</FormHelperText>
