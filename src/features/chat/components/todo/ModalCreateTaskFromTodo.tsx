@@ -4,7 +4,7 @@ import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
 import {
     Alert,
     Autocomplete,
-    Box,
+    AutocompleteOption,
     Button,
     CircularProgress,
     FormControl,
@@ -24,7 +24,6 @@ import { useTranslation } from "../../../../i18n";
 import { LimitReachedError } from "../../../../services/limitErrors";
 import { UserProps } from "../../../../types/admin";
 import { ProjectProps } from "../../../../types/tasks";
-import { stripOwnerState } from "../../../../utils/joyAutocomplete";
 import { ProjectIdentityRow } from "../../../tasks/components/ProjectIdentityRow";
 import { createQuickTask } from "../../../tasks/services/createQuickTask";
 import { loadTeamProjects } from "../../../tasks/services/loadTeamProjects";
@@ -280,9 +279,13 @@ export const ModalCreateTaskFromTodo = (props: ModalCreateTaskFromTodoProps) => 
                             size="sm"
                             value={projects.find((p) => p.projectId === projectId) ?? null}
                             renderOption={(optionProps, option) => (
-                                <Box
-                                    component="li"
-                                    {...stripOwnerState(optionProps)}
+                                // Joy's option component, same as
+                                // `ACTeamProjects` — it carries the
+                                // padding / hover / selected states that
+                                // make these rows match a Joy Select's
+                                // options, and consumes `ownerState`.
+                                <AutocompleteOption
+                                    {...optionProps}
                                     key={option.projectId}
                                     sx={{
                                         display: "flex",
@@ -299,7 +302,7 @@ export const ModalCreateTaskFromTodo = (props: ModalCreateTaskFromTodoProps) => 
                                         maxLabels={2}
                                         project={option}
                                     />
-                                </Box>
+                                </AutocompleteOption>
                             )}
                             onChange={(_, value) => pickProject(value?.projectId ?? null)}
                         />
