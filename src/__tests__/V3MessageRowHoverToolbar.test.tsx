@@ -11,8 +11,8 @@
  *      writes to `navigator.clipboard` with the right URL.
  */
 
-import { fireEvent, render, screen } from "@testing-library/react";
-import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { act, fireEvent, render, screen } from "@testing-library/react";
+import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
     messageDeepLinkUrl,
@@ -257,6 +257,90 @@ describe("MessagesPaneV3 row — hover visibility", () => {
         );
         render(<MessagesPaneV3 channelId="c-1" />);
         expect(screen.getByTestId("message-row-m-1").id).toBe("message-m-1");
+    });
+});
+
+/**
+ * Touch path. Hover doesn't exist on a phone, so without these the v3
+ * toolbar is unreachable there — the regression that would land the day
+ * v3 replaces the legacy chat pane.
+ */
+describe("MessagesPaneV3 row — long-press (touch) visibility", () => {
+    beforeEach(async () => {
+        await resetService();
+        localStorage.setItem("userId", "u-me");
+        vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+        vi.useRealTimers();
+    });
+
+    function renderRow() {
+        channelService.handleChannelCreated(fakeChannel("c-1"));
+        channelService.handleMessageCreated(
+            fakeMessage("m-1", "c-1", {
+                userId: "u-alice",
+                userName: "Alice",
+                userEmail: "a@x",
+                avatarImgPath: null,
+                isSystemUser: false,
+            })
+        );
+        render(<MessagesPaneV3 channelId="c-1" />);
+        return {
+            row: screen.getByTestId("message-row-m-1"),
+            toolbar: screen.getByTestId("message-row-toolbar-m-1"),
+        };
+    }
+
+    const touch = (x: number, y: number) => ({ touches: [{ clientX: x, clientY: y }] });
+
+    it("a 500ms press with no hover reveals the toolbar", () => {
+        const { row, toolbar } = renderRow();
+        expect(toolbar.getAttribute("data-toolbar-visible")).toBe("false");
+
+        fireEvent.touchStart(row, touch(10, 10));
+        act(() => {
+            vi.advanceTimersByTime(500);
+        });
+        expect(toolbar.getAttribute("data-toolbar-visible")).toBe("true");
+    });
+
+    it("a short tap does not reveal the toolbar", () => {
+        const { row, toolbar } = renderRow();
+        fireEvent.touchStart(row, touch(10, 10));
+        act(() => {
+            vi.advanceTimersByTime(200);
+        });
+        fireEvent.touchEnd(row, { changedTouches: [{ clientX: 10, clientY: 10 }] });
+        act(() => {
+            vi.advanceTimersByTime(500);
+        });
+        expect(toolbar.getAttribute("data-toolbar-visible")).toBe("false");
+    });
+
+    it("scrolling past the move tolerance cancels the press", () => {
+        const { row, toolbar } = renderRow();
+        fireEvent.touchStart(row, touch(10, 10));
+        // 40px of travel — a scroll, not a press.
+        fireEvent.touchMove(row, touch(10, 50));
+        act(() => {
+            vi.advanceTimersByTime(500);
+        });
+        expect(toolbar.getAttribute("data-toolbar-visible")).toBe("false");
+    });
+
+    it("touching outside the row dismisses the toolbar", () => {
+        const { row, toolbar } = renderRow();
+        fireEvent.touchStart(row, touch(10, 10));
+        act(() => {
+            vi.advanceTimersByTime(500);
+        });
+        expect(toolbar.getAttribute("data-toolbar-visible")).toBe("true");
+
+        fireEvent.touchStart(document.body);
+        expect(toolbar.getAttribute("data-toolbar-visible")).toBe("false");
     });
 });
 

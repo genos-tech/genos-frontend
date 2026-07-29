@@ -14,9 +14,10 @@
  * inherit from once we've validated the UX end-to-end.
  */
 
-import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 import { EmojiGlyph } from "../../../components/ui/emoji/EmojiGlyph";
+import { useLongPress } from "../../../hooks/common/useLongPress";
 import { channelService, ChannelServiceError } from "../../../services/channel/channelService";
 import type { Message } from "../../../types/channel";
 import { useChannel } from "../hooks/useChannel";
@@ -34,13 +35,17 @@ interface MessagesPaneV3Props {
      *  is hidden (still useful for embedded contexts that don't have
      *  room for a side panel). */
     onOpenThread?: (rootMessageId: string) => void;
+    /** Optional: renders a back button in the header. The shell passes
+     *  it only in the mobile single-pane stack, where the channel list
+     *  isn't visible beside the pane. */
+    onBack?: () => void;
 }
 
 /** Common emojis for the quick-react row. Kept short so it doesn't
  *  overwhelm the proof-of-life UI. */
 const QUICK_EMOJI = ["👍", "❤️", "🎉", "🤔", "😄"];
 
-export function MessagesPaneV3({ channelId, onOpenThread }: MessagesPaneV3Props) {
+export function MessagesPaneV3({ channelId, onOpenThread, onBack }: MessagesPaneV3Props) {
     const { channel, messages, readCursor, isLoading } = useChannel(channelId);
     // Separate subscription for the flag index so each row knows
     // whether it's flagged without a prop dance from useChannel.
@@ -94,9 +99,32 @@ export function MessagesPaneV3({ channelId, onOpenThread }: MessagesPaneV3Props)
                     borderBottom: "1px solid #ddd",
                     background: "#fafafa",
                     fontWeight: 600,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
                 }}
             >
-                {channel.title || channel.id} <span style={{ opacity: 0.6 }}>(v3)</span>
+                {onBack && (
+                    <button
+                        data-testid="messages-pane-v3-back"
+                        style={{
+                            fontSize: 14,
+                            padding: "4px 10px",
+                            border: "1px solid #ddd",
+                            borderRadius: 4,
+                            background: "#fff",
+                            cursor: "pointer",
+                        }}
+                        title="Back to channels"
+                        type="button"
+                        onClick={onBack}
+                    >
+                        ←
+                    </button>
+                )}
+                <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis" }}>
+                    {channel.title || channel.id} <span style={{ opacity: 0.6 }}>(v3)</span>
+                </span>
             </header>
 
             <ul
@@ -175,6 +203,24 @@ function MessageRow({
     const [editDraft, setEditDraft] = useState(message.bodyText);
     const [showEmoji, setShowEmoji] = useState(false);
     const [hovered, setHovered] = useState(false);
+    // Touch path for the toolbar: touch devices have no hover signal, so
+    // a 500ms long-press on the row opens it instead (the same pattern
+    // as the legacy MessageBubble). Dismissed by touching anywhere
+    // outside the row.
+    const [touchOpen, setTouchOpen] = useState(false);
+    const rowRef = useRef<HTMLLIElement>(null);
+    const longPress = useLongPress(() => setTouchOpen(true));
+
+    useEffect(() => {
+        if (!touchOpen) return;
+        const dismiss = (e: TouchEvent) => {
+            if (rowRef.current && !rowRef.current.contains(e.target as Node)) {
+                setTouchOpen(false);
+            }
+        };
+        document.addEventListener("touchstart", dismiss);
+        return () => document.removeEventListener("touchstart", dismiss);
+    }, [touchOpen]);
 
     const reportError = useCallback(
         (e: unknown) => {
@@ -253,6 +299,7 @@ function MessageRow({
 
     return (
         <li
+            ref={rowRef}
             data-testid={`message-row-${message.id}`}
             id={`message-${message.id}`}
             style={{
@@ -263,6 +310,10 @@ function MessageRow({
             onFocus={() => setHovered(true)}
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
+            onTouchCancel={longPress.onTouchCancel}
+            onTouchEnd={longPress.onTouchEnd}
+            onTouchMove={longPress.onTouchMove}
+            onTouchStart={longPress.onTouchStart}
             onBlur={(e) => {
                 // Keep the toolbar visible if focus moves to a child
                 // (e.g. clicking the react button to open the emoji
@@ -271,8 +322,21 @@ function MessageRow({
                     setHovered(false);
                 }
             }}
+            onClickCapture={(e) => {
+                // A long-press that opened the toolbar also produces a
+                // synthetic click on whatever child is under the finger
+                // (a link, a reaction chip). Swallow that one click so
+                // opening the toolbar never doubles as an action.
+                if (longPress.consumedTap()) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+            }}
         >
-            <div style={{ display: "flex", gap: 6, alignItems: "baseline" }}>
+            {/* flexWrap: at coarse-pointer tap-target size the toolbar can
+                be wider than a phone row — wrapping drops it onto its own
+                line instead of overflowing the pane horizontally. */}
+            <div style={{ display: "flex", gap: 6, alignItems: "baseline", flexWrap: "wrap" }}>
                 <strong>{message.sender?.userName ?? "system"}:</strong>{" "}
                 {editing ? (
                     <span style={{ display: "flex", gap: 4, flex: 1 }}>
@@ -359,7 +423,7 @@ function MessageRow({
                         isFlagged={isFlagged}
                         isMine={!!isMine}
                         replyCount={message.replyCount}
-                        visible={hovered || showEmoji}
+                        visible={hovered || showEmoji || touchOpen}
                         onCopyLink={copyLink}
                         onDelete={() => void handleDelete()}
                         onFlag={() => void handleToggleFlag()}
