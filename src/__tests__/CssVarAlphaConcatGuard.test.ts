@@ -93,7 +93,31 @@ describe("CSS custom properties are never hex-alpha concatenated", () => {
                 offenders.push(`${relative}: ${hit}`);
             }
         }
-        // Compose alpha as `rgba(var(--token-rgb), α)` instead.
-        expect(offenders).toEqual([]);
+        // A bare array diff gives whoever trips this no idea what to do,
+        // and `frontend-test` is a required check — so spell out both
+        // the fix and the escape hatch in the failure itself.
+        expect(
+            offenders,
+            offenders.length === 0
+                ? ""
+                : [
+                      "Hex alpha is concatenated onto a value this file assigns a `var(--…)` to.",
+                      "`${token}cc` yields the string `var(--gp-…)cc`, which is not a color — CSS",
+                      "then discards the WHOLE declaration, so the background/border silently",
+                      "disappears rather than degrading.",
+                      "",
+                      "Fix: compose through the `-rgb` companion token instead —",
+                      "  `${accent}cc`  ->  `rgba(${accentRgb}, 0.8)`   (cc = 204/255)",
+                      "Keep the plain `var(--gp-…)` form for opaque use; an RGB triplet is not",
+                      "a valid standalone color.",
+                      "",
+                      "If the flagged value is really a hex from data (a tag color, a config",
+                      "literal) this is a false positive of the name-based match — add the file",
+                      "to ALLOWLIST above with a one-line reason.",
+                      "",
+                      "Offenders:",
+                      ...offenders.map((o) => `  ${o}`),
+                  ].join("\n")
+        ).toEqual([]);
     });
 });
