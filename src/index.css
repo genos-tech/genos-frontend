@@ -39,6 +39,18 @@
            everyone: consumers reserve this, and nobody adds the inset again. */
         --BottomTabBar-height: calc(60px + env(safe-area-inset-bottom, 0px));
 
+        /* How much of the viewport the on-screen keyboard covers. Kept at
+           0 here and maintained by `useKeyboardInset` — iOS never resizes
+           the layout viewport for the keyboard, so nothing in CSS can
+           work this out on its own. */
+        --keyboard-inset: 0px;
+
+        /* What a full-height mobile surface must leave free at the bottom.
+           `max()` rather than a sum, because the keyboard covers the tab
+           bar: when it's up the bar is behind it, so reserving both would
+           push the composer a tab bar's height above the keyboard. */
+        --mobile-bottom-inset: max(var(--BottomTabBar-height), var(--keyboard-inset));
+
         /* Responsive breakpoints */
         --breakpoint-mobile: 480px;
         --breakpoint-tablet: 768px;
@@ -75,6 +87,10 @@
     body {
         margin: 0;
         min-width: var(--min-width);
+        /* Stops an over-pull at the top of a message list from triggering
+           the browser's pull-to-refresh. In an installed PWA that reload
+           reboots the shell and takes any half-typed message with it. */
+        overscroll-behavior-y: contain;
         /* `100vh` on iOS Safari is the viewport with the browser chrome
            HIDDEN, so a body pinned to it is permanently taller than what
            you can actually see — the document scrolls by roughly a
