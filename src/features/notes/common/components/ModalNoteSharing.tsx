@@ -139,7 +139,7 @@ export const ModalNoteSharing = ({
                     // BottomTabBar height so the sheet never lives under
                     // the tab bar or off-screen.
                     maxHeight: {
-                        xs: "calc(100dvh - 24px - var(--BottomTabBar-height, 60px) - env(safe-area-inset-bottom, 0px))",
+                        xs: "calc(100dvh - 24px - var(--BottomTabBar-height, 60px))",
                         sm: "calc(100vh - 64px)",
                     },
                     mx: "auto",

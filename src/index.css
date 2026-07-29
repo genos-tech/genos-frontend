@@ -27,6 +27,19 @@
         --min-width: 320px;
         --min-height: 100vh;
 
+        /* Total space the mobile BottomTabBar occupies: its own 60px of
+           usable height PLUS the home-indicator strip it has to sit above.
+           Ten call sites read this and, until now, none defined it — every
+           one fell back to a bare 60px, which produced two bugs at once.
+           `box-sizing: border-box` (Joy's CssBaseline) meant the bar's
+           safe-area padding was subtracted from its 60px rather than added
+           to it, so on an iPhone with a home indicator the icons and labels
+           were crushed into ~26px. Meanwhile the FAB and the install banner
+           added the inset themselves, so they floated a home-indicator's
+           height too high. Defining it here makes one answer true for
+           everyone: consumers reserve this, and nobody adds the inset again. */
+        --BottomTabBar-height: calc(60px + env(safe-area-inset-bottom, 0px));
+
         /* Responsive breakpoints */
         --breakpoint-mobile: 480px;
         --breakpoint-tablet: 768px;

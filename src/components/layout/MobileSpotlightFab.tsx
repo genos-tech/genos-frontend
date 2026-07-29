@@ -27,9 +27,10 @@ export const MobileSpotlightFab = ({ onOpenSpotlight }: MobileSpotlightFabProps)
             size="lg"
             sx={{
                 position: "fixed",
-                // 16px gap above the bottom tab bar (60px). Add safe-area
-                // so it stays above the home-indicator strip on iPhones.
-                bottom: "calc(var(--BottomTabBar-height, 60px) + 16px + env(safe-area-inset-bottom, 0px))",
+                // 16px gap above the bottom tab bar. The variable already
+                // includes the home-indicator inset, so adding it again here
+                // would float the button a whole strip too high.
+                bottom: "calc(var(--BottomTabBar-height, 60px) + 16px)",
                 right: 16,
                 // Above page content (BottomTabBar is 1200) but below
                 // MUI Joy Modal (1300) and the SpotlightOverlay (13100).

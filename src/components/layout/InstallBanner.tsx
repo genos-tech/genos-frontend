@@ -123,7 +123,7 @@ export const InstallBanner = () => {
                     // zIndex 1250 — docking the banner at +8 put the FAB
                     // on top of the banner's close button, making it
                     // untappable. 66 = the FAB's top edge + a 12px gap.
-                    bottom: "calc(var(--BottomTabBar-height, 60px) + env(safe-area-inset-bottom, 0px) + 66px)",
+                    bottom: "calc(var(--BottomTabBar-height, 60px) + 66px)",
                     zIndex: 1199,
                     px: 2,
                     py: 1,
