@@ -140,14 +140,20 @@ const config = {
                 // Cache-Control, browsers heuristically cached index.html
                 // and kept serving a pre-deploy bundle after releases —
                 // this also covers sw.js and manifest.webmanifest.
+                //
+                // App icons deliberately inherit this instead of getting
+                // their own longer rule. They are NOT content-hashed, so a
+                // rebrand changes the bytes behind an unchanged URL, and a
+                // cached copy then outlives it. The failure that matters
+                // isn't a stale favicon: an OS snapshots the icon when the
+                // PWA is INSTALLED, so a stale copy at that moment gets
+                // baked into the home-screen app permanently — you delete
+                // it, re-add it, and the old artwork comes back, which
+                // looks like the fix simply didn't work. A handful of
+                // conditional requests is a fair price for that never
+                // happening.
                 { key: "Cache-Control", value: "no-cache" },
             ],
-        },
-        {
-            // PWA icons / root logos are mutable (not content-hashed):
-            // cache a day, then revalidate.
-            source: "{icons/**,*.png}",
-            headers: [{ key: "Cache-Control", value: "public, max-age=86400" }],
         },
         {
             // Everything under assets/ is Vite content-hashed — immutable.
