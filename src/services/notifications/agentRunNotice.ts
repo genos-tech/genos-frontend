@@ -57,7 +57,9 @@ export interface AgentRunNotice {
 // (`public/sw.js`), and a run can be announced by either side. A hashed
 // bundle URL would render the two paths differently for one feature.
 // Keep in sync with `sw.js` if the file is ever renamed.
-const APP_ICON_URL = "/genos_tech.png";
+// Opaque icon rather than the transparent brand mark: notification
+// surfaces composite onto their own background, which can be dark.
+const APP_ICON_URL = "/icons/icon-192.png";
 
 /** Notification bodies are a glance, not a transcript. */
 const QUERY_PREVIEW_MAX = 120;

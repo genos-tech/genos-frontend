@@ -160,8 +160,11 @@ self.addEventListener("push", (event) => {
         body: data.body || "",
         // Card icon: the sender's avatar when the server supplies one,
         // else the app icon.
-        icon: data.icon || "/genos_tech.png",
-        badge: "/genos_tech.png",
+        // Opaque variants on purpose: the brand mark itself is transparent,
+        // and notification surfaces composite it on their own background
+        // (black on some Android themes), which would swallow a dark logo.
+        icon: data.icon || "/icons/icon-192.png",
+        badge: "/icons/icon-192.png",
         tag: data.tag || undefined,
         // Large hero image (Chrome desktop/Android), when supplied.
         image: data.image || undefined,

@@ -266,7 +266,7 @@ describe("notifyAgentRunComplete", () => {
             runId: "run-1",
             turnId: 1,
         });
-        expect(notify.mock.calls[0][0].icon).toBe("/genos_tech.png");
+        expect(notify.mock.calls[0][0].icon).toBe("/icons/icon-192.png");
     });
 
     it("truncates a long question rather than dumping it into the card", () => {

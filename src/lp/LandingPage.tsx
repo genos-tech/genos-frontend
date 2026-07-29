@@ -671,19 +671,20 @@ export default function GenosLandingPage() {
                 <header className="sticky top-0 z-50 border-b border-violet-100/70 bg-white/75 backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/70">
                     <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
                         <a className="flex items-center gap-3" href="#top">
-                            <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl border border-violet-100 bg-white shadow-lg shadow-violet-900/10 dark:border-white/10 dark:bg-white">
+                            {/* The full lockup already carries the wordmark, so the
+                                separate "Genos" line is gone. The plate stays white in
+                                dark mode (`dark:bg-white`) — the wordmark is a fixed
+                                purple and would all but vanish on a dark surface. */}
+                            <div className="flex h-12 items-center justify-center overflow-hidden rounded-2xl border border-violet-100 bg-white px-3.5 shadow-lg shadow-violet-900/10 dark:border-white/10 dark:bg-white">
                                 <img
                                     alt="Genos"
-                                    className="h-11 w-11 object-contain"
-                                    src="/genos_tech.png"
+                                    className="h-7 object-contain"
+                                    src="/genos-logo-with-name.png"
                                 />
                             </div>
 
-                            <div>
-                                <div className="text-lg font-black tracking-tight">Genos</div>
-                                <div className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                                    Connected workspace
-                                </div>
+                            <div className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                                Connected workspace
                             </div>
                         </a>
 
@@ -1283,14 +1284,13 @@ export default function GenosLandingPage() {
                     <div className="mx-auto flex max-w-7xl flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
                         <div>
                             <div className="flex items-center gap-3">
-                                <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl border border-violet-100 bg-white shadow-lg shadow-violet-900/10 dark:border-white/10 dark:bg-white">
+                                <div className="flex h-12 items-center justify-center overflow-hidden rounded-2xl border border-violet-100 bg-white px-3.5 shadow-lg shadow-violet-900/10 dark:border-white/10 dark:bg-white">
                                     <img
-                                        alt="Genos"
-                                        className="h-11 w-11 object-contain"
-                                        src="/genos_tech.png"
+                                        alt={t.footer.product}
+                                        className="h-7 object-contain"
+                                        src="/genos-logo-with-name.png"
                                     />
                                 </div>
-                                <div className="font-black">{t.footer.product}</div>
                             </div>
                             <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">
                                 {t.footer.line}
