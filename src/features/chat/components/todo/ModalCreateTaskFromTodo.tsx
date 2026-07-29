@@ -3,6 +3,8 @@ import { PartialBlock } from "@blocknote/core";
 import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
 import {
     Alert,
+    Autocomplete,
+    AutocompleteOption,
     Button,
     CircularProgress,
     FormControl,
@@ -10,21 +12,24 @@ import {
     Input,
     Modal,
     ModalDialog,
-    Option,
-    Select,
     Stack,
     Typography,
 } from "@mui/joy";
 
 import { useAuth } from "../../../../context/AuthContext";
+import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../../../hooks/common/UrlLinkModalContext";
+import { useSprintMilestoneManagement } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { useTranslation } from "../../../../i18n";
 import { LimitReachedError } from "../../../../services/limitErrors";
 import { UserProps } from "../../../../types/admin";
 import { ProjectProps } from "../../../../types/tasks";
+import { ProjectIdentityRow } from "../../../tasks/components/ProjectIdentityRow";
 import { createQuickTask } from "../../../tasks/services/createQuickTask";
 import { loadTeamProjects } from "../../../tasks/services/loadTeamProjects";
 import { emitTasksBulkChanged } from "../../../tasks/services/taskEvents";
+import { SprintMilestonePicker } from "../../../tasks/sprint-milestone/components/SprintMilestonePicker";
+import { projectAvatarSrc } from "../../../tasks/utils/projectAvatar";
 
 // Remembers the last project a to-do was promoted into. Most people
 // funnel their to-dos into the same project, and the picker defaulting
@@ -60,6 +65,9 @@ type ModalCreateTaskFromTodoProps = {
     todoNotes: PartialBlock[] | null;
     /** Fires with the created task's id after a successful create. */
     onCreated?: (taskId: number | null) => void;
+    /** Chat list — resolves each project option's avatar from its PM
+     *  chat, so the picker matches the task sidebar / TaskPreview. */
+    useCM?: ChatManagementState;
 };
 
 /**
@@ -81,7 +89,7 @@ type ModalCreateTaskFromTodoProps = {
  * silently ticking it off would lose the user's own state.
  */
 export const ModalCreateTaskFromTodo = (props: ModalCreateTaskFromTodoProps) => {
-    const { open, onClose, myself, todoTitle, todoNotes, onCreated } = props;
+    const { open, onClose, myself, todoTitle, todoNotes, onCreated, useCM } = props;
     const { accessToken } = useAuth();
     const { t } = useTranslation();
     // Present on the chat surface (the to-do pane renders inside the
@@ -93,6 +101,17 @@ export const ModalCreateTaskFromTodo = (props: ModalCreateTaskFromTodoProps) => 
     const [projectId, setProjectId] = useState<number | null>(null);
     const [title, setTitle] = useState(todoTitle);
     const [loadingProjects, setLoadingProjects] = useState(false);
+    // Milestone is project-scoped, so it lives next to `projectId` and is
+    // cleared whenever that changes (see `pickProject`). `milestoneTaskId`
+    // is the milestone's BACKING task — the create needs it, see submit.
+    const [milestoneId, setMilestoneId] = useState<number | null>(null);
+    const [milestoneTaskId, setMilestoneTaskId] = useState<number | null>(null);
+    // Own instance rather than a threaded `useSM`: the to-do pane has no
+    // sprint/milestone state in scope, and the modal mounts only while
+    // open, so a local one costs a single fetch per use. Giving
+    // `SprintMilestonePicker` its state this way is what keeps the picker
+    // literally the same component TaskPreview uses.
+    const useSM = useSprintMilestoneManagement(accessToken);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -122,13 +141,28 @@ export const ModalCreateTaskFromTodo = (props: ModalCreateTaskFromTodoProps) => 
             const remembered = Number(localStorage.getItem(LAST_PROJECT_KEY));
             const rememberedIsLive =
                 Number.isFinite(remembered) && list.some((p) => p.projectId === remembered);
-            setProjectId(rememberedIsLive ? remembered : (list[0]?.projectId ?? null));
+            pickProject(rememberedIsLive ? remembered : (list[0]?.projectId ?? null));
         })();
         return () => {
             cancelled = true;
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open, accessToken]);
+
+    // Selecting a project invalidates any milestone chosen under the
+    // previous one — milestones belong to a project, so keeping the old
+    // selection would POST a milestone from a different project. Mirrors
+    // `ACTeamProjects`' `resetMilestoneOnChange` in the create form.
+    const pickProject = (nextProjectId: number | null) => {
+        setProjectId(nextProjectId);
+        setMilestoneId(null);
+        setMilestoneTaskId(null);
+        if (nextProjectId != null) {
+            void useSM.loadMilestonesForProject(nextProjectId, {
+                statuses: ["Open", "WIP", "Pending", "Closed"],
+            });
+        }
+    };
 
     const submit = async () => {
         const trimmed = title.trim();
@@ -141,11 +175,17 @@ export const ModalCreateTaskFromTodo = (props: ModalCreateTaskFromTodoProps) => 
                 accessToken,
                 projectId,
                 title: trimmed,
-                // A promoted to-do is top-level work, not a sub-task of
-                // anything — both null makes it a root task.
-                parentTaskId: null,
-                rootTaskId: null,
-                milestoneId: null,
+                // No milestone: top-level work, both null = root task.
+                // With one: the milestone's BACKING task is the parent and
+                // the root. The POST's own bridge only promotes the parent
+                // (`root_task_id` is taken verbatim, and the milestone→root
+                // bridge lives in the PUT handler this path never hits), so
+                // sending both explicitly is what makes a task created here
+                // match one created from the milestone preview instead of
+                // landing with a NULL root.
+                parentTaskId: milestoneTaskId,
+                rootTaskId: milestoneTaskId,
+                milestoneId,
                 // Carry the to-do's notes over as the task body when it
                 // has any; otherwise createQuickTask's default template
                 // gives the user something to flesh out.
@@ -223,18 +263,71 @@ export const ModalCreateTaskFromTodo = (props: ModalCreateTaskFromTodoProps) => 
 
                     <FormControl>
                         <FormLabel>{tc.projectLabel}</FormLabel>
-                        <Select
+                        {/* Same Autocomplete shape as the task pickers —
+                            avatar, label chips, lock, name — so a project
+                            looks the same here as in TaskPreview and the
+                            sidebar. `getOptionLabel` stays the plain name:
+                            that is what type-to-filter matches on. */}
+                        <Autocomplete
                             disabled={isSubmitting || loadingProjects || noProjects}
+                            getOptionLabel={(option) => option.projectName}
+                            isOptionEqualToValue={(option, value) =>
+                                option.projectId === value.projectId
+                            }
+                            options={projects}
                             placeholder={loadingProjects ? tc.loadingProjects : tc.projectLabel}
-                            value={projectId}
-                            onChange={(_, value) => setProjectId(value as number | null)}
-                        >
-                            {projects.map((project) => (
-                                <Option key={project.projectId} value={project.projectId}>
-                                    {project.projectName}
-                                </Option>
-                            ))}
-                        </Select>
+                            size="sm"
+                            value={projects.find((p) => p.projectId === projectId) ?? null}
+                            renderOption={(optionProps, option) => (
+                                // Joy's option component, same as
+                                // `ACTeamProjects` — it carries the
+                                // padding / hover / selected states that
+                                // make these rows match a Joy Select's
+                                // options, and consumes `ownerState`.
+                                <AutocompleteOption
+                                    {...optionProps}
+                                    key={option.projectId}
+                                    sx={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 1,
+                                        minWidth: 0,
+                                    }}
+                                >
+                                    <ProjectIdentityRow
+                                        avatarSrc={projectAvatarSrc(
+                                            option.projectId,
+                                            useCM?.allChats
+                                        )}
+                                        maxLabels={2}
+                                        project={option}
+                                    />
+                                </AutocompleteOption>
+                            )}
+                            onChange={(_, value) => pickProject(value?.projectId ?? null)}
+                        />
+                    </FormControl>
+
+                    {/* Milestone — the same picker TaskPreview uses, so the
+                        options, ordering and "No milestone" entry match.
+                        Sprint is hidden: it is a milestone roll-up on tasks
+                        and the backend derives it from the milestone. */}
+                    <FormControl>
+                        <FormLabel>{tc.milestoneLabel}</FormLabel>
+                        <SprintMilestonePicker
+                            disabled={isSubmitting || projectId == null}
+                            milestoneId={milestoneId}
+                            projectId={projectId ?? undefined}
+                            showMilestone={true}
+                            showSprint={false}
+                            sprintId={null}
+                            useSM={useSM}
+                            onChangeMilestone={(mid, taskId) => {
+                                setMilestoneId(mid);
+                                setMilestoneTaskId(taskId);
+                            }}
+                            onChangeSprint={() => undefined}
+                        />
                     </FormControl>
 
                     <Stack direction="row" justifyContent="flex-end" spacing={1} sx={{ mt: 0.5 }}>

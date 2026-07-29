@@ -40,6 +40,7 @@ export const chat = {
             titleLabel: "Task title",
             titlePlaceholder: "What needs doing?",
             projectLabel: "Project",
+            milestoneLabel: "Milestone (optional)",
             loadingProjects: "Loading projects…",
             noProjects: "You're not in any project yet. Join or create one to file a task.",
             cancel: "Cancel",
