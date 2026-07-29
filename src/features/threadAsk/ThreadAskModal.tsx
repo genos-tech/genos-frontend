@@ -15,6 +15,7 @@
 import { useMemo, useState } from "react";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import LaunchRoundedIcon from "@mui/icons-material/LaunchRounded";
 import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
 import SaveRoundedIcon from "@mui/icons-material/SaveRounded";
 import {
@@ -24,6 +25,7 @@ import {
     CircularProgress,
     Divider,
     IconButton,
+    Link,
     Modal,
     ModalDialog,
     Stack,
@@ -33,8 +35,10 @@ import { useColorScheme } from "@mui/joy/styles";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
+import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
 import { useTranslation } from "../../i18n";
 import { UserProps } from "../../types/admin";
+import { chatTypeCodeToSlug, entityRefToHref } from "../../utils/entityHref";
 import {
     AgentQAConversation,
     AgentQAInput,
@@ -132,11 +136,14 @@ export const ThreadAskModal = ({
 }: ThreadAskModalProps) => {
     const { mode } = useColorScheme();
     const { t } = useTranslation();
+    const urlLinkModal = useUrlLinkModal();
     const isDark = mode === "dark";
 
     const [saving, setSaving] = useState(false);
     const [saveError, setSaveError] = useState<string | null>(null);
-    const [saveSuccess, setSaveSuccess] = useState(false);
+    // Note created by the last successful save — drives the "Open note"
+    // deep link in the footer.
+    const [savedNoteId, setSavedNoteId] = useState<number | null>(null);
     // Fingerprint of what the last successful save contained. While the
     // current content still matches it there is nothing new to save, so
     // the button stays disabled — clicking twice would just create a
@@ -166,7 +173,7 @@ export const ThreadAskModal = ({
         if (!state.summary || !state.threadContext) return;
         setSaving(true);
         setSaveError(null);
-        setSaveSuccess(false);
+        setSavedNoteId(null);
         try {
             const today = new Date().toISOString().slice(0, 10);
             const title = t.threadAsk.saveAsNote.noteTitle
@@ -175,7 +182,7 @@ export const ThreadAskModal = ({
             const metaLine = `Saved ${today} · ${state.summary.messageCount} message${
                 state.summary.messageCount === 1 ? "" : "s"
             }`;
-            await saveThreadAskAsNote({
+            const noteId = await saveThreadAskAsNote({
                 myself,
                 accessToken,
                 chatType: state.threadContext.chatType,
@@ -191,13 +198,53 @@ export const ThreadAskModal = ({
                 qLabel: t.threadAsk.conversation.turnLabelQ,
                 aLabel: t.threadAsk.conversation.turnLabelA,
             });
-            setSaveSuccess(true);
+            setSavedNoteId(noteId);
             setSavedSignature(saveSignature);
         } catch (err) {
             setSaveError(err instanceof Error ? err.message : t.threadAsk.saveAsNote.failed);
         } finally {
             setSaving(false);
         }
+    };
+
+    // Deep link to the note the last save created. Built through
+    // `entityRefToHref` so the shape stays in lockstep with
+    // `parseInternalUrl` (which classifies it as a `chatNote` and hands
+    // it to ModalNoteView). Only offered while `alreadySaved` holds —
+    // once the user refreshes the summary or asks a follow-up the link
+    // would point at a note missing that content, and the Save button
+    // re-arms at the same moment.
+    const savedNoteHref = useMemo(() => {
+        if (savedNoteId == null || !alreadySaved || !state.threadContext) return null;
+        return entityRefToHref({
+            entityType: "note",
+            noteKind: "chat",
+            chatType: chatTypeCodeToSlug(state.threadContext.chatType),
+            chatId: String(state.threadContext.chatId),
+            threadId: String(state.threadContext.threadId),
+            noteId: String(savedNoteId),
+        });
+    }, [savedNoteId, alreadySaved, state.threadContext]);
+
+    // Open the saved note in the shared UrlLinkModal, layered above this
+    // dialog, so the conversation stays readable behind the preview.
+    //
+    // Caveat when this modal is itself hosted inside a UrlLinkModal
+    // (thread opened via "Check thread", `zIndex` set): there is only one
+    // modal instance, so opening the note RE-TARGETS our own host — the
+    // thread view (and this modal with it) unmounts, and closing the note
+    // returns to the page behind, not to the thread. Acceptable: the
+    // conversation was just persisted to the note being opened. We still
+    // raise the level so the preview is correct for the frame in which
+    // both are mounted.
+    const onOpenSavedNote = (e: React.MouseEvent) => {
+        if (!savedNoteHref || !urlLinkModal) return; // let the anchor navigate
+        // Preserve cmd/ctrl/middle-click "open in new tab".
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+        e.preventDefault();
+        urlLinkModal.openModalByHref(savedNoteHref, {
+            zIndex: zIndex != null ? zIndex + 10 : undefined,
+        });
     };
 
     const updatedLabel = useMemo(
@@ -394,10 +441,20 @@ export const ThreadAskModal = ({
                         {t.threadAsk.conversation.clear}
                     </Button>
                     <Box sx={{ flex: 1 }} />
-                    {saveSuccess ? (
-                        <Typography level="body-xs" sx={{ color: "success.solidBg" }}>
-                            {t.threadAsk.saveAsNote.success}
-                        </Typography>
+                    {savedNoteHref ? (
+                        <Stack alignItems="center" direction="row" spacing={1}>
+                            <Typography level="body-xs" sx={{ color: "success.solidBg" }}>
+                                {t.threadAsk.saveAsNote.success}
+                            </Typography>
+                            <Link
+                                href={savedNoteHref}
+                                level="body-xs"
+                                startDecorator={<LaunchRoundedIcon sx={{ fontSize: 14 }} />}
+                                onClick={onOpenSavedNote}
+                            >
+                                {t.threadAsk.saveAsNote.openNote}
+                            </Link>
+                        </Stack>
                     ) : null}
                     {saveError ? (
                         <Typography level="body-xs" sx={{ color: "danger.solidBg" }}>
