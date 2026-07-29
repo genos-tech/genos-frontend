@@ -6,6 +6,7 @@
 // or `VITE_VAPID_PUBLIC_KEY` is unset — so the app is unaffected until push
 // is configured.
 
+import { getDeviceId } from "../../utils/deviceId";
 import { deletePushSubscription, registerPushSubscription } from "./notificationApi";
 
 const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY;
@@ -126,6 +127,10 @@ export const ensurePushSubscription = async (
             p256dh,
             auth,
             user_agent: navigator.userAgent,
+            // Must match the id the presence heartbeat sends, or this
+            // device's pushes would never be suppressed while you're
+            // looking at it.
+            device_id: getDeviceId(),
         });
     } catch (err) {
         console.warn("[push] subscribe failed", err);

@@ -1,3 +1,4 @@
+import { getDeviceId } from "../../utils/deviceId";
 import { authApi } from "../api";
 import { DEFAULT_NOTIFICATION_PREFERENCE, MutedTargetRef, NotificationPreference } from "./types";
 
@@ -128,6 +129,9 @@ export interface PushSubscriptionWire {
     p256dh: string;
     auth: string;
     user_agent?: string;
+    /** Ties this subscription to the device whose presence heartbeat
+     *  decides whether its pushes are suppressed. */
+    device_id?: string;
 }
 
 export const registerPushSubscription = async (
@@ -158,16 +162,18 @@ export const deletePushSubscription = async (
     }
 };
 
-// Best-effort "I have a visible tab" heartbeat. The server records it with
-// a short TTL so the push dispatcher skips users actively in the app
-// (they get the in-app toast instead). Sent only while the tab is visible.
+// Best-effort "THIS DEVICE has a visible tab" heartbeat. The server
+// records it against the device id with a short TTL, so the dispatcher
+// suppresses push for this device only — the tab you're looking at shows
+// the in-app toast while your other devices still get the push. Sent only
+// while the tab is visible.
 export const sendPresenceHeartbeat = async (
     accessToken: string | null | undefined
 ): Promise<void> => {
     const api = authApi(accessToken);
     if (!api) return;
     try {
-        await api.post("/user/presence/heartbeat/", {});
+        await api.post("/user/presence/heartbeat/", { device_id: getDeviceId() });
     } catch {
         // Presence is a hint; a missed beat just means a push that could
         // have been suppressed might fire. No user-visible damage.
