@@ -478,6 +478,9 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
                         open={createTaskOpen}
                         todoNotes={item.notes}
                         todoTitle={item.title}
+                        // Resolves each project option's avatar from its
+                        // PM chat, matching the task-side pickers.
+                        useCM={useCM}
                         onClose={() => setCreateTaskOpen(false)}
                     />
                 )}
