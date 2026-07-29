@@ -179,3 +179,33 @@ export const sendPresenceHeartbeat = async (
         // have been suppressed might fire. No user-visible damage.
     }
 };
+
+/**
+ * Tell the server this device stopped looking, so push resumes now
+ * rather than when the TTL lapses.
+ *
+ * Uses `fetch` with `keepalive` rather than axios: this fires as the page
+ * is being backgrounded, and a normal XHR is abandoned when the browser
+ * suspends it — which on iOS is exactly the moment this matters. (Not
+ * `sendBeacon`, which can't carry the Authorization header.)
+ */
+export const clearPresence = (accessToken: string | null | undefined): void => {
+    if (!accessToken) return;
+    if (typeof fetch !== "function") return;
+    try {
+        void fetch(`${import.meta.env.VITE_API_BASE_URL}/user/presence/heartbeat/`, {
+            method: "DELETE",
+            keepalive: true,
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify({ device_id: getDeviceId() }),
+        }).catch(() => {
+            // Best-effort. The TTL is still the backstop, so the worst
+            // case is the old behavior, not a broken one.
+        });
+    } catch {
+        // ignore — never let presence bookkeeping break a page transition
+    }
+};

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { CoarseGroup, NotificationCategory } from "../../services/notifications/categories";
 import {
+    clearPresence,
     getNotificationPreferences,
     sendPresenceHeartbeat,
     updateNotificationPreferences,
@@ -182,8 +183,13 @@ export const useNotifications = (
 
     // "I have a visible tab" heartbeat — drives server-side push
     // suppression so an open, focused tab gets the in-app toast rather than
-    // a duplicate push. Sent only while visible; the server key TTLs out
-    // when the tab is hidden/closed, after which push resumes.
+    // a duplicate push. Sent only while visible.
+    //
+    // Hiding sends an explicit clear rather than waiting for the key to
+    // expire. The TTL alone left a hole on iOS: a backgrounded PWA has its
+    // JavaScript suspended after ~30s, so the page stops raising its own
+    // notifications, while the server went on suppressing push for the
+    // remaining ~60s of the TTL — nothing notified in between.
     useEffect(() => {
         if (!accessToken || !myself.userId) return;
         const beat = () => {
@@ -193,13 +199,19 @@ export const useNotifications = (
         };
         beat();
         const interval = setInterval(beat, 45_000);
-        const onVisible = () => {
+        const onVisibilityChange = () => {
             if (document.visibilityState === "visible") beat();
+            else clearPresence(accessTokenRef.current);
         };
-        document.addEventListener("visibilitychange", onVisible);
+        // `pagehide` too: iOS often skips a final visibilitychange when the
+        // app is swiped away, and this is the last code that runs.
+        const onPageHide = () => clearPresence(accessTokenRef.current);
+        document.addEventListener("visibilitychange", onVisibilityChange);
+        window.addEventListener("pagehide", onPageHide);
         return () => {
             clearInterval(interval);
-            document.removeEventListener("visibilitychange", onVisible);
+            document.removeEventListener("visibilitychange", onVisibilityChange);
+            window.removeEventListener("pagehide", onPageHide);
         };
     }, [accessToken, myself.userId]);
 
