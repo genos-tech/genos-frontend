@@ -17,6 +17,7 @@ import { UserProps } from "../../../../types/admin";
 import { TodoCategoryProps, TodoItemProps } from "../../../../types/chat";
 import { extractYYYYMMDDHHMM } from "../../../../utils/dateUtils";
 import { formatCompletedAt } from "../../utils/todoCompletion";
+import { ModalCreateTaskFromTodo } from "./ModalCreateTaskFromTodo";
 import { useLinkifyPaste } from "./titleLinks";
 import { TodoItemMoreMenu } from "./TodoItemMoreMenu";
 import { TodoNotesEditor } from "./TodoNotesEditor";
@@ -213,6 +214,8 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
 
     // Copy-link feedback: flips the tooltip to "Link copied" briefly.
     const [linkCopied, setLinkCopied] = useState(false);
+    // "Create task from this to-do" modal (top-level rows only).
+    const [createTaskOpen, setCreateTaskOpen] = useState(false);
     const linkCopiedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     useEffect(() => {
         return () => {
@@ -463,9 +466,21 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
                     linkCopied={linkCopied}
                     onCopyLink={handleCopyLink}
                     onCreateCategory={onCategoryCreate}
+                    onCreateTask={() => setCreateTaskOpen(true)}
                     onDelete={() => onDelete(item.itemId)}
                     onSelectCategory={(categoryId) => onCategoryChange(item.itemId, categoryId)}
                 />
+                {/* Mounted only while open so the project fetch inside
+                    fires per use, not once per rendered to-do row. */}
+                {createTaskOpen && (
+                    <ModalCreateTaskFromTodo
+                        myself={myself}
+                        open={createTaskOpen}
+                        todoNotes={item.notes}
+                        todoTitle={item.title}
+                        onClose={() => setCreateTaskOpen(false)}
+                    />
+                )}
             </Stack>
             {notesExpanded && (
                 <Box
