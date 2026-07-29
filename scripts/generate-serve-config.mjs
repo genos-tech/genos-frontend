@@ -112,6 +112,17 @@ const csp = [
 
 const config = {
     rewrites: [{ source: "**", destination: "/index.html" }],
+    // NOTE: do NOT add serve-handler's `etag` key here — the serve CLI's
+    // serve.json schema rejects unknown properties and the process
+    // refuses to boot ("must NOT have additional properties"). It
+    // already sends an ETag on every response, which is what makes the
+    // `no-cache` default below cost a 304 rather than a re-download.
+    //
+    // Header rules are matched against the RESOLVED file path (so SPA
+    // routes rewritten to /index.html hit the "**" rule as index.html),
+    // and every matching rule applies in order — later same-key values
+    // overwrite earlier ones. That makes "no-cache by default, longer
+    // for specific paths" expressible as rule order.
     headers: [
         {
             source: "**",
@@ -125,7 +136,23 @@ const config = {
                     key: "Permissions-Policy",
                     value: "camera=(), microphone=(), geolocation=()",
                 },
+                // Always revalidate (cheap 304s via the etag). Without any
+                // Cache-Control, browsers heuristically cached index.html
+                // and kept serving a pre-deploy bundle after releases —
+                // this also covers sw.js and manifest.webmanifest.
+                { key: "Cache-Control", value: "no-cache" },
             ],
+        },
+        {
+            // PWA icons / root logos are mutable (not content-hashed):
+            // cache a day, then revalidate.
+            source: "{icons/**,*.png}",
+            headers: [{ key: "Cache-Control", value: "public, max-age=86400" }],
+        },
+        {
+            // Everything under assets/ is Vite content-hashed — immutable.
+            source: "assets/**",
+            headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
         },
     ],
 };
