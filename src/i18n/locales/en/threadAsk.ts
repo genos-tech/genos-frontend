@@ -60,6 +60,7 @@ export const threadAsk = {
         button: "Save as Chat Note",
         saving: "Saving…",
         success: "Saved as Chat Note.",
+        openNote: "Open note",
         nothingToSave: "Nothing to save yet — ask a question first.",
         failed: "Couldn't save as note. Please try again.",
         noteTitle: "Thread summary — {chatName} ({date})",
