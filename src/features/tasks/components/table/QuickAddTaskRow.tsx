@@ -17,6 +17,7 @@ import {
 import { alpha } from "@mui/system";
 
 import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
+import { useQuickAddRequiredFieldsPreference } from "../../../../hooks/common/useQuickAddRequiredFieldsPreference";
 import { fmt, useTranslation } from "../../../../i18n";
 import { LimitReachedError } from "../../../../services/limitErrors";
 import { UserProps } from "../../../../types/admin";
@@ -24,7 +25,7 @@ import { TagListProps, TaskTableProps } from "../../../../types/tasks";
 import { stripOwnerState } from "../../../../utils/joyAutocomplete";
 import {
     applyRuleDefaults,
-    getMissingRequiredFields,
+    getQuickAddBlockingFields,
     TaskFieldRules,
 } from "../../utils/taskFieldRules";
 import { effortLevels, priorities } from "../../utils/taskMeta";
@@ -65,8 +66,9 @@ type QuickAddTaskRowProps = {
     // "tags-required is inactive with zero tags" liveness check.
     projectTags: TagListProps[];
     // Owner-configured field rules for the parent's project (null when
-    // none / not loaded — the gate then fails open). Defaults seed the
-    // row's initial state; required fields block submit inline.
+    // none / not loaded — the gate then fails open). Defaults always seed
+    // the row's initial state. Required fields block submit only when the
+    // user opts in (Settings → Tasks); see `getQuickAddBlockingFields`.
     fieldRules: TaskFieldRules | null;
     creatorUserId: string;
     // The table owns the actual create call (createQuickTask + optimistic
@@ -110,6 +112,8 @@ export const QuickAddTaskRow = (props: QuickAddTaskRowProps) => {
         onDirtyChange,
     } = props;
     const { t } = useTranslation();
+    // Off by default — see `useQuickAddRequiredFieldsPreference`.
+    const { enforce: enforceRequiredFields } = useQuickAddRequiredFieldsPreference();
 
     // Seed the row's initial state from the project's configured field
     // defaults, computed once on mount (lazy initializer — the row is
@@ -190,11 +194,15 @@ export const QuickAddTaskRow = (props: QuickAddTaskRowProps) => {
         // In-flight guard: a second Enter while the first POST is out
         // must not create a duplicate task.
         if (trimmed === "" || isSubmittingRef.current) return;
-        // Project field-rules gate — same evaluator as the full create
-        // form. Reporter/status/project are auto-satisfied on this path
-        // (createQuickTask pins reporter to the creator, status is always
-        // set, the project is the parent's).
-        const missing = getMissingRequiredFields(
+        // Project field-rules gate. By default only the structural
+        // requirement (a project) blocks here — quick-add is the fast
+        // path, and the sub-task quick-add has always created title-only
+        // tasks. Users who want the project's creation policy applied to
+        // every entry point opt in via Settings → Tasks. Reporter/status
+        // are auto-satisfied on this path (createQuickTask pins reporter
+        // to the creator, status is always set), and the project is the
+        // parent's.
+        const missing = getQuickAddBlockingFields(
             {
                 projectId: parentTask.projectId != null ? Number(parentTask.projectId) : null,
                 dueDate,
@@ -206,7 +214,8 @@ export const QuickAddTaskRow = (props: QuickAddTaskRowProps) => {
                 reporterId: creatorUserId,
             },
             fieldRules ?? {},
-            { kind: "subtask", projectTags }
+            { kind: "subtask", projectTags },
+            { enforceRequiredFields: enforceRequiredFields }
         );
         if (missing.length > 0) {
             setError(

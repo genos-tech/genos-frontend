@@ -8,6 +8,7 @@ import {
     applyRuleDefaults,
     getActiveRequiredFields,
     getMissingRequiredFields,
+    getQuickAddBlockingFields,
     RuleDefaultsContext,
     TaskFieldDraft,
     TaskFieldRules,
@@ -178,5 +179,53 @@ describe("getActiveRequiredFields", () => {
         };
         expect(getActiveRequiredFields(rules, [])).toEqual(["priority"]);
         expect(getActiveRequiredFields(rules, [debugTag])).toEqual(["priority", "tags"]);
+    });
+});
+
+/**
+ * The quick-add gate is deliberately NOT the create form's gate. It is
+ * the single read point for the "enforce required fields on quick-add"
+ * preference, so both sides of the toggle are pinned here.
+ */
+describe("getQuickAddBlockingFields", () => {
+    const gateCtx = { kind: "task" as const, projectTags: [debugTag] };
+    const rules: TaskFieldRules = {
+        assignee: { required: true },
+        effortLevel: { required: true },
+    };
+
+    it("lets a title-only task through when enforcement is off", () => {
+        expect(
+            getQuickAddBlockingFields(emptyDraft(), rules, gateCtx, {
+                enforceRequiredFields: false,
+            })
+        ).toEqual([]);
+    });
+
+    it("blocks on every required field when enforcement is on", () => {
+        expect(
+            getQuickAddBlockingFields(emptyDraft(), rules, gateCtx, {
+                enforceRequiredFields: true,
+            })
+        ).toEqual(["assignee", "effortLevel"]);
+    });
+
+    it("still blocks on a missing project even with enforcement off", () => {
+        // Structural, not policy: the POST cannot succeed without a
+        // project, so letting it through trades an inline message for a
+        // failed request.
+        expect(
+            getQuickAddBlockingFields(emptyDraft({ projectId: null }), rules, gateCtx, {
+                enforceRequiredFields: false,
+            })
+        ).toEqual(["project"]);
+    });
+
+    it("matches the create form's gate exactly when enforcement is on", () => {
+        expect(
+            getQuickAddBlockingFields(emptyDraft({ projectId: null }), rules, gateCtx, {
+                enforceRequiredFields: true,
+            })
+        ).toEqual(getMissingRequiredFields(emptyDraft({ projectId: null }), rules, gateCtx));
     });
 });

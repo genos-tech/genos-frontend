@@ -170,6 +170,38 @@ export const getMissingRequiredFields = (
     return missing;
 };
 
+/**
+ * What actually BLOCKS an inline quick-add submit.
+ *
+ * The quick-add row is the fast path: one line, Enter, done. Holding it
+ * to the project's full creation policy turned it into the slow path with
+ * extra steps, so by default only the structural requirement applies.
+ *
+ *   - "project" always blocks. It isn't policy — the POST cannot succeed
+ *     without a project, so letting it through would trade an inline
+ *     message for a failed request.
+ *   - Every other required field blocks only when the user has opted in
+ *     via `useQuickAddRequiredFieldsPreference`.
+ *
+ * The full `CreateTaskForm` keeps enforcing everything regardless; this
+ * exemption is scoped to the one-line create. Configured DEFAULTS are
+ * unaffected either way — `applyRuleDefaults` still seeds the row.
+ *
+ * Deliberately the single read point for the toggle: moving this from a
+ * user preference to a project-owner setting is a change to this function
+ * and nothing else.
+ */
+export const getQuickAddBlockingFields = (
+    draft: TaskFieldDraft,
+    rules: TaskFieldRules,
+    ctx: { kind: TaskKind; projectTags: TagListProps[] },
+    options: { enforceRequiredFields: boolean }
+): Array<ConfigurableTaskField | "project"> => {
+    const missing = getMissingRequiredFields(draft, rules, ctx);
+    if (options.enforceRequiredFields) return missing;
+    return missing.filter((field) => field === "project");
+};
+
 /** The rule-required fields that are ACTIVE for the given project state
  *  (e.g. tags-required with zero project tags is inactive) — used to
  *  render the required-asterisk indicators. */
