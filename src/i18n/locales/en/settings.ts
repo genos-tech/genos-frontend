@@ -163,6 +163,14 @@ export const settings = {
         slotTooltip: "Change this emoji",
         reset: "Reset",
     },
+    quickAddRequiredFields: {
+        heading: "Quick task creation",
+        description:
+            "How the inline quick-add row in the task table handles your project's required fields.",
+        toggleLabel: "Require the project's required fields",
+        toggleHelper:
+            "Off by default, so a quick task needs only a title — the same as adding a sub-task. Turn this on to apply the project's creation rules to quick-add too. Configured default values are filled in either way, and the full create form always requires them.",
+    },
     doubleClickTodo: {
         heading: "Double-click action",
         description: "Choose what happens when you double-click a message bubble.",

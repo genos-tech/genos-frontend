@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import { defaultColumns } from "../features/tasks/components/table/DraggableTaskTable";
 import { QuickAddTaskRow } from "../features/tasks/components/table/QuickAddTaskRow";
+import { QuickAddRequiredFieldsPreferenceProvider } from "../hooks/common/useQuickAddRequiredFieldsPreference";
 import { UserProps } from "../types/admin";
 import { TaskTableProps } from "../types/tasks";
 
@@ -36,27 +37,38 @@ const TITLE_PLACEHOLDER = "Type a title, Enter to create…";
 // provides in the app) or they crash reading Joy's theme shape.
 const materialTheme = createTheme({ cssVariables: true });
 
-const renderRow = (overrides: Partial<Parameters<typeof QuickAddTaskRow>[0]> = {}) => {
+// The required-field gate is a user preference read from localStorage by
+// `QuickAddRequiredFieldsPreferenceProvider` at mount. Seed the store
+// before rendering so a test can exercise either side of the toggle.
+const PREF_KEY = "genos-quick-add-required-fields-preference:v1";
+
+const renderRow = (
+    overrides: Partial<Parameters<typeof QuickAddTaskRow>[0]> = {},
+    { enforceRequiredFields = false }: { enforceRequiredFields?: boolean } = {}
+) => {
+    window.localStorage.setItem(PREF_KEY, JSON.stringify({ enforce: enforceRequiredFields }));
     const onSubmit = vi.fn().mockResolvedValue(undefined);
     const onClose = vi.fn();
     const onDirtyChange = vi.fn();
     const utils = render(
         <CssVarsProvider>
             <ThemeProvider theme={{ [THEME_ID]: materialTheme }}>
-                <QuickAddTaskRow
-                    columns={defaultColumns}
-                    creatorUserId={myself.userId}
-                    depth={1}
-                    fieldRules={null}
-                    mode="light"
-                    parentTask={parentTask}
-                    projectTags={[]}
-                    teamMembers={[myself]}
-                    onClose={onClose}
-                    onDirtyChange={onDirtyChange}
-                    onSubmit={onSubmit}
-                    {...overrides}
-                />
+                <QuickAddRequiredFieldsPreferenceProvider>
+                    <QuickAddTaskRow
+                        columns={defaultColumns}
+                        creatorUserId={myself.userId}
+                        depth={1}
+                        fieldRules={null}
+                        mode="light"
+                        parentTask={parentTask}
+                        projectTags={[]}
+                        teamMembers={[myself]}
+                        onClose={onClose}
+                        onDirtyChange={onDirtyChange}
+                        onSubmit={onSubmit}
+                        {...overrides}
+                    />
+                </QuickAddRequiredFieldsPreferenceProvider>
             </ThemeProvider>
         </CssVarsProvider>
     );
@@ -213,10 +225,28 @@ describe("QuickAddTaskRow", () => {
         });
     });
 
-    it("refuses to create while a required field is missing, naming it inline", async () => {
-        const { onSubmit, titleInput, getByText } = renderRow({
+    it("creates with only a title while a required field is unfilled (the default)", async () => {
+        // Quick-add is the fast path: by default the project's creation
+        // policy does not gate it, matching the sub-task quick-add.
+        const { onSubmit, titleInput } = renderRow({
             fieldRules: { effortLevel: { required: true } },
         });
+
+        fireEvent.change(titleInput, { target: { value: "Fast task" } });
+        fireEvent.keyDown(titleInput, { key: "Enter" });
+
+        await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+        expect(onSubmit.mock.calls[0][0]).toMatchObject({
+            title: "Fast task",
+            effortLevel: null,
+        });
+    });
+
+    it("refuses to create while a required field is missing once enforcement is on", async () => {
+        const { onSubmit, titleInput, getByText } = renderRow(
+            { fieldRules: { effortLevel: { required: true } } },
+            { enforceRequiredFields: true }
+        );
 
         fireEvent.change(titleInput, { target: { value: "Blocked task" } });
         fireEvent.keyDown(titleInput, { key: "Enter" });
@@ -227,10 +257,13 @@ describe("QuickAddTaskRow", () => {
     });
 
     it("passes the gate when a required field is satisfied by its default", async () => {
-        const { onSubmit, titleInput } = renderRow({
-            projectTags: [debugTag],
-            fieldRules: { tags: { required: true, defaultTagNames: ["debug"] } },
-        });
+        const { onSubmit, titleInput } = renderRow(
+            {
+                projectTags: [debugTag],
+                fieldRules: { tags: { required: true, defaultTagNames: ["debug"] } },
+            },
+            { enforceRequiredFields: true }
+        );
 
         fireEvent.change(titleInput, { target: { value: "Tagged task" } });
         fireEvent.keyDown(titleInput, { key: "Enter" });

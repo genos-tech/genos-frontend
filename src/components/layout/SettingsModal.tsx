@@ -61,6 +61,7 @@ import {
 } from "../../hooks/common/useBubbleStylePreference";
 import { useDoubleClickTodoPreference } from "../../hooks/common/useDoubleClickTodoPreference";
 import { useLlmModelPreference } from "../../hooks/common/useLlmModelPreference";
+import { useQuickAddRequiredFieldsPreference } from "../../hooks/common/useQuickAddRequiredFieldsPreference";
 import { useQuickReactionsPreference } from "../../hooks/common/useQuickReactionsPreference";
 import { useSpotlightPreferences } from "../../hooks/common/useSpotlightPreferences";
 import { ThemePreference, useThemePreference } from "../../hooks/common/useThemePreference";
@@ -968,6 +969,36 @@ const LanguageSection = () => {
     );
 };
 
+const QuickAddRequiredFieldsSection = () => {
+    const { enforce, setEnforce } = useQuickAddRequiredFieldsPreference();
+    const { t } = useTranslation();
+    return (
+        <Sheet sx={{ p: 2, borderRadius: "lg" }} variant="outlined">
+            <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 0.5 }}>
+                <PlaylistAddCheckRoundedIcon />
+                <Typography level="title-md">
+                    {t.settings.quickAddRequiredFields.heading}
+                </Typography>
+            </Stack>
+            <Typography level="body-xs" sx={{ mb: 1.5 }}>
+                {t.settings.quickAddRequiredFields.description}
+            </Typography>
+
+            <Stack alignItems="center" direction="row" justifyContent="space-between" spacing={2}>
+                <Box sx={{ minWidth: 0, flex: 1 }}>
+                    <Typography level="title-sm">
+                        {t.settings.quickAddRequiredFields.toggleLabel}
+                    </Typography>
+                    <Typography level="body-xs">
+                        {t.settings.quickAddRequiredFields.toggleHelper}
+                    </Typography>
+                </Box>
+                <Switch checked={enforce} onChange={(e) => setEnforce(e.target.checked)} />
+            </Stack>
+        </Sheet>
+    );
+};
+
 const AutoCloseOnPrMergeSection = () => {
     const { enabled, loading, setEnabled } = useAutoCloseOnPrMergePreference();
     const { t } = useTranslation();
@@ -1591,6 +1622,7 @@ export const SettingsModal = ({
                                 ones. The two integrations below stay
                                 here because they affect cross-feature
                                 behaviour. */}
+                            <QuickAddRequiredFieldsSection />
                             <AutoCloseOnPrMergeSection />
                             <AutoSyncCalendarSection />
                         </Stack>
