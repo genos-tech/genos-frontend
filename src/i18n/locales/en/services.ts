@@ -9,6 +9,16 @@ export const services = {
         streamInterrupted: "Stream interrupted: {message}",
         malformedNdjsonLine: "Malformed NDJSON line: {line}",
     },
+    // Install-to-home-screen banner (InstallBanner.tsx). `iosBody` is the
+    // no-prompt path: iOS has no install API, so the affordance is
+    // instructions — and installing is also what enables push there.
+    pwaInstall: {
+        title: "Install Genos",
+        body: "Add Genos to your home screen for quick access and reliable notifications.",
+        install: "Install",
+        iosBody:
+            "Tap the Share button and choose “Add to Home Screen”. On iOS, notifications only work in the installed app.",
+    },
     notifications: {
         permissionTitle: "Notifications are off",
         permissionBody: "Enable browser notifications to get pinged when something needs you.",

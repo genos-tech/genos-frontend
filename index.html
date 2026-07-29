@@ -3,9 +3,24 @@
     <head>
         <meta charset="UTF-8" />
         <link rel="icon" type="image/png" href="/genos_tech.png" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/manifest.webmanifest" />
         <meta name="theme-color" content="#7c3aed" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <!-- viewport-fit=cover lets the app extend into device cutout areas,
+             which is what makes the env(safe-area-inset-*) paddings (bottom
+             tab bar, FAB, overlays) actually resolve to non-zero values. -->
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+        />
+        <!-- iOS treats a page as installable-to-standalone via these (plus the
+             manifest). Web Push on iOS only works in an installed PWA, so
+             without them the push stack is unreachable for iPhone users.
+             status-bar-style stays "default" (opaque) so content never sits
+             under the status bar — nothing pads safe-area-inset-top yet. -->
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="Genos" />
         <title>Genos</title>
     </head>
 

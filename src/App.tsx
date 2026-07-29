@@ -23,6 +23,7 @@ import { BillingReturnSnackbar } from "./components/layout/BillingReturnSnackbar
 import { BottomTabBar } from "./components/layout/BottomTabBar";
 import { ConnectionStatusSnackbar } from "./components/layout/ConnectionStatusSnackbar";
 import { HistoryShell } from "./components/layout/HistoryShell";
+import { InstallBanner } from "./components/layout/InstallBanner";
 import { MentionGroupModal } from "./components/layout/MentionGroupModal";
 import { MobileSpotlightFab } from "./components/layout/MobileSpotlightFab";
 import {
@@ -1216,6 +1217,7 @@ export const App = () => {
                                                                     useNotif.requestPermission
                                                                 }
                                                             />
+                                                            <InstallBanner />
                                                             {/* Sidebar lives here (outside <Routes>) so it
                                 is mounted once for the whole authenticated
                                 shell. Switching services only swaps the

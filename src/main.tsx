@@ -18,6 +18,7 @@ import { SignUpForm } from "./features/admin/components/SignUpForm";
 import { VerifyEmailHandler } from "./features/admin/components/VerifyEmailHandler";
 import { OAUTH_INTEGRATIONS_ENABLED } from "./features/integrations/featureFlags";
 import { analytics } from "./services/analytics";
+import { registerServiceWorkerOnBoot } from "./services/notifications/pushSubscription";
 import { startLongTaskObserver } from "./services/perfObserver";
 
 import { App } from "./App";
@@ -45,6 +46,13 @@ const GenosPrivacyPage = lazy(() => import("./lp/PrivacyPage"));
 // VITE_POSTHOG_KEY / VITE_POSTHOG_HOST are unset, so leaving them blank
 // in .env.local is the local-dev kill switch.
 analytics.init();
+
+// Register the push service worker at boot. Previously registration only
+// happened after the user granted notification permission, which meant a
+// visitor who never touched the permission prompt had no service worker —
+// and on iOS, no worker means the page can't become a push-capable
+// installed PWA at all.
+registerServiceWorkerOnBoot();
 
 // Dev-only: log main-thread tasks >50ms to the console. The observer is
 // stripped from production builds by Vite's dead-code elimination on

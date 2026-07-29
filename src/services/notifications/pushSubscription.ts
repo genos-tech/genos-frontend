@@ -45,10 +45,19 @@ const appServerKeyMatches = (sub: PushSubscription, desiredKey: Uint8Array): boo
     return true;
 };
 
+// Registration only needs the Service Worker API — deliberately NOT
+// isPushSupported(): iOS Safari exposes PushManager only inside an
+// installed PWA, but the worker must already be registered for the
+// install itself to be offered and for push to work post-install.
+const isServiceWorkerSupported = (): boolean =>
+    typeof window !== "undefined" &&
+    "serviceWorker" in navigator &&
+    window.isSecureContext === true;
+
 let registrationPromise: Promise<ServiceWorkerRegistration | null> | null = null;
 
 const registerServiceWorker = (): Promise<ServiceWorkerRegistration | null> => {
-    if (!isPushSupported()) return Promise.resolve(null);
+    if (!isServiceWorkerSupported()) return Promise.resolve(null);
     if (!registrationPromise) {
         registrationPromise = navigator.serviceWorker.register("/sw.js").catch((err) => {
             console.warn("[push] service worker registration failed", err);
@@ -57,6 +66,16 @@ const registerServiceWorker = (): Promise<ServiceWorkerRegistration | null> => {
         });
     }
     return registrationPromise;
+};
+
+/**
+ * Register the service worker at app boot, independent of notification
+ * permission. Subscribing to push stays gated on permission
+ * (`ensurePushSubscription`); registration must not be, or the PWA has no
+ * worker at all until the user happens to grant notifications.
+ */
+export const registerServiceWorkerOnBoot = (): void => {
+    void registerServiceWorker();
 };
 
 /**

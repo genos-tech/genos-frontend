@@ -1539,6 +1539,13 @@ export const es: DeepPartial<Messages> = {
             streamInterrupted: "Transmisión interrumpida: {message}",
             malformedNdjsonLine: "Línea NDJSON malformada: {line}",
         },
+        pwaInstall: {
+            title: "Instalar Genos",
+            body: "Añade Genos a tu pantalla de inicio para un acceso rápido y notificaciones fiables.",
+            install: "Instalar",
+            iosBody:
+                "Toca el botón Compartir y elige “Añadir a pantalla de inicio”. En iOS, las notificaciones solo funcionan en la app instalada.",
+        },
         notifications: {
             permissionTitle: "Las notificaciones están desactivadas",
             permissionBody:
