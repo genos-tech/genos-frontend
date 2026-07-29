@@ -19,7 +19,11 @@ export const useProjectTaskManagement = ({
 }: UseProjectTaskManagementProps) => {
     const location = useLocation();
     const usePM = useProjectManagement(myself, accessToken, currentTeamId);
-    const useTM = useTaskManagement(myself, accessToken);
+    // The active project is threaded in so a milestone scope set in one
+    // project stops applying the moment the user is somewhere else — see
+    // `tableMilestoneFilterId`. usePM is constructed first precisely so
+    // this is available here.
+    const useTM = useTaskManagement(myself, accessToken, usePM.currentProject?.projectId);
     const useSM = useSprintMilestoneManagement(accessToken);
 
     // Auto-fetch project tasks when:

@@ -400,7 +400,7 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                                                     // previous project so we never carry stale
                                                     // ids across project boundaries.
                                                     useTM.closeTaskPreview();
-                                                    useTM.setTableMilestoneFilterId(null);
+                                                    useTM.setTableMilestoneFilter(null);
                                                     // Switch out of the global "Home" dashboard
                                                     // view when a specific project is opened.
                                                     // Without this, clicking a project from the

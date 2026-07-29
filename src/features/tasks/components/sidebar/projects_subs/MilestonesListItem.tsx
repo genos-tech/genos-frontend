@@ -109,7 +109,7 @@ export const MilestonesListItem = ({
             // which leaves `targetUrlProjectId.current` stale and lets the
             // enforce-match effect revert the project switch.
             useTM.closeTaskPreview();
-            useTM.setTableMilestoneFilterId(null);
+            useTM.setTableMilestoneFilter(null);
             useTM.setAllTasks([]);
             await usePM.loadProjectsAndTasks(currentProjectId);
             usePM.setCurrentProject({
@@ -130,7 +130,11 @@ export const MilestonesListItem = ({
         useTM.setCurrentPreviewKind("milestone");
         useTM.setCurrentPreviewMilestoneId(milestoneId);
         useTM.setIsTaskPreviewVisible(true);
-        useTM.setTableMilestoneFilterId(isAlreadyScoped ? null : milestoneId);
+        // Stamped with the milestone's own project, so the scope
+        // deactivates itself if the user navigates elsewhere.
+        useTM.setTableMilestoneFilter(
+            isAlreadyScoped ? null : { milestoneId, projectId: currentProjectId }
+        );
     };
 
     const handleAddMilestone = () => {
