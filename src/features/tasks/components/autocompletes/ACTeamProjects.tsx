@@ -1,10 +1,9 @@
-import { Box } from "@mui/joy";
+import { AutocompleteOption } from "@mui/joy";
 import Autocomplete from "@mui/joy/Autocomplete";
 
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TaskProps } from "../../../../types/tasks";
-import { stripOwnerState } from "../../../../utils/joyAutocomplete";
 import { projectAvatarSrc } from "../../utils/projectAvatar";
 import { ProjectIdentityRow } from "../ProjectIdentityRow";
 
@@ -56,14 +55,15 @@ export const ACTeamProjects = (props: ACTeamProjectsProps) => {
             sx={{ width: "100%" }}
             value={taskContent.project?.projectId ? taskContent.project : undefined}
             renderOption={(optionProps, option) => (
-                // `stripOwnerState`: Joy injects its internal
-                // `ownerState` into these props, and spreading them onto
-                // a bespoke <li> leaks it to the DOM — a React warning on
-                // every option render. See `utils/joyAutocomplete.ts` and
-                // the AutocompleteOwnerStateLeak canary test.
-                <Box
-                    component="li"
-                    {...stripOwnerState(optionProps)}
+                // Joy's own option component, NOT a bespoke <li>: it
+                // brings the padding, hover, focus and selected states
+                // that make these rows look like the `Option`s in a Joy
+                // Select (e.g. the dashboard's project picker). A plain
+                // <li> renders unstyled — cramped, with no hover
+                // feedback. It also consumes Joy's internal `ownerState`,
+                // so no `stripOwnerState` is needed here.
+                <AutocompleteOption
+                    {...optionProps}
                     key={option.projectId}
                     sx={{ display: "flex", alignItems: "center", gap: 1, minWidth: 0 }}
                 >
@@ -72,7 +72,7 @@ export const ACTeamProjects = (props: ACTeamProjectsProps) => {
                         maxLabels={2}
                         project={option}
                     />
-                </Box>
+                </AutocompleteOption>
             )}
             onOpen={() => setIsOpenProjectList(!isOpenProjectList)}
             onChange={(event, value) => {

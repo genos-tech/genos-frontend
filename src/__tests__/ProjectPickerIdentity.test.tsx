@@ -7,9 +7,13 @@
  * three inches away. Options now carry the shared `ProjectIdentityRow`:
  * avatar, label chips, a lock when private, then the name.
  *
- * Also guards the bespoke-`<li>` hazard: Joy injects `ownerState` into
- * the props it hands `renderOption`, and spreading them onto a plain
- * element warns on EVERY option render.
+ * Options render through Joy's `AutocompleteOption`, not a bespoke
+ * `<li>`. That is what gives them the padding, hover and selected states
+ * of a Joy `Select`'s `Option` — a plain `<li>` renders unstyled — and it
+ * also consumes Joy's internal `ownerState`, which a plain element would
+ * forward to the DOM and warn about on EVERY option render. The leak
+ * assertion below fails if someone swaps back to a bare element without
+ * `stripOwnerState`.
  */
 
 import { CssVarsProvider } from "@mui/joy/styles";
