@@ -1,12 +1,9 @@
 import { useMemo, useRef, useState } from "react";
-import AssignmentIcon from "@mui/icons-material/Assignment";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import LockOutlineIcon from "@mui/icons-material/LockOutline";
 import WorkIcon from "@mui/icons-material/Work";
 import {
-    Avatar,
     Box,
     Dropdown,
     IconButton,
@@ -33,8 +30,8 @@ import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { buildAvatarSrc } from "../../../../utils/avatarSrc";
-import { ProjectLabelChips } from "../../../admin/components/projectLabels/ProjectLabelChips";
 import { popSpecificProjectTasks } from "../../services/popSpecificProjectTasks";
+import { ProjectIdentityRow } from "../ProjectIdentityRow";
 import { Toggler } from "./common";
 import { JoinProjectListItem } from "./projects_subs/JoinProjectListItem";
 import { MilestonesListItem } from "./projects_subs/MilestonesListItem";
@@ -342,6 +339,14 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                             systemUserId,
                         }) => {
                             const isSelected = projectId === usePM.currentProject?.projectId;
+                            // Selected-project emphasis. Lives here, not in
+                            // ProjectIdentityRow: only the sidebar has an
+                            // "active project" — a dropdown option has none.
+                            const accent = isSelected
+                                ? isDark
+                                    ? "#fb923c"
+                                    : "#ea580c"
+                                : undefined;
                             // Resolve this project's PM chat (chatType 3) so we
                             // can show its uploaded avatar image. Same canonical
                             // lookup TaskHeader / HistoryModal use. When the PM
@@ -482,74 +487,25 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                                                 }
                                             }}
                                         >
-                                            <Avatar
-                                                size="sm"
-                                                src={avatarSrc}
-                                                sx={{
-                                                    width: 20,
-                                                    height: 20,
-                                                    flexShrink: 0,
+                                            {/* Avatar + labels + lock + name. Shared with
+                                                the project pickers via
+                                                `ProjectIdentityRow` so the dropdown and
+                                                this row can't drift apart; the selected
+                                                emphasis stays here because only the
+                                                sidebar has an "active project". */}
+                                            <ProjectIdentityRow
+                                                avatarSrc={avatarSrc}
+                                                iconColor={accent}
+                                                maxLabels={1}
+                                                nameColor={accent}
+                                                nameWeight={isSelected ? 600 : 500}
+                                                project={{
+                                                    projectId,
+                                                    projectName,
+                                                    projectLabels,
+                                                    isPrivate,
                                                 }}
-                                            >
-                                                <AssignmentIcon
-                                                    sx={{
-                                                        fontSize: 14,
-                                                        color: isSelected
-                                                            ? isDark
-                                                                ? "#fb923c"
-                                                                : "#ea580c"
-                                                            : isDark
-                                                              ? "rgba(255,255,255,0.6)"
-                                                              : "rgba(0,0,0,0.5)",
-                                                    }}
-                                                />
-                                            </Avatar>
-
-                                            {/* Team-scoped project labels, right after
-                                                    the avatar. Capped at ONE chip + a `+N`
-                                                    pill: the row is narrow and the project
-                                                    NAME is what users scan for, so a second
-                                                    chip would eat its truncation budget.
-                                                    Full list is on the chip's tooltip.
-                                                    Renders nothing when unlabelled, so those
-                                                    rows keep their previous layout. */}
-                                            <ProjectLabelChips
-                                                labels={projectLabels ?? []}
-                                                max={1}
                                             />
-
-                                            {isPrivate === true && (
-                                                <LockOutlineIcon
-                                                    sx={{
-                                                        fontSize: 14,
-                                                        mx: -0.5,
-                                                        color: isDark
-                                                            ? "rgba(255,255,255,0.4)"
-                                                            : "rgba(0,0,0,0.35)",
-                                                    }}
-                                                />
-                                            )}
-
-                                            <Typography
-                                                level="body-sm"
-                                                sx={{
-                                                    overflow: "hidden",
-                                                    textOverflow: "ellipsis",
-                                                    whiteSpace: "nowrap",
-                                                    flex: 1,
-                                                    fontWeight: isSelected ? 600 : 500,
-                                                    color: isSelected
-                                                        ? isDark
-                                                            ? "#fb923c"
-                                                            : "#ea580c"
-                                                        : isDark
-                                                          ? "rgba(255,255,255,0.8)"
-                                                          : "rgba(0,0,0,0.7)",
-                                                }}
-                                                noWrap
-                                            >
-                                                {projectName}
-                                            </Typography>
                                             <KeyboardArrowDownIcon
                                                 sx={{
                                                     fontSize: 16,

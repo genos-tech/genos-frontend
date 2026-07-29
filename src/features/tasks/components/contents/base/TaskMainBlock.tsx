@@ -694,6 +694,9 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                     setTaskContent={setTaskContent}
                                     setTaskUpdated={setTaskUpdated}
                                     taskContent={taskContent}
+                                    // Resolves each option's avatar from
+                                    // its PM chat.
+                                    useCM={useCM}
                                     usePM={usePM}
                                 />
                             </Box>
