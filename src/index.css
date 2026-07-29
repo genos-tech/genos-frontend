@@ -25,7 +25,6 @@
 
         /* Layout */
         --min-width: 320px;
-        --min-height: 100vh;
 
         /* Total space the mobile BottomTabBar occupies: its own 60px of
            usable height PLUS the home-indicator strip it has to sit above.
@@ -76,7 +75,16 @@
     body {
         margin: 0;
         min-width: var(--min-width);
-        min-height: var(--min-height);
+        /* `100vh` on iOS Safari is the viewport with the browser chrome
+           HIDDEN, so a body pinned to it is permanently taller than what
+           you can actually see — the document scrolls by roughly a
+           toolbar's height even when the app itself fits. On the mobile
+           workspace that reads as the UI coming apart: the whole shell
+           slides up under the fixed tab bar and empty space appears
+           below it. `dvh` tracks the visible viewport instead.
+           `vh` first as the fallback for browsers without `dvh`. */
+        min-height: 100vh;
+        min-height: 100dvh;
     }
 
     html,
