@@ -27,9 +27,8 @@ import { UIStateManagementState } from "../../../hooks/common/useUIStateManageme
 import { fmt, useTranslation } from "../../../i18n";
 import { Team, TeamProfileProps, UserProps } from "../../../types/admin";
 import { buildAvatarSrc } from "../../../utils/avatarSrc";
-import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
-import { joinTeam } from "../services/joinTeam";
 import { loadMyTeams } from "../services/loadMyTeams";
+import { switchTeam } from "../services/switchTeam";
 import { ModalTeamProfile } from "./modals/ModalTeamProfile";
 
 type TeamDropdownProps = {
@@ -65,10 +64,6 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
     const isDark = mode === "dark";
     const styles = isDark ? TeamDropdownStyles.dark : TeamDropdownStyles.light;
 
-    const _joinTeam = async (teamId: string) => {
-        await joinTeam(accessToken, teamId, myself.userId);
-    };
-
     const handleClick = (event: React.MouseEvent<HTMLElement>) => {
         if (accessToken !== null) {
             (async () => {
@@ -84,24 +79,7 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
     };
 
     const handleClicked = (teamId: string, teamName: string) => {
-        localStorage.setItem("teamId", teamId);
-        localStorage.setItem("teamName", teamName);
-        localStorage.removeItem("lastProjectId");
-        setMyself({
-            teamId: teamId,
-            teamName: teamName,
-            userId: myself.userId,
-            userName: myself.userName,
-            userEmail: myself.userEmail,
-            tsLastSeen: getLocalCurrentTimestamp(),
-            tsJoined: myself.tsJoined,
-            isOfflineForced: myself.isOfflineForced,
-            role: myself.role,
-            baseCountry: myself.baseCountry,
-            customStatus: myself.customStatus,
-            avatarImgPath: myself.avatarImgPath,
-        });
-        _joinTeam(teamId);
+        switchTeam({ accessToken, myself, setMyself, teamId, teamName });
         handleClose();
     };
 

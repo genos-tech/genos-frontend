@@ -160,6 +160,7 @@ export const fr: DeepPartial<Messages> = {
             chats: "Conversations",
             tasks: "Tâches",
             notes: "Notes",
+            account: "Compte",
             search: "Genos",
         },
         tooltips: {
@@ -171,6 +172,13 @@ export const fr: DeepPartial<Messages> = {
         },
     },
     layout: {
+        mobileAccount: {
+            switchTeam: "Changer d'équipe",
+            settings: "Paramètres",
+            darkMode: "Mode sombre",
+            lightMode: "Mode clair",
+            signOut: "Se déconnecter",
+        },
         pageNotFound: {
             title: "Page introuvable",
             body: "La page que vous recherchez n'existe pas ou a été déplacée.",

@@ -29,25 +29,21 @@ import { useColorScheme } from "@mui/joy/styles";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Socket } from "socket.io-client";
 
-import { useAuth } from "../../context/AuthContext";
 import { UserProfile } from "../../features/admin/components/modals/ModalUserProfile";
 import { TeamDropdown } from "../../features/admin/components/teamDropdown";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { useIsMobile } from "../../hooks/common/useIsMobile";
+import { useSignOut } from "../../hooks/common/useSignOut";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { InboxManagementState } from "../../hooks/inbox/useInboxManagement";
 import { useTranslation } from "../../i18n";
-import { analytics } from "../../services/analytics";
 import { purplePalette } from "../../theme/purplePalette";
 import { UserProps } from "../../types/admin";
-import { clearAllEditorDrafts } from "../../utils/editorDraftStorage";
 import { isMac } from "../../utils/platform";
 import { AvatarWithStatus } from "../ui/avatars/avatarWithStatus";
 import { ColorSchemeToggle } from "./colorSchemeToggle";
 import { SettingsModal } from "./SettingsModal";
-
-const base_url = import.meta.env.VITE_API_BASE_URL;
 
 // Navigation item configuration. `shortcutKey` mirrors `SERVICE_BY_KEY` in
 // `hooks/common/useGlobalServiceShortcut.ts` — keep them in sync so the
@@ -126,7 +122,7 @@ export const Sidebar = (props: SidebarProps) => {
         onOpenSpotlight,
         onOpenHistory,
     } = props;
-    const { setAccessToken } = useAuth();
+    const handleLogout = useSignOut();
     const { mode } = useColorScheme();
     const { t } = useTranslation();
     const isMobile = useIsMobile();
@@ -147,72 +143,6 @@ export const Sidebar = (props: SidebarProps) => {
     // confirmation modal is the safety net.
     const [openSignOutConfirm, setOpenSignOutConfirm] = useState<boolean>(false);
     const [signOutBusy, setSignOutBusy] = useState<boolean>(false);
-
-    const handleLogout = async () => {
-        try {
-            const response = await fetch(`${base_url}/user/signout/`, {
-                method: "POST",
-                credentials: "include",
-            });
-
-            if (response.ok) {
-                // Clear all localStorage items
-                // `userId` is intentionally omitted: it survives logout as
-                // a "last signed-in user" marker so the next sign-in can
-                // detect a user change and decide whether to wipe IndexedDB.
-                const keysToRemove = [
-                    "isSigningIn",
-                    "userEmail",
-                    "userName",
-                    "avatarImgPath",
-                    "teamId",
-                    "tsJoined",
-                    "isOfflineForced",
-                    "role",
-                    "baseCountry",
-                    "customStatus",
-                    "teamName",
-                    "lastOpenMyNoteId",
-                    "lastOpenNoteType",
-                    "lastChatType",
-                    "lastDMChatId",
-                    "lastGMChatId",
-                    "lastPMChatId",
-                    "lastPinnedChatId",
-                    "lastPinnedChatType",
-                    "lastProjectId",
-                    "lastOpenChatNoteId",
-                    "lastOpenTaskNoteId",
-                    "currentMainChatId",
-                    "isDemoUser",
-                ];
-                keysToRemove.forEach((key) => localStorage.setItem(key, ""));
-                localStorage.setItem("isOfflineForced", "false");
-                // Wipe per-team history buckets ("genos.history.v1.<teamId>").
-                // The user may belong to several teams; logout should clear
-                // every team's history on this device, not just the active one.
-                try {
-                    const historyKeys: string[] = [];
-                    for (let i = 0; i < localStorage.length; i++) {
-                        const k = localStorage.key(i);
-                        if (k && k.startsWith("genos.history.v1.")) historyKeys.push(k);
-                    }
-                    historyKeys.forEach((k) => localStorage.removeItem(k));
-                } catch {
-                    // ignore — storage may be unavailable in some embedded contexts
-                }
-                clearAllEditorDrafts();
-                analytics.reset();
-
-                setAccessToken(null);
-                navigate("/");
-            } else {
-                console.error("Logout failed");
-            }
-        } catch (error) {
-            console.error("Error logging out:", error);
-        }
-    };
 
     const handleNavClick = (path: string) => {
         navigate(path);

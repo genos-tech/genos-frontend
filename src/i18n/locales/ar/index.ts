@@ -160,6 +160,7 @@ export const ar: DeepPartial<Messages> = {
             chats: "المحادثات",
             tasks: "المهام",
             notes: "الملاحظات",
+            account: "الحساب",
             search: "Genos",
         },
         tooltips: {
@@ -171,6 +172,13 @@ export const ar: DeepPartial<Messages> = {
         },
     },
     layout: {
+        mobileAccount: {
+            switchTeam: "تبديل الفريق",
+            settings: "الإعدادات",
+            darkMode: "الوضع الداكن",
+            lightMode: "الوضع الفاتح",
+            signOut: "تسجيل الخروج",
+        },
         pageNotFound: {
             title: "الصفحة غير موجودة",
             body: "الصفحة التي تبحث عنها غير موجودة أو تم نقلها إلى موقع جديد.",

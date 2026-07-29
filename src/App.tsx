@@ -25,6 +25,7 @@ import { ConnectionStatusSnackbar } from "./components/layout/ConnectionStatusSn
 import { HistoryShell } from "./components/layout/HistoryShell";
 import { InstallBanner } from "./components/layout/InstallBanner";
 import { MentionGroupModal } from "./components/layout/MentionGroupModal";
+import { MobileAccountSheet } from "./components/layout/MobileAccountSheet";
 import { MobileSpotlightFab } from "./components/layout/MobileSpotlightFab";
 import {
     QuickMeetClipboardHandle,
@@ -689,6 +690,10 @@ export const App = () => {
     // toggles), opened from the gear icon on the Spotlight bar. Local
     // to the App root so the dialog can layer above the overlay.
     const [spotlightSettingsOpen, setSpotlightSettingsOpen] = useState(false);
+    // Mobile-only account surface (settings, theme, team switch, sign-out).
+    // Held here rather than in BottomTabBar because the sheet needs the
+    // same myself/socket/manager props the Sidebar already receives.
+    const [accountSheetOpen, setAccountSheetOpen] = useState(false);
 
     // Translate a Spotlight result row into the canonical deep-link URL
     // for its entity type. We set the URL directly (rather than calling
@@ -1680,6 +1685,39 @@ export const App = () => {
                                                                                                     }
                                                                                                     useIM={
                                                                                                         useIM
+                                                                                                    }
+                                                                                                    onOpenAccount={() =>
+                                                                                                        setAccountSheetOpen(
+                                                                                                            true
+                                                                                                        )
+                                                                                                    }
+                                                                                                />
+                                                                                                <MobileAccountSheet
+                                                                                                    myself={
+                                                                                                        myself
+                                                                                                    }
+                                                                                                    open={
+                                                                                                        accountSheetOpen
+                                                                                                    }
+                                                                                                    setMyself={
+                                                                                                        setMyself
+                                                                                                    }
+                                                                                                    socket={
+                                                                                                        socketInstance
+                                                                                                    }
+                                                                                                    useCM={
+                                                                                                        useCM
+                                                                                                    }
+                                                                                                    useTEM={
+                                                                                                        useTEM
+                                                                                                    }
+                                                                                                    useUISM={
+                                                                                                        useUISM
+                                                                                                    }
+                                                                                                    onClose={() =>
+                                                                                                        setAccountSheetOpen(
+                                                                                                            false
+                                                                                                        )
                                                                                                     }
                                                                                                 />
                                                                                                 <MobileSpotlightFab

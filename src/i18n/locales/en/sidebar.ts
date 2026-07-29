@@ -4,6 +4,9 @@ export const sidebar = {
         chats: "Chats",
         tasks: "Tasks",
         notes: "Notes",
+        // Mobile-only: the BottomTabBar's Account tab (opens the account
+        // sheet). The desktop sidebar has no equivalent nav entry.
+        account: "Account",
         integrations: "Integrations",
         // Label for the Spotlight launcher in the sidebar. Spotlight is the
         // AI-agent entry point that does far more than search, so it carries

@@ -169,6 +169,7 @@ export const ja: DeepPartial<Messages> = {
             chats: "チャット",
             tasks: "タスク",
             notes: "ノート",
+            account: "アカウント",
             search: "Genos",
         },
         tooltips: {
@@ -181,6 +182,13 @@ export const ja: DeepPartial<Messages> = {
         },
     },
     layout: {
+        mobileAccount: {
+            switchTeam: "チームを切り替え",
+            settings: "設定",
+            darkMode: "ダークモード",
+            lightMode: "ライトモード",
+            signOut: "サインアウト",
+        },
         pageNotFound: {
             title: "ページが見つかりません",
             body: "お探しのページは存在しないか、別の場所に移動されました。",
