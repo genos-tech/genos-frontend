@@ -94,6 +94,9 @@ export const fr: DeepPartial<Messages> = {
             takingLonger: "Cela prend plus de temps que prévu ?",
             sessionExpired: "Votre session a peut-être expiré",
             signInAgain: "Se reconnecter",
+            offlineTitle: "Vous êtes hors ligne",
+            offlineBody:
+                "Impossible de joindre le serveur pour le moment. Tout reprendra automatiquement dès le retour de la connexion.",
         },
         modalView: {
             chatUnavailable: "Cette conversation n'est pas disponible.",

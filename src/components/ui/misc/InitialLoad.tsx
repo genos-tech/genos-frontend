@@ -51,6 +51,14 @@ export const InitialLoad = (props: InitialLoadProps) => {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const [showSignIn, setShowSignIn] = useState(false);
+    // Offline changes what the slow-boot prompt should say. The default
+    // copy blames the session ("may have expired — sign in again"), which
+    // offline is both wrong and unactionable: the sign-in page can't
+    // submit without a network either. Track connectivity so the prompt
+    // can tell the truth instead.
+    const [isOffline, setIsOffline] = useState<boolean>(
+        typeof navigator !== "undefined" && navigator.onLine === false
+    );
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -58,6 +66,17 @@ export const InitialLoad = (props: InitialLoadProps) => {
         }, 5000);
 
         return () => clearTimeout(timer);
+    }, []);
+
+    useEffect(() => {
+        const goOffline = () => setIsOffline(true);
+        const goOnline = () => setIsOffline(false);
+        window.addEventListener("offline", goOffline);
+        window.addEventListener("online", goOnline);
+        return () => {
+            window.removeEventListener("offline", goOffline);
+            window.removeEventListener("online", goOnline);
+        };
     }, []);
 
     loadInitialData(myself, accessToken, setIsLoading, setCurrentMainChat, firstRefreshDone);
@@ -223,42 +242,54 @@ export const InitialLoad = (props: InitialLoadProps) => {
                             textAlign: "center",
                         }}
                     >
-                        {t.common.initialLoad.takingLonger}
+                        {isOffline
+                            ? t.common.initialLoad.offlineTitle
+                            : t.common.initialLoad.takingLonger}
                     </Typography>
                     <Typography
                         sx={{
                             fontSize: "0.8rem",
                             color: "rgba(255,255,255,0.4)",
                             mb: 1,
+                            textAlign: "center",
+                            maxWidth: 320,
                         }}
                     >
-                        {t.common.initialLoad.sessionExpired}
+                        {isOffline
+                            ? t.common.initialLoad.offlineBody
+                            : t.common.initialLoad.sessionExpired}
                     </Typography>
-                    <Button
-                        variant="outlined"
-                        sx={{
-                            borderColor: "rgba(99, 102, 241, 0.5)",
-                            color: "rgba(255,255,255,0.9)",
-                            px: 4,
-                            py: 1,
-                            fontSize: "0.85rem",
-                            fontWeight: 500,
-                            letterSpacing: "0.05em",
-                            borderRadius: "8px",
-                            transition: "all 0.3s ease",
-                            background: "rgba(99, 102, 241, 0.1)",
-                            backdropFilter: "blur(10px)",
-                            "&:hover": {
-                                borderColor: "rgba(99, 102, 241, 0.8)",
-                                background: "rgba(99, 102, 241, 0.2)",
-                                transform: "translateY(-2px)",
-                                boxShadow: "0 8px 25px rgba(99, 102, 241, 0.25)",
-                            },
-                        }}
-                        onClick={() => navigate("/signin")}
-                    >
-                        {t.common.initialLoad.signInAgain}
-                    </Button>
+                    {/* No button offline: sign-in can't submit without a
+                        network, so offering it is a dead end. The `online`
+                        listener swaps the prompt back the moment the
+                        connection returns. */}
+                    {!isOffline && (
+                        <Button
+                            variant="outlined"
+                            sx={{
+                                borderColor: "rgba(99, 102, 241, 0.5)",
+                                color: "rgba(255,255,255,0.9)",
+                                px: 4,
+                                py: 1,
+                                fontSize: "0.85rem",
+                                fontWeight: 500,
+                                letterSpacing: "0.05em",
+                                borderRadius: "8px",
+                                transition: "all 0.3s ease",
+                                background: "rgba(99, 102, 241, 0.1)",
+                                backdropFilter: "blur(10px)",
+                                "&:hover": {
+                                    borderColor: "rgba(99, 102, 241, 0.8)",
+                                    background: "rgba(99, 102, 241, 0.2)",
+                                    transform: "translateY(-2px)",
+                                    boxShadow: "0 8px 25px rgba(99, 102, 241, 0.25)",
+                                },
+                            }}
+                            onClick={() => navigate("/signin")}
+                        >
+                            {t.common.initialLoad.signInAgain}
+                        </Button>
+                    )}
                 </Box>
             )}
         </Box>
