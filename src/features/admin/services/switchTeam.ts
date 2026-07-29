@@ -1,0 +1,45 @@
+import { UserProps } from "../../../types/admin";
+import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
+import { joinTeam } from "./joinTeam";
+
+type SwitchTeamArgs = {
+    accessToken: string | null;
+    myself: UserProps;
+    setMyself: (me: UserProps) => void;
+    teamId: string;
+    teamName: string;
+};
+
+/**
+ * Make `teamId` the active team.
+ *
+ * Shared by the desktop TeamDropdown and the mobile account sheet. The
+ * `lastProjectId` removal matters: it belongs to the team being left, and
+ * carrying it across would open a project the new team can't see.
+ */
+export const switchTeam = ({
+    accessToken,
+    myself,
+    setMyself,
+    teamId,
+    teamName,
+}: SwitchTeamArgs): void => {
+    localStorage.setItem("teamId", teamId);
+    localStorage.setItem("teamName", teamName);
+    localStorage.removeItem("lastProjectId");
+    setMyself({
+        teamId: teamId,
+        teamName: teamName,
+        userId: myself.userId,
+        userName: myself.userName,
+        userEmail: myself.userEmail,
+        tsLastSeen: getLocalCurrentTimestamp(),
+        tsJoined: myself.tsJoined,
+        isOfflineForced: myself.isOfflineForced,
+        role: myself.role,
+        baseCountry: myself.baseCountry,
+        customStatus: myself.customStatus,
+        avatarImgPath: myself.avatarImgPath,
+    });
+    void joinTeam(accessToken, teamId, myself.userId);
+};

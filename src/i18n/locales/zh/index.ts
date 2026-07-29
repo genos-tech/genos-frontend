@@ -158,6 +158,7 @@ export const zh: DeepPartial<Messages> = {
             chats: "聊天",
             tasks: "任务",
             notes: "笔记",
+            account: "账户",
             search: "Genos",
         },
         tooltips: {
@@ -170,6 +171,13 @@ export const zh: DeepPartial<Messages> = {
         },
     },
     layout: {
+        mobileAccount: {
+            switchTeam: "切换团队",
+            settings: "设置",
+            darkMode: "深色模式",
+            lightMode: "浅色模式",
+            signOut: "退出登录",
+        },
         pageNotFound: {
             title: "页面未找到",
             body: "你访问的页面不存在或已被移动。",

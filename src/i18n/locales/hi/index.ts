@@ -161,6 +161,7 @@ export const hi: DeepPartial<Messages> = {
             chats: "चैट",
             tasks: "टास्क",
             notes: "नोट",
+            account: "अकाउंट",
             search: "Genos",
         },
         tooltips: {
@@ -173,6 +174,13 @@ export const hi: DeepPartial<Messages> = {
         },
     },
     layout: {
+        mobileAccount: {
+            switchTeam: "टीम बदलें",
+            settings: "सेटिंग्स",
+            darkMode: "डार्क मोड",
+            lightMode: "लाइट मोड",
+            signOut: "साइन आउट",
+        },
         pageNotFound: {
             title: "पेज नहीं मिला",
             body: "आप जो पेज ढूँढ रहे हैं वह मौजूद नहीं है या किसी नई जगह पर ले जाया गया है।",

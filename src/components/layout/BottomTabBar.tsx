@@ -1,3 +1,4 @@
+import AccountCircleRoundedIcon from "@mui/icons-material/AccountCircleRounded";
 import AllInboxRoundedIcon from "@mui/icons-material/AllInboxRounded";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import NoteAltRoundedIcon from "@mui/icons-material/NoteAltRounded";
@@ -15,6 +16,7 @@ import { purplePalette } from "../../theme/purplePalette";
 type BottomTabBarProps = {
     useIM: InboxManagementState;
     useCM: ChatManagementState;
+    onOpenAccount: () => void;
 };
 
 // Mirrors NAV_ITEMS in `sidebar.tsx`. Kept inline rather than imported
@@ -46,10 +48,19 @@ const TAB_ITEMS = [
         labelKey: "notes" as const,
         path: "/workspace/notes",
     },
+    // Account opens a sheet rather than navigating: settings, theme, team
+    // switch and sign-out live in the desktop sidebar, which is `null` on
+    // mobile. `path` is empty so nothing here is ever route-active.
+    {
+        id: 4,
+        icon: AccountCircleRoundedIcon,
+        labelKey: "account" as const,
+        path: "",
+    },
 ];
 
 export const BottomTabBar = (props: BottomTabBarProps) => {
-    const { useIM, useCM } = props;
+    const { useIM, useCM, onOpenAccount } = props;
     const isMobile = useIsMobile();
     const { mode } = useColorScheme();
     const { t } = useTranslation();
@@ -94,7 +105,9 @@ export const BottomTabBar = (props: BottomTabBarProps) => {
         >
             {TAB_ITEMS.map((item) => {
                 const Icon = item.icon;
-                const isActive = location.pathname.includes(item.path);
+                // Guard on empty `path` — `includes("")` is true for every
+                // route, which would light up the Account tab everywhere.
+                const isActive = item.path !== "" && location.pathname.includes(item.path);
                 const badgeCount = getBadgeCount(item.id);
 
                 return (
@@ -116,7 +129,7 @@ export const BottomTabBar = (props: BottomTabBarProps) => {
                             transition: "color 0.2s ease",
                             "&:active": { opacity: 0.7 },
                         }}
-                        onClick={() => navigate(item.path)}
+                        onClick={() => (item.path === "" ? onOpenAccount() : navigate(item.path))}
                     >
                         <Badge
                             badgeContent={badgeCount > 0 ? badgeCount : 0}
