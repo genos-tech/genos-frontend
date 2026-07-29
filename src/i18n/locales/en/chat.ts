@@ -32,6 +32,20 @@ export const chat = {
         saved: "Saved",
         copyLink: "Copy link",
         linkCopied: "Link copied",
+        createTask: {
+            menu: "Create task",
+            heading: "Create a task from this to-do",
+            description:
+                "Copies the title (and any notes) into a new task. The to-do itself is left as it is.",
+            titleLabel: "Task title",
+            titlePlaceholder: "What needs doing?",
+            projectLabel: "Project",
+            loadingProjects: "Loading projects…",
+            noProjects: "You're not in any project yet. Join or create one to file a task.",
+            cancel: "Cancel",
+            submit: "Create task",
+            failed: "Couldn't create the task. Please try again.",
+        },
     },
     thread: {
         replyPlaceholder: "Reply in thread…",

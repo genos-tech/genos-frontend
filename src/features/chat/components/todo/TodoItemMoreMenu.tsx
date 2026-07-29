@@ -5,6 +5,7 @@ import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import LinkRoundedIcon from "@mui/icons-material/LinkRounded";
 import LocalOfferRoundedIcon from "@mui/icons-material/LocalOfferRounded";
 import MoreVertRoundedIcon from "@mui/icons-material/MoreVertRounded";
+import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
 import {
     Box,
     Dropdown,
@@ -31,6 +32,10 @@ interface TodoItemMoreMenuProps {
     onCreateCategory: (name: string) => Promise<TodoCategoryProps | undefined>;
     onCopyLink: () => void;
     linkCopied: boolean;
+    // Opens the "create a task from this to-do" modal. Top-level rows
+    // only, matching the other row-scoped actions above — a subitem is
+    // part of its parent's item, not a candidate for its own task.
+    onCreateTask: () => void;
     onDelete: () => void;
 }
 
@@ -48,6 +53,7 @@ export const TodoItemMoreMenu = (props: TodoItemMoreMenuProps) => {
         onCreateCategory,
         onCopyLink,
         linkCopied,
+        onCreateTask,
         onDelete,
     } = props;
     const { t } = useTranslation();
@@ -90,6 +96,12 @@ export const TodoItemMoreMenu = (props: TodoItemMoreMenuProps) => {
                         <Typography level="body-sm">
                             {linkCopied ? t.chat.todoPane.linkCopied : t.chat.todoPane.copyLink}
                         </Typography>
+                    </MenuItem>
+                )}
+                {!isChild && (
+                    <MenuItem onClick={onCreateTask}>
+                        <TaskAltRoundedIcon sx={{ fontSize: 16 }} />
+                        <Typography level="body-sm">{t.chat.todoPane.createTask.menu}</Typography>
                     </MenuItem>
                 )}
                 {!isChild && (

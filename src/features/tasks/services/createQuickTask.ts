@@ -11,8 +11,12 @@ type CreateQuickTaskProps = {
     accessToken: string | null;
     projectId: number;
     title: string;
-    parentTaskId: number;
-    rootTaskId: number;
+    // Null on both = a ROOT task (no parent, no chain). The backend
+    // reads these with `.get(..., None)`, and the create form's own
+    // bootstrap POST already sends nulls — the sub-task callers pass
+    // real ids.
+    parentTaskId: number | null;
+    rootTaskId: number | null;
     milestoneId: number | null;
     // Optional metadata for callers that expose more than a title input
     // (the table's quick-add row). New tasks default to unassigned — pass
@@ -26,6 +30,11 @@ type CreateQuickTaskProps = {
     dueDate?: string | null;
     // Full tag objects, same shape uploadNewTask sends.
     tags?: TagListProps[];
+    // Body blocks. Defaults to the standard Summary/Motivation/
+    // Acceptance/Notes scaffold; pass a value when the caller already
+    // has real content to carry over (converting a to-do keeps the
+    // to-do's notes).
+    content?: unknown;
 };
 
 export type CreateQuickTaskResult = {
@@ -75,7 +84,7 @@ export const createQuickTask = async (
         // feels unfinished and gives the user nothing to flesh out — the
         // default template's Summary / Motivation / Acceptance / Notes
         // sections are the prompt to add detail later.
-        content: taskContentTemplate,
+        content: props.content ?? taskContentTemplate,
         due_date: props.dueDate ?? null,
         links: null,
         tags: props.tags ?? [],
