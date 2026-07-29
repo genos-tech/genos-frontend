@@ -53,8 +53,8 @@ export const InboxTabHeader = ({ requestCount }: InboxTabHeaderProps) => {
             sx={{
                 display: "flex",
                 gap: 0.5,
-                px: 3,
-                py: 1.5,
+                px: { xs: 1.5, md: 3 },
+                py: { xs: 1, md: 1.5 },
                 borderBottom: "1px solid",
                 borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
                 background: isDark
@@ -71,7 +71,7 @@ export const InboxTabHeader = ({ requestCount }: InboxTabHeaderProps) => {
                             display: "flex",
                             alignItems: "center",
                             gap: 0.75,
-                            px: 2,
+                            px: { xs: 1.5, md: 2 },
                             py: 0.875,
                             borderRadius: "10px",
                             cursor: "pointer",

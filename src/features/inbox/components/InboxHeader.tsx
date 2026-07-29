@@ -14,10 +14,13 @@ export const InboxHeader = () => {
     return (
         <Box
             sx={{
-                height: "64px",
+                // Shorter and tighter on a phone: the inbox is a vertical
+                // list under a fixed tab bar, so chrome height comes
+                // straight out of the number of items you can see.
+                height: { xs: "56px", md: "64px" },
                 display: "flex",
                 alignItems: "center",
-                px: 3,
+                px: { xs: 2, md: 3 },
                 borderBottom: "1px solid",
                 borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
                 background: isDark

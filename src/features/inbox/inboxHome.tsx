@@ -211,14 +211,16 @@ export const InboxHome = (props: InboxHomeProps) => {
                     </Routes>
                 </Box>
 
-                {/* Footer */}
+                {/* Footer — decorative tagline, hidden on mobile: it sits
+                    directly above the BottomTabBar and costs a row of list
+                    height for nothing actionable. */}
                 <Box
                     sx={{
                         px: 3,
                         py: 1.5,
                         borderTop: "1px solid",
                         borderColor: p.borderMuted,
-                        display: "flex",
+                        display: { xs: "none", md: "flex" },
                         alignItems: "center",
                         justifyContent: "center",
                     }}
