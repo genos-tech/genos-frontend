@@ -528,14 +528,19 @@ export const LayoutStyles = {
     // bottom: 0) by capping the wrapper at viewport-minus-tab-bar so
     // the feature content ends above the tab bar instead of being
     // covered by it.
+    // `--mobile-bottom-inset` is the tab bar, or the on-screen keyboard
+    // when that's taller (see index.css). Subtracting it means the
+    // composer at the bottom of a chat surface rides above the keyboard
+    // instead of sitting behind it — iOS never shrinks the viewport for
+    // the keyboard, so without this the input is simply covered.
     outerWrapper: {
         display: "flex",
         minHeight: {
-            xs: "calc(100dvh - var(--BottomTabBar-height, 60px))",
+            xs: "calc(100dvh - var(--mobile-bottom-inset, 60px))",
             md: "100dvh",
         },
         height: {
-            xs: "calc(100dvh - var(--BottomTabBar-height, 60px))",
+            xs: "calc(100dvh - var(--mobile-bottom-inset, 60px))",
             md: "auto",
         },
         flex: 1,

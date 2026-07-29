@@ -58,6 +58,7 @@ import { BubbleStylePreferenceProvider } from "./hooks/common/useBubbleStylePref
 import { DoubleClickTodoPreferenceProvider } from "./hooks/common/useDoubleClickTodoPreference";
 import { useGlobalServiceShortcut } from "./hooks/common/useGlobalServiceShortcut";
 import { HistoryProvider } from "./hooks/common/useHistory";
+import { useKeyboardInset } from "./hooks/common/useKeyboardInset";
 import { useNotifications } from "./hooks/common/useNotifications";
 import { PersonalGMTagsBootstrap } from "./hooks/common/usePersonalGMTags";
 import { useProjectTaskManagement } from "./hooks/common/useProjectTaskManagement";
@@ -246,6 +247,11 @@ export const App = () => {
     // badges use, so the home-screen number and the in-app ones can't
     // disagree. No-ops in a normal browser tab.
     useAppBadge(useIM.unReadInboxItemCount + useCM.unReadChatAndActivityCounts);
+
+    // Publishes the on-screen keyboard's height as `--keyboard-inset`, so
+    // mobile surfaces can keep their composer above it. iOS never resizes
+    // the viewport for the keyboard, so nothing in CSS can infer this.
+    useKeyboardInset();
 
     // Daily todo groups — one instance for the whole app: the chat todo
     // pane (prop-drilled through ChatHome) and the agent-input "#"

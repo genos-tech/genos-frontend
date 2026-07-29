@@ -587,6 +587,17 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
                                     : "rgba(0,0,0,0.025)"
                                 : "transparent",
                     transition: "background-color 0.15s ease",
+                    // The 500ms long-press below opens this app's message
+                    // toolbar — but iOS answers the same gesture with its
+                    // own Copy / Look Up callout, so both appeared at once.
+                    // Suppressing the callout leaves the app's toolbar as
+                    // the single response.
+                    //
+                    // Deliberately NOT `user-select: none`: that would also
+                    // kill selecting message text, and the in-app menu only
+                    // offers "copy link", not "copy text" — so this is the
+                    // user's only way to copy what someone wrote.
+                    WebkitTouchCallout: "none",
                 }}
                 onClick={handleMessageClick}
                 onDoubleClick={doubleClickTodoEnabled ? handleAddMessageToToDo : undefined}

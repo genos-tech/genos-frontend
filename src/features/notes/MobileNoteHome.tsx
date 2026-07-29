@@ -52,7 +52,7 @@ const MobileOverlay = ({
                     : "linear-gradient(180deg, rgba(252,250,255,1) 0%, rgba(248,245,255,1) 100%)",
                 display: "flex",
                 flexDirection: "column",
-                paddingBottom: "var(--BottomTabBar-height, 60px)",
+                paddingBottom: "var(--mobile-bottom-inset, 60px)",
             }}
         >
             <IconButton

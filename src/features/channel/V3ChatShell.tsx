@@ -121,7 +121,7 @@ export function V3ChatShell() {
                     height: "100%",
                     minWidth: 0,
                     fontFamily: "system-ui, sans-serif",
-                    paddingBottom: "var(--BottomTabBar-height, 60px)",
+                    paddingBottom: "var(--mobile-bottom-inset, 60px)",
                 }}
             >
                 {!selected ? (
