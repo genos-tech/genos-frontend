@@ -570,7 +570,7 @@ input[type="checkbox"] {
     min-height: 200px;
     max-height: 500px;
     overflow: auto;
-    padding-left: 15px;
+    padding-inline-start: 15px;
 }
 
 .bn-chat-editor-box-light.with-subchat .bn-editor,
@@ -589,7 +589,7 @@ input[type="checkbox"] {
     min-height: 200px;
     max-height: 500px;
     overflow: auto;
-    padding-left: 15px;
+    padding-inline-start: 15px;
 }
 
 .bn-chat-editor-box-dark code {
@@ -623,7 +623,7 @@ input[type="checkbox"] {
     min-height: 200px;
     max-height: 800px;
     overflow: auto;
-    padding-left: 15px;
+    padding-inline-start: 15px;
 }
 
 .bn-task-comment-box-light code {
@@ -637,7 +637,7 @@ input[type="checkbox"] {
     min-height: 200px;
     max-height: 800px;
     overflow: auto;
-    padding-left: 15px;
+    padding-inline-start: 15px;
 }
 
 .bn-task-comment-box-dark code {
@@ -904,7 +904,7 @@ div[data-floating-ui-focusable] {
 .task-comment-preview-light .bn-editor {
     color: #111827; /* Dark text on white background */
     background-color: transparent;
-    padding-left: 20px;
+    padding-inline-start: 20px;
 }
 
 .task-comment-preview-light code {
@@ -915,7 +915,7 @@ div[data-floating-ui-focusable] {
 .task-comment-preview-dark .bn-editor {
     color: #e0e7ff; /* Light indigo text on dark indigo background */
     background-color: transparent;
-    padding-left: 20px;
+    padding-inline-start: 20px;
 }
 
 .task-comment-preview-dark code {
@@ -941,7 +941,7 @@ div[data-floating-ui-focusable] {
 .inbox-preview-light .bn-editor {
     color: black;
     background-color: transparent;
-    padding-left: var(--inbox-preview-indent);
+    padding-inline-start: var(--inbox-preview-indent);
 }
 
 .inbox-preview-light code {
@@ -952,7 +952,7 @@ div[data-floating-ui-focusable] {
 .inbox-preview-dark .bn-editor {
     color: white;
     background-color: transparent;
-    padding-left: var(--inbox-preview-indent);
+    padding-inline-start: var(--inbox-preview-indent);
 }
 
 .inbox-preview-dark code {
@@ -1005,6 +1005,13 @@ div[data-floating-ui-focusable] {
    Utility Styles
    ========================================================================== */
 
+/* NOT converted to a logical property, unlike the rest of this file: the
+   selector is a HASHED emotion class name, so it is already one Joy version
+   bump away from matching nothing. Rewriting the property inside it would
+   imply it is maintained. Same for the `.css-rxb3rp-MuiToolbar-…` rule
+   above. Both should be replaced by an `sx` on the component that owns
+   them; until then they stay physical and Arabic keeps a 10px gap on the
+   wrong side of a stack. */
 .css-ljwjwd-JoyStack-root > :not(style) ~ :not(style) {
     margin-top: 5px !important;
     margin-left: 10px !important;
@@ -1030,7 +1037,7 @@ div[data-floating-ui-focusable] {
         padding-top: 40px;
         min-height: 150px;
         max-height: 300px;
-        padding-left: 10px;
+        padding-inline-start: 10px;
     }
 
     .bn-task-comment-box-light .bn-editor,
@@ -1038,7 +1045,7 @@ div[data-floating-ui-focusable] {
         padding-top: 40px;
         min-height: 150px;
         max-height: 400px;
-        padding-left: 10px;
+        padding-inline-start: 10px;
     }
 
     /* Task / note body editors need horizontal padding for two reasons:
@@ -1051,13 +1058,15 @@ div[data-floating-ui-focusable] {
        so reading width isn't crushed at 390px. */
     .bn-task-body-box-light .bn-editor,
     .bn-task-body-box-dark .bn-editor {
-        padding: 32px 22px 20px 44px;
+        padding-block: 32px 20px;
+        padding-inline: 44px 22px;
         height: var(--task-body-editor-height, 300px);
     }
 
     .bn-note-body-box-light .bn-editor,
     .bn-note-body-box-dark .bn-editor {
-        padding: 56px 22px 20px 44px;
+        padding-block: 56px 20px;
+        padding-inline: 44px 22px;
         height: 85dvh;
     }
 }
@@ -1235,7 +1244,7 @@ body
         padding-top: 44px;
         min-height: 105px;
         max-height: 210px;
-        padding-left: 10px;
+        padding-inline-start: 10px;
     }
 
     .bn-task-comment-box-light .bn-editor,
@@ -1243,6 +1252,6 @@ body
         padding-top: 44px;
         min-height: 105px;
         max-height: 280px;
-        padding-left: 10px;
+        padding-inline-start: 10px;
     }
 }
