@@ -1,6 +1,5 @@
 import AddIcon from "@mui/icons-material/Add";
 import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRounded";
-import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import DashboardRoundedIcon from "@mui/icons-material/DashboardRounded";
 import ListAltRoundedIcon from "@mui/icons-material/ListAltRounded";
 import MoreVertRoundedIcon from "@mui/icons-material/MoreVertRounded";
@@ -23,6 +22,7 @@ import { TaskPreview } from "./components/contents/TaskPreview";
 import { TaskDashboard } from "./components/dashboard/TaskDashboard";
 import { TaskSidebar } from "./components/sidebar/TaskSidebarMain";
 
+import { MobileOverlay } from "../../components/layout/MobileOverlay";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
@@ -60,54 +60,6 @@ type MobileTaskHomeProps = {
         isPrivate: boolean;
         systemUserId: string;
     }) => void;
-};
-
-// Full-screen overlay shell. Mirrors MobileOverlay in MobileChatHome.
-const MobileOverlay = ({
-    children,
-    onClose,
-}: {
-    children: React.ReactNode;
-    onClose: () => void;
-}) => {
-    const { mode } = useColorScheme();
-    const isDark = mode === "dark";
-    return (
-        <Box
-            sx={{
-                position: "fixed",
-                inset: 0,
-                zIndex: 1300,
-                background: isDark
-                    ? "linear-gradient(180deg, rgba(var(--gp-dark-surface-b-rgb), 1) 0%, rgba(11,10,22,1) 100%)"
-                    : "linear-gradient(180deg, rgba(252,250,255,1) 0%, rgba(248,245,255,1) 100%)",
-                display: "flex",
-                flexDirection: "column",
-                paddingBottom: "var(--mobile-bottom-inset, 60px)",
-            }}
-        >
-            <IconButton
-                aria-label="Close"
-                size="sm"
-                variant="plain"
-                sx={{
-                    position: "absolute",
-                    top: 8,
-                    right: 8,
-                    zIndex: 1,
-                    borderRadius: "10px",
-                    background: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
-                    "&:hover": {
-                        background: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)",
-                    },
-                }}
-                onClick={onClose}
-            >
-                <CloseRoundedIcon sx={{ fontSize: 20 }} />
-            </IconButton>
-            <Box sx={{ flex: 1, minHeight: 0, overflow: "auto", pt: 5 }}>{children}</Box>
-        </Box>
-    );
 };
 
 export const MobileTaskHome = (props: MobileTaskHomeProps) => {
@@ -372,20 +324,27 @@ export const MobileTaskHome = (props: MobileTaskHomeProps) => {
                     useTM.currentPreviewTaskId !== -1 ||
                     useTM.currentPreviewKind === "milestone") && (
                     <MobileOverlay onClose={handleCloseTaskPreview}>
-                        <Box sx={{ p: 1, height: "100%", overflow: "auto" }}>
-                            <TaskPreview
-                                myself={myself}
-                                setMyself={setMyself}
-                                socket={socket}
-                                useCM={useCM}
-                                useNM={useNM}
-                                usePM={usePM}
-                                useSM={useSM}
-                                useTEM={useTEM}
-                                useTM={useTM}
-                                useUISM={useUISM}
-                            />
-                        </Box>
+                        {/* No wrapper: `TaskPreviewLayout`'s Sheet already
+                            owns `overflowY: auto` and now flexes to fill
+                            below `md`, so it becomes the ONE scroller and
+                            uses the whole overlay. The old
+                            `p: 1 / height: 100% / overflow: auto` box was a
+                            second scroller around a Sheet pinned to
+                            `minHeight: 500` — a short card in a tall empty
+                            overlay, which is the wasted space in the
+                            report. */}
+                        <TaskPreview
+                            myself={myself}
+                            setMyself={setMyself}
+                            socket={socket}
+                            useCM={useCM}
+                            useNM={useNM}
+                            usePM={usePM}
+                            useSM={useSM}
+                            useTEM={useTEM}
+                            useTM={useTM}
+                            useUISM={useUISM}
+                        />
                     </MobileOverlay>
                 )}
 
@@ -393,7 +352,7 @@ export const MobileTaskHome = (props: MobileTaskHomeProps) => {
                 <MobileOverlay
                     onClose={() => useTM.setIsCreatingTask((prev) => ({ ...prev, flag: false }))}
                 >
-                    <Box sx={{ p: 1, height: "100%", overflow: "auto" }}>
+                    <Box sx={{ p: 1, flex: 1, minHeight: 0, overflow: "auto" }}>
                         <CreateTaskForm
                             myself={myself}
                             setMyself={setMyself}
@@ -412,7 +371,7 @@ export const MobileTaskHome = (props: MobileTaskHomeProps) => {
 
             {useNM.isTaskNoteVisible && useNM.currentTaskNoteChain && (
                 <MobileOverlay onClose={() => useNM.setIsTaskNoteVisible(false)}>
-                    <Box sx={{ p: 1, height: "100%", overflow: "auto" }}>
+                    <Box sx={{ p: 1, flex: 1, minHeight: 0, overflow: "auto" }}>
                         {activeNoteType === 1 && useNM.currentMyNote && (
                             <MyNoteMain
                                 isInTaskPage={true}

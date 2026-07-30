@@ -41,19 +41,33 @@ export const TaskPreviewLayout = forwardRef<HTMLDivElement, TaskPreviewLayoutPro
                 ref={ref}
                 className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                 sx={{
-                    minHeight: 500,
-                    borderRadius: "16px",
+                    // Below `md` this frame is the whole screen (mobile
+                    // opens the preview as a full-screen overlay), so it
+                    // fills its host's flex column instead of standing off
+                    // it as a floating card:
+                    //   - `minHeight: 500` is a DESKTOP-panel minimum. On a
+                    //     phone it forced a fixed 500px box inside a ~740px
+                    //     overlay, which is the empty space below the task.
+                    //   - rounded corners, a border and a drop shadow only
+                    //     read as a card when something is visible around
+                    //     it; edge-to-edge they're wasted pixels.
+                    minHeight: { xs: 0, md: 500 },
+                    flex: { xs: 1, md: "0 1 auto" },
+                    borderRadius: { xs: 0, md: "16px" },
                     p: 0,
                     overflowY: "auto",
                     overflowX: "hidden",
                     background: isDark
                         ? "linear-gradient(180deg, rgba(22,22,28,0.98) 0%, rgba(18,18,24,1) 100%)"
                         : "linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(252,252,255,1) 100%)",
-                    border: "1px solid",
+                    border: { xs: "none", md: "1px solid" },
                     borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)",
-                    boxShadow: isDark
-                        ? "0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.03)"
-                        : "0 8px 32px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.8)",
+                    boxShadow: {
+                        xs: "none",
+                        md: isDark
+                            ? "0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.03)"
+                            : "0 8px 32px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.8)",
+                    },
                     position: "relative",
                     animation: "slideIn 0.3s ease-out",
                     "@keyframes slideIn": {
@@ -64,10 +78,13 @@ export const TaskPreviewLayout = forwardRef<HTMLDivElement, TaskPreviewLayoutPro
             >
                 {accent}
 
+                {/* Tighter gutters on a phone: 20px each side is 40px of
+                    the ~342px available, and the header row inside is the
+                    most width-starved part of the pane. */}
                 <Box
                     sx={{
-                        p: 2.5,
-                        pt: 3,
+                        p: { xs: 1.5, md: 2.5 },
+                        pt: { xs: 2, md: 3 },
                         borderBottom: "1px solid",
                         borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
                     }}
@@ -75,7 +92,7 @@ export const TaskPreviewLayout = forwardRef<HTMLDivElement, TaskPreviewLayoutPro
                     {header}
                 </Box>
 
-                <Box sx={{ p: 2.5 }}>{mainContent}</Box>
+                <Box sx={{ p: { xs: 1.5, md: 2.5 } }}>{mainContent}</Box>
 
                 {tabs != null && (
                     <Box
