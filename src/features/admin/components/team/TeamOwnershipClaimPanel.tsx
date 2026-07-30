@@ -1,69 +1,35 @@
 /**
- * Ownership recovery, from the CLAIMANT's side of the team profile.
+ * Ownership-recovery STATUS, in the team profile.
  *
- * The owner answers a claim from their inbox — the claim is an inbox row
- * addressed to them. The claimant is the sender, so the row never
- * reaches their own inbox and this panel is the only place they can see
- * their request or act on it once the deadline passes.
+ * Renders what is already in flight — my pending claim, someone else's,
+ * or my rejection cooldown. The action that STARTS one lives in the
+ * profile's button row next to Invite members (`ModalRequestOwnership`),
+ * so the `request` state draws nothing here.
  *
- * Policy lives on the server (`origin/services/ownership_claim.py`);
- * `canRequest` / `canFinalize` come from it rather than being re-derived
- * here, and every button press is re-authorised server-side.
+ * This is the claimant's only view of their own claim: the claim is an
+ * inbox row addressed to the owner, so it never reaches the sender's own
+ * inbox, and "take ownership" has nowhere else to live.
  */
-import { useCallback, useEffect, useState } from "react";
 import ShieldRoundedIcon from "@mui/icons-material/ShieldRounded";
 import { Alert, Box, Button, Stack, Typography } from "@mui/joy";
 
-import { useAuth } from "../../../../context/AuthContext";
 import { fmt, useTranslation } from "../../../../i18n";
 import { extractYYYYMMDD } from "../../../../utils/dateUtils";
-import {
-    finalizeOwnershipClaim,
-    getOwnershipClaim,
-    requestOwnershipClaim,
-    type OwnershipClaimStatus,
-} from "../../services/ownershipClaim";
-import { resolveClaimPanel } from "./ownershipClaimPanelState";
+import type { OwnershipClaimControls } from "./useOwnershipClaim";
 
 type Props = {
-    teamId: string;
-    isTeamOwner: boolean;
+    claim: OwnershipClaimControls;
     /** Called after ownership actually moves, so the modal can refresh. */
     onOwnershipTaken: () => void;
 };
 
-export const TeamOwnershipClaimPanel = (props: Props) => {
-    const { teamId, isTeamOwner, onOwnershipTaken } = props;
-    const { accessToken } = useAuth();
+export const TeamOwnershipClaimPanel = ({ claim, onOwnershipTaken }: Props) => {
     const { t } = useTranslation();
-    const [status, setStatus] = useState<OwnershipClaimStatus | null>(null);
-    const [busy, setBusy] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-
-    const refresh = useCallback(async () => {
-        setStatus(await getOwnershipClaim(accessToken, teamId));
-    }, [accessToken, teamId]);
-
-    useEffect(() => {
-        void refresh();
-    }, [refresh]);
-
-    const panel = resolveClaimPanel(status, isTeamOwner);
-    if (panel.kind === "none") return null;
-
-    const run = async (action: () => Promise<boolean>, thenNotify?: () => void) => {
-        setBusy(true);
-        setError(null);
-        const ok = await action();
-        setBusy(false);
-        // Refetch either way: a failure is usually a state change
-        // (someone else acted, the owner answered), so the panel should
-        // catch up rather than keep showing a button that just refused.
-        await refresh();
-        if (ok) thenNotify?.();
-    };
-
+    const { panel, busy, error } = claim;
     const strings = t.common.profileEdit;
+
+    // "request" is drawn as a button in the action row, not here.
+    if (panel.kind === "none" || panel.kind === "request") return null;
 
     return (
         <Box sx={{ mt: 1.5 }}>
@@ -74,31 +40,6 @@ export const TeamOwnershipClaimPanel = (props: Props) => {
                 variant="soft"
             >
                 <Stack spacing={1} sx={{ minWidth: 0, width: "100%" }}>
-                    {panel.kind === "request" && (
-                        <>
-                            <Typography level="body-sm" sx={{ fontWeight: 600 }}>
-                                {strings.claimTitle}
-                            </Typography>
-                            <Typography level="body-xs">{strings.claimDescription}</Typography>
-                            <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
-                                <Button
-                                    color="warning"
-                                    disabled={busy}
-                                    size="sm"
-                                    sx={{ borderRadius: "8px" }}
-                                    variant="soft"
-                                    onClick={() =>
-                                        void run(() =>
-                                            requestOwnershipClaim(accessToken, teamId, setError)
-                                        )
-                                    }
-                                >
-                                    {strings.claimRequest}
-                                </Button>
-                            </Box>
-                        </>
-                    )}
-
                     {panel.kind === "mine" && (
                         <>
                             <Typography level="body-sm" sx={{ fontWeight: 600 }}>
@@ -125,15 +66,9 @@ export const TeamOwnershipClaimPanel = (props: Props) => {
                                     sx={{ borderRadius: "8px" }}
                                     variant="solid"
                                     onClick={() =>
-                                        void run(
-                                            () =>
-                                                finalizeOwnershipClaim(
-                                                    accessToken,
-                                                    panel.itemId,
-                                                    setError
-                                                ),
-                                            onOwnershipTaken
-                                        )
+                                        void claim.finalize(panel.itemId).then((ok) => {
+                                            if (ok) onOwnershipTaken();
+                                        })
                                     }
                                 >
                                     {strings.claimFinalize}
@@ -154,9 +89,7 @@ export const TeamOwnershipClaimPanel = (props: Props) => {
 
                     {panel.kind === "cooldown" && (
                         <Typography level="body-xs">
-                            {fmt(strings.claimCooldown, {
-                                date: extractYYYYMMDD(panel.until),
-                            })}
+                            {fmt(strings.claimCooldown, { date: extractYYYYMMDD(panel.until) })}
                         </Typography>
                     )}
 

@@ -6,6 +6,7 @@ import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import PersonAddAltRoundedIcon from "@mui/icons-material/PersonAddAltRounded";
 import SearchIcon from "@mui/icons-material/Search";
+import ShieldRoundedIcon from "@mui/icons-material/ShieldRounded";
 import SwapHorizRoundedIcon from "@mui/icons-material/SwapHorizRounded";
 import {
     Avatar,
@@ -50,7 +51,9 @@ import { canManageMembers, MemberRole, resolveMyRole } from "../../../../utils/m
 import { leaveTeam } from "../../services/leaveTeam";
 import { setTeamMemberRole } from "../../services/setTeamMemberRole";
 import { updateTeamProfile } from "../../services/updateTeamProfile";
+import { ModalRequestOwnership } from "../team/ModalRequestOwnership";
 import { TeamOwnershipClaimPanel } from "../team/TeamOwnershipClaimPanel";
+import { useOwnershipClaim } from "../team/useOwnershipClaim";
 import { ModalInviteMembers } from "./ModalInviteMembers";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
@@ -144,6 +147,15 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
     // Invite-by-email flow (owner-only). The button + sub-modal are gated
     // by isTeamOwner; the backend re-checks ownership on /team/invite/.
     const [openInvite, setOpenInvite] = useState(false);
+
+    // Break-glass ownership recovery. One fetch feeds two places: the
+    // "Request ownership" button in the action row above, and the status
+    // panel under the owner's details. Eligibility comes from the server
+    // (`panel.kind === "request"`), not from `myRole` — the rules are
+    // more than a role check (an open claim or a cooldown also suppress
+    // it) and re-deriving them here would drift.
+    const ownershipClaim = useOwnershipClaim(teamProfile.teamId, isTeamOwner);
+    const [openClaimRequest, setOpenClaimRequest] = useState(false);
 
     const handleNameSave = async () => {
         const next = nameDraft.trim();
@@ -842,6 +854,32 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                                 }
                                                             </Button>
                                                         )}
+                                                        {/* Recovery for an absent owner —
+                                                            offered only to an editor with no
+                                                            claim already open. It sits beside
+                                                            Transfer ownership because they're
+                                                            the same act from opposite ends;
+                                                            the confirm modal carries the part
+                                                            that makes them different. */}
+                                                        {ownershipClaim.panel.kind ===
+                                                            "request" && (
+                                                            <Button
+                                                                color="warning"
+                                                                size="sm"
+                                                                sx={{ borderRadius: "8px" }}
+                                                                variant="outlined"
+                                                                startDecorator={
+                                                                    <ShieldRoundedIcon
+                                                                        sx={{ fontSize: 16 }}
+                                                                    />
+                                                                }
+                                                                onClick={() =>
+                                                                    setOpenClaimRequest(true)
+                                                                }
+                                                            >
+                                                                {t.common.profileEdit.claimRequest}
+                                                            </Button>
+                                                        )}
                                                     </Box>
                                                 )}
                                                 {/* Recovery for an absent owner. Sits under
@@ -850,8 +888,7 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                     named there has gone. Renders nothing
                                                     unless there's something to say. */}
                                                 <TeamOwnershipClaimPanel
-                                                    isTeamOwner={isTeamOwner}
-                                                    teamId={teamProfile.teamId}
+                                                    claim={ownershipClaim}
                                                     onOwnershipTaken={() =>
                                                         setTeamProfile({
                                                             ...teamProfile,
@@ -1180,6 +1217,13 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                 open={openInvite}
                 teamId={teamProfile.teamId}
                 onClose={() => setOpenInvite(false)}
+            />
+            <ModalRequestOwnership
+                open={openClaimRequest}
+                responseDays={ownershipClaim.responseDays}
+                teamName={teamProfile.teamName}
+                onCancel={() => setOpenClaimRequest(false)}
+                onConfirm={ownershipClaim.request}
             />
         </>
     );
