@@ -42,6 +42,18 @@ export type SavedFilterSelection = {
  * include Closed and Deleted rows, so the key is omitted entirely
  * instead: a board-saved filter asserts nothing about status.
  */
+// Pull the labels out of one dimension, skipping any hole.
+//
+// The skip is not paranoia: this runs on EVERY render of the filter bar
+// (the applied-filter badge is derived from it), so a momentarily
+// malformed selection would take down the whole Tasks feature via its
+// error boundary rather than degrade. A `[undefined]` selection is exactly
+// what a `[someList[0]]` reset produces when the list is empty — the bug
+// `tagSelectionDefault` now prevents at the source in `TaskFilterMenu`.
+// Defending here too keeps that class of mistake from ever being fatal.
+const labelsOf = (filters: FilterProps[]): string[] =>
+    (filters ?? []).filter((f) => f != null).map((f) => f.label);
+
 export const buildSavedFilterPayload = (input: {
     hideStatusFilter?: boolean;
     status: FilterProps[];
@@ -51,12 +63,12 @@ export const buildSavedFilterPayload = (input: {
     milestoneKeys: (string | number)[];
     memberKeys: string[];
 }): SavedFilterPayload => ({
-    ...(input.hideStatusFilter ? {} : { status: input.status.map((f) => f.label) }),
-    tags: input.tags.map((f) => f.label),
-    priorities: input.priorities.map((f) => f.label),
-    effortLevels: input.effortLevels.map((f) => f.label),
-    milestoneKeys: input.milestoneKeys,
-    memberKeys: input.memberKeys,
+    ...(input.hideStatusFilter ? {} : { status: labelsOf(input.status) }),
+    tags: labelsOf(input.tags),
+    priorities: labelsOf(input.priorities),
+    effortLevels: labelsOf(input.effortLevels),
+    milestoneKeys: input.milestoneKeys ?? [],
+    memberKeys: input.memberKeys ?? [],
 });
 
 /**

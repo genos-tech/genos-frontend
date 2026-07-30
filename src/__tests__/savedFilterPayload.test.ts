@@ -260,3 +260,60 @@ describe("savedFilterMatchesSelection", () => {
         expect(savedFilterMatchesSelection(asStrings, current, opts())).toBe(true);
     });
 });
+
+describe("buildSavedFilterPayload — malformed selections must not be fatal", () => {
+    // This runs on every render of the filter bar (the applied-filter badge
+    // derives from it), so a corrupt selection has to degrade rather than
+    // throw — an uncaught TypeError here takes down the whole Tasks feature
+    // through its error boundary. That is exactly what happened: a Reset in
+    // a project with no tags put `[undefined]` into the tag selection.
+    it("skips holes instead of throwing on undefined entries", () => {
+        const payload = buildSavedFilterPayload({
+            ...selection,
+            tags: [undefined as unknown as FilterProps],
+        });
+        expect(payload.tags).toEqual([]);
+    });
+
+    it("survives a hole in any dimension", () => {
+        const hole = [undefined as unknown as FilterProps];
+        const payload = buildSavedFilterPayload({
+            status: hole,
+            tags: hole,
+            priorities: hole,
+            effortLevels: hole,
+            milestoneKeys: [],
+            memberKeys: [],
+        });
+        expect(payload).toEqual({
+            status: [],
+            tags: [],
+            priorities: [],
+            effortLevels: [],
+            milestoneKeys: [],
+            memberKeys: [],
+        });
+    });
+
+    it("keeps the real entries alongside a hole", () => {
+        const payload = buildSavedFilterPayload({
+            ...selection,
+            status: [
+                byLabel(predefinedStatusFilters, "Open"),
+                undefined as unknown as FilterProps,
+                byLabel(predefinedStatusFilters, "WIP"),
+            ],
+        });
+        expect(payload.status).toEqual(["Open", "WIP"]);
+    });
+
+    it("tolerates a project with no tags at all", () => {
+        // The legitimate version of the same shape: `[]`, not `[undefined]`.
+        const payload = buildSavedFilterPayload({ ...selection, tags: [] });
+        expect(payload.tags).toEqual([]);
+        // …and it still round-trips.
+        expect(
+            savedFilterMatchesSelection(payload, payload, { ...opts(), predefinedTagsFilters: [] })
+        ).toBe(true);
+    });
+});

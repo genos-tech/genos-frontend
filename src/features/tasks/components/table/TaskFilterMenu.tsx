@@ -73,6 +73,18 @@ const defaultStatusFilters: FilterProps[] = predefinedStatusFilters.filter((f) =
     taskTypes.ongoing.statuses.includes(f.label)
 );
 
+// The "no tag filter" selection: the leading "All" entry when the project
+// HAS tags, and an empty list when it doesn't.
+//
+// Every site that resets the tag dimension has to go through this. Writing
+// `[predefinedTagsFilters[0]]` directly puts `[undefined]` into state in a
+// project with no tags (or before they've loaded) — a corrupt selection
+// that then crashes anything reading `tags[0].label`, which `applyFilters`
+// does. `[]` takes the "no tag filter" path in `applyFilters` and means
+// exactly the same thing.
+const tagSelectionDefault = (tagFilters: FilterProps[]): FilterProps[] =>
+    tagFilters.length > 0 ? [tagFilters[0]] : [];
+
 // Sentinels used by the milestone filter alongside numeric milestone
 // ids. Mirrors the `NO_MILESTONE` pattern in `SprintMilestonePicker`
 // so unattached tasks (`task.milestoneId == null`) can be filtered for
@@ -293,7 +305,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
 
     // Tags filter
     const [selectedTags, setSelectedTags] = React.useState<FilterProps[]>(
-        predefinedTagsFilters.length > 0 ? [predefinedTagsFilters[0]] : []
+        tagSelectionDefault(predefinedTagsFilters)
     );
     const [anchorElTagsFilter, setAnchorElTagsFilter] = React.useState<null | HTMLElement>(null);
     const openTagsFilter = Boolean(anchorElTagsFilter);
@@ -304,7 +316,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         let newTags: FilterProps[];
         if (tag.label === "All") {
             // If the tag is "All", set it to "All". Remove all other tags.
-            newTags = [predefinedTagsFilters[0]];
+            newTags = tagSelectionDefault(predefinedTagsFilters);
             setSelectedTags(newTags);
             setAnchorElTagsFilter(null);
         } else if (selectedTags.some((items) => items.label === tag.label) === true) {
@@ -318,7 +330,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         }
 
         if (newTags.length === 0) {
-            newTags = [predefinedTagsFilters[0]];
+            newTags = tagSelectionDefault(predefinedTagsFilters);
             setSelectedTags(newTags);
             setAnchorElTagsFilter(null);
         }
@@ -360,9 +372,11 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         if (restoredTagsForKeyRef.current !== filterStorageKey) {
             restoredTagsForKeyRef.current = filterStorageKey;
             const storedForKey = filterStorageKey ? readStoredFilters(filterStorageKey) : null;
-            const restored = rehydrateFilters(storedForKey?.tags, predefinedTagsFilters, [
-                predefinedTagsFilters[0],
-            ]);
+            const restored = rehydrateFilters(
+                storedForKey?.tags,
+                predefinedTagsFilters,
+                tagSelectionDefault(predefinedTagsFilters)
+            );
             setSelectedTags(restored);
             // The reactive `applyFilters` effect below doesn't watch
             // `selectedTags`, so a restore that changes the selection has
@@ -380,7 +394,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
             }
             return;
         }
-        setSelectedTags([predefinedTagsFilters[0]]);
+        setSelectedTags(tagSelectionDefault(predefinedTagsFilters));
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [predefinedTagsFilters, filterStorageKey]);
 
@@ -1429,7 +1443,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         // after a Reset. Mirrors the mount-time initializer above.
         const resetStatus = hideStatusFilter ? [predefinedStatusFilters[0]] : defaultStatusFilters;
         setSelectedStatus(resetStatus);
-        setSelectedTags([predefinedTagsFilters[0]]);
+        setSelectedTags(tagSelectionDefault(predefinedTagsFilters));
         setSelectedPriorities([predefinedPriorityFilters[0]]);
         setSelectedEffortLevels([predefinedEffortLevelFilters[0]]);
         setSelectedMilestoneKeys([MILESTONE_ALL]);
@@ -1437,7 +1451,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         setPastMilestonesExpanded(false);
         applyFilters(
             resetStatus,
-            [predefinedTagsFilters[0]],
+            tagSelectionDefault(predefinedTagsFilters),
             [predefinedPriorityFilters[0]],
             [predefinedEffortLevelFilters[0]],
             [MILESTONE_ALL],
