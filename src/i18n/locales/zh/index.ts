@@ -1399,6 +1399,10 @@ export const zh: DeepPartial<Messages> = {
             projectRequest: "项目申请",
             gmRequest: "群组申请",
             noteAccessRequest: "笔记访问",
+            ownershipClaim: "所有权申请",
+        },
+        ownershipClaim: {
+            respondBy: "请在 {date} 前回复，否则对方可以取得所有权",
         },
         noteAccess: {
             openNote: "打开笔记",
@@ -1599,6 +1603,7 @@ export const zh: DeepPartial<Messages> = {
                 inboxTitleJoinProject: "加入项目申请",
                 inboxTitleJoinGroup: "加入群组申请",
                 inboxTitleNoteAccess: "笔记访问申请",
+                inboxTitleOwnershipClaim: "有人申请团队所有权",
             },
         },
     },

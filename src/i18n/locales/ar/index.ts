@@ -1419,6 +1419,10 @@ export const ar: DeepPartial<Messages> = {
             projectRequest: "طلب مشروع",
             gmRequest: "طلب مجموعة",
             noteAccessRequest: "الوصول إلى الملاحظة",
+            ownershipClaim: "طلب ملكية",
+        },
+        ownershipClaim: {
+            respondBy: "يُرجى الرد قبل {date}، وإلا أصبح بإمكانهم الحصول على الملكية",
         },
         noteAccess: {
             openNote: "فتح الملاحظة",
@@ -1621,6 +1625,7 @@ export const ar: DeepPartial<Messages> = {
                 inboxTitleJoinProject: "طلب الانضمام إلى المشروع",
                 inboxTitleJoinGroup: "طلب الانضمام إلى المجموعة",
                 inboxTitleNoteAccess: "طلب الوصول إلى الملاحظة",
+                inboxTitleOwnershipClaim: "تم طلب ملكية الفريق",
             },
         },
     },

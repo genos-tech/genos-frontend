@@ -78,6 +78,27 @@ export const common = {
         transferConfirm: "Transfer",
         transferError: "Couldn't transfer ownership. Please try again.",
         noOtherMembers: "No other members to transfer ownership to.",
+        // Break-glass recovery for a team whose owner is absent. Only an
+        // editor sees these. The button is one word with no context, so
+        // `claimConfirmWindow` in the confirm modal carries the whole
+        // expectation — that this is slow, and that the owner is told.
+        // Without it "Request ownership" reads as escalate-now.
+        claimConfirmTitle: "Request ownership of this team?",
+        claimDescription:
+            "Use this when the owner has left or stopped responding. They're notified straight away and can approve or decline.",
+        claimConfirmWindow:
+            "If they do neither within {days} days, you'll be able to take ownership yourself. Everyone in the team is told when that happens.",
+        claimConfirmSend: "Send request",
+        claimError: "Couldn't send the request. Please try again.",
+        claimRequest: "Request ownership",
+        claimPendingTitle: "Ownership request pending",
+        claimWaiting:
+            "Waiting for the owner. You can take ownership on {date} if they don't reply.",
+        claimReady: "The owner didn't reply. You can now take ownership of this team.",
+        claimFinalize: "Take ownership",
+        claimOtherPending:
+            "Another editor has requested ownership of this team. The owner has until {date} to respond.",
+        claimCooldown: "The owner declined your request. You can ask again after {date}.",
     },
     empty: {
         noResults: "No results",

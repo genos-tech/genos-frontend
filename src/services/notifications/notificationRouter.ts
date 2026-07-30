@@ -456,6 +456,7 @@ const buildInboxIntent = (
         2: routerMessages.inboxTitleJoinProject,
         3: routerMessages.inboxTitleJoinGroup,
         4: routerMessages.inboxTitleNoteAccess,
+        5: routerMessages.inboxTitleOwnershipClaim,
     };
     const title = titleByType[item.itemType] || routerMessages.inboxFallback;
 
