@@ -1,7 +1,26 @@
 import { renderHook } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useChatListItem } from "../../features/chat/hooks/useChatListItem";
+
+// The hook navigates on mobile (the URL is what selects the pane there),
+// so it needs a router. Stubbing `useNavigate` rather than mounting a
+// MemoryRouter keeps the assertion on the PATH the tap produces.
+const navigateMock = vi.fn();
+vi.mock("react-router-dom", () => ({
+    useNavigate: () => navigateMock,
+}));
+
+// `useIsMobile` is viewport-only (`useMediaQuery` under the hood) and the
+// test setup's `matchMedia` stub answers "no match" to everything, so the
+// default here is DESKTOP. `setViewport("mobile")` flips it.
+let isMobileViewport = false;
+const setViewport = (kind: "desktop" | "mobile") => {
+    isMobileViewport = kind === "mobile";
+};
+vi.mock("../../hooks/common/useIsMobile", () => ({
+    useIsMobile: () => isMobileViewport,
+}));
 
 // `syncChannel` returns a NEVER-resolving promise so the test can prove the
 // chat is switched BEFORE (and independently of) the background revalidation.
@@ -52,6 +71,7 @@ const makeUseCM = () =>
 
 const useTM = { isCreatingTask: { flag: false }, isTaskPreviewVisible: false } as never;
 
+beforeEach(() => setViewport("desktop"));
 afterEach(() => vi.clearAllMocks());
 
 describe("useChatListItem.onClickHandler", () => {
@@ -88,5 +108,77 @@ describe("useChatListItem.onClickHandler", () => {
         const switched = useCM.setCurrentMainChat.mock.calls[0][0];
         expect(switched.chatId).toBe("chan-b");
         expect(switched.messages).toEqual([{ messageId: 7 }]);
+    });
+
+    it("does not touch the URL on desktop — selection stays state-first there", () => {
+        const { result } = renderHook(() =>
+            useChatListItem({
+                chat: makeChat(),
+                myself: { userId: "u1" } as never,
+                isPinnedChat: false,
+            })
+        );
+
+        result.current.onClickHandler({ useCM: makeUseCM(), useTM } as never);
+
+        expect(navigateMock).not.toHaveBeenCalled();
+    });
+
+    it("navigates to the tapped chat on mobile", () => {
+        setViewport("mobile");
+        const { result } = renderHook(() =>
+            useChatListItem({
+                chat: makeChat(),
+                myself: { userId: "u1" } as never,
+                isPinnedChat: false,
+            })
+        );
+
+        result.current.onClickHandler({ useCM: makeUseCM(), useTM } as never);
+
+        expect(navigateMock).toHaveBeenCalledWith("/workspace/chat/dm/chan-b");
+    });
+
+    it("navigates on mobile even when the tapped chat is ALREADY the selected one", () => {
+        // The regression this guards: mobile back drops `:chatId` from the
+        // URL but leaves the chat selected, and `useChatRouting`'s state→URL
+        // effect is keyed on the chat's identity — so re-tapping the same
+        // chat used to fire nothing and the chat never reopened. Same shape
+        // as the boot restore of `lastChatId`.
+        setViewport("mobile");
+        const alreadyOpen = makeChat();
+        const { result } = renderHook(() =>
+            useChatListItem({
+                chat: alreadyOpen,
+                myself: { userId: "u1" } as never,
+                isPinnedChat: false,
+            })
+        );
+
+        const useCM = {
+            ...(makeUseCM() as object),
+            // The pane is on chan-b already; only the URL fell back to the
+            // chat-type list.
+            currentMainChat: { chatId: "chan-b", chatName: "B", chatType: 1 },
+        };
+
+        result.current.onClickHandler({ useCM, useTM } as never);
+
+        expect(navigateMock).toHaveBeenCalledWith("/workspace/chat/dm/chan-b");
+    });
+
+    it("builds the path from the chat's own type (MDM keeps its own segment)", () => {
+        setViewport("mobile");
+        const { result } = renderHook(() =>
+            useChatListItem({
+                chat: { ...(makeChat() as object), chatType: 4 } as never,
+                myself: { userId: "u1" } as never,
+                isPinnedChat: false,
+            })
+        );
+
+        result.current.onClickHandler({ useCM: makeUseCM(), useTM } as never);
+
+        expect(navigateMock).toHaveBeenCalledWith("/workspace/chat/mdm/chan-b");
     });
 });

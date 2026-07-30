@@ -36,7 +36,7 @@ const CHAT_TYPE_MAP: Record<string, number> = {
     pm: 3,
 };
 
-const CHAT_TYPE_REVERSE_MAP: Record<number, string> = {
+export const CHAT_TYPE_REVERSE_MAP: Record<number, string> = {
     1: "dm",
     2: "gm",
     3: "pm",
@@ -51,7 +51,7 @@ const CHAT_TYPE_REVERSE_MAP: Record<number, string> = {
 // a thread message bubble (the existing flow) or one focuses a task
 // comment in the PM thread's "Comments" tab. If both are passed,
 // `commentId` wins (caller's choice was a deeper-link target).
-const buildChatPath = (
+export const buildChatPath = (
     typePath: string,
     // `chatId` widened to `string | number` for the v3 migration —
     // post-flip the runtime value is the UUID string from
