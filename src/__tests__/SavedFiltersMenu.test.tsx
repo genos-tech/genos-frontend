@@ -126,6 +126,33 @@ describe("SavedFiltersMenu", () => {
         await waitFor(async () => expect(await trigger()).toHaveTextContent("My blocked work"));
     });
 
+    it("refetches when the dropdown opens, so a teammate's new filter shows up", async () => {
+        // These rows are shared; without this a filter someone else just
+        // created stays invisible until the component remounts, which
+        // undercuts the reason they live server-side at all.
+        renderMenu();
+        await waitFor(() => expect(loadProjectSavedFilters).toHaveBeenCalledTimes(1));
+        await openMenu();
+        await waitFor(() => expect(loadProjectSavedFilters).toHaveBeenCalledTimes(2));
+    });
+
+    it("opens the save dialog EMPTY even while a filter is applied", async () => {
+        // Seeding the name with the applied filter would pre-arm an
+        // overwrite: the badge doesn't clear when the user edits a
+        // dimension by hand, so "apply → tweak → Save" would silently
+        // point at replacing a teammate-visible filter.
+        renderMenu();
+        await openMenu();
+        fireEvent.click(await screen.findByText("My blocked work"));
+        await waitFor(async () => expect(await trigger()).toHaveTextContent("My blocked work"));
+
+        await openMenu();
+        fireEvent.click(await screen.findByText("Save current filters…"));
+        expect(screen.getByPlaceholderText("e.g. My blocked work")).toHaveValue("");
+        // …and therefore offers Save, not Overwrite.
+        expect(screen.queryByRole("button", { name: "Overwrite" })).toBeNull();
+    });
+
     it("saves a new name as a create, with the bar's current selection", async () => {
         const { getCurrentFilters } = renderMenu();
         await openMenu();
@@ -241,7 +268,8 @@ describe("SavedFiltersMenu", () => {
         await waitFor(() => expect(deleteProjectSavedFilter).toHaveBeenCalledWith(7, 1, "tok"));
         // Shared project-wide, so the confirm names the blast radius.
         expect(confirmSpy.mock.calls[0][0]).toContain("everyone in the project");
-        expect(loadProjectSavedFilters).toHaveBeenCalledTimes(2);
+        // mount + open + post-delete refresh.
+        await waitFor(() => expect(loadProjectSavedFilters).toHaveBeenCalledTimes(3));
         confirmSpy.mockRestore();
     });
 

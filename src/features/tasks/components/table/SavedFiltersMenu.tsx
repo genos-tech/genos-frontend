@@ -138,13 +138,21 @@ export const SavedFiltersMenu = ({
         setIsLoading(false);
     }, [teamId, projectId, accessToken]);
 
-    // Load on mount and whenever the project changes. A project switch
-    // also drops the applied-name badge — it named a filter belonging to
-    // the project the user just left.
+    // Load on mount, and whenever the fetch inputs change.
     useEffect(() => {
-        setAppliedName(null);
         void refresh();
     }, [refresh]);
+
+    // Drop the applied-name badge on a PROJECT switch — it named a filter
+    // belonging to the project the user just left.
+    //
+    // Keyed on `projectId` alone, deliberately NOT on `refresh`: that
+    // callback's identity also changes when `accessToken` is refreshed on
+    // its timer, which would clear the badge mid-session for no reason the
+    // user could see.
+    useEffect(() => {
+        setAppliedName(null);
+    }, [projectId]);
 
     const closeMenu = () => setAnchorEl(null);
     const closeDialog = () => {
@@ -155,10 +163,14 @@ export const SavedFiltersMenu = ({
 
     const openSaveDialog = () => {
         closeMenu();
-        // Seed with the applied filter's name so "tweak it and save
-        // again" naturally lands on overwrite rather than making the user
-        // retype the name they're already looking at.
-        setNameDraft(appliedName ?? "");
+        // Opens EMPTY, even when a saved filter is applied. Seeding it
+        // with `appliedName` looked convenient but pre-armed an overwrite:
+        // the badge doesn't clear when the user then edits a dimension by
+        // hand, so "apply a filter → tweak it → Save" would open already
+        // pointed at Overwrite and replace a teammate-visible filter with
+        // an unrelated selection. Overwriting a specific filter is its own
+        // explicit gesture — the Save-As icon on that filter's row.
+        setNameDraft("");
         setDialogError(null);
         setDialog({ kind: "save" });
     };
@@ -326,7 +338,17 @@ export const SavedFiltersMenu = ({
                             transform: "translateY(-1px)",
                         },
                     }}
-                    onClick={(event) => setAnchorEl(event.currentTarget)}
+                    onClick={(event) => {
+                        setAnchorEl(event.currentTarget);
+                        // Refetch on open. These rows are shared, so a
+                        // filter a teammate just created would otherwise
+                        // stay invisible until this component remounted —
+                        // which undercuts the whole reason they live
+                        // server-side. Opening the dropdown is the natural
+                        // moment to be current; the previous list stays
+                        // rendered while it lands, so there's no flash.
+                        void refresh();
+                    }}
                 >
                     {appliedName ?? ts.button}
                 </Button>
