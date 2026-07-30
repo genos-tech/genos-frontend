@@ -304,7 +304,36 @@ export const NoteHeaderActions = ({
     };
 
     return (
-        <Stack alignItems="center" direction="row" spacing={1}>
+        <Stack
+            alignItems="center"
+            direction="row"
+            spacing={1}
+            sx={{
+                // This row is the reason the whole note page could be
+                // dragged sideways on a phone. Its buttons are 36px with
+                // `minWidth: 36`, and a flex container's automatic minimum
+                // size is its MIN-CONTENT width — so the row refused to
+                // shrink below the sum of its buttons, overflowed the
+                // header, and the note pane's `overflow: auto` turned that
+                // into a page-wide horizontal scroll that dragged the
+                // editor along with it.
+                //
+                // `minWidth: 0` lets the row shrink; `overflowX: auto`
+                // keeps the buttons it can no longer fit reachable by
+                // scrolling THIS STRIP instead of the page. Desktop is
+                // unaffected: with room to spare there is nothing to
+                // scroll and no scrollbar appears.
+                minWidth: 0,
+                maxWidth: "100%",
+                overflowX: "auto",
+                overflowY: "hidden",
+                scrollbarWidth: "none",
+                "&::-webkit-scrollbar": { display: "none" },
+                // Buttons keep their tap-target size inside the strip
+                // rather than being squeezed to slivers.
+                "& > *": { flexShrink: 0 },
+            }}
+        >
             {/* My Notes: New Note Button */}
             {noteType === 1 && (
                 <Tooltip

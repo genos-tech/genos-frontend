@@ -202,7 +202,14 @@ export const MobileNoteHome = (props: MobileNoteHomeProps) => {
                         </Typography>
                     </Stack>
 
-                    <Box sx={{ flex: 1, minHeight: 0, overflow: "auto" }}>
+                    {/* `overflowX: hidden`, not `overflow: auto`: a note is
+                        read by scrolling DOWN, and nothing in it should be
+                        able to drag the page sideways. Anything genuinely
+                        wider than the phone — the header's action strip, a
+                        table, a code block — owns its own horizontal
+                        scroller so it stays reachable without moving the
+                        editor underneath it. */}
+                    <Box sx={{ flex: 1, minHeight: 0, overflowX: "hidden", overflowY: "auto" }}>
                         <NoteContentRenderer
                             myself={myself}
                             setMyself={setMyself}
