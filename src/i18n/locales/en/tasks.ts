@@ -707,6 +707,36 @@ export const tasks = {
         noAssignee: "No assignee",
     },
 
+    // Named, project-shared filter selections in the filter bar. Called
+    // "Saved Filters" rather than "Views" on purpose: the app already
+    // uses "view" for the mutually-exclusive table / dashboard /
+    // sprint-board surfaces, so a "Views" dropdown here would mean two
+    // different things by the same word.
+    savedFilters: {
+        button: "Saved Filters",
+        tooltip: "Save the current filter combination, or apply one the project already has",
+        loading: "Loading…",
+        empty: "No saved filters yet. Set the filters you want, then choose “Save current filters”.",
+        saveCurrent: "Save current filters…",
+        saveTitle: "Save current filters",
+        saveHelper: "Shared with everyone in this project.",
+        renameTitle: "Rename saved filter",
+        renameHelper: "Everyone in the project sees the new name.",
+        namePlaceholder: "e.g. My blocked work",
+        saveConfirm: "Save",
+        overwriteConfirm: "Overwrite",
+        renameConfirm: "Rename",
+        cancel: "Cancel",
+        overwriteTooltip: "Replace with the current filters",
+        renameTooltip: "Rename",
+        deleteTooltip: "Delete",
+        overwriteWarning: "“{name}” already exists — saving replaces it for everyone.",
+        confirmDelete: "Delete “{name}”? This removes it for everyone in the project.",
+        errorNameRequired: "Give the filter a name.",
+        errorNameTaken: "Another saved filter already uses that name.",
+        errorSaveFailed: "Couldn’t save. Please try again.",
+    },
+
     // Table-row interactions.
     table: {
         searchMembersPlaceholder: "Search members...",

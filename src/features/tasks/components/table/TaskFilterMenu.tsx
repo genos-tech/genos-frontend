@@ -28,6 +28,7 @@ import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TaskTableProps } from "../../../../types/tasks";
 import { buildAvatarSrc } from "../../../../utils/avatarSrc";
+import { SavedFilterPayload } from "../../services/projectSavedFilters";
 import { Milestone } from "../../sprint-milestone/types";
 import {
     getMilestoneStatusChipColor,
@@ -47,6 +48,7 @@ import {
     selectMilestoneRowsForSelection,
     selectMilestonesWithMatchingChildren,
 } from "../../utils/milestoneChildFilter";
+import { buildSavedFilterPayload, resolveSavedFilter } from "../../utils/savedFilterPayload";
 import {
     clearStoredFilters,
     readStoredFilters,
@@ -55,6 +57,7 @@ import {
     StoredTaskFilters,
     writeStoredFilters,
 } from "../../utils/taskFilterStorage";
+import { SavedFiltersMenu } from "./SavedFiltersMenu";
 
 // Default status selection = the "ongoing" statuses (Open, WIP, Blocked,
 // Pending) — everything except Closed / Expired / Deleted. Derived by label
@@ -143,6 +146,18 @@ type TaskFilterMenuProps = {
     // when no filter is narrowing. Omitted by the sprint board, which is
     // flat and has nothing to expand.
     setMilestoneAutoExpandIds?: (ids: Set<string>) => void;
+    // Optional: the CURRENT project and team. When both are given, the
+    // bar renders the "Saved Filters" control (named, project-shared
+    // filter selections).
+    //
+    // Passed explicitly rather than derived from `useTM.allTasks[0]
+    // ?.projectId` — that heuristic is fine for the milestone dropdown
+    // (which has nothing to show in an empty project anyway) but is null
+    // in a project with zero tasks, and CRUD can't hang off a value that
+    // disappears when the filter empties the list. Also not parsed back
+    // out of `filterStorageKey`, which is a storage detail.
+    savedFiltersProjectId?: number | null;
+    savedFiltersTeamId?: string | null;
 };
 
 export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
@@ -159,6 +174,8 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         onOpenColumnSettings,
         filterStorageKey,
         setMilestoneAutoExpandIds,
+        savedFiltersProjectId,
+        savedFiltersTeamId,
     } = props;
 
     // Selection restored from localStorage for the CURRENT key. Read
@@ -1299,6 +1316,79 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         if (setIsMemberFilterActive) {
             setIsMemberFilterActive(memberFilterActive);
         }
+    };
+
+    // ---- Saved Filters (named, project-shared selections) ------------
+    //
+    // Reads the CURRENT six-tuple in the same identity-only shape the
+    // localStorage path uses (`StoredTaskFilters`) — labels and keys, never
+    // the `FilterProps` objects, which carry predicates and palette colors
+    // that ship with the app. Crossing users makes that rule stricter, not
+    // looser: a stored predicate would pin one member's stale copy of the
+    // logic for everyone.
+    // The status rule lives in `buildSavedFilterPayload` (a board-saved
+    // filter omits status entirely) — see that module's docstring.
+    const getCurrentSavedFilterPayload = (): SavedFilterPayload =>
+        buildSavedFilterPayload({
+            hideStatusFilter,
+            status: selectedStatus,
+            tags: selectedTags,
+            priorities: selectedPriorities,
+            effortLevels: selectedEffortLevels,
+            milestoneKeys: selectedMilestoneKeys,
+            memberKeys: selectedMemberKeys,
+        });
+
+    // Applies a saved selection. The one thing that is load-bearing HERE
+    // (the rest is in `resolveSavedFilter`): `applyFilters` must be called
+    // with the NEW values. The reactive effect at the bottom of this file
+    // watches only allTasks / tableMilestoneFilterId / milestone / member /
+    // outdated — status, tags, priority and effort are NOT in its deps,
+    // which is why every handler in this file re-runs the pipeline inline.
+    // Setting state alone would leave the table showing unfiltered rows
+    // under a filtered-looking bar.
+    const applySavedFilter = (payload: SavedFilterPayload) => {
+        const resolved = resolveSavedFilter(payload, {
+            hideStatusFilter,
+            predefinedStatusFilters,
+            defaultStatusFilters,
+            predefinedTagsFilters,
+            predefinedPriorityFilters,
+            predefinedEffortLevelFilters,
+        });
+        const nextStatus = resolved.status;
+        const nextTags = resolved.tags;
+        const nextPriorities = resolved.priorities;
+        const nextEffort = resolved.effortLevels;
+        const nextMilestones = resolved.milestoneKeys as MilestoneFilterKey[];
+        const nextMembers = resolved.memberKeys as MemberFilterKey[];
+
+        setSelectedStatus(nextStatus);
+        setSelectedTags(nextTags);
+        setSelectedPriorities(nextPriorities);
+        setSelectedEffortLevels(nextEffort);
+        setSelectedMilestoneKeys(nextMilestones);
+        setSelectedMemberKeys(nextMembers);
+
+        applyFilters(
+            nextStatus,
+            nextTags,
+            nextPriorities,
+            nextEffort,
+            nextMilestones,
+            nextMembers
+        );
+        // Persist like any other selection change, so the applied filter
+        // survives the table/board/dashboard remount the same way a
+        // hand-picked one does.
+        persistFilters(
+            nextStatus,
+            nextTags,
+            nextPriorities,
+            nextEffort,
+            nextMilestones,
+            nextMembers
+        );
     };
 
     const resetFilters = () => {
@@ -2744,6 +2834,19 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                 )}
 
                 <Box sx={{ flex: 1 }} />
+
+                {/* Saved Filters — named, project-shared selections.
+                    Sits after the dimension filters and before Reset:
+                    it acts on the whole bar rather than narrowing one
+                    dimension, so it belongs with Reset in the trailing
+                    action group, not in the row of dimension chips.
+                    Renders only when a project + team are resolved. */}
+                <SavedFiltersMenu
+                    getCurrentFilters={getCurrentSavedFilterPayload}
+                    projectId={savedFiltersProjectId}
+                    teamId={savedFiltersTeamId}
+                    onApply={applySavedFilter}
+                />
 
                 {/* Reset Filters Button */}
                 <AppTooltip title={t.tasks.tooltips.resetFilters}>
