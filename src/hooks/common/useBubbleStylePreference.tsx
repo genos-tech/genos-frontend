@@ -33,7 +33,8 @@ const DEFAULT_STYLE: BubbleStyle = "compact";
 
 // Bumped from `genos-bubble-style-preference` — see the note above.
 // Keep in sync with DEVICE_PREFERENCE_LOCAL_STORAGE_KEYS in
-// context/AuthContext.tsx, or a user switch on a shared device wipes it.
+// context/AuthContext.tsx (a PRESERVE list — an unlisted key is wiped
+// when a different user signs in on the same device).
 const STORAGE_KEY = "genos-bubble-style-preference-v2";
 
 const readPreference = (): BubbleStyle => {
