@@ -128,6 +128,20 @@ const Kbd = ({ children }: { children: React.ReactNode }) => (
 // Pill-style active state replacing Joy's default left-bar indicator
 // on the modal's vertical sidebar. Reused on every Tab in the rail.
 const SIDEBAR_TAB_SX = {
+    // MUST stay here, on the Tab's own `sx`, and MUST stay unconditional.
+    //
+    // Joy's Tab root sets `flex: 'initial'` (Tab.js), which is shorthand
+    // for `0 1 auto` — i.e. flex-shrink 1. In the horizontal mobile strip
+    // that let ten tabs squeeze to ~34px each and their labels collided.
+    // The same declaration on the TabList (`& > *`) LOSES: equal
+    // specificity, and the child's own emotion class is injected after the
+    // parent's. `sx` on the Tab itself is applied last, so it wins.
+    //
+    // Unconditional because on the desktop vertical rail shrink applies to
+    // the cross axis, where the tabs are fixed-height anyway — a no-op
+    // there, and one value that a test can actually assert.
+    flex: "0 0 auto",
+    whiteSpace: "nowrap",
     justifyContent: "flex-start",
     gap: 1.25,
     borderRadius: "md",
@@ -167,7 +181,18 @@ const ColorThemeRow = () => {
     const isDark = mode === "dark";
 
     return (
-        <Stack alignItems="center" direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1 }}>
+        <Stack
+            direction="row"
+            sx={{
+                alignItems: "center",
+                // A touch smaller on a phone so all seven fit one row
+                // (7 × 28 + 6 × 6 = 232px, inside a ~342px panel) instead
+                // of spilling onto a second. `flexWrap` stays as a backstop
+                // for a future eighth theme / a narrower device.
+                flexWrap: "wrap",
+                gap: { xs: 0.75, md: 1 },
+            }}
+        >
             {THEME_IDS.map((id) => {
                 const selected = id === themeId;
                 return (
@@ -178,11 +203,12 @@ const ColorThemeRow = () => {
                             size="sm"
                             variant="plain"
                             sx={{
-                                width: 32,
-                                height: 32,
+                                width: { xs: 28, md: 32 },
+                                height: { xs: 28, md: 32 },
                                 borderRadius: "50%",
                                 padding: 0,
                                 minWidth: 0,
+                                flexShrink: 0,
                                 // Selected state is a ring around the dot
                                 // rather than a checkmark on top of it — the
                                 // swatch stays legible at 20px.
@@ -195,8 +221,8 @@ const ColorThemeRow = () => {
                         >
                             <Box
                                 sx={{
-                                    width: 20,
-                                    height: 20,
+                                    width: { xs: 18, md: 20 },
+                                    height: { xs: 18, md: 20 },
                                     borderRadius: "50%",
                                     backgroundColor: themeSwatch(id, isDark),
                                     border: "1px solid",
@@ -268,7 +294,21 @@ const AppearanceSection = () => {
 
             <Divider sx={{ my: 1.5 }} />
 
-            <Stack alignItems="center" direction="row" justifyContent="space-between" spacing={2}>
+            {/* Label above, swatches below on a phone. Side by side, the
+                seven 32px swatches claim ~272px of a ~342px panel as their
+                flex BASIS (their content width), leaving the label about
+                70px to wrap into — which reads as the swatches running
+                into the text. Stacked, each gets the full width.
+                `alignItems` has to flip too: `center` follows the axis, so
+                a column would centre the label text and the swatch row. */}
+            <Stack
+                direction={{ xs: "column", md: "row" }}
+                spacing={{ xs: 1, md: 2 }}
+                sx={{
+                    alignItems: { xs: "flex-start", md: "center" },
+                    justifyContent: { xs: "flex-start", md: "space-between" },
+                }}
+            >
                 <Box sx={{ minWidth: 0, flex: 1 }}>
                     <Typography level="title-sm">
                         {t.settings.appearance.colorThemeLabel}
@@ -385,12 +425,25 @@ const QuickReactionsSection = () => {
                 {t.settings.quickReactions.description}
             </Typography>
 
-            <Stack alignItems="center" direction="row" justifyContent="space-between" spacing={2}>
+            {/* Same stacking as the colour-theme row, and for the same
+                reason: the slot buttons (`minWidth: 44`) plus Reset can't
+                shrink, so side by side they squeeze the label. See that
+                row for why `alignItems` has to flip with the direction. */}
+            <Stack
+                direction={{ xs: "column", md: "row" }}
+                spacing={{ xs: 1, md: 2 }}
+                sx={{
+                    alignItems: { xs: "flex-start", md: "center" },
+                    justifyContent: { xs: "flex-start", md: "space-between" },
+                }}
+            >
                 <Box sx={{ minWidth: 0, flex: 1 }}>
                     <Typography level="title-sm">{t.settings.quickReactions.label}</Typography>
                     <Typography level="body-xs">{t.settings.quickReactions.helper}</Typography>
                 </Box>
-                <Stack alignItems="center" direction="row" spacing={1}>
+                {/* `gap`, not Stack's `spacing`: Joy's `spacing` compiles to
+                    margins, which lay out wrongly once a row wraps. */}
+                <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", gap: 1 }}>
                     {emojis.map((emoji, index) => (
                         <AppTooltip
                             key={`quick-reaction-slot-${index}`}
@@ -1570,9 +1623,10 @@ export const SettingsModal = ({
                             overflowY: { xs: "hidden", md: "visible" },
                             scrollbarWidth: "none",
                             "&::-webkit-scrollbar": { display: "none" },
-                            // Tabs keep their natural width and scroll; the
-                            // labels must not wrap to two lines either.
-                            "& > *": { flexShrink: 0, whiteSpace: "nowrap" },
+                            // Keeping the tabs at their natural width is
+                            // NOT done from here — a `& > *` rule loses to
+                            // Joy's own `flex: 'initial'` on the Tab root.
+                            // See the note in `SIDEBAR_TAB_SX`.
                         }}
                     >
                         <Tab sx={SIDEBAR_TAB_SX} value="general">

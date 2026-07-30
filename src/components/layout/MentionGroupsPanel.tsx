@@ -181,13 +181,20 @@ export const MentionGroupsPanel = ({
                         )}
                         {mentionGroups.map((g) => (
                             <ListItem key={g.groupId} sx={{ p: 0 }}>
+                                {/* Spacing is one `gap` for the whole row
+                                    rather than a margin on the icon: the old
+                                    `mr: 0.75` + no margin before the Chip
+                                    left the icon and the member count almost
+                                    touching the row's edges and the name.
+                                    Applies at every width — the row was
+                                    cramped on desktop too. */}
                                 <ListItemButton
                                     selected={g.groupId === selectedGroupId}
-                                    sx={{ px: 1.25, py: 0.75 }}
+                                    sx={{ px: 1.5, py: 0.75, gap: 1 }}
                                     onClick={() => setSelectedGroupId(g.groupId)}
                                 >
                                     <GroupRoundedIcon
-                                        sx={{ fontSize: 16, color: "#16a34a", mr: 0.75 }}
+                                        sx={{ fontSize: 16, color: "#16a34a", flexShrink: 0 }}
                                     />
                                     <Box sx={{ flex: 1, minWidth: 0 }}>
                                         <Typography
@@ -198,7 +205,12 @@ export const MentionGroupsPanel = ({
                                             @{g.groupName}
                                         </Typography>
                                     </Box>
-                                    <Chip color="success" size="sm" variant="soft">
+                                    <Chip
+                                        color="success"
+                                        size="sm"
+                                        sx={{ px: 0.75, flexShrink: 0 }}
+                                        variant="soft"
+                                    >
                                         {g.memberCount}
                                     </Chip>
                                 </ListItemButton>

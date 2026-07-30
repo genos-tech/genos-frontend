@@ -72,6 +72,27 @@ describe("SettingsModal tab rail", () => {
         expect(screen.getByRole("tablist")).toHaveClass("MuiTabList-horizontal");
     });
 
+    it("never lets a tab shrink or wrap its label", () => {
+        // Joy's Tab root sets `flex: 'initial'` (= flex-shrink 1), and the
+        // same declaration on the TabList (`& > *`) LOSES the specificity
+        // tie to it — so ten tabs squeezed to ~34px each in the mobile
+        // strip and their labels collided. The override has to sit on the
+        // Tab's own `sx`, and it is unconditional (a no-op on the desktop
+        // vertical rail, where shrink acts on the fixed-height cross axis).
+        isMobileViewport = true;
+        renderModal();
+        for (const tab of screen.getAllByRole("tab")) {
+            const style = getComputedStyle(tab);
+            expect(style.flexShrink).toBe("0");
+            expect(style.whiteSpace).toBe("nowrap");
+        }
+    });
+
+    it("keeps tabs at their natural width on desktop too", () => {
+        renderModal();
+        expect(getComputedStyle(screen.getAllByRole("tab")[0]).flexShrink).toBe("0");
+    });
+
     it("keeps every tab reachable in the mobile strip", () => {
         isMobileViewport = true;
         renderModal();
