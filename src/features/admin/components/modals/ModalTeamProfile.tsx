@@ -154,7 +154,7 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
     // (`panel.kind === "request"`), not from `myRole` — the rules are
     // more than a role check (an open claim or a cooldown also suppress
     // it) and re-deriving them here would drift.
-    const ownershipClaim = useOwnershipClaim(teamProfile.teamId, isTeamOwner);
+    const ownershipClaim = useOwnershipClaim(teamProfile.teamId, isTeamOwner, socket);
     const [openClaimRequest, setOpenClaimRequest] = useState(false);
 
     const handleNameSave = async () => {

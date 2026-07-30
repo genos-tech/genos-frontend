@@ -12,6 +12,7 @@
  * here, and every action is re-authorised server-side.
  */
 import { useCallback, useEffect, useState } from "react";
+import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
 import {
@@ -36,7 +37,8 @@ export type OwnershipClaimControls = {
 
 export const useOwnershipClaim = (
     teamId: string,
-    isTeamOwner: boolean
+    isTeamOwner: boolean,
+    socket: Socket | null
 ): OwnershipClaimControls => {
     const { accessToken } = useAuth();
     const [status, setStatus] = useState<OwnershipClaimStatus | null>(null);
@@ -73,8 +75,26 @@ export const useOwnershipClaim = (
         busy,
         error,
         request: useCallback(
-            () => run(() => requestOwnershipClaim(accessToken, teamId, setError)),
-            [accessToken, teamId, run]
+            () =>
+                run(async () => {
+                    const ok = await requestOwnershipClaim(accessToken, teamId, setError);
+                    // Hand the claim to the owner's open tab. Request
+                    // types 1-4 are FILED by the sockets service, which
+                    // pushes the new row as it creates it; this one
+                    // files over HTTP, so without this the owner sees
+                    // nothing until a full page reload — and their
+                    // silence is what lets the claim be finalized.
+                    //
+                    // Fire-and-forget, and deliberately after the filing
+                    // rather than instead of it: the claim is already
+                    // committed, so a socket that is down or behind
+                    // costs a live update, not the request. The service
+                    // re-reads the claim from Django and relays that,
+                    // so nothing here is trusted as content.
+                    if (ok && socket) socket.emit("ownership_claim_notice", { teamId });
+                    return ok;
+                }),
+            [accessToken, socket, teamId, run]
         ),
         finalize: useCallback(
             (itemId: number) => run(() => finalizeOwnershipClaim(accessToken, itemId, setError)),

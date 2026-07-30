@@ -30,6 +30,13 @@ export type OwnershipClaim = {
     isMine: boolean;
     claimantId: string | null;
     canFinalize: boolean;
+    /**
+     * Present only for the claimant. The sockets service reads this
+     * back from Django to relay the card to the owner's open tab — the
+     * client never supplies it, so the relay can't be used to push
+     * arbitrary inbox content at someone.
+     */
+    notice?: { receiver: string | null; data: Record<string, unknown> };
 };
 
 export type OwnershipClaimStatus = {
