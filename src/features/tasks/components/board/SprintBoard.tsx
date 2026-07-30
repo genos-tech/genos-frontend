@@ -530,6 +530,8 @@ export const SprintBoard = (props: SprintBoardProps) => {
             <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
                 <TaskFilterMenu
                     predefinedTagsFilters={predefinedTagsFilters}
+                    savedFiltersProjectId={usePM.currentProject?.projectId}
+                    savedFiltersTeamId={myself.teamId}
                     setCurrentDisplayingTasks={setFilteredTasks}
                     setIsMemberFilterActive={setIsMemberFilterActive}
                     setIsMilestoneFilterActive={setIsMilestoneFilterActive}

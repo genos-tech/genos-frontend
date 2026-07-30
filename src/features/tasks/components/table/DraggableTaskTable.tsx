@@ -1525,6 +1525,8 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
             >
                 <TaskFilterMenu
                     predefinedTagsFilters={predefinedTagsFilters}
+                    savedFiltersProjectId={usePM.currentProject?.projectId}
+                    savedFiltersTeamId={myself.teamId}
                     setCurrentDisplayingTasks={setCurrentDisplayingTasksSorted}
                     setIsMemberFilterActive={setIsMemberFilterActive}
                     setMilestoneAutoExpandIds={setMilestoneAutoExpandIds}
