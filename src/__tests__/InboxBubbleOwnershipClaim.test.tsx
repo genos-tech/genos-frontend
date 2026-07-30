@@ -30,6 +30,11 @@ vi.mock("../features/admin/services/ownershipClaim", () => ({
     respondToOwnershipClaim: (...args: unknown[]) => respond(...args),
 }));
 
+const persist = vi.fn().mockResolvedValue(null);
+vi.mock("../features/admin/services/addInboxItem", () => ({
+    addInboxItem: (...args: unknown[]) => persist(...args),
+}));
+
 vi.mock("../context/AuthContext", () => ({
     useAuth: () => ({ accessToken: "tok" }),
 }));
@@ -48,11 +53,12 @@ const claimItem: InboxItemProps = {
     },
 };
 
-const renderBubble = (item: InboxItemProps, socket: unknown = null) =>
+const renderBubble = (item: InboxItemProps, socket: unknown = null, onItemChanged = vi.fn()) => {
     render(
         <CssVarsProvider>
             <InboxBubble
                 inboxItem={item}
+                onItemChanged={onItemChanged}
                 myself={{ userId: "u1", teamId: "t1" } as never}
                 setMyself={vi.fn()}
                 socket={socket as never}
@@ -62,6 +68,8 @@ const renderBubble = (item: InboxItemProps, socket: unknown = null) =>
             />
         </CssVarsProvider>
     );
+    return onItemChanged;
+};
 
 describe("InboxBubble ownership claim", () => {
     it("gives the owner a way to answer", () => {
@@ -101,6 +109,37 @@ describe("InboxBubble ownership claim", () => {
     it("drops the deadline once the claim has been answered", () => {
         renderBubble({ ...claimItem, requestStatus: "rejected" });
         expect(screen.queryByText(/Aug\. 29, 2026/)).toBeNull();
+    });
+
+    it("persists the answer instead of only flipping component state", async () => {
+        // THE BUG THIS PINS. These cards render inside a Virtuoso list,
+        // so component state dies when a row is recycled — and the
+        // STORED row still said "pending", so Approve/Reject came back
+        // live on a request that had already been answered. Types 1-4
+        // never hit it: they answer over Socket.IO and the service
+        // pushes the updated card back, which writes to IndexedDB.
+        persist.mockClear();
+        const onItemChanged = renderBubble(claimItem);
+        fireEvent.click(screen.getByRole("button", { name: /reject/i }));
+        await waitFor(() =>
+            expect(persist).toHaveBeenCalledWith(
+                expect.objectContaining({ itemId: 77, requestStatus: "rejected" })
+            )
+        );
+        // ...and re-read the list, or the store and the screen disagree.
+        expect(onItemChanged).toHaveBeenCalled();
+    });
+
+    it("persists nothing when the server refuses", async () => {
+        persist.mockClear();
+        respond.mockResolvedValueOnce(false);
+        const onItemChanged = renderBubble(claimItem);
+        fireEvent.click(screen.getByRole("button", { name: /approve/i }));
+        await waitFor(() => expect(respond).toHaveBeenCalled());
+        expect(persist).not.toHaveBeenCalled();
+        expect(onItemChanged).not.toHaveBeenCalled();
+        // The buttons stay live so it can be retried.
+        expect(screen.getByRole("button", { name: /approve/i })).toBeTruthy();
     });
 
     it("leaves the socket types alone", () => {

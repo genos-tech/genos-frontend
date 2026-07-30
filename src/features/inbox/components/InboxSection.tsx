@@ -33,6 +33,7 @@ export const InboxSection = forwardRef<VirtuosoHandle, InboxSectionExtendedProps
             emptySubtitle,
             isRequest = false,
             selectedItemId,
+            onItemChanged,
         },
         ref
     ) => {
@@ -129,6 +130,7 @@ export const InboxSection = forwardRef<VirtuosoHandle, InboxSectionExtendedProps
                                         useCM={useCM}
                                         useTEM={useTEM}
                                         useUISM={useUISM}
+                                        onItemChanged={onItemChanged}
                                     />
                                 </Box>
                             );

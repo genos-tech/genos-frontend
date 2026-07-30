@@ -38,6 +38,7 @@ const ActivitiesSection = (props: InboxHomeProps & { items: any[]; virtuosoRef: 
             selectedItemId={
                 itemId && !Number.isNaN(parseInt(itemId, 10)) ? parseInt(itemId, 10) : undefined
             }
+            onItemChanged={props.useIM.funcSetInboxItems}
         />
     );
 };
@@ -65,6 +66,7 @@ const RequestsSection = (props: InboxHomeProps & { items: any[]; virtuosoRef: an
             selectedItemId={
                 itemId && !Number.isNaN(parseInt(itemId, 10)) ? parseInt(itemId, 10) : undefined
             }
+            onItemChanged={props.useIM.funcSetInboxItems}
         />
     );
 };

@@ -22,6 +22,7 @@ import { purplePalette } from "../../../theme/purplePalette";
 import { UserProps } from "../../../types/admin";
 import { InboxItemProps } from "../../../types/common";
 import { extractYYYYMMDD, extractYYYYMMDDHHMM } from "../../../utils/dateUtils";
+import { addInboxItem } from "../../admin/services/addInboxItem";
 import { respondToOwnershipClaim } from "../../admin/services/ownershipClaim";
 import { InboxTargetChip } from "./InboxTargetChip";
 
@@ -107,10 +108,12 @@ type InboxBubbleProps = {
     inboxItem: InboxItemProps;
     useUISM: UIStateManagementState;
     useCM: ChatManagementState;
+    /** Re-read the list after this card answers its own request. */
+    onItemChanged?: () => void;
 };
 
 export const InboxBubble = (props: InboxBubbleProps) => {
-    const { useTEM, socket, myself, setMyself, inboxItem, useUISM, useCM } = props;
+    const { useTEM, socket, myself, setMyself, inboxItem, useUISM, useCM, onItemChanged } = props;
     const { mode } = useColorScheme();
     const { accessToken } = useAuth();
     const { t } = useTranslation();
@@ -166,7 +169,19 @@ export const InboxBubble = (props: InboxBubbleProps) => {
             decision,
             setClaimError
         );
-        if (ok) setLocalStatus(decision === "approve" ? "approved" : "rejected");
+        if (!ok) return;
+        const status = decision === "approve" ? "approved" : "rejected";
+        setLocalStatus(status);
+        // PERSIST IT, don't just flip local state. These rows render
+        // inside a Virtuoso list, so component state dies whenever a row
+        // is recycled — and the stored item still said "pending", so the
+        // card came back with Approve/Reject live on a request that had
+        // already been answered. Types 1-4 avoid this for free: they
+        // answer over Socket.IO and the service pushes the updated card
+        // back, which writes to IndexedDB and re-reads the list. This
+        // one answers over HTTP, so it has to do both itself.
+        await addInboxItem({ ...inboxItem, requestStatus: status, isRead: true });
+        onItemChanged?.();
     };
 
     const handleApprove = () => {

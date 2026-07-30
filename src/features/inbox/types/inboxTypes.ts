@@ -26,6 +26,17 @@ export type InboxSectionProps = {
     socket: Socket | null;
     useTEM: TeamManagementState;
     itemKeyPrefix: string;
+    /**
+     * Re-read the inbox after a card changes its own row.
+     *
+     * Request types 1-4 answer over Socket.IO and get their updated card
+     * pushed back, which lands in IndexedDB and re-reads the list.
+     * Ownership claims (type 5) answer over HTTP, so nothing else does
+     * it — and a row that only flipped in component state is lost the
+     * moment Virtuoso recycles it, leaving Approve/Reject live on a
+     * request that has already been answered.
+     */
+    onItemChanged: () => void;
 };
 
 export type InboxSectionHeaderProps = {
