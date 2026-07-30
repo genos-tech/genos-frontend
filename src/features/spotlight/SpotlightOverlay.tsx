@@ -82,7 +82,11 @@ import {
     type CompletedTurn,
     type ToolEvent,
 } from "../agentQA";
-import { SPOTLIGHT_FILTER_SERVICES, type SpotlightFilterService } from "./spotlightFilters";
+import {
+    isServiceDisabledByProjectScope,
+    SPOTLIGHT_FILTER_SERVICES,
+    type SpotlightFilterService,
+} from "./spotlightFilters";
 import { SpotlightProjectFilter, SpotlightProjectFilterSummary } from "./SpotlightProjectFilter";
 import {
     badgeFor,
@@ -889,34 +893,65 @@ export const SpotlightOverlay = ({
                             {t.spotlight.filter.label}
                         </Typography>
                         {SPOTLIGHT_FILTER_SERVICES.map((service) => {
-                            const active = filterServices.includes(service);
+                            // Todos and Genos answers carry no project_id,
+                            // so a live project scope makes them a
+                            // guaranteed-empty search. Disable rather than
+                            // hide (hiding would look like the chip row
+                            // lost items), and show unpressed — the search
+                            // drops them via `effectiveFilterServices`, so
+                            // this is what's actually being applied. The
+                            // user's underlying selection is untouched and
+                            // comes back when the scope is cleared.
+                            const scopeDisabled = isServiceDisabledByProjectScope(
+                                service,
+                                selectedProjectIds
+                            );
+                            const active = filterServices.includes(service) && !scopeDisabled;
                             return (
-                                <Chip
+                                <AppTooltip
                                     key={service}
-                                    color={active ? "primary" : "neutral"}
+                                    placement="bottom"
                                     size="sm"
-                                    startDecorator={FILTER_CHIP_ICON[service]}
-                                    variant={active ? "solid" : "soft"}
-                                    slotProps={{
-                                        action: { "aria-pressed": active },
-                                    }}
-                                    sx={{
-                                        "--Chip-minHeight": "26px",
-                                        fontWeight: 600,
-                                        // Soft neutral chips vanish against the
-                                        // translucent dark sheet — give inactive
-                                        // ones an explicit bg + readable text.
-                                        ...(isDark && !active
-                                            ? {
-                                                  color: DARK_TEXT_MEDIUM,
-                                                  backgroundColor: "rgba(255,255,255,0.07)",
-                                              }
-                                            : {}),
-                                    }}
-                                    onClick={() => onToggleFilterService(service)}
+                                    title={
+                                        scopeDisabled
+                                            ? t.spotlight.filter.projectScopeIncompatible
+                                            : ""
+                                    }
                                 >
-                                    {t.spotlight.filter[service]}
-                                </Chip>
+                                    <Chip
+                                        color={active ? "primary" : "neutral"}
+                                        disabled={scopeDisabled}
+                                        size="sm"
+                                        startDecorator={FILTER_CHIP_ICON[service]}
+                                        variant={active ? "solid" : "soft"}
+                                        slotProps={{
+                                            action: {
+                                                "aria-pressed": active,
+                                                "aria-disabled": scopeDisabled,
+                                            },
+                                        }}
+                                        sx={{
+                                            "--Chip-minHeight": "26px",
+                                            fontWeight: 600,
+                                            // Soft neutral chips vanish against the
+                                            // translucent dark sheet — give inactive
+                                            // ones an explicit bg + readable text.
+                                            ...(isDark && !active
+                                                ? {
+                                                      color: DARK_TEXT_MEDIUM,
+                                                      backgroundColor: "rgba(255,255,255,0.07)",
+                                                  }
+                                                : {}),
+                                            ...(scopeDisabled ? { opacity: 0.45 } : {}),
+                                        }}
+                                        onClick={() => {
+                                            if (scopeDisabled) return;
+                                            onToggleFilterService(service);
+                                        }}
+                                    >
+                                        {t.spotlight.filter[service]}
+                                    </Chip>
+                                </AppTooltip>
                             );
                         })}
                         {/* Project scope, immediately after the service

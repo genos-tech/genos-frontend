@@ -48,6 +48,10 @@ export const spotlight = {
         // Clears the whole project selection in one click. Shows the
         // count because the picker collapses its tags to "+N".
         projectClear: "{count, plural, one {# project ×} other {# projects ×}}",
+        // Shown on Todos / Genos answers while a project is scoped —
+        // neither carries a project, so the combination can only ever
+        // return nothing.
+        projectScopeIncompatible: "Not available when filtering by project",
     },
     mentions: {
         ariaLabel: "Mention suggestions",

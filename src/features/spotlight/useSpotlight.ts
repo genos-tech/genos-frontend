@@ -57,6 +57,7 @@ import {
 } from "../agentQA";
 import { emitTasksBulkChanged, TASK_WRITE_TOOLS } from "../tasks/services/taskEvents";
 import {
+    effectiveFilterServices,
     entityTypesForFilter,
     projectIdsForFilter,
     toggleFilterService,
@@ -424,7 +425,15 @@ export const useSpotlight = ({
         // Selected services → entity_types; undefined (spread away)
         // when no chips are active so the request stays byte-identical
         // to the unfiltered wire format.
-        const entityTypes = entityTypesForFilter(filterServices);
+        //
+        // `effectiveFilterServices` drops chips that a live project scope
+        // makes impossible (Todos / Genos answers carry no project_id, so
+        // scoping them can only return zero). The overlay disables the
+        // same chips off the same helper, so the request can never
+        // disagree with what the row shows.
+        const entityTypes = entityTypesForFilter(
+            effectiveFilterServices(filterServices, filterProjectIds)
+        );
         // Selected projects → project_ids, same omit-when-empty rule.
         const projectIds = projectIdsForFilter(filterProjectIds);
 

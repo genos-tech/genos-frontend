@@ -108,10 +108,18 @@ export const SpotlightProjectFilter = ({
                 },
             }}
             sx={{
-                minWidth: 150,
-                // Bounded so a long project name can't crowd out the
-                // service chips it shares the row with.
-                maxWidth: 260,
+                // Mobile: take the whole width so the picker wraps onto a
+                // deliberate line of its own BELOW the service chips,
+                // rather than squeezing in beside them and forcing a
+                // ragged two- or three-line row at 390px. The filter row
+                // is `flexWrap: wrap`, so `width: 100%` is all it takes.
+                // `minWidth: 0` keeps it from overflowing the sheet's
+                // `px: 1` gutter.
+                width: { xs: "100%", sm: "auto" },
+                minWidth: { xs: 0, sm: 150 },
+                // Bounded on desktop so a long project name can't crowd
+                // out the service chips it shares the row with.
+                maxWidth: { xs: "100%", sm: 260 },
                 flexShrink: 1,
                 "--Chip-minHeight": "20px",
                 fontSize: "0.8125rem",

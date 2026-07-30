@@ -238,6 +238,57 @@ describe("useSpotlight project filter → project_ids wire field", () => {
         expect(last.project_ids).toEqual(["7"]);
     });
 
+    it("drops project-less services from the query while a project is scoped", async () => {
+        const { result } = renderHook(() =>
+            useSpotlight({ accessToken: "test-token", teamId: "team-1" })
+        );
+        act(() => {
+            result.current.open();
+            result.current.setQuery("launch");
+            result.current.onToggleFilterService("task");
+            result.current.onToggleFilterService("todo");
+            result.current.onToggleFilterService("answer");
+        });
+        await waitFor(() => expect(searchSpotlight).toHaveBeenCalled());
+
+        // Unscoped: every picked service is applied.
+        expect(vi.mocked(searchSpotlight).mock.calls.at(-1)![0].entity_types).toEqual([
+            "task",
+            "milestone",
+            "todo",
+            "spotlight_answer",
+        ]);
+
+        vi.mocked(searchSpotlight).mockClear();
+        act(() => {
+            result.current.onChangeFilterProjects([7]);
+        });
+        await waitFor(() => expect(searchSpotlight).toHaveBeenCalled());
+
+        // Scoped: todo + spotlight_answer chunks carry no project_id, so
+        // keeping them would guarantee zero results. They're dropped from
+        // the request rather than silently returning nothing.
+        expect(vi.mocked(searchSpotlight).mock.calls.at(-1)![0].entity_types).toEqual([
+            "task",
+            "milestone",
+        ]);
+
+        // Derived, not pruned: clearing the scope restores the user's
+        // original selection instead of having destroyed it.
+        vi.mocked(searchSpotlight).mockClear();
+        act(() => {
+            result.current.onChangeFilterProjects([]);
+        });
+        await waitFor(() => expect(searchSpotlight).toHaveBeenCalled());
+        expect(vi.mocked(searchSpotlight).mock.calls.at(-1)![0].entity_types).toEqual([
+            "task",
+            "milestone",
+            "todo",
+            "spotlight_answer",
+        ]);
+        expect(result.current.filterServices).toEqual(["task", "todo", "answer"]);
+    });
+
     it("never scopes the ask (search-only)", async () => {
         vi.mocked(askAgentStream).mockImplementation(async (args) => {
             args.onDone("sess-1", "run-1");
@@ -401,6 +452,49 @@ describe("SpotlightOverlay project filter", () => {
         // keep exactly the pre-feature filter row.
         renderOverlay(overlayProps());
         expect(screen.queryByPlaceholderText("All projects")).toBeNull();
+    });
+
+    it("disables the project-less chips while a project is scoped", async () => {
+        const user = userEvent.setup();
+        const onToggleFilterService = vi.fn();
+        const props = {
+            ...overlayProps(),
+            projects: PROJECTS,
+            filterProjectIds: [7],
+            filterServices: ["answer" as const],
+            onToggleFilterService,
+            onChangeFilterProjects: vi.fn(),
+        };
+        renderOverlay(props);
+
+        // Todos + Genos answers carry no project_id, so scoping them can
+        // only return nothing. Disabled and shown UNPRESSED even though
+        // "answer" is still in the selection — the query drops it too, so
+        // the chip reflects what's actually applied.
+        expect(
+            screen.getByRole("button", { name: "Genos answers", pressed: false })
+        ).toHaveAttribute("aria-disabled", "true");
+        expect(screen.getByRole("button", { name: "Todos" })).toHaveAttribute(
+            "aria-disabled",
+            "true"
+        );
+        // Chats / Tasks / Notes DO carry a project, so they stay live.
+        expect(screen.getByRole("button", { name: "Tasks" })).toHaveAttribute(
+            "aria-disabled",
+            "false"
+        );
+
+        await user.click(screen.getByRole("button", { name: "Tasks" }));
+        expect(onToggleFilterService).toHaveBeenCalledWith("task");
+    });
+
+    it("leaves every chip enabled with no project scope", () => {
+        const props = { ...overlayProps(), projects: PROJECTS, onChangeFilterProjects: vi.fn() };
+        renderOverlay(props);
+
+        for (const name of ["Chats", "Tasks", "Notes", "Todos", "Genos answers"]) {
+            expect(screen.getByRole("button", { name })).toHaveAttribute("aria-disabled", "false");
+        }
     });
 
     it("shows the scoped-project count and clears it in one click", async () => {
