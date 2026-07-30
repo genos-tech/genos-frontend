@@ -61,6 +61,7 @@ import { purplePalette } from "../../theme/purplePalette";
 // typography block stays in lock-step with every other "answer surface"
 // (ThreadAskModal etc.) that renders the same theme.
 import type { UserProps } from "../../types/admin";
+import type { ProjectProps } from "../../types/tasks";
 import {
     ApprovalCard,
     CITATION_HREF_PREFIX,
@@ -82,6 +83,7 @@ import {
     type ToolEvent,
 } from "../agentQA";
 import { SPOTLIGHT_FILTER_SERVICES, type SpotlightFilterService } from "./spotlightFilters";
+import { SpotlightProjectFilter, SpotlightProjectFilterSummary } from "./SpotlightProjectFilter";
 import {
     badgeFor,
     entitySubtitle,
@@ -106,6 +108,20 @@ interface Props {
     // the surface and results filtering is meaningless.
     filterServices: SpotlightFilterService[];
     onToggleFilterService: (service: SpotlightFilterService) => void;
+    // Project scope for search results — a multi-select dropdown next to
+    // the service chips (the vocabulary is per-team and can be long, so
+    // chips don't scale). Also the source for each result row's
+    // project-LABEL chips: the search API returns a bare `project_id`,
+    // and labels only exist client-side on `teamProjects`.
+    //
+    // Threaded as a prop because this overlay mounts OUTSIDE the project
+    // provider tree (App renders it above the authed provider stack) —
+    // same reason as `mentionMembers` / `mentionGroups`. Optional so
+    // callers that don't wire it (tests) keep working: the picker then
+    // simply doesn't render.
+    projects?: ProjectProps[];
+    filterProjectIds?: number[];
+    onChangeFilterProjects?: (projectIds: number[]) => void;
     onSelect: (r: SpotlightResult) => void;
     // Inline citations AND source chips in the agent answer open a
     // quick-look preview (existing UrlLinkModal) on top of Spotlight
@@ -174,6 +190,13 @@ const CHIPS_INITIAL = 4;
 const DARK_TEXT_MEDIUM = "#cebfeb";
 const DARK_TEXT_SOFT = "#a89bbf";
 
+// Stable empty defaults for the optional project props. Inline `[]`
+// literals would be a fresh identity every render and re-run the
+// `projectById` memo (and re-render every memoised result row) on each
+// keystroke.
+const EMPTY_PROJECTS: ProjectProps[] = [];
+const EMPTY_PROJECT_IDS: number[] = [];
+
 // Icons for the search-mode service filter chips. Reuses the same
 // icon-per-entity mapping as the agent answer's source chips
 // (`_chipIcon` below) so "chat" looks like chat everywhere in the
@@ -197,6 +220,9 @@ export const SpotlightOverlay = ({
     error,
     filterServices,
     onToggleFilterService,
+    projects,
+    filterProjectIds,
+    onChangeFilterProjects,
     onSelect,
     onPreview,
     onAsk,
@@ -262,6 +288,24 @@ export const SpotlightOverlay = ({
         results.forEach((r, i) => m.set(`${r.entity_type}:${r.entity_id}`, i));
         return m;
     }, [results]);
+
+    // `project_id` on a result → the project record, so each row can
+    // render its project's label chips. Keyed by STRING: project ids are
+    // numbers on `ProjectProps` but strings on the wire, and comparing
+    // the two directly silently never matches.
+    const projectById = useMemo(() => {
+        const m = new Map<string, ProjectProps>();
+        for (const p of projects ?? EMPTY_PROJECTS) m.set(String(p.projectId), p);
+        return m;
+    }, [projects]);
+
+    const selectedProjectIds = filterProjectIds ?? EMPTY_PROJECT_IDS;
+    // The picker is pointless with nothing to pick from — a caller that
+    // doesn't thread projects (or a team with none) gets the old row.
+    const showProjectFilter = (projects?.length ?? 0) > 0 && !!onChangeFilterProjects;
+    const projectClearLabel = fmt(t.spotlight.filter.projectClear, {
+        count: selectedProjectIds.length,
+    });
 
     // ---- Input performance: decouple display from heavy renders. ----
     //
@@ -875,6 +919,34 @@ export const SpotlightOverlay = ({
                                 </Chip>
                             );
                         })}
+                        {/* Project scope, immediately after the service
+                            chips (i.e. right of "Genos answers"). A
+                            dropdown, not a chip: the options are the
+                            team's project list, which can run long, and
+                            the user picks from it rather than toggling a
+                            fixed vocabulary. Same selection semantics as
+                            the chips though — empty means "everything",
+                            picking re-fires the search instantly, and it
+                            resets when the overlay closes. */}
+                        {showProjectFilter && (
+                            <>
+                                <SpotlightProjectFilter
+                                    ariaLabel={t.spotlight.filter.projectAriaLabel}
+                                    isDark={isDark}
+                                    placeholder={t.spotlight.filter.projectPlaceholder}
+                                    projects={projects ?? EMPTY_PROJECTS}
+                                    selectedIds={selectedProjectIds}
+                                    onChange={onChangeFilterProjects}
+                                />
+                                <SpotlightProjectFilterSummary
+                                    clearLabel={projectClearLabel}
+                                    count={selectedProjectIds.length}
+                                    isDark={isDark}
+                                    label={t.spotlight.filter.projectScopeLabel}
+                                    onClear={() => onChangeFilterProjects([])}
+                                />
+                            </>
+                        )}
                     </Box>
                 )}
 
@@ -959,18 +1031,32 @@ export const SpotlightOverlay = ({
                                 gap: 0.25,
                             }}
                         >
-                            {results.map((r) => (
-                                <SpotlightResultItem
-                                    key={`${r.entity_type}:${r.entity_id}`}
-                                    query={deferredQuery}
-                                    result={r}
-                                    isHighlighted={
-                                        resultIndexOf.get(`${r.entity_type}:${r.entity_id}`) ===
-                                        selectedIndex
-                                    }
-                                    onSelect={handleRowSelect}
-                                />
-                            ))}
+                            {results.map((r) => {
+                                // Resolved here rather than inside the
+                                // row so the lookup map is built once per
+                                // results change instead of per row — and
+                                // so a row with no project, or one the
+                                // viewer's `teamProjects` hasn't loaded,
+                                // simply gets undefined and renders no
+                                // label chips.
+                                const rowProject = r.project_id
+                                    ? projectById.get(r.project_id)
+                                    : undefined;
+                                return (
+                                    <SpotlightResultItem
+                                        key={`${r.entity_type}:${r.entity_id}`}
+                                        project={rowProject}
+                                        query={deferredQuery}
+                                        result={r}
+                                        isHighlighted={
+                                            resultIndexOf.get(
+                                                `${r.entity_type}:${r.entity_id}`
+                                            ) === selectedIndex
+                                        }
+                                        onSelect={handleRowSelect}
+                                    />
+                                );
+                            })}
                         </Box>
                     )}
                 </Box>

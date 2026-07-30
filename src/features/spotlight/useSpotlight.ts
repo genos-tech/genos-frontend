@@ -58,6 +58,7 @@ import {
 import { emitTasksBulkChanged, TASK_WRITE_TOOLS } from "../tasks/services/taskEvents";
 import {
     entityTypesForFilter,
+    projectIdsForFilter,
     toggleFilterService,
     type SpotlightFilterService,
 } from "./spotlightFilters";
@@ -131,6 +132,14 @@ export interface UseSpotlightReturn {
     // debounce). Reset when the overlay closes.
     filterServices: SpotlightFilterService[];
     onToggleFilterService: (service: SpotlightFilterService) => void;
+    // ----- Search-mode project filter (dropdown in the same row) -----
+    // Empty = no project scoping. Unlike the service chips this is a
+    // multi-select over the team's project list, so the overlay hands
+    // back the whole selection rather than a single toggled item.
+    // Re-runs the search immediately and resets on close, exactly like
+    // `filterServices`.
+    filterProjectIds: number[];
+    onChangeFilterProjects: (projectIds: number[]) => void;
     onAsk: (overrideQuery?: string, mentions?: AgentMentionRef[]) => void;
     onApprove: () => void;
     onReject: () => void;
@@ -183,6 +192,8 @@ export const useSpotlight = ({
     const [error, setError] = useState<string | null>(null);
     // Service filter chips (search mode only). Empty = all services.
     const [filterServices, setFilterServices] = useState<SpotlightFilterService[]>([]);
+    // Project filter (search mode only). Empty = every project.
+    const [filterProjectIds, setFilterProjectIds] = useState<number[]>([]);
     const [ask, setAsk] = useState<AskState>(EMPTY_ASK_STATE);
     const [turns, setTurns] = useState<CompletedTurn[]>([]);
     // ----- History panel state (Phase ~4.6) -----
@@ -349,8 +360,11 @@ export const useSpotlight = ({
         setError(null);
         // Filter chips are transient like the query — a fresh open
         // starts unfiltered rather than silently remembering a narrow
-        // scope from last time.
+        // scope from last time. Same for the project selection: coming
+        // back to Cmd-K and silently seeing only one project's content
+        // would read as "search is broken".
         setFilterServices([]);
+        setFilterProjectIds([]);
     }, [isOpen]);
 
     // ---- Persist conversation to localStorage on turns / sessionId change. ----
@@ -402,14 +416,17 @@ export const useSpotlight = ({
         }
 
         // Debounce only while the query itself is changing (typing).
-        // A re-run with the same query — a filter-chip toggle — fires
-        // immediately so narrowing feels like a click, not a pause.
+        // A re-run with the same query — a filter-chip toggle or a
+        // project pick — fires immediately so narrowing feels like a
+        // click, not a pause.
         const delay = trimmed === lastSearchedQueryRef.current ? 0 : DEBOUNCE_MS;
         lastSearchedQueryRef.current = trimmed;
         // Selected services → entity_types; undefined (spread away)
         // when no chips are active so the request stays byte-identical
         // to the unfiltered wire format.
         const entityTypes = entityTypesForFilter(filterServices);
+        // Selected projects → project_ids, same omit-when-empty rule.
+        const projectIds = projectIdsForFilter(filterProjectIds);
 
         // Start a fresh request; supersede any in-flight one.
         abortRef.current?.abort();
@@ -440,6 +457,11 @@ export const useSpotlight = ({
                 min_score: RESULT_MIN_SCORE,
                 use_vector: false,
                 ...(entityTypes ? { entity_types: entityTypes } : {}),
+                // Both lanes carry the scope. If only the hybrid lane
+                // did, the fast keyword pass would paint unfiltered
+                // rows that then visibly swap out — a flash of results
+                // from projects the user just excluded.
+                ...(projectIds ? { project_ids: projectIds } : {}),
                 accessToken,
                 signal: controller.signal,
             })
@@ -463,6 +485,7 @@ export const useSpotlight = ({
                     min_score: RESULT_MIN_SCORE,
                     use_vector: true,
                     ...(entityTypes ? { entity_types: entityTypes } : {}),
+                    ...(projectIds ? { project_ids: projectIds } : {}),
                     accessToken,
                     signal: controller.signal,
                 });
@@ -489,13 +512,20 @@ export const useSpotlight = ({
             window.clearTimeout(timer);
             controller.abort();
         };
-    }, [query, isOpen, teamId, accessToken, t, filterServices]);
+    }, [query, isOpen, teamId, accessToken, t, filterServices, filterProjectIds]);
 
     // Chip toggle for the overlay's filter row. Selection order is
     // preserved (pure helper); the search effect above re-fires with
     // zero delay because the query hasn't changed.
     const onToggleFilterService = useCallback((service: SpotlightFilterService) => {
         setFilterServices((prev) => toggleFilterService(prev, service));
+    }, []);
+
+    // Project dropdown. The picker is multi-select, so it reports the
+    // whole selection rather than one toggled item — no toggle helper
+    // needed. Re-fires the search with zero delay like the chips.
+    const onChangeFilterProjects = useCallback((projectIds: number[]) => {
+        setFilterProjectIds(projectIds);
     }, []);
 
     const open = useCallback(() => setIsOpen(true), []);
@@ -795,11 +825,15 @@ export const useSpotlight = ({
             // Mirror for the completion notice (see `notifyRunFinished`).
             liveRunRef.current = { turnId: askedTurnId, askedQuery: trimmed };
 
-            // The Spotlight filter chips are a SEARCH-ONLY feature: they
-            // scope the typeahead, never the agent. An ask is intentionally
+            // The Spotlight filters — service chips AND the project
+            // dropdown — are a SEARCH-ONLY feature: they scope the
+            // typeahead, never the agent. An ask is intentionally
             // unscoped so Genos always answers from the full workspace —
             // the user narrowing what they browse must not silently narrow
-            // what the assistant can reason over.
+            // what the assistant can reason over. (Scoping the ask by
+            // filter was tried and reverted: fe #177 / api #122.)
+            // Nothing derived from `filterServices` / `filterProjectIds`
+            // may be added to this call.
             void askAgentStream({
                 query: trimmed,
                 teamId,
@@ -1049,6 +1083,8 @@ export const useSpotlight = ({
         error,
         filterServices,
         onToggleFilterService,
+        filterProjectIds,
+        onChangeFilterProjects,
         onAsk,
         onApprove,
         onReject,

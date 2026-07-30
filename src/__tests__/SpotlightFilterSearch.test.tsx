@@ -153,6 +153,134 @@ describe("useSpotlight service filter → entity_types wire field", () => {
     });
 });
 
+// ---- Project filter → project_ids wire field --------------------------
+//
+// Same contract as the service chips (omit when empty, both lanes, never
+// reaches the ask), with one addition: ids are numbers in the app but
+// strings on the wire, because the index stores project_id as a keyword.
+
+describe("useSpotlight project filter → project_ids wire field", () => {
+    beforeEach(() => {
+        vi.mocked(searchSpotlight).mockClear();
+        vi.mocked(askAgentStream).mockClear();
+        localStorage.clear();
+    });
+
+    it("omits project_ids until projects are picked, then sends them stringified", async () => {
+        const { result } = renderHook(() =>
+            useSpotlight({ accessToken: "test-token", teamId: "team-1" })
+        );
+        act(() => {
+            result.current.open();
+            result.current.setQuery("launch");
+        });
+        await waitFor(() => {
+            expect(searchSpotlight).toHaveBeenCalledTimes(2);
+        });
+        for (const [args] of vi.mocked(searchSpotlight).mock.calls) {
+            expect(args.project_ids).toBeUndefined();
+        }
+
+        vi.mocked(searchSpotlight).mockClear();
+        act(() => {
+            result.current.onChangeFilterProjects([7, 12]);
+        });
+        // Same query → no debounce. BOTH lanes must carry the scope, or
+        // the fast keyword pass paints rows from excluded projects that
+        // then visibly swap out.
+        await waitFor(() => {
+            expect(searchSpotlight).toHaveBeenCalledTimes(2);
+        });
+        expect(vi.mocked(searchSpotlight).mock.calls).toHaveLength(2);
+        for (const [args] of vi.mocked(searchSpotlight).mock.calls) {
+            expect(args.project_ids).toEqual(["7", "12"]);
+        }
+        // Exactly one of the two lanes is the keyword fast pass.
+        const vectorFlags = vi
+            .mocked(searchSpotlight)
+            .mock.calls.map(([args]) => args.use_vector)
+            .sort();
+        expect(vectorFlags).toEqual([false, true]);
+
+        // Clearing the selection goes back to omitting the key.
+        vi.mocked(searchSpotlight).mockClear();
+        act(() => {
+            result.current.onChangeFilterProjects([]);
+        });
+        await waitFor(() => {
+            expect(searchSpotlight).toHaveBeenCalledTimes(2);
+        });
+        for (const [args] of vi.mocked(searchSpotlight).mock.calls) {
+            expect(args.project_ids).toBeUndefined();
+        }
+    });
+
+    it("composes with the service chips", async () => {
+        const { result } = renderHook(() =>
+            useSpotlight({ accessToken: "test-token", teamId: "team-1" })
+        );
+        act(() => {
+            result.current.open();
+            result.current.setQuery("launch");
+        });
+        await waitFor(() => expect(searchSpotlight).toHaveBeenCalled());
+
+        vi.mocked(searchSpotlight).mockClear();
+        act(() => {
+            result.current.onToggleFilterService("task");
+            result.current.onChangeFilterProjects([7]);
+        });
+        await waitFor(() => {
+            expect(searchSpotlight).toHaveBeenCalled();
+        });
+        const last = vi.mocked(searchSpotlight).mock.calls.at(-1)![0];
+        expect(last.entity_types).toEqual(["task", "milestone"]);
+        expect(last.project_ids).toEqual(["7"]);
+    });
+
+    it("never scopes the ask (search-only)", async () => {
+        vi.mocked(askAgentStream).mockImplementation(async (args) => {
+            args.onDone("sess-1", "run-1");
+        });
+        const { result } = renderHook(() =>
+            useSpotlight({ accessToken: "test-token", teamId: "team-1" })
+        );
+        act(() => {
+            result.current.open();
+            result.current.onChangeFilterProjects([7, 12]);
+        });
+        act(() => {
+            result.current.onAsk("what is blocked?");
+        });
+        await waitFor(() => {
+            expect(askAgentStream).toHaveBeenCalledTimes(1);
+        });
+        // Genos always answers from the full workspace: narrowing what
+        // the user BROWSES must never narrow what the agent can reason
+        // over. (Scoping the ask by filter was reverted — fe #177.)
+        const askArgs = vi.mocked(askAgentStream).mock.calls[0][0];
+        expect(askArgs).not.toHaveProperty("project_ids");
+        expect(askArgs).not.toHaveProperty("projectIds");
+    });
+
+    it("resets the project selection when the overlay closes", async () => {
+        const { result } = renderHook(() =>
+            useSpotlight({ accessToken: "test-token", teamId: "team-1" })
+        );
+        act(() => {
+            result.current.open();
+            result.current.onChangeFilterProjects([7]);
+        });
+        expect(result.current.filterProjectIds).toEqual([7]);
+        act(() => {
+            result.current.close();
+        });
+        await waitFor(() => {
+            expect(result.current.filterProjectIds).toEqual([]);
+        });
+    });
+});
+
 // ---- Overlay: chips are a search-mode-only surface --------------------
 
 const overlayProps = () => ({
@@ -238,5 +366,59 @@ describe("SpotlightOverlay filter chips", () => {
         expect(screen.getByRole("button", { name: "Chats", pressed: true })).toBeTruthy();
         expect(screen.getByRole("button", { name: "Tasks", pressed: false })).toBeTruthy();
         expect(document.querySelectorAll('[aria-pressed="true"]')).toHaveLength(1);
+    });
+});
+
+// ---- Overlay: the project picker ---------------------------------------
+
+const PROJECTS = [
+    { projectId: 7, projectName: "Apollo", projectTags: [], isJoined: true },
+    { projectId: 12, projectName: "Borealis", projectTags: [], isJoined: true },
+];
+
+describe("SpotlightOverlay project filter", () => {
+    it("renders the picker next to the service chips in search mode", () => {
+        const props = { ...overlayProps(), projects: PROJECTS, onChangeFilterProjects: vi.fn() };
+        renderOverlay(props);
+
+        // Placeholder doubles as the "no scope" affordance.
+        expect(screen.getByPlaceholderText("All projects")).toBeTruthy();
+        // Still in the same row as the service chips.
+        expect(screen.getByText("Filters")).toBeTruthy();
+        expect(screen.getByRole("button", { name: "Genos answers" })).toBeTruthy();
+    });
+
+    it("hides the picker in agent mode, like the chips", () => {
+        const props = { ...overlayProps(), projects: PROJECTS, onChangeFilterProjects: vi.fn() };
+        props.ask = { ...EMPTY_ASK_STATE, isStreaming: true, askedQuery: "why?" };
+        renderOverlay(props);
+
+        expect(screen.queryByPlaceholderText("All projects")).toBeNull();
+    });
+
+    it("does not render when no projects were threaded", () => {
+        // Callers that don't wire the prop (and teams with no projects)
+        // keep exactly the pre-feature filter row.
+        renderOverlay(overlayProps());
+        expect(screen.queryByPlaceholderText("All projects")).toBeNull();
+    });
+
+    it("shows the scoped-project count and clears it in one click", async () => {
+        const user = userEvent.setup();
+        const onChangeFilterProjects = vi.fn();
+        const props = {
+            ...overlayProps(),
+            projects: PROJECTS,
+            filterProjectIds: [7, 12],
+            onChangeFilterProjects,
+        };
+        renderOverlay(props);
+
+        // The picker collapses tags to "+N", so the count is spelled out
+        // beside it and doubles as a one-click clear. Click the
+        // ChipAction button, not the label span — the label is
+        // pointer-events: none in Joy (see the service-chip test above).
+        await user.click(screen.getByRole("button", { name: "2 projects ×" }));
+        expect(onChangeFilterProjects).toHaveBeenCalledWith([]);
     });
 });

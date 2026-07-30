@@ -16,6 +16,9 @@ import { useColorScheme } from "@mui/joy/styles";
 
 import { useTranslation, type Messages } from "../../i18n";
 import { purplePalette } from "../../theme/purplePalette";
+import type { ProjectProps } from "../../types/tasks";
+import { ProjectLabelChips } from "../admin/components/projectLabels/ProjectLabelChips";
+import { TaskStatusChip } from "../tasks/components/TaskStatusChip";
 import type { SpotlightResult } from "./types";
 
 type SpotlightMessages = Messages["spotlight"];
@@ -24,8 +27,34 @@ interface Props {
     result: SpotlightResult;
     query: string;
     isHighlighted?: boolean;
+    /** The project this row belongs to, resolved by the parent from
+     *  `result.project_id`. Carries `projectLabels`, which is the only
+     *  source for the label chips — the search backend returns a bare
+     *  `project_id`, never the labels. Undefined for rows with no
+     *  project (DMs, personal notes, todos) and for a project the
+     *  viewer's `teamProjects` hasn't loaded. */
+    project?: ProjectProps;
     onSelect: (r: SpotlightResult) => void;
 }
+
+// Which rows are "task-related" enough to carry the metadata chips.
+//
+// `task` and `milestone` are the task service itself. A note whose
+// `note_type` is "task" is a note attached to a task, so it inherits the
+// task's project — and therefore its labels — but has no status of its
+// own. Everything else (chats incl. PM chats, personal/chat notes,
+// todos, past answers) is left alone: the chips exist to make a task
+// result scannable, not to decorate every row.
+const isTaskRelated = (r: SpotlightResult): boolean =>
+    r.entity_type === "task" ||
+    r.entity_type === "milestone" ||
+    (r.entity_type === "note" && r.note_type === "task");
+
+// Status applies to the two entities that HAVE one. A task-note shows
+// its project's labels but no status — the note isn't open or closed,
+// the task it hangs off is.
+const showsStatus = (r: SpotlightResult): boolean =>
+    r.entity_type === "task" || r.entity_type === "milestone";
 
 const ENTITY_ICON = {
     chat: QuestionAnswerRoundedIcon,
@@ -255,7 +284,7 @@ function windowAroundMatch(text: string, query: string, extraTerms?: string[]): 
     return prefix + text.slice(start, end).trim() + suffix;
 }
 
-const SpotlightResultItemInner = ({ result, query, isHighlighted, onSelect }: Props) => {
+const SpotlightResultItemInner = ({ result, query, isHighlighted, project, onSelect }: Props) => {
     const { mode } = useColorScheme();
     const { t } = useTranslation();
     const isDark = mode === "dark";
@@ -369,6 +398,45 @@ const SpotlightResultItemInner = ({ result, query, isHighlighted, onSelect }: Pr
                             </Chip>
                         );
                     })()}
+                    {/* Task metadata: status, then the project's labels.
+                        Both live on the title row alongside the subtitle
+                        and THREAD/COMMENT badge — that row is already the
+                        "what kind of thing is this" line, and a separate
+                        chip row would cost vertical density on every task
+                        hit. `flexShrink: 0` keeps the chips intact and
+                        lets the title ellipsize instead; the chips are
+                        individually capped so they can't run away with
+                        the row.
+
+                        Each renders only when its data is there:
+                        `task_status` is absent on older backends and on
+                        not-yet-reingested milestones, and
+                        `ProjectLabelChips` self-hides when the project
+                        has no labels — so an unlabelled task in a
+                        pre-reindex workspace looks exactly like it does
+                        today. */}
+                    {isTaskRelated(result) && (
+                        <Box
+                            sx={{
+                                display: "flex",
+                                // The row is baseline-aligned for its
+                                // text; chips (one with a leading icon)
+                                // need centring or they hang off the
+                                // title's baseline.
+                                alignItems: "center",
+                                alignSelf: "center",
+                                gap: 0.5,
+                                flexShrink: 0,
+                            }}
+                        >
+                            {showsStatus(result) && result.task_status && (
+                                <TaskStatusChip status={result.task_status} />
+                            )}
+                            {project && (
+                                <ProjectLabelChips labels={project.projectLabels ?? []} max={2} />
+                            )}
+                        </Box>
+                    )}
                 </Box>
                 {result.snippet && (
                     <Typography
