@@ -341,11 +341,35 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                     width: "100%",
                     alignItems: "center",
                     justifyContent: "space-between",
+                    // MUST be able to wrap below `md`. The two groups are
+                    // "Start Task" + id + status chips on the left and the
+                    // action icons on the right, and neither could shrink,
+                    // so on a phone the row overflowed to the right — the
+                    // Close button, being last, was cut in half. And the
+                    // pane's `overflowX: hidden` meant you couldn't even
+                    // scroll to it: the only way out of the task was the
+                    // overlay's own Close. Wrapping puts the action group
+                    // on its own line instead of off the screen.
+                    flexWrap: { xs: "wrap", md: "nowrap" },
+                    rowGap: 1,
                 }}
             >
                 {/* Left side: ID and Status chips (preview mode) or New Task badge (create mode) */}
                 {isPreviewMode ? (
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <Box
+                        sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 1,
+                            // Yields space first: the status/id chips can
+                            // wrap among themselves, and `minWidth: 0`
+                            // lets this group shrink instead of pushing
+                            // the action icons off the right edge.
+                            flexWrap: { xs: "wrap", md: "nowrap" },
+                            minWidth: 0,
+                            rowGap: 0.75,
+                        }}
+                    >
                         {/* Status Transition Buttons */}
                         {isPreviewMode &&
                             (taskContent.status.status === "Open" ||
@@ -519,7 +543,20 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                 )}
 
                 {/* Right side: Action buttons */}
-                <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, ml: "auto" }}>
+                <Box
+                    sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 0.5,
+                        ml: "auto",
+                        // Never squeezed: these are 36px icon buttons
+                        // and the last one is Close. If the row runs out
+                        // of width the whole group wraps to line two
+                        // (still right-aligned via `ml: auto`) rather
+                        // than any of it being clipped.
+                        flexShrink: 0,
+                    }}
+                >
                     {isOnTasksRoute &&
                         taskContent.threadId !== null &&
                         taskContent.chatType !== null &&
