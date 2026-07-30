@@ -3,7 +3,7 @@ import { createContext, ReactNode, useCallback, useContext, useEffect, useState 
 import { getLoadedMessages, loadLocale } from "./localeLoaders";
 import { en } from "./locales/en";
 import { persistLocale, resolveInitialLocale } from "./localeSource";
-import { Locale, Messages, RTL_LOCALES } from "./types";
+import { applyDocumentLocale, Locale, Messages } from "./types";
 
 /**
  * Centralized i18n layer. Mirrors the manual `ja` / `en` `Copy` pattern that
@@ -69,11 +69,12 @@ export const I18nProvider = ({ children }: { children: ReactNode }) => {
     // logical-property CSS (margin-inline-start etc.), and any assistive
     // tech keying off these attributes pick up the change. Arabic flips
     // the document to RTL; everything else stays LTR.
+    //
+    // `main.tsx` does the same thing once BEFORE React mounts (the static
+    // `index.html` ships `lang="en"`), so both call the same helper — if
+    // they ever disagreed the document would keep whichever ran last.
     useEffect(() => {
-        if (typeof document !== "undefined") {
-            document.documentElement.lang = locale;
-            document.documentElement.dir = RTL_LOCALES.has(locale) ? "rtl" : "ltr";
-        }
+        applyDocumentLocale(locale);
     }, [locale]);
 
     return (

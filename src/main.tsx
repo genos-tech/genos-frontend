@@ -22,7 +22,7 @@ import { registerServiceWorkerOnBoot } from "./services/notifications/pushSubscr
 import { startLongTaskObserver } from "./services/perfObserver";
 
 import { App } from "./App";
-import { bootI18n, resolveInitialLocale } from "./i18n";
+import { applyDocumentLocale, bootI18n, resolveInitialLocale } from "./i18n";
 
 // The public marketing pages are code-split away from the app entry.
 // They are the only consumers of framer-motion, and nobody who opens
@@ -200,6 +200,24 @@ const mount = () => createRoot(document.getElementById("root")!).render(tree);
 // that a broken catalog chunk can never leave a white screen. It swallows
 // rather than mounting, so `.then(mount)` runs exactly once either way.
 const initialLocale = resolveInitialLocale();
+
+// Write <html lang>/<html dir> BEFORE the mount, not just from
+// `I18nProvider`'s effect.
+//
+// `index.html` ships a hard-coded `lang="en"`, and this is a pure
+// client-rendered SPA — one `index.html`, no prerender step — so that
+// attribute is what every request receives. Until React mounted, a
+// Japanese or Arabic user's document claimed to be English: a screen
+// reader starting to read immediately used an English voice, and an
+// Arabic user got a left-to-right document. For a non-English locale the
+// mount is gated on a catalog fetch below, so that window is a network
+// round-trip, not a frame.
+//
+// Placed before the branch so it covers English too — an English user who
+// had previously switched away and back still lands on a document whose
+// attributes match, rather than inheriting whatever the last locale set.
+applyDocumentLocale(initialLocale);
+
 if (initialLocale === "en") {
     mount();
 } else {

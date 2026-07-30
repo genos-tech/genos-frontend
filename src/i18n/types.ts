@@ -20,6 +20,36 @@ export type Locale = "en" | "ja" | "es" | "fr" | "zh" | "ar" | "hi";
  */
 export const RTL_LOCALES: ReadonlySet<Locale> = new Set(["ar"]);
 
+/** Value for `<html dir>` under a given locale. */
+export type Direction = "ltr" | "rtl";
+
+/**
+ * The document direction a locale renders in.
+ *
+ * Deliberately a shared function rather than each caller reaching for
+ * `RTL_LOCALES` itself: `<html lang>`/`<html dir>` are now written from TWO
+ * places — `main.tsx` before React mounts, and `I18nProvider` whenever the
+ * user switches language — and the two disagreeing is a silent bug (the
+ * document would keep a stale direction for the rest of the session).
+ */
+export const localeDirection = (locale: Locale): Direction =>
+    RTL_LOCALES.has(locale) ? "rtl" : "ltr";
+
+/**
+ * Write the locale onto the document element.
+ *
+ * `lang` is what screen readers use to pick pronunciation — with the wrong
+ * value, every non-English user hears their content read in an English
+ * voice — and what `:lang()` selectors and browser translation prompts key
+ * off. `dir` drives text direction, `text-align: start`, the flex inline
+ * axis, and logical-property CSS.
+ */
+export const applyDocumentLocale = (locale: Locale): void => {
+    if (typeof document === "undefined") return;
+    document.documentElement.lang = locale;
+    document.documentElement.dir = localeDirection(locale);
+};
+
 export type DeepPartial<T> = {
     [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K] extends string ? string : T[K];
 };
