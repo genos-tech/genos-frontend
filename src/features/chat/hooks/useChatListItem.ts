@@ -1,12 +1,15 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
+import { useIsMobile } from "../../../hooks/common/useIsMobile";
 import { TaskManagementState } from "../../../hooks/tasks/useTaskManagement";
 import { channelService } from "../../../services/channel/channelService";
 import { UserProps } from "../../../types/admin";
 import { AllChatProps, ChatProps, MessageProps } from "../../../types/chat";
 import { toggleMessagesPane } from "../../../utils/sidebarUtils";
 import { readV3CachedMessages } from "../services/loadV3SpecificMessages";
+import { buildChatPath, CHAT_TYPE_REVERSE_MAP } from "../utils/chatPaths";
 
 /**
  * The manager state a click handler reads LIVE, handed in at call time.
@@ -35,6 +38,8 @@ interface UseChatListItemProps {
 
 export const useChatListItem = ({ chat, myself, isPinnedChat }: UseChatListItemProps) => {
     const [isPinned, setIsPinned] = useState(chat.isPinned);
+    const navigate = useNavigate();
+    const isMobile = useIsMobile();
 
     const isYou = myself.userId === chat.dmPartnerUser.userId;
 
@@ -66,6 +71,38 @@ export const useChatListItem = ({ chat, myself, isPinnedChat }: UseChatListItemP
     };
 
     const onClickHandler = ({ useCM, useTM }: ChatListItemLive) => {
+        // Mobile is a single-pane stack where the URL — not
+        // `currentMainChat` — decides which pane is on screen (see
+        // `MobileChatHome`), so opening a chat has to move the URL.
+        //
+        // Selection is otherwise state-first: nothing here navigates, and
+        // `useChatRouting`'s state→URL effect catches up. But that effect is
+        // keyed on the chat's IDENTITY, so re-selecting the chat that is
+        // already `currentMainChat` writes the same id, fires no effect, and
+        // never navigates. Both of these leave exactly that state — a chat
+        // still selected while the URL sits at the list:
+        //
+        //   1. Mobile back (header arrow, browser Back, swipe-back) drops
+        //      the `:chatId` segment but keeps the selection.
+        //   2. Boot restores `lastChatId` into `currentMainChat`
+        //      (`loadInitialData`) while the URL is still `/workspace/chat/:type`.
+        //
+        // In both, tapping THAT chat did nothing while tapping any other
+        // chat worked — which is what made the failure look intermittent.
+        // Driving the URL from the tap removes the dependency on the
+        // identity changing at all. Desktop is untouched: it renders panes
+        // from state and deliberately keeps selection state-first.
+        //
+        // Skipped when the URL already points here: `navigate` to an
+        // identical path still PUSHES, and a duplicate entry costs the user
+        // two Back presses to leave the chat.
+        if (isMobile) {
+            const typePath = CHAT_TYPE_REVERSE_MAP[chat.chatType];
+            const target = typePath ? buildChatPath(typePath, chat.chatId) : null;
+            if (target !== null && window.location.pathname !== target) {
+                navigate(target);
+            }
+        }
         if (
             useCM.isSubChatVisible === false ||
             `${useCM.currentSubChat?.chatType}-${useCM.currentSubChat?.chatId}-${useCM.currentSubChat?.chatName}` !==
