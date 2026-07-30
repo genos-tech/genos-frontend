@@ -14,6 +14,7 @@ import { UserProps } from "../../../../types/admin";
 import { ChatProps, MessageProps, ThreadMessageProps, ThreadProps } from "../../../../types/chat";
 import { TaskCommentProps } from "../../../../types/tasks";
 import { useScrollToBottomOnChatChange } from "../../hooks/messageBubbleHooks";
+import { useFollowOwnOutput } from "../../hooks/useFollowOwnOutput";
 import { VisibleRange } from "../../hooks/useScrollManagement";
 import { handleAtTop } from "../../services/handleBubblePositionAction";
 import { computeMessageItemMetas } from "../../utils/messageItemMetas";
@@ -101,14 +102,22 @@ export const MessageListRenderer = ({
 }: MessageListRendererProps) => {
     // Auto-follow only — jumping to a focused message is owned by
     // `useScrollManagement` (see that hook + `resolveJumpScroll`).
+    //
+    // The last two arguments come from `chat` — the chat THIS list is
+    // rendering — not from `useCM.currentMainChat`. They used to always
+    // read the main chat, so a thread pane's auto-follow keyed off a
+    // different conversation: any main-chat jump target (an activity
+    // click, which is usually how you got to the thread) made the hook
+    // bail, and the main chat's `notMove` decided whether a reply of
+    // YOURS in the thread pulled the pane down.
     useScrollToBottomOnChatChange(
         virtuosoRef,
         currentChatId,
         visibleRangeRef,
         messages.length - 1,
         indexMap,
-        useCM.currentMainChat?.moveToSpecificIndex,
-        useCM.currentMainChat?.notMove
+        chat.moveToSpecificIndex,
+        chat.notMove
     );
 
     const { mode } = useColorScheme();
@@ -128,6 +137,38 @@ export const MessageListRenderer = ({
     const chatIdentityKey = isThread
         ? `${chat.chatId}:${(chat as ThreadProps).threadId}`
         : `${chat.chatId}`;
+
+    // Same keys `indexMap` and `resolveFocusedState` use. Legacy rows can
+    // arrive without a v3 uuid, so fall back to the sequence id — this
+    // only has to CHANGE when a new row lands at the end.
+    const getMessageKey = useCallback(
+        (message: MessageProps | ThreadMessageProps) => {
+            const key = isThread
+                ? (message as ThreadMessageProps).messageIdWithChatIdAndThreadId
+                : (message as MessageProps).messageIdWithChatId;
+            return key ? String(key) : `seq:${message.messageId}`;
+        },
+        [isThread]
+    );
+    // PM (chatType 3) is a read-only task-card feed with no composer, so
+    // there is no "I just sent this" gesture to honour — a card for a task
+    // created elsewhere must not yank a reader out of the history. Every
+    // other kind follows the sender.
+    const isOwnMessage = useCallback(
+        (message: MessageProps | ThreadMessageProps) =>
+            chat.chatType !== 3 && message.sender.userId === myself.userId,
+        [chat.chatType, myself.userId]
+    );
+    // Sticky-bottom policy: always follow my own new message, follow
+    // everyone else's only while I'm already at the bottom. See
+    // `resolveFollowOutput` for why this is `followOutput` and not a
+    // `scrollToIndex` on send.
+    const followOutput = useFollowOwnOutput({
+        getKey: getMessageKey,
+        isOwn: isOwnMessage,
+        resetKey: chatIdentityKey,
+        rows: messages,
+    });
 
     // A cold channel (never synced this session, nothing in IDB) has no
     // messages to paint until its sync lands, so the pane would sit
@@ -380,6 +421,7 @@ export const MessageListRenderer = ({
                 atTopThreshold={64}
                 className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                 context={listContext}
+                followOutput={followOutput}
                 increaseViewportBy={{ bottom: OVERSCAN_PX, top: OVERSCAN_PX }}
                 initialTopMostItemIndex={{ align: "end", index: "LAST" }}
                 isScrolling={setIsScrolling}
