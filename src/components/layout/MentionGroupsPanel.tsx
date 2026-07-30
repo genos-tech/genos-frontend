@@ -186,7 +186,34 @@ export const MentionGroupsPanel = ({
                             </ListItem>
                         )}
                         {mentionGroups.map((g) => (
-                            <ListItem key={g.groupId} sx={{ p: 0 }}>
+                            <ListItem
+                                key={g.groupId}
+                                sx={{
+                                    p: 0,
+                                    // Joy's ListItem hands its child
+                                    // ListItemButton a NEGATIVE margin —
+                                    // `calc(-1 * var(--ListItem-paddingY))`,
+                                    // and the same on the inline axis — so the
+                                    // button bleeds out to the ListItem's
+                                    // edges (ListItem.js). That assumes the
+                                    // ListItem carries the padding. Ours
+                                    // doesn't (`p: 0`; the row's own padding
+                                    // shapes it), and zeroing `p` does NOT
+                                    // reset those vars — so every row kept a
+                                    // -6px block margin and spilled over the
+                                    // rows above AND below. Invisible until
+                                    // hover painted the real box, which is
+                                    // exactly how it was reported.
+                                    //
+                                    // These MUST sit on the ListItem, not the
+                                    // List: the ListItem re-declares them on
+                                    // itself, so the button inherits from it
+                                    // (the nearer ancestor) and a List-level
+                                    // override never reaches the button.
+                                    "--ListItemButton-marginBlock": "0px",
+                                    "--ListItemButton-marginInline": "0px",
+                                }}
+                            >
                                 {/* Spacing is one `gap` for the whole row
                                     rather than a margin on the icon: the old
                                     `mr: 0.75` + no margin before the Chip

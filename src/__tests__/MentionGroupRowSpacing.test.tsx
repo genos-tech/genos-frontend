@@ -45,6 +45,27 @@ describe("mention group row", () => {
         expect(getComputedStyle(list).padding).toBe("6px");
     });
 
+    it("does not let rows bleed over each other", () => {
+        // Joy's ListItem gives its child ListItemButton a NEGATIVE margin
+        // (`calc(-1 * var(--ListItem-paddingY))`) so the button can bleed out
+        // to the ListItem's edges. Ours carries no padding to cancel — and
+        // `p: 0` does NOT reset the variable — so each row spilled 6px over
+        // the rows above and below. You only saw it on hover, when the fill
+        // painted the real box.
+        //
+        // Asserted on the VARIABLE as resolved at the row, not on
+        // `marginTop`: jsdom doesn't evaluate `var()` inside a margin, so a
+        // margin assertion here passes against the broken version. It also
+        // has to be read at the ROW — the ListItem re-declares the variable
+        // on itself, so a List-level override never reaches the button (an
+        // earlier draft of this fix did exactly that and did nothing).
+        renderPanel();
+        const row = screen.getByText("@designers").closest("[role='button']") as HTMLElement;
+        const style = getComputedStyle(row);
+        expect(style.getPropertyValue("--ListItemButton-marginBlock")).toBe("0px");
+        expect(style.getPropertyValue("--ListItemButton-marginInline")).toBe("0px");
+    });
+
     it("spaces the icon, name and member count with one row gap", () => {
         renderPanel();
         const row = screen.getByText("@designers").closest("[role='button']") as HTMLElement;
