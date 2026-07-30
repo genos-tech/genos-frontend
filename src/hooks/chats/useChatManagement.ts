@@ -842,6 +842,7 @@ export const useChatManagement = (
         let lastSliceRef: readonly unknown[] | undefined;
         let lastFlagsVersion = -1;
         const adapt = createCachedThreadMessagesAdapter();
+        const myUserId = myself.userId || "";
         const apply = () => {
             const snapshot = channelService.getSnapshot();
             const messagesSlice = snapshot.messagesByChannel.get(channelUuid);
@@ -866,12 +867,28 @@ export const useChatManagement = (
                 if (String(prev.threadId) !== threadRootUuid) return prev;
                 // Stable-output bail — see the main-chat bridge.
                 if (prev.messages === legacyThreadMessages) return prev;
-                return { ...prev, messages: legacyThreadMessages };
+                // Same auto-follow policy as the main / sub bridges, which
+                // this one was missing: without `notMove` the thread's
+                // scroll hooks saw `undefined` and read every patch as
+                // "safe to pull the pane down", so a reply from someone
+                // else yanked a reader who had scrolled up the thread.
+                const grew = legacyThreadMessages.length > prev.messages.length;
+                const tail = grew
+                    ? legacyThreadMessages[legacyThreadMessages.length - 1]
+                    : undefined;
+                const selfAppended = !!tail && tail.sender.userId === myUserId;
+                return {
+                    ...prev,
+                    messages: legacyThreadMessages,
+                    notMove: !selfAppended,
+                };
             });
         };
         const unsubscribe = channelService.subscribe(apply);
         apply();
         return unsubscribe;
+        // Same arm-time read of `myself.userId` as the main-chat bridge.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentThreadChat?.chatId, currentThreadChat?.threadId, currentThreadChat?.chatType]);
 
     // Flagged-messages sidebar subscription. The legacy `popFlaggedMessages`

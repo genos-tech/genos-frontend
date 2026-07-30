@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import CommentRoundedIcon from "@mui/icons-material/CommentRounded";
 import { Box, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
@@ -13,6 +13,7 @@ import { TaskManagementState } from "../../../../../../hooks/tasks/useTaskManage
 import { UserProps } from "../../../../../../types/admin";
 import { MessageProps, ThreadMessageProps } from "../../../../../../types/chat";
 import { TaskCommentProps } from "../../../../../../types/tasks";
+import { useFollowOwnOutput } from "../../../../../chat/hooks/useFollowOwnOutput";
 import { useScrollToTaskCommentByCommentId } from "../../../../hooks/taskCommentHooks";
 import { TaskCommentBubble } from "./TaskCommentBubble";
 
@@ -119,6 +120,25 @@ export const TaskCommentList = ({
         focusedCommentId
     );
 
+    // ...with one exception to "only when already at the bottom": a
+    // comment *I* just posted always pulls the list down, even if I had
+    // scrolled up to re-read something before typing it. The plain
+    // unconditional `followOutput` this replaces left your own comment
+    // off-screen in that case. See `resolveFollowOutput`.
+    //
+    // `resetKey` is the task these comments belong to (every row carries
+    // it) so the pending-append flag can't survive into another task's
+    // list — this component is reused across tasks without remounting.
+    const followOutput = useFollowOwnOutput({
+        getKey: useCallback((comment: TaskCommentProps) => String(comment.commentId), []),
+        isOwn: useCallback(
+            (comment: TaskCommentProps) => comment.senderId === myself.userId,
+            [myself.userId]
+        ),
+        resetKey: String(taskComments[taskComments.length - 1]?.taskId ?? ""),
+        rows: taskComments,
+    });
+
     // Hoisted out of `itemContent` so both Virtuoso branches reuse
     // the same wiring without duplicating the click closure.
     const buildCommentClickHandler = (commentId: number) => {
@@ -185,7 +205,7 @@ export const TaskCommentList = ({
                     atBottomThreshold={128}
                     atTopThreshold={64}
                     className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
-                    followOutput="auto"
+                    followOutput={followOutput}
                     initialTopMostItemIndex={taskComments.length - 1}
                     style={{ flex: 1, minHeight: 0 }}
                     totalCount={taskComments.length}
@@ -226,7 +246,7 @@ export const TaskCommentList = ({
                 atBottomThreshold={128}
                 atTopThreshold={64}
                 className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
-                followOutput="auto"
+                followOutput={followOutput}
                 initialTopMostItemIndex={taskComments.length - 1}
                 style={{ height: Math.min(contentHeight, maxHeight) }}
                 totalCount={taskComments.length}
