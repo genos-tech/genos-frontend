@@ -319,7 +319,18 @@ export const PlanUsageSection = ({ onNavigateAway }: { onNavigateAway?: () => vo
 
             {billing?.enabled ? (
                 <Stack spacing={1}>
-                    <Stack alignItems="center" direction="row" spacing={1.5}>
+                    {/* WRAPS. These are 3-4 buttons whose labels can't
+                        shrink, so in a single nowrap row they overflowed the
+                        panel and the tab panel turned that into a horizontal
+                        scrollbar. `gap` rather than Stack's `spacing`, which
+                        compiles to margins and lays out wrongly once a row
+                        wraps. The explanatory hint moved OUT of this row —
+                        it's prose, not an action, and it was the widest item
+                        in it. */}
+                    <Stack
+                        direction="row"
+                        sx={{ alignItems: "center", flexWrap: "wrap", gap: 1.5 }}
+                    >
                         {/* Personal upgrades key off the user's OWN tier —
                             a team-granted effective tier doesn't hide them
                             (someone on team-pro may still buy personal max).
@@ -379,12 +390,12 @@ export const PlanUsageSection = ({ onNavigateAway }: { onNavigateAway?: () => vo
                         >
                             {p.comparePlans}
                         </Button>
-                        <Typography level="body-xs" sx={{ color: "text.tertiary" }}>
-                            {billing.personal_tier !== "free" && billing.has_billing_account
-                                ? p.manageBillingHint
-                                : p.upgradeHint}
-                        </Typography>
                     </Stack>
+                    <Typography level="body-xs" sx={{ color: "text.tertiary" }}>
+                        {billing.personal_tier !== "free" && billing.has_billing_account
+                            ? p.manageBillingHint
+                            : p.upgradeHint}
+                    </Typography>
                     {billingError && (
                         <Typography color="danger" level="body-xs">
                             {billingError}
@@ -392,7 +403,7 @@ export const PlanUsageSection = ({ onNavigateAway }: { onNavigateAway?: () => vo
                     )}
                 </Stack>
             ) : (
-                <Stack alignItems="center" direction="row" spacing={1.5}>
+                <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", gap: 1.5 }}>
                     {/* Stripe not configured server-side (or old backend). */}
                     <Button disabled size="sm" variant="solid">
                         {p.upgradeCta}
