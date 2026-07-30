@@ -1208,3 +1208,41 @@ body
         height: var(--task-body-editor-height, 600px);
     }
 }
+
+/* ==========================================================================
+   Mobile chat / task-comment composer
+   ==========================================================================
+   LAST in the file on purpose. The blocks above are ordered
+   `max-width: 480px` → `768-1023px` → `min-width: 1024px`, so a 600-900px
+   viewport picked up desktop-ish heights while `useIsMobile()` (< 900px,
+   Joy's `md`) had already switched the toolbar to its mobile shape. One
+   query at the SAME breakpoint the JS uses keeps the two in step, and
+   being last it wins the `768-1023px` overlap without !important.
+
+   Heights are ~30% below the previous mobile values: the composer was
+   claiming a third of a phone screen before you typed anything, which on a
+   surface whose point is reading messages is the wrong trade.
+
+   `padding-top` must stay LARGER than the floating toolbar's height, or
+   the bar covers the first line typed — that was the bug. The bar is
+   ~40px on mobile (36px controls + the tightened 2px inner pad from
+   `bnChatEditor` / `bnTaskCommentEditor`), so 44px clears it with margin
+   for a locale that renders the controls a little taller.
+   ========================================================================== */
+@media (max-width: 899.95px) {
+    .bn-chat-editor-box-light .bn-editor,
+    .bn-chat-editor-box-dark .bn-editor {
+        padding-top: 44px;
+        min-height: 105px;
+        max-height: 210px;
+        padding-left: 10px;
+    }
+
+    .bn-task-comment-box-light .bn-editor,
+    .bn-task-comment-box-dark .bn-editor {
+        padding-top: 44px;
+        min-height: 105px;
+        max-height: 280px;
+        padding-left: 10px;
+    }
+}

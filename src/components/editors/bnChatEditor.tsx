@@ -452,17 +452,33 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
                         className="bn-editor-toolbar"
                         sx={{
                             position: "absolute",
-                            top: "1%",
-                            left: "0.5%",
+                            // `top: "1%"` resolved against the editor box, so
+                            // on a phone the bar started ~3px down and its
+                            // ~47px height ran past the content's 40px
+                            // `padding-top` — covering the first line you
+                            // typed. Flush to the top on mobile, with a
+                            // tighter inner pad so the bar is shorter than
+                            // the padding that clears it (see App.css).
+                            top: { xs: 0, md: "1%" },
+                            left: { xs: 0, md: "0.5%" },
                             zIndex: 1,
-                            p: 0.7,
+                            p: { xs: 0.25, md: 0.7 },
                         }}
                     >
                         <FormattingToolbar>
-                            <BlockTypeSelect
-                                key={"blockTypeSelect"}
-                                items={getBlockTypeSelectItemsWithCodeBlock(editor.dictionary)}
-                            />
+                            {/* The block-type picker ("Paragraph" + a
+                                dropdown of headings / lists) is the widest
+                                item in the bar by far, and heading-styled
+                                chat messages aren't a thing people reach for
+                                on a phone. Dropping it on mobile is what
+                                buys room for Emoji and GIF below; the "/"
+                                menu still offers every block type. */}
+                            {!isMobile && (
+                                <BlockTypeSelect
+                                    key={"blockTypeSelect"}
+                                    items={getBlockTypeSelectItemsWithCodeBlock(editor.dictionary)}
+                                />
+                            )}
 
                             <BasicTextStyleButton
                                 key={"boldStyleButton"}
@@ -501,19 +517,19 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
                             <FilePreviewButton key={"filePreviewButton"} />
                             <FileRenameButton key={"fileRenameButton"} />
 
-                            {/* Extra button to toggle blue text & background */}
-                            {!isMobile && (
-                                <CustomEmojiToolbar
-                                    key={"customButton"}
-                                    setShowEmojiPicker={setShowEmojiPicker}
-                                />
-                            )}
-                            {!isMobile && (
-                                <GifToolbarButton
-                                    key={"gifButton"}
-                                    setShowGifPicker={setShowGifPicker}
-                                />
-                            )}
+                            {/* Emoji + GIF now render at EVERY width. They
+                                were mobile-hidden because the bar clipped
+                                off-screen — that was the block-type picker's
+                                width; with it gone these two fit, and they're
+                                the two people actually want in a chat. */}
+                            <CustomEmojiToolbar
+                                key={"customButton"}
+                                setShowEmojiPicker={setShowEmojiPicker}
+                            />
+                            <GifToolbarButton
+                                key={"gifButton"}
+                                setShowGifPicker={setShowGifPicker}
+                            />
                             {/* Session-only wrap toggles — hidden on
                                 mobile because the toolbar already
                                 clips off-screen on narrow viewports. */}
