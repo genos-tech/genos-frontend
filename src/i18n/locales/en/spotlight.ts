@@ -39,6 +39,19 @@ export const spotlight = {
         // Filters to the collected past-Genos-answer lane (entity type
         // spotlight_answer); "Genos answers" is the user-facing branding.
         answer: "Genos answers",
+        // Project scope picker, sitting right after the service chips.
+        // A dropdown rather than more chips — a team can have dozens of
+        // projects.
+        projectAriaLabel: "Filter results by project",
+        projectPlaceholder: "All projects",
+        projectScopeLabel: "in",
+        // Clears the whole project selection in one click. Shows the
+        // count because the picker collapses its tags to "+N".
+        projectClear: "{count, plural, one {# project ×} other {# projects ×}}",
+        // Shown on Todos / Genos answers while a project is scoped —
+        // neither carries a project, so the combination can only ever
+        // return nothing.
+        projectScopeIncompatible: "Not available when filtering by project",
     },
     mentions: {
         ariaLabel: "Mention suggestions",

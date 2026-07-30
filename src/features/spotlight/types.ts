@@ -56,6 +56,14 @@ export interface SpotlightResult {
     // e.g. "PRJ-42"). Always shown to end users in place of the raw
     // task_id. Null on legacy rows or when the task lacks a project.
     task_display_id: string | null;
+    // Task status name ("Open" / "WIP" / "Blocked" / "Pending" /
+    // "Closed"), projected onto task and milestone rows so the result
+    // row can render the status chip. Optional on purpose — it is
+    // absent against older backends, and MILESTONE rows only carry it
+    // once their chunks have been reingested (the field was added to
+    // `milestone_chunker` after the index was first built). Treat a
+    // missing value as "unknown" and render no chip.
+    task_status?: string | null;
 
     // Note-specific
     note_id: string | null;
@@ -90,6 +98,12 @@ export interface SearchRequest {
     query: string;
     team_id: string;
     entity_types?: EntityType[];
+    // Hard project scope: only content whose `project_id` is in this
+    // list comes back. Because it's a filter and not a boost, anything
+    // with no project at all (DMs/GMs, personal notes, todos) drops out
+    // — that's the intended reading of "only these projects". Omitted
+    // entirely when the user has selected no projects.
+    project_ids?: string[];
     date_from?: string;
     date_to?: string;
     limit?: number;

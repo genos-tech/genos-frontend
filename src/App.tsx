@@ -372,6 +372,23 @@ export const App = () => {
         [useTEM.teamMemberProfiles]
     );
 
+    // Project list for the Spotlight filter row's project picker, and the
+    // source of the project-LABEL chips on task-related result rows (the
+    // search API returns a bare `project_id`; labels only exist here).
+    // Threaded as a prop for the same reason as the mention roster above:
+    // the overlay mounts outside the project provider tree.
+    //
+    // `isJoined === true` only — the same predicate the task sidebar's
+    // project list uses (`teamProjects` also carries projects the user
+    // hasn't joined). Offering a project the viewer isn't a member of
+    // would scope the search to something the ACL filter then returns
+    // nothing for, which reads as a broken filter rather than an empty
+    // project.
+    const spotlightFilterProjects = useMemo(
+        () => usePM.teamProjects.filter((p) => p.isJoined === true),
+        [usePM.teamProjects]
+    );
+
     // Push freshly-cached IDB data into React state after a background
     // network refresh writes it. Shared by the cache-first boot refresh and
     // the wake refresh — both refresh IDB, then call this to repaint.
@@ -1153,6 +1170,9 @@ export const App = () => {
                                                             }
                                                             closeHistory={spotlight.closeHistory}
                                                             error={spotlight.error}
+                                                            filterProjectIds={
+                                                                spotlight.filterProjectIds
+                                                            }
                                                             filterServices={
                                                                 spotlight.filterServices
                                                             }
@@ -1171,6 +1191,7 @@ export const App = () => {
                                                                 spotlightMentionMembers
                                                             }
                                                             openHistory={spotlight.openHistory}
+                                                            projects={spotlightFilterProjects}
                                                             query={spotlight.query}
                                                             results={spotlight.results}
                                                             turns={spotlight.turns}
@@ -1180,6 +1201,9 @@ export const App = () => {
                                                             onApprove={spotlight.onApprove}
                                                             onAsk={spotlight.onAsk}
                                                             onCancel={spotlight.onCancel}
+                                                            onChangeFilterProjects={
+                                                                spotlight.onChangeFilterProjects
+                                                            }
                                                             onClose={spotlight.close}
                                                             onFeedback={spotlight.submitFeedback}
                                                             onNewConversation={
