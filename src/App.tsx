@@ -65,6 +65,7 @@ import { useProjectTaskManagement } from "./hooks/common/useProjectTaskManagemen
 import { QuickAddRequiredFieldsPreferenceProvider } from "./hooks/common/useQuickAddRequiredFieldsPreference";
 import { QuickReactionsPreferenceProvider } from "./hooks/common/useQuickReactionsPreference";
 import { useReconcileMyselfAvatar } from "./hooks/common/useReconcileMyselfAvatar";
+import { useReportBrowserTimezone } from "./hooks/common/useReportBrowserTimezone";
 import { useServiceInitialization } from "./hooks/common/useServiceInitialization";
 import { SpotlightPreferencesProvider } from "./hooks/common/useSpotlightPreferences";
 import { webSocketSync } from "./hooks/common/useSyncManagement";
@@ -252,6 +253,12 @@ export const App = () => {
     // mobile surfaces can keep their composer above it. iOS never resizes
     // the viewport for the keyboard, so nothing in CSS can infer this.
     useKeyboardInset();
+
+    // Tell the server which timezone this user is in. Server-side date
+    // math ("due today", and later "send the digest at 8am local") has no
+    // other source for it — `TIME_ZONE` is UTC, so without this every
+    // boundary is UTC's. Silent and once per session; see the hook.
+    useReportBrowserTimezone();
 
     // Daily todo groups — one instance for the whole app: the chat todo
     // pane (prop-drilled through ChatHome) and the agent-input "#"
