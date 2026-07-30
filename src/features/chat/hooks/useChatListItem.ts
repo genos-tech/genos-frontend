@@ -9,7 +9,7 @@ import { UserProps } from "../../../types/admin";
 import { AllChatProps, ChatProps, MessageProps } from "../../../types/chat";
 import { toggleMessagesPane } from "../../../utils/sidebarUtils";
 import { readV3CachedMessages } from "../services/loadV3SpecificMessages";
-import { buildChatPath, CHAT_TYPE_REVERSE_MAP } from "./useChatRouting";
+import { buildChatPath, CHAT_TYPE_REVERSE_MAP } from "../utils/chatPaths";
 
 /**
  * The manager state a click handler reads LIVE, handed in at call time.
@@ -92,9 +92,16 @@ export const useChatListItem = ({ chat, myself, isPinnedChat }: UseChatListItemP
         // Driving the URL from the tap removes the dependency on the
         // identity changing at all. Desktop is untouched: it renders panes
         // from state and deliberately keeps selection state-first.
+        //
+        // Skipped when the URL already points here: `navigate` to an
+        // identical path still PUSHES, and a duplicate entry costs the user
+        // two Back presses to leave the chat.
         if (isMobile) {
             const typePath = CHAT_TYPE_REVERSE_MAP[chat.chatType];
-            if (typePath) navigate(buildChatPath(typePath, chat.chatId));
+            const target = typePath ? buildChatPath(typePath, chat.chatId) : null;
+            if (target !== null && window.location.pathname !== target) {
+                navigate(target);
+            }
         }
         if (
             useCM.isSubChatVisible === false ||

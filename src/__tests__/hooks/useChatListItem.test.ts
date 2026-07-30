@@ -71,7 +71,12 @@ const makeUseCM = () =>
 
 const useTM = { isCreatingTask: { flag: false }, isTaskPreviewVisible: false } as never;
 
-beforeEach(() => setViewport("desktop"));
+beforeEach(() => {
+    setViewport("desktop");
+    // The mobile navigate is skipped when the URL already points at the
+    // tapped chat, so each case starts from the chat-type list.
+    window.history.replaceState({}, "", "/workspace/chat/dm");
+});
 afterEach(() => vi.clearAllMocks());
 
 describe("useChatListItem.onClickHandler", () => {
@@ -165,6 +170,24 @@ describe("useChatListItem.onClickHandler", () => {
         result.current.onClickHandler({ useCM, useTM } as never);
 
         expect(navigateMock).toHaveBeenCalledWith("/workspace/chat/dm/chan-b");
+    });
+
+    it("skips the navigate when the URL already points at the tapped chat", () => {
+        // `navigate` to an identical path still pushes, and a duplicate
+        // history entry costs the user two Back presses to leave the chat.
+        setViewport("mobile");
+        window.history.replaceState({}, "", "/workspace/chat/dm/chan-b");
+        const { result } = renderHook(() =>
+            useChatListItem({
+                chat: makeChat(),
+                myself: { userId: "u1" } as never,
+                isPinnedChat: false,
+            })
+        );
+
+        result.current.onClickHandler({ useCM: makeUseCM(), useTM } as never);
+
+        expect(navigateMock).not.toHaveBeenCalled();
     });
 
     it("builds the path from the chat's own type (MDM keeps its own segment)", () => {
