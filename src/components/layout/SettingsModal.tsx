@@ -60,6 +60,7 @@ import {
     useBubbleStylePreference,
 } from "../../hooks/common/useBubbleStylePreference";
 import { useDoubleClickTodoPreference } from "../../hooks/common/useDoubleClickTodoPreference";
+import { useIsMobile } from "../../hooks/common/useIsMobile";
 import { useLlmModelPreference } from "../../hooks/common/useLlmModelPreference";
 import { useQuickAddRequiredFieldsPreference } from "../../hooks/common/useQuickAddRequiredFieldsPreference";
 import { useQuickReactionsPreference } from "../../hooks/common/useQuickReactionsPreference";
@@ -1484,6 +1485,14 @@ export const SettingsModal = ({
     const { mode } = useColorScheme();
     const { t } = useTranslation();
     const isDark = mode === "dark";
+    // The tab rail is a LEFT SIDEBAR on desktop and a scrollable TOP
+    // STRIP on mobile. Not a styling preference: `orientation` is what
+    // makes Joy's `Tabs` a row vs a column, and the vertical rail's
+    // `minWidth: 184` + `flexShrink: 0` left about 120px for the panel
+    // inside a 92vw (~359px) dialog — less than the 140px `minWidth` of
+    // the Selects the panels are built from, so every settings row
+    // overflowed and `overflowX: hidden` clipped it.
+    const isMobile = useIsMobile();
     // Tab selection is local component state — open the modal,
     // navigate around, close — there's no need to persist this across
     // sessions. Default to "general" because it holds the broadest
@@ -1499,12 +1508,24 @@ export const SettingsModal = ({
                     // panel (group list + member editor) fits without
                     // truncation. The other tabs still look fine in
                     // the extra space — they're single-column sheets.
-                    width: { xs: "92vw", sm: 550, md: 700, lg: 920 },
-                    maxHeight: "85vh",
+                    width: { xs: "94vw", sm: 550, md: 700, lg: 920 },
+                    // `dvh`, not `vh`: `vh` is the viewport with the
+                    // browser chrome HIDDEN, so on iOS an 85vh dialog is
+                    // taller than what you can actually see. Mobile also
+                    // subtracts the bottom bar / keyboard strip, because
+                    // the Modal (z-1300) paints OVER the BottomTabBar
+                    // (z-1200) and would otherwise put its lowest rows
+                    // behind it.
+                    maxHeight: {
+                        xs: "calc(100dvh - var(--mobile-bottom-inset, 60px) - 24px)",
+                        sm: "85dvh",
+                    },
                     overflowY: "auto",
                     overflowX: "hidden",
                     borderRadius: "xl",
-                    p: 2.5,
+                    // Every 8px of padding is 16px off the panel width,
+                    // which is the scarce axis on a phone.
+                    p: { xs: 1.5, sm: 2.5 },
                 }}
             >
                 <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 1 }}>
@@ -1517,7 +1538,7 @@ export const SettingsModal = ({
                 </Stack>
                 <Divider sx={{ mb: 2 }} />
                 <Tabs
-                    orientation="vertical"
+                    orientation={isMobile ? "horizontal" : "vertical"}
                     value={tab}
                     sx={{
                         // Sidebar tab list on the left, panel on the
@@ -1525,7 +1546,8 @@ export const SettingsModal = ({
                         // along its orientation, so a row layout drops
                         // out naturally once orientation flips.
                         bgcolor: "transparent",
-                        gap: 2,
+                        gap: { xs: 1, md: 2 },
+                        minWidth: 0,
                     }}
                     onChange={(_event, value) => {
                         if (typeof value === "string") setTab(value as SettingsTabKey);
@@ -1533,11 +1555,24 @@ export const SettingsModal = ({
                 >
                     <TabList
                         sx={{
-                            minWidth: 184,
-                            flexShrink: 0,
+                            // Desktop: a fixed-width rail beside the panel.
+                            // Mobile: a full-width strip the tabs scroll
+                            // inside. `minWidth: 0` is what lets the strip
+                            // shrink below its content — a flex container's
+                            // automatic minimum size is its min-content
+                            // width, so without it the ten tabs would push
+                            // the dialog wider than the screen instead of
+                            // scrolling.
+                            minWidth: { xs: 0, md: 184 },
+                            flexShrink: { xs: 1, md: 0 },
                             gap: 0.25,
-                            overflow: "visible",
+                            overflowX: { xs: "auto", md: "visible" },
+                            overflowY: { xs: "hidden", md: "visible" },
                             scrollbarWidth: "none",
+                            "&::-webkit-scrollbar": { display: "none" },
+                            // Tabs keep their natural width and scroll; the
+                            // labels must not wrap to two lines either.
+                            "& > *": { flexShrink: 0, whiteSpace: "nowrap" },
                         }}
                     >
                         <Tab sx={SIDEBAR_TAB_SX} value="general">
@@ -1586,34 +1621,43 @@ export const SettingsModal = ({
                         )}
                     </TabList>
 
-                    <TabPanel sx={{ px: 0, py: 2 }} value="general">
+                    <TabPanel
+                        sx={{ px: 0, py: 2, minWidth: 0, overflowX: "auto" }}
+                        value="general"
+                    >
                         <Stack spacing={2}>
                             <AppearanceSection />
                             <LanguageSection />
                             <PrivacySection />
                         </Stack>
                     </TabPanel>
-                    <TabPanel sx={{ px: 0, py: 2 }} value="planUsage">
+                    <TabPanel
+                        sx={{ px: 0, py: 2, minWidth: 0, overflowX: "auto" }}
+                        value="planUsage"
+                    >
                         <Stack spacing={2}>
                             {/* "Compare plans" navigates to /workspace/plans;
                                 close the modal so it doesn't sit on top. */}
                             <PlanUsageSection onNavigateAway={onClose} />
                         </Stack>
                     </TabPanel>
-                    <TabPanel sx={{ px: 0, py: 2 }} value="spotlight">
+                    <TabPanel
+                        sx={{ px: 0, py: 2, minWidth: 0, overflowX: "auto" }}
+                        value="spotlight"
+                    >
                         <Stack spacing={2}>
                             <LlmModelSection />
                             <SpotlightSection />
                         </Stack>
                     </TabPanel>
-                    <TabPanel sx={{ px: 0, py: 2 }} value="chat">
+                    <TabPanel sx={{ px: 0, py: 2, minWidth: 0, overflowX: "auto" }} value="chat">
                         <Stack spacing={2}>
                             <MessageLayoutSection />
                             <QuickReactionsSection />
                             <DoubleClickTodoSection />
                         </Stack>
                     </TabPanel>
-                    <TabPanel sx={{ px: 0, py: 2 }} value="tasks">
+                    <TabPanel sx={{ px: 0, py: 2, minWidth: 0, overflowX: "auto" }} value="tasks">
                         <Stack spacing={2}>
                             {/* Sort settings now live in
                                 `TaskTableColumnSettings` (task table /
@@ -1627,12 +1671,18 @@ export const SettingsModal = ({
                             <AutoSyncCalendarSection />
                         </Stack>
                     </TabPanel>
-                    <TabPanel sx={{ px: 0, py: 2 }} value="notifications">
+                    <TabPanel
+                        sx={{ px: 0, py: 2, minWidth: 0, overflowX: "auto" }}
+                        value="notifications"
+                    >
                         <Stack spacing={2}>
                             <NotificationSettingsPanel />
                         </Stack>
                     </TabPanel>
-                    <TabPanel sx={{ px: 0, py: 2 }} value="mentionGroups">
+                    <TabPanel
+                        sx={{ px: 0, py: 2, minWidth: 0, overflowX: "auto" }}
+                        value="mentionGroups"
+                    >
                         <Stack spacing={2}>
                             {/* All five auxiliary props are needed to
                                 render the panel's avatar rows. If any
@@ -1654,7 +1704,10 @@ export const SettingsModal = ({
                             )}
                         </Stack>
                     </TabPanel>
-                    <TabPanel sx={{ px: 0, py: 2 }} value="customEmoji">
+                    <TabPanel
+                        sx={{ px: 0, py: 2, minWidth: 0, overflowX: "auto" }}
+                        value="customEmoji"
+                    >
                         <Stack spacing={2}>
                             {myself ? (
                                 <TeamEmojiPanel
@@ -1668,13 +1721,19 @@ export const SettingsModal = ({
                             )}
                         </Stack>
                     </TabPanel>
-                    <TabPanel sx={{ px: 0, py: 2 }} value="shortcuts">
+                    <TabPanel
+                        sx={{ px: 0, py: 2, minWidth: 0, overflowX: "auto" }}
+                        value="shortcuts"
+                    >
                         <Stack spacing={2}>
                             <KeyboardShortcutsSection />
                         </Stack>
                     </TabPanel>
                     {OAUTH_INTEGRATIONS_ENABLED && (
-                        <TabPanel sx={{ px: 0, py: 2 }} value="integrations">
+                        <TabPanel
+                            sx={{ px: 0, py: 2, minWidth: 0, overflowX: "auto" }}
+                            value="integrations"
+                        >
                             <Stack spacing={2}>
                                 <IntegrationsSection />
                             </Stack>
