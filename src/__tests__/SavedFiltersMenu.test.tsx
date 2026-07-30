@@ -15,6 +15,7 @@
  *    must not impose it.
  */
 
+import { useState } from "react";
 import { CssVarsProvider } from "@mui/joy/styles";
 import { createTheme, THEME_ID, ThemeProvider } from "@mui/material/styles";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
@@ -27,6 +28,7 @@ import {
     loadProjectSavedFilters,
     updateProjectSavedFilter,
     type ProjectSavedFilter,
+    type SavedFilterPayload,
 } from "../features/tasks/services/projectSavedFilters";
 
 vi.mock("../features/tasks/services/projectSavedFilters", () => ({
@@ -49,6 +51,9 @@ const CURRENT = {
     memberKeys: ["__all__"],
 };
 
+// A hand-made selection matching no saved filter.
+const MANUAL = { status: ["Pending"], tags: ["All"] };
+
 const row = (over: Partial<ProjectSavedFilter> = {}): ProjectSavedFilter => ({
     id: 1,
     filterName: "My blocked work",
@@ -67,24 +72,70 @@ const row = (over: Partial<ProjectSavedFilter> = {}): ProjectSavedFilter => ({
 // dialogs are Joy.
 const materialTheme = createTheme({ cssVariables: true });
 
+const same = (a: SavedFilterPayload, b: SavedFilterPayload) =>
+    JSON.stringify(a) === JSON.stringify(b);
+
+// Stands in for `TaskFilterMenu`: it owns the live selection, answers
+// `isCurrentSelection` against it, and ADOPTS whatever gets applied. That
+// last part matters — the applied badge is derived from the selection, so
+// a harness that didn't update the selection on apply couldn't test it at
+// all. The `change filter` button simulates the user editing a dimension
+// by hand afterwards.
+//
+// The real equivalence rule (order-insensitive, resolves stored blobs
+// against the live predefined lists) is unit-tested in
+// `savedFilterPayload.test.ts`; here a JSON compare is enough.
+const Host = ({
+    onApplySpy,
+    getCurrentSpy,
+    initial = CURRENT,
+    manual = MANUAL,
+    ...props
+}: {
+    onApplySpy: (p: SavedFilterPayload) => void;
+    getCurrentSpy: () => void;
+    initial?: SavedFilterPayload;
+    manual?: SavedFilterPayload;
+} & Partial<React.ComponentProps<typeof SavedFiltersMenu>>) => {
+    const [current, setCurrent] = useState<SavedFilterPayload>(initial);
+    return (
+        <>
+            <button type="button" onClick={() => setCurrent(manual)}>
+                change filter
+            </button>
+            <SavedFiltersMenu
+                isCurrentSelection={(p) => same(p, current)}
+                projectId={7}
+                teamId="t1"
+                getCurrentFilters={() => {
+                    getCurrentSpy();
+                    return current;
+                }}
+                onApply={(p) => {
+                    onApplySpy(p);
+                    setCurrent(p);
+                }}
+                {...props}
+            />
+        </>
+    );
+};
+
 const renderMenu = (props: Partial<React.ComponentProps<typeof SavedFiltersMenu>> = {}) => {
     const onApply = vi.fn();
-    const getCurrentFilters = vi.fn(() => CURRENT);
+    const getCurrentFilters = vi.fn();
     const result = render(
         <ThemeProvider theme={{ [THEME_ID]: materialTheme }}>
             <CssVarsProvider>
-                <SavedFiltersMenu
-                    getCurrentFilters={getCurrentFilters}
-                    projectId={7}
-                    teamId="t1"
-                    onApply={onApply}
-                    {...props}
-                />
+                <Host getCurrentSpy={getCurrentFilters} onApplySpy={onApply} {...props} />
             </CssVarsProvider>
         </ThemeProvider>
     );
     return { ...result, onApply, getCurrentFilters };
 };
+
+const changeFilterByHand = () =>
+    fireEvent.click(screen.getByRole("button", { name: "change filter" }));
 
 // The trigger's accessible name is AppTooltip's sentence (it writes the
 // title onto the child as `aria-label`), so go through the testid.
@@ -104,11 +155,24 @@ describe("SavedFiltersMenu", () => {
     });
 
     it("renders nothing until a project and team are resolved", () => {
-        const { container } = renderMenu({ projectId: null });
-        expect(container).toBeEmptyDOMElement();
+        const bare = (over: Partial<React.ComponentProps<typeof SavedFiltersMenu>>) => (
+            <ThemeProvider theme={{ [THEME_ID]: materialTheme }}>
+                <CssVarsProvider>
+                    <SavedFiltersMenu
+                        getCurrentFilters={() => CURRENT}
+                        isCurrentSelection={() => false}
+                        projectId={7}
+                        teamId="t1"
+                        onApply={vi.fn()}
+                        {...over}
+                    />
+                </CssVarsProvider>
+            </ThemeProvider>
+        );
+        expect(render(bare({ projectId: null })).container).toBeEmptyDOMElement();
         expect(loadProjectSavedFilters).not.toHaveBeenCalled();
 
-        renderMenu({ teamId: null });
+        render(bare({ teamId: null }));
         expect(loadProjectSavedFilters).not.toHaveBeenCalled();
     });
 
@@ -124,6 +188,88 @@ describe("SavedFiltersMenu", () => {
         expect(onApply).toHaveBeenCalledWith({ status: ["Blocked"], memberKeys: ["u1"] });
         // The button then names the applied filter instead of "Saved Filters".
         await waitFor(async () => expect(await trigger()).toHaveTextContent("My blocked work"));
+    });
+
+    it("drops the badge once the user edits a filter on top of an applied one", async () => {
+        // Apply f1, then change a dimension by hand: the selection is no
+        // longer f1, so the button must stop claiming it is.
+        renderMenu();
+        await openMenu();
+        fireEvent.click(await screen.findByText("My blocked work"));
+        await waitFor(async () => expect(await trigger()).toHaveTextContent("My blocked work"));
+
+        changeFilterByHand();
+        await waitFor(async () => expect(await trigger()).toHaveTextContent("Saved Filters"));
+    });
+
+    it("shows a saved filter as applied when the selection reaches it by hand", async () => {
+        // The mirror case: never touch the menu, just build a selection
+        // that happens to equal a saved filter, and it counts as applied.
+        renderMenu({ initial: MANUAL, manual: row().filters });
+        expect(await trigger()).toHaveTextContent("Saved Filters");
+
+        changeFilterByHand();
+        await waitFor(async () => expect(await trigger()).toHaveTextContent("My blocked work"));
+    });
+
+    it("marks the matching row inside the menu, not just the button", async () => {
+        vi.mocked(loadProjectSavedFilters).mockResolvedValue([
+            row(),
+            row({ id: 2, filterName: "Second", filters: { status: ["Closed"] } }),
+        ]);
+        renderMenu({ initial: row().filters });
+        await openMenu();
+
+        // `aria-current` carries "this is the one in effect" to screen
+        // readers, and is a stabler hook than the weight/color emphasis.
+        const rows = await screen.findAllByRole("menuitem");
+        const applied = rows.filter((r) => r.getAttribute("aria-current") === "true");
+        expect(applied).toHaveLength(1);
+        expect(applied[0]).toHaveTextContent("My blocked work");
+    });
+
+    it("keeps the badge on the right row after a rename", async () => {
+        // Derived, so it follows the renamed row with no bookkeeping.
+        vi.mocked(updateProjectSavedFilter).mockResolvedValue(row({ filterName: "Renamed" }));
+        renderMenu({ initial: row().filters });
+        await waitFor(async () => expect(await trigger()).toHaveTextContent("My blocked work"));
+
+        vi.mocked(loadProjectSavedFilters).mockResolvedValue([row({ filterName: "Renamed" })]);
+        await openMenu();
+        fireEvent.click(await screen.findAllByLabelText("Rename").then((els) => els[0]));
+        fireEvent.change(screen.getByPlaceholderText("e.g. My blocked work"), {
+            target: { value: "Renamed" },
+        });
+        fireEvent.click(screen.getByRole("button", { name: "Rename" }));
+
+        await waitFor(async () => expect(await trigger()).toHaveTextContent("Renamed"));
+    });
+
+    it("shows every row's actions, not only the auto-focused first one", async () => {
+        // Regression: the actions were `opacity: 0` revealed on
+        // `:hover, :focus-within`, and a Material Menu auto-focuses its
+        // FIRST item on open — so row 1 alone showed its icons. They're
+        // always rendered and always clickable now.
+        vi.mocked(loadProjectSavedFilters).mockResolvedValue([
+            row(),
+            row({ id: 2, filterName: "Second" }),
+            row({ id: 3, filterName: "Third" }),
+        ]);
+        renderMenu();
+        await openMenu();
+
+        for (const label of ["Rename", "Delete", "Replace with the current filters"]) {
+            const buttons = await screen.findAllByLabelText(label);
+            expect(buttons).toHaveLength(3);
+            for (const b of buttons) expect(b).toBeVisible();
+        }
+
+        // And the third row's action really fires — proof they aren't
+        // pointer-events: none.
+        const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
+        fireEvent.click((await screen.findAllByLabelText("Delete"))[2]);
+        await waitFor(() => expect(deleteProjectSavedFilter).toHaveBeenCalledWith(7, 3, "tok"));
+        confirmSpy.mockRestore();
     });
 
     it("refetches when the dropdown opens, so a teammate's new filter shows up", async () => {

@@ -91,6 +91,14 @@ type SavedFiltersMenuProps = {
      *  setters AND has to re-run its filter pipeline explicitly, so this
      *  is one call rather than six setters. */
     onApply: (filters: SavedFilterPayload) => void;
+    /** "Would applying this produce the selection currently in effect?"
+     *
+     *  The bar answers, because it owns both the live selection and the
+     *  predefined lists a stored blob resolves against. Asked per row on
+     *  every render, so the applied state is DERIVED rather than
+     *  remembered — editing a dimension after applying a filter drops the
+     *  badge, and hand-building a matching selection lights it up. */
+    isCurrentSelection: (filters: SavedFilterPayload) => boolean;
 };
 
 export const SavedFiltersMenu = ({
@@ -98,6 +106,7 @@ export const SavedFiltersMenu = ({
     projectId,
     getCurrentFilters,
     onApply,
+    isCurrentSelection,
 }: SavedFiltersMenuProps) => {
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
@@ -114,12 +123,22 @@ export const SavedFiltersMenu = ({
     const [nameDraft, setNameDraft] = useState("");
     const [dialogError, setDialogError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    // Name of the saved filter the user last applied, so the menu can
-    // show which one is active. Deliberately NOT persisted: the bar's own
-    // localStorage already restores the selection itself, and a stored
-    // name would go stale the moment anyone edits the filter behind it,
-    // claiming a selection that no longer matches.
-    const [appliedName, setAppliedName] = useState<string | null>(null);
+
+    // Which saved filter is in effect — DERIVED from the bar's live
+    // selection every render, never stored.
+    //
+    // This started as an `appliedName` state set on click, and that was
+    // wrong in both directions: it kept claiming "f1" after the user
+    // edited a dimension on top of it, and it stayed blank when someone
+    // hand-built a selection that already existed as a saved filter.
+    // Deriving fixes both, and removes a whole class of staleness (it also
+    // can't survive a project switch or a token refresh, which the stored
+    // version had to be taught about separately).
+    //
+    // First match wins if two filters hold the same conditions — the list
+    // is name-ordered server-side, so that's at least deterministic.
+    const appliedRow = saved.find((row) => isCurrentSelection(row.filters));
+    const appliedName = appliedRow?.filterName ?? null;
 
     // Race guard: a project switch mid-fetch must not land the previous
     // project's filters in this menu.
@@ -142,17 +161,6 @@ export const SavedFiltersMenu = ({
     useEffect(() => {
         void refresh();
     }, [refresh]);
-
-    // Drop the applied-name badge on a PROJECT switch — it named a filter
-    // belonging to the project the user just left.
-    //
-    // Keyed on `projectId` alone, deliberately NOT on `refresh`: that
-    // callback's identity also changes when `accessToken` is refreshed on
-    // its timer, which would clear the badge mid-session for no reason the
-    // user could see.
-    useEffect(() => {
-        setAppliedName(null);
-    }, [projectId]);
 
     const closeMenu = () => setAnchorEl(null);
     const closeDialog = () => {
@@ -184,7 +192,8 @@ export const SavedFiltersMenu = ({
 
     const handleApply = (row: ProjectSavedFilter) => {
         closeMenu();
-        setAppliedName(row.filterName);
+        // No badge bookkeeping: applying changes the bar's selection, and
+        // the badge is derived from that.
         onApply(row.filters);
     };
 
@@ -213,7 +222,6 @@ export const SavedFiltersMenu = ({
             setDialogError(ts.errorSaveFailed);
             return;
         }
-        setAppliedName(result.filterName);
         closeDialog();
         void refresh();
     };
@@ -252,9 +260,6 @@ export const SavedFiltersMenu = ({
             setDialogError(ts.errorSaveFailed);
             return;
         }
-        // Keep the active badge pointing at the same filter under its new
-        // name, rather than silently going stale.
-        setAppliedName((prev) => (prev === dialog.name ? result.filterName : prev));
         closeDialog();
         void refresh();
     };
@@ -266,7 +271,6 @@ export const SavedFiltersMenu = ({
         if (!window.confirm(ts.confirmDelete.replace("{name}", row.filterName))) return;
         const ok = await deleteProjectSavedFilter(projectId, row.id, accessToken);
         if (!ok) return;
-        setAppliedName((prev) => (prev === row.filterName ? null : prev));
         void refresh();
     };
 
@@ -394,10 +398,17 @@ export const SavedFiltersMenu = ({
                 )}
 
                 {saved.map((row) => {
-                    const isApplied = row.filterName === appliedName;
+                    // Compare by id, not name: two rows could momentarily
+                    // share a name mid-rename, and the id is what the
+                    // derived match actually resolved to.
+                    const isApplied = appliedRow?.id === row.id;
                     return (
                         <MenuItem
                             key={row.id}
+                            // The applied row is emphasised with weight and
+                            // color; `aria-current` carries the same fact to
+                            // screen readers, which can't see either.
+                            aria-current={isApplied ? "true" : undefined}
                             sx={{
                                 borderRadius: "8px",
                                 mx: 0.5,
@@ -405,16 +416,22 @@ export const SavedFiltersMenu = ({
                                 gap: 1,
                                 transition: "all 0.2s ease",
                                 "&:hover": { background: styles.buttonHoverBg },
-                                // Row actions stay hidden until hover /
-                                // keyboard focus so the menu reads as a
-                                // list of names, which is what the user is
-                                // scanning. `:focus-within` keeps them
-                                // reachable without a pointer.
-                                "&:hover .saved-filter-actions, &:focus-within .saved-filter-actions":
-                                    {
-                                        opacity: 1,
-                                        pointerEvents: "auto",
-                                    },
+                                // Row actions sit at a low opacity and come
+                                // up to full on hover — always present,
+                                // never hidden.
+                                //
+                                // They used to be `opacity: 0` revealed by
+                                // `:hover, :focus-within`, which broke: a
+                                // Material Menu auto-focuses its FIRST item
+                                // on open, so `:focus-within` matched row 1
+                                // permanently and only that row showed its
+                                // icons. Gating on `:hover` alone would fix
+                                // the symptom but leave the actions
+                                // undiscoverable and unreachable by touch —
+                                // a recurring problem in this app — so
+                                // always-visible-faint is the better answer
+                                // than a smarter focus selector.
+                                "&:hover .saved-filter-actions": { opacity: 1 },
                             }}
                             onClick={() => handleApply(row)}
                         >
@@ -454,8 +471,9 @@ export const SavedFiltersMenu = ({
                                     direction="row"
                                     spacing={0.25}
                                     sx={{
-                                        opacity: 0,
-                                        pointerEvents: "none",
+                                        // Faint but always there and always
+                                        // clickable — see the row's sx.
+                                        opacity: 0.45,
                                         transition: "opacity 0.15s ease",
                                         flexShrink: 0,
                                     }}

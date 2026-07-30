@@ -81,16 +81,18 @@ export const buildSavedFilterPayload = (input: {
  * — so a teammate's filter naming a deleted tag or a departed member
  * takes exactly the path a stale localStorage entry already takes.
  */
+export type ResolveSavedFilterOptions = {
+    hideStatusFilter?: boolean;
+    predefinedStatusFilters: FilterProps[];
+    defaultStatusFilters: FilterProps[];
+    predefinedTagsFilters: FilterProps[];
+    predefinedPriorityFilters: FilterProps[];
+    predefinedEffortLevelFilters: FilterProps[];
+};
+
 export const resolveSavedFilter = (
     payload: SavedFilterPayload,
-    opts: {
-        hideStatusFilter?: boolean;
-        predefinedStatusFilters: FilterProps[];
-        defaultStatusFilters: FilterProps[];
-        predefinedTagsFilters: FilterProps[];
-        predefinedPriorityFilters: FilterProps[];
-        predefinedEffortLevelFilters: FilterProps[];
-    }
+    opts: ResolveSavedFilterOptions
 ): SavedFilterSelection => ({
     status: opts.hideStatusFilter
         ? [opts.predefinedStatusFilters[0]]
@@ -113,3 +115,67 @@ export const resolveSavedFilter = (
     milestoneKeys: rehydrateKeys(payload.milestoneKeys) ?? ["all"],
     memberKeys: (rehydrateKeys(payload.memberKeys) as string[] | null) ?? ["__all__"],
 });
+
+// One dimension is "the same selection" when it holds the same values,
+// regardless of order. The bar preserves CLICK order, so a saved
+// selection and a hand-built one can list the same statuses in different
+// sequences and still mean exactly the same filter. Keys are stringified
+// because milestone ids are numbers while the sentinels are strings.
+const sameDimension = (
+    a: (string | number)[] | undefined,
+    b: (string | number)[] | undefined
+): boolean => {
+    if (a === undefined || b === undefined) return a === b;
+    if (a.length !== b.length) return false;
+    const norm = (xs: (string | number)[]) => xs.map(String).sort();
+    const [x, y] = [norm(a), norm(b)];
+    return x.every((value, i) => value === y[i]);
+};
+
+/**
+ * Would applying `saved` produce exactly the selection `current` describes?
+ *
+ * This is how the bar decides which saved filter (if any) is currently in
+ * effect, and it is DERIVED on every render rather than remembered from
+ * the last click. Remembering was wrong in both directions:
+ *
+ *   - Edit a dimension after applying "f1" and the selection is no longer
+ *     f1, but a remembered name kept claiming it was.
+ *   - Build a selection by hand that happens to equal a saved filter, and
+ *     a remembered name showed nothing even though the filter genuinely
+ *     matches.
+ *
+ * The comparison runs against the RESOLVED form of `saved` — what it would
+ * actually apply here, not the raw blob — which makes the awkward cases
+ * fall out for free:
+ *
+ *   - a board-saved filter omits `status`, resolves to this surface's
+ *     default, and so still matches right after being applied;
+ *   - a filter naming a since-deleted tag resolves without it, and matches
+ *     the selection that applying it really produces;
+ *   - on a surface that hides status, both sides omit the dimension.
+ */
+export const savedFilterMatchesSelection = (
+    saved: SavedFilterPayload,
+    current: SavedFilterPayload,
+    opts: ResolveSavedFilterOptions
+): boolean => {
+    const resolved = resolveSavedFilter(saved, opts);
+    const asApplied = buildSavedFilterPayload({
+        hideStatusFilter: opts.hideStatusFilter,
+        status: resolved.status,
+        tags: resolved.tags,
+        priorities: resolved.priorities,
+        effortLevels: resolved.effortLevels,
+        milestoneKeys: resolved.milestoneKeys,
+        memberKeys: resolved.memberKeys,
+    });
+    return (
+        sameDimension(asApplied.status, current.status) &&
+        sameDimension(asApplied.tags, current.tags) &&
+        sameDimension(asApplied.priorities, current.priorities) &&
+        sameDimension(asApplied.effortLevels, current.effortLevels) &&
+        sameDimension(asApplied.milestoneKeys, current.milestoneKeys) &&
+        sameDimension(asApplied.memberKeys, current.memberKeys)
+    );
+};

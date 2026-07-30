@@ -28,6 +28,7 @@ import {
 import {
     buildSavedFilterPayload,
     resolveSavedFilter,
+    savedFilterMatchesSelection,
 } from "../features/tasks/utils/savedFilterPayload";
 
 const defaultStatusFilters = predefinedStatusFilters.filter((f) =>
@@ -176,5 +177,86 @@ describe("resolveSavedFilter", () => {
         const backOnBoard = resolveSavedFilter(boardPayload, opts(true));
         expect(backOnBoard.status.map((f) => f.label)).toEqual(["All"]);
         expect(backOnBoard.memberKeys).toEqual(["u1"]);
+    });
+});
+
+describe("savedFilterMatchesSelection", () => {
+    const current = buildSavedFilterPayload(selection);
+
+    it("matches the selection its own payload describes", () => {
+        expect(savedFilterMatchesSelection(current, current, opts())).toBe(true);
+    });
+
+    it("stops matching once any dimension differs", () => {
+        // The "user edited a filter on top of an applied one" case: the
+        // badge has to drop, so this must go false on a single change.
+        const edited = buildSavedFilterPayload({
+            ...selection,
+            priorities: [byLabel(predefinedPriorityFilters, "Low")],
+        });
+        expect(savedFilterMatchesSelection(current, edited, opts())).toBe(false);
+    });
+
+    it("ignores ORDER within a dimension", () => {
+        // The bar preserves click order, so a hand-built selection can
+        // list the same statuses in a different sequence and still be the
+        // same filter — this is what makes "the selection coincidentally
+        // equals a saved filter" work in practice.
+        const reversed = buildSavedFilterPayload({
+            ...selection,
+            status: [...selection.status].reverse(),
+            milestoneKeys: ["none", 12],
+        });
+        expect(savedFilterMatchesSelection(current, reversed, opts())).toBe(true);
+    });
+
+    it("does not match a subset or a superset", () => {
+        const fewer = buildSavedFilterPayload({
+            ...selection,
+            status: [byLabel(predefinedStatusFilters, "Open")],
+        });
+        expect(savedFilterMatchesSelection(current, fewer, opts())).toBe(false);
+        expect(savedFilterMatchesSelection(fewer, current, opts())).toBe(false);
+    });
+
+    it("matches a board-saved filter right after it is applied on the table", () => {
+        // It omits `status`, resolves to the table's default, and the bar's
+        // selection then holds that default — so the comparison has to run
+        // against the RESOLVED form, not the raw blob.
+        const boardSaved = buildSavedFilterPayload({ ...selection, hideStatusFilter: true });
+        const afterApplyingOnTable = buildSavedFilterPayload({
+            ...selection,
+            status: defaultStatusFilters,
+        });
+        expect(savedFilterMatchesSelection(boardSaved, afterApplyingOnTable, opts())).toBe(true);
+    });
+
+    it("ignores status entirely on a surface that hides it", () => {
+        // Both sides omit the dimension there, so two filters differing
+        // ONLY in status are the same filter on the board.
+        const a = { ...selection, status: [byLabel(predefinedStatusFilters, "Open")] };
+        const b = { ...selection, status: [byLabel(predefinedStatusFilters, "Closed")] };
+        const boardOpts = opts(true);
+        expect(
+            savedFilterMatchesSelection(
+                buildSavedFilterPayload({ ...a, hideStatusFilter: true }),
+                buildSavedFilterPayload({ ...b, hideStatusFilter: true }),
+                boardOpts
+            )
+        ).toBe(true);
+    });
+
+    it("matches a filter naming a since-deleted tag against what it really applies", () => {
+        // Resolves without the dead label, so it matches the selection the
+        // user actually ends up with instead of never matching at all.
+        const withDeadTag = { ...current, tags: ["Gone"] };
+        const afterApply = buildSavedFilterPayload({ ...selection, tags: [tagFilter("All")] });
+        expect(savedFilterMatchesSelection(withDeadTag, afterApply, opts())).toBe(true);
+    });
+
+    it("treats numeric and string milestone ids as equal", () => {
+        // JSON round-trips ids as strings; they must not read as a change.
+        const asStrings = { ...current, milestoneKeys: ["12", "none"] };
+        expect(savedFilterMatchesSelection(asStrings, current, opts())).toBe(true);
     });
 });

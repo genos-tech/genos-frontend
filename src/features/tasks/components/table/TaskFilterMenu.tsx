@@ -48,7 +48,11 @@ import {
     selectMilestoneRowsForSelection,
     selectMilestonesWithMatchingChildren,
 } from "../../utils/milestoneChildFilter";
-import { buildSavedFilterPayload, resolveSavedFilter } from "../../utils/savedFilterPayload";
+import {
+    buildSavedFilterPayload,
+    resolveSavedFilter,
+    savedFilterMatchesSelection,
+} from "../../utils/savedFilterPayload";
 import {
     clearStoredFilters,
     readStoredFilters,
@@ -1328,15 +1332,39 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
     // logic for everyone.
     // The status rule lives in `buildSavedFilterPayload` (a board-saved
     // filter omits status entirely) — see that module's docstring.
-    const getCurrentSavedFilterPayload = (): SavedFilterPayload =>
-        buildSavedFilterPayload({
+    const currentSavedFilterPayload = buildSavedFilterPayload({
+        hideStatusFilter,
+        status: selectedStatus,
+        tags: selectedTags,
+        priorities: selectedPriorities,
+        effortLevels: selectedEffortLevels,
+        milestoneKeys: selectedMilestoneKeys,
+        memberKeys: selectedMemberKeys,
+    });
+    const getCurrentSavedFilterPayload = (): SavedFilterPayload => currentSavedFilterPayload;
+
+    // "Is this saved filter the selection currently in effect?" — asked per
+    // row, on every render, so the menu's applied state is DERIVED from the
+    // live selection instead of remembered from the last click.
+    //
+    // That's what makes both of these correct without any extra bookkeeping:
+    // editing a dimension after applying a filter drops the badge (the
+    // selection genuinely isn't that filter any more), and hand-building a
+    // selection that happens to equal a saved one shows it as applied.
+    // Reset lands in the first case.
+    //
+    // Rebuilt each render rather than memoised: it closes over all six
+    // selections, so a `useCallback` would need every one in its deps and
+    // would be recreated just as often. The comparison is a handful of
+    // short arrays per saved filter.
+    const isCurrentSavedFilterSelection = (payload: SavedFilterPayload): boolean =>
+        savedFilterMatchesSelection(payload, currentSavedFilterPayload, {
             hideStatusFilter,
-            status: selectedStatus,
-            tags: selectedTags,
-            priorities: selectedPriorities,
-            effortLevels: selectedEffortLevels,
-            milestoneKeys: selectedMilestoneKeys,
-            memberKeys: selectedMemberKeys,
+            predefinedStatusFilters,
+            defaultStatusFilters,
+            predefinedTagsFilters,
+            predefinedPriorityFilters,
+            predefinedEffortLevelFilters,
         });
 
     // Applies a saved selection. The one thing that is load-bearing HERE
@@ -2843,6 +2871,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                     Renders only when a project + team are resolved. */}
                 <SavedFiltersMenu
                     getCurrentFilters={getCurrentSavedFilterPayload}
+                    isCurrentSelection={isCurrentSavedFilterSelection}
                     projectId={savedFiltersProjectId}
                     teamId={savedFiltersTeamId}
                     onApply={applySavedFilter}
