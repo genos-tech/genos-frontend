@@ -47,7 +47,38 @@ export const localeDirection = (locale: Locale): Direction =>
 export const applyDocumentLocale = (locale: Locale): void => {
     if (typeof document === "undefined") return;
     document.documentElement.lang = locale;
-    document.documentElement.dir = localeDirection(locale);
+    const dir = localeDirection(locale);
+    document.documentElement.dir = dir;
+    if (currentDirection !== dir) {
+        currentDirection = dir;
+        directionListeners.forEach((fn) => fn(dir));
+    }
+};
+
+/**
+ * Direction as a subscribable value, not just a DOM attribute.
+ *
+ * `ColorThemeProvider` needs it, and that provider sits ABOVE `I18nProvider`
+ * in the tree (it renders `CssVarsProvider`, which everything below depends
+ * on), so it cannot call `useTranslation()`. Reading
+ * `document.documentElement.dir` would work but wouldn't re-render on a
+ * language switch.
+ *
+ * This module is already the single place that writes the attribute, so it
+ * is the natural place to announce the change too.
+ */
+let currentDirection: Direction = "ltr";
+const directionListeners = new Set<(dir: Direction) => void>();
+
+/** The direction as last written by `applyDocumentLocale`. */
+export const getDocumentDirection = (): Direction => currentDirection;
+
+/** Subscribe to direction changes; returns an unsubscribe. */
+export const subscribeDocumentDirection = (fn: (dir: Direction) => void): (() => void) => {
+    directionListeners.add(fn);
+    return () => {
+        directionListeners.delete(fn);
+    };
 };
 
 export type DeepPartial<T> = {
