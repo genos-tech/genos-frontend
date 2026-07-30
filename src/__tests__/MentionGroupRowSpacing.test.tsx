@@ -39,15 +39,43 @@ const renderPanel = () =>
  * just on a phone.
  */
 describe("mention group row", () => {
+    it("insets the rows from the container's border", () => {
+        renderPanel();
+        const list = screen.getByRole("list");
+        expect(getComputedStyle(list).padding).toBe("6px");
+    });
+
+    it("does not let rows bleed over each other", () => {
+        // Joy's ListItem gives its child ListItemButton a NEGATIVE margin
+        // (`calc(-1 * var(--ListItem-paddingY))`) so the button can bleed out
+        // to the ListItem's edges. Ours carries no padding to cancel — and
+        // `p: 0` does NOT reset the variable — so each row spilled 6px over
+        // the rows above and below. You only saw it on hover, when the fill
+        // painted the real box.
+        //
+        // Asserted on the VARIABLE as resolved at the row, not on
+        // `marginTop`: jsdom doesn't evaluate `var()` inside a margin, so a
+        // margin assertion here passes against the broken version. It also
+        // has to be read at the ROW — the ListItem re-declares the variable
+        // on itself, so a List-level override never reaches the button (an
+        // earlier draft of this fix did exactly that and did nothing).
+        renderPanel();
+        const row = screen.getByText("@designers").closest("[role='button']") as HTMLElement;
+        const style = getComputedStyle(row);
+        expect(style.getPropertyValue("--ListItemButton-marginBlock")).toBe("0px");
+        expect(style.getPropertyValue("--ListItemButton-marginInline")).toBe("0px");
+    });
+
     it("spaces the icon, name and member count with one row gap", () => {
         renderPanel();
         const row = screen.getByText("@designers").closest("[role='button']") as HTMLElement;
         const style = getComputedStyle(row);
-        expect(style.gap).toBe("8px");
-        // 1.5 spacing units — the old 1.25 left the icon nearly touching
-        // the row edge.
-        expect(style.paddingLeft).toBe("12px");
-        expect(style.paddingRight).toBe("12px");
+        expect(style.gap).toBe("10px");
+        // 1.75 spacing units. Combined with the List's own 6px inset, the
+        // icon and the member count sit 20px off the container's border —
+        // 1.25 (10px) and then 1.5 (12px) both still read as cramped.
+        expect(style.paddingLeft).toBe("14px");
+        expect(style.paddingRight).toBe("14px");
     });
 
     it("keeps the member count intact next to a long group name", () => {

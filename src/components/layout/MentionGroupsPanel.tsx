@@ -170,6 +170,12 @@ export const MentionGroupsPanel = ({
                             overflow: "hidden",
                             maxHeight: 320,
                             overflowY: "auto",
+                            // Inset the rows from the container's border. The
+                            // rows used to sit flush against it, so the only
+                            // gap between the border and the group icon was
+                            // the row's own padding — which read as cramped
+                            // even after that padding grew.
+                            p: 0.75,
                         }}
                     >
                         {mentionGroups.length === 0 && !creating && (
@@ -180,17 +186,56 @@ export const MentionGroupsPanel = ({
                             </ListItem>
                         )}
                         {mentionGroups.map((g) => (
-                            <ListItem key={g.groupId} sx={{ p: 0 }}>
+                            <ListItem
+                                key={g.groupId}
+                                sx={{
+                                    p: 0,
+                                    // Joy's ListItem hands its child
+                                    // ListItemButton a NEGATIVE margin —
+                                    // `calc(-1 * var(--ListItem-paddingY))`,
+                                    // and the same on the inline axis — so the
+                                    // button bleeds out to the ListItem's
+                                    // edges (ListItem.js). That assumes the
+                                    // ListItem carries the padding. Ours
+                                    // doesn't (`p: 0`; the row's own padding
+                                    // shapes it), and zeroing `p` does NOT
+                                    // reset those vars — so every row kept a
+                                    // -6px block margin and spilled over the
+                                    // rows above AND below. Invisible until
+                                    // hover painted the real box, which is
+                                    // exactly how it was reported.
+                                    //
+                                    // These MUST sit on the ListItem, not the
+                                    // List: the ListItem re-declares them on
+                                    // itself, so the button inherits from it
+                                    // (the nearer ancestor) and a List-level
+                                    // override never reaches the button.
+                                    "--ListItemButton-marginBlock": "0px",
+                                    "--ListItemButton-marginInline": "0px",
+                                }}
+                            >
                                 {/* Spacing is one `gap` for the whole row
                                     rather than a margin on the icon: the old
                                     `mr: 0.75` + no margin before the Chip
                                     left the icon and the member count almost
                                     touching the row's edges and the name.
                                     Applies at every width — the row was
-                                    cramped on desktop too. */}
+                                    cramped on desktop too.
+
+                                    Total breathing room either side is now
+                                    6px (the List's padding) + 14px (this
+                                    row's) = 20px, and `borderRadius` makes
+                                    the hover / selected fill read as a pill
+                                    inside the container rather than a band
+                                    spanning it. */}
                                 <ListItemButton
                                     selected={g.groupId === selectedGroupId}
-                                    sx={{ px: 1.5, py: 0.75, gap: 1 }}
+                                    sx={{
+                                        px: 1.75,
+                                        py: 1,
+                                        gap: 1.25,
+                                        borderRadius: "sm",
+                                    }}
                                     onClick={() => setSelectedGroupId(g.groupId)}
                                 >
                                     <GroupRoundedIcon
