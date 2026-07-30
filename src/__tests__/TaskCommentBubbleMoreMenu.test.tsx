@@ -75,7 +75,22 @@ const renderBubble = (comment: TaskCommentProps, props: Partial<{ commentLink: s
         </CssVarsProvider>
     );
 
-const openMoreMenu = () => fireEvent.click(screen.getByLabelText("More options"));
+// The hover toolbar that hosts the ⋮ trigger is gated on hovering the
+// bubble root, and the two message layouts gate it DIFFERENTLY:
+//
+//   * bubble  — always mounted, `opacity: 0` until hover. `getByLabelText`
+//     finds it either way, so these tests used to pass without hovering.
+//   * compact — conditionally MOUNTED on hover, so the trigger doesn't
+//     exist in the DOM at all until then.
+//
+// Hovering first is correct for both and keeps this file independent of
+// which layout is the current default (it is "compact" now — that flip is
+// what surfaced the difference).
+const openMoreMenu = (container: HTMLElement) => {
+    const root = container.firstElementChild;
+    if (root) fireEvent.mouseEnter(root);
+    fireEvent.click(screen.getByLabelText("More options"));
+};
 
 describe("TaskCommentBubble — ⋮ more-options menu", () => {
     beforeEach(() => vi.clearAllMocks());
@@ -87,10 +102,10 @@ describe("TaskCommentBubble — ⋮ more-options menu", () => {
             value: { writeText },
         });
 
-        renderBubble(makeComment(), {
+        const { container } = renderBubble(makeComment(), {
             commentLink: "/workspace/tasks/project/7/task/42/comment/3",
         });
-        openMoreMenu();
+        openMoreMenu(container);
         fireEvent.click(await screen.findByText("Copy comment link"));
 
         await waitFor(() =>
@@ -101,31 +116,31 @@ describe("TaskCommentBubble — ⋮ more-options menu", () => {
     });
 
     it("hides copy link when the mount wires no routing", async () => {
-        renderBubble(makeComment());
-        openMoreMenu();
+        const { container } = renderBubble(makeComment());
+        openMoreMenu(container);
         await screen.findByText("Unwrap content");
         expect(screen.queryByText("Copy comment link")).not.toBeInTheDocument();
     });
 
     it("opens the delete confirm from the menu on own comments only", async () => {
-        renderBubble(makeComment());
-        openMoreMenu();
+        const { container } = renderBubble(makeComment());
+        openMoreMenu(container);
         fireEvent.click(await screen.findByText("Delete"));
         expect(screen.getByTestId("delete-confirm-open")).toBeInTheDocument();
     });
 
     it("offers no delete on someone else's comment", async () => {
-        renderBubble(makeComment({ senderId: "u2", senderName: "Other" }));
-        openMoreMenu();
+        const { container } = renderBubble(makeComment({ senderId: "u2", senderName: "Other" }));
+        openMoreMenu(container);
         await screen.findByText("Unwrap content");
         expect(screen.queryByText("Delete")).not.toBeInTheDocument();
     });
 
     it("flips the wrap toggle label once toggled", async () => {
-        renderBubble(makeComment());
-        openMoreMenu();
+        const { container } = renderBubble(makeComment());
+        openMoreMenu(container);
         fireEvent.click(await screen.findByText("Unwrap content"));
-        openMoreMenu();
+        openMoreMenu(container);
         expect(await screen.findByText("Wrap content")).toBeInTheDocument();
     });
 });
