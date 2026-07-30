@@ -1441,6 +1441,10 @@ export const fr: DeepPartial<Messages> = {
             projectRequest: "Demande de projet",
             gmRequest: "Demande de GM",
             noteAccessRequest: "Accès à la note",
+            ownershipClaim: "Demande de propriété",
+        },
+        ownershipClaim: {
+            respondBy: "Répondez avant le {date}, sinon la propriété pourra leur être transférée",
         },
         noteAccess: {
             openNote: "Ouvrir la note",
@@ -1648,6 +1652,7 @@ export const fr: DeepPartial<Messages> = {
                 inboxTitleJoinProject: "Demande pour rejoindre le projet",
                 inboxTitleJoinGroup: "Demande pour rejoindre le groupe",
                 inboxTitleNoteAccess: "Demande d'accès à la note",
+                inboxTitleOwnershipClaim: "Propriété de l'équipe demandée",
             },
         },
     },

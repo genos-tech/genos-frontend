@@ -50,6 +50,7 @@ import { canManageMembers, MemberRole, resolveMyRole } from "../../../../utils/m
 import { leaveTeam } from "../../services/leaveTeam";
 import { setTeamMemberRole } from "../../services/setTeamMemberRole";
 import { updateTeamProfile } from "../../services/updateTeamProfile";
+import { TeamOwnershipClaimPanel } from "../team/TeamOwnershipClaimPanel";
 import { ModalInviteMembers } from "./ModalInviteMembers";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
@@ -843,6 +844,21 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                         )}
                                                     </Box>
                                                 )}
+                                                {/* Recovery for an absent owner. Sits under
+                                                    the owner's details because that's where
+                                                    you look when you realise the person
+                                                    named there has gone. Renders nothing
+                                                    unless there's something to say. */}
+                                                <TeamOwnershipClaimPanel
+                                                    isTeamOwner={isTeamOwner}
+                                                    teamId={teamProfile.teamId}
+                                                    onOwnershipTaken={() =>
+                                                        setTeamProfile({
+                                                            ...teamProfile,
+                                                            teamOwnerId: myself.userId,
+                                                        })
+                                                    }
+                                                />
                                             </FormControl>
 
                                             {teamProfile.teamMembers.length > 0 && (

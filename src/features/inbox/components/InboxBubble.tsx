@@ -4,12 +4,15 @@ import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
 import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
+import ScheduleRoundedIcon from "@mui/icons-material/ScheduleRounded";
+import ShieldRoundedIcon from "@mui/icons-material/ShieldRounded";
 import StickyNote2RoundedIcon from "@mui/icons-material/StickyNote2Rounded";
 import { Box, Button, Card, Chip, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { MessageBody } from "../../../components/messageBody/MessageBody";
+import { useAuth } from "../../../context/AuthContext";
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../../hooks/common/UrlLinkModalContext";
 import { TeamManagementState } from "../../../hooks/common/useTeamManagement";
@@ -18,22 +21,31 @@ import { fmt, getMessages, useTranslation } from "../../../i18n";
 import { purplePalette } from "../../../theme/purplePalette";
 import { UserProps } from "../../../types/admin";
 import { InboxItemProps } from "../../../types/common";
-import { extractYYYYMMDDHHMM } from "../../../utils/dateUtils";
+import { extractYYYYMMDD, extractYYYYMMDDHHMM } from "../../../utils/dateUtils";
+import { respondToOwnershipClaim } from "../../admin/services/ownershipClaim";
 import { InboxTargetChip } from "./InboxTargetChip";
 
 // Item type configurations for cleaner code. `colorScheme` is intentionally
 // NOT mapped to the unified purple palette — each request type needs a
 // distinct hue (Team=blue, Project=green, GM=pink, Note=amber) so the user
 // can tell request types apart at a glance in a dense inbox.
-type RequestLabelKey = "teamRequest" | "projectRequest" | "gmRequest" | "noteAccessRequest";
+type RequestLabelKey =
+    | "teamRequest"
+    | "projectRequest"
+    | "gmRequest"
+    | "noteAccessRequest"
+    | "ownershipClaim";
 
 const ITEM_TYPE_CONFIG: Record<
     number,
     {
         labelKey: RequestLabelKey;
         icon: React.ReactNode;
-        approveEvent: string;
-        rejectEvent: string;
+        // Types 1-4 answer over Socket.IO. Type 5 (ownership claim) is
+        // HTTP — its guards live in a locked Django transaction — so it
+        // carries no events and is dispatched separately below.
+        approveEvent?: string;
+        rejectEvent?: string;
         colorScheme: { dark: string; light: string };
     }
 > = {
@@ -65,7 +77,17 @@ const ITEM_TYPE_CONFIG: Record<
         rejectEvent: "reject_note_access_request",
         colorScheme: { dark: "#fbbf24", light: "#f59e0b" },
     },
+    // Red, alone among the request types, and deliberately so: this is
+    // the only inbox item that costs you something by being IGNORED.
+    5: {
+        labelKey: "ownershipClaim",
+        icon: <ShieldRoundedIcon sx={{ fontSize: 14 }} />,
+        colorScheme: { dark: "#f87171", light: "#ef4444" },
+    },
 };
+
+/** `item_type` for a team-ownership claim. See `ownershipClaim.ts`. */
+const OWNERSHIP_CLAIM = 5;
 
 // Where the card's body text actually starts, measured from the card's own
 // content edge. The body is inset TWICE — MessageBody wraps it in a box with
@@ -90,14 +112,19 @@ type InboxBubbleProps = {
 export const InboxBubble = (props: InboxBubbleProps) => {
     const { useTEM, socket, myself, setMyself, inboxItem, useUISM, useCM } = props;
     const { mode } = useColorScheme();
+    const { accessToken } = useAuth();
     const { t } = useTranslation();
     const isDark = mode === "dark";
     const palette = isDark ? purplePalette.dark : purplePalette.light;
     const [localStatus, setLocalStatus] = useState<"approved" | "rejected" | null>(null);
     const [isHovered, setIsHovered] = useState<boolean>(false);
+    // Only the HTTP (ownership-claim) path can report a refusal — a
+    // socket emit is fire-and-forget. Rejecting a claim you no longer
+    // have standing to answer has to say so, not no-op.
+    const [claimError, setClaimError] = useState<string | null>(null);
 
     const config = ITEM_TYPE_CONFIG[inboxItem.itemType];
-    const isRequest = inboxItem.itemType >= 1 && inboxItem.itemType <= 4;
+    const isRequest = inboxItem.itemType >= 1 && inboxItem.itemType <= OWNERSHIP_CLAIM;
     // Cards that can name an openable target: team/project/GM join requests
     // (1-3) and activities (0). Note-access (4) is excluded — it has its own
     // open-note chip. The chip renders nothing when nothing resolves, so this
@@ -105,6 +132,10 @@ export const InboxBubble = (props: InboxBubbleProps) => {
     const canHaveTarget = inboxItem.itemType >= 0 && inboxItem.itemType <= 3;
     const resolvedStatus = localStatus ?? inboxItem.requestStatus;
     const isHandled = resolvedStatus === "approved" || resolvedStatus === "rejected";
+    const claimDeadline =
+        inboxItem.itemType === OWNERSHIP_CLAIM
+            ? (inboxItem.itemOptionals?.deadline as string | undefined)
+            : undefined;
 
     // Note-access requests (itemType 4) can open the referenced note in the
     // URL-link modal. Only personal notes (note_type 1) are routable from
@@ -121,15 +152,36 @@ export const InboxBubble = (props: InboxBubbleProps) => {
               }
             : null;
 
+    // An ownership claim is answered over HTTP rather than the socket
+    // events types 1-4 use, so the two paths are dispatched separately.
+    // The optimistic `setLocalStatus` only moves once the call resolves
+    // — unlike a socket emit, this one can be refused (you may no longer
+    // be the owner), and showing "Approved" on a rejected transfer would
+    // be a lie about who owns the team.
+    const respondToClaim = async (decision: "approve" | "reject") => {
+        setClaimError(null);
+        const ok = await respondToOwnershipClaim(
+            accessToken,
+            inboxItem.itemId,
+            decision,
+            setClaimError
+        );
+        if (ok) setLocalStatus(decision === "approve" ? "approved" : "rejected");
+    };
+
     const handleApprove = () => {
-        if (socket && config) {
+        if (inboxItem.itemType === OWNERSHIP_CLAIM) {
+            void respondToClaim("approve");
+        } else if (socket && config?.approveEvent) {
             socket.emit(config.approveEvent, { item_id: inboxItem.itemId });
             setLocalStatus("approved");
         }
     };
 
     const handleReject = () => {
-        if (socket && config) {
+        if (inboxItem.itemType === OWNERSHIP_CLAIM) {
+            void respondToClaim("reject");
+        } else if (socket && config?.rejectEvent) {
             socket.emit(config.rejectEvent, { item_id: inboxItem.itemId });
             setLocalStatus("rejected");
         }
@@ -306,6 +358,37 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                         >
                             {fmt(t.inbox.noteAccess.openNoteNamed, { title: openableNote.title })}
                         </Chip>
+                    </Box>
+                )}
+
+                {/* When an unanswered ownership claim becomes actionable
+                    by the person who filed it. The body says how many
+                    days; this says the date, because "30 days" read
+                    three weeks late is not a warning. Only while the
+                    claim is still open — after a decision the deadline
+                    is spent. */}
+                {claimDeadline && !isHandled && (
+                    <Box sx={{ pl: BODY_TEXT_INDENT }}>
+                        <Typography
+                            level="body-xs"
+                            startDecorator={<ScheduleRoundedIcon sx={{ fontSize: 14 }} />}
+                            sx={{
+                                color: isDark ? "#f87171" : "#ef4444",
+                                fontWeight: 600,
+                            }}
+                        >
+                            {fmt(t.inbox.ownershipClaim.respondBy, {
+                                date: extractYYYYMMDD(claimDeadline),
+                            })}
+                        </Typography>
+                    </Box>
+                )}
+
+                {claimError && (
+                    <Box sx={{ pl: BODY_TEXT_INDENT }}>
+                        <Typography color="danger" level="body-xs">
+                            {claimError}
+                        </Typography>
                     </Box>
                 )}
 

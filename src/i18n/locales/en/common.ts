@@ -78,6 +78,22 @@ export const common = {
         transferConfirm: "Transfer",
         transferError: "Couldn't transfer ownership. Please try again.",
         noOtherMembers: "No other members to transfer ownership to.",
+        // Break-glass recovery for a team whose owner is absent. Only an
+        // editor sees these, and only the wording of `claimDescription`
+        // sets the expectation that this is slow and visible on purpose
+        // — it is not an "escalate to admin" button.
+        claimTitle: "Owner unreachable?",
+        claimDescription:
+            "You can ask the owner to hand over the team. If they don't respond, you'll be able to take ownership after the deadline. They're notified either way.",
+        claimRequest: "Request ownership",
+        claimPendingTitle: "Ownership request pending",
+        claimWaiting:
+            "Waiting for the owner. You can take ownership on {date} if they don't reply.",
+        claimReady: "The owner didn't reply. You can now take ownership of this team.",
+        claimFinalize: "Take ownership",
+        claimOtherPending:
+            "Another editor has requested ownership of this team. The owner has until {date} to respond.",
+        claimCooldown: "The owner declined your request. You can ask again after {date}.",
     },
     empty: {
         noResults: "No results",

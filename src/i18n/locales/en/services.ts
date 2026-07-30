@@ -150,6 +150,7 @@ export const services = {
             inboxTitleJoinProject: "Join project request",
             inboxTitleJoinGroup: "Join group request",
             inboxTitleNoteAccess: "Note access request",
+            inboxTitleOwnershipClaim: "Team ownership requested",
         },
     },
 } as const;

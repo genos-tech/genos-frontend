@@ -24,6 +24,13 @@ export const inbox = {
         projectRequest: "Project Request",
         gmRequest: "GM Request",
         noteAccessRequest: "Note Access",
+        ownershipClaim: "Ownership Request",
+    },
+    ownershipClaim: {
+        // The card's body already says how many days. This is the date,
+        // because the consequence of ignoring THIS request is losing the
+        // team — the one inbox item where doing nothing is the decision.
+        respondBy: "Respond by {date}, or they can take ownership",
     },
     noteAccess: {
         openNote: "Open note",

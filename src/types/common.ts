@@ -19,6 +19,10 @@ export type ReactionProps = {
 // itemType:1 : Join team request
 // itemType:2 : Join project request
 // itemType:3 : Join gm request
+// itemType:4 : Note access request
+// itemType:5 : Team ownership claim (break-glass recovery for an absent
+//              owner — the receiver is the CURRENT owner, and ignoring it
+//              is what lets the sender take ownership)
 export type InboxItemProps = {
     itemId: number;
     itemBody: PartialBlock[] | any[];

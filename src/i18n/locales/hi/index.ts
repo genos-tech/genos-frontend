@@ -1432,6 +1432,10 @@ export const hi: DeepPartial<Messages> = {
             projectRequest: "प्रोजेक्ट अनुरोध",
             gmRequest: "GM अनुरोध",
             noteAccessRequest: "नोट एक्सेस",
+            ownershipClaim: "स्वामित्व अनुरोध",
+        },
+        ownershipClaim: {
+            respondBy: "{date} तक उत्तर दें, अन्यथा वे स्वामित्व ले सकते हैं",
         },
         noteAccess: {
             openNote: "नोट खोलें",
@@ -1636,6 +1640,7 @@ export const hi: DeepPartial<Messages> = {
                 inboxTitleJoinProject: "प्रोजेक्ट जॉइन करने का अनुरोध",
                 inboxTitleJoinGroup: "ग्रुप जॉइन करने का अनुरोध",
                 inboxTitleNoteAccess: "नोट एक्सेस अनुरोध",
+                inboxTitleOwnershipClaim: "टीम स्वामित्व का अनुरोध किया गया",
             },
         },
     },

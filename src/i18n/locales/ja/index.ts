@@ -1548,6 +1548,11 @@ export const ja: DeepPartial<Messages> = {
             projectRequest: "プロジェクトリクエスト",
             gmRequest: "GMリクエスト",
             noteAccessRequest: "ノートアクセス",
+            ownershipClaim: "オーナー権限リクエスト",
+        },
+        ownershipClaim: {
+            respondBy:
+                "{date} までに返信してください。返信がない場合、相手がオーナー権限を取得できます",
         },
         noteAccess: {
             openNote: "ノートを開く",
@@ -1763,6 +1768,7 @@ export const ja: DeepPartial<Messages> = {
                 inboxTitleJoinProject: "プロジェクト参加リクエスト",
                 inboxTitleJoinGroup: "グループ参加リクエスト",
                 inboxTitleNoteAccess: "ノートアクセスのリクエスト",
+                inboxTitleOwnershipClaim: "チームのオーナー権限がリクエストされました",
             },
         },
     },
