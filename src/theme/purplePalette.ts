@@ -248,10 +248,19 @@ export const purplePalette: { dark: PurpleTokens; light: PurpleTokens } = {
  * unusable channels. The provider rebuilds this (memoized) when the theme
  * changes, which is cheap: Joy regenerates one stylesheet.
  */
-export const buildJoyTheme = (themeId: ThemeId = DEFAULT_THEME_ID) => {
+export const buildJoyTheme = (
+    themeId: ThemeId = DEFAULT_THEME_ID,
+    // Joy reads `direction` for the handful of components that position
+    // themselves relative to the reading order (Select/Menu popper
+    // placement, Drawer anchor). The bulk of the mirroring is done by the
+    // emotion plugin in `rtlCache.ts`; this covers what the plugin can't,
+    // because it isn't expressed as CSS.
+    direction: "ltr" | "rtl" = "ltr"
+) => {
     const { ramp, brandRgb } = THEME_PRIMITIVES[themeId];
     const soft = (alpha: number) => `rgba(${brandRgb}, ${alpha})`;
     return extendTheme({
+        direction,
         colorSchemes: {
             dark: {
                 palette: {
