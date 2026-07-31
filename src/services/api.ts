@@ -1,5 +1,6 @@
 import axios, { AxiosInstance } from "axios";
 
+import { notifyNonMemberMentions } from "./nonMemberMentionBus";
 import { emitRequestError } from "./requestErrorNotifier";
 
 // Per-request opt-out for the global error toast. Callers that render their
@@ -28,6 +29,12 @@ const attachInterceptors = (instance: AxiosInstance): AxiosInstance => {
     instance.interceptors.response.use(
         (response) => {
             _onApiHealthChange?.(false);
+            // Any save/send that carried an @mention may report users
+            // who can't reach the surface. Handling it here covers
+            // every mention surface at once — and the chat-message case
+            // in particular, whose mention is dropped server-side and
+            // has no other client-visible signal.
+            notifyNonMemberMentions(response.data);
             return response;
         },
         (error) => {

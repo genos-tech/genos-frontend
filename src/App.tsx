@@ -27,6 +27,7 @@ import { InstallBanner } from "./components/layout/InstallBanner";
 import { MentionGroupModal } from "./components/layout/MentionGroupModal";
 import { MobileAccountSheet } from "./components/layout/MobileAccountSheet";
 import { MobileSpotlightFab } from "./components/layout/MobileSpotlightFab";
+import { NonMemberMentionSnackbar } from "./components/layout/NonMemberMentionSnackbar";
 import {
     QuickMeetClipboardHandle,
     QuickMeetClipboardHost,
@@ -1270,6 +1271,10 @@ export const App = () => {
                                                         showWsDisconnected={showWsDisconnected}
                                                     />
                                                     <RequestErrorSnackbar />
+                                                    <NonMemberMentionSnackbar
+                                                        myself={myself}
+                                                        socket={socketInstance}
+                                                    />
                                                     <BillingReturnSnackbar />
                                                     <QuickMeetClipboardHost
                                                         ref={meetClipboardRef}
