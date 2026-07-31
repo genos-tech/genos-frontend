@@ -75,8 +75,15 @@ export type MilestoneHistoryEntry = {
 
 export type NoteHistoryEntry = {
     kind: "note";
+    // The sidebar BUCKET, not the backend type: 1 my, 2 task, 3 chat,
+    // 4 shared, 8 team. My / Shared / Team are all note_type 1 on the
+    // server, so recording the backend type would collapse them into
+    // one indistinguishable "My note" row.
     noteType: number;
     noteId: number;
+    // Team notes only — the containing folder, shown as the row's
+    // subtitle the way a task note shows its project.
+    folderName?: string | null;
     // Coordinates needed to deep-link back to the note. Filled in for
     // task notes (projectId + taskId) and chat notes (chatType + chatId
     // + threadId); empty for personal "My Notes".

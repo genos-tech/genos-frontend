@@ -1847,6 +1847,37 @@ export const useNoteManagement = (
                     (fid) => addKey(`folder-${fid}`)
                 );
             }
+
+            // Team notes get none of the above for free. They aren't in
+            // `myNoteMeta`, so `currentMyNoteChain` is empty for them and
+            // neither the note-ancestor keys nor the folder reveal above
+            // ever fire — which is why opening one from a tab left the
+            // Team Notes tree collapsed and nothing highlighted.
+            //
+            // Resolve the note's own row instead: expand its containing
+            // TEAM folder chain, and key its note ancestors on bucket 8,
+            // which is the noteType the team rows render with.
+            const activeTab = tabsApi.activeTab;
+            if (activeTab?.kind === "my" && activeTab.bucket === "team") {
+                const row = teamNoteMeta.find((n) => n.noteId === activeTab.noteId);
+                if (row) {
+                    // Walk up the note-parent chain so a sub-note reveals
+                    // its parents, then the folder chain of the root.
+                    let cursor: TeamNoteMetaProps | undefined = row;
+                    const seen = new Set<number>();
+                    while (cursor && !seen.has(cursor.noteId)) {
+                        seen.add(cursor.noteId);
+                        const parentId: number | null = cursor.parentNoteId;
+                        if (parentId == null) break;
+                        addKey(`8-${parentId}`);
+                        cursor = teamNoteMeta.find((n) => n.noteId === parentId);
+                    }
+                    collectFolderAncestorIds(
+                        teamNoteFolders,
+                        cursor?.folderId ?? row.folderId ?? null
+                    ).forEach((fid) => addKey(`folder-${fid}`));
+                }
+            }
             for (const tabKey in allNoteIdChains) {
                 const dash = tabKey.indexOf("-");
                 if (dash <= 0) continue;
@@ -1865,6 +1896,12 @@ export const useNoteManagement = (
         currentChatNoteChain,
         allNoteIdChains,
         myNoteFolders,
+        // Team reveal depends on the active tab plus both team lists —
+        // the folder list often arrives AFTER the tab opens, so this has
+        // to re-run when it lands or the reveal is silently skipped.
+        tabsApi.activeTab,
+        teamNoteMeta,
+        teamNoteFolders,
     ]);
 
     // Initialize note states
