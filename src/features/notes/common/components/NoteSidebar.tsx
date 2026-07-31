@@ -1519,11 +1519,35 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     const renderFavoriteNotes = () => {
         if (!useNM.favoriteNotes) return null;
 
-        const hasPersonalNotes = useNM.favoriteNotes.personalNotes.length > 0;
+        // The server groups favorites by BACKEND note type, so team (and
+        // shared) notes arrive in `personalNotes` — they're note_type 1.
+        // Split them back out here, or a favorited team note shows up
+        // under "My Notes" with no way to tell it apart.
+        const teamNoteIds = new Set(useNM.teamNoteMeta.map((n) => n.noteId));
+        const sharedNoteIds = new Set(useNM.sharedNoteMeta.map((n) => n.noteId));
+        const favTeamNotes = useNM.favoriteNotes.personalNotes.filter((n) =>
+            teamNoteIds.has(n.noteId)
+        );
+        const favSharedNotes = useNM.favoriteNotes.personalNotes.filter(
+            (n) => !teamNoteIds.has(n.noteId) && sharedNoteIds.has(n.noteId)
+        );
+        const favMyNotes = useNM.favoriteNotes.personalNotes.filter(
+            (n) => !teamNoteIds.has(n.noteId) && !sharedNoteIds.has(n.noteId)
+        );
+
+        const hasPersonalNotes = favMyNotes.length > 0;
+        const hasTeamNotes = favTeamNotes.length > 0;
+        const hasSharedNotes = favSharedNotes.length > 0;
         const hasTaskNotes = useNM.favoriteNotes.taskNotes.length > 0;
         const hasChatNotes = useNM.favoriteNotes.chatNotes.length > 0;
 
-        if (!hasPersonalNotes && !hasTaskNotes && !hasChatNotes) {
+        if (
+            !hasPersonalNotes &&
+            !hasTeamNotes &&
+            !hasSharedNotes &&
+            !hasTaskNotes &&
+            !hasChatNotes
+        ) {
             return (
                 <Box sx={{ px: 2, py: 1 }}>
                     <Typography
@@ -1548,9 +1572,27 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                         groupLabel={t.notes.sidebar.myNotes}
                         icon={<WindowRoundedIcon sx={{ fontSize: 14 }} />}
                     >
-                        {useNM.favoriteNotes.personalNotes.map((note) =>
-                            renderFavoriteNoteItem(note, 1)
-                        )}
+                        {favMyNotes.map((note) => renderFavoriteNoteItem(note, 1))}
+                    </FavoriteNoteSection>
+                )}
+                {hasSharedNotes && (
+                    <FavoriteNoteSection
+                        defaultExpanded={true}
+                        groupKey="fav-shared"
+                        groupLabel={t.notes.sidebar.sharedNotes}
+                        icon={<ShareRoundedIcon sx={{ fontSize: 14 }} />}
+                    >
+                        {favSharedNotes.map((note) => renderFavoriteNoteItem(note, 4))}
+                    </FavoriteNoteSection>
+                )}
+                {hasTeamNotes && (
+                    <FavoriteNoteSection
+                        defaultExpanded={true}
+                        groupKey="fav-team"
+                        groupLabel={t.notes.sidebar.teamNotes}
+                        icon={<GroupsRoundedIcon sx={{ fontSize: 14 }} />}
+                    >
+                        {favTeamNotes.map((note) => renderFavoriteNoteItem(note, 8))}
                     </FavoriteNoteSection>
                 )}
                 {hasTaskNotes && (

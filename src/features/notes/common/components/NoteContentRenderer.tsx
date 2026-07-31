@@ -289,10 +289,13 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
         );
     }
 
-    // Shared Note placeholder
-    if (useNM.currentNoteType === 4) {
-        return renderPlaceholder(t.notes.placeholder.sharedNotesTitle);
-    }
+    // Shared Notes deliberately has NO placeholder pane. Clicking a
+    // sidebar section header is a navigation gesture — it expands that
+    // section's tree — and shouldn't tear down whatever the user was
+    // reading. Shared notes render through the normal My-Notes path
+    // below (they're personal notes), so the open note simply stays.
+    //
+    // Team Notes never had one, which is the behaviour to match.
 
     // The active Main renders the header + tab strip for the active
     // kind. The editor body for *every* live tab is rendered as a

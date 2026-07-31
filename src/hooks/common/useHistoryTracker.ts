@@ -15,6 +15,7 @@ import { useEffect, useRef } from "react";
 
 import { loadV3SpecificMessages } from "../../features/chat/services/loadV3SpecificMessages";
 import { loadV3SpecificThreadMessages } from "../../features/chat/services/loadV3SpecificThreadMessages";
+import { noteTypeFromBucket } from "../../features/notes/common/utils/noteTypeAlias";
 import { isV3Uuid } from "../../utils/legacyId";
 import { ChatManagementState } from "../chats/useChatManagement";
 import { NoteManagementState } from "../notes/useNoteManagement";
@@ -432,20 +433,42 @@ export const useHistoryTracker = ({ useCM, useTM, useSM, useNM, usePM }: Props) 
     // the same noteId in different surfaces still dedups within the
     // notes tab.
     const currentMyNote = useNM.currentMyNote;
+    // My / Shared / Team notes all arrive here as noteType 1, so the
+    // history row has to record the sidebar BUCKET instead — otherwise
+    // every one of them renders with the "My note" chip. The bucket
+    // lives on the tab; nothing on the note itself distinguishes them.
+    const activeNoteTab = useNM.tabsApi.activeTab;
+    const myNoteBucket =
+        activeNoteTab?.kind === "my" ? (activeNoteTab.bucket ?? "my") : ("my" as const);
+    const teamNoteFolders = useNM.teamNoteFolders;
+    const teamNoteMeta = useNM.teamNoteMeta;
     useEffect(() => {
         if (!currentMyNote || !currentMyNote.noteId) return;
-        const key = `note:${currentMyNote.noteType}:${currentMyNote.noteId}`;
+        const bucketNoteType = noteTypeFromBucket(myNoteBucket);
+        const key = `note:${bucketNoteType}:${currentMyNote.noteId}`;
         if (lastNoteKeyRef.current === key) return;
         lastNoteKeyRef.current = key;
+
+        // Team rows carry their folder as the subtitle, the way a task
+        // note carries its project — it's the context that makes the
+        // row identifiable at a glance. Captured at open time so a later
+        // rename doesn't rewrite old history.
+        let folderName: string | null = null;
+        if (bucketNoteType === 8) {
+            const folderId = teamNoteMeta.find((n) => n.noteId === currentMyNote.noteId)?.folderId;
+            folderName = teamNoteFolders.find((f) => f.folderId === folderId)?.name ?? null;
+        }
+
         const entry: HistoryEntry = {
             kind: "note",
             label: currentMyNote.title || `#${currentMyNote.noteId}`,
             noteId: currentMyNote.noteId,
-            noteType: currentMyNote.noteType,
+            noteType: bucketNoteType,
+            folderName,
             openedAt: Date.now(),
         };
         record(entry);
-    }, [currentMyNote, record]);
+    }, [currentMyNote, myNoteBucket, teamNoteMeta, teamNoteFolders, record]);
 
     const currentTaskNote = useNM.currentTaskNote;
     const allTasksForNotes = useTM.allTasks;

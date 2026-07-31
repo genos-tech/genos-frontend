@@ -9,6 +9,7 @@ import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import NoteAltRoundedIcon from "@mui/icons-material/NoteAltRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
+import ShareRoundedIcon from "@mui/icons-material/ShareRounded";
 import WindowRoundedIcon from "@mui/icons-material/WindowRounded";
 import {
     Avatar,
@@ -255,6 +256,20 @@ const NOTE_TYPE_VISUAL: Record<
         icon: <QuestionAnswerRoundedIcon sx={{ fontSize: 14 }} />,
         light: "#f97316",
         dark: "#fb923c",
+    },
+    // 4 and 8 are sidebar buckets over note_type 1. They need their own
+    // entries or every shared / team note reads as "My note".
+    4: {
+        label: "Shared note",
+        icon: <ShareRoundedIcon sx={{ fontSize: 14 }} />,
+        light: "#0ea5e9",
+        dark: "#38bdf8",
+    },
+    8: {
+        label: "Team note",
+        icon: <GroupsRoundedIcon sx={{ fontSize: 14 }} />,
+        light: "#a855f7",
+        dark: "#c084fc",
     },
 };
 
@@ -607,13 +622,29 @@ export const HistoryModal = ({
                         ? [entry.projectName, entry.taskTitle].filter(Boolean).join(" · ") || null
                         : entry.noteType === 3
                           ? entry.chatName || null
-                          : null;
+                          : // Team notes show their folder, the way a task
+                            // note shows its project.
+                            entry.noteType === 8
+                            ? entry.folderName || null
+                            : null;
                 // Mirror the avatar a user sees in the originating
                 // surface: personal notes -> their own avatar; task
                 // notes -> the task's project image; chat notes ->
                 // the chat's avatar (DM partner / GM-MDM-PM image).
                 let noteAvatar: React.ReactNode;
-                if (entry.noteType === 1) {
+                if (entry.noteType === 8) {
+                    // A team note belongs to the team, not to you — the
+                    // owner avatar would be misleading here.
+                    noteAvatar = (
+                        <GroupOrProjectAvatar
+                            fallback={
+                                <GroupsRoundedIcon sx={{ fontSize: AVATAR_FALLBACK_ICON_SIZE }} />
+                            }
+                            isDark={isDark}
+                            src={undefined}
+                        />
+                    );
+                } else if (entry.noteType === 1 || entry.noteType === 4) {
                     noteAvatar = (
                         <UserAvatar clickable={false} size={AVATAR_SIZE} userId={myself.userId} />
                     );
