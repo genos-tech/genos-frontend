@@ -40,6 +40,7 @@ import { TaskInfoPill } from "../../../tasks/components/TaskInfoPill";
 import { ModalMoveToFolder } from "../../my-notes/modals/ModalMoveToFolder";
 import { exportNoteMarkdown } from "../services/exportNoteMarkdown";
 import { getMyNoteRoleId, NOTE_ROLE_OWNER } from "../utils/noteRoles";
+import { isPersonalNoteBucket, toBackendNoteType } from "../utils/noteTypeAlias";
 import { ImportMarkdownContext, ModalImportMarkdown } from "./ModalImportMarkdown";
 import { ModalNoteHistory } from "./ModalNoteHistory";
 import { ModalNoteSharing } from "./ModalNoteSharing";
@@ -99,17 +100,16 @@ export const NoteHeaderActions = ({
     const notifCtx = useNotificationsContext();
 
     // Resolve the active note from useNM based on noteType so the share
-    // modal targets the note shown in this header. noteType=4 (shared
-    // personal notes) reuses the currentMyNote slot since the backend
-    // serves them from the same endpoint.
-    const activeNote =
-        noteType === 1 || noteType === 4
-            ? useNM.currentMyNote
-            : noteType === 2
-              ? useNM.currentTaskNote
-              : noteType === 3
-                ? useNM.currentChatNote
-                : null;
+    // modal targets the note shown in this header. noteType 4 (shared)
+    // and 8 (team) reuse the currentMyNote slot since the backend serves
+    // all three from the same endpoint.
+    const activeNote = isPersonalNoteBucket(noteType)
+        ? useNM.currentMyNote
+        : noteType === 2
+          ? useNM.currentTaskNote
+          : noteType === 3
+            ? useNM.currentChatNote
+            : null;
     const activeNoteId = activeNote?.noteId ?? null;
     const activeNoteTitle = activeNote?.title ?? "";
 
@@ -149,24 +149,23 @@ export const NoteHeaderActions = ({
     // the open note. All three surfaces then let the user retarget the
     // import from the dialog — to another folder on my-notes, to another
     // task / chat elsewhere.
-    const importContext: ImportMarkdownContext | null =
-        noteType === 1 || noteType === 4
-            ? { kind: "my" }
-            : noteType === 2 && useNM.currentTaskNote
-              ? {
-                    kind: "task",
-                    projectId: useNM.currentTaskNote.projectId,
-                    taskId: useNM.currentTaskNote.taskId,
-                }
-              : noteType === 3 && useNM.currentChatNote
-                ? {
-                      kind: "chat",
-                      chatType: useNM.currentChatNote.chatType,
-                      chatId: useNM.currentChatNote.chatId,
-                      isThread: useNM.currentChatNote.isThread,
-                      threadId: useNM.currentChatNote.threadId,
-                  }
-                : null;
+    const importContext: ImportMarkdownContext | null = isPersonalNoteBucket(noteType)
+        ? { kind: "my" }
+        : noteType === 2 && useNM.currentTaskNote
+          ? {
+                kind: "task",
+                projectId: useNM.currentTaskNote.projectId,
+                taskId: useNM.currentTaskNote.taskId,
+            }
+          : noteType === 3 && useNM.currentChatNote
+            ? {
+                  kind: "chat",
+                  chatType: useNM.currentChatNote.chatType,
+                  chatId: useNM.currentChatNote.chatId,
+                  isThread: useNM.currentChatNote.isThread,
+                  threadId: useNM.currentChatNote.threadId,
+              }
+            : null;
 
     // Shared with the sidebar row menu — see `exportNoteMarkdown` for why
     // the note is re-fetched first.
@@ -192,12 +191,17 @@ export const NoteHeaderActions = ({
     const { accessToken } = useAuth();
     const noteAsk = useNoteAsk({ accessToken, teamId: myself.teamId });
     const askButtonAvailable = activeNoteId != null;
-    const normalizedNoteType: 1 | 2 | 3 | null =
-        noteType === 4
-            ? 1
-            : noteType === 1 || noteType === 2 || noteType === 3
-              ? (noteType as 1 | 2 | 3)
-              : null;
+    // Every backend-facing action (Ask, Export, version history) goes
+    // through this. It must recognise EVERY sidebar alias — a bucket it
+    // doesn't know falls to `null` and silently disables Ask/Export
+    // while handing version history a code the backend rejects.
+    const normalizedNoteType: 1 | 2 | 3 | null = isPersonalNoteBucket(noteType)
+        ? 1
+        : noteType === 2 || noteType === 3
+          ? noteType
+          : // Pseudo buckets (Home / Favorites / Recents / Unread) have
+            // no note behind them — null disables the actions.
+            null;
     const openNoteAsk = () => {
         if (!askButtonAvailable || normalizedNoteType === null || activeNoteId == null) return;
         noteAsk.open({ noteType: normalizedNoteType, noteId: activeNoteId });
@@ -830,7 +834,7 @@ export const NoteHeaderActions = ({
                     myself={myself}
                     noteId={activeNoteId}
                     noteTitle={activeNoteTitle}
-                    noteType={noteType === 4 ? 1 : noteType}
+                    noteType={toBackendNoteType(noteType)}
                     open={shareOpen}
                     setMyself={setMyself}
                     socket={socket}

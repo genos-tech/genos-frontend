@@ -12,6 +12,8 @@ import { UserProps } from "../../../../types/admin";
 import { EmptyState } from "../../common/components/EmptyState";
 import { NoteHeaderActions } from "../../common/components/NoteHeaderActions";
 import { NoteTabList } from "../../common/components/NoteTabList";
+import { noteTypeFromBucket } from "../../common/utils/noteTypeAlias";
+import { TeamNoteHeader } from "../../team-notes/components/TeamNoteHeader";
 import { MyNoteHeader } from "../components/MyNoteHeader";
 import { ModalDeleteMyNote } from "../modals/ModalDeleteMyNote";
 import { MyNoteEditorPanel } from "./MyNoteEditorPanel";
@@ -47,6 +49,20 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
 
     const { accessToken } = useAuth();
     const [openDeleteNote, setOpenDeleteNote] = useState<boolean>(false);
+
+    // Which personal-backed space the open note belongs to. Read off the
+    // active tab because it can't be re-derived — My / Shared / Team are
+    // all note_type 1. Falls back to the sidebar's current section while
+    // a tab is still settling.
+    const activeTab = useNM.tabsApi.activeTab;
+    const activeBucket =
+        activeTab?.kind === "my"
+            ? (activeTab.bucket ?? "my")
+            : useNM.currentNoteType === 8
+              ? "team"
+              : useNM.currentNoteType === 4
+                ? "shared"
+                : "my";
 
     // In task-page mode MyNoteMain renders standalone — the editor pool
     // lives in `NoteContentRenderer`, which is only mounted on
@@ -157,14 +173,24 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                             mb: "5px",
                         }}
                     >
-                        <MyNoteHeader useNM={useNM} />
+                        {/* One Main serves all three personal-backed
+                            buckets, so the header is chosen by the
+                            ACTIVE TAB's bucket rather than hardcoded —
+                            otherwise a team note reads as "My Notes"
+                            with no folder path, which is what made the
+                            Team Notes header look missing. */}
+                        {activeBucket === "team" ? (
+                            <TeamNoteHeader useNM={useNM} />
+                        ) : (
+                            <MyNoteHeader useNM={useNM} />
+                        )}
 
                         <NoteHeaderActions
                             currentTask={undefined}
                             hostZIndex={hostZIndex}
                             isInTaskPage={isInTaskPage}
                             myself={myself}
-                            noteType={1}
+                            noteType={noteTypeFromBucket(activeBucket)}
                             pmChat={undefined}
                             setMyself={setMyself}
                             socket={socket}

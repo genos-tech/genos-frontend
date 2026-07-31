@@ -29,6 +29,9 @@ import { mentionKey, type AgentMentionCandidate, type AgentMentionRef } from "./
 const NOTE_KIND_TO_TYPE: Record<string, 1 | 2 | 3> = {
     my: 1,
     shared: 1,
+    // Team Notes are personal notes with a folder-carried ACL, so the
+    // agent reaches them through the same note_type 1 context.
+    team: 1,
     task: 2,
     chat: 3,
 };

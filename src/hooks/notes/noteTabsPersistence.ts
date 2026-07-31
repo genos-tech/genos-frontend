@@ -10,9 +10,19 @@ const STORAGE_KEY_PREFIX = "noteTabs:";
 
 export type NoteTypeId = 1 | 2 | 3;
 
+// Which sidebar space a personal-backed note came from. Persisted
+// because it CANNOT be re-derived: My / Shared / Team notes are all
+// `noteType: 1` on the backend. Without it a reload would silently
+// re-open every team note as a My Note — the same defect the in-memory
+// tab bucket fixes, just one refresh later.
+export type PersistedNoteBucket = "my" | "shared" | "team";
+
 export interface TabRef {
     noteType: NoteTypeId;
     noteId: number;
+    // Absent on records written before Team Notes existed; readers
+    // treat that as "my".
+    bucket?: PersistedNoteBucket;
 }
 
 // `tmpTabs` is legacy: the old per-service swap (chat/task/notes)
@@ -29,28 +39,37 @@ export interface PersistedNoteTabs {
 
 const storageKey = (teamId: string): string => `${STORAGE_KEY_PREFIX}${teamId}`;
 
+const isValidBucket = (value: unknown): value is PersistedNoteBucket =>
+    value === "my" || value === "shared" || value === "team";
+
 const isValidRef = (value: unknown): value is TabRef => {
     if (!value || typeof value !== "object") return false;
-    const candidate = value as { noteType?: unknown; noteId?: unknown };
+    const candidate = value as { noteType?: unknown; noteId?: unknown; bucket?: unknown };
     return (
         (candidate.noteType === 1 || candidate.noteType === 2 || candidate.noteType === 3) &&
         typeof candidate.noteId === "number" &&
-        Number.isFinite(candidate.noteId)
+        Number.isFinite(candidate.noteId) &&
+        // Tolerant on purpose: an absent bucket is a pre-Team-Notes
+        // record, not a corrupt one, and must still load.
+        (candidate.bucket === undefined || isValidBucket(candidate.bucket))
     );
 };
 
 // A loose shape for any note-like object the in-memory `tabItems` state
 // might carry. The hook stores full notes (`MyNoteProps | TaskNoteProps |
 // ChatNoteProps`) but we only need the identity fields here.
-type NoteLike = { noteType?: unknown; noteId?: unknown } | null | undefined;
+type NoteLike = { noteType?: unknown; noteId?: unknown; bucket?: unknown } | null | undefined;
 
 // Project a (possibly full) note-like object down to the persistence ref.
 // Returns null when the input lacks usable identity fields so callers can
 // drop it cleanly.
 export const toRef = (item: NoteLike): TabRef | null => {
     if (!item) return null;
-    const { noteType, noteId } = item;
-    const ref = { noteType, noteId };
+    const { noteType, noteId, bucket } = item;
+    // Omit the key entirely when absent rather than writing `undefined`,
+    // so records stay byte-identical to the pre-Team-Notes shape for
+    // ordinary My Notes tabs.
+    const ref = isValidBucket(bucket) ? { noteType, noteId, bucket } : { noteType, noteId };
     return isValidRef(ref) ? ref : null;
 };
 

@@ -7,6 +7,7 @@ import {
     MyNoteMetaProps,
     SharedNoteMetaProps,
     TaskNoteMetaProps,
+    TeamNoteMetaProps,
 } from "../types/notes";
 import { ProjectProps, SearchTeamTasksResponse, TaskTableProps } from "../types/tasks";
 
@@ -19,7 +20,11 @@ export type HashNoteEntry =
     | ({ kind: "my" } & MyNoteMetaProps)
     | ({ kind: "task" } & TaskNoteMetaProps)
     | ({ kind: "chat" } & ChatNoteMetaProps)
-    | ({ kind: "shared" } & SharedNoteMetaProps);
+    | ({ kind: "shared" } & SharedNoteMetaProps)
+    // Team Notes. Backed by note_type 1 like "my" and "shared", but
+    // kept a distinct kind so the deep-link URL resolves to the Team
+    // Notes section rather than My Notes.
+    | ({ kind: "team" } & TeamNoteMetaProps);
 
 // The data backing the "#" mention suggestion menu. Provided once at the
 // App root (where the task / note / chat / project hooks already live) and

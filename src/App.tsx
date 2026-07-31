@@ -346,6 +346,7 @@ export const App = () => {
                 ...useNM.taskNoteMeta.map((m) => ({ kind: "task" as const, ...m })),
                 ...useNM.chatNoteMeta.map((m) => ({ kind: "chat" as const, ...m })),
                 ...useNM.sharedNoteMeta.map((m) => ({ kind: "shared" as const, ...m })),
+                ...useNM.teamNoteMeta.map((m) => ({ kind: "team" as const, ...m })),
             ],
             chats: useCM.allChats.filter((c) => c.chatType === 2),
             allChats: useCM.allChats,

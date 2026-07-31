@@ -22,8 +22,19 @@ import {
 } from "./noteTabsPersistence";
 import { upsertNoteCache } from "./useNoteData";
 
+// Which sidebar space a personal-backed note was opened FROM. All three
+// are `note_type: 1` on the backend and share the editor, Yjs room and
+// IndexedDB store — the bucket is the only thing that distinguishes
+// them, and it cannot be re-derived from the note itself.
+//
+// It has to travel ON THE TAB. Without it, a team note opened from the
+// Team Notes section becomes indistinguishable from a My Note the
+// moment it lands in a tab, which is what made the header, the tab
+// strip and note creation all treat team notes as personal ones.
+export type NoteBucket = "my" | "shared" | "team";
+
 export type NoteRef =
-    | { kind: "my"; noteType: 1; noteId: number }
+    | { kind: "my"; noteType: 1; noteId: number; bucket?: NoteBucket }
     | { kind: "task"; noteType: 2; noteId: number; projectId: number; taskId: number }
     | {
           kind: "chat";
@@ -158,6 +169,10 @@ export const useNoteTabs = ({ myself, accessToken }: UseNoteTabsOptions): NoteTa
                             kind: "my",
                             noteType: 1,
                             noteId: myNote.noteId,
+                            // Carry the persisted bucket through, or the
+                            // reload silently demotes team/shared tabs
+                            // back to My Notes.
+                            bucket: ref.bucket ?? "my",
                             id: tabIdFor("my", myNote.noteId),
                             title: myNote.title,
                             teamId,
@@ -171,6 +186,7 @@ export const useNoteTabs = ({ myself, accessToken }: UseNoteTabsOptions): NoteTa
                             kind: "my",
                             noteType: 1,
                             noteId: fetched.noteId,
+                            bucket: ref.bucket ?? "my",
                             id: tabIdFor("my", fetched.noteId),
                             title: fetched.title,
                             teamId,
@@ -256,7 +272,15 @@ export const useNoteTabs = ({ myself, accessToken }: UseNoteTabsOptions): NoteTa
     const persist = useCallback(
         (nextTabs: NoteTab[], nextActiveId: string | null) => {
             if (!myself.teamId) return;
-            const refs = toRefs(nextTabs.map((t) => ({ noteType: t.noteType, noteId: t.noteId })));
+            const refs = toRefs(
+                nextTabs.map((t) => ({
+                    noteType: t.noteType,
+                    noteId: t.noteId,
+                    // Only the "my" variant carries a bucket; the others
+                    // are unambiguous from their kind.
+                    bucket: t.kind === "my" ? t.bucket : undefined,
+                }))
+            );
             // Find the index of the active tab so we can keep backwards
             // compatibility with the legacy `selectedTabIndex` field.
             const idx = nextActiveId ? nextTabs.findIndex((t) => t.id === nextActiveId) : 0;
@@ -476,13 +500,17 @@ export const noteToTab = (
         isThread?: boolean;
         threadId?: number;
     },
-    teamId: string
+    teamId: string,
+    // Defaults to "my" so every existing call site keeps its behavior;
+    // only the Team Notes / Shared Notes sections pass anything else.
+    bucket: NoteBucket = "my"
 ): NoteTab => {
     if (note.noteType === 1) {
         return {
             kind: "my",
             noteType: 1,
             noteId: note.noteId,
+            bucket,
             id: tabIdFor("my", note.noteId),
             title: note.title,
             teamId,
