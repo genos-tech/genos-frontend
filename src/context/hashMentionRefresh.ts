@@ -13,6 +13,17 @@
 /** At most one `#`-data refetch per 30s across the whole app. */
 export const HASH_MENTION_REFRESH_INTERVAL_MS = 30_000;
 
+/**
+ * How often to re-pull the lists while the tab is VISIBLE.
+ *
+ * `focus` alone only fires on a blur→focus round trip, so someone who
+ * simply leaves the app open never picks up a teammate's new note. This
+ * is the fallback tick for that case — deliberately slower than the
+ * throttle above (so it can never be the thing that saturates it) and
+ * paused while the tab is hidden.
+ */
+export const NOTE_LIST_POLL_MS = 60_000;
+
 export type ThrottledRefresh = (() => void) & {
     /** Test seam — drops the throttle so the next call runs. */
     reset: () => void;
