@@ -45,6 +45,17 @@ import { createEmptyTaskNote } from "../../features/notes/task-notes/services/cr
 import { deleteTaskNote } from "../../features/notes/task-notes/services/deleteTaskNote";
 import { loadTaskNoteMeta } from "../../features/notes/task-notes/services/loadTaskNoteMeta";
 import { moveTaskNote as moveTaskNoteApi } from "../../features/notes/task-notes/services/moveTaskNote";
+import {
+    CreateTeamFolderInput,
+    createTeamNoteFolder as createTeamNoteFolderApi,
+} from "../../features/notes/team-notes/services/createTeamNoteFolder";
+import {
+    DeleteTeamFolderResult,
+    deleteTeamNoteFolder as deleteTeamNoteFolderApi,
+} from "../../features/notes/team-notes/services/deleteTeamNoteFolder";
+import { loadTeamNoteFolders } from "../../features/notes/team-notes/services/loadTeamNoteFolders";
+import { loadTeamNotesMeta } from "../../features/notes/team-notes/services/loadTeamNotesMeta";
+import { updateTeamNoteFolder as updateTeamNoteFolderApi } from "../../features/notes/team-notes/services/updateTeamNoteFolder";
 import { onTaskTouched } from "../../features/tasks/services/taskEvents";
 import { UserProps } from "../../types/admin";
 import {
@@ -56,6 +67,7 @@ import {
     MyNoteMetaProps,
     MyNoteMetaTreeNode,
     MyNoteProps,
+    NoteFolderVisibility,
     NoteRoleMember,
     NoteVersionMeta,
     SharedNoteMetaProps,
@@ -63,6 +75,9 @@ import {
     TaskNoteMetaProps,
     TaskNoteMetaTreeNode,
     TaskNoteProps,
+    TeamNoteFolderForest,
+    TeamNoteFolderProps,
+    TeamNoteMetaProps,
 } from "../../types/notes";
 import {
     buildChatNoteTree,
@@ -216,6 +231,25 @@ export interface NoteManagementState {
     noteResyncNonce: number;
 
     // Shared-with-me personal notes (drives the noteType=4 sidebar bucket)
+    // Team Notes — the shared "general" space. Notes here are personal
+    // notes (noteType 1) whose FOLDER carries the ACL, so they open
+    // through the same tabs/editor path as My Notes; only the sidebar
+    // bucket differs.
+    teamNoteFolders: TeamNoteFolderProps[];
+    teamNoteFolderForest: TeamNoteFolderForest;
+    teamNoteMeta: TeamNoteMetaProps[];
+    teamNoteMetaTree: MyNoteMetaTreeNode[];
+    getTeamNoteFolders: () => Promise<void>;
+    getTeamNoteMeta: () => Promise<void>;
+    createTeamNoteFolder: (input: CreateTeamFolderInput) => Promise<TeamNoteFolderProps | null>;
+    renameTeamNoteFolder: (folderId: number, name: string) => Promise<void>;
+    setTeamNoteFolderVisibility: (
+        folderId: number,
+        visibility: NoteFolderVisibility | null
+    ) => Promise<void>;
+    moveTeamNoteFolder: (folderId: number, newParentFolderId: number | null) => Promise<boolean>;
+    deleteTeamNoteFolder: (folderId: number) => Promise<DeleteTeamFolderResult>;
+
     sharedNoteMeta: SharedNoteMetaProps[];
     setSharedNoteMeta: (meta: SharedNoteMetaProps[]) => void;
     sharedNoteMetaTree: SharedNoteMetaTreeNode[];
@@ -371,6 +405,8 @@ export const useNoteManagement = (
     const [noteResyncNonce, setNoteResyncNonce] = useState<number>(0);
 
     // Shared-with-me personal notes (drives the noteType=4 sidebar bucket)
+    const [teamNoteFolders, setTeamNoteFolders] = useState<TeamNoteFolderProps[]>([]);
+    const [teamNoteMeta, setTeamNoteMeta] = useState<TeamNoteMetaProps[]>([]);
     const [sharedNoteMeta, setSharedNoteMeta] = useState<SharedNoteMetaProps[]>([]);
 
     // Visibility states
@@ -401,6 +437,25 @@ export const useNoteManagement = (
         () => buildChatNoteTree(chatNoteMeta),
         [chatNoteMeta]
     );
+    // Team notes reuse the personal builders wholesale: a team note IS a
+    // personal note, and `buildMyNoteFolderForest` already surfaces a
+    // folder whose parent is missing from the input at the root — which
+    // is exactly what a subfolder shared with you but whose parent isn't
+    // needs.
+    const teamNoteMetaTree = useMemo<MyNoteMetaTreeNode[]>(
+        () => buildMyNoteTree(teamNoteMeta),
+        [teamNoteMeta]
+    );
+
+    const teamNoteFolderForest = useMemo<TeamNoteFolderForest>(
+        () =>
+            buildMyNoteFolderForest(
+                teamNoteFolders,
+                teamNoteMetaTree
+            ) as unknown as TeamNoteFolderForest,
+        [teamNoteFolders, teamNoteMetaTree]
+    );
+
     const sharedNoteMetaTree = useMemo<SharedNoteMetaTreeNode[]>(
         () => buildSharedNoteTree(sharedNoteMeta),
         [sharedNoteMeta]
@@ -1448,6 +1503,108 @@ export const useNoteManagement = (
         return true;
     };
 
+    // ------------------------------------------------------------------
+    // Team Notes — the shared "general" space
+    // ------------------------------------------------------------------
+
+    const getTeamNoteFolders = async () => {
+        setTeamNoteFolders(await loadTeamNoteFolders(myself, accessToken));
+    };
+
+    const getTeamNoteMeta = async () => {
+        setTeamNoteMeta(await loadTeamNotesMeta(myself, accessToken));
+    };
+
+    const createTeamNoteFolderAction = async (
+        input: CreateTeamFolderInput
+    ): Promise<TeamNoteFolderProps | null> => {
+        if (!accessToken) return null;
+        const created = await createTeamNoteFolderApi(myself, input, accessToken);
+        if (!created) return null;
+        setTeamNoteFolders((prev) => [...prev, created]);
+        if (input.parentFolderId != null) expandFolder(input.parentFolderId);
+        expandFolder(created.folderId);
+        return created;
+    };
+
+    const renameTeamNoteFolder = async (folderId: number, name: string) => {
+        if (!accessToken) return;
+        setTeamNoteFolders((prev) =>
+            prev.map((f) => (f.folderId === folderId ? { ...f, name } : f))
+        );
+        const updated = await updateTeamNoteFolderApi(myself, folderId, { name }, accessToken);
+        if (!updated) await getTeamNoteFolders();
+    };
+
+    const setTeamNoteFolderVisibility = async (
+        folderId: number,
+        visibility: NoteFolderVisibility | null
+    ) => {
+        if (!accessToken) return;
+        const updated = await updateTeamNoteFolderApi(
+            myself,
+            folderId,
+            { visibility },
+            accessToken
+        );
+        // Always refetch: changing one folder's visibility re-resolves
+        // `effectiveVisibility` (and possibly reachability) for its whole
+        // subtree, which a local patch can't compute.
+        await getTeamNoteFolders();
+        if (!updated) await getTeamNoteMeta();
+    };
+
+    const moveTeamNoteFolder = async (
+        folderId: number,
+        newParentFolderId: number | null
+    ): Promise<boolean> => {
+        if (!accessToken) return false;
+        if (newParentFolderId != null) {
+            const descendants = collectDescendantFolderIds(teamNoteFolders, folderId);
+            if (newParentFolderId === folderId || descendants.has(newParentFolderId)) {
+                return false;
+            }
+        }
+        const updated = await updateTeamNoteFolderApi(
+            myself,
+            folderId,
+            { parentFolderId: newParentFolderId },
+            accessToken
+        );
+        // Re-parenting changes inherited access down the subtree.
+        await getTeamNoteFolders();
+        return Boolean(updated);
+    };
+
+    const deleteTeamNoteFolderAction = async (
+        folderId: number
+    ): Promise<DeleteTeamFolderResult> => {
+        if (!accessToken) return { ok: false, blocked: false };
+        const result = await deleteTeamNoteFolderApi(myself, folderId, accessToken);
+        if (result.ok) {
+            // Close tabs for every destroyed note and drop its local
+            // caches, mirroring the My Notes folder delete. Team notes
+            // are personal notes, so they live under the "my" tab kind
+            // and the `my-note:` Yjs room.
+            for (const noteId of result.deletedNoteIds) {
+                const tab = tabsApi.tabs.find((t) => t.kind === "my" && t.noteId === noteId);
+                if (tab) tabsApi.closeTab(tab.id);
+                try {
+                    await noteService.deletePersonalNote(noteId);
+                    await DatabaseUtils.deleteYjsDatabase(`my-note:${noteId}`);
+                } catch {
+                    // Local cache teardown is best-effort — the server
+                    // has already deleted the note.
+                }
+            }
+            const deletedFolders = new Set(result.deletedFolderIds);
+            const deletedNotes = new Set(result.deletedNoteIds);
+            setTeamNoteFolders((prev) => prev.filter((f) => !deletedFolders.has(f.folderId)));
+            setTeamNoteMeta((prev) => prev.filter((n) => !deletedNotes.has(n.noteId)));
+        }
+        return result;
+    };
+
     // Shared-with-me personal notes
     const getSharedNoteMeta = async () => {
         const loaded = await loadSharedNotesMeta(myself, accessToken);
@@ -2024,6 +2181,18 @@ export const useNoteManagement = (
         noteResyncNonce,
 
         // Shared-with-me personal notes
+        teamNoteFolders,
+        teamNoteFolderForest,
+        teamNoteMeta,
+        teamNoteMetaTree,
+        getTeamNoteFolders,
+        getTeamNoteMeta,
+        createTeamNoteFolder: createTeamNoteFolderAction,
+        renameTeamNoteFolder,
+        setTeamNoteFolderVisibility,
+        moveTeamNoteFolder,
+        deleteTeamNoteFolder: deleteTeamNoteFolderAction,
+
         sharedNoteMeta,
         setSharedNoteMeta,
         sharedNoteMetaTree,

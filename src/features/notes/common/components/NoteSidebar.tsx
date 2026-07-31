@@ -6,6 +6,7 @@ import DriveFileMoveRoundedIcon from "@mui/icons-material/DriveFileMoveRounded";
 import FileDownloadRoundedIcon from "@mui/icons-material/FileDownloadRounded";
 import FileUploadRoundedIcon from "@mui/icons-material/FileUploadRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
+import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import MarkChatUnreadRoundedIcon from "@mui/icons-material/MarkChatUnreadRounded";
@@ -14,7 +15,18 @@ import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded
 import ShareRoundedIcon from "@mui/icons-material/ShareRounded";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
 import WindowRoundedIcon from "@mui/icons-material/WindowRounded";
-import { Box, Divider, List, ListItem, ListItemContent, Sheet, Typography } from "@mui/joy";
+import {
+    Box,
+    Button,
+    Divider,
+    List,
+    ListItem,
+    ListItemContent,
+    Modal,
+    ModalDialog,
+    Sheet,
+    Typography,
+} from "@mui/joy";
 import ListItemButton from "@mui/joy/ListItemButton";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
@@ -39,6 +51,7 @@ import {
     MyNoteMetaTreeNode,
     SharedNoteMetaTreeNode,
     TaskNoteMetaProps,
+    TeamNoteFolderTreeNode,
 } from "../../../../types/notes";
 import { formatTaskDisplayId } from "../../../tasks/utils/taskDisplayId";
 import { ChildNoteCreator } from "../../chat-notes/components/ChildNoteCreator";
@@ -49,6 +62,12 @@ import {
 import { ModalDeleteFolder } from "../../my-notes/modals/ModalDeleteFolder";
 import { ModalFolderName } from "../../my-notes/modals/ModalFolderName";
 import { ModalMoveToFolder } from "../../my-notes/modals/ModalMoveToFolder";
+import {
+    TeamFolderActionHandlers,
+    TeamNoteFolderTree,
+} from "../../team-notes/components/TeamNoteFolderTree";
+import { ModalTeamFolderMembers } from "../../team-notes/modals/ModalTeamFolderMembers";
+import { ModalTeamFolderName } from "../../team-notes/modals/ModalTeamFolderName";
 import { useNoteUnread } from "../context/NoteUnreadContext";
 import {
     chatContainerId,
@@ -503,6 +522,14 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         useNM.getSharedNoteMeta();
     }, []);
 
+    // Team Notes (noteType=8 bucket): the folder list and the notes
+    // inside it are separate calls, because the folders ARE the ACL and
+    // the server resolves them before it can say which notes you see.
+    useEffect(() => {
+        void useNM.getTeamNoteFolders();
+        void useNM.getTeamNoteMeta();
+    }, []);
+
     // Use custom hooks for each note type
     const myNoteState = useNoteTreeState({
         metaTree: useNM.myNoteMetaTree,
@@ -535,6 +562,15 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         currentNote: useNM.currentMyNote,
     });
 
+    // Team notes are personal notes, so — like shared notes — the row
+    // highlight tracks `currentMyNote`.
+    const teamNoteState = useNoteTreeState<MyNoteMetaTreeNode>({
+        metaTree: useNM.teamNoteMetaTree,
+        currentChain: undefined,
+        selectedTabIndex: useNM.selectedTabIndex,
+        currentNote: useNM.currentMyNote,
+    });
+
     // ------------------------------------------------------------------
     // My-note folders — modal host. One instance of each dialog serves
     // every folder row / note row; rows only set this state.
@@ -550,6 +586,26 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         | null
     >(null);
     const [deleteFolderModal, setDeleteFolderModal] = useState<MyNoteFolderTreeNode | null>(null);
+
+    // ------------------------------------------------------------------
+    // Team-note folder dialogs. Kept separate from the My Notes ones
+    // because a team folder also carries visibility and a roster.
+    // ------------------------------------------------------------------
+    const [teamFolderModal, setTeamFolderModal] = useState<
+        | { mode: "create-root" }
+        | { mode: "create-child"; parent: TeamNoteFolderTreeNode }
+        | { mode: "rename"; folder: TeamNoteFolderTreeNode }
+        | null
+    >(null);
+    const [teamMembersModal, setTeamMembersModal] = useState<TeamNoteFolderTreeNode | null>(null);
+    const [teamMoveModal, setTeamMoveModal] = useState<TeamNoteFolderTreeNode | null>(null);
+    const [teamDeleteModal, setTeamDeleteModal] = useState<TeamNoteFolderTreeNode | null>(null);
+    // Populated when the server REFUSES a delete because the subtree
+    // still holds other people's content (409).
+    const [teamDeleteBlocked, setTeamDeleteBlocked] = useState<{
+        noteCount: number;
+        folderCount: number;
+    } | null>(null);
     // Note deletion straight from a sidebar "⋯" row menu (my / task /
     // chat) — one confirm dialog serves every row. `hasChildren` is read
     // off the tree node so the dialog can block deletion of a parent note
@@ -839,6 +895,97 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                 />
             )}
         />
+    );
+
+    // Team notes render exactly like My Notes rows — they ARE personal
+    // notes — but pass noteType={8} so the sidebar highlight tracks the
+    // Team Notes bucket rather than My Notes.
+    const renderTeamNoteTreeItem = (node: any) => (
+        <NoteTreeRenderer
+            key={node.noteId}
+            currentChain={teamNoteState.tmpCurrentChain}
+            node={node}
+            noteType={8}
+            rowMenuItems={(node) => [buildExportMenuItem(8, node)]}
+            timestamp={teamNoteState.timestamp}
+            useNM={useNM}
+            createChildNoteList={(node) => (
+                <ChildNoteCreator node={node} timestamp={teamNoteState.timestamp} useNM={useNM} />
+            )}
+        />
+    );
+
+    const teamFolderActions: TeamFolderActionHandlers = {
+        onCreateNoteHere: (folderId) => {
+            void useNM.handleCreateNewMyNote(null, folderId);
+        },
+        onImportNoteHere: (folderId) => setImportModalContext({ kind: "my", folderId }),
+        onCreateSubfolder: (parent) => setTeamFolderModal({ mode: "create-child", parent }),
+        onRenameFolder: (folder) => setTeamFolderModal({ mode: "rename", folder }),
+        onMoveFolder: (folder) => setTeamMoveModal(folder),
+        onManageMembers: (folder) => setTeamMembersModal(folder),
+        onDeleteFolder: (folder) => setTeamDeleteModal(folder),
+    };
+
+    // Team Notes section: the folder forest, headed by a "New team
+    // folder" affordance. No drop targets — moving a note between team
+    // folders crosses an ACL boundary, so it goes through the explicit
+    // move dialog rather than a drag.
+    //
+    // Box root ON PURPOSE — see renderMyNotesSection.
+    const renderTeamNotesSection = () => (
+        <Box>
+            <ListItem>
+                <ListItemButton
+                    sx={{
+                        borderRadius: "8px",
+                        py: 0.5,
+                        px: 1,
+                        my: 0.25,
+                        gap: 0.75,
+                        minHeight: 30,
+                        border: "1px dashed",
+                        borderColor: isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.12)",
+                        color: isDark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.5)",
+                        "&:hover": {
+                            borderColor: isDark
+                                ? "rgba(var(--gp-brandalt-400-rgb), 0.6)"
+                                : "rgba(var(--gp-brand-700-rgb), 0.5)",
+                            color: isDark ? "var(--gp-brandalt-400)" : "var(--gp-brand-700)",
+                        },
+                    }}
+                    onClick={() => setTeamFolderModal({ mode: "create-root" })}
+                >
+                    <CreateNewFolderRoundedIcon sx={{ fontSize: 15 }} />
+                    <Typography level="body-xs" sx={{ fontWeight: 500, color: "inherit" }}>
+                        {t.notes.teamNotes.newFolder}
+                    </Typography>
+                </ListItemButton>
+            </ListItem>
+            {useNM.teamNoteFolderForest.rootFolders.length === 0 ? (
+                <Box sx={{ px: 2, py: 1 }}>
+                    <Typography
+                        level="body-xs"
+                        sx={{
+                            color: isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.35)",
+                            fontStyle: "italic",
+                        }}
+                    >
+                        {t.notes.teamNotes.emptySpace}
+                    </Typography>
+                </Box>
+            ) : (
+                useNM.teamNoteFolderForest.rootFolders.map((folder) => (
+                    <TeamNoteFolderTree
+                        key={`team-folder-${folder.folderId}`}
+                        actions={teamFolderActions}
+                        folder={folder}
+                        renderNote={renderTeamNoteTreeItem}
+                        useNM={useNM}
+                    />
+                ))
+            )}
+        </Box>
     );
 
     // A project's PM channel, which carries the project avatar. Same join
@@ -1400,6 +1547,19 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             renderGrouped: renderGroupedSharedNotes,
             isGrouped: true,
         },
+        // Team Notes — the shared "general" space. Sits with the two
+        // personal-note buckets it shares storage with (type 8 is the
+        // other UI-only alias of 1), above the sections anchored to
+        // tasks and channels.
+        {
+            noteType: 8,
+            icon: <GroupsRoundedIcon sx={{ fontSize: 18 }} />,
+            title: t.notes.sidebar.teamNotes,
+            state: teamNoteState,
+            renderTree: null,
+            renderGrouped: renderTeamNotesSection,
+            isGrouped: true,
+        },
         {
             noteType: 2,
             icon: <AssignmentRoundedIcon sx={{ fontSize: 18 }} />,
@@ -1682,6 +1842,100 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                     else if (noteType === 3) void useNM.deleteChatNoteById(noteId);
                 }}
             />
+
+            {/* Team-folder dialogs — one instance each, driven by the
+                state the folder rows set. */}
+            <ModalTeamFolderName
+                initialName={teamFolderModal?.mode === "rename" ? teamFolderModal.folder.name : ""}
+                mode={teamFolderModal?.mode ?? "create-root"}
+                open={teamFolderModal !== null}
+                parentName={
+                    teamFolderModal?.mode === "create-child"
+                        ? teamFolderModal.parent.name
+                        : undefined
+                }
+                initialVisibility={
+                    teamFolderModal?.mode === "rename"
+                        ? teamFolderModal.folder.visibility
+                        : undefined
+                }
+                onClose={() => setTeamFolderModal(null)}
+                onSubmit={(name, visibility) => {
+                    if (!teamFolderModal) return;
+                    if (teamFolderModal.mode === "rename") {
+                        void useNM.renameTeamNoteFolder(teamFolderModal.folder.folderId, name);
+                        return;
+                    }
+                    void useNM.createTeamNoteFolder({
+                        name,
+                        visibility,
+                        parentFolderId:
+                            teamFolderModal.mode === "create-child"
+                                ? teamFolderModal.parent.folderId
+                                : null,
+                    });
+                }}
+            />
+            <ModalTeamFolderMembers
+                folder={teamMembersModal}
+                myself={myself}
+                open={teamMembersModal !== null}
+                useTEM={useTEM}
+                onClose={() => setTeamMembersModal(null)}
+                onChanged={() => {
+                    // A grant or revoke can change which folders and
+                    // notes this user resolves, so refetch both.
+                    void useNM.getTeamNoteFolders();
+                    void useNM.getTeamNoteMeta();
+                }}
+            />
+            <ModalMoveToFolder
+                currentFolderId={teamMoveModal?.parentFolderId ?? null}
+                folders={useNM.teamNoteFolders}
+                movingFolderId={teamMoveModal?.folderId}
+                open={teamMoveModal !== null}
+                onClose={() => setTeamMoveModal(null)}
+                onSelect={(folderId) => {
+                    if (!teamMoveModal) return;
+                    void useNM.moveTeamNoteFolder(teamMoveModal.folderId, folderId);
+                }}
+            />
+            <ModalDeleteFolder
+                folderName={teamDeleteModal?.name ?? ""}
+                open={teamDeleteModal !== null}
+                onClose={() => setTeamDeleteModal(null)}
+                onConfirm={() => {
+                    if (!teamDeleteModal) return;
+                    void useNM.deleteTeamNoteFolder(teamDeleteModal.folderId).then((result) => {
+                        // The server refuses rather than destroying a
+                        // colleague's work; surface exactly what blocked it.
+                        if (!result.ok && result.blocked) {
+                            setTeamDeleteBlocked({
+                                noteCount: result.foreignNoteCount,
+                                folderCount: result.foreignFolderCount,
+                            });
+                        }
+                    });
+                }}
+            />
+            <Modal open={teamDeleteBlocked !== null} onClose={() => setTeamDeleteBlocked(null)}>
+                <ModalDialog sx={{ maxWidth: 440 }}>
+                    <Typography level="title-md">
+                        {t.notes.teamNotes.deleteBlockedTitle}
+                    </Typography>
+                    <Typography level="body-sm" sx={{ mt: 1 }}>
+                        {fmt(t.notes.teamNotes.deleteBlockedBody, {
+                            noteCount: teamDeleteBlocked?.noteCount ?? 0,
+                            folderCount: teamDeleteBlocked?.folderCount ?? 0,
+                        })}
+                    </Typography>
+                    <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
+                        <Button variant="plain" onClick={() => setTeamDeleteBlocked(null)}>
+                            {t.notes.folders.cancel}
+                        </Button>
+                    </Box>
+                </ModalDialog>
+            </Modal>
 
             {/* Footer */}
             <Divider sx={{ opacity: isDark ? 0.08 : 0.12 }} />
