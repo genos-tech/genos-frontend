@@ -122,6 +122,32 @@ export const settings = {
         benefitNotes: "{n} notes per month",
         benefitNotesUnlimited: "Unlimited notes",
         benefitUpload: "Files up to {mb} MB",
+        // --- UX tier model: capability rows -----------------------
+        // The experience ladder each card leads with (what Genos does /
+        // how deeply it thinks / what it remembers / what it can see /
+        // whether it comes to you). Labels mirror the server's
+        // TIER_QUOTAS vocabulary. A capability a tier lacks renders
+        // with an EXPLICIT cross, never silently dropped — a false
+        // capability rendered as absent makes Free's card look
+        // identical to Core's on exactly the rows that separate them.
+        capAgencyRead: "Genos answers your questions",
+        capAgencyAct: "Genos takes actions for you, with your approval",
+        capAgencyOrganize: "Genos organizes — a whole plan in one approval",
+        capDepthQuick: "Quick answers",
+        capDepthThorough: "Thorough answers",
+        capDepthDeep: "Deep reasoning",
+        capDepthAdaptive: "Deep reasoning, auto-tuned per question",
+        capMemoryNone: "Remembers the current conversation",
+        capMemoryOwn: "Remembers your past conversations",
+        capMemoryTeam: "Remembers your team's collected knowledge",
+        capGenosHistoryDays: "Genos conversation history: {days} days",
+        capGenosHistoryUnlimited: "Unlimited Genos conversation history",
+        capReachWeb: "Web search",
+        capReachCalendar: "Google Calendar integration",
+        capReachGithub: "GitHub integration",
+        capDigestNone: "Proactive digest from Genos",
+        capDigestWeekly: "Weekly digest from Genos",
+        capDigestDaily: "Daily digest + alerts from Genos",
         billingReturnCancelled: "Checkout cancelled — your plan is unchanged.",
     },
     appearance: {

@@ -1,10 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, Check, Mail, Moon, Sparkles, Sun } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Mail, Moon, Sparkles, Sun, X } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import { CurrencyPicker } from "../features/billing/CurrencyPicker";
 import { planBenefitRows } from "../features/billing/planBenefits";
+import { planCapabilityRows } from "../features/billing/planComparisonRows";
 import { useCurrencyPreference } from "../hooks/common/useCurrencyPreference";
 import { fmt, I18nProvider, useTranslation } from "../i18n";
 import {
@@ -263,6 +264,27 @@ function PlansPageInner() {
                                             </div>
 
                                             <ul className="mt-5 flex-1 space-y-2.5">
+                                                {/* Capability rows first — the
+                                                    experience ladder sells the
+                                                    tier. An excluded row keeps
+                                                    its EXPLICIT dimmed cross. */}
+                                                {planCapabilityRows(tier, p).map((row) => (
+                                                    <li
+                                                        key={row.key}
+                                                        className={
+                                                            row.included
+                                                                ? "flex items-start gap-2.5 text-sm leading-6 text-slate-700 dark:text-slate-200"
+                                                                : "flex items-start gap-2.5 text-sm leading-6 text-slate-400 dark:text-slate-500"
+                                                        }
+                                                    >
+                                                        {row.included ? (
+                                                            <Check className="mt-0.5 h-4 w-4 shrink-0 text-violet-600 dark:text-violet-300" />
+                                                        ) : (
+                                                            <X className="mt-0.5 h-4 w-4 shrink-0 text-slate-300 dark:text-slate-600" />
+                                                        )}
+                                                        {row.label}
+                                                    </li>
+                                                ))}
                                                 {planBenefitRows(tier, p, locale).map((row) => (
                                                     <li
                                                         key={row}

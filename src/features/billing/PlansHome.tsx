@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import {
     Box,
     Button,
@@ -37,6 +38,7 @@ import {
 import { formatPrice } from "../../utils/currency";
 import { CurrencyPicker } from "./CurrencyPicker";
 import { planBenefitRows } from "./planBenefits";
+import { planCapabilityRows } from "./planComparisonRows";
 import { planCta } from "./planCta";
 
 /**
@@ -230,11 +232,11 @@ export const PlansHome = () => {
             case "contact":
                 return (
                     <Button
-                        fullWidth
                         component="a"
                         href={CONTACT_SALES_MAILTO}
                         size="sm"
                         variant="outlined"
+                        fullWidth
                     >
                         {p.contactUs}
                     </Button>
@@ -242,13 +244,13 @@ export const PlansHome = () => {
             case "checkout":
                 return (
                     <Button
-                        fullWidth
                         disabled={busy}
+                        variant={cta.plan === "pro" ? "solid" : "soft"}
                         size="sm"
                         // Pro is the tier we expect most people to buy,
                         // so it carries the solid (primary) treatment;
                         // core and max flank it as soft.
-                        variant={cta.plan === "pro" ? "solid" : "soft"}
+                        fullWidth
                         onClick={() =>
                             runBillingAction(() => startCheckout(accessToken!, cta.plan, currency))
                         }
@@ -263,10 +265,10 @@ export const PlansHome = () => {
             case "downgrade":
                 return (
                     <Button
-                        fullWidth
                         disabled={busy}
                         size="sm"
                         variant={cta.kind === "upgrade" ? "solid" : "outlined"}
+                        fullWidth
                         onClick={() =>
                             runBillingAction(() =>
                                 openBillingPortal(accessToken!, "update", cta.plan)
@@ -281,11 +283,11 @@ export const PlansHome = () => {
             case "cancel":
                 return (
                     <Button
-                        fullWidth
                         color="neutral"
                         disabled={busy}
                         size="sm"
                         variant="outlined"
+                        fullWidth
                         onClick={() =>
                             runBillingAction(() => openBillingPortal(accessToken!, "cancel"))
                         }
@@ -418,6 +420,7 @@ export const PlansHome = () => {
                     return (
                         <Card
                             key={tier.tier}
+                            variant="outlined"
                             sx={{
                                 gap: 1,
                                 overflow: "visible",
@@ -428,19 +431,18 @@ export const PlansHome = () => {
                                     boxShadow: "md",
                                 }),
                             }}
-                            variant="outlined"
                         >
                             {highlighted && (
                                 <Chip
                                     color="primary"
                                     size="sm"
+                                    variant="solid"
                                     sx={{
                                         position: "absolute",
                                         top: -12,
                                         left: "50%",
                                         transform: "translateX(-50%)",
                                     }}
-                                    variant="solid"
                                 >
                                     {p.bestValue}
                                 </Chip>
@@ -489,6 +491,36 @@ export const PlansHome = () => {
                             <Box sx={{ minHeight: 36 }}>{renderCta(tier)}</Box>
                             <Divider />
                             <Stack spacing={0.75} sx={{ flex: 1 }}>
+                                {/* Capability rows first — the experience
+                                    ladder sells the tier. `included:
+                                    false` renders an EXPLICIT dimmed
+                                    cross, never an omission. */}
+                                {planCapabilityRows(tier, p).map((row) => (
+                                    <Typography
+                                        key={row.key}
+                                        level="body-sm"
+                                        sx={row.included ? undefined : { color: "text.tertiary" }}
+                                        startDecorator={
+                                            row.included ? (
+                                                <CheckRoundedIcon
+                                                    sx={{
+                                                        fontSize: 16,
+                                                        color: "success.solidBg",
+                                                    }}
+                                                />
+                                            ) : (
+                                                <CloseRoundedIcon
+                                                    sx={{
+                                                        fontSize: 16,
+                                                        color: "neutral.plainDisabledColor",
+                                                    }}
+                                                />
+                                            )
+                                        }
+                                    >
+                                        {row.label}
+                                    </Typography>
+                                ))}
                                 {planBenefitRows(tier, p, locale).map((row) => (
                                     <Typography
                                         key={row}
