@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useMemo, useState } from "react";
+import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import CreateNewFolderRoundedIcon from "@mui/icons-material/CreateNewFolderRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
@@ -481,7 +481,12 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                 ? useNM.taskNoteMeta.find((n) => n.noteId === noteId)
                 : noteType === 3
                   ? useNM.chatNoteMeta.find((n) => n.noteId === noteId)
-                  : useNM.myNoteMeta.find((n) => n.noteId === noteId);
+                  : // A personal-backed note can be in any of the three
+                    // lists; searching only `myNoteMeta` left team and
+                    // shared rows title-less (falling back to the stub).
+                    (useNM.myNoteMeta.find((n) => n.noteId === noteId) ??
+                    useNM.teamNoteMeta.find((n) => n.noteId === noteId) ??
+                    useNM.sharedNoteMeta.find((n) => n.noteId === noteId));
         return found ?? ({ noteId } as MyNoteMetaProps);
     };
 
@@ -496,11 +501,15 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                 // Fall back to the activity's title without mutating the
                 // shared meta object from the loaded lists.
                 const meta = found.title ? found : { ...found, title: n.title };
+                // The activity feed only knows backend types, so a
+                // personal-backed row has to be resolved to its bucket
+                // here — same as Recents and Favorites.
+                const bucket = n.noteType === 1 ? personalBucketFor(n.noteId) : n.noteType;
                 return (
                     <RecentNoteItem
-                        key={`unread-${n.noteType}-${n.noteId}`}
+                        key={`unread-${bucket}-${n.noteId}`}
                         note={meta}
-                        noteType={n.noteType}
+                        noteType={bucket}
                         useNM={useNM}
                     />
                 );
@@ -1632,13 +1641,34 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         noteType: number;
         tsOpenedAt: string;
     };
+    // Same split Favorites does: the server groups recents by BACKEND
+    // note type, so team and shared notes arrive inside `personalNotes`
+    // (they're all note_type 1). Resolving each row to its sidebar
+    // bucket is what gives it the right icon and opens it in the right
+    // section.
+    const teamNoteIds = useMemo(
+        () => new Set(useNM.teamNoteMeta.map((n) => n.noteId)),
+        [useNM.teamNoteMeta]
+    );
+    const sharedNoteIds = useMemo(
+        () => new Set(useNM.sharedNoteMeta.map((n) => n.noteId)),
+        [useNM.sharedNoteMeta]
+    );
+    // `useCallback` so the memo below can depend on it honestly rather
+    // than closing over a function that changes identity every render.
+    const personalBucketFor = useCallback(
+        (noteId: number): number =>
+            teamNoteIds.has(noteId) ? 8 : sharedNoteIds.has(noteId) ? 4 : 1,
+        [teamNoteIds, sharedNoteIds]
+    );
+
     const sortedRecentRows = useMemo<RecentRow[]>(() => {
         const recents = useNM.recentNotes;
         if (!recents) return [];
         const rows: RecentRow[] = [
             ...recents.personalNotes.map((n) => ({
                 note: n,
-                noteType: 1,
+                noteType: personalBucketFor(n.noteId),
                 tsOpenedAt: n.tsOpenedAt,
             })),
             ...recents.taskNotes.map((n) => ({
@@ -1658,7 +1688,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             return bT - aT;
         });
         return rows;
-    }, [useNM.recentNotes]);
+    }, [useNM.recentNotes, personalBucketFor]);
 
     // Render recent notes section content. Flat list ordered by
     // tsOpenedAt desc — the natural shape for "recents" since

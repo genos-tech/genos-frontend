@@ -1,6 +1,8 @@
 import { memo } from "react";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
+import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
+import ShareRoundedIcon from "@mui/icons-material/ShareRounded";
 import WindowRoundedIcon from "@mui/icons-material/WindowRounded";
 import { Box, ListItem, ListItemButton, ListItemContent, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
@@ -9,6 +11,7 @@ import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { useTranslation } from "../../../../i18n";
 import { ChatNoteMetaProps, MyNoteMetaProps, TaskNoteMetaProps } from "../../../../types/notes";
 import { useNoteUnread } from "../context/NoteUnreadContext";
+import { isPersonalNoteBucket } from "../utils/noteTypeAlias";
 
 interface RecentNoteItemProps {
     note: MyNoteMetaProps | TaskNoteMetaProps | ChatNoteMetaProps;
@@ -24,6 +27,12 @@ function getTypeIcon(noteType: number) {
             return <AssignmentRoundedIcon sx={{ fontSize: 14 }} />;
         case 3:
             return <QuestionAnswerRoundedIcon sx={{ fontSize: 14 }} />;
+        // Sidebar buckets over note_type 1 — they need their own glyphs
+        // or every shared / team note reads as a My note.
+        case 4:
+            return <ShareRoundedIcon sx={{ fontSize: 14 }} />;
+        case 8:
+            return <GroupsRoundedIcon sx={{ fontSize: 14 }} />;
         default:
             return null;
     }
@@ -37,6 +46,10 @@ function getTypeColor(noteType: number, isDark: boolean) {
             return isDark ? "#4ade80" : "#22c55e";
         case 3:
             return isDark ? "#fb923c" : "#f97316";
+        case 4:
+            return isDark ? "#38bdf8" : "#0ea5e9";
+        case 8:
+            return isDark ? "#c084fc" : "#a855f7";
         default:
             return isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)";
     }
@@ -65,12 +78,13 @@ function RecentNoteItemComponent({ note, noteType, useNM }: RecentNoteItemProps)
     const isSelected =
         useNM.currentNoteType === noteType &&
         note?.noteId ===
-            (noteType === 1
-                ? useNM.currentMyNote?.noteId
-                : noteType === 2
-                  ? useNM.currentTaskNote?.noteId
-                  : noteType === 3
-                    ? useNM.currentChatNote?.noteId
+            (noteType === 2
+                ? useNM.currentTaskNote?.noteId
+                : noteType === 3
+                  ? useNM.currentChatNote?.noteId
+                  : // 1, 4 and 8 all ride the currentMyNote slot.
+                    isPersonalNoteBucket(noteType)
+                    ? useNM.currentMyNote?.noteId
                     : 0);
 
     const handleClick = () => {
