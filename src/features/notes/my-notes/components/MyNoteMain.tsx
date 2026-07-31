@@ -159,106 +159,104 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
     // doesn't unmount mounted editors.
     return (
         <Stack direction={"column"} sx={{ width: "100%" }}>
-            {useNM.currentNoteType !== 0 && (
-                <Stack direction={"column"} sx={{ width: "100%" }}>
-                    <Stack
-                        alignItems="center"
-                        direction="row"
-                        justifyContent="space-between"
-                        sx={{
-                            width: "100%",
-                            height: "30px",
-                            // Task-page panel wraps this Main with its
-                            // own header zone, so we pull up by 15px to
-                            // sit flush with that surround. Notes-home
-                            // uses the standard 10px top gap.
-                            mt: isInTaskPage ? "-15px" : "10px",
-                            mb: "5px",
-                        }}
-                    >
-                        {/* One Main serves all three personal-backed
+            <Stack direction={"column"} sx={{ width: "100%" }}>
+                <Stack
+                    alignItems="center"
+                    direction="row"
+                    justifyContent="space-between"
+                    sx={{
+                        width: "100%",
+                        height: "30px",
+                        // Task-page panel wraps this Main with its
+                        // own header zone, so we pull up by 15px to
+                        // sit flush with that surround. Notes-home
+                        // uses the standard 10px top gap.
+                        mt: isInTaskPage ? "-15px" : "10px",
+                        mb: "5px",
+                    }}
+                >
+                    {/* One Main serves all three personal-backed
                             buckets, so the header is chosen by the
                             ACTIVE TAB's bucket rather than hardcoded —
                             otherwise a team note reads as "My Notes"
                             with no folder path, which is what made the
                             Team Notes header look missing. */}
-                        {activeBucket === "team" ? (
-                            <TeamNoteHeader useNM={useNM} />
-                        ) : (
-                            <MyNoteHeader useNM={useNM} />
-                        )}
+                    {activeBucket === "team" ? (
+                        <TeamNoteHeader useNM={useNM} />
+                    ) : (
+                        <MyNoteHeader useNM={useNM} />
+                    )}
 
-                        <NoteHeaderActions
-                            currentTask={undefined}
-                            hostZIndex={hostZIndex}
-                            isInTaskPage={isInTaskPage}
-                            myself={myself}
-                            noteType={noteTypeFromBucket(activeBucket)}
-                            pmChat={undefined}
-                            setMyself={setMyself}
-                            socket={socket}
-                            useCM={useCM}
-                            useNM={useNM}
-                            useTEM={useTEM}
-                            useUISM={useUISM}
-                            onCopyNoteLink={handleCopyNoteLink}
-                            onCreateChildNote={handleCreateChildNote}
-                            onCreateNewNote={handleCreateNewNote}
-                            onDeleteNote={handleDeleteNote}
-                            onOpenTask={() => {}}
-                            onCloseNotes={() => {
-                                useNM.setIsTaskNoteVisible(false);
-                            }}
-                        />
-
-                        {useNM.currentMyNote && (
-                            <ModalDeleteMyNote
-                                currentMyNote={useNM.currentMyNote}
-                                currentTabIndex={useNM.selectedTabIndex}
-                                handleCloseTab={handleCloseTab}
-                                myNoteMeta={useNM.myNoteMeta}
-                                myself={myself}
-                                openDeleteNote={openDeleteNote}
-                                setMyNoteMeta={useNM.setMyNoteMeta}
-                                setOpenDeleteNote={setOpenDeleteNote}
-                            />
-                        )}
-                    </Stack>
-
-                    <Tabs
-                        sx={{ width: "100%" }}
-                        value={useNM.selectedTabIndex}
-                        onChange={(_, val) => {
-                            handleTabChange(Number(val));
+                    <NoteHeaderActions
+                        currentTask={undefined}
+                        hostZIndex={hostZIndex}
+                        isInTaskPage={isInTaskPage}
+                        myself={myself}
+                        noteType={noteTypeFromBucket(activeBucket)}
+                        pmChat={undefined}
+                        setMyself={setMyself}
+                        socket={socket}
+                        useCM={useCM}
+                        useNM={useNM}
+                        useTEM={useTEM}
+                        useUISM={useUISM}
+                        onCopyNoteLink={handleCopyNoteLink}
+                        onCreateChildNote={handleCreateChildNote}
+                        onCreateNewNote={handleCreateNewNote}
+                        onDeleteNote={handleDeleteNote}
+                        onOpenTask={() => {}}
+                        onCloseNotes={() => {
+                            useNM.setIsTaskNoteVisible(false);
                         }}
-                    >
-                        <NoteTabList useNM={useNM} onCloseTab={handleCloseTab} />
-                    </Tabs>
+                    />
 
-                    {/* Task-page inline editor — task-page panel is
+                    {useNM.currentMyNote && (
+                        <ModalDeleteMyNote
+                            currentMyNote={useNM.currentMyNote}
+                            currentTabIndex={useNM.selectedTabIndex}
+                            handleCloseTab={handleCloseTab}
+                            myNoteMeta={useNM.myNoteMeta}
+                            myself={myself}
+                            openDeleteNote={openDeleteNote}
+                            setMyNoteMeta={useNM.setMyNoteMeta}
+                            setOpenDeleteNote={setOpenDeleteNote}
+                        />
+                    )}
+                </Stack>
+
+                <Tabs
+                    sx={{ width: "100%" }}
+                    value={useNM.selectedTabIndex}
+                    onChange={(_, val) => {
+                        handleTabChange(Number(val));
+                    }}
+                >
+                    <NoteTabList useNM={useNM} onCloseTab={handleCloseTab} />
+                </Tabs>
+
+                {/* Task-page inline editor — task-page panel is
                         single-note, so this is one panel, always
                         active. Notes-home renders editors via the LRU
                         pool in NoteContentRenderer instead. The `key`
                         forces remount on note id change (parent → child)
                         — BlockNote uses `body` as an initial value and
                         wouldn't pick up the new doc otherwise. */}
-                    {isInTaskPage && inlineMyTab && (
-                        <MyNoteEditorPanel
-                            key={inlineMyTab.id}
-                            accessToken={accessToken}
-                            myself={myself}
-                            setMyself={setMyself}
-                            socket={socket}
-                            tab={inlineMyTab}
-                            useCM={useCM}
-                            useNM={useNM}
-                            useTEM={useTEM}
-                            useUISM={useUISM}
-                            isActive
-                        />
-                    )}
-                </Stack>
-            )}
+                {isInTaskPage && inlineMyTab && (
+                    <MyNoteEditorPanel
+                        key={inlineMyTab.id}
+                        accessToken={accessToken}
+                        myself={myself}
+                        setMyself={setMyself}
+                        socket={socket}
+                        tab={inlineMyTab}
+                        useCM={useCM}
+                        useNM={useNM}
+                        useTEM={useTEM}
+                        useUISM={useUISM}
+                        isActive
+                    />
+                )}
+            </Stack>
         </Stack>
     );
 };

@@ -245,128 +245,127 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
 
     return (
         <Stack direction={"column"} sx={{ width: "100%" }}>
-            {useNM.currentNoteType !== 0 && (
-                <Stack direction={"column"} sx={{ width: "100%" }}>
-                    <Stack
-                        alignItems="center"
-                        direction="row"
-                        justifyContent="space-between"
-                        sx={{
-                            width: "100%",
-                            height: "30px",
-                            // Task-page panel wraps this Main with its
-                            // own header zone, so we pull up by 15px to
-                            // sit flush with that surround. Notes-home
-                            // and chat-page use the standard 10px top
-                            // gap.
-                            mt: isInTaskPage ? "-15px" : "10px",
-                            mb: "5px",
-                        }}
-                    >
-                        <ChatNoteHeader
-                            chat={chat}
-                            handleCloseTab={handleCloseTab}
-                            hostZIndex={hostZIndex}
-                            isInChatPage={isInChatPage}
-                            isInTaskPage={isInTaskPage}
-                            myself={myself}
-                            openDeleteNote={openDeleteNote}
-                            openSearchBox={openSearchBox}
-                            setMyself={setMyself}
-                            setOpenDeleteNote={setOpenDeleteNote}
-                            setOpenSearchBox={setOpenSearchBox}
-                            socket={socket}
-                            useCM={useCM}
-                            useNM={useNM}
-                            usePM={usePM}
-                            useTEM={useTEM}
-                            useTM={useTM}
-                            useUISM={useUISM}
-                            onCreateChildNote={handleCreateChildNote}
-                            onDeleteNote={handleDeleteNote}
-                        />
-                    </Stack>
+            <Stack direction={"column"} sx={{ width: "100%" }}>
+                <Stack
+                    alignItems="center"
+                    direction="row"
+                    justifyContent="space-between"
+                    sx={{
+                        width: "100%",
+                        height: "30px",
+                        // Task-page panel wraps this Main with its
+                        // own header zone, so we pull up by 15px to
+                        // sit flush with that surround. Notes-home
+                        // and chat-page use the standard 10px top
+                        // gap.
+                        mt: isInTaskPage ? "-15px" : "10px",
+                        mb: "5px",
+                    }}
+                >
+                    <ChatNoteHeader
+                        chat={chat}
+                        handleCloseTab={handleCloseTab}
+                        hostZIndex={hostZIndex}
+                        isInChatPage={isInChatPage}
+                        isInTaskPage={isInTaskPage}
+                        myself={myself}
+                        openDeleteNote={openDeleteNote}
+                        openSearchBox={openSearchBox}
+                        setMyself={setMyself}
+                        setOpenDeleteNote={setOpenDeleteNote}
+                        setOpenSearchBox={setOpenSearchBox}
+                        socket={socket}
+                        useCM={useCM}
+                        useNM={useNM}
+                        usePM={usePM}
+                        useTEM={useTEM}
+                        useTM={useTM}
+                        useUISM={useUISM}
+                        onCreateChildNote={handleCreateChildNote}
+                        onDeleteNote={handleDeleteNote}
+                    />
+                </Stack>
 
-                    <Tabs
-                        sx={{ width: "100%" }}
-                        value={
-                            isInChatPage
-                                ? Math.max(0, chatPanelActiveTabIndex)
-                                : useNM.selectedTabIndex
+                <Tabs
+                    sx={{ width: "100%" }}
+                    value={
+                        isInChatPage
+                            ? Math.max(0, chatPanelActiveTabIndex)
+                            : useNM.selectedTabIndex
+                    }
+                    onChange={(_, val) => {
+                        if (isInChatPage) {
+                            handleChatPanelTabChange(Number(val));
+                        } else {
+                            handleTabChange(Number(val));
                         }
-                        onChange={(_, val) => {
-                            if (isInChatPage) {
-                                handleChatPanelTabChange(Number(val));
-                            } else {
-                                handleTabChange(Number(val));
-                            }
-                        }}
-                    >
-                        {/* Chat-page panel keeps its own isolated tab
-                         * list (driven by `chatPanelApi.tabs`) so users
-                         * can flip between a parent note and the child
-                         * they just created from the header. Notes-home
-                         * uses the cross-kind `useNM.tabItems` instead.
-                         * The strip is hidden when there are 0–1 tabs
-                         * (no value to add). */}
-                        {!isInChatPage && (
-                            <ChatNoteTabList
-                                selectedTabIndex={useNM.selectedTabIndex}
-                                tabItems={useNM.tabItems}
-                                onCloseTab={handleCloseTab}
-                            />
-                        )}
-                        {isInChatPage && useNM.chatPanelApi.tabs.length > 1 && (
-                            <ChatNoteTabList
-                                selectedTabIndex={Math.max(0, chatPanelActiveTabIndex)}
-                                tabItems={useNM.chatPanelApi.tabs}
-                                onCloseTab={handleChatPanelCloseTab}
-                            />
-                        )}
+                    }}
+                >
+                    {/* Chat-page panel keeps its own isolated tab
+                     * list (driven by `chatPanelApi.tabs`) so users
+                     * can flip between a parent note and the child
+                     * they just created from the header. Notes-home
+                     * uses the cross-kind `useNM.tabItems` instead.
+                     * The strip is hidden when there are 0–1 tabs
+                     * (no value to add). */}
+                    {!isInChatPage && (
+                        <ChatNoteTabList
+                            selectedTabIndex={useNM.selectedTabIndex}
+                            tabItems={useNM.tabItems}
+                            onCloseTab={handleCloseTab}
+                        />
+                    )}
+                    {isInChatPage && useNM.chatPanelApi.tabs.length > 1 && (
+                        <ChatNoteTabList
+                            selectedTabIndex={Math.max(0, chatPanelActiveTabIndex)}
+                            tabItems={useNM.chatPanelApi.tabs}
+                            onCloseTab={handleChatPanelCloseTab}
+                        />
+                    )}
 
-                        {/* Chat-page mode renders its own editor inline
-                         * (no LRU pool here — chatPanelApi drives the
-                         * active note). Notes-home mode's editors live
-                         * in the pool rendered by NoteContentRenderer
-                         * for cross-tab keepalive. The `chatNoteEditor`
-                         * hook is fed `null` in notes-home mode, so
-                         * `body` is undefined and this branch is naturally
-                         * skipped. */}
-                        {isInChatPage && activeChatNote && chatNoteEditor.body && (
-                            <TabPanel
-                                key={`tab-note-body-${activeChatNote.noteType}-${activeChatNote.noteId}`}
-                                value={Math.max(0, chatPanelActiveTabIndex)}
-                                sx={{
-                                    paddingX: "5px",
-                                    paddingTop: "0px",
-                                    paddingBottom: "5px",
-                                }}
-                            >
-                                <ChatNoteEditor
-                                    body={chatNoteEditor.body}
-                                    currentChatNote={activeChatNote}
-                                    currentChatNoteTitle={chatNoteEditor.currentChatNoteTitle}
-                                    currentNoteMembers={useNM.currentNoteMembers}
-                                    myself={myself}
-                                    noteBodySaved={chatNoteEditor.noteBodySaved}
-                                    resyncSignal={useNM.noteResyncNonce}
-                                    setMyself={setMyself}
-                                    setNoteBodyEdited={chatNoteEditor.setNoteBodyEdited}
-                                    setNoteBodySaved={chatNoteEditor.setNoteBodySaved}
-                                    socket={socket}
-                                    titleInputRef={chatNoteEditor.titleInputRef}
-                                    useCM={useCM}
-                                    useTEM={useTEM}
-                                    useUISM={useUISM}
-                                    onBodyChange={chatNoteEditor.handleBodyChange}
-                                    onTitleBlur={chatNoteEditor.handleTitleBlur}
-                                    onTitleChange={chatNoteEditor.handleTitleChange}
-                                />
-                            </TabPanel>
-                        )}
-                    </Tabs>
+                    {/* Chat-page mode renders its own editor inline
+                     * (no LRU pool here — chatPanelApi drives the
+                     * active note). Notes-home mode's editors live
+                     * in the pool rendered by NoteContentRenderer
+                     * for cross-tab keepalive. The `chatNoteEditor`
+                     * hook is fed `null` in notes-home mode, so
+                     * `body` is undefined and this branch is naturally
+                     * skipped. */}
+                    {isInChatPage && activeChatNote && chatNoteEditor.body && (
+                        <TabPanel
+                            key={`tab-note-body-${activeChatNote.noteType}-${activeChatNote.noteId}`}
+                            value={Math.max(0, chatPanelActiveTabIndex)}
+                            sx={{
+                                paddingX: "5px",
+                                paddingTop: "0px",
+                                paddingBottom: "5px",
+                            }}
+                        >
+                            <ChatNoteEditor
+                                body={chatNoteEditor.body}
+                                currentChatNote={activeChatNote}
+                                currentChatNoteTitle={chatNoteEditor.currentChatNoteTitle}
+                                currentNoteMembers={useNM.currentNoteMembers}
+                                myself={myself}
+                                noteBodySaved={chatNoteEditor.noteBodySaved}
+                                resyncSignal={useNM.noteResyncNonce}
+                                setMyself={setMyself}
+                                setNoteBodyEdited={chatNoteEditor.setNoteBodyEdited}
+                                setNoteBodySaved={chatNoteEditor.setNoteBodySaved}
+                                socket={socket}
+                                titleInputRef={chatNoteEditor.titleInputRef}
+                                useCM={useCM}
+                                useTEM={useTEM}
+                                useUISM={useUISM}
+                                onBodyChange={chatNoteEditor.handleBodyChange}
+                                onTitleBlur={chatNoteEditor.handleTitleBlur}
+                                onTitleChange={chatNoteEditor.handleTitleChange}
+                            />
+                        </TabPanel>
+                    )}
+                </Tabs>
 
-                    {/* Task-page inline editor — task-page panel
+                {/* Task-page inline editor — task-page panel
                         renders a single chat note, so this is one
                         panel, always active. Notes-home renders editors
                         via the LRU pool in NoteContentRenderer
@@ -374,23 +373,22 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                         change (parent → child) — BlockNote uses `body`
                         as an initial value and wouldn't pick up the
                         new doc otherwise. */}
-                    {isInTaskPage && inlineChatTab && (
-                        <ChatNoteEditorPanel
-                            key={inlineChatTab.id}
-                            accessToken={accessToken}
-                            myself={myself}
-                            setMyself={setMyself}
-                            socket={socket}
-                            tab={inlineChatTab}
-                            useCM={useCM}
-                            useNM={useNM}
-                            useTEM={useTEM}
-                            useUISM={useUISM}
-                            isActive
-                        />
-                    )}
-                </Stack>
-            )}
+                {isInTaskPage && inlineChatTab && (
+                    <ChatNoteEditorPanel
+                        key={inlineChatTab.id}
+                        accessToken={accessToken}
+                        myself={myself}
+                        setMyself={setMyself}
+                        socket={socket}
+                        tab={inlineChatTab}
+                        useCM={useCM}
+                        useNM={useNM}
+                        useTEM={useTEM}
+                        useUISM={useUISM}
+                        isActive
+                    />
+                )}
+            </Stack>
         </Stack>
     );
 };

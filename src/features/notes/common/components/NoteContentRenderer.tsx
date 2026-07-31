@@ -20,7 +20,6 @@ import { MyNoteEditorPanel } from "../../my-notes/components/MyNoteEditorPanel";
 import { MyNoteMain } from "../../my-notes/components/MyNoteMain";
 import { TaskNoteEditorPanel } from "../../task-notes/components/TaskNoteEditorPanel";
 import { TaskNoteMain } from "../../task-notes/components/TaskNoteMain";
-import { NoteHomeContent } from "./NoteHomeContent";
 
 type NoteContentRendererProps = {
     myself: UserProps;
@@ -187,10 +186,6 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
     );
 
     // Note Home page - show dashboard when Home is selected
-    if (useNM.currentNoteType === 0) {
-        return <NoteHomeContent useNM={useNM} />;
-    }
-
     // Get the currently selected tab's note type
     // This ensures we render the correct component based on the OPEN note,
     // not the sidebar category the user clicked on

@@ -86,11 +86,11 @@ export const MobileNoteHome = (props: MobileNoteHomeProps) => {
     const isDark = mode === "dark";
 
     // Mobile pane selection. Sidebar is the default landing surface;
-    // tapping a note (or "Home" / a type root in the sidebar) flips to
-    // content view. Back button returns to sidebar without closing the
-    // tab so reopening the same surface stays cheap.
+    // tapping a note flips to content view. Back button returns to
+    // sidebar without closing the tab so reopening the same surface
+    // stays cheap.
     const [mobileViewMode, setMobileViewMode] = useState<"sidebar" | "content">(
-        useNM.tabsApi.activeTabId !== null || useNM.currentNoteType === 0 ? "content" : "sidebar"
+        useNM.tabsApi.activeTabId !== null ? "content" : "sidebar"
     );
 
     // Detect "user opened a note from the sidebar" by watching
@@ -106,17 +106,9 @@ export const MobileNoteHome = (props: MobileNoteHomeProps) => {
         setMobileViewMode("content");
     }, [useNM.tabsApi.openTick]);
 
-    // Same detection for "user tapped Home in the sidebar". Home isn't
-    // a tab (currentNoteType=0 has no tab item) so it needs its own
-    // signal.
-    const lastNoteTypeRef = useRef(useNM.currentNoteType);
-    useEffect(() => {
-        const prev = lastNoteTypeRef.current;
-        lastNoteTypeRef.current = useNM.currentNoteType;
-        if (useNM.currentNoteType === 0 && prev !== 0) {
-            setMobileViewMode("content");
-        }
-    }, [useNM.currentNoteType]);
+    // (The Home dashboard used to need its own flip-to-content signal
+    // here, since it wasn't a tab. With Home gone, `openTick` above is
+    // the only trigger.)
 
     const showSidebar = mobileViewMode === "sidebar";
     const showContent = mobileViewMode === "content";
@@ -126,7 +118,6 @@ export const MobileNoteHome = (props: MobileNoteHomeProps) => {
     // Title for the mobile content header. Falls back to "Notes" so
     // the chrome stays consistent across loading states.
     const headerTitle = (() => {
-        if (useNM.currentNoteType === 0) return "Home";
         const activeTab = useNM.tabsApi.activeTab;
         if (activeTab?.title) return activeTab.title;
         if (useNM.currentNoteType === 1) return useNM.currentMyNote?.title || "My Note";

@@ -75,27 +75,10 @@ export const NoteHome = (props: NoteHomeProps) => {
         borderColor: ls.sidebarPanel.borderColor,
     };
 
+    // One panel identity now that the Home dashboard is gone; the
+    // former id="2" branch existed only to give Home its own
+    // react-resizable-panels layout slot.
     const renderMainContent = () => {
-        if (useNM.currentNoteType === 0) {
-            return (
-                <Panel id={"2"} maxSize={85} minSize={35} order={2}>
-                    <Box sx={noteContentBox}>
-                        <NoteContentRenderer
-                            myself={myself}
-                            setMyself={setMyself}
-                            socket={socket}
-                            useCM={useCM}
-                            useNM={useNM}
-                            usePM={usePM}
-                            useTEM={useTEM}
-                            useTM={useTM}
-                            useUISM={useUISM}
-                        />
-                    </Box>
-                </Panel>
-            );
-        }
-
         return (
             <Panel id={"3"} maxSize={85} minSize={35} order={3}>
                 <Box sx={noteContentBox}>

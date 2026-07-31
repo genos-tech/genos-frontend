@@ -1246,7 +1246,6 @@ export const fr: DeepPartial<Messages> = {
             deleteBody: "Cette action est irréversible.",
         },
         sidebar: {
-            home: "Accueil",
             favorites: "Favoris",
             recents: "Récents",
             workspaces: "Espaces de travail",
@@ -1282,29 +1281,6 @@ export const fr: DeepPartial<Messages> = {
             milestoneFallback: "Jalon {milestoneId}",
             taskFallback: "Tâche n°{taskId}",
             someone: "Quelqu'un",
-        },
-        home: {
-            title: "Tableau de bord des notes",
-            subtitle: "Capturez vos idées, organisez vos pensées et restez productif",
-            statMyNotes: "Mes notes",
-            statTaskNotes: "Notes de tâches",
-            statChatNotes: "Notes de conversation",
-            statFavorites: "Favoris",
-            quickActions: "Actions rapides",
-            openMyNotes: "Ouvrir mes notes",
-            openTaskNotes: "Ouvrir les notes de tâches",
-            openChatNotes: "Ouvrir les notes de conversation",
-            recentNotes: "Notes récentes",
-            favorites: "Favoris",
-            favoritesEmpty:
-                "Aucun favori pour le moment. Mettez des notes en favori pour les ajouter ici.",
-            bigEmptyTitle: "Aucune note ouverte pour le moment",
-            bigEmptyBody:
-                "Utilisez les actions rapides ci-dessus pour accéder à une section, ou mettez une note en favori pour l'épingler.",
-            proTip: "Astuce",
-            tip1: "Mettez les notes importantes en favori pour y accéder depuis Favoris",
-            tip2: "Organisez les notes en hiérarchies imbriquées pour une meilleure structure",
-            tip3: "Liez les notes aux tâches et conversations pour un contexte fluide",
         },
         placeholder: {
             selectFromSidebar: "Sélectionner depuis la barre latérale",

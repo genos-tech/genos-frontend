@@ -191,78 +191,77 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
 
     return (
         <Stack direction={"column"} sx={{ width: "100%" }}>
-            {useNM.currentNoteType !== 0 && (
-                <>
-                    {/* Note Header */}
-                    <Stack
-                        alignItems="center"
-                        direction="row"
-                        justifyContent="space-between"
-                        sx={{
-                            width: "100%",
-                            height: "30px",
-                            mt: isInTaskPage ? "-15px" : "10px",
-                            mb: "5px",
-                        }}
-                    >
-                        {isInTaskPage === true && (
-                            <Box
-                                sx={{
-                                    ml: "5px",
-                                    mb: "5px",
-                                    width: "40%",
-                                }}
-                            >
-                                <ACTaskNotes
-                                    myself={myself}
-                                    openSearchBox={openSearchBox}
-                                    setOpenSearchBox={setOpenSearchBox}
-                                    useNM={useNM}
-                                />
-                            </Box>
-                        )}
-
-                        {isInTaskPage === false && <TaskNoteHeader useNM={useNM} />}
-
-                        <NoteHeaderActions
-                            currentTask={currentTask}
-                            hostZIndex={hostZIndex}
-                            isInTaskPage={isInTaskPage}
-                            myself={myself}
-                            noteType={2}
-                            pmChat={pmChat}
-                            setMyself={setMyself}
-                            socket={socket}
-                            useCM={useCM}
-                            useNM={useNM}
-                            useTEM={useTEM}
-                            useUISM={useUISM}
-                            onCloseNotes={handleCloseNotes}
-                            onCopyNoteLink={handleCopyNoteLink}
-                            onCreateChildNote={handleCreateChildNote}
-                            onCreateNewNote={() => {}} // Don't create new task note in task note page
-                            onDeleteNote={handleDeleteNote}
-                            onOpenTask={handleOpenTask}
-                        />
-
-                        {useNM.currentTaskNote && (
-                            <ModalDeleteTaskNote
-                                handleCloseTab={handleCloseTab}
+            <>
+                {/* Note Header */}
+                <Stack
+                    alignItems="center"
+                    direction="row"
+                    justifyContent="space-between"
+                    sx={{
+                        width: "100%",
+                        height: "30px",
+                        mt: isInTaskPage ? "-15px" : "10px",
+                        mb: "5px",
+                    }}
+                >
+                    {isInTaskPage === true && (
+                        <Box
+                            sx={{
+                                ml: "5px",
+                                mb: "5px",
+                                width: "40%",
+                            }}
+                        >
+                            <ACTaskNotes
                                 myself={myself}
-                                openDeleteNote={openDeleteNote}
-                                setOpenDeleteNote={setOpenDeleteNote}
+                                openSearchBox={openSearchBox}
+                                setOpenSearchBox={setOpenSearchBox}
                                 useNM={useNM}
                             />
-                        )}
-                    </Stack>
+                        </Box>
+                    )}
 
-                    {/* Just the tab strip — in notes-home mode the
+                    {isInTaskPage === false && <TaskNoteHeader useNM={useNM} />}
+
+                    <NoteHeaderActions
+                        currentTask={currentTask}
+                        hostZIndex={hostZIndex}
+                        isInTaskPage={isInTaskPage}
+                        myself={myself}
+                        noteType={2}
+                        pmChat={pmChat}
+                        setMyself={setMyself}
+                        socket={socket}
+                        useCM={useCM}
+                        useNM={useNM}
+                        useTEM={useTEM}
+                        useUISM={useUISM}
+                        onCloseNotes={handleCloseNotes}
+                        onCopyNoteLink={handleCopyNoteLink}
+                        onCreateChildNote={handleCreateChildNote}
+                        onCreateNewNote={() => {}} // Don't create new task note in task note page
+                        onDeleteNote={handleDeleteNote}
+                        onOpenTask={handleOpenTask}
+                    />
+
+                    {useNM.currentTaskNote && (
+                        <ModalDeleteTaskNote
+                            handleCloseTab={handleCloseTab}
+                            myself={myself}
+                            openDeleteNote={openDeleteNote}
+                            setOpenDeleteNote={setOpenDeleteNote}
+                            useNM={useNM}
+                        />
+                    )}
+                </Stack>
+
+                {/* Just the tab strip — in notes-home mode the
                         editor body comes from the LRU pool in
                         NoteContentRenderer; in task-page mode we render
                         a single inline panel just below. */}
-                    <TaskNoteTabs useNM={useNM} onCloseTab={handleCloseTab} />
+                <TaskNoteTabs useNM={useNM} onCloseTab={handleCloseTab} />
 
-                    {/* Task-page inline editor — task-page panel is
+                {/* Task-page inline editor — task-page panel is
                         single-note, so this is one panel, always
                         active. The `key` is critical: BlockNote
                         treats `body` as an initial value and won't
@@ -271,23 +270,22 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                         header's "Child Note" action) must force a
                         full remount, otherwise the editor keeps
                         showing the parent's document. */}
-                    {isInTaskPage && inlineTaskTab && (
-                        <TaskNoteEditorPanel
-                            key={inlineTaskTab.id}
-                            accessToken={accessToken}
-                            myself={myself}
-                            setMyself={setMyself}
-                            socket={socket}
-                            tab={inlineTaskTab}
-                            useCM={useCM}
-                            useNM={useNM}
-                            useTEM={useTEM}
-                            useUISM={useUISM}
-                            isActive
-                        />
-                    )}
-                </>
-            )}
+                {isInTaskPage && inlineTaskTab && (
+                    <TaskNoteEditorPanel
+                        key={inlineTaskTab.id}
+                        accessToken={accessToken}
+                        myself={myself}
+                        setMyself={setMyself}
+                        socket={socket}
+                        tab={inlineTaskTab}
+                        useCM={useCM}
+                        useNM={useNM}
+                        useTEM={useTEM}
+                        useUISM={useUISM}
+                        isActive
+                    />
+                )}
+            </>
         </Stack>
     );
 };

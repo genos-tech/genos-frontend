@@ -8,7 +8,6 @@ import FileUploadRoundedIcon from "@mui/icons-material/FileUploadRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
-import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import MarkChatUnreadRoundedIcon from "@mui/icons-material/MarkChatUnreadRounded";
 import NoteAddRoundedIcon from "@mui/icons-material/NoteAddRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
@@ -85,7 +84,7 @@ import {
 import { useNoteTreeState } from "../hooks/useNoteTreeState";
 import { exportNoteMarkdown } from "../services/exportNoteMarkdown";
 import { ChatNoteMetaTreeNode, TaskNoteMetaTreeNode } from "../types/noteTypes";
-import { toBackendNoteType } from "../utils/noteTypeAlias";
+import { isPersonalNoteBucket, toBackendNoteType } from "../utils/noteTypeAlias";
 import { FavoriteNoteItem } from "./FavoriteNoteItem";
 import { FavoriteNoteSection } from "./FavoriteNoteSection";
 import { GroupedNoteSection } from "./GroupedNoteSection";
@@ -603,6 +602,14 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     >(null);
     const [teamMembersModal, setTeamMembersModal] = useState<TeamNoteFolderTreeNode | null>(null);
     const [teamTagsModal, setTeamTagsModal] = useState<TeamNoteFolderTreeNode | null>(null);
+    // Moving a NOTE between team folders. Separate from `teamMoveModal`,
+    // which moves a FOLDER — the two pick from the same tree but write
+    // through different endpoints.
+    const [teamNoteMoveModal, setTeamNoteMoveModal] = useState<{
+        noteId: number;
+        currentFolderId: number | null;
+        isChild: boolean;
+    } | null>(null);
     const [teamTagFilter, setTeamTagFilter] = useState<Set<number>>(new Set());
     const [teamMoveModal, setTeamMoveModal] = useState<TeamNoteFolderTreeNode | null>(null);
     const [teamDeleteModal, setTeamDeleteModal] = useState<TeamNoteFolderTreeNode | null>(null);
@@ -907,13 +914,39 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     // Team notes render exactly like My Notes rows — they ARE personal
     // notes — but pass noteType={8} so the sidebar highlight tracks the
     // Team Notes bucket rather than My Notes.
+    // Can this user edit the folder the note sits in? Move and delete
+    // are folder-scoped, not note-scoped: the server gates them on
+    // folder role, so a viewer shouldn't be offered actions that 403.
+    const canEditTeamNote = (node: { folderId?: number | null }): boolean => {
+        const folder = useNM.teamNoteFolders.find((f) => f.folderId === node.folderId);
+        return folder != null && folder.myRoleId < 3;
+    };
+
     const renderTeamNoteTreeItem = (node: any) => (
         <NoteTreeRenderer
             key={node.noteId}
             currentChain={teamNoteState.tmpCurrentChain}
             node={node}
             noteType={8}
-            rowMenuItems={(node) => [buildExportMenuItem(8, node)]}
+            rowMenuItems={(node: MyNoteMetaTreeNode) =>
+                canEditTeamNote(node)
+                    ? [
+                          {
+                              id: "move-to-folder",
+                              label: t.notes.folders.moveToFolder,
+                              icon: <DriveFileMoveRoundedIcon sx={{ fontSize: 16 }} />,
+                              onClick: () =>
+                                  setTeamNoteMoveModal({
+                                      noteId: node.noteId,
+                                      currentFolderId: node.folderId ?? null,
+                                      isChild: node.parentNoteId != null,
+                                  }),
+                          },
+                          buildExportMenuItem(8, node),
+                          buildDeleteMenuItem(8, node),
+                      ]
+                    : [buildExportMenuItem(8, node)]
+            }
             timestamp={teamNoteState.timestamp}
             useNM={useNM}
             createChildNoteList={(node) => (
@@ -1734,76 +1767,6 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                             "--ListItem-radius": "8px",
                         }}
                     >
-                        {/* Home Item */}
-                        <ListItem>
-                            <ListItemButton
-                                selected={useNM.currentNoteType === 0}
-                                sx={{
-                                    borderRadius: "10px",
-                                    py: 1,
-                                    px: 1.5,
-                                    gap: 1.5,
-                                    transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                                    "&:hover": {
-                                        backgroundColor: isDark
-                                            ? "rgba(255,255,255,0.06)"
-                                            : "rgba(0,0,0,0.04)",
-                                    },
-                                    "&.Mui-selected": {
-                                        backgroundColor: isDark
-                                            ? "rgba(var(--gp-brand-700-rgb), 0.15)"
-                                            : "rgba(var(--gp-brand-700-rgb), 0.1)",
-                                        "&:hover": {
-                                            backgroundColor: isDark
-                                                ? "rgba(var(--gp-brand-700-rgb), 0.2)"
-                                                : "rgba(var(--gp-brand-700-rgb), 0.15)",
-                                        },
-                                    },
-                                }}
-                                onClick={() => {
-                                    useNM.setCurrentNoteType(0);
-                                    localStorage.setItem("lastOpenNoteType", "0");
-                                }}
-                            >
-                                <Box
-                                    sx={{
-                                        width: 28,
-                                        height: 28,
-                                        borderRadius: "8px",
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        backgroundColor: isDark
-                                            ? "rgba(255,255,255,0.08)"
-                                            : "rgba(0,0,0,0.05)",
-                                        transition: "all 0.2s ease",
-                                    }}
-                                >
-                                    <HomeRoundedIcon
-                                        sx={{
-                                            fontSize: 16,
-                                            color: isDark
-                                                ? "rgba(255,255,255,0.75)"
-                                                : "rgba(0,0,0,0.65)",
-                                        }}
-                                    />
-                                </Box>
-                                <ListItemContent>
-                                    <Typography
-                                        level="body-sm"
-                                        sx={{
-                                            fontWeight: 500,
-                                            color: isDark
-                                                ? "rgba(255,255,255,0.9)"
-                                                : "rgba(0,0,0,0.8)",
-                                        }}
-                                    >
-                                        {t.notes.sidebar.home}
-                                    </Typography>
-                                </ListItemContent>
-                            </ListItemButton>
-                        </ListItem>
-
                         {/* Favorites Section */}
                         <NoteTypeSection
                             icon={<StarRoundedIcon sx={{ fontSize: 18 }} />}
@@ -1939,7 +1902,9 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                 onConfirm={() => {
                     if (!deleteNoteModal) return;
                     const { noteType, noteId } = deleteNoteModal;
-                    if (noteType === 1) void useNM.deleteMyNoteById(noteId);
+                    // Buckets 4 and 8 are personal notes too, so they
+                    // delete through the same action.
+                    if (isPersonalNoteBucket(noteType)) void useNM.deleteMyNoteById(noteId);
                     else if (noteType === 2) void useNM.deleteTaskNoteById(noteId);
                     else if (noteType === 3) void useNM.deleteChatNoteById(noteId);
                 }}
@@ -1998,6 +1963,20 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                 open={teamTagsModal !== null}
                 onClose={() => setTeamTagsModal(null)}
                 onChanged={() => void useNM.getTeamNoteFolders()}
+            />
+            {/* Move a NOTE into another team folder. Scoped to the team
+                folder list so a team note can't be filed into someone's
+                personal sidebar. */}
+            <ModalMoveToFolder
+                currentFolderId={teamNoteMoveModal?.currentFolderId ?? null}
+                folders={useNM.teamNoteFolders}
+                open={teamNoteMoveModal !== null}
+                showDetachHint={teamNoteMoveModal?.isChild === true}
+                onClose={() => setTeamNoteMoveModal(null)}
+                onSelect={(folderId) => {
+                    if (!teamNoteMoveModal) return;
+                    void useNM.moveMyNoteToFolder(teamNoteMoveModal.noteId, folderId);
+                }}
             />
             <ModalMoveToFolder
                 currentFolderId={teamMoveModal?.parentFolderId ?? null}
