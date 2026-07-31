@@ -72,6 +72,14 @@ export type SharedNoteTarget = {
     noteId: number;
 };
 
+// Team Notes. Like `sharedNote`, this is a personal note (note_type 1)
+// distinguished only by which sidebar space it belongs to — the kind
+// exists so the link lands in Team Notes rather than My Notes.
+export type TeamNoteTarget = {
+    kind: "teamNote";
+    noteId: number;
+};
+
 export type TodoTarget = {
     kind: "todo";
     // The group's day bucket (YYYY-MM-DD) — part of the URL so the modal
@@ -89,6 +97,7 @@ export type ModalTarget =
     | TaskNoteTarget
     | MyNoteTarget
     | SharedNoteTarget
+    | TeamNoteTarget
     | TodoTarget;
 
 export type UrlClassification =
@@ -218,6 +227,10 @@ export const parseInternalUrl = (href: string): UrlClassification => {
         if (parts[2] === "shared") {
             const noteId = toInt(parts[3]);
             if (noteId) return { kind: "sharedNote", noteId };
+        }
+        if (parts[2] === "team") {
+            const noteId = toInt(parts[3]);
+            if (noteId) return { kind: "teamNote", noteId };
         }
         // /workspace/notes/task/project/:projectId/task/:taskId/note/:noteId
         if (

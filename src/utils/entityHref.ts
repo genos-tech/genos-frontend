@@ -23,6 +23,7 @@ export type HashEntityRef =
     | { entityType: "chat"; chatType: string; chatId: string }
     | { entityType: "note"; noteKind: "my"; noteId: string }
     | { entityType: "note"; noteKind: "shared"; noteId: string }
+    | { entityType: "note"; noteKind: "team"; noteId: string }
     | { entityType: "note"; noteKind: "task"; projectId: string; taskId: string; noteId: string }
     | {
           entityType: "note";
@@ -58,6 +59,8 @@ export const entityRefToHref = (ref: HashEntityRef): string => {
                     return `/workspace/notes/my/${ref.noteId}`;
                 case "shared":
                     return `/workspace/notes/shared/${ref.noteId}`;
+                case "team":
+                    return `/workspace/notes/team/${ref.noteId}`;
                 case "task":
                     return `/workspace/notes/task/project/${ref.projectId}/task/${ref.taskId}/note/${ref.noteId}`;
                 case "chat":

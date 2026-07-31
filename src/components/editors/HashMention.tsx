@@ -196,6 +196,8 @@ export const CreateHashNoteSpec = () =>
                     };
                 } else if (noteKind === "shared") {
                     ref = { entityType: "note", noteKind: "shared", noteId };
+                } else if (noteKind === "team") {
+                    ref = { entityType: "note", noteKind: "team", noteId };
                 } else {
                     ref = { entityType: "note", noteKind: "my", noteId };
                 }
@@ -470,6 +472,8 @@ export const HashMentionMenuItems = (
                 subtitle = "Chat note";
             } else if (n.kind === "shared") {
                 subtitle = "Shared note";
+            } else if (n.kind === "team") {
+                subtitle = "Team note";
             } else {
                 subtitle = "My note";
             }

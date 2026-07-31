@@ -24,6 +24,7 @@ import { restoreNoteVersion as restoreNoteVersionApi } from "../../features/note
 import { updateNoteRole } from "../../features/notes/common/services/updateNoteRole";
 import {
     bucketFromNoteType,
+    noteTypeFromBucket,
     toBackendNoteType,
 } from "../../features/notes/common/utils/noteTypeAlias";
 import {
@@ -155,6 +156,9 @@ export interface NoteManagementState {
     setCurrentMyNote: (note: MyNoteProps | null) => void;
     myNoteMeta: MyNoteMetaProps[];
     setMyNoteMeta: (meta: MyNoteMetaProps[]) => void;
+    // Title/timestamp sync for a personal-backed note, applied to
+    // whichever of the My / Shared / Team lists holds it.
+    patchPersonalNoteMeta: (noteId: number, title: string, tsUpdated: string) => void;
     currentMyNoteChain: MyNoteMetaTreeNode[] | undefined;
     setCurrentMyNoteChain: (chain: MyNoteMetaTreeNode[]) => void;
     getMyNoteMeta: () => Promise<void>;
@@ -839,6 +843,37 @@ export const useNoteManagement = (
         } catch (error) {
             console.error("Error creating my note:", error);
         }
+    };
+
+    // Patch a personal-backed note's title/timestamp wherever it lives.
+    //
+    // My, Shared and Team notes all render through `MyNoteEditorPanel`,
+    // but each sidebar section reads its OWN meta list. The panel used to
+    // patch `myNoteMeta` alone, so a rename in the Team (or Shared)
+    // section updated the tab strip and never the sidebar row — the note
+    // simply kept its old title until a reload.
+    //
+    // Patching by noteId across all three lists keeps that from having to
+    // be rediscovered every time a new personal-backed bucket appears:
+    // the row is updated in whichever list actually holds it, and the
+    // others are left untouched.
+    const patchPersonalNoteMeta = (noteId: number, title: string, tsUpdated: string) => {
+        const patch = <T extends { noteId: number; title: string; tsUpdated: string }>(
+            rows: T[]
+        ): T[] => {
+            let hit = false;
+            const next = rows.map((r) => {
+                if (r.noteId !== noteId) return r;
+                hit = true;
+                return { ...r, title, tsUpdated };
+            });
+            // Preserve identity when this list doesn't hold the note, so
+            // the other sections' memoized trees don't rebuild.
+            return hit ? next : rows;
+        };
+        setMyNoteMeta(patch);
+        setSharedNoteMeta(patch);
+        setTeamNoteMeta(patch);
     };
 
     const getMyNoteMeta = async () => {
@@ -1935,16 +1970,21 @@ export const useNoteManagement = (
             return;
         }
 
-        // Shared notes (type 4) ride on the same tab kind ("my") as
-        // owned personal notes, so we disambiguate via the
-        // shared-meta list: if the active personal note is in that
-        // list, the bucket is "Shared Notes" (4); otherwise it's
-        // "My Notes" (1). Used in both the cached-sync and async
-        // branches so the sidebar highlight, the noteType=4
-        // routing-write effect, and `NoteTreeRenderer.isSelected`
-        // all see a consistent value.
-        const personalBucketType = () =>
-            sharedNoteMeta.some((n) => n.noteId === active.noteId) ? 4 : 1;
+        // Shared (4) and team (8) notes ride the same tab kind ("my") as
+        // owned personal notes, so the bucket has to come off the TAB —
+        // it's the only thing that knows which section the note was
+        // opened from. This drives the sidebar highlight, the
+        // routing-write effect, and `NoteTreeRenderer.isSelected`, so
+        // getting it wrong highlights the wrong section entirely.
+        //
+        // The shared-meta probe stays as a fallback for tabs persisted
+        // before buckets existed, which rehydrate without one.
+        const personalBucketType = () => {
+            if (active.kind === "my" && active.bucket) {
+                return noteTypeFromBucket(active.bucket);
+            }
+            return sharedNoteMeta.some((n) => n.noteId === active.noteId) ? 4 : 1;
+        };
 
         // Synchronous cache hit: write the new current* note, drop the
         // other kinds, and let the renderer pick it up in this render.
@@ -2227,6 +2267,8 @@ export const useNoteManagement = (
         noteResyncNonce,
 
         // Shared-with-me personal notes
+        patchPersonalNoteMeta,
+
         teamNoteFolders,
         teamNoteFolderForest,
         teamNoteMeta,

@@ -64,16 +64,15 @@ export const MyNoteEditorPanel = ({
             // resurrected a pre-move `parentNoteId`. Structural fields
             // stay authoritative from the meta list, which the move
             // actions patch. (Same pattern as TaskNoteEditorPanel.)
-            useNM.setMyNoteMeta(
-                useNM.myNoteMeta.map((item) =>
-                    item.noteType === updatedNote.noteType && item.noteId === updatedNote.noteId
-                        ? {
-                              ...item,
-                              title: updatedNote.title,
-                              tsUpdated: updatedNote.tsUpdated,
-                          }
-                        : item
-                )
+            //
+            // This panel serves ALL THREE personal-backed buckets, so the
+            // patch has to reach whichever list holds the note — patching
+            // `myNoteMeta` alone left renames invisible in the Team and
+            // Shared sections.
+            useNM.patchPersonalNoteMeta(
+                updatedNote.noteId,
+                updatedNote.title,
+                updatedNote.tsUpdated
             );
 
             useNM.bumpNoteVersionsHead(updatedNote.noteType, updatedNote.noteId);

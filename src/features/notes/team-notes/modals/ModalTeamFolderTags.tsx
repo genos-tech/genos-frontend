@@ -238,25 +238,45 @@ export const ModalTeamFolderTags = (props: Props) => {
                                     />
                                 ) : (
                                     <>
-                                        {/* The chip IS the assign control;
-                                            dimmed when not on this folder. */}
-                                        <Chip
-                                            size="sm"
-                                            variant="solid"
-                                            startDecorator={
-                                                isOn ? (
-                                                    <CheckRoundedIcon sx={{ fontSize: 12 }} />
-                                                ) : undefined
-                                            }
-                                            sx={{
-                                                ...folderTagChipSx(tag, "md"),
-                                                cursor: "pointer",
-                                                opacity: isOn ? 1 : 0.45,
-                                            }}
+                                        {/* Clicking assigns/unassigns on THIS
+                                            folder. The handler sits on a
+                                            wrapper, NOT on the Chip: a Joy
+                                            Chip with `onClick` renders a
+                                            ChipAction overlay that paints
+                                            the variant's own background over
+                                            the root, which swallowed the
+                                            tag colour and made every chip
+                                            here render grey. Keeping the
+                                            Chip presentational is also what
+                                            ProjectLabelChips does. */}
+                                        <Box
+                                            role="button"
+                                            sx={{ cursor: "pointer", display: "flex" }}
+                                            tabIndex={0}
                                             onClick={() => toggle(tag.tagId)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === "Enter" || e.key === " ") {
+                                                    e.preventDefault();
+                                                    toggle(tag.tagId);
+                                                }
+                                            }}
                                         >
-                                            {tag.name}
-                                        </Chip>
+                                            <Chip
+                                                size="sm"
+                                                variant="solid"
+                                                startDecorator={
+                                                    isOn ? (
+                                                        <CheckRoundedIcon sx={{ fontSize: 12 }} />
+                                                    ) : undefined
+                                                }
+                                                sx={{
+                                                    ...folderTagChipSx(tag, "md"),
+                                                    opacity: isOn ? 1 : 0.45,
+                                                }}
+                                            >
+                                                {tag.name}
+                                            </Chip>
+                                        </Box>
                                         <Typography level="body-xs" sx={{ flex: 1, opacity: 0.6 }}>
                                             {fmt(t.notes.teamNotes.tagUsage, {
                                                 count: tag.folderCount,

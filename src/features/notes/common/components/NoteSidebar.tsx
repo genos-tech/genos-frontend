@@ -50,6 +50,7 @@ import {
     MyNoteFolderTreeNode,
     MyNoteMetaProps,
     MyNoteMetaTreeNode,
+    NoteFolderTagProps,
     SharedNoteMetaTreeNode,
     TaskNoteMetaProps,
     TeamNoteFolderTreeNode,
@@ -69,7 +70,7 @@ import {
 } from "../../team-notes/components/TeamNoteFolderTree";
 import { ModalTeamFolderMembers } from "../../team-notes/modals/ModalTeamFolderMembers";
 import { ModalTeamFolderName } from "../../team-notes/modals/ModalTeamFolderName";
-import { ModalTeamFolderTags } from "../../team-notes/modals/ModalTeamFolderTags";
+import { folderTagChipSx, ModalTeamFolderTags } from "../../team-notes/modals/ModalTeamFolderTags";
 import { useNoteUnread } from "../context/NoteUnreadContext";
 import {
     chatContainerId,
@@ -958,10 +959,10 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     // Every tag actually in use, so the filter row never offers a chip
     // that would match nothing.
     const teamFolderTags = useMemo(() => {
-        const map = new Map<number, { tagId: number; name: string }>();
-        useNM.teamNoteFolders.forEach((f) =>
-            f.tags.forEach((tg) => map.set(tg.tagId, { tagId: tg.tagId, name: tg.name }))
-        );
+        // Keep the whole tag, not just id+name — the filter chips render
+        // in the user's chosen colour, same as the folder-row chips.
+        const map = new Map<number, NoteFolderTagProps>();
+        useNM.teamNoteFolders.forEach((f) => f.tags.forEach((tg) => map.set(tg.tagId, tg)));
         return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
     }, [useNM.teamNoteFolders]);
 
@@ -1005,12 +1006,26 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                     {teamFolderTags.map((tag) => {
                         const isOn = teamTagFilter.has(tag.tagId);
                         return (
-                            <Chip
+                            // Handler on the wrapper, not the Chip: a Joy
+                            // Chip with `onClick` paints a ChipAction
+                            // overlay over the root and swallows the tag
+                            // colour. Selection reads as full opacity +
+                            // a ring rather than a colour change, so the
+                            // tag stays recognisable either way.
+                            <Box
                                 key={tag.tagId}
-                                color={isOn ? "primary" : "neutral"}
-                                size="sm"
-                                sx={{ "--Chip-minHeight": "18px", fontSize: 10 }}
-                                variant={isOn ? "solid" : "outlined"}
+                                role="button"
+                                tabIndex={0}
+                                sx={{
+                                    borderRadius: "6px",
+                                    cursor: "pointer",
+                                    display: "flex",
+                                    outline: isOn ? "2px solid" : "none",
+                                    outlineColor: isDark
+                                        ? "rgba(var(--gp-brandalt-400-rgb), 0.9)"
+                                        : "rgba(var(--gp-brand-700-rgb), 0.7)",
+                                    outlineOffset: "1px",
+                                }}
                                 onClick={() =>
                                     setTeamTagFilter((prev) => {
                                         const next = new Set(prev);
@@ -1019,9 +1034,29 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                                         return next;
                                     })
                                 }
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter" || e.key === " ") {
+                                        e.preventDefault();
+                                        setTeamTagFilter((prev) => {
+                                            const next = new Set(prev);
+                                            if (next.has(tag.tagId)) next.delete(tag.tagId);
+                                            else next.add(tag.tagId);
+                                            return next;
+                                        });
+                                    }
+                                }}
                             >
-                                {tag.name}
-                            </Chip>
+                                <Chip
+                                    size="sm"
+                                    variant="solid"
+                                    sx={{
+                                        ...folderTagChipSx(tag),
+                                        opacity: isOn ? 1 : 0.5,
+                                    }}
+                                >
+                                    {tag.name}
+                                </Chip>
+                            </Box>
                         );
                     })}
                 </Box>

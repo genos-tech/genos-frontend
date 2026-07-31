@@ -33,10 +33,16 @@ import {
     MyNoteTarget,
     SharedNoteTarget,
     TaskNoteTarget,
+    TeamNoteTarget,
 } from "../../../utils/parseInternalUrl";
 import { NoteModalHostZIndexProvider } from "../noteModalHostZIndex";
 
-type NoteTarget = MyNoteTarget | SharedNoteTarget | TaskNoteTarget | ChatNoteTarget;
+type NoteTarget =
+    | MyNoteTarget
+    | SharedNoteTarget
+    | TeamNoteTarget
+    | TaskNoteTarget
+    | ChatNoteTarget;
 
 type ModalNoteViewProps = {
     target: NoteTarget;
@@ -125,7 +131,7 @@ export const ModalNoteView = (props: ModalNoteViewProps) => {
     // "Shared Notes" styling). This is also the `note_type` the
     // access-request emit needs when the fetch 403s.
     const backendNoteType =
-        target.kind === "myNote" || target.kind === "sharedNote"
+        target.kind === "myNote" || target.kind === "sharedNote" || target.kind === "teamNote"
             ? 1
             : target.kind === "taskNote"
               ? 2
@@ -223,9 +229,12 @@ export const ModalNoteView = (props: ModalNoteViewProps) => {
     );
 
     // --- My / Shared note branch ---
-    if (target.kind === "myNote" || target.kind === "sharedNote") {
+    if (target.kind === "myNote" || target.kind === "sharedNote" || target.kind === "teamNote") {
         const note = modalNote as MyNoteProps;
-        const internalNoteType = target.kind === "sharedNote" ? 4 : 1;
+        // Sidebar bucket the modal should present as: 4 shared, 8 team,
+        // 1 my. All three are note_type 1 on the backend.
+        const internalNoteType =
+            target.kind === "sharedNote" ? 4 : target.kind === "teamNote" ? 8 : 1;
         // Synthetic single-entry tab list so MyNoteMain's
         // `tabItems.length === 0` early-return (which would otherwise
         // show its EmptyState for users with no my-notes open) doesn't
