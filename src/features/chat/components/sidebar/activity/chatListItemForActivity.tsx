@@ -624,9 +624,19 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
             return;
         }
         if (noteTypeForActivity === 1) {
-            useNM.setCurrentNoteType(1);
+            // The activity only knows backend type 1, but the note may
+            // be a TEAM or SHARED note — route to its real section when
+            // the meta lists can tell, so the header and sidebar land
+            // right immediately instead of waiting for the tab-bucket
+            // healing pass.
+            const bucket = useNM.teamNoteMeta.some((n) => n.noteId === noteId)
+                ? "team"
+                : useNM.sharedNoteMeta.some((n) => n.noteId === noteId)
+                  ? "shared"
+                  : "my";
+            useNM.setCurrentNoteType(bucket === "team" ? 8 : bucket === "shared" ? 4 : 1);
             useNM.setCurrentMyNote(fetched as MyNoteProps);
-            navigate(`/workspace/notes/my/${noteId}`);
+            navigate(`/workspace/notes/${bucket}/${noteId}`);
             return;
         }
         if (noteTypeForActivity === 2) {

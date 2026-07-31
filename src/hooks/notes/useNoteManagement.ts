@@ -1725,6 +1725,27 @@ export const useNoteManagement = (
         return result;
     };
 
+    // Heal tab buckets once the meta lists can disambiguate them.
+    //
+    // A tab opened from an activity click, a push URL or a history row
+    // is created with bucket "my" — those surfaces only know backend
+    // note types, and the team/shared meta may not have loaded yet when
+    // the tab is born. Without this, such a tab keeps the My Notes
+    // header and highlights the wrong sidebar section for its whole
+    // life, surviving even a reload (the bucket is persisted).
+    // `updateTabBucket` no-ops when already correct, so this converges
+    // instead of looping.
+    useEffect(() => {
+        for (const tab of tabsApi.tabs) {
+            if (tab.kind !== "my" || (tab.bucket ?? "my") !== "my") continue;
+            if (teamNoteMeta.some((n) => n.noteId === tab.noteId)) {
+                tabsApi.updateTabBucket(tab.noteId, "team");
+            } else if (sharedNoteMeta.some((n) => n.noteId === tab.noteId)) {
+                tabsApi.updateTabBucket(tab.noteId, "shared");
+            }
+        }
+    }, [tabsApi.tabs, teamNoteMeta, sharedNoteMeta, tabsApi]);
+
     // Shared-with-me personal notes
     const getSharedNoteMeta = async () => {
         const loaded = await loadSharedNotesMeta(myself, accessToken);
@@ -1952,9 +1973,19 @@ export const useNoteManagement = (
             // backend; those codes exist only to drive the sidebar bucket
             // and the route, so alias to the personal load path here.
             // Capture which SECTION the click came from before the type
-            // is normalized — that's the only moment the bucket is
-            // knowable, and the tab has to carry it from here on.
-            const bucket = bucketFromNoteType(noteType);
+            // is normalized — the tab has to carry the bucket from here.
+            //
+            // A caller saying "my" is a DEFAULT, not knowledge: activity
+            // clicks, push URLs and history rows all say 1 because the
+            // backend only has three types. Verify it against the loaded
+            // meta lists, or a team note opened from any of those paths
+            // lands under the My Notes header with no sidebar row. An
+            // explicit "shared"/"team" from the sidebar is trusted as-is.
+            let bucket = bucketFromNoteType(noteType);
+            if (bucket === "my") {
+                if (teamNoteMeta.some((n) => n.noteId === noteId)) bucket = "team";
+                else if (sharedNoteMeta.some((n) => n.noteId === noteId)) bucket = "shared";
+            }
             noteType = toBackendNoteType(noteType);
             if (noteType === 1) {
                 const cached = await noteService.getPersonalNote(noteId);
