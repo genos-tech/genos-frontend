@@ -12,6 +12,7 @@ import HubRoundedIcon from "@mui/icons-material/HubRounded";
 import KeyboardRoundedIcon from "@mui/icons-material/KeyboardRounded";
 import LanguageRoundedIcon from "@mui/icons-material/LanguageRounded";
 import LightModeRoundedIcon from "@mui/icons-material/LightModeRounded";
+import LockRoundedIcon from "@mui/icons-material/LockRounded";
 import NotificationsRoundedIcon from "@mui/icons-material/NotificationsRounded";
 import PaletteRoundedIcon from "@mui/icons-material/PaletteRounded";
 import PlaylistAddCheckRoundedIcon from "@mui/icons-material/PlaylistAddCheckRounded";
@@ -617,6 +618,11 @@ export const LlmModelSection = () => {
     // when `current.effort` is missing from an older payload.
     const currentEffort = data.current.effort || "low";
     const effortsForProvider = (data.efforts ?? []).filter((e) => e.provider === currentProvider);
+    // Rungs above the tier's max_effort ceiling come back locked — the
+    // server would CLAMP them, so the picker must not offer them
+    // (UX tier model §5; a padlock is fine on a settings control).
+    // Absent on older payloads → nothing locked.
+    const lockedEfforts = new Set(effortsForProvider.filter((e) => e.locked).map((e) => e.effort));
     const effortLabel = (e: string) =>
         e === "low"
             ? t.settings.llmModel.effortLow
@@ -747,11 +753,25 @@ export const LlmModelSection = () => {
                             void setEffort(currentProvider, value);
                         }}
                     >
-                        {(["low", "medium", "high"] as const).map((e) => (
-                            <Option key={e} value={e}>
-                                <Typography level="body-sm">{effortLabel(e)}</Typography>
-                            </Option>
-                        ))}
+                        {(["low", "medium", "high"] as const).map((e) => {
+                            const locked = lockedEfforts.has(e);
+                            return (
+                                <Option key={e} disabled={locked} value={e}>
+                                    <Stack alignItems="center" direction="row" spacing={0.75}>
+                                        {locked && <LockRoundedIcon fontSize="small" />}
+                                        <Typography level="body-sm">{effortLabel(e)}</Typography>
+                                        {locked && (
+                                            <Typography
+                                                level="body-xs"
+                                                sx={{ color: "text.tertiary" }}
+                                            >
+                                                {t.settings.llmModel.effortLockedHint}
+                                            </Typography>
+                                        )}
+                                    </Stack>
+                                </Option>
+                            );
+                        })}
                     </Select>
                 </Stack>
             ) : (

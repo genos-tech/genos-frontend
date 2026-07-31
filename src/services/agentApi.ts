@@ -244,6 +244,17 @@ export interface AgentFeatures {
     // breaker still uses the ask counter) but no longer describe any
     // limit the user is subject to — render credits instead.
     credits?: CreditsBlock;
+    // UX-pillar capability dimensions (UX tier model). Optional so an
+    // older backend still type-checks; permissive for every tier until
+    // the server-side flip. `integrations` drives the Integrations
+    // page locks; the others let in-app UI adapt without new fetches.
+    agent_tool_level?: "read" | "act" | "organize";
+    max_effort?: "low" | "medium" | "high";
+    auto_effort?: boolean;
+    agent_memory?: "none" | "own" | "team";
+    agent_history_retention_days?: number | null;
+    integrations?: ("web" | "google_calendar" | "github")[];
+    digest_cadence?: "weekly" | "daily" | null;
 }
 
 export async function fetchAgentFeatures(accessToken: string): Promise<AgentFeatures | null> {
@@ -284,6 +295,11 @@ export interface AgentEffortEntry {
     model_label: string;
     daily_limit: number | null;
     used_today: number;
+    // True when this rung sits above the tier's max_effort ceiling —
+    // the server would CLAMP it, so the picker renders it locked with
+    // an upgrade hint instead of offering it. Optional: absent on
+    // older backends means nothing is locked.
+    locked?: boolean;
 }
 
 export interface AgentModels {
@@ -296,6 +312,9 @@ export interface AgentModels {
     // otherwise — which makes FE/API deploys skew-proof in both
     // directions (no FE flag to coordinate).
     efforts?: AgentEffortEntry[];
+    // The tier's effort ceiling (present alongside `efforts` on newer
+    // backends). Rungs above it come back `locked: true`.
+    max_effort?: "low" | "medium" | "high";
     // Cross-cutting per-tier daily quotas, mirroring AgentFeatures.
     // Folded into this payload so the Settings UI loads everything it
     // needs in one round-trip.
