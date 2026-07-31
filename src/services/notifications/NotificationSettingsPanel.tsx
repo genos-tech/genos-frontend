@@ -12,6 +12,7 @@ import {
     Typography,
 } from "@mui/joy";
 
+import { useDigestPreference } from "../../hooks/common/useDigestPreference";
 import { fmt, Messages, useTranslation } from "../../i18n";
 import { CATEGORY_BY_KEY, CATEGORY_GROUPS, CoarseGroup, NotificationCategory } from "./categories";
 import { useNotificationsContext } from "./NotificationsContext";
@@ -78,6 +79,11 @@ const labelForTargetType = (targetType: MutedTargetType, t: Messages): string =>
 export const NotificationSettingsPanel = () => {
     const ctx = useNotificationsContext();
     const { t } = useTranslation();
+    // Proactive digest opt-out — server-backed, independent of the
+    // browser-push preferences (the digest also lands in the Inbox, so
+    // it is NOT gated by masterEnabled). Above the early return: hooks
+    // must run unconditionally.
+    const { digestEnabled, setDigestEnabled } = useDigestPreference();
     if (!ctx) return null;
 
     const {
@@ -355,6 +361,29 @@ export const NotificationSettingsPanel = () => {
                     })}
                 </Stack>
             )}
+
+            <Divider sx={{ mt: 1.5 }} />
+
+            {/* Proactive digest (UX tier model §8). Disabled while the
+                server value is unknown — flashing a default that then
+                snaps reads like the setting changed itself. */}
+            <Stack
+                alignItems="center"
+                direction="row"
+                justifyContent="space-between"
+                spacing={2}
+                sx={{ mt: 1.5 }}
+            >
+                <Box sx={{ minWidth: 0, flex: 1 }}>
+                    <Typography level="title-sm">{settingsMessages.digestHeading}</Typography>
+                    <Typography level="body-xs">{settingsMessages.digestDescription}</Typography>
+                </Box>
+                <Switch
+                    checked={digestEnabled ?? true}
+                    disabled={digestEnabled === null}
+                    onChange={(e) => setDigestEnabled(e.target.checked)}
+                />
+            </Stack>
         </Sheet>
     );
 };

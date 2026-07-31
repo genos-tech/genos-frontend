@@ -67,6 +67,11 @@ export const services = {
                 "Show desktop notifications when the tab is in the background, or an in-app toast when it's foreground but you're on a different screen.",
             browserPermissionLabel: "Browser permission:",
             allow: "Allow",
+            // Proactive digest (UX tier model §8) — server-backed
+            // opt-out; whether/how often it fires comes from the plan.
+            digestHeading: "Genos digest",
+            digestDescription:
+                "A short personal digest from Genos, delivered to your inbox (weekly on Pro, daily on Max).",
             mutedChatsHeading: "Muted chats ({count})",
             noMutedChats: "No muted chats. Use the bell icon in any chat header to mute it.",
             mutedTargetsHeading: "Muted items ({count})",
