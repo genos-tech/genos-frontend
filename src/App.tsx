@@ -10,7 +10,7 @@ import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-
 
 import { CalendarModalProvider, useCalendarModalState } from "./context/CalendarModalContext";
 import { HashMentionDataProvider } from "./context/HashMentionDataContext";
-import { createThrottledRefresh } from "./context/hashMentionRefresh";
+import { createThrottledRefresh, NOTE_LIST_POLL_MS } from "./context/hashMentionRefresh";
 import {
     MentionGroupModalProvider,
     useMentionGroupModalState,
@@ -288,6 +288,11 @@ export const App = () => {
         void useNM.getTaskNoteMeta();
         void useNM.getChatNoteMeta();
         void useNM.getSharedNoteMeta();
+        // Team Notes postdate this refresh and were never added, so a
+        // folder someone shared with you — or a note they filed in one
+        // you can already see — stayed missing until a full reload.
+        void useNM.getTeamNoteFolders();
+        void useNM.getTeamNoteMeta();
         // The project LIST only. Deliberately NOT `loadProjectsAndTasks`,
         // which calls `setCurrentProject` when it finds a joined project —
         // a background refresh must never yank the user's open project out
@@ -327,6 +332,31 @@ export const App = () => {
     useEffect(() => {
         window.addEventListener("focus", refreshHashMentionData);
         return () => window.removeEventListener("focus", refreshHashMentionData);
+    }, [refreshHashMentionData]);
+
+    // `focus` only fires on a blur→focus round trip, so a user parked on
+    // the page never saw anything a teammate created — the reported
+    // "I can't get new notes until I refresh". Two cheaper signals cover
+    // that gap:
+    //
+    //   * `visibilitychange` — catches tab switches inside one window,
+    //     which don't always emit `focus`.
+    //   * a slow poll while the tab is VISIBLE — the only trigger that
+    //     works when the user never leaves at all. Deliberately paused
+    //     when hidden so background tabs cost nothing.
+    //
+    // Both go through the same 30s throttle as everything else, so the
+    // extra listeners can't multiply the request rate.
+    useEffect(() => {
+        const onVisible = () => {
+            if (document.visibilityState === "visible") refreshHashMentionData();
+        };
+        document.addEventListener("visibilitychange", onVisible);
+        const timer = setInterval(onVisible, NOTE_LIST_POLL_MS);
+        return () => {
+            document.removeEventListener("visibilitychange", onVisible);
+            clearInterval(timer);
+        };
     }, [refreshHashMentionData]);
 
     // Backing data for the "#" mention menu (tasks / notes / GM chats /

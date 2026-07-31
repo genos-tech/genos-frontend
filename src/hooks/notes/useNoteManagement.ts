@@ -330,6 +330,18 @@ export interface NoteManagementState {
     popInitialNote: () => Promise<void>;
 }
 
+// Cheap structural equality for the meta/folder arrays a background
+// refresh re-fetches. They're small, flat, and serialized in a stable
+// server-side order, so JSON comparison is both correct and far cheaper
+// than the re-render it avoids.
+const sameJson = (a: unknown, b: unknown): boolean => {
+    try {
+        return JSON.stringify(a) === JSON.stringify(b);
+    } catch {
+        return false;
+    }
+};
+
 export const useNoteManagement = (
     myself: UserProps,
     accessToken: string | null
@@ -1534,12 +1546,18 @@ export const useNoteManagement = (
     // Team Notes — the shared "general" space
     // ------------------------------------------------------------------
 
+    // Both loaders are now on a poll, so they keep the PREVIOUS array
+    // when nothing changed. Without that, every tick hands back a fresh
+    // array identity, which invalidates the `useMemo` trees built on it
+    // and re-renders the whole sidebar on a timer for no reason.
     const getTeamNoteFolders = async () => {
-        setTeamNoteFolders(await loadTeamNoteFolders(myself, accessToken));
+        const loaded = await loadTeamNoteFolders(myself, accessToken);
+        setTeamNoteFolders((prev) => (sameJson(prev, loaded) ? prev : loaded));
     };
 
     const getTeamNoteMeta = async () => {
-        setTeamNoteMeta(await loadTeamNotesMeta(myself, accessToken));
+        const loaded = await loadTeamNotesMeta(myself, accessToken);
+        setTeamNoteMeta((prev) => (sameJson(prev, loaded) ? prev : loaded));
     };
 
     const createTeamNoteFolderAction = async (
