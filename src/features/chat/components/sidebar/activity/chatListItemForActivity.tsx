@@ -7,7 +7,16 @@
 // on react-vs-@mui ordering.
 /* eslint-disable react/jsx-sort-props */
 import * as React from "react";
-import { Box, ListDivider, ListItem, Stack, Typography } from "@mui/joy";
+import {
+    Box,
+    ListDivider,
+    ListItem,
+    Modal,
+    ModalClose,
+    ModalDialog,
+    Stack,
+    Typography,
+} from "@mui/joy";
 import ListItemButton from "@mui/joy/ListItemButton";
 import { useColorScheme } from "@mui/joy/styles";
 import { useNavigate } from "react-router-dom";
@@ -34,6 +43,7 @@ import { ChatNoteProps, MyNoteProps, TaskNoteProps } from "../../../../../types/
 import { ProjectProps, TaskProps } from "../../../../../types/tasks";
 import { getLocalCurrentTimestamp } from "../../../../../utils/dateUtils";
 import { toggleMessagesPane } from "../../../../../utils/sidebarUtils";
+import { NoteAccessRequestPanel } from "../../../../notes/common/components/NoteAccessRequestPanel";
 import { loadSpecificNote } from "../../../../notes/common/services/loadSpecificNote";
 import { loadSpecificTask } from "../../../../tasks/services/loadSpecificTask";
 import { useActivityStatus } from "../../../hooks/useActivityStatus";
@@ -133,6 +143,13 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
     const { accessToken } = useAuth();
     const { t } = useTranslation();
     const navigate = useNavigate();
+    // Set when a mentioned note turns out to be inaccessible — opens the
+    // request-access panel in place of dead-ending on the generic
+    // permission toast.
+    const [deniedNote, setDeniedNote] = React.useState<{
+        noteId: number;
+        noteType: 1 | 2 | 3;
+    } | null>(null);
 
     const { groupedReactions, updateActivityReadStatus } = useActivityStatus({
         activity,
@@ -590,9 +607,19 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
         if (!useNM || !noteTypeForActivity) return;
         const noteId = activity.chatId;
         const fetched = await loadSpecificNote(myself, noteTypeForActivity, noteId, accessToken);
-        // Bail on any non-note result: `undefined` (load failure) OR the
-        // `{ error: "forbidden" }` 403 marker — the latter is truthy, so
-        // a `!fetched`-only guard would set the marker as a fake note.
+        // A 403 means the user was mentioned in a note they can't open.
+        // Bailing silently left them with only the generic "You don't
+        // have permission to do that" toast and no way forward — so
+        // surface the request-access panel instead. `noteId` +
+        // `noteType` come off the activity itself, which is all that
+        // panel needs; the failed fetch would only have supplied
+        // deep-link coordinates we don't require here.
+        if (fetched?.error === "forbidden") {
+            setDeniedNote({ noteId, noteType: noteTypeForActivity });
+            return;
+        }
+        // Any other non-note result (undefined = load failure) still
+        // bails — the 403 marker is truthy, hence the check above.
         if (!fetched || fetched.error) {
             return;
         }
@@ -852,6 +879,22 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                     opacity: isDark ? 0.04 : 0.06,
                 }}
             />
+            {/* Mentioned in a note you can't open. The panel only needs
+                the note's id + type, both of which the activity already
+                carries — so this works even though the fetch that would
+                have supplied the deep-link coordinates 403'd. */}
+            <Modal open={deniedNote !== null} onClose={() => setDeniedNote(null)}>
+                <ModalDialog sx={{ maxWidth: 460 }}>
+                    <ModalClose />
+                    {deniedNote && (
+                        <NoteAccessRequestPanel
+                            noteId={deniedNote.noteId}
+                            noteType={deniedNote.noteType}
+                            socket={socket}
+                        />
+                    )}
+                </ModalDialog>
+            </Modal>
         </React.Fragment>
     );
 };
