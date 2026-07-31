@@ -101,7 +101,7 @@ export const spotlight = {
         chatFallback: "Chat",
         task: "Task",
         project: "Project",
-        notePersonal: "Personal note",
+        notePersonal: "My note",
         noteTask: "Task note",
         noteChat: "Chat note",
         noteFallback: "Note",

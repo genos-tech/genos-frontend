@@ -15,7 +15,7 @@ export const agentApproval = {
     subtask: "Sub-task",
     subtasksOf: "Sub-tasks of {task}",
     blockedBy: "Blocked by {tasks}",
-    newPersonalNote: "New personal note",
+    newPersonalNote: "New note in My Notes",
     newTaskNote: "New task note",
     updateNote: "Update note: {note}",
     task: "Task",
