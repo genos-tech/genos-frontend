@@ -353,9 +353,13 @@ export const useNoteManagement = (
     // Initialize NoteService
     const noteService = new NoteService();
     // Note type and tabs
-    const [currentNoteType, setCurrentNoteType] = useState<number>(
-        Number(localStorage.getItem("currentNoteType") || "1")
-    );
+    const [currentNoteType, setCurrentNoteType] = useState<number>(() => {
+        const stored = Number(localStorage.getItem("currentNoteType") || "1");
+        // 0 was the Home dashboard, which no longer exists. Anyone whose
+        // last session ended there has it persisted, and would otherwise
+        // boot into a section that renders nothing.
+        return stored === 0 ? 1 : stored;
+    });
     const [tabItems, setTabItems] = useState<any[]>([]);
     const [selectedTabIndex, setSelectedTabIndex] = useState(0);
 
@@ -876,6 +880,40 @@ export const useNoteManagement = (
         setTeamNoteMeta(patch);
     };
 
+    // Same "whichever list holds it" treatment for the other two
+    // mutations a personal-backed note undergoes. Each preserves array
+    // identity when the note isn't in that list, so unrelated sections
+    // don't rebuild their memoized trees.
+    const removePersonalNoteMeta = (noteIds: Set<number>) => {
+        const drop = <T extends { noteId: number }>(rows: T[]): T[] =>
+            rows.some((r) => noteIds.has(r.noteId))
+                ? rows.filter((r) => !noteIds.has(r.noteId))
+                : rows;
+        setMyNoteMeta(drop);
+        setSharedNoteMeta(drop);
+        setTeamNoteMeta(drop);
+    };
+
+    const setPersonalNoteFolderMeta = (noteId: number, folderId: number | null) => {
+        const move = <T extends { noteId: number }>(rows: T[]): T[] =>
+            rows.some((r) => r.noteId === noteId)
+                ? rows.map((r) =>
+                      r.noteId === noteId ? { ...r, folderId, parentNoteId: null } : r
+                  )
+                : rows;
+        setMyNoteMeta(move);
+        setSharedNoteMeta(move);
+        setTeamNoteMeta(move);
+    };
+
+    // A note blocks deletion when it still has children, wherever it
+    // lives — checking `myNoteMeta` alone let a team parent be deleted
+    // and orphan its children.
+    const personalNoteHasChildren = (noteId: number): boolean =>
+        myNoteMeta.some((n) => n.parentNoteId === noteId) ||
+        sharedNoteMeta.some((n) => n.parentNoteId === noteId) ||
+        teamNoteMeta.some((n) => n.parentNoteId === noteId);
+
     const getMyNoteMeta = async () => {
         const loadedNotes: MyNoteMetaProps[] = await loadMyNoteMeta(myself, accessToken);
         if (loadedNotes.length > 0) {
@@ -1135,11 +1173,7 @@ export const useNoteManagement = (
         if (!accessToken) return;
         // Optimistic meta patch. The backend re-roots the note (folders
         // own ROOT notes), so parentNoteId flips to null too.
-        setMyNoteMeta((prev) =>
-            prev.map((n) =>
-                n.noteId === noteId ? { ...n, folderId: folderId, parentNoteId: null } : n
-            )
-        );
+        setPersonalNoteFolderMeta(noteId, folderId);
         // Cache write-through — keeps every consumer of the open note
         // (and the next autosave snapshot) on post-move truth. Autosave
         // no longer sends parent_note_id at all, so this is
@@ -1315,7 +1349,7 @@ export const useNoteManagement = (
     // ------------------------------------------------------------------
     const deleteMyNoteById = async (noteId: number): Promise<boolean> => {
         if (!accessToken) return false;
-        if (myNoteMeta.some((n) => n.parentNoteId === noteId)) return false;
+        if (personalNoteHasChildren(noteId)) return false;
         await deleteMyNote(myself, noteId, accessToken);
         const tab = tabsApi.tabs.find((t) => t.kind === "my" && t.noteId === noteId);
         if (tab) tabsApi.closeTab(tab.id);
@@ -1325,7 +1359,7 @@ export const useNoteManagement = (
         } catch {
             // Local cache cleanup is best-effort.
         }
-        setMyNoteMeta((prev) => prev.filter((n) => n.noteId !== noteId));
+        removePersonalNoteMeta(new Set([noteId]));
         // Don't null `currentMyNote` here: `closeTab` above already settled
         // the active tab (to a neighbour, or none), and the active-tab sync
         // effect drives `currentMyNote` off THAT. An extra null-write races

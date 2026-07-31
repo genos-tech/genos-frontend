@@ -63,7 +63,7 @@ type TrailItem =
 // stays gray — both are presets without a current functional caller.
 const colorSchemes = {
     primary: {
-        // My Notes — indigo. Harmonized with getNoteTypeColor (NoteHomeContent)
+        // My Notes — indigo.
         // and getTypeColor (RecentNoteItem) so all 3 surfaces match.
         bg: "linear-gradient(135deg, rgba(99,102,241,0.12) 0%, rgba(99,102,241,0.08) 100%)",
         iconBg: "linear-gradient(135deg, #818cf8 0%, #6366f1 100%)",

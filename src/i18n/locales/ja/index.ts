@@ -1345,7 +1345,6 @@ export const ja: DeepPartial<Messages> = {
                 "子ノートを移動すると親ノートから切り離されます。そのノート自身のサブノートは一緒に移動します。",
         },
         sidebar: {
-            home: "ホーム",
             favorites: "お気に入り",
             recents: "最近の項目",
             workspaces: "ワークスペース",
@@ -1381,29 +1380,6 @@ export const ja: DeepPartial<Messages> = {
             milestoneFallback: "マイルストーン {milestoneId}",
             taskFallback: "タスク #{taskId}",
             someone: "誰か",
-        },
-        home: {
-            title: "ノートダッシュボード",
-            subtitle: "アイデアを書き留め、考えを整理し、生産性を保ちましょう",
-            statMyNotes: "マイノート",
-            statTaskNotes: "タスクノート",
-            statChatNotes: "チャットノート",
-            statFavorites: "お気に入り",
-            quickActions: "クイックアクション",
-            openMyNotes: "マイノートを開く",
-            openTaskNotes: "タスクノートを開く",
-            openChatNotes: "チャットノートを開く",
-            recentNotes: "最近のノート",
-            favorites: "お気に入り",
-            favoritesEmpty:
-                "お気に入りはまだありません。ノートにスターを付けてここに追加しましょう。",
-            bigEmptyTitle: "まだノートを開いていません",
-            bigEmptyBody:
-                "上のクイックアクションでセクションに移動するか、ノートにスターを付けてお気に入りに登録しましょう。",
-            proTip: "ヒント",
-            tip1: "重要なノートにスターを付けると、お気に入りからすぐにアクセスできます",
-            tip2: "ノートを階層構造で整理すると、より見やすくなります",
-            tip3: "ノートをタスクやチャットに紐づけて、文脈をシームレスに保ちましょう",
         },
         placeholder: {
             selectFromSidebar: "サイドバーから選択",
