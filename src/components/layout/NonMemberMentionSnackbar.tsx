@@ -4,6 +4,7 @@ import { Button, Snackbar, Stack, Typography } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../context/AuthContext";
+import { grantTeamFolderMembers } from "../../features/notes/team-notes/services/teamNoteFolderMembers";
 import { fmt, useTranslation } from "../../i18n";
 import {
     addMembersToGMWithNotice,
@@ -15,6 +16,9 @@ import {
     unregisterNonMemberMentionListener,
 } from "../../services/nonMemberMentionBus";
 import { UserProps } from "../../types/admin";
+
+// Folder roles: 1 owner, 2 editor, 3 viewer.
+const FOLDER_ROLE_EDITOR = 2;
 
 type Props = {
     myself: UserProps;
@@ -30,13 +34,12 @@ type Props = {
  * note kinds, chat messages — without any of them knowing it exists.
  *
  * It PROMPTS rather than auto-adding: an @mention is a strong hint, but
- * adding someone to a project or channel is a permissions change and
- * shouldn't happen implicitly from typing in a text field.
+ * adding someone to a project, channel or folder is a permissions
+ * change and shouldn't happen implicitly from typing in a text field.
  *
- * Team-folder mentions are reported but not actionable here — folder
- * access is granted per folder with a role, which is what the folder's
- * own members dialog is for. Those get the warning without the button,
- * which still fixes the real problem (the mentioner had no idea).
+ * All three scopes are actionable, but they're granted differently — a
+ * project and a channel take a member row, a team folder takes a ROLE.
+ * That's why the add branches per scope rather than sharing one call.
  */
 export const NonMemberMentionSnackbar = ({ myself, socket }: Props) => {
     const { t } = useTranslation();
@@ -52,7 +55,6 @@ export const NonMemberMentionSnackbar = ({ myself, socket }: Props) => {
     if (!pending) return null;
 
     const names = pending.users.map((u) => u.userName).join(", ");
-    const canAdd = pending.scopeKind === "project" || pending.scopeKind === "channel";
 
     const handleAdd = async () => {
         setBusy(true);
@@ -70,13 +72,23 @@ export const NonMemberMentionSnackbar = ({ myself, socket }: Props) => {
                     // they're added silently.
                     socket,
                 });
-            } else {
+            } else if (pending.scopeKind === "channel") {
                 await addMembersToGMWithNotice({
                     channelId: pending.scopeId,
                     gmName: pending.scopeName,
                     memberIds,
                     socket,
                 });
+            } else {
+                // Team folder — grants a folder role rather than adding
+                // to a member list. Editor matches what the folder's own
+                // invite dialog defaults to, so the two paths agree.
+                await grantTeamFolderMembers(
+                    myself,
+                    Number(pending.scopeId),
+                    { userIds: memberIds, roleId: FOLDER_ROLE_EDITOR },
+                    accessToken
+                );
             }
         } finally {
             setBusy(false);
@@ -99,26 +111,19 @@ export const NonMemberMentionSnackbar = ({ myself, socket }: Props) => {
         >
             <Stack alignItems="center" direction="row" spacing={1.5}>
                 <Typography level="body-sm">
-                    {fmt(
-                        canAdd
-                            ? t.common.nonMemberMention.body
-                            : t.common.nonMemberMention.bodyNoAction,
-                        { names, scope: pending.scopeName }
-                    )}
+                    {fmt(t.common.nonMemberMention.body, { names, scope: pending.scopeName })}
                 </Typography>
-                {canAdd && (
-                    <Button
-                        color="warning"
-                        disabled={busy}
-                        loading={busy}
-                        size="sm"
-                        startDecorator={<PersonAddAltRoundedIcon sx={{ fontSize: 16 }} />}
-                        variant="solid"
-                        onClick={() => void handleAdd()}
-                    >
-                        {t.common.nonMemberMention.add}
-                    </Button>
-                )}
+                <Button
+                    color="warning"
+                    disabled={busy}
+                    loading={busy}
+                    size="sm"
+                    startDecorator={<PersonAddAltRoundedIcon sx={{ fontSize: 16 }} />}
+                    variant="solid"
+                    onClick={() => void handleAdd()}
+                >
+                    {t.common.nonMemberMention.add}
+                </Button>
                 <Button color="neutral" size="sm" variant="plain" onClick={() => setPending(null)}>
                     {t.common.nonMemberMention.dismiss}
                 </Button>

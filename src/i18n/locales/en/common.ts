@@ -218,7 +218,6 @@ export const common = {
     // Shown after an @mention of someone who can't reach the surface.
     nonMemberMention: {
         body: "{names} can't see this — they're not in {scope}.",
-        bodyNoAction: "{names} can't see this — they don't have access to {scope}.",
         add: "Add them",
         dismiss: "Dismiss",
     },
