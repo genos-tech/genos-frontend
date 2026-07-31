@@ -20,6 +20,7 @@ import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { useTranslation } from "../../../../i18n";
 import { MyNoteMetaTreeNode, TeamNoteFolderTreeNode } from "../../../../types/notes";
 import { NOTE_ROLE_VIEWER } from "../../common/utils/noteRoles";
+import { folderTagChipSx } from "../modals/ModalTeamFolderTags";
 
 // Actions bubbled up to the single modal host in NoteSidebar — one
 // modal instance serves every folder row, same as My Notes.
@@ -215,18 +216,7 @@ function TeamNoteFolderTreeComponent(props: TeamNoteFolderTreeProps) {
                         the rest are reachable from the tag filter and the
                         tag dialog. */}
                     {folder.tags.slice(0, 2).map((tag) => (
-                        <Chip
-                            key={tag.tagId}
-                            size="sm"
-                            variant="soft"
-                            sx={{
-                                "--Chip-minHeight": "16px",
-                                flexShrink: 0,
-                                fontSize: 10,
-                                maxWidth: 72,
-                                ...(tag.color ? { backgroundColor: tag.color } : {}),
-                            }}
-                        >
+                        <Chip key={tag.tagId} size="sm" sx={folderTagChipSx(tag)} variant="solid">
                             {tag.name}
                         </Chip>
                     ))}

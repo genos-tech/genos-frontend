@@ -102,8 +102,15 @@ export const notes = {
         // Tags
         editTags: "Tags…",
         tagsTitle: 'Tags for "{name}"',
+        tagsHint:
+            "Click a tag to apply it to this folder. Renaming, recolouring or deleting a tag " +
+            "affects every folder that uses it.",
         noTags: "No tags yet. Create one below to start organizing folders.",
         newTagPlaceholder: "New tag name",
+        newTagPreview: "Preview",
+        tagUsage: "used by {count} folder(s)",
+        tagEditFailed: "Couldn't update that tag. It may already exist, or not be yours to edit.",
+        tagDeleteFailed: "Couldn't delete that tag. Only its creator or the team owner can.",
     },
     chatTypes: {
         dm: "DM",
