@@ -22,7 +22,10 @@ import { loadSharedNotesMeta } from "../../features/notes/common/services/loadSh
 import { loadSpecificNote } from "../../features/notes/common/services/loadSpecificNote";
 import { restoreNoteVersion as restoreNoteVersionApi } from "../../features/notes/common/services/restoreNoteVersion";
 import { updateNoteRole } from "../../features/notes/common/services/updateNoteRole";
-import { toBackendNoteType } from "../../features/notes/common/utils/noteTypeAlias";
+import {
+    bucketFromNoteType,
+    toBackendNoteType,
+} from "../../features/notes/common/utils/noteTypeAlias";
 import {
     addNoteFavorite,
     FavoriteNotesMetaResponse,
@@ -95,7 +98,7 @@ import { initCurrentMyNoteChain, updataMyNoteChain } from "./myNote";
 import { updataTaskNoteChain } from "./taskNote";
 import { ChatPanelNoteApi, useChatPanelNote } from "./useChatPanelNote";
 import { getCachedNote, upsertNoteCache } from "./useNoteData";
-import { NoteTabsApi, noteToTab, useNoteTabs } from "./useNoteTabs";
+import { NoteBucket, NoteTabsApi, noteToTab, useNoteTabs } from "./useNoteTabs";
 
 /** Optional overrides for the create-note handlers. Used by markdown
  *  import: `title` replaces the auto-numbered "New … Note (n)" name and
@@ -760,10 +763,21 @@ export const useNoteManagement = (
     ) => {
         if (!accessToken) return;
 
+        // Which sidebar space the note belongs to. A folder id alone
+        // can't tell us — a My Notes folder id and a Team Notes folder
+        // id are drawn from the same sequence — so ask the loaded team
+        // folder list. Without this the note lands in My Notes state
+        // locally even though the server filed it in the team space,
+        // and it only appears in the right section after a reload.
+        const isTeam = folderId != null && teamNoteFolders.some((f) => f.folderId === folderId);
+        const bucket: NoteBucket = isTeam ? "team" : "my";
+
         try {
             const noteTitle =
                 opts?.title ??
-                `${parentNoteId ? "Child" : "New"} My Note (${newlyCreatedMyNotes.length + 1})`;
+                `${parentNoteId ? "Child" : "New"} ${isTeam ? "Team" : "My"} Note (${
+                    newlyCreatedMyNotes.length + 1
+                })`;
             const newNote = await createEmptyMyNote(
                 myself,
                 parentNoteId,
@@ -779,23 +793,35 @@ export const useNoteManagement = (
                 setCurrentMyNote(newNote);
                 addNote(1, newNote);
                 upsertNoteCache(myNote);
-                tabsApi.openTab(noteToTab(myNote, myself.teamId));
+                tabsApi.openTab(noteToTab(myNote, myself.teamId, bucket));
                 recordNoteOpen(myNote.noteId, 1);
 
-                setMyNoteMeta((prev) => [
-                    {
-                        noteType: newNote.noteType,
-                        noteId: newNote.noteId,
-                        parentNoteId: newNote.parentNoteId,
-                        // Server-confirmed placement, falling back to the
-                        // requested folder for older backends that don't
-                        // echo folderId.
-                        folderId: newNote.folderId ?? folderId ?? null,
-                        title: newNote.title,
-                        tsUpdated: newNote.tsUpdated,
-                    },
-                    ...prev,
-                ]);
+                const metaRow = {
+                    noteType: newNote.noteType,
+                    noteId: newNote.noteId,
+                    parentNoteId: newNote.parentNoteId,
+                    // Server-confirmed placement, falling back to the
+                    // requested folder for older backends that don't
+                    // echo folderId.
+                    folderId: newNote.folderId ?? folderId ?? null,
+                    title: newNote.title,
+                    tsUpdated: newNote.tsUpdated,
+                };
+
+                // Route the optimistic row to the section the note
+                // actually belongs to. `/note/personal/meta/` excludes
+                // team-folder notes server-side, so putting a team note
+                // in `myNoteMeta` made it appear under My Notes until
+                // the next reload — and never under Team Notes.
+                if (isTeam) {
+                    setTeamNoteMeta((prev) => [
+                        { ...metaRow, ownerId: myself.userId, ownerName: null, roleId: 1 },
+                        ...prev,
+                    ]);
+                    setCurrentNoteType(8);
+                } else {
+                    setMyNoteMeta((prev) => [metaRow, ...prev]);
+                }
                 if (folderId != null) expandFolder(folderId);
             }
         } catch (error) {
@@ -1795,13 +1821,17 @@ export const useNoteManagement = (
             // Shared (4) and team (8) notes live in note_type=1 on the
             // backend; those codes exist only to drive the sidebar bucket
             // and the route, so alias to the personal load path here.
+            // Capture which SECTION the click came from before the type
+            // is normalized — that's the only moment the bucket is
+            // knowable, and the tab has to carry it from here on.
+            const bucket = bucketFromNoteType(noteType);
             noteType = toBackendNoteType(noteType);
             if (noteType === 1) {
                 const cached = await noteService.getPersonalNote(noteId);
                 if (cached) {
                     const myNote: MyNoteProps = { ...cached, noteType: 1 };
                     upsertNoteCache(myNote);
-                    tabsApi.openTab(noteToTab(myNote, myself.teamId));
+                    tabsApi.openTab(noteToTab(myNote, myself.teamId, bucket));
                     return;
                 }
                 const fetched: MyNoteProps = await loadSpecificNote(
@@ -1813,7 +1843,7 @@ export const useNoteManagement = (
                 if (fetched && !fetched.error && fetched.noteType === 1) {
                     addNote(1, fetched);
                     upsertNoteCache(fetched);
-                    tabsApi.openTab(noteToTab(fetched, myself.teamId));
+                    tabsApi.openTab(noteToTab(fetched, myself.teamId, bucket));
                 }
                 return;
             }

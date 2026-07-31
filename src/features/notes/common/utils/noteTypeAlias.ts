@@ -30,3 +30,20 @@ export const toBackendNoteType = (noteType: number): BackendNoteType => {
 // rows open through MyNoteMain / MyNoteEditorPanel and the `my-note:`
 // Yjs room.
 export const isPersonalNoteBucket = (noteType: number): boolean => PERSONAL_ALIASES.has(noteType);
+
+// The sidebar bucket a personal-backed noteType came from. The inverse
+// of `toBackendNoteType`, and the value a tab must carry: once a note is
+// open, nothing downstream can tell My / Shared / Team apart, because
+// all three are note_type 1.
+export const bucketFromNoteType = (noteType: number): "my" | "shared" | "team" => {
+    if (noteType === 4) return "shared";
+    if (noteType === 8) return "team";
+    return "my";
+};
+
+// …and back again, for the sidebar highlight + header label.
+export const noteTypeFromBucket = (bucket: "my" | "shared" | "team"): number => {
+    if (bucket === "shared") return 4;
+    if (bucket === "team") return 8;
+    return 1;
+};
