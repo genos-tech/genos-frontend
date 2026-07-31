@@ -82,6 +82,7 @@ import {
 import { useNoteTreeState } from "../hooks/useNoteTreeState";
 import { exportNoteMarkdown } from "../services/exportNoteMarkdown";
 import { ChatNoteMetaTreeNode, TaskNoteMetaTreeNode } from "../types/noteTypes";
+import { toBackendNoteType } from "../utils/noteTypeAlias";
 import { FavoriteNoteItem } from "./FavoriteNoteItem";
 import { FavoriteNoteSection } from "./FavoriteNoteSection";
 import { GroupedNoteSection } from "./GroupedNoteSection";
@@ -625,8 +626,9 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     );
 
     // Builds the shared "Export as Markdown" row-menu item for any note
-    // row. noteType 4 (shared personal notes) is served by the personal
-    // endpoint, so it exports as type 1.
+    // row. Sidebar buckets 4 (shared) and 8 (team) are UI-only aliases
+    // of personal notes, so the export goes out as type 1 — see
+    // `toBackendNoteType`.
     const buildExportMenuItem = (
         noteType: number,
         node: { noteId: number; title: string }
@@ -637,7 +639,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         onClick: () => {
             void exportNoteMarkdown({
                 myself,
-                noteType: noteType === 4 ? 1 : (noteType as 1 | 2 | 3),
+                noteType: toBackendNoteType(noteType),
                 noteId: node.noteId,
                 accessToken,
                 fallbackTitle: node.title,

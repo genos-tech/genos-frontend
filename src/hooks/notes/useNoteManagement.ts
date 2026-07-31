@@ -22,6 +22,7 @@ import { loadSharedNotesMeta } from "../../features/notes/common/services/loadSh
 import { loadSpecificNote } from "../../features/notes/common/services/loadSpecificNote";
 import { restoreNoteVersion as restoreNoteVersionApi } from "../../features/notes/common/services/restoreNoteVersion";
 import { updateNoteRole } from "../../features/notes/common/services/updateNoteRole";
+import { toBackendNoteType } from "../../features/notes/common/utils/noteTypeAlias";
 import {
     addNoteFavorite,
     FavoriteNotesMetaResponse,
@@ -1467,9 +1468,9 @@ export const useNoteManagement = (
         // fetch directly from the backend. The IDB row + the in-memory
         // cache row still hold the pre-restore body, so `loadNote`'s
         // cache-first path would short-circuit and leave the editor
-        // showing stale content. Shared notes (noteType=4) live on the
-        // personal note table on the backend, so we transparently alias.
-        const backendNoteType = noteType === 4 ? 1 : noteType;
+        // showing stale content. Shared (4) and team (8) notes live on
+        // the personal note table on the backend, so we alias.
+        const backendNoteType = toBackendNoteType(noteType);
         const fetched = await loadSpecificNote(myself, backendNoteType, noteId, accessToken);
         if (fetched && !fetched.error) {
             // Write through every cache layer so the next tab open / data
@@ -1791,13 +1792,10 @@ export const useNoteManagement = (
     const loadNote = async (noteType: number, noteId: number, _nextTabIndex: number) => {
         if (!accessToken) return;
         try {
-            // Shared personal notes live in note_type=1 on the backend; the
-            // separate noteType=4 only exists to drive the sidebar bucket
-            // and the route, so we transparently alias to the personal
-            // note load path here.
-            if (noteType === 4) {
-                noteType = 1;
-            }
+            // Shared (4) and team (8) notes live in note_type=1 on the
+            // backend; those codes exist only to drive the sidebar bucket
+            // and the route, so alias to the personal load path here.
+            noteType = toBackendNoteType(noteType);
             if (noteType === 1) {
                 const cached = await noteService.getPersonalNote(noteId);
                 if (cached) {
