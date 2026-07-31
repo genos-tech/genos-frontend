@@ -158,15 +158,21 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
     const myRoleId = getMyNoteRoleId(currentNoteMembers, myself.userId);
     const isEditable = isNoteEditableForRole(myRoleId);
 
-    // Restrict the @-suggestion picker to users who have explicit
-    // access to this note (the owner + anyone granted a role via
-    // `NotePermissionMaster`). Personal notes have no implicit access
-    // path, so this is the canonical list. Preventative UX only —
-    // backend still notifies via the `note_mention` socket event for
-    // any user who slips through (e.g., role revoked mid-session).
-    const mentionableUsers = currentNoteMembers
-        .map((m) => useTEM.teamMemberProfiles[m.userId])
-        .filter((u): u is NonNullable<typeof u> => !!u);
+    // The @-picker offers the whole team, matching every other editor
+    // (task note, chat note, chat, task comment).
+    //
+    // It used to be restricted to this note's explicit
+    // `NotePermissionMaster` grants, on the reasoning that a personal
+    // note has no implicit access path so that list was canonical. Two
+    // things broke that:
+    //
+    //   * this editor now also serves TEAM notes, whose access comes
+    //     from the FOLDER, not per-note grants — so `currentNoteMembers`
+    //     is near-empty for them and the picker offered almost nobody;
+    //   * it was only ever a proxy for "don't mention someone who can't
+    //     see this", which the non-member-mention prompt now handles
+    //     properly — it tells you, and offers to fix it.
+    const mentionableUsers = useTEM.teamMembers;
 
     const { mode } = useColorScheme();
     const { accessToken } = useAuth();
