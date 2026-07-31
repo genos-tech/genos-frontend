@@ -76,6 +76,9 @@ export interface NoteTabsApi {
     switchTab: (tabId: string) => void;
     closeTab: (tabId: string) => void;
     updateTabTitle: (noteId: number, kind: NoteTabKind, title: string) => void;
+    // Heal a personal-backed tab's bucket once the team/shared meta
+    // lists can disambiguate it — see the implementation note.
+    updateTabBucket: (noteId: number, bucket: NoteBucket) => void;
     rehydrate: () => Promise<void>;
 }
 
@@ -401,6 +404,27 @@ export const useNoteTabs = ({ myself, accessToken }: UseNoteTabsOptions): NoteTa
         // Since title isn't persisted, we skip the persist call here.
     }, []);
 
+    // Correct a personal-backed tab's bucket after the fact. Needed
+    // because the bucket is often UNKNOWABLE at open time: a tab opened
+    // from an activity click or a push URL says "my" (the backend only
+    // has three note types), and the team/shared meta lists that could
+    // disambiguate may not have loaded yet. useNoteManagement heals the
+    // bucket through this once they arrive. Unlike a title change the
+    // bucket IS persisted, so the strip is re-saved.
+    const updateTabBucket = useCallback(
+        (noteId: number, bucket: NoteBucket) => {
+            const current = tabsRef.current;
+            const idx = current.findIndex((t) => t.kind === "my" && t.noteId === noteId);
+            if (idx === -1) return;
+            const tab = current[idx];
+            if (tab.kind !== "my" || (tab.bucket ?? "my") === bucket) return;
+            const next = current.map((t, i) => (i === idx ? { ...t, bucket } : t));
+            setTabs(next);
+            persist(next, activeIdRef.current);
+        },
+        [persist]
+    );
+
     const rehydrate = useCallback(async () => {
         if (!myself.teamId) return;
         hasHydratedRef.current = false;
@@ -483,6 +507,7 @@ export const useNoteTabs = ({ myself, accessToken }: UseNoteTabsOptions): NoteTa
         switchTab,
         closeTab,
         updateTabTitle,
+        updateTabBucket,
         rehydrate,
     };
 };
