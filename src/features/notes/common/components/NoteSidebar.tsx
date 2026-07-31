@@ -1387,6 +1387,19 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             renderGrouped: renderMyNotesSection,
             isGrouped: true,
         },
+        // Shared Notes sits directly under My Notes: both are personal
+        // notes (type 4 is a UI-only alias of 1), so they read as one
+        // pair — "mine" then "mine, from someone else" — before the
+        // task/chat sections that are anchored to other surfaces.
+        {
+            noteType: 4,
+            icon: <ShareRoundedIcon sx={{ fontSize: 18 }} />,
+            title: t.notes.sidebar.sharedNotes,
+            state: sharedNoteState,
+            renderTree: null,
+            renderGrouped: renderGroupedSharedNotes,
+            isGrouped: true,
+        },
         {
             noteType: 2,
             icon: <AssignmentRoundedIcon sx={{ fontSize: 18 }} />,
@@ -1403,15 +1416,6 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             state: chatNoteState,
             renderTree: null,
             renderGrouped: renderGroupedChatNotes,
-            isGrouped: true,
-        },
-        {
-            noteType: 4,
-            icon: <ShareRoundedIcon sx={{ fontSize: 18 }} />,
-            title: t.notes.sidebar.sharedNotes,
-            state: sharedNoteState,
-            renderTree: null,
-            renderGrouped: renderGroupedSharedNotes,
             isGrouped: true,
         },
     ];
