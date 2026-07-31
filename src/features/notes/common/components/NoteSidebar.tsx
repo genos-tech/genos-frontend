@@ -18,6 +18,7 @@ import WindowRoundedIcon from "@mui/icons-material/WindowRounded";
 import {
     Box,
     Button,
+    Chip,
     Divider,
     List,
     ListItem,
@@ -68,6 +69,7 @@ import {
 } from "../../team-notes/components/TeamNoteFolderTree";
 import { ModalTeamFolderMembers } from "../../team-notes/modals/ModalTeamFolderMembers";
 import { ModalTeamFolderName } from "../../team-notes/modals/ModalTeamFolderName";
+import { ModalTeamFolderTags } from "../../team-notes/modals/ModalTeamFolderTags";
 import { useNoteUnread } from "../context/NoteUnreadContext";
 import {
     chatContainerId,
@@ -599,6 +601,8 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         | null
     >(null);
     const [teamMembersModal, setTeamMembersModal] = useState<TeamNoteFolderTreeNode | null>(null);
+    const [teamTagsModal, setTeamTagsModal] = useState<TeamNoteFolderTreeNode | null>(null);
+    const [teamTagFilter, setTeamTagFilter] = useState<Set<number>>(new Set());
     const [teamMoveModal, setTeamMoveModal] = useState<TeamNoteFolderTreeNode | null>(null);
     const [teamDeleteModal, setTeamDeleteModal] = useState<TeamNoteFolderTreeNode | null>(null);
     // Populated when the server REFUSES a delete because the subtree
@@ -926,8 +930,40 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         onRenameFolder: (folder) => setTeamFolderModal({ mode: "rename", folder }),
         onMoveFolder: (folder) => setTeamMoveModal(folder),
         onManageMembers: (folder) => setTeamMembersModal(folder),
+        onEditTags: (folder) => setTeamTagsModal(folder),
         onDeleteFolder: (folder) => setTeamDeleteModal(folder),
     };
+
+    // Tag filter. Filtering keeps a folder's ANCESTORS visible even when
+    // they don't carry the tag themselves — otherwise a matching
+    // subfolder would vanish along with its unmatched parent, and the
+    // filter would look broken rather than selective.
+    const visibleTeamFolderIds = useMemo<Set<number> | null>(() => {
+        if (teamTagFilter.size === 0) return null;
+        const byId = new Map(useNM.teamNoteFolders.map((f) => [f.folderId, f]));
+        const keep = new Set<number>();
+        for (const folder of useNM.teamNoteFolders) {
+            if (!folder.tags.some((tg) => teamTagFilter.has(tg.tagId))) continue;
+            let cursor: number | null = folder.folderId;
+            const seen = new Set<number>();
+            while (cursor != null && !seen.has(cursor)) {
+                seen.add(cursor);
+                keep.add(cursor);
+                cursor = byId.get(cursor)?.parentFolderId ?? null;
+            }
+        }
+        return keep;
+    }, [teamTagFilter, useNM.teamNoteFolders]);
+
+    // Every tag actually in use, so the filter row never offers a chip
+    // that would match nothing.
+    const teamFolderTags = useMemo(() => {
+        const map = new Map<number, { tagId: number; name: string }>();
+        useNM.teamNoteFolders.forEach((f) =>
+            f.tags.forEach((tg) => map.set(tg.tagId, { tagId: tg.tagId, name: tg.name }))
+        );
+        return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
+    }, [useNM.teamNoteFolders]);
 
     // Team Notes section: the folder forest, headed by a "New team
     // folder" affordance. No drop targets — moving a note between team
@@ -964,6 +1000,32 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                     </Typography>
                 </ListItemButton>
             </ListItem>
+            {teamFolderTags.length > 0 && (
+                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, px: 1, py: 0.5 }}>
+                    {teamFolderTags.map((tag) => {
+                        const isOn = teamTagFilter.has(tag.tagId);
+                        return (
+                            <Chip
+                                key={tag.tagId}
+                                color={isOn ? "primary" : "neutral"}
+                                size="sm"
+                                sx={{ "--Chip-minHeight": "18px", fontSize: 10 }}
+                                variant={isOn ? "solid" : "outlined"}
+                                onClick={() =>
+                                    setTeamTagFilter((prev) => {
+                                        const next = new Set(prev);
+                                        if (next.has(tag.tagId)) next.delete(tag.tagId);
+                                        else next.add(tag.tagId);
+                                        return next;
+                                    })
+                                }
+                            >
+                                {tag.name}
+                            </Chip>
+                        );
+                    })}
+                </Box>
+            )}
             {useNM.teamNoteFolderForest.rootFolders.length === 0 ? (
                 <Box sx={{ px: 2, py: 1 }}>
                     <Typography
@@ -977,15 +1039,18 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                     </Typography>
                 </Box>
             ) : (
-                useNM.teamNoteFolderForest.rootFolders.map((folder) => (
-                    <TeamNoteFolderTree
-                        key={`team-folder-${folder.folderId}`}
-                        actions={teamFolderActions}
-                        folder={folder}
-                        renderNote={renderTeamNoteTreeItem}
-                        useNM={useNM}
-                    />
-                ))
+                useNM.teamNoteFolderForest.rootFolders
+                    .filter((f) => !visibleTeamFolderIds || visibleTeamFolderIds.has(f.folderId))
+                    .map((folder) => (
+                        <TeamNoteFolderTree
+                            key={`team-folder-${folder.folderId}`}
+                            actions={teamFolderActions}
+                            folder={folder}
+                            renderNote={renderTeamNoteTreeItem}
+                            useNM={useNM}
+                            visibleFolderIds={visibleTeamFolderIds}
+                        />
+                    ))
             )}
         </Box>
     );
@@ -1891,6 +1956,13 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                     void useNM.getTeamNoteFolders();
                     void useNM.getTeamNoteMeta();
                 }}
+            />
+            <ModalTeamFolderTags
+                folder={teamTagsModal}
+                myself={myself}
+                open={teamTagsModal !== null}
+                onClose={() => setTeamTagsModal(null)}
+                onChanged={() => void useNM.getTeamNoteFolders()}
             />
             <ModalMoveToFolder
                 currentFolderId={teamMoveModal?.parentFolderId ?? null}

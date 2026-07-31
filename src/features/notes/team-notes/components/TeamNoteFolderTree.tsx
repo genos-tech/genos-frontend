@@ -8,10 +8,11 @@ import FileUploadRoundedIcon from "@mui/icons-material/FileUploadRounded";
 import FolderOpenRoundedIcon from "@mui/icons-material/FolderOpenRounded";
 import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
 import GroupRoundedIcon from "@mui/icons-material/GroupRounded";
+import LocalOfferRoundedIcon from "@mui/icons-material/LocalOfferRounded";
 import LockRoundedIcon from "@mui/icons-material/LockRounded";
 import NoteAddRoundedIcon from "@mui/icons-material/NoteAddRounded";
 import PublicRoundedIcon from "@mui/icons-material/PublicRounded";
-import { Box, List, ListItem, ListItemButton, ListItemContent, Typography } from "@mui/joy";
+import { Box, Chip, List, ListItem, ListItemButton, ListItemContent, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { MoreMenu, MoreMenuItem } from "../../../../components/ui/MoreMenu";
@@ -29,6 +30,7 @@ export type TeamFolderActionHandlers = {
     onRenameFolder: (folder: TeamNoteFolderTreeNode) => void;
     onMoveFolder: (folder: TeamNoteFolderTreeNode) => void;
     onManageMembers: (folder: TeamNoteFolderTreeNode) => void;
+    onEditTags: (folder: TeamNoteFolderTreeNode) => void;
     onDeleteFolder: (folder: TeamNoteFolderTreeNode) => void;
 };
 
@@ -37,6 +39,10 @@ type TeamNoteFolderTreeProps = {
     useNM: NoteManagementState;
     actions: TeamFolderActionHandlers;
     renderNote: (node: MyNoteMetaTreeNode) => ReactNode;
+    // Tag filter result, or null when no filter is active. Ancestors of
+    // a match are included by the caller so a matching subfolder stays
+    // reachable through its (unmatched) parent.
+    visibleFolderIds?: Set<number> | null;
     depth?: number;
 };
 
@@ -55,7 +61,7 @@ type TeamNoteFolderTreeProps = {
 // content across ACL boundaries, so moves go through the explicit
 // "Move to folder" dialog where the destination is a deliberate choice.
 function TeamNoteFolderTreeComponent(props: TeamNoteFolderTreeProps) {
-    const { folder, useNM, actions, renderNote, depth = 0 } = props;
+    const { folder, useNM, actions, renderNote, visibleFolderIds = null, depth = 0 } = props;
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const { t } = useTranslation();
@@ -97,6 +103,12 @@ function TeamNoteFolderTreeComponent(props: TeamNoteFolderTreeProps) {
                 label: t.notes.teamNotes.manageAccess,
                 icon: <GroupRoundedIcon sx={{ fontSize: 16 }} />,
                 onClick: () => actions.onManageMembers(folder),
+            },
+            {
+                id: "tags",
+                label: t.notes.teamNotes.editTags,
+                icon: <LocalOfferRoundedIcon sx={{ fontSize: 16 }} />,
+                onClick: () => actions.onEditTags(folder),
             },
             {
                 id: "rename",
@@ -198,6 +210,39 @@ function TeamNoteFolderTreeComponent(props: TeamNoteFolderTreeProps) {
                         </Typography>
                     </ListItemContent>
 
+                    {/* Tags, capped at two on the row. The sidebar is
+                        narrow and the folder NAME has to stay readable;
+                        the rest are reachable from the tag filter and the
+                        tag dialog. */}
+                    {folder.tags.slice(0, 2).map((tag) => (
+                        <Chip
+                            key={tag.tagId}
+                            size="sm"
+                            variant="soft"
+                            sx={{
+                                "--Chip-minHeight": "16px",
+                                flexShrink: 0,
+                                fontSize: 10,
+                                maxWidth: 72,
+                                ...(tag.color ? { backgroundColor: tag.color } : {}),
+                            }}
+                        >
+                            {tag.name}
+                        </Chip>
+                    ))}
+                    {folder.tags.length > 2 && (
+                        <Typography
+                            level="body-xs"
+                            sx={{
+                                color: isDark ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.4)",
+                                flexShrink: 0,
+                                fontSize: 10,
+                            }}
+                        >
+                            +{folder.tags.length - 2}
+                        </Typography>
+                    )}
+
                     {/* Visibility at a glance. Muted when inherited, so
                         "private because its parent is" reads differently
                         from "private in its own right". */}
@@ -248,16 +293,19 @@ function TeamNoteFolderTreeComponent(props: TeamNoteFolderTreeProps) {
 
                 {isExpanded && (
                     <List sx={{ pl: 1.5, "--List-nestedInsetStart": "16px" }}>
-                        {folder.childFolders.map((child) => (
-                            <TeamNoteFolderTree
-                                key={`team-folder-${child.folderId}`}
-                                actions={actions}
-                                depth={depth + 1}
-                                folder={child}
-                                renderNote={renderNote}
-                                useNM={useNM}
-                            />
-                        ))}
+                        {folder.childFolders
+                            .filter((c) => !visibleFolderIds || visibleFolderIds.has(c.folderId))
+                            .map((child) => (
+                                <TeamNoteFolderTree
+                                    key={`team-folder-${child.folderId}`}
+                                    actions={actions}
+                                    depth={depth + 1}
+                                    folder={child}
+                                    renderNote={renderNote}
+                                    useNM={useNM}
+                                    visibleFolderIds={visibleFolderIds}
+                                />
+                            ))}
                         {folder.notes.map((note) => renderNote(note))}
                         {isEmpty && (
                             <Typography
