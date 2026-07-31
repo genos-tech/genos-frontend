@@ -151,7 +151,7 @@ describe("NoteWritePreview (create_note / update_note approvals)", () => {
             // Friendly-ized server-side to the folder's name.
             folder_id: "Research",
         });
-        expect(screen.getByText("New personal note")).toBeTruthy();
+        expect(screen.getByText("New note in My Notes")).toBeTruthy();
         expect(screen.getByText("Folder: Research")).toBeTruthy();
         expect(screen.getByText("Onboarding research")).toBeTruthy();
         expect(screen.getByText("Key findings")).toBeTruthy();
