@@ -127,6 +127,7 @@ export const UrlLinkModal = (props: UrlLinkModalProps) => {
         if (
             target.kind === "myNote" ||
             target.kind === "sharedNote" ||
+            target.kind === "teamNote" ||
             target.kind === "taskNote" ||
             target.kind === "chatNote"
         ) {
