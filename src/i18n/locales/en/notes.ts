@@ -80,7 +80,12 @@ export const notes = {
         membersTitle: 'Access to "{name}"',
         addPeople: "Add people",
         addGroup: "Add a whole group",
-        groupsHint: "Adding a group invites everyone in it right now.",
+        groupsHint:
+            "Invite everyone in a mention group, project, or group chat at once. " +
+            "Members are added as they are right now.",
+        sourceProject: "Project",
+        sourceGm: "Group chat",
+        memberCountApprox: "Everyone in the selected groups",
         invitedViaGroup: "via {group}",
         resyncGroup: "Re-sync group",
         resyncHint: "Add anyone who joined {group} since the invite.",

@@ -1882,6 +1882,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                 folder={teamMembersModal}
                 myself={myself}
                 open={teamMembersModal !== null}
+                useCM={useCM}
                 useTEM={useTEM}
                 onClose={() => setTeamMembersModal(null)}
                 onChanged={() => {
