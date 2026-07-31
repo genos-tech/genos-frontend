@@ -73,7 +73,11 @@ export type NoteFolderVisibility = "public" | "private";
 export type NoteFolderTagProps = {
     tagId: number;
     name: string;
+    // Chip background + foreground. Stored as a PAIR (not derived) so a
+    // folder tag renders identically to a project label — the palette
+    // hand-picks a readable text colour per swatch.
     color: string | null;
+    textColor: string | null;
 };
 
 export type TeamNoteFolderProps = MyNoteFolderProps & {
