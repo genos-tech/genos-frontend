@@ -99,6 +99,11 @@ export const notes = {
             "Ask them to move or delete their content first.",
         ownerLabel: "Created by {name}",
         memberCount: "{count} with access",
+        // Tags
+        editTags: "Tags…",
+        tagsTitle: 'Tags for "{name}"',
+        noTags: "No tags yet. Create one below to start organizing folders.",
+        newTagPlaceholder: "New tag name",
     },
     chatTypes: {
         dm: "DM",
