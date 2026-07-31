@@ -1389,13 +1389,19 @@ export const useNoteManagement = (
         }
     };
 
+    // Favorites are keyed by the BACKEND note type. The sidebar hands us
+    // a bucket code, so 4 (shared) and 8 (team) must be normalized first
+    // — otherwise a team note's star writes an unknown `note_type: 8`
+    // the server rejects, and the local key never matches the one the
+    // favorites list is built from.
     const isNoteFavorited = (noteId: number, noteType: number): boolean => {
-        return favoriteNoteIds.has(`${noteType}-${noteId}`);
+        return favoriteNoteIds.has(`${toBackendNoteType(noteType)}-${noteId}`);
     };
 
-    const toggleFavorite = async (noteId: number, noteType: number): Promise<boolean> => {
+    const toggleFavorite = async (noteId: number, bucketNoteType: number): Promise<boolean> => {
         if (!accessToken) return false;
 
+        const noteType = toBackendNoteType(bucketNoteType);
         const isFavorited = isNoteFavorited(noteId, noteType);
 
         try {

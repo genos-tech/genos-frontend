@@ -4,10 +4,18 @@ import { activityChannel } from "../../../../db/workers/channels";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { UserProps } from "../../../../types/admin";
 import { NoteUnreadValue, UnreadNote } from "../context/NoteUnreadContext";
+import { toBackendNoteType } from "../utils/noteTypeAlias";
 
 // Surface chatType (on activity rows) ↔ note_type. 6=my(1), 7=task(2), 8=chat(3).
+//
+// Callers pass a SIDEBAR bucket code, which for personal-backed notes is
+// 1, 4 (shared) or 8 (team) — all the same note_type 1. Normalizing here
+// is what keeps the unread key consistent with the one derived from the
+// activity feed; the raw `noteType + 5` arithmetic would map bucket 8 to
+// a surface 13 that no activity row carries, so team notes would never
+// show an unread dot and marking one read would be a no-op.
 const SURFACE_TO_NOTE_TYPE: Record<number, number> = { 6: 1, 7: 2, 8: 3 };
-const noteTypeToSurface = (noteType: number): number => noteType + 5;
+const noteTypeToSurface = (noteType: number): number => toBackendNoteType(noteType) + 5;
 
 /**
  * Derives note-unread state from the activity feed already synced into
@@ -64,7 +72,8 @@ export const useNoteMentionUnread = (
     }, [unreadActivities]);
 
     const isUnread = useCallback(
-        (noteType: number, noteId: number) => unreadKeys.has(`${noteType}:${noteId}`),
+        (noteType: number, noteId: number) =>
+            unreadKeys.has(`${toBackendNoteType(noteType)}:${noteId}`),
         [unreadKeys]
     );
 

@@ -129,8 +129,11 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
             // Recipients of a shared note are in the "Shared Notes"
             // bucket; emit a /shared/ link so when they click it the
             // sidebar opens the right section.
-            const isShared = useNM.currentNoteType === 4;
-            const segment = isShared ? "shared" : "my";
+            // The link must land the recipient in the SAME sidebar
+            // section, so the segment comes from the open note's bucket
+            // rather than assuming My Notes.
+            const segment =
+                activeBucket === "shared" ? "shared" : activeBucket === "team" ? "team" : "my";
             const noteUrl = `${window.location.origin}/workspace/notes/${segment}/${useNM.currentMyNote.noteId}`;
             try {
                 await navigator.clipboard.writeText(noteUrl);
