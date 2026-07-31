@@ -24,6 +24,7 @@ import {
 import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
 import { useAuth } from "../../../../context/AuthContext";
 import { useMentionGroupsContext } from "../../../../context/MentionGroupsContext";
+import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
@@ -47,8 +48,24 @@ type Props = {
     folder: TeamNoteFolderTreeNode | null;
     myself: UserProps;
     useTEM: TeamManagementState;
+    // Source of the project and GM invite options — both are "a set of
+    // people" the user already maintains elsewhere.
+    useCM: ChatManagementState;
     onClose: () => void;
     onChanged: () => void;
+};
+
+// One selectable group, flattened across the three kinds so the picker
+// is a single list rather than three. `memberUserIds` is present only
+// for mention groups, whose roster arrives inline with the group list;
+// project and GM rosters are resolved server-side at invite time, so
+// their preview count is unknown until then.
+type GroupOption = {
+    key: string;
+    type: NoteFolderInviteGroup["type"];
+    id: string;
+    label: string;
+    memberUserIds: string[] | null;
 };
 
 // Roster for one team folder, plus the invite affordance the whole
@@ -60,7 +77,7 @@ type Props = {
 // request. The group is still sent to the server, which re-expands it
 // authoritatively; the client list is never the permission source.
 export const ModalTeamFolderMembers = (props: Props) => {
-    const { open, folder, myself, useTEM, onClose, onChanged } = props;
+    const { open, folder, myself, useTEM, useCM, onClose, onChanged } = props;
     const { t } = useTranslation();
     const { accessToken } = useAuth();
     const hostZIndex = useNoteModalHostZIndex();
@@ -94,18 +111,62 @@ export const ModalTeamFolderMembers = (props: Props) => {
 
     const existingIds = useMemo(() => new Set(members.map((m) => m.userId)), [members]);
 
+    // The three group kinds the backend can expand, flattened into one
+    // picker. Projects come from their PM channel (one per project) and
+    // GMs from the channel list — both are already loaded, so offering
+    // them costs no extra request.
+    const groupOptions = useMemo<GroupOption[]>(() => {
+        const out: GroupOption[] = mentionGroups.map((g) => ({
+            key: `mention_group:${g.groupId}`,
+            type: "mention_group",
+            id: String(g.groupId),
+            label: `@${g.groupName}`,
+            memberUserIds: g.memberUserIds.map(String),
+        }));
+        for (const chat of useCM.allChats ?? []) {
+            if (chat.chatType === 3 && chat.project?.projectId != null) {
+                out.push({
+                    key: `project:${chat.project.projectId}`,
+                    type: "project",
+                    id: String(chat.project.projectId),
+                    label: chat.chatName,
+                    memberUserIds: null,
+                });
+            } else if (chat.chatType === 2) {
+                out.push({
+                    key: `gm:${chat.chatId}`,
+                    type: "gm",
+                    id: String(chat.chatId),
+                    label: chat.chatName,
+                    memberUserIds: null,
+                });
+            }
+        }
+        return out;
+    }, [mentionGroups, useCM.allChats]);
+
     // Everyone the pending selection would add — individuals plus every
-    // member of each pending group, minus people who already have access.
+    // KNOWN member of each pending group, minus people who already have
+    // access. Project/GM rosters aren't known client-side, so the count
+    // is a lower bound; the label says so.
     const previewUserIds = useMemo(() => {
         const out = new Set(pendingUserIds);
         for (const g of pendingGroups) {
-            if (g.type !== "mention_group") continue;
-            const group = mentionGroups.find((mg) => String(mg.groupId) === g.id);
-            group?.memberUserIds.forEach((uid) => out.add(String(uid)));
+            const opt = groupOptions.find((o) => o.type === g.type && o.id === g.id);
+            opt?.memberUserIds?.forEach((uid) => out.add(uid));
         }
         existingIds.forEach((id) => out.delete(id));
         return Array.from(out);
-    }, [pendingUserIds, pendingGroups, mentionGroups, existingIds]);
+    }, [pendingUserIds, pendingGroups, groupOptions, existingIds]);
+
+    const previewIsExact = useMemo(
+        () =>
+            pendingGroups.every((g) => {
+                const opt = groupOptions.find((o) => o.type === g.type && o.id === g.id);
+                return opt?.memberUserIds != null;
+            }),
+        [pendingGroups, groupOptions]
+    );
 
     const candidates = useMemo(() => {
         const q = search.trim().toLowerCase();
@@ -117,8 +178,11 @@ export const ModalTeamFolderMembers = (props: Props) => {
     }, [search, useTEM.teamMembers, existingIds, pendingUserIds]);
 
     const availableGroups = useMemo(
-        () => mentionGroups.filter((g) => !pendingGroups.some((p) => p.id === String(g.groupId))),
-        [mentionGroups, pendingGroups]
+        () =>
+            groupOptions.filter(
+                (o) => !pendingGroups.some((p) => p.type === o.type && p.id === o.id)
+            ),
+        [groupOptions, pendingGroups]
     );
 
     const submit = async () => {
@@ -147,13 +211,13 @@ export const ModalTeamFolderMembers = (props: Props) => {
         onChanged();
     };
 
+    // Resolve a grant's recorded provenance back to a readable name.
+    // Falls back to the raw kind when the group has since been deleted —
+    // the grant itself is a snapshot and outlives its source.
     const groupLabel = (m: TeamNoteFolderMemberProps): string | null => {
         if (!m.viaGroupType || !m.viaGroupId) return null;
-        if (m.viaGroupType === "mention_group") {
-            const g = mentionGroups.find((mg) => String(mg.groupId) === m.viaGroupId);
-            return g ? `@${g.groupName}` : null;
-        }
-        return m.viaGroupType;
+        const opt = groupOptions.find((o) => o.type === m.viaGroupType && o.id === m.viaGroupId);
+        return opt?.label ?? m.viaGroupType;
     };
 
     return (
@@ -237,16 +301,24 @@ export const ModalTeamFolderMembers = (props: Props) => {
                             startDecorator={<GroupRoundedIcon sx={{ fontSize: 16 }} />}
                             value={null}
                             onChange={(_, value) => {
-                                if (!value) return;
+                                const opt = availableGroups.find((o) => o.key === value);
+                                if (!opt) return;
                                 setPendingGroups((prev) => [
                                     ...prev,
-                                    { type: "mention_group", id: String(value) },
+                                    { type: opt.type, id: opt.id },
                                 ]);
                             }}
                         >
                             {availableGroups.map((g) => (
-                                <Option key={g.groupId} value={String(g.groupId)}>
-                                    @{g.groupName} · {g.memberCount}
+                                <Option key={g.key} value={g.key}>
+                                    {g.label}
+                                    {g.memberUserIds
+                                        ? ` · ${g.memberUserIds.length}`
+                                        : ` · ${
+                                              g.type === "project"
+                                                  ? t.notes.teamNotes.sourceProject
+                                                  : t.notes.teamNotes.sourceGm
+                                          }`}
                                 </Option>
                             ))}
                         </Select>
@@ -287,22 +359,25 @@ export const ModalTeamFolderMembers = (props: Props) => {
                         {(pendingGroups.length > 0 || pendingUserIds.length > 0) && (
                             <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mt: 1 }}>
                                 {pendingGroups.map((g) => {
-                                    const grp = mentionGroups.find(
-                                        (mg) => String(mg.groupId) === g.id
+                                    const opt = groupOptions.find(
+                                        (o) => o.type === g.type && o.id === g.id
                                     );
                                     return (
                                         <Chip
-                                            key={`g-${g.id}`}
+                                            key={`g-${g.type}-${g.id}`}
                                             color="primary"
                                             size="sm"
                                             variant="soft"
                                             onClick={() =>
                                                 setPendingGroups((prev) =>
-                                                    prev.filter((p) => p.id !== g.id)
+                                                    prev.filter(
+                                                        (p) =>
+                                                            !(p.type === g.type && p.id === g.id)
+                                                    )
                                                 )
                                             }
                                         >
-                                            @{grp?.groupName ?? g.id} ✕
+                                            {opt?.label ?? g.id} ✕
                                         </Chip>
                                     );
                                 })}
@@ -339,11 +414,13 @@ export const ModalTeamFolderMembers = (props: Props) => {
                                 <Option value={ROLE_VIEWER}>{t.notes.sharing.roles.viewer}</Option>
                             </Select>
                             <Box sx={{ flexGrow: 1 }}>
-                                {previewUserIds.length > 0 && (
+                                {(previewUserIds.length > 0 || pendingGroups.length > 0) && (
                                     <Typography level="body-xs" sx={{ opacity: 0.75 }}>
-                                        {fmt(t.notes.teamNotes.memberCount, {
-                                            count: previewUserIds.length,
-                                        })}
+                                        {previewIsExact
+                                            ? fmt(t.notes.teamNotes.memberCount, {
+                                                  count: previewUserIds.length,
+                                              })
+                                            : t.notes.teamNotes.memberCountApprox}
                                     </Typography>
                                 )}
                             </Box>
