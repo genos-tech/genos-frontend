@@ -9,6 +9,7 @@ const NOTE_TYPE_MAP: Record<string, number> = {
     task: 2,
     chat: 3,
     shared: 4,
+    team: 8,
 };
 
 const NOTE_TYPE_REVERSE_MAP: Record<number, string> = {
@@ -16,6 +17,7 @@ const NOTE_TYPE_REVERSE_MAP: Record<number, string> = {
     2: "task",
     3: "chat",
     4: "shared",
+    8: "team",
 };
 
 // Chat type constants matching the existing codebase

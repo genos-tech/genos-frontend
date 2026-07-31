@@ -59,6 +59,73 @@ export type MyNoteFolderForest = {
     rootNotes: MyNoteMetaTreeNode[];
 };
 
+// ---------------------------------------------------------------------
+// Team Notes — the shared "general" space.
+//
+// Notes here are personal notes (noteType 1); the FOLDER carries the
+// ACL, which is why a team folder extends MyNoteFolderProps rather than
+// being its own thing. `visibility` is the folder's OWN setting and is
+// null when it inherits; `effectiveVisibility` is what it actually
+// behaves as once resolved up the chain.
+// ---------------------------------------------------------------------
+export type NoteFolderVisibility = "public" | "private";
+
+export type NoteFolderTagProps = {
+    tagId: number;
+    name: string;
+    color: string | null;
+};
+
+export type TeamNoteFolderProps = MyNoteFolderProps & {
+    visibility: NoteFolderVisibility | null;
+    effectiveVisibility: NoteFolderVisibility | null;
+    myRoleId: number;
+    ownerId: string;
+    ownerName: string | null;
+    memberCount: number;
+    tags: NoteFolderTagProps[];
+};
+
+export type TeamNoteFolderTreeNode = TeamNoteFolderProps & {
+    childFolders: TeamNoteFolderTreeNode[];
+    notes: MyNoteMetaTreeNode[];
+};
+
+export type TeamNoteFolderForest = {
+    rootFolders: TeamNoteFolderTreeNode[];
+    // Notes whose folder isn't readable shouldn't reach the client at
+    // all, so this stays empty in practice — it exists so the team
+    // forest can reuse `buildMyNoteFolderForest` unchanged.
+    rootNotes: MyNoteMetaTreeNode[];
+};
+
+// A note in the team space. Same extension SharedNoteMetaProps makes,
+// since both surface notes owned by someone else.
+export type TeamNoteMetaProps = MyNoteMetaProps & {
+    ownerId: string;
+    ownerName: string | null;
+    roleId: number;
+};
+
+// One row of a team folder's roster. `viaGroupType`/`viaGroupId` record
+// that the grant came from expanding a group rather than an individual
+// pick, so the UI can show "invited via @eng-team" and offer a re-sync.
+export type TeamNoteFolderMemberProps = {
+    userId: string;
+    userName: string;
+    avatarUrl: string | null;
+    roleId: number;
+    viaGroupType: "mention_group" | "project" | "gm" | null;
+    viaGroupId: string | null;
+    tsCreated: string;
+};
+
+// A group that can be expanded into folder members in one click.
+export type NoteFolderInviteGroup = {
+    type: "mention_group" | "project" | "gm";
+    id: string;
+};
+
 export type TaskNoteMetaProps = {
     noteType: number;
     noteId: number;

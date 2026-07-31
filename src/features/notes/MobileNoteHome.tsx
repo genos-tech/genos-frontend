@@ -133,6 +133,8 @@ export const MobileNoteHome = (props: MobileNoteHomeProps) => {
         if (useNM.currentNoteType === 2) return useNM.currentTaskNote?.title || "Task Note";
         if (useNM.currentNoteType === 3) return useNM.currentChatNote?.title || "Chat Note";
         if (useNM.currentNoteType === 4) return useNM.currentMyNote?.title || "Shared Note";
+        // 8 = Team Notes; like shared notes it is backed by currentMyNote.
+        if (useNM.currentNoteType === 8) return useNM.currentMyNote?.title || "Team Note";
         return "Notes";
     })();
 

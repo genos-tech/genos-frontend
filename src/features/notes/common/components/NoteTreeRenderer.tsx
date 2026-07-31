@@ -18,6 +18,7 @@ import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { useTranslation } from "../../../../i18n";
 import { useNoteUnread } from "../context/NoteUnreadContext";
 import { BaseNoteTreeNode } from "../types/noteTypes";
+import { isPersonalNoteBucket } from "../utils/noteTypeAlias";
 
 interface NoteTreeRendererProps<T extends BaseNoteTreeNode> {
     node: T;
@@ -67,7 +68,9 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
                   ? useNM.currentTaskNote?.noteId
                   : noteType === 3
                     ? useNM.currentChatNote?.noteId
-                    : noteType === 4
+                    : // 4 (shared) and 8 (team) are UI-only buckets over
+                      // personal notes, so both highlight off currentMyNote.
+                      isPersonalNoteBucket(noteType)
                       ? useNM.currentMyNote?.noteId
                       : 0);
 
