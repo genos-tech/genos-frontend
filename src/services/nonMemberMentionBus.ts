@@ -10,7 +10,13 @@
 // A module-level listener (not a context) because the interceptor lives
 // outside React and can't read one.
 
-export type NonMemberMentionScopeKind = "project" | "channel" | "team_folder";
+export type NonMemberMentionScopeKind =
+    | "project"
+    | "channel"
+    | "team_folder"
+    // A personal note. Not a membership at all — the remedy is
+    // SHARING the note, not adding someone to a container.
+    | "personal_note";
 
 export type NonMemberMentionPayload = {
     scopeKind: NonMemberMentionScopeKind;
@@ -37,7 +43,8 @@ const isValid = (value: unknown): value is NonMemberMentionPayload => {
     return (
         (p.scopeKind === "project" ||
             p.scopeKind === "channel" ||
-            p.scopeKind === "team_folder") &&
+            p.scopeKind === "team_folder" ||
+            p.scopeKind === "personal_note") &&
         typeof p.scopeId === "string" &&
         Array.isArray(p.users) &&
         p.users.length > 0

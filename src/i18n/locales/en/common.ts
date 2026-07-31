@@ -219,6 +219,8 @@ export const common = {
     nonMemberMention: {
         body: "{names} can't see this — they're not in {scope}.",
         add: "Add them",
+        share: "Share it",
+        bodyShare: "{names} can't see this — {scope} isn't shared with them.",
         dismiss: "Dismiss",
     },
 } as const;
