@@ -248,6 +248,9 @@ export const settings = {
         effortLowNote: "Fastest — quick answers for simple questions.",
         effortMediumNote: "Balanced speed and quality — right for most questions.",
         effortHighNote: "Takes longer — deepest reasoning for complex questions.",
+        // Rungs above the tier's ceiling render disabled with this hint
+        // (the server would clamp them anyway — see max_effort).
+        effortLockedHint: "Upgrade to unlock",
     },
     privacy: {
         heading: "Privacy & analytics",

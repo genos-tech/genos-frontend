@@ -8,6 +8,7 @@ import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import HubRoundedIcon from "@mui/icons-material/HubRounded";
 import LinkRoundedIcon from "@mui/icons-material/LinkRounded";
+import LockRoundedIcon from "@mui/icons-material/LockRounded";
 import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
 import VideoCameraFrontRoundedIcon from "@mui/icons-material/VideoCameraFrontRounded";
 import {
@@ -30,6 +31,7 @@ import {
     Typography,
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
+import { useNavigate } from "react-router-dom";
 
 import { CalendarEventModal } from "./components/CalendarEventModal";
 import { ConnectionsSection } from "./components/ConnectionsSection";
@@ -47,6 +49,7 @@ import { redirectToOAuthConnect } from "./services/oauth";
 
 import { AppTooltip } from "../../components/ui/AppTooltip";
 import { useAuth } from "../../context/AuthContext";
+import { fetchAgentFeatures } from "../../services/agentApi";
 import { useCalendarSources } from "../calendar/hooks/useCalendarSources";
 
 type TabKey = "connections" | "calendar" | "github";
@@ -625,11 +628,50 @@ const GithubTab = ({
     );
 };
 
+/** Tier gate (UX tier model §7): a connector the plan doesn't include
+ *  renders locked with an upgrade path. A padlock is acceptable here —
+ *  this is a settings surface, not the conversation. */
+const LockedIntegrationPanel = ({
+    label,
+    onUpgrade,
+}: {
+    label: string;
+    onUpgrade: () => void;
+}) => (
+    <Card sx={{ alignItems: "flex-start", gap: 1 }} variant="soft">
+        <Stack alignItems="center" direction="row" spacing={1}>
+            <LockRoundedIcon fontSize="small" />
+            <Typography level="title-sm">{label} isn&apos;t included in your plan</Typography>
+        </Stack>
+        <Typography level="body-sm" sx={{ color: "text.secondary" }}>
+            Upgrade to connect {label} and let Genos use it when answering.
+        </Typography>
+        <Button size="sm" variant="solid" onClick={onUpgrade}>
+            Compare plans
+        </Button>
+    </Card>
+);
+
 export const IntegrationsHome = () => {
     const { accessToken } = useAuth();
+    const navigate = useNavigate();
     const [tab, setTab] = useState<TabKey>("connections");
     const [data, setData] = useState<ConnectionsResponse | null>(null);
     const [loadingConnections, setLoadingConnections] = useState(true);
+    // The tier's integrations allowlist (/agent/features/). null =
+    // unknown (older backend, or the fetch failed) and renders
+    // PERMISSIVE — a fetch hiccup must never padlock a paying user.
+    const [tierIntegrations, setTierIntegrations] = useState<Set<string> | null>(null);
+
+    useEffect(() => {
+        if (!accessToken) return;
+        void fetchAgentFeatures(accessToken).then((f) => {
+            setTierIntegrations(f?.integrations ? new Set(f.integrations) : null);
+        });
+    }, [accessToken]);
+
+    const integrationAllowed = (name: "google_calendar" | "github") =>
+        tierIntegrations === null || tierIntegrations.has(name);
 
     const reload = useCallback(async () => {
         if (!accessToken) return;
@@ -703,15 +745,32 @@ export const IntegrationsHome = () => {
                     </TabPanel>
 
                     <TabPanel sx={{ px: 0 }} value="calendar">
-                        <CalendarTab
-                            accessToken={accessToken}
-                            calendarAuthorized={googleCalendarAuthorized}
-                            googleConnected={googleConnected}
-                        />
+                        {integrationAllowed("google_calendar") ? (
+                            <CalendarTab
+                                accessToken={accessToken}
+                                calendarAuthorized={googleCalendarAuthorized}
+                                googleConnected={googleConnected}
+                            />
+                        ) : (
+                            <LockedIntegrationPanel
+                                label="Google Calendar"
+                                onUpgrade={() => navigate("/workspace/plans")}
+                            />
+                        )}
                     </TabPanel>
 
                     <TabPanel sx={{ px: 0 }} value="github">
-                        <GithubTab accessToken={accessToken} githubConnected={githubConnected} />
+                        {integrationAllowed("github") ? (
+                            <GithubTab
+                                accessToken={accessToken}
+                                githubConnected={githubConnected}
+                            />
+                        ) : (
+                            <LockedIntegrationPanel
+                                label="GitHub"
+                                onUpgrade={() => navigate("/workspace/plans")}
+                            />
+                        )}
                     </TabPanel>
                 </Tabs>
             </Box>

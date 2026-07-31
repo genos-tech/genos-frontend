@@ -102,32 +102,54 @@ export interface PlanPrice {
     interval: string;
 }
 
+/** UX tier model capability vocabularies (mirror the server's TIER_QUOTAS). */
+export type AgentToolLevel = "read" | "act" | "organize";
+export type EffortLevel = "low" | "medium" | "high";
+export type AgentMemoryLevel = "none" | "own" | "team";
+export type IntegrationName = "web" | "google_calendar" | "github";
+export type DigestCadence = "weekly" | "daily";
+
+export interface PlanLimits {
+    llm_ask_daily: number | null;
+    web_search_daily: number | null;
+    task_create_monthly: number | null;
+    note_create_monthly: number | null;
+    message_retention_days: number | null;
+    upload_max_mb: number | null;
+    /**
+     * The plan's monthly AI credits. PRESENT ONLY when the server
+     * enforces credits — its presence is the render switch, the same
+     * payload-shape convention `credits` uses on /agent/features/.
+     *
+     * That is what stops this page advertising a limit the quota
+     * engine has stopped applying: under credits the daily ask and
+     * web-search caps still exist as numbers but bind nobody, so
+     * rendering them would be selling a limit that isn't one.
+     *
+     * `null` = unlimited (enterprise). Absent = the daily era.
+     */
+    monthly_ai_credits?: number | null;
+    /**
+     * UX-pillar capability dimensions (UX tier model). All optional so
+     * an older server payload still type-checks; they are tier CONFIG
+     * served by the public plans endpoint, permissive for every tier
+     * until the server-side flip.
+     */
+    agent_tool_level?: AgentToolLevel;
+    max_effort?: EffortLevel;
+    auto_effort?: boolean;
+    agent_memory?: AgentMemoryLevel;
+    agent_history_retention_days?: number | null;
+    integrations?: IntegrationName[];
+    digest_cadence?: DigestCadence | null;
+}
+
 export interface PlanTier {
     tier: "free" | "core" | "pro" | "max" | "enterprise";
     price: PlanPrice | null; // null = unavailable (contact-sales / Stripe dark)
     purchasable: boolean;
     contact_sales: boolean;
-    limits: {
-        llm_ask_daily: number | null;
-        web_search_daily: number | null;
-        task_create_monthly: number | null;
-        note_create_monthly: number | null;
-        message_retention_days: number | null;
-        upload_max_mb: number | null;
-        /**
-         * The plan's monthly AI credits. PRESENT ONLY when the server
-         * enforces credits — its presence is the render switch, the same
-         * payload-shape convention `credits` uses on /agent/features/.
-         *
-         * That is what stops this page advertising a limit the quota
-         * engine has stopped applying: under credits the daily ask and
-         * web-search caps still exist as numbers but bind nobody, so
-         * rendering them would be selling a limit that isn't one.
-         *
-         * `null` = unlimited (enterprise). Absent = the daily era.
-         */
-        monthly_ai_credits?: number | null;
-    };
+    limits: PlanLimits;
 }
 
 export interface BillingPlans {
