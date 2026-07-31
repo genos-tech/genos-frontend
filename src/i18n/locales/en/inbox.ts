@@ -25,6 +25,7 @@ export const inbox = {
         gmRequest: "GM Request",
         noteAccessRequest: "Note Access",
         ownershipClaim: "Ownership Request",
+        digest: "Genos digest",
     },
     ownershipClaim: {
         // The card's body already says how many days. This is the date,

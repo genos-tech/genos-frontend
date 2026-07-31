@@ -1,4 +1,5 @@
 import { useState } from "react";
+import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import ChatRoundedIcon from "@mui/icons-material/ChatRounded";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
@@ -35,7 +36,8 @@ type RequestLabelKey =
     | "projectRequest"
     | "gmRequest"
     | "noteAccessRequest"
-    | "ownershipClaim";
+    | "ownershipClaim"
+    | "digest";
 
 const ITEM_TYPE_CONFIG: Record<
     number,
@@ -85,10 +87,21 @@ const ITEM_TYPE_CONFIG: Record<
         icon: <ShieldRoundedIcon sx={{ fontSize: 14 }} />,
         colorScheme: { dark: "#f87171", light: "#ef4444" },
     },
+    // Proactive Genos digest (UX tier model §8): system-authored, not a
+    // request — no approve/reject events, body rendered from
+    // item_body.{title,text} below rather than BlockNote blocks.
+    6: {
+        labelKey: "digest",
+        icon: <AutoAwesomeRoundedIcon sx={{ fontSize: 14 }} />,
+        colorScheme: { dark: "#c084fc", light: "#9333ea" },
+    },
 };
 
 /** `item_type` for a team-ownership claim. See `ownershipClaim.ts`. */
 const OWNERSHIP_CLAIM = 5;
+
+/** `item_type` for a proactive Genos digest (UX tier model §8). */
+const DIGEST = 6;
 
 // Where the card's body text actually starts, measured from the card's own
 // content edge. The body is inset TWICE — MessageBody wraps it in a box with
@@ -297,8 +310,21 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                     </Typography>
                 </Stack>
 
-                {/* Content */}
-                {inboxItem.itemBody[0]?.content?.length > 0 && (
+                {/* Content — digest items carry {title, text} rather than
+                    BlockNote blocks; render the text pre-wrapped (it is
+                    short markdown-ish bullets from the agent). */}
+                {inboxItem.itemType === DIGEST && (
+                    <Typography
+                        level="body-sm"
+                        sx={{
+                            whiteSpace: "pre-wrap",
+                            color: isDark ? "rgba(255,255,255,0.8)" : "rgba(0,0,0,0.75)",
+                        }}
+                    >
+                        {String((inboxItem.itemBody as unknown as { text?: string })?.text ?? "")}
+                    </Typography>
+                )}
+                {inboxItem.itemType !== DIGEST && inboxItem.itemBody[0]?.content?.length > 0 && (
                     <Box
                         sx={{
                             "& .inbox-preview": {

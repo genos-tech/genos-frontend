@@ -1549,6 +1549,7 @@ export const ja: DeepPartial<Messages> = {
             gmRequest: "GMリクエスト",
             noteAccessRequest: "ノートアクセス",
             ownershipClaim: "オーナー権限リクエスト",
+            digest: "Genos ダイジェスト",
         },
         ownershipClaim: {
             respondBy:
