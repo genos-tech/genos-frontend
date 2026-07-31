@@ -60,8 +60,19 @@ export const TaskPreviewLayout = forwardRef<HTMLDivElement, TaskPreviewLayoutPro
                     background: isDark
                         ? "linear-gradient(180deg, rgba(22,22,28,0.98) 0%, rgba(18,18,24,1) 100%)"
                         : "linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(252,252,255,1) 100%)",
-                    border: { xs: "none", md: "1px solid" },
-                    borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)",
+                    // One shorthand per breakpoint, color included. When
+                    // only the SHORTHAND went responsive (the mobile
+                    // full-screen change), it compiled into an @media
+                    // block emitted AFTER the base `borderColor` longhand
+                    // — and `border: 1px solid` resets border-color to
+                    // currentColor, so the desktop card drew a BLACK
+                    // outline instead of the 8% hairline. Keeping the
+                    // color inside the shorthand makes that ordering
+                    // hazard inexpressible.
+                    border: {
+                        xs: "none",
+                        md: `1px solid ${isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)"}`,
+                    },
                     boxShadow: {
                         xs: "none",
                         md: isDark
