@@ -16,17 +16,25 @@ export interface InviteResult {
 }
 
 /**
- * POST /team/invite/ — owner-only (enforced server-side; the UI also
- * gates the button by isTeamOwner). Sends an invite email per address,
- * each link locked to that address. Returns a per-email result array so
- * the modal can show what happened to each one; returns null on a
- * request-level failure (and reports via setErrorMessage).
+ * POST /team/invite/ — owner/editor (enforced server-side; the UI also
+ * gates the button). Sends an invite email per address, each link locked
+ * to that address. Returns a per-email result array so the modal can
+ * show what happened to each one; returns null on a request-level
+ * failure (and reports via setErrorMessage).
+ *
+ * Pass `projectId` to invite GUESTS instead of members. The server then
+ * writes a project membership on acceptance and NO team membership, so
+ * the invitee never sees the wider workspace. It is one optional
+ * parameter here because it is one optional field there — the whole
+ * guest flow reuses this endpoint deliberately, since an external
+ * person has no inbox to receive a request in.
  */
 export const inviteTeamMembers = async (
     accessToken: string | null,
     teamId: string,
     emails: string[],
-    setErrorMessage?: (value: string) => void
+    setErrorMessage?: (value: string) => void,
+    projectId?: number | null
 ): Promise<InviteResult[] | null> => {
     const m = getMessages().admin.inviteMembers.errors;
     try {
@@ -35,7 +43,14 @@ export const inviteTeamMembers = async (
             setErrorMessage?.(m.tokenMissing);
             return null;
         }
-        const res = await api.post("/team/invite/", { team_id: teamId, emails });
+        const res = await api.post("/team/invite/", {
+            team_id: teamId,
+            emails,
+            // Omitted entirely when absent: the server branches on the
+            // key being present, so sending `null` would read as a
+            // guest invite to nowhere.
+            ...(projectId != null ? { project_id: projectId } : {}),
+        });
         return (res.data?.results ?? []) as InviteResult[];
     } catch (error: unknown) {
         if (axios.isAxiosError(error)) {

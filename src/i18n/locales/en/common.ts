@@ -59,8 +59,12 @@ export const common = {
         owner: "Owner",
         editor: "Editor",
         viewer: "Viewer",
+        guest: "Guest",
         sectionLabel: "Role",
         changeFailed: "Couldn't change that member's role.",
+        // `MemberRoleControl` indexes this map by the role string, so a
+        // missing key renders `undefined` rather than failing to compile.
+        guestHint: "Outside collaborator — sees only this project.",
     },
     profileEdit: {
         rename: "Rename",
