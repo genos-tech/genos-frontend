@@ -92,6 +92,9 @@ export const services = {
             emailHeading: "Email notifications",
             emailDescription:
                 "When you're away, Genos emails you what you missed — batched, never one email per event.",
+            emailDigestHeading: "Daily email digest",
+            emailDigestDescription:
+                "One morning email at 8am your time summarizing what you haven't seen — sent only when there's something new.",
             mutedChatsHeading: "Muted chats ({count})",
             noMutedChats: "No muted chats. Use the bell icon in any chat header to mute it.",
             mutedTargetsHeading: "Muted items ({count})",

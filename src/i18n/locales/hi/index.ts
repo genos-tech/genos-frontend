@@ -1589,6 +1589,9 @@ export const hi: DeepPartial<Messages> = {
                 emailHeading: "ईमेल सूचनाएँ",
                 emailDescription:
                     "जब आप दूर हों, Genos छूटी हुई सूचनाएँ एक ईमेल में समेटकर भेजता है — हर घटना के लिए अलग ईमेल नहीं।",
+                emailDigestHeading: "दैनिक ईमेल डाइजेस्ट",
+                emailDigestDescription:
+                    "आपके समयानुसार हर सुबह 8 बजे एक ईमेल में अनदेखे अपडेट — कुछ नया होने पर ही भेजा जाता है।",
                 mutedChatsHeading: "म्यूट की गई चैट ({count})",
                 noMutedChats:
                     "कोई म्यूट चैट नहीं। किसी भी चैट हेडर में बेल आइकन से उसे म्यूट करें।",
