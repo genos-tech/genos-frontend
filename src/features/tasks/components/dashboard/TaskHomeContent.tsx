@@ -2197,17 +2197,28 @@ export const TaskHomeContent = ({
                                                     sx={{ fontWeight: 600, color: textPrimary }}
                                                 >
                                                     {selectedSprint
-                                                        ? "No tasks in this sprint yet"
-                                                        : "No backlog tasks yet"}
+                                                        ? t.tasks.dashboard.emptySprintTitle
+                                                        : t.tasks.dashboard.emptyBacklogTitle}
                                                 </Typography>
                                                 <Typography
                                                     level="body-sm"
                                                     sx={{ color: textMuted }}
                                                 >
                                                     {selectedSprint
-                                                        ? "Assign tasks to this sprint or create new ones"
-                                                        : "Tasks not attached to a sprint will show here"}
+                                                        ? t.tasks.dashboard.emptySprintSubtitle
+                                                        : t.tasks.dashboard.emptyBacklogSubtitle}
                                                 </Typography>
+                                                {/* An empty list that only says "nothing here"
+                                                    leaves a new team stuck; offer the action the
+                                                    header button already owns. */}
+                                                <Button
+                                                    size="sm"
+                                                    startDecorator={<AddRoundedIcon />}
+                                                    variant="soft"
+                                                    onClick={handleCreateTask}
+                                                >
+                                                    {t.tasks.dashboard.emptyCreateTask}
+                                                </Button>
                                             </Stack>
                                         </Card>
                                     )}

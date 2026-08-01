@@ -1138,6 +1138,11 @@ export const zh: DeepPartial<Messages> = {
             dueOn: "{when} 到期",
         },
         dashboard: {
+            emptySprintTitle: "此冲刺还没有任务",
+            emptyBacklogTitle: "待办清单还没有任务",
+            emptySprintSubtitle: "将任务分配到此冲刺，或创建新任务",
+            emptyBacklogSubtitle: "未分配到冲刺的任务会显示在这里",
+            emptyCreateTask: "新建任务",
             member: "成员",
             open: "待处理",
             wip: "进行中",

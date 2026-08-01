@@ -1153,6 +1153,11 @@ export const ar: DeepPartial<Messages> = {
             dueOn: "مستحقة في {when}",
         },
         dashboard: {
+            emptySprintTitle: "لا توجد مهام في هذا السبرينت بعد",
+            emptyBacklogTitle: "لا توجد مهام في قائمة الانتظار بعد",
+            emptySprintSubtitle: "أسنِد مهامًا إلى هذا السبرينت أو أنشئ مهامًا جديدة",
+            emptyBacklogSubtitle: "المهام غير المرتبطة بسبرينت ستظهر هنا",
+            emptyCreateTask: "مهمة جديدة",
             member: "العضو",
             open: "مفتوحة",
             wip: "قيد التنفيذ",

@@ -4,10 +4,11 @@
 // and the file is slated for replacement by the v3 channel sidebar.
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
 import FlagOutlinedIcon from "@mui/icons-material/FlagOutlined";
 import NotificationsNoneRoundedIcon from "@mui/icons-material/NotificationsNoneRounded";
-import { Box, List, Stack, Typography } from "@mui/joy";
+import { Box, Button, List, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
@@ -135,6 +136,10 @@ type ChatListProps = {
     // filter with zero matches must not claim "No group messages".
     emptyTitleKey?: keyof Messages["chat"]["sidebar"];
     emptySubtitleKey?: keyof Messages["chat"]["sidebar"];
+    // Optional empty-state call-to-action (e.g. the GM pane's "New
+    // Group Message" — the modal state lives in ChatSidebar).
+    emptyActionLabelKey?: keyof Messages["chat"]["sidebar"];
+    onEmptyAction?: () => void;
     useCM: ChatManagementState;
     state: ChatListState;
     actions: ChatListActions;
@@ -232,15 +237,21 @@ const useFilteredActivityMessages = (
 
 // Empty state component. `titleKey`/`subtitleKey` optionally override the
 // per-chatType config — used by the past-flagged view, which has no
-// chatType code of its own.
-const EmptyState = ({
+// chatType code of its own. Exported for its unit test only.
+export const EmptyState = ({
     chatType,
     titleKey,
     subtitleKey,
+    actionLabelKey,
+    onAction,
 }: {
     chatType: number;
     titleKey?: keyof Messages["chat"]["sidebar"];
     subtitleKey?: keyof Messages["chat"]["sidebar"];
+    /** Optional call-to-action under the subtitle — an empty list that
+     *  only says "things will appear here" leaves a new team stuck. */
+    actionLabelKey?: keyof Messages["chat"]["sidebar"];
+    onAction?: () => void;
 }) => {
     const { mode } = useColorScheme();
     const { t } = useTranslation();
@@ -331,6 +342,17 @@ const EmptyState = ({
             >
                 {t.chat.sidebar[resolvedSubtitleKey]}
             </Typography>
+            {actionLabelKey && onAction && (
+                <Button
+                    size="sm"
+                    startDecorator={<AddRoundedIcon />}
+                    sx={{ mt: 2 }}
+                    variant="soft"
+                    onClick={onAction}
+                >
+                    {t.chat.sidebar[actionLabelKey]}
+                </Button>
+            )}
         </Box>
     );
 };
@@ -590,6 +612,8 @@ export const ChatList = (props: ChatListProps) => {
         chatTagFilter,
         emptyTitleKey,
         emptySubtitleKey,
+        emptyActionLabelKey,
+        onEmptyAction,
         state,
         actions,
         data,
@@ -875,9 +899,11 @@ export const ChatList = (props: ChatListProps) => {
             if (targetChats.length === 0) {
                 return (
                     <EmptyState
+                        actionLabelKey={emptyActionLabelKey}
                         chatType={targetChatType}
                         subtitleKey={emptySubtitleKey}
                         titleKey={emptyTitleKey}
+                        onAction={onEmptyAction}
                     />
                 );
             }

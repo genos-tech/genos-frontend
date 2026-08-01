@@ -1160,6 +1160,11 @@ export const es: DeepPartial<Messages> = {
             dueOn: "Vence {when}",
         },
         dashboard: {
+            emptySprintTitle: "Aún no hay tareas en este sprint",
+            emptyBacklogTitle: "Aún no hay tareas en el backlog",
+            emptySprintSubtitle: "Asigna tareas a este sprint o crea nuevas",
+            emptyBacklogSubtitle: "Las tareas sin sprint aparecerán aquí",
+            emptyCreateTask: "Nueva tarea",
             member: "Miembro",
             open: "Abiertas",
             wip: "En curso",

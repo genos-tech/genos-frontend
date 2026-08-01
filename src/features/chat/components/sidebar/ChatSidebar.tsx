@@ -818,6 +818,11 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             data={{ myself, setMyself }}
                             emptySubtitleKey={gmTagFilter ? "emptyGMFilteredSubtitle" : undefined}
                             emptyTitleKey={gmTagFilter ? "emptyGMFilteredTitle" : undefined}
+                            // CTA only on the truly-empty state — a tag
+                            // filter with zero matches shouldn't push
+                            // "create another group" as the fix.
+                            emptyActionLabelKey={gmTagFilter ? undefined : "newGroupMessageMenu"}
+                            onEmptyAction={gmTagFilter ? undefined : () => setOpenCreateGM(true)}
                             selectedActivityChipIds={EMPTY_CHIP_SET}
                             selectedActivityInstanceIds={EMPTY_INSTANCE_SET}
                             selectedActivityMentionGroupIds={EMPTY_GROUP_ID_SET}
