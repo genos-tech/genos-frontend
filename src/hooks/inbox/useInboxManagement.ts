@@ -36,8 +36,13 @@ export const useInboxManagement = (): InboxManagementState => {
     }, []);
 
     useEffect(() => {
+        // The badge sits on the REQUESTS tab, so it counts unread request
+        // items only (item_type 1-5) — not activity notices (0) and not
+        // the Genos digest (6), which lives on the Activities tab.
         setUnReadInboxItemCount(
-            countUnReadInboxItem(inboxItems.filter((item) => item.itemType > 0))
+            countUnReadInboxItem(
+                inboxItems.filter((item) => item.itemType > 0 && item.itemType !== 6)
+            )
         );
     }, [inboxItems]);
 
