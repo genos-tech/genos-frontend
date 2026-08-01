@@ -246,6 +246,22 @@ export class NotificationManager {
         this.commitPatch({ masterEnabled: value });
     }
 
+    /** Independent EMAIL-channel master (backend `email_enabled`). */
+    setEmailEnabled(value: boolean) {
+        this.commitPatch({ emailEnabled: value });
+    }
+
+    /**
+     * Set an EMAIL per-category override. `serverKey` is the SERVER's
+     * fine-category vocabulary, stored as `email:<serverKey>` in the same
+     * full-map-replaced `categorySettings` blob (see `emailCategories.ts`
+     * for why the client registry's keys are the wrong ones here).
+     */
+    setEmailCategoryEnabled(serverKey: string, value: boolean) {
+        const next = { ...this.prefs.categorySettings, [`email:${serverKey}`]: value };
+        this.commitPatch({ categorySettings: next });
+    }
+
     /**
      * Set a coarse *group* master (writes the legacy boolean column). When
      * off it hard-gates every sub-category in the group regardless of

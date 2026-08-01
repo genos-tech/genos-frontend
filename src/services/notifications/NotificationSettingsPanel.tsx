@@ -15,6 +15,7 @@ import {
 import { useDigestPreference } from "../../hooks/common/useDigestPreference";
 import { fmt, Messages, useTranslation } from "../../i18n";
 import { CATEGORY_BY_KEY, CATEGORY_GROUPS, CoarseGroup, NotificationCategory } from "./categories";
+import { EMAIL_CATEGORIES, isEmailCategoryEnabled } from "./emailCategories";
 import { useNotificationsContext } from "./NotificationsContext";
 import { MutedTargetType } from "./types";
 
@@ -91,6 +92,8 @@ export const NotificationSettingsPanel = () => {
         permission,
         requestPermission,
         setMasterEnabled,
+        setEmailEnabled,
+        setEmailCategoryEnabled,
         setGroupEnabled,
         setSubCategoryEnabled,
         unmute,
@@ -226,6 +229,68 @@ export const NotificationSettingsPanel = () => {
 
                             {idx < CATEGORY_GROUPS.length - 1 && <Divider sx={{ mt: 1.5 }} />}
                         </Box>
+                    );
+                })}
+            </Stack>
+
+            {/* Email channel: independent master + per-category toggles
+                writing `email:`-prefixed SERVER-vocabulary keys into the
+                same categorySettings map (see emailCategories.ts for the
+                vocabulary trap). The coarse group switches above still
+                hard-gate email server-side, so a group turned off also
+                silences its emails. */}
+            <Divider sx={{ mt: 2 }} />
+            <Stack
+                alignItems="center"
+                direction="row"
+                justifyContent="space-between"
+                spacing={2}
+                sx={{ mt: 1.5, opacity: masterDisabled ? 0.5 : 1 }}
+            >
+                <Box sx={{ minWidth: 0, flex: 1 }}>
+                    <Typography level="title-sm">{settingsMessages.emailHeading}</Typography>
+                    <Typography level="body-xs">{settingsMessages.emailDescription}</Typography>
+                </Box>
+                <Switch
+                    checked={preferences.emailEnabled}
+                    disabled={masterDisabled}
+                    onChange={(e) => setEmailEnabled(e.target.checked)}
+                />
+            </Stack>
+            <Stack
+                spacing={1}
+                sx={{
+                    mt: 1,
+                    pl: 2,
+                    opacity: masterDisabled || !preferences.emailEnabled ? 0.5 : 1,
+                }}
+            >
+                {EMAIL_CATEGORIES.map((entry) => {
+                    const on = isEmailCategoryEnabled(preferences.categorySettings, entry);
+                    const labels = t.services.notifications.emailCategories as Record<
+                        string,
+                        string
+                    >;
+                    return (
+                        <Stack
+                            key={entry.serverKey}
+                            alignItems="center"
+                            direction="row"
+                            justifyContent="space-between"
+                            spacing={2}
+                        >
+                            <Typography level="body-sm" sx={{ minWidth: 0, flex: 1 }}>
+                                {labels[entry.labelKey] || entry.serverKey}
+                            </Typography>
+                            <Switch
+                                checked={on}
+                                disabled={masterDisabled || !preferences.emailEnabled}
+                                size="sm"
+                                onChange={(e) =>
+                                    setEmailCategoryEnabled(entry.serverKey, e.target.checked)
+                                }
+                            />
+                        </Stack>
                     );
                 })}
             </Stack>

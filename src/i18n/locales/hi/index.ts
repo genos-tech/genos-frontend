@@ -1560,6 +1560,17 @@ export const hi: DeepPartial<Messages> = {
                 taskComments: "टास्क कमेंट",
                 inbox: "इनबॉक्स",
             },
+            emailCategories: {
+                mentionChat: "चैट में मेंशन",
+                mentionThread: "थ्रेड में मेंशन",
+                mentionTask: "टास्क में मेंशन",
+                mentionNote: "नोट में मेंशन",
+                threadReplies: "थ्रेड के जवाब",
+                taskComments: "टास्क कमेंट",
+                inbox: "अनुरोध और सूचनाएँ",
+                chats: "सभी चैट संदेश",
+                reactions: "रिएक्शन",
+            },
             banner: {
                 title: "डेस्कटॉप नोटिफिकेशन चालू करें",
                 body: "जब टैब बैकग्राउंड में हो तब नए मेसेज, मेंशन और इनबॉक्स अपडेट की सूचना पाएँ।",
@@ -1575,6 +1586,9 @@ export const hi: DeepPartial<Messages> = {
                     "जब टैब बैकग्राउंड में हो तब डेस्कटॉप नोटिफिकेशन दिखाएँ, या जब टैब फोरग्राउंड में हो लेकिन आप किसी और स्क्रीन पर हों तब इन-ऐप टोस्ट दिखाएँ।",
                 browserPermissionLabel: "ब्राउज़र अनुमति:",
                 allow: "अनुमति दें",
+                emailHeading: "ईमेल सूचनाएँ",
+                emailDescription:
+                    "जब आप दूर हों, Genos छूटी हुई सूचनाएँ एक ईमेल में समेटकर भेजता है — हर घटना के लिए अलग ईमेल नहीं।",
                 mutedChatsHeading: "म्यूट की गई चैट ({count})",
                 noMutedChats:
                     "कोई म्यूट चैट नहीं। किसी भी चैट हेडर में बेल आइकन से उसे म्यूट करें।",

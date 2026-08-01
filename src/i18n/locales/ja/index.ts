@@ -1713,6 +1713,17 @@ export const ja: DeepPartial<Messages> = {
                 taskComments: "タスクコメント",
                 inbox: "受信箱",
             },
+            emailCategories: {
+                mentionChat: "チャットでのメンション",
+                mentionThread: "スレッドでのメンション",
+                mentionTask: "タスクでのメンション",
+                mentionNote: "ノートでのメンション",
+                threadReplies: "スレッド返信",
+                taskComments: "タスクコメント",
+                inbox: "リクエストと通知",
+                chats: "すべてのチャットメッセージ",
+                reactions: "リアクション",
+            },
             banner: {
                 title: "デスクトップ通知を有効にする",
                 body: "タブがバックグラウンドにあるときに、新着メッセージ、メンション、受信箱の更新を通知します。",
@@ -1728,6 +1739,9 @@ export const ja: DeepPartial<Messages> = {
                     "タブがバックグラウンドのときはデスクトップ通知を、フォアグラウンドでも別の画面を表示しているときはアプリ内トーストを表示します。",
                 browserPermissionLabel: "ブラウザの許可：",
                 allow: "許可",
+                emailHeading: "メール通知",
+                emailDescription:
+                    "離席中に見逃した通知を、1通にまとめてメールでお知らせします（イベントごとには送信されません）。",
                 mutedChatsHeading: "ミュート中のチャット（{count}）",
                 noMutedChats:
                     "ミュート中のチャットはありません。各チャットヘッダーのベルアイコンからミュートできます。",

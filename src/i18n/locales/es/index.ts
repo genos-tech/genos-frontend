@@ -1557,6 +1557,17 @@ export const es: DeepPartial<Messages> = {
                 taskComments: "Comentarios de tareas",
                 inbox: "Bandeja",
             },
+            emailCategories: {
+                mentionChat: "Menciones en chats",
+                mentionThread: "Menciones en hilos",
+                mentionTask: "Menciones en tareas",
+                mentionNote: "Menciones en notas",
+                threadReplies: "Respuestas en hilos",
+                taskComments: "Comentarios de tareas",
+                inbox: "Solicitudes y avisos",
+                chats: "Todos los mensajes de chat",
+                reactions: "Reacciones",
+            },
             banner: {
                 title: "Activar notificaciones de escritorio",
                 body: "Recibe avisos sobre nuevos mensajes, menciones y actualizaciones de la bandeja mientras la pestaña está en segundo plano.",
@@ -1572,6 +1583,9 @@ export const es: DeepPartial<Messages> = {
                     "Muestra notificaciones de escritorio cuando la pestaña está en segundo plano, o un aviso dentro de la app cuando está visible pero estás en otra pantalla.",
                 browserPermissionLabel: "Permiso del navegador:",
                 allow: "Permitir",
+                emailHeading: "Notificaciones por correo",
+                emailDescription:
+                    "Cuando no estás, Genos te envía por correo lo que te perdiste — agrupado, nunca un correo por evento.",
                 mutedChatsHeading: "Chats silenciados ({count})",
                 noMutedChats:
                     "No hay chats silenciados. Usa el icono de campana en el encabezado de cualquier chat para silenciarlo.",

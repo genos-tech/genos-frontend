@@ -164,6 +164,7 @@ describe("notificationApi", () => {
                 enableTaskComments: false,
                 enableInbox: true,
                 // Absent on the wire fixture -> defaulted by fromWire.
+                emailEnabled: true,
                 categorySettings: {},
                 mutedChats: [
                     { chatType: 1, chatId: "abc", chatName: "Alice" },

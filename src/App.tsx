@@ -67,6 +67,7 @@ import { QuickAddRequiredFieldsPreferenceProvider } from "./hooks/common/useQuic
 import { QuickReactionsPreferenceProvider } from "./hooks/common/useQuickReactionsPreference";
 import { useReconcileMyselfAvatar } from "./hooks/common/useReconcileMyselfAvatar";
 import { useReportBrowserTimezone } from "./hooks/common/useReportBrowserTimezone";
+import { useReportUiLanguage } from "./hooks/common/useReportUiLanguage";
 import { useServiceInitialization } from "./hooks/common/useServiceInitialization";
 import { SpotlightPreferencesProvider } from "./hooks/common/useSpotlightPreferences";
 import { webSocketSync } from "./hooks/common/useSyncManagement";
@@ -260,6 +261,10 @@ export const App = () => {
     // other source for it — `TIME_ZONE` is UTC, so without this every
     // boundary is UTC's. Silent and once per session; see the hook.
     useReportBrowserTimezone();
+
+    // Same contract for the UI language: notification emails render in
+    // the user's locale, and the server has no other source for it.
+    useReportUiLanguage();
 
     // Daily todo groups — one instance for the whole app: the chat todo
     // pane (prop-drilled through ChatHome) and the agent-input "#"

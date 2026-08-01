@@ -1571,6 +1571,17 @@ export const fr: DeepPartial<Messages> = {
                 taskComments: "Commentaires de tâche",
                 inbox: "Boîte de réception",
             },
+            emailCategories: {
+                mentionChat: "Mentions dans les conversations",
+                mentionThread: "Mentions dans les fils",
+                mentionTask: "Mentions dans les tâches",
+                mentionNote: "Mentions dans les notes",
+                threadReplies: "Réponses dans les fils",
+                taskComments: "Commentaires de tâche",
+                inbox: "Demandes et avis",
+                chats: "Tous les messages de chat",
+                reactions: "Réactions",
+            },
             banner: {
                 title: "Activer les notifications de bureau",
                 body: "Soyez notifié des nouveaux messages, mentions et mises à jour de la boîte de réception lorsque l'onglet est en arrière-plan.",
@@ -1586,6 +1597,9 @@ export const fr: DeepPartial<Messages> = {
                     "Affiche des notifications de bureau lorsque l'onglet est en arrière-plan, ou un toast in-app lorsqu'il est au premier plan mais que vous êtes sur un autre écran.",
                 browserPermissionLabel: "Autorisation du navigateur :",
                 allow: "Autoriser",
+                emailHeading: "Notifications par e-mail",
+                emailDescription:
+                    "En votre absence, Genos vous envoie un e-mail récapitulatif de ce que vous avez manqué — groupé, jamais un e-mail par événement.",
                 mutedChatsHeading: "Conversations en sourdine ({count})",
                 noMutedChats:
                     "Aucune conversation en sourdine. Utilisez l'icône de cloche dans l'en-tête de toute conversation pour la mettre en sourdine.",

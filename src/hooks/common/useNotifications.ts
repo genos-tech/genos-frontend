@@ -44,6 +44,10 @@ export interface NotificationsState {
     pushActive: boolean;
     requestPermission: () => Promise<WebNotificationPermission>;
     setMasterEnabled: (value: boolean) => void;
+    /** Toggle the independent EMAIL-channel master. */
+    setEmailEnabled: (value: boolean) => void;
+    /** Toggle an email category (SERVER vocabulary — see emailCategories.ts). */
+    setEmailCategoryEnabled: (serverKey: string, value: boolean) => void;
     /** Toggle a coarse group master (e.g. all mentions). */
     setGroupEnabled: (group: CoarseGroup, value: boolean) => void;
     /** Toggle a fine sub-category (e.g. task-body mentions). */
@@ -248,6 +252,14 @@ export const useNotifications = (
         (value: boolean) => manager.setMasterEnabled(value),
         [manager]
     );
+    const setEmailEnabled = useCallback(
+        (value: boolean) => manager.setEmailEnabled(value),
+        [manager]
+    );
+    const setEmailCategoryEnabled = useCallback(
+        (serverKey: string, value: boolean) => manager.setEmailCategoryEnabled(serverKey, value),
+        [manager]
+    );
     const setGroupEnabled = useCallback(
         (group: CoarseGroup, value: boolean) => manager.setGroupEnabled(group, value),
         [manager]
@@ -300,6 +312,8 @@ export const useNotifications = (
         pushActive,
         requestPermission,
         setMasterEnabled,
+        setEmailEnabled,
+        setEmailCategoryEnabled,
         setGroupEnabled,
         setSubCategoryEnabled,
         mute,

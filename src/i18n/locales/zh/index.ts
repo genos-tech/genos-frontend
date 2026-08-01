@@ -1526,6 +1526,17 @@ export const zh: DeepPartial<Messages> = {
                 taskComments: "任务评论",
                 inbox: "收件箱",
             },
+            emailCategories: {
+                mentionChat: "聊天中的提及",
+                mentionThread: "话题中的提及",
+                mentionTask: "任务中的提及",
+                mentionNote: "笔记中的提及",
+                threadReplies: "话题回复",
+                taskComments: "任务评论",
+                inbox: "请求与通知",
+                chats: "所有聊天消息",
+                reactions: "表情回应",
+            },
             banner: {
                 title: "开启桌面通知",
                 body: "当此标签页在后台时，及时收到新消息、提及与收件箱更新的通知。",
@@ -1541,6 +1552,9 @@ export const zh: DeepPartial<Messages> = {
                     "当标签页在后台时显示桌面通知；若在前台但你在其他界面，则显示应用内提示。",
                 browserPermissionLabel: "浏览器权限：",
                 allow: "允许",
+                emailHeading: "邮件通知",
+                emailDescription:
+                    "当您离开时，Genos 会把错过的通知汇总为一封邮件发送给您（不会每条事件发一封）。",
                 mutedChatsHeading: "已静音的聊天（{count}）",
                 noMutedChats: "暂无静音的聊天。点击任意聊天顶部的铃铛图标即可静音。",
                 unmuteAriaLabel: "取消静音 {name}",
