@@ -69,6 +69,7 @@ import { setProjectMemberRole } from "../../services/setProjectMemberRole";
 import { updateProjectProfile } from "../../services/updateProjectProfile";
 import { ModalManageProjectLabels } from "../projectLabels/ModalManageProjectLabels";
 import { ProjectLabelChips } from "../projectLabels/ProjectLabelChips";
+import { ModalInviteMembers } from "./ModalInviteMembers";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
@@ -147,6 +148,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
     // open) so the button is gated on both projectProfile presence and
     // ownerUserId mismatch.
     const [openLeaveConfirm, setOpenLeaveConfirm] = useState(false);
+    const [openInviteGuests, setOpenInviteGuests] = useState(false);
     const isProjectOwner = !!projectProfile && myself.userId === projectProfile.ownerUserId;
     const canShowLeave = !!projectProfile && !isProjectOwner;
 
@@ -1028,6 +1030,37 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                             >
                                                                 {t.common.addMembers.openButton}
                                                             </Button>
+                                                            {/* Guests are invited BY EMAIL, not picked
+                                                                from the team roster, because the whole
+                                                                point is that they aren't in it. Hence a
+                                                                second button rather than a mode on the
+                                                                member picker. */}
+                                                            {canManage && (
+                                                                <Button
+                                                                    color="neutral"
+                                                                    size="sm"
+                                                                    variant="outlined"
+                                                                    startDecorator={
+                                                                        <PersonAddAltRoundedIcon
+                                                                            sx={{ fontSize: 14 }}
+                                                                        />
+                                                                    }
+                                                                    sx={{
+                                                                        borderRadius: "8px",
+                                                                        fontSize: "12px",
+                                                                        fontWeight: 600,
+                                                                        flexShrink: 0,
+                                                                    }}
+                                                                    onClick={() =>
+                                                                        setOpenInviteGuests(true)
+                                                                    }
+                                                                >
+                                                                    {
+                                                                        t.admin.inviteMembers
+                                                                            .openButtonGuest
+                                                                    }
+                                                                </Button>
+                                                            )}
                                                         </Stack>
                                                         <Input
                                                             placeholder={
@@ -1564,6 +1597,13 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                 (which can't handle PM), and `excludeUserIds` hides people
                 already in the project: the picker can't derive a PM roster
                 from `AllChatProps` on its own. */}
+            <ModalInviteMembers
+                open={openInviteGuests}
+                teamId={myself.teamId}
+                projectId={projectProfile?.projectId ?? null}
+                projectName={projectProfile?.projectName}
+                onClose={() => setOpenInviteGuests(false)}
+            />
             <ModalAddMembers
                 chat={pmChat}
                 excludeUserIds={(projectProfile?.projectMembers ?? []).map((m) => m.userId)}
