@@ -1555,6 +1555,9 @@ export const zh: DeepPartial<Messages> = {
                 emailHeading: "邮件通知",
                 emailDescription:
                     "当您离开时，Genos 会把错过的通知汇总为一封邮件发送给您（不会每条事件发一封）。",
+                emailDigestHeading: "每日邮件摘要",
+                emailDigestDescription:
+                    "每天早上8点（当地时间）将未读更新汇总为一封邮件发送，仅在有新内容时发送。",
                 mutedChatsHeading: "已静音的聊天（{count}）",
                 noMutedChats: "暂无静音的聊天。点击任意聊天顶部的铃铛图标即可静音。",
                 unmuteAriaLabel: "取消静音 {name}",

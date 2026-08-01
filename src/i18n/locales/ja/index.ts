@@ -1742,6 +1742,9 @@ export const ja: DeepPartial<Messages> = {
                 emailHeading: "メール通知",
                 emailDescription:
                     "離席中に見逃した通知を、1通にまとめてメールでお知らせします（イベントごとには送信されません）。",
+                emailDigestHeading: "デイリーメールダイジェスト",
+                emailDigestDescription:
+                    "未読の更新を毎朝8時（現地時間）に1通のメールでお届けします。新しいものがあるときだけ送信されます。",
                 mutedChatsHeading: "ミュート中のチャット（{count}）",
                 noMutedChats:
                     "ミュート中のチャットはありません。各チャットヘッダーのベルアイコンからミュートできます。",

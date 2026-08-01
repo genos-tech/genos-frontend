@@ -84,7 +84,8 @@ export const NotificationSettingsPanel = () => {
     // browser-push preferences (the digest also lands in the Inbox, so
     // it is NOT gated by masterEnabled). Above the early return: hooks
     // must run unconditionally.
-    const { digestEnabled, setDigestEnabled } = useDigestPreference();
+    const { digestEnabled, setDigestEnabled, emailDigestEnabled, setEmailDigestEnabled } =
+        useDigestPreference();
     if (!ctx) return null;
 
     const {
@@ -447,6 +448,30 @@ export const NotificationSettingsPanel = () => {
                     checked={digestEnabled ?? true}
                     disabled={digestEnabled === null}
                     onChange={(e) => setDigestEnabled(e.target.checked)}
+                />
+            </Stack>
+
+            {/* Email digest — the plain unread-summary email (all tiers),
+                a separate opt-out from the agent digest above. Disabled
+                while unknown, including against a backend that doesn't
+                support it yet. */}
+            <Stack
+                alignItems="center"
+                direction="row"
+                justifyContent="space-between"
+                spacing={2}
+                sx={{ mt: 1.5 }}
+            >
+                <Box sx={{ minWidth: 0, flex: 1 }}>
+                    <Typography level="title-sm">{settingsMessages.emailDigestHeading}</Typography>
+                    <Typography level="body-xs">
+                        {settingsMessages.emailDigestDescription}
+                    </Typography>
+                </Box>
+                <Switch
+                    checked={emailDigestEnabled ?? true}
+                    disabled={emailDigestEnabled === null}
+                    onChange={(e) => setEmailDigestEnabled(e.target.checked)}
                 />
             </Stack>
         </Sheet>

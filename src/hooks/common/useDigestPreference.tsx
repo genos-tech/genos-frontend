@@ -23,15 +23,24 @@ const DIGEST_PREF_URL = "/user/preferences/digest/";
 export const useDigestPreference = () => {
     const { accessToken } = useAuth();
     const [digestEnabled, setDigestEnabledState] = useState<boolean | null>(null);
+    // The EMAIL digest (all tiers, plain unread summary) — a separate
+    // opt-out from the agent digest above, through the same endpoint.
+    // Stays null (switch disabled) against an older backend that doesn't
+    // return the key yet.
+    const [emailDigestEnabled, setEmailDigestEnabledState] = useState<boolean | null>(null);
 
     useEffect(() => {
         const api = authApi(accessToken);
         if (!api) return;
         let cancelled = false;
         void api
-            .get<{ digest_enabled: boolean }>(DIGEST_PREF_URL)
+            .get<{ digest_enabled: boolean; email_digest_enabled?: boolean }>(DIGEST_PREF_URL)
             .then((res) => {
-                if (!cancelled) setDigestEnabledState(!!res.data.digest_enabled);
+                if (cancelled) return;
+                setDigestEnabledState(!!res.data.digest_enabled);
+                if (typeof res.data.email_digest_enabled === "boolean") {
+                    setEmailDigestEnabledState(res.data.email_digest_enabled);
+                }
             })
             .catch(() => {
                 // Leave null — the switch stays disabled rather than
@@ -54,5 +63,15 @@ export const useDigestPreference = () => {
         [accessToken]
     );
 
-    return { digestEnabled, setDigestEnabled };
+    const setEmailDigestEnabled = useCallback(
+        (value: boolean) => {
+            setEmailDigestEnabledState(value);
+            const api = authApi(accessToken);
+            if (!api) return;
+            void api.patch(DIGEST_PREF_URL, { email_digest_enabled: value }).catch(() => {});
+        },
+        [accessToken]
+    );
+
+    return { digestEnabled, setDigestEnabled, emailDigestEnabled, setEmailDigestEnabled };
 };

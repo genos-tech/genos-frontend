@@ -1586,6 +1586,9 @@ export const es: DeepPartial<Messages> = {
                 emailHeading: "Notificaciones por correo",
                 emailDescription:
                     "Cuando no estás, Genos te envía por correo lo que te perdiste — agrupado, nunca un correo por evento.",
+                emailDigestHeading: "Resumen diario por correo",
+                emailDigestDescription:
+                    "Un correo cada mañana a las 8 (tu hora) con lo que no has visto — solo se envía si hay algo nuevo.",
                 mutedChatsHeading: "Chats silenciados ({count})",
                 noMutedChats:
                     "No hay chats silenciados. Usa el icono de campana en el encabezado de cualquier chat para silenciarlo.",

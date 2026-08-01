@@ -1575,6 +1575,9 @@ export const ar: DeepPartial<Messages> = {
                 emailHeading: "إشعارات البريد الإلكتروني",
                 emailDescription:
                     "عند غيابك، يرسل لك Genos ما فاتك في رسالة واحدة مجمّعة — وليس رسالة لكل حدث.",
+                emailDigestHeading: "الملخص اليومي بالبريد",
+                emailDigestDescription:
+                    "رسالة واحدة كل صباح الساعة 8 بتوقيتك تلخّص ما لم تطّلع عليه — تُرسل فقط عند وجود جديد.",
                 mutedChatsHeading: "المحادثات المكتومة ({count})",
                 noMutedChats:
                     "لا توجد محادثات مكتومة. استخدم أيقونة الجرس في رأس أي محادثة لكتمها.",
