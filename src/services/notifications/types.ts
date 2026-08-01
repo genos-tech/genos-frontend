@@ -44,9 +44,18 @@ export interface NotificationPreference {
     enableMentions: boolean;
     enableTaskComments: boolean;
     enableInbox: boolean;
+    /** Independent master for the EMAIL channel (sibling of the backend's
+     *  `push_enabled`). Gates only email — in-app and push are untouched. */
+    emailEnabled: boolean;
     /** Fine-grained per-category overrides layered on the coarse groups.
      *  `{ fineKey: boolean }`; an absent key inherits the category's
-     *  `defaultEnabled`. Always PUT the FULL map (JSON field replace). */
+     *  `defaultEnabled`. Always PUT the FULL map (JSON field replace).
+     *
+     *  The map also carries the EMAIL channel's overrides under
+     *  `email:`-prefixed keys — and those use the SERVER's category
+     *  vocabulary (`email:mention_task`), not this client's finer one
+     *  (`mention_task_body`/`mention_task_comment`), because the server is
+     *  what reads them. See `emailCategories.ts`. */
     categorySettings: Record<string, boolean>;
     /** Coarse "mute whole chat" list. */
     mutedChats: MutedChatRef[];
@@ -63,6 +72,7 @@ export const DEFAULT_NOTIFICATION_PREFERENCE: NotificationPreference = {
     enableMentions: true,
     enableTaskComments: true,
     enableInbox: true,
+    emailEnabled: true,
     categorySettings: {},
     mutedChats: [],
     mutedTargets: [],

@@ -48,6 +48,21 @@ export const services = {
             mentionNoteChat: "In a chat note",
             agentRunDone: "AI answer ready",
         },
+        // Email-channel category labels (emailCategories.ts). These use
+        // the SERVER's coarser vocabulary — one "mention_task" where the
+        // in-app registry splits body/comment — so they get their own
+        // label set rather than reusing `categories` above.
+        emailCategories: {
+            mentionChat: "Mentions in chat",
+            mentionThread: "Mentions in threads",
+            mentionTask: "Mentions in tasks",
+            mentionNote: "Mentions in notes",
+            threadReplies: "Thread replies",
+            taskComments: "Task comments",
+            inbox: "Requests & notices",
+            chats: "Every chat message",
+            reactions: "Reactions",
+        },
         // Top banner (PermissionBanner.tsx) prompting the user to grant
         // browser-notification permission.
         banner: {
@@ -72,6 +87,11 @@ export const services = {
             digestHeading: "Genos digest",
             digestDescription:
                 "A short personal digest from Genos, delivered to your inbox (weekly on Pro, daily on Max).",
+            // Email channel (independent of push/in-app; sent only after
+            // you've been away for a while, batched into one email).
+            emailHeading: "Email notifications",
+            emailDescription:
+                "When you're away, Genos emails you what you missed — batched, never one email per event.",
             mutedChatsHeading: "Muted chats ({count})",
             noMutedChats: "No muted chats. Use the bell icon in any chat header to mute it.",
             mutedTargetsHeading: "Muted items ({count})",
