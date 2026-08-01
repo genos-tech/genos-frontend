@@ -26,6 +26,9 @@ export const InboxTabHeader = ({ requestCount }: InboxTabHeaderProps) => {
         ? "activities"
         : "requests";
 
+    // Activities first (left): it is the default landing and where the
+    // steady stream (notices + the Genos digest) lives; Requests sit on
+    // the right with the unread badge pulling attention when needed.
     const tabs: {
         id: InboxTab;
         labelKey: "requests" | "activities";
@@ -34,17 +37,17 @@ export const InboxTabHeader = ({ requestCount }: InboxTabHeaderProps) => {
         count?: number;
     }[] = [
         {
+            id: "activities",
+            labelKey: "activities",
+            path: "/workspace/inbox/activities",
+            icon: <NotificationsActiveRoundedIcon sx={{ fontSize: 16 }} />,
+        },
+        {
             id: "requests",
             labelKey: "requests",
             path: "/workspace/inbox/requests",
             icon: <PendingActionsRoundedIcon sx={{ fontSize: 16 }} />,
             count: requestCount,
-        },
-        {
-            id: "activities",
-            labelKey: "activities",
-            path: "/workspace/inbox/activities",
-            icon: <NotificationsActiveRoundedIcon sx={{ fontSize: 16 }} />,
         },
     ];
 

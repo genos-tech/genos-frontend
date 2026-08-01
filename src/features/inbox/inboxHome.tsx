@@ -208,8 +208,11 @@ export const InboxHome = (props: InboxHomeProps) => {
                             }
                         />
 
-                        {/* Default redirect to requests */}
-                        <Route element={<Navigate to="requests" replace />} path="" />
+                        {/* Default = Activities, matching the tab order
+                            (it's the leftmost tab and where the steady
+                            stream lands); the Requests badge still pulls
+                            attention when something needs a decision. */}
+                        <Route element={<Navigate to="activities" replace />} path="" />
                     </Routes>
                 </Box>
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import ChatRoundedIcon from "@mui/icons-material/ChatRounded";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
@@ -26,6 +26,10 @@ import { extractYYYYMMDD, extractYYYYMMDDHHMM } from "../../../utils/dateUtils";
 import { addInboxItem } from "../../admin/services/addInboxItem";
 import { respondToOwnershipClaim } from "../../admin/services/ownershipClaim";
 import { InboxTargetChip } from "./InboxTargetChip";
+
+// Lazy: keeps react-markdown (and its remark deps) out of the inbox's
+// initial chunk — only digest bubbles ever need it.
+const DigestBody = lazy(() => import("./DigestBody"));
 
 // Item type configurations for cleaner code. `colorScheme` is intentionally
 // NOT mapped to the unified purple palette — each request type needs a
@@ -311,18 +315,34 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                 </Stack>
 
                 {/* Content — digest items carry {title, text} rather than
-                    BlockNote blocks; render the text pre-wrapped (it is
-                    short markdown-ish bullets from the agent). */}
+                    BlockNote blocks. The text is agent-authored MARKDOWN
+                    (bold, bullets, workspace links resolved server-side),
+                    rendered by the lazy DigestBody; while the chunk loads,
+                    fall back to the old pre-wrapped plain text. */}
                 {inboxItem.itemType === DIGEST && (
-                    <Typography
-                        level="body-sm"
-                        sx={{
-                            whiteSpace: "pre-wrap",
-                            color: isDark ? "rgba(255,255,255,0.8)" : "rgba(0,0,0,0.75)",
-                        }}
+                    <Suspense
+                        fallback={
+                            <Typography
+                                level="body-sm"
+                                sx={{
+                                    whiteSpace: "pre-wrap",
+                                    color: isDark ? "rgba(255,255,255,0.8)" : "rgba(0,0,0,0.75)",
+                                }}
+                            >
+                                {String(
+                                    (inboxItem.itemBody as unknown as { text?: string })?.text ??
+                                        ""
+                                )}
+                            </Typography>
+                        }
                     >
-                        {String((inboxItem.itemBody as unknown as { text?: string })?.text ?? "")}
-                    </Typography>
+                        <DigestBody
+                            isDark={isDark}
+                            text={String(
+                                (inboxItem.itemBody as unknown as { text?: string })?.text ?? ""
+                            )}
+                        />
+                    </Suspense>
                 )}
                 {inboxItem.itemType !== DIGEST && inboxItem.itemBody[0]?.content?.length > 0 && (
                     <Box
