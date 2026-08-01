@@ -796,6 +796,13 @@ export const tasks = {
 
     // Dashboard table headers / labels.
     dashboard: {
+        // Sprint-board empty state (was hardcoded English in
+        // TaskHomeContent until the onboarding CTA pass).
+        emptySprintTitle: "No tasks in this sprint yet",
+        emptyBacklogTitle: "No backlog tasks yet",
+        emptySprintSubtitle: "Assign tasks to this sprint or create new ones",
+        emptyBacklogSubtitle: "Tasks not attached to a sprint will show here",
+        emptyCreateTask: "New task",
         // My Tasks "Up Next" — sort selector + plain-language help.
         upNext: {
             byWeight: "By weight",

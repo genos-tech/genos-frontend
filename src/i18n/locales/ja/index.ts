@@ -1266,6 +1266,11 @@ export const ja: DeepPartial<Messages> = {
             dueOn: "期限 {when}",
         },
         dashboard: {
+            emptySprintTitle: "このスプリントにはまだタスクがありません",
+            emptyBacklogTitle: "バックログにはまだタスクがありません",
+            emptySprintSubtitle: "タスクをこのスプリントに割り当てるか、新しく作成しましょう",
+            emptyBacklogSubtitle: "スプリント未割り当てのタスクがここに表示されます",
+            emptyCreateTask: "新しいタスク",
             member: "メンバー",
             open: "未着手",
             wip: "進行中",

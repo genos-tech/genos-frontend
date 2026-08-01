@@ -1166,6 +1166,11 @@ export const hi: DeepPartial<Messages> = {
             dueOn: "{when} को ड्यू",
         },
         dashboard: {
+            emptySprintTitle: "इस स्प्रिंट में अभी कोई टास्क नहीं है",
+            emptyBacklogTitle: "बैकलॉग में अभी कोई टास्क नहीं है",
+            emptySprintSubtitle: "इस स्प्रिंट में टास्क असाइन करें या नए बनाएँ",
+            emptyBacklogSubtitle: "बिना स्प्रिंट वाले टास्क यहाँ दिखेंगे",
+            emptyCreateTask: "नया टास्क",
             member: "मेंबर",
             open: "ओपन",
             wip: "WIP",
