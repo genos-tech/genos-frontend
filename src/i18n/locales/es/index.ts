@@ -209,6 +209,33 @@ export const es: DeepPartial<Messages> = {
             mentionGroups: "Grupos de menciones",
             customEmoji: "Emojis personalizados",
             shortcuts: "Atajos",
+            account: "Cuenta",
+        },
+        account: {
+            exportHeading: "Exporta tus datos",
+            exportDescription:
+                "Descarga todo lo que has creado — perfil, notas, tareas, mensajes y comentarios — en un archivo JSON. No incluye contenido del equipo escrito por otras personas.",
+            exportButton: "Descargar mis datos",
+            deleteHeading: "Eliminar tu cuenta",
+            deleteDescription: "Borra tu cuenta de forma permanente. No se puede deshacer.",
+            deleteButton: "Eliminar cuenta",
+            ownershipBlocked:
+                "Eres propietario de equipos que aún tienen otros miembros. Transfiere la propiedad desde el perfil de cada equipo antes de eliminar tu cuenta.",
+            confirmHeading: "¿Eliminar tu cuenta?",
+            confirmBody: "Esto es permanente. Esto es exactamente lo que ocurre:",
+            confirmBullet1:
+                "Tu nombre, correo y perfil se borran, y se cierra tu sesión en todos los dispositivos al instante.",
+            confirmBullet2:
+                "Tus notas privadas, tareas e historial de IA se eliminan; los equipos donde eras el último miembro se cierran.",
+            confirmBullet3:
+                "El trabajo hecho con tus compañeros permanece en su espacio, atribuido a «Usuario eliminado».",
+            confirmTypeLabel: "Escribe DELETE para confirmar",
+            confirmPasswordLabel: "Tu contraseña",
+            confirmDeleteButton: "Eliminar mi cuenta",
+            cancel: "Cancelar",
+            errorPassword: "La contraseña no es correcta.",
+            errorOwnership: "Primero transfiere la propiedad de tus equipos.",
+            errorGeneric: "Algo salió mal. Inténtalo de nuevo.",
         },
         planUsage: {
             heading: "Plan y uso",

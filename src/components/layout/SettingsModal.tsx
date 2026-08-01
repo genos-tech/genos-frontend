@@ -13,6 +13,7 @@ import KeyboardRoundedIcon from "@mui/icons-material/KeyboardRounded";
 import LanguageRoundedIcon from "@mui/icons-material/LanguageRounded";
 import LightModeRoundedIcon from "@mui/icons-material/LightModeRounded";
 import LockRoundedIcon from "@mui/icons-material/LockRounded";
+import ManageAccountsRoundedIcon from "@mui/icons-material/ManageAccountsRounded";
 import NotificationsRoundedIcon from "@mui/icons-material/NotificationsRounded";
 import PaletteRoundedIcon from "@mui/icons-material/PaletteRounded";
 import PlaylistAddCheckRoundedIcon from "@mui/icons-material/PlaylistAddCheckRounded";
@@ -76,6 +77,7 @@ import { getServiceShortcutModifierKeys, isMac } from "../../utils/platform";
 import { AppTooltip } from "../ui/AppTooltip";
 import { EmojiGlyph } from "../ui/emoji/EmojiGlyph";
 import { EmojiPicker } from "../ui/emoji/EmojiPicker";
+import { AccountSettingsSection } from "./AccountSettingsSection";
 import { MentionGroupsPanel } from "./MentionGroupsPanel";
 import { CreditUsageSection } from "./settings/CreditBalance";
 import { PlanUsageSection } from "./settings/PlanUsageSection";
@@ -1487,6 +1489,7 @@ const KeyboardShortcutsSection = () => {
  *   5. Language         – locale switcher (English / 日本語).
  *   6. Notifications    – delegates to `NotificationSettingsPanel`.
  *   7. Keyboard shortcuts – read-only reference for the global service shortcuts.
+ *   8. Account          – data export + account deletion (GDPR).
  *
  * Notification state is read from `NotificationsContext` provided at the
  * App root, so the modal needs no notification-specific props.
@@ -1504,7 +1507,8 @@ type SettingsTabKey =
     | "mentionGroups"
     | "customEmoji"
     | "shortcuts"
-    | "integrations";
+    | "integrations"
+    | "account";
 
 /**
  * Settings → Integrations panel. Renders the same Connections UI
@@ -1685,6 +1689,10 @@ export const SettingsModal = ({
                             <KeyboardRoundedIcon sx={SIDEBAR_TAB_ICON_SX} />
                             {t.settings.tabs.shortcuts}
                         </Tab>
+                        <Tab sx={SIDEBAR_TAB_SX} value="account">
+                            <ManageAccountsRoundedIcon sx={SIDEBAR_TAB_ICON_SX} />
+                            {t.settings.tabs.account}
+                        </Tab>
                         {/* Feature-flagged so disabled deploys don't
                             show an empty tab. */}
                         {OAUTH_INTEGRATIONS_ENABLED && (
@@ -1801,6 +1809,14 @@ export const SettingsModal = ({
                     >
                         <Stack spacing={2}>
                             <KeyboardShortcutsSection />
+                        </Stack>
+                    </TabPanel>
+                    <TabPanel
+                        sx={{ px: 0, py: 2, minWidth: 0, overflowX: "auto" }}
+                        value="account"
+                    >
+                        <Stack spacing={2}>
+                            <AccountSettingsSection />
                         </Stack>
                     </TabPanel>
                     {OAUTH_INTEGRATIONS_ENABLED && (

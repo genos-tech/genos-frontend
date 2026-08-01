@@ -210,6 +210,33 @@ export const fr: DeepPartial<Messages> = {
             mentionGroups: "Groupes de mentions",
             customEmoji: "Émojis personnalisés",
             shortcuts: "Raccourcis",
+            account: "Compte",
+        },
+        account: {
+            exportHeading: "Exporter vos données",
+            exportDescription:
+                "Téléchargez tout ce que vous avez créé — profil, notes, tâches, messages et commentaires — dans un fichier JSON. Le contenu d'équipe rédigé par d'autres n'est pas inclus.",
+            exportButton: "Télécharger mes données",
+            deleteHeading: "Supprimer votre compte",
+            deleteDescription: "Effacer définitivement votre compte. Action irréversible.",
+            deleteButton: "Supprimer le compte",
+            ownershipBlocked:
+                "Vous possédez des équipes qui comptent encore d'autres membres. Transférez la propriété depuis le profil de chaque équipe avant de supprimer votre compte.",
+            confirmHeading: "Supprimer votre compte ?",
+            confirmBody: "C'est définitif. Voici précisément ce qui se passe :",
+            confirmBullet1:
+                "Votre nom, votre e-mail et votre profil sont effacés, et vous êtes déconnecté partout immédiatement.",
+            confirmBullet2:
+                "Vos notes privées, tâches et historique IA sont supprimés ; les équipes où vous étiez le dernier membre sont fermées.",
+            confirmBullet3:
+                "Le travail réalisé avec vos collègues reste dans leur espace, attribué à « Utilisateur supprimé ».",
+            confirmTypeLabel: "Tapez DELETE pour confirmer",
+            confirmPasswordLabel: "Votre mot de passe",
+            confirmDeleteButton: "Supprimer mon compte",
+            cancel: "Annuler",
+            errorPassword: "Mot de passe incorrect.",
+            errorOwnership: "Transférez d'abord la propriété de vos équipes.",
+            errorGeneric: "Une erreur est survenue. Réessayez.",
         },
         planUsage: {
             heading: "Forfait et utilisation",

@@ -206,6 +206,31 @@ export const zh: DeepPartial<Messages> = {
             mentionGroups: "提及群组",
             customEmoji: "自定义表情",
             shortcuts: "快捷键",
+            account: "账户",
+        },
+        account: {
+            exportHeading: "导出你的数据",
+            exportDescription:
+                "将你创建的内容（个人资料、笔记、待办、任务、消息和评论）下载为 JSON 文件。不包含其他成员撰写的团队内容。",
+            exportButton: "下载我的数据",
+            deleteHeading: "删除账户",
+            deleteDescription: "永久删除你的账户，此操作无法撤销。",
+            deleteButton: "删除账户",
+            ownershipBlocked:
+                "你是仍有其他成员的团队所有者。请先在各团队资料中转移所有权，然后再删除账户。",
+            confirmHeading: "确定要删除账户吗？",
+            confirmBody: "此操作不可撤销。具体会发生：",
+            confirmBullet1: "你的姓名、邮箱和个人资料将被清除，并立即在所有设备上退出登录。",
+            confirmBullet2:
+                "你的私人笔记、待办和 AI 记录将被删除；你是最后一名成员的团队将被关闭。",
+            confirmBullet3: "你与队友共同完成的工作会保留在他们的工作区，署名为“已删除用户”。",
+            confirmTypeLabel: "输入 DELETE 以确认",
+            confirmPasswordLabel: "你的密码",
+            confirmDeleteButton: "删除我的账户",
+            cancel: "取消",
+            errorPassword: "密码不正确。",
+            errorOwnership: "请先转移团队所有权。",
+            errorGeneric: "出了点问题，请重试。",
         },
         planUsage: {
             heading: "套餐与用量",

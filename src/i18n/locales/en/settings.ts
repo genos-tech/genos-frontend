@@ -11,6 +11,34 @@ export const settings = {
         customEmoji: "Custom emoji",
         shortcuts: "Shortcuts",
         integrations: "Integrations",
+        account: "Account",
+    },
+    // Settings → Account: GDPR export + erasure.
+    account: {
+        exportHeading: "Export your data",
+        exportDescription:
+            "Download everything you've created here — your profile, notes, todos, tasks, messages and comments — as a JSON file. Team content written by other people isn't included.",
+        exportButton: "Download my data",
+        deleteHeading: "Delete your account",
+        deleteDescription: "Permanently erase your account. This cannot be undone.",
+        deleteButton: "Delete account",
+        ownershipBlocked:
+            "You own teams that still have other members. Transfer ownership from each team's profile before deleting your account.",
+        confirmHeading: "Delete your account?",
+        confirmBody: "This is permanent. Here's exactly what happens:",
+        confirmBullet1:
+            "Your name, email and profile are erased, and you're signed out everywhere immediately.",
+        confirmBullet2:
+            "Your private notes, todos and AI history are deleted; teams where you were the last member are closed.",
+        confirmBullet3:
+            "Work you did with teammates stays in their workspace, attributed to “Deleted user”.",
+        confirmTypeLabel: "Type DELETE to confirm",
+        confirmPasswordLabel: "Your password",
+        confirmDeleteButton: "Delete my account",
+        cancel: "Cancel",
+        errorPassword: "That password is incorrect.",
+        errorOwnership: "Transfer ownership of your teams first.",
+        errorGeneric: "Something went wrong. Please try again.",
     },
     planUsage: {
         heading: "Plan & Usage",
