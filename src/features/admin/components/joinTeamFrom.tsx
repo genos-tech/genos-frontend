@@ -9,6 +9,7 @@ import {
     Alert,
     Box,
     Button,
+    Checkbox,
     FormControl,
     FormLabel,
     Input,
@@ -59,6 +60,10 @@ export const JoinTeam = () => {
     const [moveToTeamErrorMessage, setMoveToTeamErrorMessage] = useState<string | null>(null);
     const [searchTeamErrorMessage, setSearchTeamErrorMessage] = useState<string | null>(null);
     const [createTeamErrorMessage, setCreateTeamErrorMessage] = useState<string | null>(null);
+    // Starter workspace opt-in (readiness plan §3.3). Default ON: a new
+    // team benefits from landing in a populated app, and the seeded
+    // project's last task is "delete this project".
+    const [withStarter, setWithStarter] = useState(true);
     const { accessToken, setAccessToken } = useAuth();
     const [joinedTeams, setJoinedTeams] = useState<Team[]>([]);
     const { mode } = useColorScheme();
@@ -131,7 +136,8 @@ export const JoinTeam = () => {
                 accessToken,
                 teamName,
                 userId,
-                setCreateTeamErrorMessage
+                setCreateTeamErrorMessage,
+                withStarter
             );
             await sleepMilliSeconds(100);
             if (createTeamRes) {
@@ -713,6 +719,19 @@ export const JoinTeam = () => {
                             }}
                         />
                     </FormControl>
+                    <Checkbox
+                        checked={withStarter}
+                        label={t.admin.joinTeam.starterOptIn}
+                        size="sm"
+                        sx={{ mt: 1.5, color: styles.labelColor }}
+                        onChange={(e) => setWithStarter(e.target.checked)}
+                    />
+                    <Typography
+                        level="body-xs"
+                        sx={{ color: styles.subtitleColor, mt: 0.5, ml: 3.5 }}
+                    >
+                        {t.admin.joinTeam.starterOptInHint}
+                    </Typography>
                     <Button
                         startDecorator={<AddCircleRoundedIcon />}
                         type="submit"

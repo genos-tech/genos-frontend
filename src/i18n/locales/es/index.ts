@@ -1730,6 +1730,9 @@ export const es: DeepPartial<Messages> = {
             teamIdPlaceholder: "Introduce el ID del equipo para buscar",
             teamNameLabel: "Nombre del equipo",
             teamNamePlaceholder: "Introduce el nombre de tu equipo",
+            starterOptIn: "Empezar con un proyecto de ejemplo",
+            starterOptInHint:
+                "Un pequeño proyecto inicial, una nota y tareas para que la app no esté vacía — bórralo cuando quieras.",
             searchAnother: "Buscar otro",
             requestToJoin: "Solicitar unirse",
             searchTeam: "Buscar equipo",

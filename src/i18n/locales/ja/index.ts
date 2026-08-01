@@ -1886,6 +1886,9 @@ export const ja: DeepPartial<Messages> = {
             teamIdPlaceholder: "検索するチームIDを入力",
             teamNameLabel: "チーム名",
             teamNamePlaceholder: "チーム名を入力",
+            starterOptIn: "サンプルプロジェクトから始める",
+            starterOptInHint:
+                "空のアプリにならないよう、小さなスタートガイド用プロジェクト・ノート・ToDoを用意します。いつでも削除できます。",
             searchAnother: "別のチームを検索",
             requestToJoin: "参加をリクエスト",
             searchTeam: "チームを検索",

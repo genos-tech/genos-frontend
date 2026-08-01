@@ -7,7 +7,8 @@ export const createTeam = async (
     accessToken: string | null,
     teamName: string,
     userId: string,
-    setErrorMessage?: (value: string) => void
+    setErrorMessage?: (value: string) => void,
+    withStarter?: boolean
 ) => {
     const m = getMessages().admin.auth.errors;
     try {
@@ -17,6 +18,9 @@ export const createTeam = async (
                 team_name: teamName,
                 team_email: `${teamName}@genos.tech`,
                 owner_id: userId,
+                // Backend requires the literal boolean true to seed —
+                // omitted entirely when off.
+                ...(withStarter === true ? { with_starter: true } : {}),
             });
             return res.data;
         } else {

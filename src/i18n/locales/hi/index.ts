@@ -1733,6 +1733,9 @@ export const hi: DeepPartial<Messages> = {
             teamIdPlaceholder: "खोजने के लिए टीम ID डालें",
             teamNameLabel: "टीम का नाम",
             teamNamePlaceholder: "अपनी टीम का नाम डालें",
+            starterOptIn: "एक नमूना प्रोजेक्ट के साथ शुरू करें",
+            starterOptInHint:
+                "एक छोटा शुरुआती प्रोजेक्ट, नोट और टूडू ताकि ऐप खाली न लगे — कभी भी हटा सकते हैं।",
             searchAnother: "दूसरी खोजें",
             requestToJoin: "जॉइन करने का अनुरोध",
             searchTeam: "टीम खोजें",

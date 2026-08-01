@@ -1695,6 +1695,9 @@ export const zh: DeepPartial<Messages> = {
             teamIdPlaceholder: "请输入团队 ID 进行搜索",
             teamNameLabel: "团队名称",
             teamNamePlaceholder: "请输入团队名称",
+            starterOptIn: "从示例项目开始",
+            starterOptInHint:
+                "创建一个小型入门项目、笔记和待办，让应用不再空空如也 — 可随时删除。",
             searchAnother: "搜索其他团队",
             requestToJoin: "申请加入",
             searchTeam: "搜索团队",
