@@ -33,10 +33,16 @@ type MemberRoleControlProps = {
     popupZIndex?: number;
 };
 
-const ROLE_CHIP_COLOR: Record<MemberRole, "primary" | "success" | "neutral"> = {
+const ROLE_CHIP_COLOR: Record<MemberRole, "primary" | "success" | "neutral" | "warning"> = {
     owner: "primary",
     editor: "success",
     viewer: "neutral",
+    // Deliberately the one warm colour in the set. A guest is somebody
+    // from OUTSIDE the company sitting in the member list, and the whole
+    // value of the badge is that a teammate registers it without reading
+    // it. `neutral` would have made an external collaborator look like
+    // the quietest person in the room.
+    guest: "warning",
 };
 
 /**

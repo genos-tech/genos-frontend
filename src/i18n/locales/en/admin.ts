@@ -176,6 +176,13 @@ export const admin = {
         title: "Invite team members",
         subtitle:
             "Enter one or more email addresses. Each person gets an invite link locked to their email.",
+        // Guest variant. The promise has to be different, and precise:
+        // an outside collaborator is agreeing to join ONE project, and
+        // the copy is what sets that expectation before they accept.
+        openButtonGuest: "Invite guests",
+        titleGuest: "Invite guests to {projectName}",
+        subtitleGuest:
+            "Guests join this project only. They won't see your other projects, your team's members, or anything else in the workspace.",
         emailPlaceholder: "name@example.com",
         addHint: "Press Enter or comma to add each email.",
         invalidEmail: "That doesn't look like a valid email address.",

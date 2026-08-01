@@ -13,6 +13,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { useAuth } from "../../../../context/AuthContext";
 import { ValidationUtils } from "../../../../db/utils/validation";
 import { useTranslation } from "../../../../i18n";
+import { fmt } from "../../../../i18n/interpolate";
 import {
     InviteResult,
     InviteResultStatus,
@@ -28,6 +29,11 @@ type Props = {
     open: boolean;
     teamId: string;
     onClose: () => void;
+    /** Present → invite GUESTS scoped to this project instead of team
+     *  members. The modal's copy changes with it, because "invite to the
+     *  team" is the wrong promise to make to an outside collaborator. */
+    projectId?: number | null;
+    projectName?: string;
 };
 
 // Per-status icon + accent colour for the results list.
@@ -42,7 +48,8 @@ const STATUS_META: Record<InviteResultStatus, { color: string; Icon: typeof Info
     failed: { color: "rgba(var(--gp-tint-danger-rgb), 0.95)", Icon: ErrorOutlineRoundedIcon },
 };
 
-export const ModalInviteMembers = ({ open, teamId, onClose }: Props) => {
+export const ModalInviteMembers = ({ open, teamId, onClose, projectId, projectName }: Props) => {
+    const asGuest = projectId != null;
     const { accessToken } = useAuth();
     const { t } = useTranslation();
     const { mode } = useColorScheme();
@@ -91,7 +98,13 @@ export const ModalInviteMembers = ({ open, teamId, onClose }: Props) => {
         if (submitting || emails.length === 0) return;
         setSubmitting(true);
         setErrorMessage(null);
-        const res = await inviteTeamMembers(accessToken, teamId, emails, setErrorMessage);
+        const res = await inviteTeamMembers(
+            accessToken,
+            teamId,
+            emails,
+            setErrorMessage,
+            projectId
+        );
         setSubmitting(false);
         if (res) {
             setResults(res);
@@ -159,10 +172,16 @@ export const ModalInviteMembers = ({ open, teamId, onClose }: Props) => {
                         level="h4"
                         sx={{ color: "rgba(255, 255, 255, 0.9)", fontWeight: 600, mb: 1 }}
                     >
-                        {t.admin.inviteMembers.title}
+                        {asGuest
+                            ? fmt(t.admin.inviteMembers.titleGuest, {
+                                  projectName: projectName ?? "",
+                              })
+                            : t.admin.inviteMembers.title}
                     </Typography>
                     <Typography level="body-sm" sx={{ color: "rgba(255, 255, 255, 0.6)" }}>
-                        {t.admin.inviteMembers.subtitle}
+                        {asGuest
+                            ? t.admin.inviteMembers.subtitleGuest
+                            : t.admin.inviteMembers.subtitle}
                     </Typography>
                 </Box>
 
