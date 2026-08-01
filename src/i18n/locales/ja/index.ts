@@ -217,6 +217,33 @@ export const ja: DeepPartial<Messages> = {
             mentionGroups: "メンショングループ",
             customEmoji: "カスタム絵文字",
             shortcuts: "ショートカット",
+            account: "アカウント",
+        },
+        account: {
+            exportHeading: "データをエクスポート",
+            exportDescription:
+                "プロフィール、ノート、ToDo、タスク、メッセージ、コメントなど、あなたが作成したデータをJSONファイルでダウンロードします。他のメンバーが書いたチームのコンテンツは含まれません。",
+            exportButton: "データをダウンロード",
+            deleteHeading: "アカウントを削除",
+            deleteDescription: "アカウントを完全に削除します。取り消しはできません。",
+            deleteButton: "アカウントを削除",
+            ownershipBlocked:
+                "他のメンバーが在籍するチームのオーナーになっています。アカウントを削除する前に、各チームのプロフィールからオーナー権限を移譲してください。",
+            confirmHeading: "アカウントを削除しますか？",
+            confirmBody: "この操作は取り消せません。実行される内容は次のとおりです：",
+            confirmBullet1:
+                "名前・メールアドレス・プロフィールが消去され、すべての端末で即座にサインアウトされます。",
+            confirmBullet2:
+                "プライベートなノート、ToDo、AI履歴は削除されます。あなたが最後のメンバーだったチームは閉鎖されます。",
+            confirmBullet3:
+                "チームメンバーと行った作業は「削除済みユーザー」として相手のワークスペースに残ります。",
+            confirmTypeLabel: "確認のため DELETE と入力してください",
+            confirmPasswordLabel: "パスワード",
+            confirmDeleteButton: "アカウントを削除する",
+            cancel: "キャンセル",
+            errorPassword: "パスワードが正しくありません。",
+            errorOwnership: "先にチームのオーナー権限を移譲してください。",
+            errorGeneric: "問題が発生しました。もう一度お試しください。",
         },
         planUsage: {
             heading: "プランと使用状況",

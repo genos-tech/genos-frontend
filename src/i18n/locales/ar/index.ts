@@ -208,6 +208,33 @@ export const ar: DeepPartial<Messages> = {
             mentionGroups: "مجموعات الإشارة",
             customEmoji: "رموز تعبيرية مخصصة",
             shortcuts: "الاختصارات",
+            account: "الحساب",
+        },
+        account: {
+            exportHeading: "تصدير بياناتك",
+            exportDescription:
+                "نزّل كل ما أنشأته — ملفك الشخصي وملاحظاتك ومهامك ورسائلك وتعليقاتك — كملف JSON. لا يشمل محتوى الفريق الذي كتبه آخرون.",
+            exportButton: "تنزيل بياناتي",
+            deleteHeading: "حذف حسابك",
+            deleteDescription: "حذف حسابك نهائيًا. لا يمكن التراجع عن ذلك.",
+            deleteButton: "حذف الحساب",
+            ownershipBlocked:
+                "أنت مالك فرق ما زال بها أعضاء آخرون. انقل الملكية من ملف كل فريق قبل حذف حسابك.",
+            confirmHeading: "هل تريد حذف حسابك؟",
+            confirmBody: "هذا إجراء نهائي. إليك ما سيحدث بالضبط:",
+            confirmBullet1:
+                "سيُمحى اسمك وبريدك وملفك الشخصي، وسيتم تسجيل خروجك فورًا من كل الأجهزة.",
+            confirmBullet2:
+                "ستُحذف ملاحظاتك الخاصة ومهامك وسجل الذكاء الاصطناعي؛ وتُغلق الفرق التي كنت آخر عضو فيها.",
+            confirmBullet3:
+                "يبقى العمل الذي أنجزته مع زملائك في مساحتهم منسوبًا إلى «مستخدم محذوف».",
+            confirmTypeLabel: "اكتب DELETE للتأكيد",
+            confirmPasswordLabel: "كلمة المرور",
+            confirmDeleteButton: "احذف حسابي",
+            cancel: "إلغاء",
+            errorPassword: "كلمة المرور غير صحيحة.",
+            errorOwnership: "انقل ملكية فرقك أولًا.",
+            errorGeneric: "حدث خطأ ما. حاول مرة أخرى.",
         },
         planUsage: {
             heading: "الخطة والاستخدام",
