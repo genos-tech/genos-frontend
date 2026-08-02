@@ -25,6 +25,7 @@ import { InboxItemProps } from "../../../types/common";
 import { extractYYYYMMDD, extractYYYYMMDDHHMM } from "../../../utils/dateUtils";
 import { addInboxItem } from "../../admin/services/addInboxItem";
 import { respondToOwnershipClaim } from "../../admin/services/ownershipClaim";
+import { DigestHeadline } from "./DigestHeadline";
 import { InboxTargetChip } from "./InboxTargetChip";
 
 // Lazy: keeps react-markdown (and its remark deps) out of the inbox's
@@ -319,6 +320,14 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                     (bold, bullets, workspace links resolved server-side),
                     rendered by the lazy DigestBody; while the chunk loads,
                     fall back to the old pre-wrapped plain text. */}
+                {inboxItem.itemType === DIGEST && (
+                    <DigestHeadline
+                        isDark={isDark}
+                        title={String(
+                            (inboxItem.itemBody as unknown as { title?: string })?.title ?? ""
+                        )}
+                    />
+                )}
                 {inboxItem.itemType === DIGEST && (
                     <Suspense
                         fallback={

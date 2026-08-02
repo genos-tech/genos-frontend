@@ -10,6 +10,7 @@ import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 
 import DigestBody from "../features/inbox/components/DigestBody";
+import { DigestHeadline } from "../features/inbox/components/DigestHeadline";
 import { useInboxItems } from "../features/inbox/hooks/useInboxItems";
 import { useInboxManagement } from "../hooks/inbox/useInboxManagement";
 import { InboxItemProps } from "../types/common";
@@ -83,5 +84,24 @@ describe("DigestBody markdown rendering", () => {
         const link = screen.getByText("MDN").closest("a");
         expect(link?.getAttribute("href")).toBe("https://developer.mozilla.org");
         expect(link?.getAttribute("target")).toBe("_blank");
+    });
+});
+
+describe("DigestHeadline", () => {
+    it("shows the edition's own headline", () => {
+        render(<DigestHeadline isDark={false} title="Three things are stuck" />);
+        expect(screen.getByText("Three things are stuck")).toBeTruthy();
+    });
+
+    it("renders nothing for the generic fallback title", () => {
+        // Pre-headline rows and headline-less runs both store this; the
+        // chip already says "Genos digest", so repeating it is noise.
+        const { container } = render(<DigestHeadline isDark={false} title="Your Genos digest" />);
+        expect(container.textContent).toBe("");
+    });
+
+    it("renders nothing for an empty or whitespace title", () => {
+        const { container } = render(<DigestHeadline isDark={false} title="   " />);
+        expect(container.textContent).toBe("");
     });
 });
