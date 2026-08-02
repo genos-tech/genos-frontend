@@ -36,6 +36,11 @@ vi.mock("../components/layout/settings/PlanUsageSection", () => ({
 vi.mock("../components/layout/MentionGroupsPanel", () => ({
     MentionGroupsPanel: () => <div />,
 }));
+// Isolates the layout assertion from the Developer panel's network
+// calls — same reason every other panel here is stubbed.
+vi.mock("../components/layout/DeveloperSettingsSection", () => ({
+    DeveloperSettingsSection: () => null,
+}));
 vi.mock("../components/layout/TeamEmojiPanel", () => ({
     TeamEmojiPanel: () => <div />,
 }));
