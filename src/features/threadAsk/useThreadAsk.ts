@@ -21,38 +21,19 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
     fetchThreadSummary,
-    type AgentSessionTurn,
     type ThreadContext,
     type ThreadSummaryResponse,
 } from "../../services/agentApi";
 import { notifyAgentRunComplete } from "../../services/notifications/agentRunNotice";
 import { useNotificationsContext } from "../../services/notifications/NotificationsContext";
 import {
+    sessionTurnToCompleted,
     useAgentQA,
     type AgentRunResult,
     type CompletedTurn,
     type ToolEvent,
     type UseAgentQAReturn,
 } from "../agentQA";
-
-// Map a server-side AgentSessionTurn (restored from a persisted run)
-// to the local CompletedTurn shape the modal renders. The local id
-// is just a React key — derived from index since the server doesn't
-// expose a numeric turn id, only `run_id` (UUID).
-const sessionTurnToCompleted = (turn: AgentSessionTurn, index: number): CompletedTurn => ({
-    id: index + 1,
-    askedQuery: turn.query,
-    answer: turn.answer,
-    answerSources: turn.sources || [],
-    // toolEvents are not persisted on AgentRun — the activity strip
-    // is "show what happened LIVE", not part of the durable record.
-    // Restored turns render without it; the prior answer + sources
-    // are enough context.
-    toolEvents: [],
-    askError: turn.error || null,
-    // Carry run_id so restored turns can still be rated (F1).
-    runId: turn.run_id,
-});
 
 // How often we re-check the server's fingerprint while the modal is
 // open. 30 s is a generous compromise — the backend call is cheap

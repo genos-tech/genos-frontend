@@ -20,32 +20,18 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
     fetchNoteSummary,
-    type AgentSessionTurn,
     type NoteContext,
     type NoteSummaryResponse,
 } from "../../services/agentApi";
 import { notifyAgentRunComplete } from "../../services/notifications/agentRunNotice";
 import { useNotificationsContext } from "../../services/notifications/NotificationsContext";
 import {
+    sessionTurnToCompleted,
     useAgentQA,
     type AgentRunResult,
     type CompletedTurn,
     type UseAgentQAReturn,
 } from "../agentQA";
-
-// Map a server-side AgentSessionTurn to the local CompletedTurn shape.
-// Same shape as the thread variant — both share the same backend session
-// model under the hood.
-const sessionTurnToCompleted = (turn: AgentSessionTurn, index: number): CompletedTurn => ({
-    id: index + 1,
-    askedQuery: turn.query,
-    answer: turn.answer,
-    answerSources: turn.sources || [],
-    toolEvents: [],
-    askError: turn.error || null,
-    // Carry run_id so restored turns can still be rated (F1).
-    runId: turn.run_id,
-});
 
 // How often we re-check the server's fingerprint while the modal is
 // open. Notes don't change as often as threads, but the same 30 s
