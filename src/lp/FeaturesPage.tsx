@@ -3,7 +3,10 @@ import { motion } from "framer-motion";
 import {
     ArrowLeft,
     ArrowRight,
+    Bell,
+    Bot,
     CalendarDays,
+    Code2,
     Command,
     FileText,
     Inbox,
@@ -23,15 +26,28 @@ import { I18nProvider, useTranslation } from "../i18n";
 const APP_URL = "https://genosai.dev";
 
 // Order + icon for each entry in `t.featuresPage.features.items`.
+//
+// The order is read in ROWS of three, because that is what the grid
+// renders at `lg` — so each row is a theme rather than an arbitrary run:
+// the places work lives, the ways it reaches you, Genos AI, and the ways
+// in from outside. A card added to the wrong row still renders; it just
+// stops the page explaining itself.
 const FEATURE_ORDER = [
     "chat",
     "tasks",
     "notes",
+
     "inbox",
     "calendar",
-    "integrations",
+    "notifications",
+
     "spotlight",
+    "genos",
     "agent",
+
+    "integrations",
+    "developers",
+    "mcp",
 ] as const;
 
 const FEATURE_ICONS: Record<
@@ -43,9 +59,13 @@ const FEATURE_ICONS: Record<
     notes: FileText,
     inbox: Inbox,
     calendar: CalendarDays,
+    notifications: Bell,
     integrations: Plug,
     spotlight: Search,
+    genos: Sparkles,
     agent: Wand2,
+    developers: Code2,
+    mcp: Bot,
 };
 
 function cn(...classes: Array<string | false | undefined>) {
