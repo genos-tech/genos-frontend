@@ -73,21 +73,24 @@ describe("CreditBalance", () => {
         expect(screen.getByText(/0\.4 of 10 AI credits left/i)).toBeTruthy();
     });
 
-    it("shows an EMPTY bar on an untouched allowance", () => {
-        // The bug this replaces: "200 of 200 left" rendered a full bar,
-        // reading as "all used up" on a month nobody had spent yet.
+    it("shows a FULL bar on an untouched allowance", () => {
+        // Direction reversed 2026-08-02 by maintainer request: the bar
+        // is a fuel gauge showing what is LEFT, so an unspent month
+        // reads full. This agrees with the label beside it, which has
+        // always said "{balance} of {limit} AI credits left" — the
+        // previous used-fill direction contradicted its own caption.
         renderBalance(block({ balance: 200, limit: 200, used: 0 }));
-        expect(barValue()).toBe(0);
-    });
-
-    it("fills the bar in proportion to what has been used", () => {
-        renderBalance(block({ balance: 40, limit: 100 }));
-        expect(barValue()).toBe(60);
-    });
-
-    it("shows a FULL bar once the allowance is gone", () => {
-        renderBalance(block({ balance: 0, limit: 100 }));
         expect(barValue()).toBe(100);
+    });
+
+    it("drains the bar in proportion to what has been used", () => {
+        renderBalance(block({ balance: 40, limit: 100 }));
+        expect(barValue()).toBe(40);
+    });
+
+    it("shows an EMPTY bar once the allowance is gone", () => {
+        renderBalance(block({ balance: 0, limit: 100 }));
+        expect(barValue()).toBe(0);
     });
 
     it("warns that a long request may stop partway when running low", () => {

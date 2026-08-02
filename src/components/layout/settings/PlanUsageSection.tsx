@@ -67,16 +67,30 @@ const UPGRADE_LABEL_KEY = {
 const UsageRow = ({
     label,
     windowLabel,
+    remainingTemplate,
     block,
     unlimitedLabel,
 }: {
     label: string;
     windowLabel: string;
+    remainingTemplate: string;
     block: QuotaBlock;
     unlimitedLabel: string;
 }) => {
     const unlimited = block.limit === null;
-    const ratio = unlimited || block.limit === 0 ? 0 : Math.min(block.used / block.limit!, 1);
+    // The bar shows what is LEFT of the allowance, not what has been
+    // consumed — full at the start of the window, empty at the cap. Same
+    // direction as the credit meter in `CreditBalance`; the two sit in
+    // the same modal and must not drain opposite ways.
+    //
+    // `limit === 0` reads as 0% (nothing available), not 100%, so a plan
+    // that grants none of something doesn't render a full bar.
+    const remaining =
+        unlimited || block.limit === 0 ? 0 : 1 - Math.min(block.used / block.limit!, 1);
+    // Unchanged, and deliberately still keyed on being AT the cap rather
+    // than on the bar being visually empty: the warning colour marks the
+    // state the server refuses in, and inverting the fill must not move
+    // what the colour means.
     const atCap = !unlimited && block.limit !== 0 && block.used >= block.limit!;
     return (
         <Box>
@@ -85,7 +99,18 @@ const UsageRow = ({
                     {label}
                 </Typography>
                 <Typography level="body-sm" sx={{ color: "text.tertiary" }}>
-                    {unlimited ? unlimitedLabel : `${block.used} / ${block.limit} ${windowLabel}`}
+                    {unlimited
+                        ? unlimitedLabel
+                        : fmt(remainingTemplate, {
+                              // Clamped: the server can report `used`
+                              // above `limit` (a quota lowered by a
+                              // downgrade, or a race at the boundary),
+                              // and "-3 of 50 left" is not a number to
+                              // show anyone.
+                              remaining: Math.max((block.limit ?? 0) - block.used, 0),
+                              limit: block.limit ?? 0,
+                              window: windowLabel,
+                          })}
                 </Typography>
             </Stack>
             {!unlimited && (
@@ -94,7 +119,7 @@ const UsageRow = ({
                     determinate
                     sx={{ mt: 0.5 }}
                     thickness={4}
-                    value={ratio * 100}
+                    value={remaining * 100}
                 />
             )}
         </Box>
@@ -213,12 +238,14 @@ export const PlanUsageSection = ({ onNavigateAway }: { onNavigateAway?: () => vo
                         <UsageRow
                             block={data.llm_ask}
                             label={p.aiAsks}
+                            remainingTemplate={p.quotaRemaining}
                             unlimitedLabel={p.unlimited}
                             windowLabel={p.todaySuffix}
                         />
                         <UsageRow
                             block={data.web_search}
                             label={p.webSearches}
+                            remainingTemplate={p.quotaRemaining}
                             unlimitedLabel={p.unlimited}
                             windowLabel={p.todaySuffix}
                         />
@@ -228,6 +255,7 @@ export const PlanUsageSection = ({ onNavigateAway }: { onNavigateAway?: () => vo
                     <UsageRow
                         block={data.task_create}
                         label={p.tasksCreated}
+                        remainingTemplate={p.quotaRemaining}
                         unlimitedLabel={p.unlimited}
                         windowLabel={p.monthSuffix}
                     />
@@ -236,6 +264,7 @@ export const PlanUsageSection = ({ onNavigateAway }: { onNavigateAway?: () => vo
                     <UsageRow
                         block={data.note_create}
                         label={p.notesCreated}
+                        remainingTemplate={p.quotaRemaining}
                         unlimitedLabel={p.unlimited}
                         windowLabel={p.monthSuffix}
                     />
