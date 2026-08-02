@@ -2,18 +2,7 @@ import { useEffect, useState } from "react";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
-import {
-    Box,
-    Button,
-    Card,
-    Chip,
-    Divider,
-    LinearProgress,
-    Link,
-    Sheet,
-    Stack,
-    Typography,
-} from "@mui/joy";
+import { Box, Button, Card, Chip, LinearProgress, Link, Sheet, Stack, Typography } from "@mui/joy";
 
 import { useAuth } from "../../context/AuthContext";
 import { useCurrencyPreference } from "../../hooks/common/useCurrencyPreference";
@@ -462,8 +451,8 @@ export const PlansHome = () => {
                 marketing previously had separate row builders and drifted,
                 most recently over MCP. One renderer, one set of facts. */}
             <Sheet
-                variant="outlined"
                 sx={{ borderRadius: "lg", overflowX: "auto", overflowY: "hidden" }}
+                variant="outlined"
             >
                 <Box
                     component="table"
@@ -511,8 +500,8 @@ export const PlansHome = () => {
                                 const highlighted = tier.tier === "pro";
                                 return (
                                     <Box
-                                        component="th"
                                         key={tier.tier}
+                                        component="th"
                                         scope="col"
                                         sx={{
                                             position: "relative",
@@ -598,11 +587,11 @@ export const PlansHome = () => {
                     </Box>
 
                     {planMatrixGroups(plans.tiers, p, locale).map((group) => (
-                        <Box component="tbody" key={group.key}>
+                        <Box key={group.key} component="tbody">
                             <Box component="tr">
                                 <Box
-                                    component="th"
                                     colSpan={plans.tiers.length + 1}
+                                    component="th"
                                     scope="colgroup"
                                     sx={{
                                         position: "sticky",
@@ -627,8 +616,8 @@ export const PlansHome = () => {
                             </Box>
                             {group.rows.map((row) => (
                                 <Box
-                                    component="tr"
                                     key={row.key}
+                                    component="tr"
                                     sx={{
                                         borderBottom: "1px solid",
                                         borderColor: "divider",
@@ -652,8 +641,8 @@ export const PlansHome = () => {
                                     </Box>
                                     {row.cells.map((cell, i) => (
                                         <Box
-                                            component="td"
                                             key={plans.tiers[i].tier}
+                                            component="td"
                                             sx={{
                                                 borderInlineStart: "1px solid",
                                                 borderColor:
