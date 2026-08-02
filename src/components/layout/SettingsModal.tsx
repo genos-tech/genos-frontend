@@ -20,6 +20,7 @@ import PlaylistAddCheckRoundedIcon from "@mui/icons-material/PlaylistAddCheckRou
 import PrivacyTipRoundedIcon from "@mui/icons-material/PrivacyTipRounded";
 import SettingsBrightnessRoundedIcon from "@mui/icons-material/SettingsBrightnessRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
+import TerminalRoundedIcon from "@mui/icons-material/TerminalRounded";
 import ViewStreamRoundedIcon from "@mui/icons-material/ViewStreamRounded";
 import WorkspacePremiumRoundedIcon from "@mui/icons-material/WorkspacePremiumRounded";
 import {
@@ -78,6 +79,7 @@ import { AppTooltip } from "../ui/AppTooltip";
 import { EmojiGlyph } from "../ui/emoji/EmojiGlyph";
 import { EmojiPicker } from "../ui/emoji/EmojiPicker";
 import { AccountSettingsSection } from "./AccountSettingsSection";
+import { DeveloperSettingsSection } from "./DeveloperSettingsSection";
 import { MentionGroupsPanel } from "./MentionGroupsPanel";
 import { CreditUsageSection } from "./settings/CreditBalance";
 import { PlanUsageSection } from "./settings/PlanUsageSection";
@@ -1508,6 +1510,7 @@ type SettingsTabKey =
     | "customEmoji"
     | "shortcuts"
     | "integrations"
+    | "developer"
     | "account";
 
 /**
@@ -1701,6 +1704,10 @@ export const SettingsModal = ({
                                 {t.settings.tabs.integrations}
                             </Tab>
                         )}
+                        <Tab sx={SIDEBAR_TAB_SX} value="developer">
+                            <TerminalRoundedIcon sx={SIDEBAR_TAB_ICON_SX} />
+                            {t.settings.tabs.developer}
+                        </Tab>
                     </TabList>
 
                     <TabPanel
@@ -1829,6 +1836,14 @@ export const SettingsModal = ({
                             </Stack>
                         </TabPanel>
                     )}
+                    <TabPanel
+                        sx={{ px: 0, py: 2, minWidth: 0, overflowX: "auto" }}
+                        value="developer"
+                    >
+                        <Stack spacing={2}>
+                            <DeveloperSettingsSection teamId={localStorage.getItem("teamId")} />
+                        </Stack>
+                    </TabPanel>
                 </Tabs>
             </ModalDialog>
         </Modal>

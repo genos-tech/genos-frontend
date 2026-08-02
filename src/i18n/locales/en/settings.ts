@@ -12,6 +12,45 @@ export const settings = {
         shortcuts: "Shortcuts",
         integrations: "Integrations",
         account: "Account",
+        developer: "Developer",
+    },
+    developer: {
+        keys: {
+            title: "API keys",
+            blurb: "Use a key to call the Genos API from your own scripts and tools. A key acts as you, so it can only see what you can see.",
+            namePlaceholder: "What is this key for? e.g. CI bot",
+            scopeRead: "Read",
+            scopeWrite: "Read & write",
+            create: "Create key",
+            revoke: "Revoke",
+            empty: "No API keys yet.",
+        },
+        webhooks: {
+            title: "Webhooks",
+            blurb: "Get an HTTPS request when something happens in this team. Each delivery is signed so you can verify it came from us.",
+            urlPlaceholder: "https://your-app.example.com/genos",
+            create: "Add webhook",
+            delete: "Delete",
+            empty: "No webhooks yet.",
+            // The server disables an endpoint after 10 consecutive
+            // failures; without saying so, "our webhooks stopped" is a
+            // support ticket rather than something they can act on.
+            disabled: "Disabled after repeated failures",
+            managerOnly: "Only a team owner or editor can add a webhook.",
+            createFailed: "Couldn't add that webhook. Please try again.",
+        },
+        // Both secrets are shown exactly once and cannot be recovered.
+        // The copy has to say so before the panel is dismissed, or
+        // people reasonably assume they can come back for it.
+        oneShot: {
+            title: "Copy your API key now",
+            body: "This is the only time it will be shown. If you lose it, revoke this key and create another.",
+            secretTitle: "Copy your signing secret now",
+            secretBody:
+                "Use it to verify the X-Genos-Signature header. This is the only time it will be shown.",
+            copy: "Copy",
+            dismiss: "I've saved it",
+        },
     },
     // Settings → Account: GDPR export + erasure.
     account: {
