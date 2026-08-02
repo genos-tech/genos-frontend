@@ -284,12 +284,17 @@ function PlansPageInner() {
                                     initial={{ opacity: 0, y: 18 }}
                                     transition={{ duration: 0.5 }}
                                 >
-                                    {/* min-w keeps the columns legible instead of
+                                    {/* `tabular-nums`: the numeric rows are read
+                                        DOWN a column as much as across a row, and
+                                        proportional digits make 150 and 30 sit at
+                                        different optical widths.
+
+                                        min-w keeps the columns legible instead of
                                     crushing five of them onto a phone; the
                                     wrapper scrolls and the feature column is
                                     pinned, so you never lose track of which
                                     row you are reading. */}
-                                    <table className="w-full min-w-[64rem] border-collapse text-left">
+                                    <table className="w-full min-w-[64rem] border-collapse text-left tabular-nums">
                                         <caption className="sr-only">{p.matrixHeading}</caption>
                                         <thead>
                                             <tr>
