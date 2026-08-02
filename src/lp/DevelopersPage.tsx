@@ -158,7 +158,7 @@ export default function DevelopersPage() {
 
                 <h1 className="mt-6 text-2xl font-black sm:text-3xl">Developers</h1>
                 <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-                    REST API, outbound webhooks, and the realtime event stream.
+                    REST API, MCP, outbound webhooks, and the realtime event stream.
                 </p>
 
                 <div className="mt-5 flex flex-wrap gap-2">
@@ -180,6 +180,7 @@ export default function DevelopersPage() {
                 <nav className="mt-6 flex flex-wrap gap-x-4 gap-y-1 text-sm text-violet-700 dark:text-violet-300">
                     {[
                         ["auth", "Authentication"],
+                        ["mcp", "MCP"],
                         ["rest", "REST"],
                         ["errors", "Errors & limits"],
                         ["webhooks", "Webhooks"],
@@ -260,6 +261,245 @@ export default function DevelopersPage() {
     "team_id": null          // null = personal access token
   }
 }`}</Pre>
+                </Section>
+
+                {/* ── mcp ──────────────────────────────────────────── */}
+                <Section
+                    id="mcp"
+                    subtitle="One endpoint. An MCP client reads and updates your tasks with an API key."
+                    title="MCP"
+                >
+                    <p className="text-sm leading-7 text-slate-600 dark:text-slate-300">
+                        With this endpoint an agent works the task itself, instead of you pasting
+                        the description into it and pasting the result back. Point Claude Code — or
+                        any MCP client — at it with an API key and it can find a task, read its
+                        description and its blockers, search the workspace, and, with a write key,
+                        update the task or leave a comment.
+                    </p>
+                    <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
+                        There is no model on this side of the connection. The endpoint is a
+                        JSON-RPC dispatcher over the same tools the in-app agent uses — your client
+                        does the reasoning, Genos answers questions about the workspace and writes
+                        what it is told to.
+                    </p>
+
+                    <Pre label="the whole setup">{`claude mcp add --transport http genos \\
+  "${API_BASE}/api/public/v1/mcp?team_id=${TEAM_ID}" \\
+  --header "Authorization: ApiKey gnos_…"`}</Pre>
+                    <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
+                        Every message is one <Code>POST</Code> and one JSON object back — a
+                        notification, which carries no id, gets an empty <Code>202</Code>. No SSE
+                        stream, no session to keep alive, no batching. Four protocol revisions are
+                        supported: a legacy client settles on one at <Code>initialize</Code>, a
+                        2026-07-28 client names it on every request, so there is nothing to
+                        configure.
+                    </p>
+                    <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
+                        A personal access token spans every team you belong to, so it has to be
+                        told which one — append <Code>?team_id=&lt;uuid&gt;</Code> to the server
+                        URL, as the setup above does. A team-scoped key carries its own team and
+                        needs no parameter. With neither, everything past the handshake —{" "}
+                        <Code>tools/list</Code> included — answers <Code>-32602</Code> and says so.
+                    </p>
+
+                    <Endpoint method="POST" path="/api/public/v1/mcp">
+                        <p className="text-sm leading-7 text-slate-600 dark:text-slate-300">
+                            No trailing slash, unlike the REST routes below. This URL is pasted
+                            into a client config by hand, and Django&apos;s append-slash rescue is
+                            no help on a <Code>POST</Code> — the redirect drops the body — so a
+                            wrong one fails as a broken message rather than being fixed for you.
+                        </p>
+                        <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
+                            Only <Code>POST</Code> and <Code>OPTIONS</Code> are answered. Claude
+                            Code opens by asking for an event stream with a <Code>GET</Code>, takes
+                            the <Code>405</Code> and carries on — that line in your proxy log is
+                            not a fault.
+                        </p>
+                        <Pre label="request — one message, without a client">{`curl -X POST "${API_BASE}/api/public/v1/mcp?team_id=${TEAM_ID}" \\
+  -H "Authorization: ApiKey gnos_…" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "tools/call",
+        "params": {
+          "name": "get_task",
+          "arguments": { "task_id": "ENG-42" }
+        }
+      }'`}</Pre>
+                        <Pre label="200">{`{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "content": [{ "type": "text", "text": "…a one-line summary, then the task as JSON" }],
+    "structuredContent": { "task_id": ${TASK_ID}, "display_id": "ENG-42", "content_markdown": "…", … },
+    "isError": false
+  }
+}`}</Pre>
+                        <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
+                            <Code>structuredContent</Code> is the same payload already parsed, so a
+                            client that understands it does not have to re-read ours.
+                        </p>
+                    </Endpoint>
+
+                    <Params
+                        rows={[
+                            {
+                                name: "get_task",
+                                type: "read",
+                                meaning: (
+                                    <>
+                                        One task in full. Read <Code>content_markdown</Code> for
+                                        the description — it keeps headings, checklists and code
+                                        fences.
+                                    </>
+                                ),
+                            },
+                            {
+                                name: "list_my_tasks",
+                                type: "read",
+                                meaning:
+                                    "What is on your plate. Where an agent starts when no task is named.",
+                            },
+                            {
+                                name: "list_tasks",
+                                type: "read",
+                                meaning:
+                                    "Tasks you can see — your projects, plus anything you are assignee or reporter on — by project, milestone, status, priority, assignee or overdue.",
+                            },
+                            {
+                                name: "list_projects",
+                                type: "read",
+                                meaning: "The projects you belong to.",
+                            },
+                            {
+                                name: "list_milestones",
+                                type: "read",
+                                meaning: "Milestones in the projects you belong to.",
+                            },
+                            {
+                                name: "get_milestone_summary",
+                                type: "read",
+                                meaning: "A milestone and the tasks under it.",
+                            },
+                            {
+                                name: "get_task_blockers",
+                                type: "read",
+                                meaning: "What a task is waiting on.",
+                            },
+                            {
+                                name: "search_workspace",
+                                type: "read",
+                                meaning: "Search across tasks, notes, chat and todos.",
+                            },
+                            { name: "get_note", type: "read", meaning: "A note's body." },
+                            {
+                                name: "get_current_user",
+                                type: "read",
+                                meaning: "Who the key acts as.",
+                            },
+                            {
+                                name: "get_team_members",
+                                type: "read",
+                                meaning: "Who is in the team, for assigning.",
+                            },
+                            {
+                                name: "update_task",
+                                type: "write",
+                                meaning:
+                                    "Status, title, description, priority, effort or due date. Reassigning is not exposed.",
+                            },
+                            {
+                                name: "add_comment",
+                                type: "write",
+                                meaning: "A comment on a task.",
+                            },
+                            {
+                                name: "create_task",
+                                type: "write",
+                                meaning: (
+                                    <>
+                                        Needs a project id from <Code>list_projects</Code>.
+                                    </>
+                                ),
+                            },
+                        ]}
+                        title="Tools · scope"
+                    />
+                    <p className="mt-4 text-sm leading-7 text-slate-600 dark:text-slate-300">
+                        Fourteen, out of the 57 the in-app agent has — the ones worth a round trip
+                        from outside, rather than the whole surface. A read-scoped key&apos;s{" "}
+                        <Code>tools/list</Code> returns the eleven reads only: the three writes are
+                        not listed at all, so an agent never plans around a tool it would be
+                        refused.
+                    </p>
+
+                    <h3 className="mt-8 text-base font-bold text-slate-800 dark:text-slate-100">
+                        What the agent can see
+                    </h3>
+                    <p className="mt-2 text-sm leading-7 text-slate-600 dark:text-slate-300">
+                        A key acts as the person who created it, and every tool re-checks that
+                        person&apos;s permissions on the call. The agent sees exactly what you see
+                        — a private project you are not in does not exist as far as it is concerned
+                        — and anything it writes is attributed to you in the task&apos;s activity
+                        feed.
+                    </p>
+                    <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
+                        A team-scoped key is the same principal pinned to one team: it still acts
+                        as its creator. Membership is re-checked on every request rather than
+                        trusted from the key, because a key goes on naming its team after its owner
+                        has been removed from that team.
+                    </p>
+
+                    <h3 className="mt-8 text-base font-bold text-slate-800 dark:text-slate-100">
+                        Naming a task
+                    </h3>
+                    <p className="mt-2 text-sm leading-7 text-slate-600 dark:text-slate-300">
+                        A person names a task in whichever form is in front of them, so all of them
+                        resolve:
+                    </p>
+                    <Pre>{`display id   ENG-42
+raw id       #${TASK_ID}  /  ${TASK_ID}
+pasted url   https://app.genosai.dev/workspace/tasks/project/${PROJECT_ID}/task/${TASK_ID}`}</Pre>
+                    <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
+                        Resolved before the tool runs, and only on the four tools that take a task:{" "}
+                        <Code>get_task</Code>, <Code>get_task_blockers</Code>,{" "}
+                        <Code>update_task</Code> and <Code>add_comment</Code>. The rest take
+                        ordinary arguments — <Code>list_tasks</Code> does not accept a display id.
+                        A reference that does not resolve comes back as a tool error saying what to
+                        try instead, so the agent retries rather than stops.
+                    </p>
+
+                    <h3 className="mt-8 text-base font-bold text-slate-800 dark:text-slate-100">
+                        Read keys, and what a refusal looks like
+                    </h3>
+                    <p className="mt-2 text-sm leading-7 text-slate-600 dark:text-slate-300">
+                        Scope is not read off the HTTP method here, because every MCP message is a{" "}
+                        <Code>POST</Code> — <Code>tools/list</Code> and a read-only{" "}
+                        <Code>tools/call</Code> included. Going by the method would refuse a read
+                        key on every request it ever makes, so scope is enforced per tool instead:{" "}
+                        <Code>update_task</Code>, <Code>add_comment</Code> and{" "}
+                        <Code>create_task</Code> need a write key, and nothing else does.
+                    </p>
+                    <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
+                        This is the one place the endpoint differs from the REST routes below,
+                        where a read key attempting a write is a <Code>403</Code>. If a read key
+                        calls a write tool here — off a tool list it cached before the key changed,
+                        say — the call succeeds and the <i>result</i> reports the refusal, in a
+                        sentence naming the scope it needs and confirming that reads still work.
+                    </p>
+                    <Pre label="200 — a successful call whose result carries the refusal">{`"result": {
+  "content": [{ "type": "text", "text": "\`update_task\` writes to the workspace, and this API key is read-only. …" }],
+  "isError": true
+}`}</Pre>
+                    <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
+                        That is the general rule. Anything the caller could fix by trying
+                        differently — a task reference that does not resolve, a permission it does
+                        not hold, the wrong key scope — arrives as a result carrying{" "}
+                        <Code>isError</Code>, because a model can read that and do something else.
+                        Only a disagreement about what exists, an unknown tool name, is a protocol
+                        error.
+                    </p>
                 </Section>
 
                 {/* ── rest ─────────────────────────────────────────── */}
