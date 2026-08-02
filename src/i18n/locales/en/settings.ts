@@ -265,6 +265,7 @@ export const settings = {
         matrixRowMemory: "What it remembers",
         matrixRowGenosHistory: "Genos conversation history",
         matrixRowDigest: "Proactive digest",
+        matrixRowMcp: "Connect an AI coding agent (MCP)",
         matrixRowHistory: "Message history",
         matrixRowTasks: "Tasks per month",
         matrixRowNotes: "Notes per month",

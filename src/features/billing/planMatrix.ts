@@ -198,6 +198,20 @@ export const planMatrixGroups = (
         );
     }
 
+    // MCP sits in the AI group rather than under "what Genos can
+    // reach": those rows are what Genos reaches OUT to, and this is an
+    // outside agent reaching in. It is still an AI capability, and that
+    // is how a reader looks for it.
+    //
+    // `has()` because a server predating the gate sends the key for
+    // nobody, and a row of crosses would then advertise that no plan
+    // includes a feature every plan actually had.
+    if (has("mcp_enabled")) {
+        ai.push(
+            row("mcp", p.matrixRowMcp, (L) => (L.mcp_enabled ? { kind: "yes" } : { kind: "no" }))
+        );
+    }
+
     groups.push({ key: "ai", label: p.matrixGroupAi, rows: ai });
 
     // ---- What it can reach --------------------------------------

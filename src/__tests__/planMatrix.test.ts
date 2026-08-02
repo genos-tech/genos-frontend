@@ -43,6 +43,7 @@ const FREE = tier("free", {
     task_create_monthly: 50,
     note_create_monthly: 50,
     upload_max_mb: 5,
+    mcp_enabled: false,
 });
 
 const PRO = tier("pro", {
@@ -58,6 +59,7 @@ const PRO = tier("pro", {
     task_create_monthly: 500,
     note_create_monthly: 500,
     upload_max_mb: 50,
+    mcp_enabled: true,
 });
 
 const flat = (tiers: PlanTier[]) =>
@@ -160,6 +162,19 @@ describe("planMatrixGroups", () => {
             const cell = rowByKey([silent], key).cells[0];
             expect(cell.kind, `row ${key} must not render a cross`).toBe("value");
         }
+    });
+
+    it("shows MCP as a yes/no capability, and hides the row on an older server", () => {
+        // MCP became a Pro-and-up feature after the matrix shipped. A
+        // server predating the gate sends the key for nobody, and a row
+        // of crosses would then claim no plan includes something every
+        // plan actually had.
+        const gated = rowByKey([FREE, PRO], "mcp");
+        expect(gated.cells[0]).toEqual({ kind: "no" });
+        expect(gated.cells[1]).toEqual({ kind: "yes" });
+
+        const older = tier("older", { monthly_ai_credits: 5 });
+        expect(flat([older]).some(([, r]) => r.key === "mcp")).toBe(false);
     });
 
     it("agrees with the card rows the in-app page renders", () => {

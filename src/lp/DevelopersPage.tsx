@@ -269,6 +269,9 @@ export default function DevelopersPage() {
                     subtitle="One endpoint. An MCP client reads and updates your tasks with an API key."
                     title="MCP"
                 >
+                    <p className="mb-4 inline-flex rounded-lg border border-violet-200 bg-violet-50 px-3 py-2 text-sm font-semibold text-violet-800 dark:border-violet-400/25 dark:bg-violet-400/10 dark:text-violet-200">
+                        Available on the Pro plan and above. The REST API below is on every plan.
+                    </p>
                     <p className="text-sm leading-7 text-slate-600 dark:text-slate-300">
                         With this endpoint an agent works the task itself, instead of you pasting
                         the description into it and pasting the result back. Point Claude Code — or
