@@ -367,6 +367,9 @@ export const settings = {
         providerGemini: "Google Gemini",
         providerClaude: "Anthropic Claude",
         providerOpenai: "OpenAI GPT",
+        // Shown beside a provider that is temporarily held back in
+        // the picker (see HELD_BACK_PROVIDERS in SettingsModal).
+        providerComingSoon: "Available soon",
         usageHeading: "Today's usage",
         usageUnlimited: "Unlimited",
         // Aggregate counters shown above per-model rows.
