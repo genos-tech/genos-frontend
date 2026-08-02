@@ -245,6 +245,12 @@ export const settings = {
         matrixHeading: "Compare every plan",
         matrixSub: "Every limit and capability, side by side.",
         matrixScrollHint: "Scroll sideways to see every plan.",
+        // Read aloud in place of the tick/cross icons. A screen
+        // reader on a row of bare glyphs learns nothing, and this
+        // table is the whole page — so these are strings, not the
+        // hardcoded English an icon label usually gets away with.
+        matrixIncluded: "Included",
+        matrixNotIncluded: "Not included",
         matrixFeature: "Feature",
         matrixUnlimited: "Unlimited",
         matrixForever: "Forever",

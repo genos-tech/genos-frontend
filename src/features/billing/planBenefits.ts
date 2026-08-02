@@ -1,13 +1,17 @@
 // The checkmark rows on a plan card.
 //
-// ONE implementation, shared by the in-app plans page and the marketing
-// page. Both previously carried their own copy, under a comment saying
+// ONE implementation, now serving the IN-APP plans page (`PlansHome`).
+// Both pages previously carried their own copy, under a comment saying
 // they were written alike "so the two pages can never disagree" — which
-// is a property only a shared function actually provides. They had
-// already drifted apart in whitespace; they would have drifted in
-// substance the first time one of them was updated alone, and the
-// visible symptom is a marketing page selling limits the product no
-// longer has.
+// is a property only a shared function actually provides.
+//
+// The marketing page has since moved to a comparison table and reads
+// `planMatrix.ts` instead, so the two are no longer literally the same
+// call. What still keeps them honest is that BOTH derive every row from
+// the same `limits` payload and nothing is hardcoded per tier — plus
+// `planMatrix.test.ts`, which asserts the two paths agree on a shared
+// fact. If you change a rule here, change it there: the tests will
+// catch a divergence, the type system will not.
 //
 // Fed by the ENFORCEMENT TABLE from `GET /billing/plans/`, so a row can
 // never advertise a limit the quota engine does not apply.

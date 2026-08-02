@@ -13,6 +13,7 @@
 
 import { describe, expect, it } from "vitest";
 
+import { planBenefitRows } from "../features/billing/planBenefits";
 import { planMatrixGroups } from "../features/billing/planMatrix";
 import { en } from "../i18n/locales/en";
 import type { PlanTier } from "../services/billingApi";
@@ -136,11 +137,62 @@ describe("planMatrixGroups", () => {
         // Matches the server's dark-ship contract: if it does not send a
         // limit it is not enforcing one, so claiming the capability is
         // the truthful reading, not the generous one.
-        const bare = tier("bare", { monthly_ai_credits: null, message_retention_days: null });
+        //
+        // The fixture sends NOTHING — not `null`, which means unlimited
+        // and would quietly skip the branch this exists to cover. An
+        // earlier version passed `{monthly_ai_credits: null}` and passed
+        // while three rows rendered a cross for every tier.
+        const bare = tier("bare", {});
         expect(rowByKey([bare], "agency").cells[0]).toMatchObject({
             label: p.matrixAgencyOrganize,
         });
         expect(rowByKey([bare], "web").cells[0]).toEqual({ kind: "yes" });
+    });
+
+    it("reads an absent quota as unlimited, never as a cross", () => {
+        // The inversion this guards against: a dimmed cross under every
+        // column of "Tasks per month" reads as *this plan cannot create
+        // tasks*, which is the opposite of what the server's silence
+        // means. `planBenefits` has always used `== null` for exactly
+        // this; the matrix has to agree or the two pages contradict.
+        const silent = tier("silent", {});
+        for (const key of ["history", "tasks", "notes"]) {
+            const cell = rowByKey([silent], key).cells[0];
+            expect(cell.kind, `row ${key} must not render a cross`).toBe("value");
+        }
+    });
+
+    it("agrees with the card rows the in-app page renders", () => {
+        // The invariant this change put at risk. `planBenefits` used to
+        // serve BOTH pages, and its docstring said the sharing was "the
+        // only thing keeping marketing and product honest". Marketing
+        // now renders from here instead, so nothing in the type system
+        // forces the two to agree — this does.
+        //
+        // Asserted on the numbers rather than the wording: the two
+        // deliberately word things differently ("40 AI credits every
+        // month" vs a cell reading "40"), and only the figure has to
+        // match.
+        for (const t of [FREE, PRO]) {
+            const cards = planBenefitRows(t, p, "en").join(" | ");
+            const cell = (key: string) => rowByKey([t], key).cells[0];
+
+            const credits = cell("credits");
+            if (credits.kind === "value" && credits.label !== p.matrixUnlimited) {
+                expect(cards, `${t.tier} credits`).toContain(credits.label);
+            }
+            const tasks = cell("tasks");
+            if (tasks.kind === "value" && tasks.label !== p.matrixUnlimited) {
+                expect(cards, `${t.tier} tasks`).toContain(tasks.label);
+            }
+            // Unlimited has to read as unlimited on both, not as a blank
+            // on one of them.
+            const history = cell("history");
+            const unlimitedHere = history.kind === "value" && history.label === p.matrixForever;
+            expect(unlimitedHere, `${t.tier} history`).toBe(
+                cards.includes(p.benefitHistoryUnlimited)
+            );
+        }
     });
 
     it("never emits a row with an empty label", () => {

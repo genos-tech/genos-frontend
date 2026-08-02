@@ -7,6 +7,7 @@ import { CurrencyPicker } from "../features/billing/CurrencyPicker";
 import { MatrixCell, planMatrixGroups } from "../features/billing/planMatrix";
 import { useCurrencyPreference } from "../hooks/common/useCurrencyPreference";
 import { fmt, I18nProvider, useTranslation } from "../i18n";
+import type { Messages } from "../i18n/types";
 import {
     BillingPlans,
     fetchPublicBillingPlans,
@@ -21,6 +22,8 @@ const CONTACT_SALES_MAILTO = "mailto:genos.support@genosai.dev?subject=Genos%20E
 // Stripe stores these currencies without decimals; everything else is
 // in hundredths (cents). Mirrors PlansHome so the marketing page and
 // the in-app page always agree on prices.
+type PlanStrings = Messages["settings"]["planUsage"];
+
 function cn(...classes: Array<string | false | undefined>) {
     return classes.filter(Boolean).join(" ");
 }
@@ -37,12 +40,14 @@ function cn(...classes: Array<string | false | undefined>) {
  * row of bare ticks learns nothing about which column it is in, and this
  * table is the page's entire argument.
  */
-const Cell = ({ cell }: { cell: MatrixCell }) => {
+const Cell = ({ cell, p }: { cell: MatrixCell; p: PlanStrings }) => {
     if (cell.kind === "yes") {
         return (
             <span className="inline-flex items-center gap-2 text-slate-700 dark:text-slate-200">
                 <Check className="h-4 w-4 shrink-0 text-violet-600 dark:text-violet-300" />
-                <span className={cell.label ? undefined : "sr-only"}>{cell.label ?? "Yes"}</span>
+                <span className={cell.label ? undefined : "sr-only"}>
+                    {cell.label ?? p.matrixIncluded}
+                </span>
             </span>
         );
     }
@@ -50,7 +55,9 @@ const Cell = ({ cell }: { cell: MatrixCell }) => {
         return (
             <span className="inline-flex items-center gap-2 text-slate-400 dark:text-slate-600">
                 <X className="h-4 w-4 shrink-0" />
-                <span className={cell.label ? undefined : "sr-only"}>{cell.label ?? "No"}</span>
+                <span className={cell.label ? undefined : "sr-only"}>
+                    {cell.label ?? p.matrixNotIncluded}
+                </span>
             </span>
         );
     }
@@ -294,12 +301,12 @@ function PlansPageInner() {
                                     wrapper scrolls and the feature column is
                                     pinned, so you never lose track of which
                                     row you are reading. */}
-                                    <table className="w-full min-w-[64rem] border-collapse text-left tabular-nums">
+                                    <table className="w-full min-w-[64rem] border-collapse text-start tabular-nums">
                                         <caption className="sr-only">{p.matrixHeading}</caption>
                                         <thead>
                                             <tr>
                                                 <th
-                                                    className="sticky left-0 z-20 w-48 bg-white p-5 align-bottom sm:w-56 dark:bg-slate-900"
+                                                    className="sticky start-0 z-20 w-48 bg-white p-5 align-bottom sm:w-56 dark:bg-slate-900"
                                                     scope="col"
                                                 >
                                                     <span className="text-xs font-black uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
@@ -316,14 +323,18 @@ function PlansPageInner() {
                                                             key={tier.tier}
                                                             scope="col"
                                                             className={cn(
-                                                                "relative border-l p-5 align-top",
+                                                                // pt-11 on EVERY column, not only the badged one:
+                                                                // the space has to be reserved
+                                                                // uniformly, or the badge just moves
+                                                                // the misalignment somewhere else.
+                                                                "relative border-l p-5 pt-11 align-top",
                                                                 highlighted
                                                                     ? "border-violet-200 bg-violet-50/60 dark:border-violet-400/20 dark:bg-violet-400/10"
                                                                     : "border-violet-100/70 dark:border-white/10"
                                                             )}
                                                         >
                                                             {highlighted && (
-                                                                <span className="mb-2 inline-flex items-center rounded-full bg-violet-600 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-[0.14em] text-white">
+                                                                <span className="absolute top-4 start-5 inline-flex items-center rounded-full bg-violet-600 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-[0.14em] text-white">
                                                                     {p.bestValue}
                                                                 </span>
                                                             )}
@@ -359,7 +370,7 @@ function PlansPageInner() {
                                             <tbody key={group.key}>
                                                 <tr>
                                                     <th
-                                                        className="sticky left-0 border-y border-violet-100 bg-violet-50/70 px-5 py-2.5 text-left text-xs font-black uppercase tracking-[0.14em] text-violet-700 dark:border-white/10 dark:bg-white/[0.06] dark:text-violet-200"
+                                                        className="sticky start-0 border-y border-violet-100 bg-violet-50/70 px-5 py-2.5 text-start text-xs font-black uppercase tracking-[0.14em] text-violet-700 dark:border-white/10 dark:bg-white/[0.06] dark:text-violet-200"
                                                         colSpan={plans.tiers.length + 1}
                                                         scope="colgroup"
                                                     >
@@ -372,7 +383,7 @@ function PlansPageInner() {
                                                         className="border-b border-violet-50 last:border-b-0 dark:border-white/5"
                                                     >
                                                         <th
-                                                            className="sticky left-0 z-10 bg-white px-5 py-3.5 text-sm font-semibold text-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                                                            className="sticky start-0 z-10 bg-white px-5 py-3.5 text-sm font-semibold text-slate-700 dark:bg-slate-900 dark:text-slate-200"
                                                             scope="row"
                                                         >
                                                             {row.label}
@@ -387,7 +398,7 @@ function PlansPageInner() {
                                                                         : "border-violet-100/70 dark:border-white/10"
                                                                 )}
                                                             >
-                                                                <Cell cell={cell} />
+                                                                <Cell cell={cell} p={p} />
                                                             </td>
                                                         ))}
                                                     </tr>

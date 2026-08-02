@@ -80,7 +80,21 @@ export const planMatrixGroups = (
         cell: (L: PlanTier["limits"]) => MatrixCell
     ): MatrixRow => ({ key, label, cells: limits.map(cell) });
 
-    /** `null` means unlimited throughout the limits payload. */
+    /**
+     * A numeric allowance. `null` means unlimited throughout the limits
+     * payload — and so does **absent**, which is the subtle one.
+     *
+     * `== null` rather than `=== null` deliberately, matching
+     * `planBenefits`: a key the server does not send is a limit it is
+     * not enforcing, so the honest cell is "Unlimited". Splitting the
+     * two and rendering a cross for `undefined` would put a dimmed "not
+     * included" under every column of, say, "Tasks per month" on an
+     * older server — reading as *this plan cannot create tasks*, which
+     * is the exact inversion of what the silence means.
+     *
+     * Whether a row should EXIST at all is a separate question, asked
+     * with `has()` at the call site.
+     */
     const quota = (
         key: string,
         label: string,
@@ -89,8 +103,7 @@ export const planMatrixGroups = (
     ) =>
         row(key, label, (L) => {
             const v = pick(L);
-            if (v === null) return { kind: "value", label: unlimited, emphasis: true };
-            if (v === undefined) return { kind: "no" };
+            if (v == null) return { kind: "value", label: unlimited, emphasis: true };
             return { kind: "value", label: num(v, locale) };
         });
 
