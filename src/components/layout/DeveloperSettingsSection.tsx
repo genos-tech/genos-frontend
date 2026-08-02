@@ -13,6 +13,7 @@ import {
     Chip,
     IconButton,
     Input,
+    Link,
     Option,
     Select,
     Sheet,
@@ -183,7 +184,13 @@ export const DeveloperSettingsSection = ({ teamId }: Props) => {
                     <Typography level="title-md">{d.keys.title}</Typography>
                 </Stack>
                 <Typography level="body-sm" sx={{ opacity: 0.75 }}>
-                    {d.keys.blurb}
+                    {d.keys.blurb}{" "}
+                    {/* Someone who already has a key looks HERE for the
+                        reference, not on the marketing site. Opens in a
+                        new tab so it never costs them an unsaved form. */}
+                    <Link href="/developers" target="_blank" rel="noreferrer">
+                        {d.docsLink}
+                    </Link>
                 </Typography>
 
                 {freshKey && (
