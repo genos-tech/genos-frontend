@@ -234,6 +234,59 @@ export const settings = {
         capDigestNone: "Proactive digest from Genos",
         capDigestWeekly: "Weekly digest from Genos",
         capDigestDaily: "Daily digest + alerts from Genos",
+        // --- Plan comparison matrix -------------------------------
+        // The same facts as the capability rows above, but pivoted: a
+        // feature is a ROW and a tier is a COLUMN, so the reader can
+        // answer "what does Pro give me that Core doesn't?" by reading
+        // across. That question is unanswerable from five separate
+        // cards, which is why these are short values rather than the
+        // finished sentences above — a cell has one column's width,
+        // and five sentences side by side compare nothing.
+        matrixHeading: "Compare every plan",
+        matrixSub: "Every limit and capability, side by side.",
+        matrixScrollHint: "Scroll sideways to see every plan.",
+        // Read aloud in place of the tick/cross icons. A screen
+        // reader on a row of bare glyphs learns nothing, and this
+        // table is the whole page — so these are strings, not the
+        // hardcoded English an icon label usually gets away with.
+        matrixIncluded: "Included",
+        matrixNotIncluded: "Not included",
+        matrixFeature: "Feature",
+        matrixUnlimited: "Unlimited",
+        matrixForever: "Forever",
+        matrixMb: "{mb} MB",
+        matrixGroupAi: "Genos AI",
+        matrixGroupReach: "What Genos can reach",
+        matrixGroupWorkspace: "Your workspace",
+        matrixRowCredits: "AI credits per month",
+        matrixRowAsks: "AI asks per day",
+        matrixRowAgency: "What Genos does",
+        matrixRowDepth: "How deeply it thinks",
+        matrixRowMemory: "What it remembers",
+        matrixRowGenosHistory: "Genos conversation history",
+        matrixRowDigest: "Proactive digest",
+        matrixRowHistory: "Message history",
+        matrixRowTasks: "Tasks per month",
+        matrixRowNotes: "Notes per month",
+        matrixRowUpload: "File upload size",
+        // Short forms for the matrix: inside a group already headed
+        // "What Genos can reach", the word "integration" is noise in
+        // every row. The long forms above still serve the cards.
+        matrixRowWeb: "Web search",
+        matrixRowCalendar: "Google Calendar",
+        matrixRowGithub: "GitHub",
+        matrixAgencyRead: "Answers questions",
+        matrixAgencyAct: "Takes actions",
+        matrixAgencyOrganize: "Organizes whole plans",
+        matrixDepthQuick: "Quick",
+        matrixDepthThorough: "Thorough",
+        matrixDepthDeep: "Deep",
+        matrixDepthAdaptive: "Deep, auto-tuned",
+        matrixMemoryNone: "This conversation",
+        matrixMemoryOwn: "Your history",
+        matrixMemoryTeam: "Your team's knowledge",
+        matrixDigestWeekly: "Weekly",
+        matrixDigestDaily: "Daily + alerts",
         billingReturnCancelled: "Checkout cancelled — your plan is unchanged.",
     },
     appearance: {

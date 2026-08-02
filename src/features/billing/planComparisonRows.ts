@@ -3,11 +3,12 @@
 // what it can see / whether it comes to you), rendered ABOVE the
 // fair-use rows from `planBenefits.ts`.
 //
-// ONE implementation, shared by the in-app plans page and the marketing
-// page, for the same reason `planBenefitRows` is: the sharing is the
-// only thing keeping marketing and product honest. Fed by the tier
-// config from `GET /billing/plans/`, so a card can never advertise a
-// capability the server doesn't grant.
+// ONE implementation, now serving the IN-APP plans page (`PlansHome`);
+// the marketing page renders the same facts as a comparison table via
+// `planMatrix.ts`. Fed by the tier config from `GET /billing/plans/`,
+// so a card can never advertise a capability the server doesn't grant —
+// which is the property that actually keeps marketing and product
+// honest, and the one both modules share.
 //
 // Two rendering rules the pages must honour:
 //   * `included: false` renders an EXPLICIT cross — never drop the
