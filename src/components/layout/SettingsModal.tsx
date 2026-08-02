@@ -557,6 +557,20 @@ const tierBadgeLabel = (tier: string, t: ReturnType<typeof useTranslation>["t"])
     return labels[tier as SubscriptionTier] ?? tier;
 };
 
+// TEMPORARY: only Gemini is offered while the other providers are held
+// back. The options stay in the list, disabled and labelled, rather than
+// being filtered out — a picker that silently loses two of its three
+// choices reads as a bug, and a user who deliberately chose Claude needs
+// to see WHY it stopped being offered rather than watch it vanish.
+//
+// This is a UI gate only. It stops anyone NEWLY selecting a held-back
+// provider; it does not migrate someone already on one, and it does not
+// stop the API. A hard cutover belongs in the server's model catalog
+// (`apis/llm_models.yaml`), which is what actually decides what may run.
+//
+// To restore a provider: delete it from this set. Nothing else changes.
+const HELD_BACK_PROVIDERS = new Set(["claude", "openai"]);
+
 // Exported so the Spotlight overlay's dedicated settings modal
 // (`features/spotlight/SpotlightSettingsModal`) can reuse the exact same
 // model-picker without threading any props — the section is self-contained
@@ -725,11 +739,29 @@ export const LlmModelSection = () => {
                         }
                     }}
                 >
-                    {providers.map((p) => (
-                        <Option key={p} value={p}>
-                            <Typography level="body-sm">{providerLabel(p)}</Typography>
-                        </Option>
-                    ))}
+                    {providers.map((p) => {
+                        // The provider someone is ALREADY on stays
+                        // selectable. Disabling it would grey out their
+                        // own current choice in its own dropdown, which
+                        // reads as "your setting is broken" rather than
+                        // "this one is paused".
+                        const heldBack = HELD_BACK_PROVIDERS.has(p) && p !== currentProvider;
+                        return (
+                            <Option key={p} disabled={heldBack} value={p}>
+                                <Stack alignItems="center" direction="row" spacing={0.75}>
+                                    <Typography level="body-sm">{providerLabel(p)}</Typography>
+                                    {heldBack && (
+                                        <Typography
+                                            level="body-xs"
+                                            sx={{ color: "text.tertiary" }}
+                                        >
+                                            {t.settings.llmModel.providerComingSoon}
+                                        </Typography>
+                                    )}
+                                </Stack>
+                            </Option>
+                        );
+                    })}
                 </Select>
             </Stack>
 
