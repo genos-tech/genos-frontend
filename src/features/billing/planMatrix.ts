@@ -1,19 +1,26 @@
-// The plan comparison MATRIX — the same tier facts as the card rows,
-// pivoted so a feature is a row and a tier is a column.
+// The plan comparison MATRIX — every tier fact, pivoted so a feature is
+// a row and a tier is a column.
 //
-// Why a second shape and not a second source: a card answers "what do I
-// get on Pro?", which is why `planBenefits.ts` and `planComparisonRows.ts`
-// return a flat list of finished sentences per tier. It cannot answer
-// "what does Pro give me that Core doesn't?" — for that the reader needs
-// the same row across five columns, and a finished sentence per tier is
-// exactly the wrong unit. So this module keeps the identical limit
-// vocabulary and emits `(rowKey, per-tier cell)` instead.
+// **The only plan renderer.** Both the public `/plans` page and the
+// in-app `/workspace/plans` read from here. They used to have separate
+// row builders — `planBenefits.ts` and `planComparisonRows.ts`, each
+// emitting finished sentences per tier — under comments insisting the
+// sharing was "the only thing keeping marketing and product honest".
+// They drifted anyway, most visibly over MCP, which reached the
+// marketing table and not the page the upgrade prompt sent people to.
+// One renderer makes that class of bug unexpressible rather than
+// merely tested for.
 //
-// The one rule inherited from its siblings, and the reason all three
-// live together: **a row may never advertise something the server does
-// not grant.** Everything here is derived from the `limits` object in
-// `GET /billing/plans/`; nothing is hardcoded per tier. A tier column is
-// whatever the server said it was.
+// The shape follows from the question. A card answers "what do I get on
+// Pro?"; nobody arrives asking that. They ask "what does Pro give me
+// that Core doesn't?" — which needs the same row across five columns,
+// and a finished sentence per tier is exactly the wrong unit for a cell.
+//
+// **A row may never advertise something the server does not grant.**
+// Everything here is derived from the `limits` object in
+// `GET /billing/plans/`; a tier column is whatever the server said it
+// was. The single exception is the premium-models row, and it says so
+// at the point it breaks the rule.
 //
 // Missing keys (an older server) resolve permissive, matching the
 // server's dark-ship contract — on such a server nothing is gated, so
@@ -85,8 +92,8 @@ export const planMatrixGroups = (
      * payload — and so does **absent**, which is the subtle one.
      *
      * `== null` rather than `=== null` deliberately, matching
-     * `planBenefits`: a key the server does not send is a limit it is
-     * not enforcing, so the honest cell is "Unlimited". Splitting the
+     * the card builders this replaced: a key the server does not send is
+     * a limit it is not enforcing, so the honest cell is "Unlimited". Splitting the
      * two and rendering a cross for `undefined` would put a dimmed "not
      * included" under every column of, say, "Tasks per month" on an
      * older server — reading as *this plan cannot create tasks*, which
@@ -114,8 +121,9 @@ export const planMatrixGroups = (
 
     // Credits and the older daily-ask counter are two eras of the same
     // row, and which one the server enforces decides which is true. Same
-    // switch `planBenefits` uses, for the same reason: either side can
-    // deploy first and the page still describes what is enforced.
+    // same payload-shape convention the model picker uses, for the same
+    // reason: either side can deploy first and the page still describes
+    // what is actually enforced.
     if (has("monthly_ai_credits")) {
         ai.push(
             quota("credits", p.matrixRowCredits, (L) => L.monthly_ai_credits, p.matrixUnlimited)
@@ -197,6 +205,22 @@ export const planMatrixGroups = (
             })
         );
     }
+
+    // The ONE row not derived from `limits`, and the exception is worth
+    // stating because the header above promises otherwise: premium model
+    // access comes from `model_daily`, which `_PLAN_LIMIT_KEYS` leaves
+    // out of the public payload on purpose (per-model caps churn with the
+    // model catalog). So the frontend cannot read it, and keying on the
+    // tier name is the only honest option left.
+    //
+    // Dropping the row instead is what the card layout's replacement did,
+    // and it silently cost every paid plan a real selling point — Free
+    // blocks opus-class models entirely.
+    ai.push({
+        key: "premium-models",
+        label: p.matrixRowPremiumModels,
+        cells: tiers.map((t) => (t.tier === "free" ? { kind: "no" } : { kind: "yes" })),
+    });
 
     // MCP sits in the AI group rather than under "what Genos can
     // reach": those rows are what Genos reaches OUT to, and this is an

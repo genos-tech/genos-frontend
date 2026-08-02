@@ -265,6 +265,7 @@ export const settings = {
         matrixRowDepth: "How deeply it thinks",
         matrixRowMemory: "What it remembers",
         matrixRowGenosHistory: "Genos conversation history",
+        matrixRowPremiumModels: "Premium AI models",
         matrixRowDigest: "Proactive digest",
         matrixRowMcp: "Connect an AI coding agent (MCP)",
         matrixRowHistory: "Message history",

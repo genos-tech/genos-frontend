@@ -167,22 +167,34 @@ describe("PlansHome", () => {
         billingApi.fetchBillingSubscription.mockResolvedValue(null);
     });
 
-    it("renders all four cards with Stripe prices and limits", async () => {
+    it("renders every tier as a column, with Stripe prices and limits", async () => {
+        // The page moved from five cards to one comparison table, so the
+        // limits are now short CELLS under a shared row label rather than
+        // finished sentences per tier ("20" under "AI asks per day", not
+        // "20 AI asks every day"). The facts asserted are the same ones.
         renderPage();
         expect(await screen.findByText("Do more of your best work with Genos")).toBeTruthy();
         expect(screen.getByText("¥1,200")).toBeTruthy();
         expect(screen.getByText("¥2,500")).toBeTruthy();
-        // "Free" appears as both the tier chip and the price line.
+        // "Free" appears as both the tier heading and the price line.
         expect(screen.getAllByText("Free").length).toBe(2);
         expect(screen.getByText("Contact sales")).toBeTruthy();
-        expect(screen.getByText("20 AI asks every day")).toBeTruthy();
-        expect(screen.getByText("10,000 tasks per month")).toBeTruthy();
-        // Paid tiers + enterprise lead with unlimited history.
-        expect(screen.getAllByText("Unlimited message history").length).toBe(3);
-        // The recommended card carries the badge; paid tiers advertise
-        // premium models (pro + max — enterprise has everything anyway).
+
+        // A row is labelled once and answered per column — the property
+        // the table exists for.
+        expect(screen.getByText("AI asks per day")).toBeTruthy();
+        expect(screen.getByText("20")).toBeTruthy();
+        expect(screen.getByText("Tasks per month")).toBeTruthy();
+        expect(screen.getByText("10,000")).toBeTruthy();
+        // Paid tiers + enterprise keep history forever.
+        expect(screen.getAllByText("Forever").length).toBe(3);
+
         expect(screen.getByText("Best value")).toBeTruthy();
-        expect(screen.getAllByText("Premium AI models included").length).toBe(3);
+        // Premium models: one row, crossed only on Free. This is the one
+        // row not derived from the limits payload — `model_daily` is
+        // deliberately not published — so it is worth pinning that it
+        // still renders at all.
+        expect(screen.getByText("Premium AI models")).toBeTruthy();
     });
 
     it("free user gets checkout buttons; clicking starts the right plan", async () => {
@@ -391,7 +403,9 @@ describe("PlansHome", () => {
         billingApi.fetchBillingConfig.mockResolvedValue(null);
         renderPage();
         expect(await screen.findByText("Do more of your best work with Genos")).toBeTruthy();
-        expect(screen.getByText("20 AI asks every day")).toBeTruthy();
+        // The comparison still renders in full — only the buy buttons go.
+        expect(screen.getByText("AI asks per day")).toBeTruthy();
+        expect(screen.getByText("20")).toBeTruthy();
         expect(screen.queryByText("Upgrade to Pro")).toBeNull();
         expect(screen.queryByText("Manage billing")).toBeNull();
         expect(screen.queryByText("¥1,200")).toBeNull();

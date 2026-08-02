@@ -10,6 +10,7 @@ import {
     Divider,
     LinearProgress,
     Link,
+    Sheet,
     Stack,
     Typography,
 } from "@mui/joy";
@@ -17,6 +18,7 @@ import {
 import { useAuth } from "../../context/AuthContext";
 import { useCurrencyPreference } from "../../hooks/common/useCurrencyPreference";
 import { fmt, useTranslation } from "../../i18n";
+import type { Messages } from "../../i18n/types";
 import { SubscriptionTier } from "../../services/agentApi";
 import {
     BillingConfig,
@@ -37,9 +39,8 @@ import {
 } from "../../services/billingApi";
 import { formatPrice } from "../../utils/currency";
 import { CurrencyPicker } from "./CurrencyPicker";
-import { planBenefitRows } from "./planBenefits";
-import { planCapabilityRows } from "./planComparisonRows";
 import { planCta } from "./planCta";
+import { MatrixCell, planMatrixGroups } from "./planMatrix";
 
 /**
  * `/workspace/plans` — the tier comparison page.
@@ -56,6 +57,8 @@ import { planCta } from "./planCta";
  * deep links for every switch and the cancel, enterprise →
  * contact-sales mailto.
  */
+
+type PlanStrings = Messages["settings"]["planUsage"];
 
 const CONTACT_SALES_MAILTO = "mailto:genos.support@gmail.com?subject=Genos%20Enterprise";
 
@@ -97,6 +100,60 @@ const TIER_COLOR: Record<SubscriptionTier, "neutral" | "primary" | "success" | "
     pro: "primary",
     max: "success",
     enterprise: "warning",
+};
+
+/**
+ * One cell of the comparison table, in Joy.
+ *
+ * Mirrors the public page's cell semantics exactly, because the two
+ * render the same facts and a reader who checks both must not find them
+ * saying different things: an absent capability is an EXPLICIT dimmed
+ * cross (an empty cell in a grid reads as a rendering bug, so the one
+ * row separating two plans would look broken), and "Unlimited" carries
+ * more weight than a number in the same column.
+ */
+const PlanCell = ({ cell, p }: { cell: MatrixCell; p: PlanStrings }) => {
+    if (cell.kind === "yes") {
+        return (
+            <Typography
+                level="body-sm"
+                startDecorator={
+                    <CheckRoundedIcon sx={{ fontSize: 16, color: "success.solidBg" }} />
+                }
+            >
+                <Box component="span" sx={{ position: "absolute", left: -9999 }}>
+                    {cell.label ?? p.matrixIncluded}
+                </Box>
+            </Typography>
+        );
+    }
+    if (cell.kind === "no") {
+        return (
+            <Typography
+                level="body-sm"
+                sx={{ color: "text.tertiary" }}
+                startDecorator={
+                    <CloseRoundedIcon sx={{ fontSize: 16, color: "neutral.plainDisabledColor" }} />
+                }
+            >
+                <Box component="span" sx={{ position: "absolute", left: -9999 }}>
+                    {cell.label ?? p.matrixNotIncluded}
+                </Box>
+            </Typography>
+        );
+    }
+    return (
+        <Typography
+            level="body-sm"
+            sx={
+                cell.emphasis
+                    ? { fontWeight: "xl", color: "primary.plainColor" }
+                    : { fontWeight: "md" }
+            }
+        >
+            {cell.label}
+        </Typography>
+    );
 };
 
 export const PlansHome = () => {
@@ -395,153 +452,229 @@ export const PlansHome = () => {
                 </Card>
             )}
 
-            <Box
-                sx={{
-                    display: "grid",
-                    // 5 tiers: a 4-column grid stranded Enterprise alone
-                    // on a second row. 3 columns gives a clean 3 + 2
-                    // (free/core/pro, then max/enterprise); very wide
-                    // viewports get all five across.
-                    gridTemplateColumns: {
-                        xs: "1fr",
-                        sm: "repeat(2, 1fr)",
-                        lg: "repeat(3, 1fr)",
-                        xl: "repeat(5, 1fr)",
-                    },
-                    gap: 2,
-                    alignItems: "stretch",
-                }}
+            {/* One table, not five cards. A card answers "what do I get
+                on Pro?"; someone on this page is asking "what does the
+                next plan give me that mine doesn't", and five parallel
+                lists make them diff by eye.
+
+                Rendered from `planMatrixGroups` — the SAME builder the
+                public /plans page uses. That is the point: this page and
+                marketing previously had separate row builders and drifted,
+                most recently over MCP. One renderer, one set of facts. */}
+            <Sheet
+                variant="outlined"
+                sx={{ borderRadius: "lg", overflowX: "auto", overflowY: "hidden" }}
             >
-                {plans.tiers.map((tier) => {
-                    const priceLabel = tier.price ? formatPrice(tier.price, locale) : null;
-                    // Slack-style highlight on the plan most users
-                    // should pick.
-                    const highlighted = tier.tier === "pro";
-                    return (
-                        <Card
-                            key={tier.tier}
-                            variant="outlined"
-                            sx={{
-                                gap: 1,
-                                overflow: "visible",
-                                position: "relative",
-                                ...(highlighted && {
-                                    borderColor: "primary.solidBg",
-                                    borderWidth: 2,
-                                    boxShadow: "md",
-                                }),
-                            }}
-                        >
-                            {highlighted && (
-                                <Chip
-                                    color="primary"
-                                    size="sm"
-                                    variant="solid"
+                <Box
+                    component="table"
+                    sx={{
+                        width: "100%",
+                        minWidth: 900,
+                        borderCollapse: "collapse",
+                        textAlign: "start",
+                        // Digits are read DOWN a column as much as across
+                        // a row; proportional figures make 150 and 30 sit
+                        // at different optical widths.
+                        fontVariantNumeric: "tabular-nums",
+                        "& th, & td": { p: 1.5, verticalAlign: "middle" },
+                        "& thead th": { verticalAlign: "top", pt: 4, pb: 2 },
+                    }}
+                >
+                    <Box component="thead">
+                        <Box component="tr">
+                            <Box
+                                component="th"
+                                scope="col"
+                                sx={{
+                                    position: "sticky",
+                                    insetInlineStart: 0,
+                                    zIndex: 2,
+                                    width: 210,
+                                    // Opaque, and the same colour as the
+                                    // Sheet: a translucent pinned column
+                                    // shows the rows sliding under it.
+                                    bgcolor: "background.surface",
+                                    verticalAlign: "bottom !important",
+                                }}
+                            >
+                                <Typography
+                                    level="body-xs"
+                                    sx={{ textTransform: "uppercase", letterSpacing: "0.14em" }}
+                                >
+                                    {p.matrixFeature}
+                                </Typography>
+                            </Box>
+                            {plans.tiers.map((tier) => {
+                                const priceLabel = tier.price
+                                    ? formatPrice(tier.price, locale)
+                                    : null;
+                                const highlighted = tier.tier === "pro";
+                                return (
+                                    <Box
+                                        component="th"
+                                        key={tier.tier}
+                                        scope="col"
+                                        sx={{
+                                            position: "relative",
+                                            borderInlineStart: "1px solid",
+                                            borderColor: highlighted
+                                                ? "primary.solidBg"
+                                                : "divider",
+                                            bgcolor: highlighted
+                                                ? "primary.softBg"
+                                                : "transparent",
+                                        }}
+                                    >
+                                        {highlighted && (
+                                            <Chip
+                                                color="primary"
+                                                size="sm"
+                                                variant="solid"
+                                                sx={{
+                                                    // Out of flow, or it
+                                                    // pushes this column's
+                                                    // name, price and CTA
+                                                    // down by its own
+                                                    // height while the
+                                                    // other four stay put.
+                                                    position: "absolute",
+                                                    top: 8,
+                                                    insetInlineStart: 12,
+                                                }}
+                                            >
+                                                {p.bestValue}
+                                            </Chip>
+                                        )}
+                                        <Typography level="title-lg">
+                                            {tierLabel[tier.tier]}
+                                        </Typography>
+                                        <Typography
+                                            level="body-xs"
+                                            sx={{ color: "text.tertiary", minHeight: 34 }}
+                                        >
+                                            {tagline[tier.tier]}
+                                        </Typography>
+                                        <Stack
+                                            alignItems="baseline"
+                                            direction="row"
+                                            spacing={0.5}
+                                            sx={{ minHeight: 40 }}
+                                        >
+                                            {tier.contact_sales ? (
+                                                <Typography level="title-md">
+                                                    {p.contactSales}
+                                                </Typography>
+                                            ) : tier.price?.amount === 0 ? (
+                                                <>
+                                                    <Typography level="h3">
+                                                        {p.freePrice}
+                                                    </Typography>
+                                                    <Typography
+                                                        level="body-xs"
+                                                        sx={{ color: "text.tertiary" }}
+                                                    >
+                                                        {p.freeForever}
+                                                    </Typography>
+                                                </>
+                                            ) : priceLabel ? (
+                                                <>
+                                                    <Typography level="h3">
+                                                        {priceLabel}
+                                                    </Typography>
+                                                    <Typography
+                                                        level="body-xs"
+                                                        sx={{ color: "text.tertiary" }}
+                                                    >
+                                                        {p.perMonth}
+                                                    </Typography>
+                                                </>
+                                            ) : null}
+                                        </Stack>
+                                        <Box sx={{ minHeight: 36, mt: 1 }}>{renderCta(tier)}</Box>
+                                    </Box>
+                                );
+                            })}
+                        </Box>
+                    </Box>
+
+                    {planMatrixGroups(plans.tiers, p, locale).map((group) => (
+                        <Box component="tbody" key={group.key}>
+                            <Box component="tr">
+                                <Box
+                                    component="th"
+                                    colSpan={plans.tiers.length + 1}
+                                    scope="colgroup"
                                     sx={{
-                                        position: "absolute",
-                                        top: -12,
-                                        left: "50%",
-                                        transform: "translateX(-50%)",
+                                        position: "sticky",
+                                        insetInlineStart: 0,
+                                        bgcolor: "background.level1",
+                                        borderBlock: "1px solid",
+                                        borderColor: "divider",
+                                        textAlign: "start",
                                     }}
                                 >
-                                    {p.bestValue}
-                                </Chip>
-                            )}
-                            <Typography level="title-lg" sx={{ mt: highlighted ? 0.5 : 0 }}>
-                                {tierLabel[tier.tier]}
-                            </Typography>
-                            {/* Fixed-height tagline keeps the price rows
-                                aligned across cards. */}
-                            <Typography
-                                level="body-sm"
-                                sx={{ color: "text.tertiary", minHeight: 40 }}
-                            >
-                                {tagline[tier.tier]}
-                            </Typography>
-                            <Stack
-                                alignItems="baseline"
-                                direction="row"
-                                spacing={0.5}
-                                sx={{ minHeight: 44 }}
-                            >
-                                {tier.contact_sales ? (
-                                    <Typography level="title-lg">{p.contactSales}</Typography>
-                                ) : tier.price?.amount === 0 ? (
-                                    <>
-                                        <Typography level="h2">{p.freePrice}</Typography>
-                                        <Typography
-                                            level="body-xs"
-                                            sx={{ color: "text.tertiary" }}
-                                        >
-                                            {p.freeForever}
-                                        </Typography>
-                                    </>
-                                ) : priceLabel ? (
-                                    <>
-                                        <Typography level="h2">{priceLabel}</Typography>
-                                        <Typography
-                                            level="body-xs"
-                                            sx={{ color: "text.tertiary" }}
-                                        >
-                                            {p.perMonth}
-                                        </Typography>
-                                    </>
-                                ) : null}
-                            </Stack>
-                            <Box sx={{ minHeight: 36 }}>{renderCta(tier)}</Box>
-                            <Divider />
-                            <Stack spacing={0.75} sx={{ flex: 1 }}>
-                                {/* Capability rows first — the experience
-                                    ladder sells the tier. `included:
-                                    false` renders an EXPLICIT dimmed
-                                    cross, never an omission. */}
-                                {planCapabilityRows(tier, p).map((row) => (
                                     <Typography
-                                        key={row.key}
-                                        level="body-sm"
-                                        sx={row.included ? undefined : { color: "text.tertiary" }}
-                                        startDecorator={
-                                            row.included ? (
-                                                <CheckRoundedIcon
-                                                    sx={{
-                                                        fontSize: 16,
-                                                        color: "success.solidBg",
-                                                    }}
-                                                />
-                                            ) : (
-                                                <CloseRoundedIcon
-                                                    sx={{
-                                                        fontSize: 16,
-                                                        color: "neutral.plainDisabledColor",
-                                                    }}
-                                                />
-                                            )
-                                        }
+                                        level="body-xs"
+                                        sx={{
+                                            fontWeight: "lg",
+                                            textTransform: "uppercase",
+                                            letterSpacing: "0.14em",
+                                        }}
                                     >
-                                        {row.label}
+                                        {group.label}
                                     </Typography>
-                                ))}
-                                {planBenefitRows(tier, p, locale).map((row) => (
-                                    <Typography
-                                        key={row}
-                                        level="body-sm"
-                                        startDecorator={
-                                            <CheckRoundedIcon
-                                                sx={{
-                                                    fontSize: 16,
-                                                    color: "success.solidBg",
-                                                }}
-                                            />
-                                        }
+                                </Box>
+                            </Box>
+                            {group.rows.map((row) => (
+                                <Box
+                                    component="tr"
+                                    key={row.key}
+                                    sx={{
+                                        borderBottom: "1px solid",
+                                        borderColor: "divider",
+                                        "&:last-of-type": { borderBottom: "none" },
+                                    }}
+                                >
+                                    <Box
+                                        component="th"
+                                        scope="row"
+                                        sx={{
+                                            position: "sticky",
+                                            insetInlineStart: 0,
+                                            zIndex: 1,
+                                            bgcolor: "background.surface",
+                                            textAlign: "start",
+                                        }}
                                     >
-                                        {row}
-                                    </Typography>
-                                ))}
-                            </Stack>
-                        </Card>
-                    );
-                })}
-            </Box>
+                                        <Typography level="body-sm" sx={{ fontWeight: "md" }}>
+                                            {row.label}
+                                        </Typography>
+                                    </Box>
+                                    {row.cells.map((cell, i) => (
+                                        <Box
+                                            component="td"
+                                            key={plans.tiers[i].tier}
+                                            sx={{
+                                                borderInlineStart: "1px solid",
+                                                borderColor:
+                                                    plans.tiers[i].tier === "pro"
+                                                        ? "primary.solidBg"
+                                                        : "divider",
+                                                bgcolor:
+                                                    plans.tiers[i].tier === "pro"
+                                                        ? "primary.softBg"
+                                                        : "transparent",
+                                            }}
+                                        >
+                                            <PlanCell cell={cell} p={p} />
+                                        </Box>
+                                    ))}
+                                </Box>
+                            ))}
+                        </Box>
+                    ))}
+                </Box>
+            </Sheet>
 
             {/* Team plans — only for teams the viewer OWNS (the config
                 endpoint returns an empty list for everyone else). Per-seat
