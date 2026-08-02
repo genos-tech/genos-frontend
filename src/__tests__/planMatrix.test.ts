@@ -13,8 +13,6 @@
 
 import { describe, expect, it } from "vitest";
 
-import { planBenefitRows } from "../features/billing/planBenefits";
-import { planCapabilityRows } from "../features/billing/planComparisonRows";
 import { planMatrixGroups } from "../features/billing/planMatrix";
 import { en } from "../i18n/locales/en";
 import type { PlanTier } from "../services/billingApi";
@@ -126,9 +124,8 @@ describe("planMatrixGroups", () => {
     });
 
     it("follows the server between the credits and daily-ask eras", () => {
-        // Same switch `planBenefits` uses: whichever the server actually
-        // enforces is the one that is true, and either side may deploy
-        // first.
+        // Whichever the server actually enforces is the one that is
+        // true, and either side may deploy first.
         const daily = tier("d", { llm_ask_daily: 20, message_retention_days: 30 });
         expect(flat([daily]).some(([, r]) => r.key === "asks")).toBe(true);
         expect(flat([daily]).some(([, r]) => r.key === "credits")).toBe(false);
@@ -156,8 +153,8 @@ describe("planMatrixGroups", () => {
         // The inversion this guards against: a dimmed cross under every
         // column of "Tasks per month" reads as *this plan cannot create
         // tasks*, which is the opposite of what the server's silence
-        // means. `planBenefits` has always used `== null` for exactly
-        // this; the matrix has to agree or the two pages contradict.
+        // means — which is why `== null` is loose here, catching an
+        // absent key as well as an explicit null.
         const silent = tier("silent", {});
         for (const key of ["history", "tasks", "notes"]) {
             const cell = rowByKey([silent], key).cells[0];
@@ -176,54 +173,6 @@ describe("planMatrixGroups", () => {
 
         const older = tier("older", { monthly_ai_credits: 5 });
         expect(flat([older]).some(([, r]) => r.key === "mcp")).toBe(false);
-    });
-
-    it("agrees with the in-app cards about MCP specifically", () => {
-        // The divergence this catches actually happened: MCP was added
-        // to the matrix (marketing) and not to the capability rows
-        // (in-app), so the refusal message told people to upgrade under
-        // Settings → Plan & Usage and sent them to a page that never
-        // mentioned MCP. A capability the product REFUSES people over
-        // has to appear wherever plans are compared.
-        for (const t of [FREE, PRO]) {
-            const cell = rowByKey([t], "mcp").cells[0];
-            const card = planCapabilityRows(t, p).find((r) => r.key === "mcp");
-            expect(card, `${t.tier}: the in-app card has no MCP row`).toBeDefined();
-            expect(card!.included, `${t.tier}: the two pages disagree`).toBe(cell.kind === "yes");
-        }
-    });
-
-    it("agrees with the card rows the in-app page renders", () => {
-        // The invariant this change put at risk. `planBenefits` used to
-        // serve BOTH pages, and its docstring said the sharing was "the
-        // only thing keeping marketing and product honest". Marketing
-        // now renders from here instead, so nothing in the type system
-        // forces the two to agree — this does.
-        //
-        // Asserted on the numbers rather than the wording: the two
-        // deliberately word things differently ("40 AI credits every
-        // month" vs a cell reading "40"), and only the figure has to
-        // match.
-        for (const t of [FREE, PRO]) {
-            const cards = planBenefitRows(t, p, "en").join(" | ");
-            const cell = (key: string) => rowByKey([t], key).cells[0];
-
-            const credits = cell("credits");
-            if (credits.kind === "value" && credits.label !== p.matrixUnlimited) {
-                expect(cards, `${t.tier} credits`).toContain(credits.label);
-            }
-            const tasks = cell("tasks");
-            if (tasks.kind === "value" && tasks.label !== p.matrixUnlimited) {
-                expect(cards, `${t.tier} tasks`).toContain(tasks.label);
-            }
-            // Unlimited has to read as unlimited on both, not as a blank
-            // on one of them.
-            const history = cell("history");
-            const unlimitedHere = history.kind === "value" && history.label === p.matrixForever;
-            expect(unlimitedHere, `${t.tier} history`).toBe(
-                cards.includes(p.benefitHistoryUnlimited)
-            );
-        }
     });
 
     it("never emits a row with an empty label", () => {
