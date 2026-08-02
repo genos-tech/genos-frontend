@@ -265,6 +265,19 @@ export const QuickAddTaskRow = (props: QuickAddTaskRowProps) => {
     const accentRgb = mode === "dark" ? "var(--gp-brandalt-400-rgb)" : "var(--gp-brand-700-rgb)";
     const depthIdx = Math.min(depth, 3);
     const dimText = mode === "dark" ? "#666" : "#aaa";
+    // Typed-input colour, and it has to be stated explicitly.
+    //
+    // These are MUI *Material* inputs, and the Material theme wrapping
+    // this table is `createTheme({ cssVariables: true })` built once at
+    // module scope in `DraggableTaskTable.tsx` — with no dark palette. So
+    // Material renders light-mode colours no matter what Joy's
+    // `useColorScheme` says, and an unstyled input paints near-black text
+    // on the dark row background: invisible while typing.
+    //
+    // `DraggableTaskRow`'s own title editor already carries this
+    // override; the quick-add row did not, which is why creating a task
+    // looked broken in dark mode while editing one did not.
+    const inputText = mode === "dark" ? "#e8e8e8" : "#1a1a1a";
 
     const menuPaperSx = {
         backgroundColor: mode === "dark" ? "#1a1a2e" : "#ffffff",
@@ -397,7 +410,15 @@ export const QuickAddTaskRow = (props: QuickAddTaskRowProps) => {
                                     borderWidth: "1.5px",
                                 },
                             },
-                            "& .MuiInputBase-input": { padding: "5px 10px" },
+                            "& .MuiInputBase-input": {
+                                padding: "5px 10px",
+                                color: inputText,
+                                // The placeholder is a separate rule —
+                                // it inherits `color` at 42% opacity, so
+                                // without this it stays near-black too
+                                // and the row reads as empty.
+                                "&::placeholder": { color: inputText, opacity: 0.55 },
+                            },
                             "& .MuiFormHelperText-root": { mx: 0.5, my: 0 },
                         }}
                         autoFocus
@@ -458,6 +479,16 @@ export const QuickAddTaskRow = (props: QuickAddTaskRowProps) => {
                                         "&.Mui-focused fieldset": {
                                             borderColor: accent,
                                             borderWidth: "1.5px",
+                                        },
+                                    },
+                                    // Same reason as the title field: the
+                                    // search term the user types is
+                                    // invisible in dark mode without it.
+                                    "& .MuiInputBase-input": {
+                                        color: inputText,
+                                        "&::placeholder": {
+                                            color: inputText,
+                                            opacity: 0.55,
                                         },
                                     },
                                 }}
@@ -676,6 +707,13 @@ export const QuickAddTaskRow = (props: QuickAddTaskRowProps) => {
                                         "&.Mui-focused fieldset": {
                                             borderColor: accent,
                                             borderWidth: "1.5px",
+                                        },
+                                    },
+                                    "& .MuiInputBase-input": {
+                                        color: inputText,
+                                        "&::placeholder": {
+                                            color: inputText,
+                                            opacity: 0.55,
                                         },
                                     },
                                 }}
