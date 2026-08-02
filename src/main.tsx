@@ -36,6 +36,7 @@ import { applyDocumentLocale, bootI18n, resolveInitialLocale } from "./i18n";
 // marketing hits — but the real fix for /home is a separate Vite entry
 // so it stops downloading the app shell at all. See the PR for that.
 const GenosDemoPage = lazy(() => import("./lp/DemoPage"));
+const GenosDevelopersPage = lazy(() => import("./lp/DevelopersPage"));
 const GenosFeaturesPage = lazy(() => import("./lp/FeaturesPage"));
 const GenosLandingPage = lazy(() => import("./lp/LandingPage"));
 const GenosLegalPage = lazy(() => import("./lp/LegalPage"));
@@ -119,6 +120,7 @@ const tree = (
             {/* プライバシーポリシー — same conventions as /legal (static
                 ja + en legal text, no I18nProvider). Linked from the Stripe
                 customer portal's privacy link and the landing footer. */}
+            <Route element={publicPage(GenosDevelopersPage)} path="/developers" />
             <Route element={publicPage(GenosPrivacyPage)} path="/privacy" />
 
             {/* All routes that need authentication context. */}

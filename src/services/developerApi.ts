@@ -9,7 +9,10 @@
 // rather than folding it into the list shape — it makes the one-shot
 // nature visible in the type.
 
+import axios from "axios";
+
 import { authApi } from "./api";
+import { v3ApiBaseURL } from "./v3Api";
 
 export interface ApiKey {
     id: string;
@@ -38,6 +41,12 @@ export interface WebhookEndpoint {
     url: string;
     description: string;
     events: string[];
+    /** Empty = every project. A filter, left unset. */
+    projectIds: number[];
+    /** Empty = NO channel. An allow-list, left empty — the opposite of
+     *  `projectIds`, deliberately. Chat payloads carry message text, so
+     *  there is no subscribe-to-all-chat and DMs are never eligible. */
+    channelIds: string[];
     isActive: boolean;
     consecutiveFailures: number;
     disabledAt: string | null;
@@ -49,6 +58,8 @@ interface WebhookWire {
     url: string;
     description: string;
     events: string[];
+    project_ids: number[];
+    channel_ids: string[];
     is_active: boolean;
     consecutive_failures: number;
     disabled_at: string | null;
@@ -58,13 +69,26 @@ interface WebhookWire {
 /** Every event the server will accept. Mirrors `webhook_models.EVENT_CHOICES`;
  *  these strings are a public contract, so renaming one is a breaking
  *  change for every integrator, not a refactor. */
-export const WEBHOOK_EVENTS = ["task.created", "task.updated", "task.completed"] as const;
+export const WEBHOOK_EVENTS = [
+    "task.created",
+    "task.updated",
+    "task.completed",
+    "task.comment_created",
+    "message.created",
+] as const;
+
+/** Events scoped by channel rather than project. The server requires a
+ *  non-empty `channel_ids` for these and rejects DM channels outright,
+ *  so the form must collect channels before it can submit one. */
+export const CHANNEL_SCOPED_EVENTS: readonly string[] = ["message.created"];
 
 const toWebhook = (w: WebhookWire): WebhookEndpoint => ({
     id: w.id,
     url: w.url,
     description: w.description,
     events: w.events ?? [],
+    projectIds: w.project_ids ?? [],
+    channelIds: w.channel_ids ?? [],
     isActive: w.is_active,
     consecutiveFailures: w.consecutive_failures,
     disabledAt: w.disabled_at,
@@ -151,7 +175,14 @@ export type CreateWebhookResult =
 
 export const createWebhook = async (
     accessToken: string | null,
-    input: { teamId: string; url: string; events: string[]; description?: string }
+    input: {
+        teamId: string;
+        url: string;
+        events: string[];
+        projectIds?: number[];
+        channelIds?: string[];
+        description?: string;
+    }
 ): Promise<CreateWebhookResult> => {
     const api = authApi(accessToken);
     if (!api) return { status: "error" };
@@ -162,6 +193,8 @@ export const createWebhook = async (
                 team_id: input.teamId,
                 url: input.url,
                 events: input.events,
+                project_ids: input.projectIds ?? [],
+                channel_ids: input.channelIds ?? [],
                 description: input.description ?? "",
             },
             // Validation errors are rendered inline next to the field, so
@@ -190,4 +223,60 @@ export const deleteWebhook = async (accessToken: string | null, id: string): Pro
     } catch {
         return false;
     }
+};
+
+// ── scope options ────────────────────────────────────────────────────
+
+export interface ScopeOptions {
+    projects: { id: number; name: string }[];
+    /** Group / project / multi-DM channels only. DMs are filtered out
+     *  HERE as well as rejected server-side: a picker that offers a
+     *  private conversation and then errors has already suggested that
+     *  routing it somewhere was a supported idea. */
+    channels: { id: string; title: string }[];
+}
+
+const DM_KIND = 1;
+
+/** Everything a webhook can be scoped to, for one team.
+ *
+ * Two calls because projects and channels live on different surfaces
+ * (v2 and v3). Failure of either yields an empty list rather than an
+ * error: scope is optional for task events, so a hiccup here must not
+ * block creating a webhook that needs no scope at all.
+ */
+export const listScopeOptions = async (
+    accessToken: string | null,
+    teamId: string,
+    userId: string
+): Promise<ScopeOptions> => {
+    const api = authApi(accessToken);
+    if (!api || !teamId) return { projects: [], channels: [] };
+
+    const projects = api
+        .get(`/project/projects/?team_id=${teamId}&attendee_id=${userId}`)
+        .then((res) =>
+            (res.data ?? []).map((p: { projectId: number; projectName: string }) => ({
+                id: p.projectId,
+                name: p.projectName,
+            }))
+        )
+        .catch(() => []);
+
+    const channels = axios
+        .get(`${v3ApiBaseURL()}/api/v3/channels/?team_id=${teamId}`, {
+            headers: { Authorization: `Bearer ${accessToken}` },
+        })
+        .then((res) =>
+            (res.data?.channels ?? [])
+                .filter((c: { kind: number }) => c.kind !== DM_KIND)
+                .map((c: { id: string; title: string; kind: number }) => ({
+                    id: c.id,
+                    title: c.title || `(untitled ${c.kind === 3 ? "project" : "group"} chat)`,
+                }))
+        )
+        .catch(() => []);
+
+    const [p, c] = await Promise.all([projects, channels]);
+    return { projects: p, channels: c };
 };

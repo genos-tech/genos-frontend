@@ -24,12 +24,15 @@ import { useAuth } from "../../context/AuthContext";
 import { useTranslation } from "../../i18n";
 import {
     ApiKey,
+    CHANNEL_SCOPED_EVENTS,
     createApiKey,
     createWebhook,
     deleteWebhook,
     listApiKeys,
+    listScopeOptions,
     listWebhooks,
     revokeApiKey,
+    ScopeOptions,
     WEBHOOK_EVENTS,
     WebhookEndpoint,
 } from "../../services/developerApi";
@@ -78,6 +81,17 @@ export const DeveloperSettingsSection = ({ teamId }: Props) => {
     const [hookEvents, setHookEvents] = useState<string[]>([WEBHOOK_EVENTS[0]]);
     const [hookError, setHookError] = useState<string | null>(null);
     const [hookBusy, setHookBusy] = useState(false);
+    const [hookProjectIds, setHookProjectIds] = useState<number[]>([]);
+    const [hookChannelIds, setHookChannelIds] = useState<string[]>([]);
+    const [scopeOptions, setScopeOptions] = useState<ScopeOptions>({
+        projects: [],
+        channels: [],
+    });
+
+    // `message.created` is the only event that REQUIRES a scope. Everything
+    // else treats an empty list as "no filter", which is why the two
+    // pickers below read so differently.
+    const wantsChat = hookEvents.some((e) => CHANNEL_SCOPED_EVENTS.includes(e));
 
     const refresh = useCallback(async () => {
         const [k, w] = await Promise.all([
@@ -91,6 +105,16 @@ export const DeveloperSettingsSection = ({ teamId }: Props) => {
         // surfaces the real reason if they try.
         setHooks(w ?? []);
         setLoaded(true);
+        // Scope options are for the create form only, so a failure here
+        // yields empty lists rather than an error — a webhook that needs
+        // no scope must still be creatable.
+        if (teamId) {
+            // `userId` is deliberately not on the auth context (it
+            // outlives logout as a last-signed-in marker), so it comes
+            // from localStorage the same way every other caller reads it.
+            const userId = localStorage.getItem("userId") ?? "";
+            setScopeOptions(await listScopeOptions(accessToken, teamId, userId));
+        }
     }, [accessToken, teamId]);
 
     useEffect(() => {
@@ -114,17 +138,25 @@ export const DeveloperSettingsSection = ({ teamId }: Props) => {
 
     const onCreateHook = async () => {
         if (!teamId || !hookUrl.trim() || hookEvents.length === 0) return;
+        if (wantsChat && hookChannelIds.length === 0) {
+            setHookError(d.webhooks.chatNeedsChannels);
+            return;
+        }
         setHookBusy(true);
         setHookError(null);
         const res = await createWebhook(accessToken, {
             teamId,
             url: hookUrl.trim(),
             events: hookEvents,
+            projectIds: hookProjectIds,
+            channelIds: wantsChat ? hookChannelIds : [],
         });
         setHookBusy(false);
         if (res.status === "created") {
             setFreshSecret(res.secret);
             setHookUrl("");
+            setHookProjectIds([]);
+            setHookChannelIds([]);
             void refresh();
         } else if (res.status === "invalid") {
             // Verbatim from the server. "Webhook URL must resolve to a
@@ -347,6 +379,74 @@ export const DeveloperSettingsSection = ({ teamId }: Props) => {
                         />
                     ))}
                 </Stack>
+                {/* Project filter — OPTIONAL. Nothing selected means every
+                    project, which is what this endpoint did before scope
+                    existed, so the copy has to say so or an empty picker
+                    reads as "you will receive nothing". */}
+                {scopeOptions.projects.length > 0 && (
+                    <Box sx={{ minWidth: 0 }}>
+                        <Typography level="body-xs" sx={{ opacity: 0.7, mb: 0.5 }}>
+                            {hookProjectIds.length === 0
+                                ? d.webhooks.projectScopeAll
+                                : d.webhooks.projectScopeSome}
+                        </Typography>
+                        <Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
+                            {scopeOptions.projects.map((p) => (
+                                <Checkbox
+                                    key={p.id}
+                                    size="sm"
+                                    label={p.name}
+                                    checked={hookProjectIds.includes(p.id)}
+                                    onChange={(e) =>
+                                        setHookProjectIds((prev) =>
+                                            e.target.checked
+                                                ? [...prev, p.id]
+                                                : prev.filter((x) => x !== p.id)
+                                        )
+                                    }
+                                />
+                            ))}
+                        </Stack>
+                    </Box>
+                )}
+
+                {/* Channel allow-list — REQUIRED once a chat event is
+                    ticked, and only rendered then. DMs are absent from
+                    `scopeOptions.channels` entirely: offering one and
+                    then rejecting it would have implied that routing a
+                    private conversation to an external URL is a
+                    supported idea that merely failed validation. */}
+                {wantsChat && (
+                    <Box sx={{ minWidth: 0 }}>
+                        <Typography level="body-xs" sx={{ opacity: 0.7, mb: 0.5 }}>
+                            {d.webhooks.channelScopeRequired}
+                        </Typography>
+                        {scopeOptions.channels.length === 0 ? (
+                            <Typography level="body-xs" color="warning">
+                                {d.webhooks.noEligibleChannels}
+                            </Typography>
+                        ) : (
+                            <Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
+                                {scopeOptions.channels.map((c) => (
+                                    <Checkbox
+                                        key={c.id}
+                                        size="sm"
+                                        label={c.title}
+                                        checked={hookChannelIds.includes(c.id)}
+                                        onChange={(e) =>
+                                            setHookChannelIds((prev) =>
+                                                e.target.checked
+                                                    ? [...prev, c.id]
+                                                    : prev.filter((x) => x !== c.id)
+                                            )
+                                        }
+                                    />
+                                ))}
+                            </Stack>
+                        )}
+                    </Box>
+                )}
+
                 {hookError && (
                     <Typography level="body-xs" color="danger">
                         {hookError}
@@ -356,7 +456,12 @@ export const DeveloperSettingsSection = ({ teamId }: Props) => {
                     size="sm"
                     startDecorator={<AddRoundedIcon sx={{ fontSize: 16 }} />}
                     loading={hookBusy}
-                    disabled={!teamId || !hookUrl.trim() || hookEvents.length === 0}
+                    disabled={
+                        !teamId ||
+                        !hookUrl.trim() ||
+                        hookEvents.length === 0 ||
+                        (wantsChat && hookChannelIds.length === 0)
+                    }
                     onClick={onCreateHook}
                     sx={{ alignSelf: "flex-start" }}
                 >
