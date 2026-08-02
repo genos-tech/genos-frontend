@@ -69,7 +69,17 @@ export const CreditBalance = ({ credits, hideUpgradeNote, tier }: Props) => {
     }
 
     const balance = Math.max(credits.balance, 0);
-    const used = Math.max(credits.limit - balance, 0);
+    // Purchased credits are a separate possession and must not be shown
+    // inside the plan's allowance: the meter reads "X of 70 left", and
+    // someone holding a 100-pack has 170 — a bar that tried to express
+    // that would either overflow or claim they had used nothing.
+    //
+    // So the METER tracks the monthly allowance and the pack gets its
+    // own line. The WARNINGS below stay on the total, because the total
+    // is what the server actually gates on.
+    const purchased = Math.max(credits.purchased_balance ?? 0, 0);
+    const monthly = Math.max(balance - purchased, 0);
+    const used = Math.max(credits.limit - monthly, 0);
     // The bar shows what is LEFT, not what has been spent: full on a
     // fresh month, empty at the cap. It is a fuel gauge, and it drains.
     //
@@ -101,7 +111,7 @@ export const CreditBalance = ({ credits, hideUpgradeNote, tier }: Props) => {
             >
                 <Typography level="body-sm" sx={{ fontWeight: 600 }}>
                     {fmt(t.settings.llmModel.creditsRemaining, {
-                        balance: formatCredits(balance),
+                        balance: formatCredits(monthly),
                         limit: formatCredits(credits.limit),
                     })}
                 </Typography>
@@ -111,12 +121,20 @@ export const CreditBalance = ({ credits, hideUpgradeNote, tier }: Props) => {
             </Stack>
 
             <LinearProgress
-                determinate
                 color={empty ? "warning" : "primary"}
                 size="sm"
                 sx={{ "--LinearProgress-radius": "6px" }}
                 value={pctRemaining}
+                determinate
             />
+
+            {purchased > 0 && (
+                <Typography level="body-xs" sx={{ color: "text.tertiary" }}>
+                    {fmt(t.settings.llmModel.creditsPurchased, {
+                        n: formatCredits(purchased),
+                    })}
+                </Typography>
+            )}
 
             {(empty || low) && (
                 <Typography level="body-xs" sx={{ color: "warning.plainColor" }}>

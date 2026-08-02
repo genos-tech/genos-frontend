@@ -4,18 +4,21 @@ import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import { Box, Button, Card, Chip, LinearProgress, Link, Sheet, Stack, Typography } from "@mui/joy";
 
+import { CreditBalance } from "../../components/layout/settings/CreditBalance";
 import { useAuth } from "../../context/AuthContext";
 import { useCurrencyPreference } from "../../hooks/common/useCurrencyPreference";
 import { fmt, useTranslation } from "../../i18n";
 import type { Messages } from "../../i18n/types";
-import { SubscriptionTier } from "../../services/agentApi";
+import { CreditsBlock, fetchAgentFeatures, SubscriptionTier } from "../../services/agentApi";
 import {
     BillingConfig,
     BillingPlans,
     BillingSubscription,
+    CreditPackCatalogue,
     fetchBillingConfig,
     fetchBillingPlans,
     fetchBillingSubscription,
+    fetchCreditPacks,
     fetchTeamBillingConfig,
     openBillingPortal,
     openTeamBillingPortal,
@@ -23,6 +26,7 @@ import {
     PlanTier,
     PurchasablePlan,
     startCheckout,
+    startCreditPackCheckout,
     startTeamCheckout,
     TeamBillingConfig,
 } from "../../services/billingApi";
@@ -155,6 +159,12 @@ export const PlansHome = () => {
     const [config, setConfig] = useState<BillingConfig | null>(null);
     const [teamConfig, setTeamConfig] = useState<TeamBillingConfig | null>(null);
     const [subscription, setSubscription] = useState<BillingSubscription | null>(null);
+    const [creditPacks, setCreditPacks] = useState<CreditPackCatalogue | null>(null);
+    // The BALANCE cannot come from the billing payload: `/billing/plans/`
+    // is AllowAny and its key list says "never add a per-user value
+    // here". So the packs section reads it from the agent features
+    // endpoint, which is authenticated and already serves it elsewhere.
+    const [credits, setCredits] = useState<CreditsBlock | null>(null);
     const [failed, setFailed] = useState(false);
     // Checkout/portal navigate away on success; stay busy until then.
     const [busy, setBusy] = useState(false);
@@ -181,6 +191,15 @@ export const PlansHome = () => {
         // showing a renewal date it doesn't have.
         void fetchBillingSubscription(accessToken).then((sub) => {
             if (!cancelled) setSubscription(sub);
+        });
+        // Both fail soft to null: a packs section that cannot load is
+        // simply not offered, which is better than a page that breaks
+        // over an upsell.
+        void fetchCreditPacks(accessToken, currency).then((catalogue) => {
+            if (!cancelled) setCreditPacks(catalogue);
+        });
+        void fetchAgentFeatures(accessToken).then((features) => {
+            if (!cancelled) setCredits(features?.credits ?? null);
         });
         return () => {
             cancelled = true;
@@ -691,6 +710,55 @@ export const PlansHome = () => {
                         ))}
                     </Box>
                 </Sheet>
+
+                {/* Credit packs — the answer to "I had a heavy week" that
+                    is not "change your subscription". Placed under the plan
+                    table because it only makes sense once you know what a
+                    plan includes, and it carries the current balance for
+                    the same reason: "buy more" needs a "more than what". */}
+                {creditPacks?.packs?.length ? (
+                    <Sheet sx={{ borderRadius: "lg", mt: 4, p: 2.5 }} variant="outlined">
+                        <Typography level="title-md">{p.creditsPacksHeading}</Typography>
+                        <Typography level="body-sm" sx={{ color: "text.tertiary", mt: 0.5 }}>
+                            {p.creditsPacksBlurb}
+                        </Typography>
+
+                        {credits && (
+                            <Box sx={{ maxWidth: 420, mt: 2 }}>
+                                <CreditBalance credits={credits} hideUpgradeNote />
+                            </Box>
+                        )}
+
+                        {creditPacks.available ? (
+                            <Stack direction="row" flexWrap="wrap" spacing={1} sx={{ mt: 2 }}>
+                                {creditPacks.packs.map((pack) => (
+                                    <Button
+                                        key={pack.pack}
+                                        disabled={busy}
+                                        size="sm"
+                                        variant="outlined"
+                                        onClick={() =>
+                                            runBillingAction(() =>
+                                                startCreditPackCheckout(
+                                                    accessToken!,
+                                                    pack.pack,
+                                                    currency
+                                                )
+                                            )
+                                        }
+                                    >
+                                        {fmt(p.creditsPackBuy, { n: String(pack.credits) })}
+                                        {pack.price ? ` · ${formatPrice(pack.price, locale)}` : ""}
+                                    </Button>
+                                ))}
+                            </Stack>
+                        ) : (
+                            <Typography level="body-sm" sx={{ color: "text.tertiary", mt: 2 }}>
+                                {creditPacks.unavailable_reason || p.creditsPacksUnavailable}
+                            </Typography>
+                        )}
+                    </Sheet>
+                ) : null}
 
                 {/* Team plans — only for teams the viewer OWNS (the config
                     endpoint returns an empty list for everyone else). Per-seat

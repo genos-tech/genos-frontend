@@ -25,12 +25,24 @@ const billingApi = vi.hoisted(() => ({
     fetchBillingConfig: vi.fn(),
     fetchTeamBillingConfig: vi.fn(),
     fetchBillingSubscription: vi.fn(),
+    fetchCreditPacks: vi.fn().mockResolvedValue(null),
     startCheckout: vi.fn().mockResolvedValue(undefined),
     openBillingPortal: vi.fn().mockResolvedValue(undefined),
+    startCreditPackCheckout: vi.fn().mockResolvedValue(undefined),
     startTeamCheckout: vi.fn().mockResolvedValue(undefined),
     openTeamBillingPortal: vi.fn().mockResolvedValue(undefined),
 }));
 vi.mock("../services/billingApi", () => billingApi);
+
+const agentApi = vi.hoisted(() => ({
+    fetchAgentFeatures: vi.fn().mockResolvedValue(null),
+}));
+// The page reads only `fetchAgentFeatures` (for the credit balance
+// beside the packs); the real module's other exports stay intact.
+vi.mock("../services/agentApi", async (importOriginal) => ({
+    ...(await importOriginal<object>()),
+    ...agentApi,
+}));
 
 const PLANS: BillingPlans = {
     billing_enabled: true,
@@ -467,5 +479,74 @@ describe("PlansHome", () => {
         await waitFor(() =>
             expect(billingApi.openTeamBillingPortal).toHaveBeenCalledWith("tok", "team-1")
         );
+    });
+
+    describe("credit packs", () => {
+        const CATALOGUE = {
+            packs: [
+                { pack: "pack_100", credits: 100, price: { amount: 3000, currency: "usd" } },
+                { pack: "pack_10", credits: 10, price: null },
+            ],
+            currency: "usd",
+            available: true,
+            unavailable_reason: "",
+        };
+
+        it("offers the packs and starts checkout for the right one", async () => {
+            billingApi.fetchCreditPacks.mockResolvedValue(CATALOGUE);
+            renderPage();
+            const buy = await screen.findByText(/Buy 100 credits/);
+            // A pack whose price lookup failed still renders, priceless —
+            // hiding it would make the catalogue depend on a cache.
+            expect(screen.getByText(/Buy 10 credits/)).toBeTruthy();
+            fireEvent.click(buy);
+            await waitFor(() =>
+                expect(billingApi.startCreditPackCheckout).toHaveBeenCalledWith(
+                    "tok",
+                    "pack_100",
+                    "usd"
+                )
+            );
+        });
+
+        it("explains instead of offering when packs are unavailable", async () => {
+            billingApi.fetchCreditPacks.mockResolvedValue({
+                ...CATALOGUE,
+                available: false,
+                unavailable_reason: "Your plan already includes unlimited AI credits.",
+            });
+            renderPage();
+            expect(
+                await screen.findByText("Your plan already includes unlimited AI credits.")
+            ).toBeTruthy();
+            expect(screen.queryByText(/Buy 100 credits/)).toBeNull();
+        });
+
+        it("shows no packs section at all when the catalogue cannot load", async () => {
+            billingApi.fetchCreditPacks.mockResolvedValue(null);
+            renderPage();
+            await screen.findByText("Do more of your best work with Genos");
+            expect(screen.queryByText("Need more credits?")).toBeNull();
+        });
+
+        it("shows the current balance beside the packs, both buckets", async () => {
+            billingApi.fetchCreditPacks.mockResolvedValue(CATALOGUE);
+            agentApi.fetchAgentFeatures.mockResolvedValue({
+                credits: {
+                    unlimited: false,
+                    balance: 150,
+                    limit: 70,
+                    used: 20,
+                    period_end_iso: "2026-09-01T00:00:00+00:00",
+                    per_request_max: 5,
+                    purchased_balance: 100,
+                },
+            });
+            renderPage();
+            // 150 total, 100 purchased -> the meter reads the monthly 50
+            // of 70, and the pack gets its own non-expiring line.
+            expect(await screen.findByText(/50 of 70 AI credits left/)).toBeTruthy();
+            expect(screen.getByText(/\+100 bought credits/)).toBeTruthy();
+        });
     });
 });

@@ -243,6 +243,11 @@ export const settings = {
         // cards, which is why these are short values rather than the
         // finished sentences above — a cell has one column's width,
         // and five sentences side by side compare nothing.
+        creditsPacksHeading: "Need more credits?",
+        creditsPacksBlurb:
+            "Buy a one-off pack. Your monthly credits are used first, and bought credits never expire.",
+        creditsPackBuy: "Buy {n} credits",
+        creditsPacksUnavailable: "Credit packs aren't available on your plan.",
         matrixHeading: "Compare every plan",
         matrixSub: "Every limit and capability, side by side.",
         matrixScrollHint: "Scroll sideways to see every plan.",
@@ -402,6 +407,10 @@ export const settings = {
         // differently. Below one request's maximum you can still ask —
         // the run just stops partway if it turns out to be expensive.
         // At zero you cannot ask at all.
+        // Shown under the meter when the user holds one-off credits.
+        // Separate from the allowance because only one of the two
+        // resets, and a single figure would imply both do.
+        creditsPurchased: "+{n} bought credits — these don't expire",
         creditsLowWarning:
             "Running low — a long request may stop partway. Your AI credits reset {when}.",
         creditsEmptyWarning:
