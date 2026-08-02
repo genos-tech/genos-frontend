@@ -4,6 +4,7 @@ import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import { Box, Button, Card, Chip, LinearProgress, Link, Sheet, Stack, Typography } from "@mui/joy";
 
+import { BILLING_REFRESHED } from "../../components/layout/BillingReturnSnackbar";
 import { CreditBalance } from "../../components/layout/settings/CreditBalance";
 import { useAuth } from "../../context/AuthContext";
 import { useCurrencyPreference } from "../../hooks/common/useCurrencyPreference";
@@ -165,6 +166,9 @@ export const PlansHome = () => {
     // here". So the packs section reads it from the agent features
     // endpoint, which is authenticated and already serves it elsewhere.
     const [credits, setCredits] = useState<CreditsBlock | null>(null);
+    // Bumped when the post-checkout reconcile finishes, so the page
+    // refetches instead of showing the balance from before the purchase.
+    const [reloadKey, setReloadKey] = useState(0);
     const [failed, setFailed] = useState(false);
     // Checkout/portal navigate away on success; stay busy until then.
     const [busy, setBusy] = useState(false);
@@ -207,8 +211,19 @@ export const PlansHome = () => {
         // `currency` is a dependency: the amounts in `plans` are quoted
         // in whichever currency they were requested in, so switching
         // has to re-ask the server rather than re-render stale numbers
-        // under a new symbol.
-    }, [accessToken, currency]);
+        // under a new symbol. `reloadKey` is the post-checkout signal.
+    }, [accessToken, currency, reloadKey]);
+
+    // Returning from Stripe is a full page load, so this page mounts and
+    // fetches while `BillingReturnSnackbar`'s reconcile is still in
+    // flight — the balance it gets is the one from BEFORE the purchase.
+    // Refetch when that finishes, which is the difference between
+    // "credits appear the moment you're back" and "nothing happened".
+    useEffect(() => {
+        const onRefreshed = () => setReloadKey((n) => n + 1);
+        window.addEventListener(BILLING_REFRESHED, onRefreshed);
+        return () => window.removeEventListener(BILLING_REFRESHED, onRefreshed);
+    }, []);
 
     const p = t.settings.planUsage;
 

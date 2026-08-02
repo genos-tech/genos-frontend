@@ -26,6 +26,10 @@ const AUTO_HIDE_MS = 8000;
  * or simply not have landed yet. The pull makes the return itself
  * self-healing; nothing here trusts the redirect params for the tier.
  */
+/** Fired once the post-checkout reconcile has completed, so pages
+ *  showing billing-derived data can refetch rather than race it. */
+export const BILLING_REFRESHED = "genos:billing-refreshed";
+
 export const BillingReturnSnackbar = () => {
     const { t } = useTranslation();
     const { accessToken } = useAuth();
@@ -43,7 +47,22 @@ export const BillingReturnSnackbar = () => {
             return;
         }
         if (billing !== "portal_return") setKind(billing);
-        if (billing !== "cancelled") void refreshBillingTier(accessToken);
+        if (billing !== "cancelled") {
+            // Tell the page when the reconcile has actually FINISHED.
+            // Without this there is a race nobody can see coming: the
+            // return is a full page load, so a plans page mounts and
+            // fetches its balance while this call is still in flight —
+            // and the balance it gets is the one from before the
+            // purchase landed. The buyer sees their old number and
+            // concludes nothing happened.
+            //
+            // A window event rather than shared state because the two
+            // components are unrelated and live in different trees;
+            // `openTodoPane` in App.tsx sets the precedent.
+            void refreshBillingTier(accessToken).finally(() => {
+                window.dispatchEvent(new CustomEvent(BILLING_REFRESHED));
+            });
+        }
         params.delete("billing");
         params.delete("plan");
         const qs = params.toString();
