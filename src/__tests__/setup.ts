@@ -21,3 +21,29 @@ if (typeof window !== "undefined" && typeof window.matchMedia === "undefined") {
         }),
     });
 }
+
+// Same class of gap: jsdom doesn't ship `IntersectionObserver`, and
+// framer-motion reaches for it the moment a component uses
+// `whileInView`. Every scroll-reveal on the marketing pages does, so
+// without this a test that merely RENDERS one throws before it can
+// assert anything.
+//
+// The stub never fires a callback, so `whileInView` elements stay at
+// their initial style. That is fine for assertions about content — the
+// element is in the DOM either way — but a test about the animated
+// state itself would need to drive the callback rather than trust this.
+if (typeof globalThis !== "undefined" && typeof globalThis.IntersectionObserver === "undefined") {
+    class StubIntersectionObserver implements IntersectionObserver {
+        readonly root = null;
+        readonly rootMargin = "";
+        readonly thresholds: ReadonlyArray<number> = [];
+        observe() {}
+        unobserve() {}
+        disconnect() {}
+        takeRecords(): IntersectionObserverEntry[] {
+            return [];
+        }
+    }
+    globalThis.IntersectionObserver =
+        StubIntersectionObserver as unknown as typeof IntersectionObserver;
+}
