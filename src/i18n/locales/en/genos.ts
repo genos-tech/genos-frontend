@@ -5,6 +5,11 @@
 // times, turn counts) also reuses `spotlight.history.*` so the two
 // history surfaces can't drift.
 export const genos = {
+    // Empty-state hero above the centered input (ChatGPT-style greeting).
+    hero: {
+        title: "Ask Genos anything",
+        subtitle: "Search chats, tasks, and notes — or have Genos do the work.",
+    },
     sidebar: {
         // "Ask history" — the list of the user's past agent sessions.
         header: "Ask history",
