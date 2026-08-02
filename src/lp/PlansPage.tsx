@@ -4,8 +4,7 @@ import { ArrowLeft, ArrowRight, Check, Mail, Moon, Sparkles, Sun, X } from "luci
 import { Link } from "react-router-dom";
 
 import { CurrencyPicker } from "../features/billing/CurrencyPicker";
-import { planBenefitRows } from "../features/billing/planBenefits";
-import { planCapabilityRows } from "../features/billing/planComparisonRows";
+import { MatrixCell, planMatrixGroups } from "../features/billing/planMatrix";
 import { useCurrencyPreference } from "../hooks/common/useCurrencyPreference";
 import { fmt, I18nProvider, useTranslation } from "../i18n";
 import {
@@ -25,6 +24,48 @@ const CONTACT_SALES_MAILTO = "mailto:genos.support@genosai.dev?subject=Genos%20E
 function cn(...classes: Array<string | false | undefined>) {
     return classes.filter(Boolean).join(" ");
 }
+
+/**
+ * One cell of the comparison table.
+ *
+ * A missing capability renders an EXPLICIT dimmed cross rather than an
+ * empty cell — the rule the card layout already followed, and it matters
+ * more here: in a grid an empty cell reads as an omission, so the one
+ * thing separating two tiers would look like a bug.
+ *
+ * `sr-only` text rides along with each icon. A screen reader hitting a
+ * row of bare ticks learns nothing about which column it is in, and this
+ * table is the page's entire argument.
+ */
+const Cell = ({ cell }: { cell: MatrixCell }) => {
+    if (cell.kind === "yes") {
+        return (
+            <span className="inline-flex items-center gap-2 text-slate-700 dark:text-slate-200">
+                <Check className="h-4 w-4 shrink-0 text-violet-600 dark:text-violet-300" />
+                <span className={cell.label ? undefined : "sr-only"}>{cell.label ?? "Yes"}</span>
+            </span>
+        );
+    }
+    if (cell.kind === "no") {
+        return (
+            <span className="inline-flex items-center gap-2 text-slate-400 dark:text-slate-600">
+                <X className="h-4 w-4 shrink-0" />
+                <span className={cell.label ? undefined : "sr-only"}>{cell.label ?? "No"}</span>
+            </span>
+        );
+    }
+    return (
+        <span
+            className={cn(
+                cell.emphasis
+                    ? "font-black text-violet-700 dark:text-violet-300"
+                    : "font-semibold text-slate-700 dark:text-slate-200"
+            )}
+        >
+            {cell.label}
+        </span>
+    );
+};
 
 function PlansPageInner() {
     const { t, locale } = useTranslation();
@@ -211,96 +252,146 @@ function PlansPageInner() {
                                 <div className="h-10 w-10 animate-spin rounded-full border-4 border-violet-200 border-t-violet-600" />
                             </div>
                         ) : (
-                            // 5 tiers: 4 columns stranded Enterprise alone on
-                            // row 2. 3 columns gives a clean 3 + 2; xl gets
-                            // all five across.
-                            <div className="grid items-stretch gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-                                {plans.tiers.map((tier, index) => {
-                                    const highlighted = tier.tier === "pro";
-                                    const isFree = tier.tier === "free";
-                                    const priceLabel = tier.price
-                                        ? formatPrice(tier.price, locale)
-                                        : null;
-                                    return (
-                                        <motion.div
-                                            key={tier.tier}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            initial={{ opacity: 0, y: 18 }}
-                                            transition={{ duration: 0.5, delay: index * 0.06 }}
-                                            className={cn(
-                                                "relative flex flex-col rounded-[1.75rem] border bg-white p-6 shadow-lg shadow-violet-900/5 dark:bg-white/5",
-                                                highlighted
-                                                    ? "border-violet-500 ring-1 ring-violet-500 dark:border-violet-400/60"
-                                                    : "border-violet-100 dark:border-white/10"
-                                            )}
-                                        >
-                                            {highlighted && (
-                                                <span className="absolute -top-3 left-6 inline-flex items-center rounded-full bg-violet-600 px-3 py-1 text-[11px] font-black uppercase tracking-[0.14em] text-white shadow-sm">
-                                                    {p.bestValue}
-                                                </span>
-                                            )}
-
-                                            <h3 className="text-xl font-black text-slate-950 dark:text-white">
-                                                {tierLabel[tier.tier] ?? tier.tier}
-                                            </h3>
-                                            <p className="mt-2 min-h-[2.5rem] text-sm leading-6 text-slate-600 dark:text-slate-300">
-                                                {tagline[tier.tier] ?? ""}
-                                            </p>
-
-                                            <div className="mt-4 min-h-[2.5rem]">
-                                                {isFree ? (
-                                                    <span className="text-3xl font-black text-slate-950 dark:text-white">
-                                                        {p.freeForever}
+                            // One table, not five cards. A card answers "what
+                            // do I get on Pro?"; nobody arrives asking that.
+                            // They ask "what does Pro give me that Core
+                            // doesn't?", and five parallel lists make the
+                            // reader do the diffing by eye — the rows are in
+                            // different positions and worded per tier. Here a
+                            // feature is a ROW and the answer is read across.
+                            //
+                            // The pricing cards become the table HEAD, so the
+                            // price and the CTA stay glued to the column they
+                            // belong to at every scroll position.
+                            <>
+                                <div className="mb-6 text-center">
+                                    <h2 className="text-2xl font-black tracking-[-0.02em] text-slate-950 dark:text-white">
+                                        {p.matrixHeading}
+                                    </h2>
+                                    <p className="mt-1.5 text-sm font-medium text-slate-500 dark:text-slate-400">
+                                        {p.matrixSub}
+                                        {/* Five columns cannot fit a phone, so the
+                                            table scrolls sideways. Saying so beats
+                                            leaving the reader to discover it — a
+                                            cut-off column reads as a broken page,
+                                            not as more content. */}
+                                        <span className="lg:hidden"> {p.matrixScrollHint}</span>
+                                    </p>
+                                </div>
+                                <motion.div
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="overflow-x-auto rounded-[1.75rem] border border-violet-100 bg-white shadow-lg shadow-violet-900/5 dark:border-white/10 dark:bg-slate-900"
+                                    initial={{ opacity: 0, y: 18 }}
+                                    transition={{ duration: 0.5 }}
+                                >
+                                    {/* min-w keeps the columns legible instead of
+                                    crushing five of them onto a phone; the
+                                    wrapper scrolls and the feature column is
+                                    pinned, so you never lose track of which
+                                    row you are reading. */}
+                                    <table className="w-full min-w-[64rem] border-collapse text-left">
+                                        <caption className="sr-only">{p.matrixHeading}</caption>
+                                        <thead>
+                                            <tr>
+                                                <th
+                                                    className="sticky left-0 z-20 w-48 bg-white p-5 align-bottom sm:w-56 dark:bg-slate-900"
+                                                    scope="col"
+                                                >
+                                                    <span className="text-xs font-black uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+                                                        {p.matrixFeature}
                                                     </span>
-                                                ) : priceLabel ? (
-                                                    <span className="text-3xl font-black text-slate-950 dark:text-white">
-                                                        {priceLabel}
-                                                    </span>
-                                                ) : tier.contact_sales ? (
-                                                    <span className="text-lg font-black text-slate-700 dark:text-slate-200">
-                                                        {p.contactUs}
-                                                    </span>
-                                                ) : null}
-                                            </div>
+                                                </th>
+                                                {plans.tiers.map((tier) => {
+                                                    const highlighted = tier.tier === "pro";
+                                                    const priceLabel = tier.price
+                                                        ? formatPrice(tier.price, locale)
+                                                        : null;
+                                                    return (
+                                                        <th
+                                                            key={tier.tier}
+                                                            scope="col"
+                                                            className={cn(
+                                                                "relative border-l p-5 align-top",
+                                                                highlighted
+                                                                    ? "border-violet-200 bg-violet-50/60 dark:border-violet-400/20 dark:bg-violet-400/10"
+                                                                    : "border-violet-100/70 dark:border-white/10"
+                                                            )}
+                                                        >
+                                                            {highlighted && (
+                                                                <span className="mb-2 inline-flex items-center rounded-full bg-violet-600 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-[0.14em] text-white">
+                                                                    {p.bestValue}
+                                                                </span>
+                                                            )}
+                                                            <div className="text-lg font-black text-slate-950 dark:text-white">
+                                                                {tierLabel[tier.tier] ?? tier.tier}
+                                                            </div>
+                                                            <p className="mt-1 min-h-[2.25rem] text-xs font-medium leading-5 text-slate-500 dark:text-slate-400">
+                                                                {tagline[tier.tier] ?? ""}
+                                                            </p>
+                                                            <div className="mt-3 min-h-[2rem]">
+                                                                {tier.tier === "free" ? (
+                                                                    <span className="text-2xl font-black text-slate-950 dark:text-white">
+                                                                        {p.freeForever}
+                                                                    </span>
+                                                                ) : priceLabel ? (
+                                                                    <span className="text-2xl font-black text-slate-950 dark:text-white">
+                                                                        {priceLabel}
+                                                                    </span>
+                                                                ) : tier.contact_sales ? (
+                                                                    <span className="text-base font-black text-slate-700 dark:text-slate-200">
+                                                                        {p.contactUs}
+                                                                    </span>
+                                                                ) : null}
+                                                            </div>
+                                                            {renderCta(tier)}
+                                                        </th>
+                                                    );
+                                                })}
+                                            </tr>
+                                        </thead>
 
-                                            <ul className="mt-5 flex-1 space-y-2.5">
-                                                {/* Capability rows first — the
-                                                    experience ladder sells the
-                                                    tier. An excluded row keeps
-                                                    its EXPLICIT dimmed cross. */}
-                                                {planCapabilityRows(tier, p).map((row) => (
-                                                    <li
+                                        {planMatrixGroups(plans.tiers, p, locale).map((group) => (
+                                            <tbody key={group.key}>
+                                                <tr>
+                                                    <th
+                                                        className="sticky left-0 border-y border-violet-100 bg-violet-50/70 px-5 py-2.5 text-left text-xs font-black uppercase tracking-[0.14em] text-violet-700 dark:border-white/10 dark:bg-white/[0.06] dark:text-violet-200"
+                                                        colSpan={plans.tiers.length + 1}
+                                                        scope="colgroup"
+                                                    >
+                                                        {group.label}
+                                                    </th>
+                                                </tr>
+                                                {group.rows.map((row) => (
+                                                    <tr
                                                         key={row.key}
-                                                        className={
-                                                            row.included
-                                                                ? "flex items-start gap-2.5 text-sm leading-6 text-slate-700 dark:text-slate-200"
-                                                                : "flex items-start gap-2.5 text-sm leading-6 text-slate-400 dark:text-slate-500"
-                                                        }
+                                                        className="border-b border-violet-50 last:border-b-0 dark:border-white/5"
                                                     >
-                                                        {row.included ? (
-                                                            <Check className="mt-0.5 h-4 w-4 shrink-0 text-violet-600 dark:text-violet-300" />
-                                                        ) : (
-                                                            <X className="mt-0.5 h-4 w-4 shrink-0 text-slate-300 dark:text-slate-600" />
-                                                        )}
-                                                        {row.label}
-                                                    </li>
+                                                        <th
+                                                            className="sticky left-0 z-10 bg-white px-5 py-3.5 text-sm font-semibold text-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                                                            scope="row"
+                                                        >
+                                                            {row.label}
+                                                        </th>
+                                                        {row.cells.map((cell, i) => (
+                                                            <td
+                                                                key={plans.tiers[i].tier}
+                                                                className={cn(
+                                                                    "border-l px-5 py-3.5 text-sm",
+                                                                    plans.tiers[i].tier === "pro"
+                                                                        ? "border-violet-200 bg-violet-50/40 dark:border-violet-400/20 dark:bg-violet-400/[0.06]"
+                                                                        : "border-violet-100/70 dark:border-white/10"
+                                                                )}
+                                                            >
+                                                                <Cell cell={cell} />
+                                                            </td>
+                                                        ))}
+                                                    </tr>
                                                 ))}
-                                                {planBenefitRows(tier, p, locale).map((row) => (
-                                                    <li
-                                                        key={row}
-                                                        className="flex items-start gap-2.5 text-sm leading-6 text-slate-700 dark:text-slate-200"
-                                                    >
-                                                        <Check className="mt-0.5 h-4 w-4 shrink-0 text-violet-600 dark:text-violet-300" />
-                                                        {row}
-                                                    </li>
-                                                ))}
-                                            </ul>
-
-                                            {renderCta(tier)}
-                                        </motion.div>
-                                    );
-                                })}
-                            </div>
+                                            </tbody>
+                                        ))}
+                                    </table>
+                                </motion.div>
+                            </>
                         )}
                     </div>
                 </section>
