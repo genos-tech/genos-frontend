@@ -322,6 +322,11 @@ export class ChannelService {
     private accessToken: string | null = null;
     private socket: Socket | null = null;
     private currentUserId: string | null = null;
+    // The team whose chats are on screen. Drives the `team_id` filter on
+    // `listChannels` — without it the sidebar shows every team the user
+    // belongs to at once, so switching teams left the previous team's
+    // chats rendered. See `setCurrentTeamId`.
+    private currentTeamId: string | null = null;
 
     // ---- Reactive in-memory store -----------------------------------------
     //
@@ -569,6 +574,60 @@ export class ChannelService {
     }
 
     /**
+     * Set the team whose chats should be on screen.
+     *
+     * A channel always belongs to exactly one team (`Channel.team` is a
+     * non-null FK server-side, DMs included), but `GET /api/v3/channels/`
+     * returns every team the caller is a member of unless narrowed. So
+     * this id is what makes the chat list team-scoped at all — see
+     * `_doListChannels`.
+     *
+     * On a real switch the in-memory maps are wiped for the same reason
+     * `setCurrentUserId` wipes them: `DatabaseUtils.clearTeamScopedStores()`
+     * (called from `useAppInitialization`) empties the PERSISTED cache,
+     * but the service's own maps are process state and survive it — so
+     * the sidebar kept rendering the previous team's channels from
+     * memory even though IDB was clean.
+     */
+    setCurrentTeamId(teamId: string | null) {
+        const next = teamId || null;
+        const previous = this.currentTeamId;
+        if (previous === next) return;
+        // Only a genuine switch resets. The first assignment (null → the
+        // boot team) must NOT wipe, or it would discard the rows
+        // `hydrateFromIDB` just loaded and blank the sidebar on boot.
+        if (previous) {
+            this._resetForTeamSwitch();
+        }
+        this.currentTeamId = next;
+    }
+
+    /**
+     * Drop the previous team's channels, messages and cursors.
+     *
+     * Deliberately narrower than `_resetForUserSwitch`: the user has not
+     * changed, so their pending sends stay valid and the socket stays
+     * up. Only the team-scoped collections are cleared.
+     */
+    private _resetForTeamSwitch(): void {
+        this._channels.clear();
+        this._members.clear();
+        this._messages.clear();
+        this._cursors.clear();
+        this._pins.clear();
+        this._pinByChannelId.clear();
+        this._flags.clear();
+        this._flagByMessageId.clear();
+        this._flagsVersion += 1;
+        this._bumpChannels();
+        // Same reasoning as the user-switch path: hooks should render
+        // their loading state until the new team's list lands, rather
+        // than an empty chat list that looks like "you have no chats".
+        this._hydrated = false;
+        this._notify();
+    }
+
+    /**
      * Wire the `/v3` socket. The router has already attached `socket.on(...)`
      * listeners to forward inbound events into `this.handle*`. The
      * service uses the socket itself only for outbound emits.
@@ -690,7 +749,19 @@ export class ChannelService {
 
     private async _doListChannels(): Promise<Channel[]> {
         try {
-            const res = await this.api().get<{ channels: Channel[] }>("/api/v3/channels/");
+            // `team_id` is REQUIRED for correctness, not an optimization.
+            // Unnarrowed, this endpoint returns every team the caller
+            // belongs to, so team-a's chats reappeared in team-b the
+            // instant the post-switch refresh landed — even with the IDB
+            // cache correctly wiped.
+            //
+            // Sent only when known. Omitting it falls back to the old
+            // all-teams behaviour, which is wrong but not broken; sending
+            // `team_id=undefined` would serialize as the string
+            // "undefined" and match no team, blanking the sidebar.
+            const res = await this.api().get<{ channels: Channel[] }>("/api/v3/channels/", {
+                params: this.currentTeamId ? { team_id: this.currentTeamId } : undefined,
+            });
             return res.data.channels ?? [];
         } catch (e) {
             throw unwrapAxiosError(e);
@@ -710,10 +781,17 @@ export class ChannelService {
      * 404ing `sprint/config`, `milestone/list`, `messages`, `threads` and
      * `members` on every sync.
      *
-     * `GET /api/v3/channels/` is the user's COMPLETE active set — unpaginated,
-     * not team-scoped, filtered on `is_deleted=False` and live membership. So
-     * anything held locally but absent from it is genuinely gone (deleted, or
-     * we were removed), and reconciling against it is safe.
+     * `GET /api/v3/channels/` is the user's COMPLETE active set for the
+     * CURRENT TEAM — unpaginated, filtered on `is_deleted=False` and live
+     * membership. So anything held locally but absent from it is either gone
+     * (deleted, or we were removed) or belongs to another team, and evicting
+     * it is right in both cases.
+     *
+     * ⚠️ This used to say "not team-scoped", and that was true until
+     * `_doListChannels` started sending `team_id`. The distinction matters
+     * here specifically: reconciling an all-teams list would have been a
+     * no-op across teams, whereas reconciling a team-scoped one is what
+     * actually evicts the previous team's chats after a switch.
      *
      * MUST only be called with an authoritative full list. Never call it with a
      * partial or failed response — that would evict every real channel.

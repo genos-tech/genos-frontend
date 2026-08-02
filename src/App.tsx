@@ -180,7 +180,7 @@ export const App = () => {
     // `socketInstance` above; v3-aware surfaces (mounted via the
     // `useChannel` / `useChannelList` hooks) consume `channelService`
     // directly. Side-by-side until the legacy paths are deleted.
-    useChannelServiceBootstrap(accessToken, myself.userId || null);
+    useChannelServiceBootstrap(accessToken, myself.userId || null, myself.teamId || null);
 
     // Runtime config: poll `/api/v2/runtime-config` on auth ready and every
     // 60s. Source of truth for the per-chat-type v3 rollout flags and
