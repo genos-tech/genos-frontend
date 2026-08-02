@@ -38,6 +38,18 @@ export const settings = {
             disabled: "Disabled after repeated failures",
             managerOnly: "Only a team owner or editor can add a webhook.",
             createFailed: "Couldn't add that webhook. Please try again.",
+            // The two scope pickers deliberately read differently,
+            // because they behave differently: no project selected means
+            // ALL projects (a filter left unset), while no channel
+            // selected means NO chat (an allow-list left empty). Copy
+            // that treated them alike would mislead in one direction or
+            // the other.
+            projectScopeAll: "Projects: all (select some to narrow)",
+            projectScopeSome: "Projects: only the selected",
+            channelScopeRequired:
+                "Channels to watch — required. Message text is sent to your URL, so each channel has to be chosen. Direct messages are never eligible.",
+            noEligibleChannels: "No group channels in this team yet.",
+            chatNeedsChannels: "Choose at least one channel for chat events.",
         },
         // Both secrets are shown exactly once and cannot be recovered.
         // The copy has to say so before the panel is dismissed, or
