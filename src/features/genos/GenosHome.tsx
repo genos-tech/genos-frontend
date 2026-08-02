@@ -1,0 +1,272 @@
+// The Genos main page (/workspace/genos) — the app's landing surface.
+//
+// ChatGPT-style layout: an "Ask history" session sidebar on the left
+// (resumable — clicking a row restores the transcript AND continues
+// the server-side session) and the shared SpotlightContent surface as
+// the main column. Empty state centers the input hero-style; once a
+// conversation is active the panel fills the column with the input
+// pinned at the bottom (SpotlightContent's own agent-mode order flip).
+//
+// All conversation state lives in `useSpotlight` at the App root — the
+// SAME instance that drives the Cmd-K overlay — so the two surfaces
+// are viewports onto one conversation. This component is a plain lazy
+// route (not a keep-alive pane): unmounting loses nothing.
+//
+// Mounted INSIDE the authed provider tree (unlike the overlay), but
+// mention/project data still arrives via props — one code path for
+// both hosts of SpotlightContent.
+
+import { useCallback, useEffect, useState } from "react";
+import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
+import { Box, IconButton } from "@mui/joy";
+import { useColorScheme } from "@mui/joy/styles";
+
+import { AppTooltip } from "../../components/ui/AppTooltip";
+import { useIsMobile } from "../../hooks/common/useIsMobile";
+import { useTranslation } from "../../i18n";
+import type { MentionGroup } from "../../services/mentionGroupsApi";
+import type { UserProps } from "../../types/admin";
+import type { ProjectProps } from "../../types/tasks";
+import { hasAskContent, SpotlightContent } from "../spotlight/SpotlightContent";
+import type { SpotlightResult } from "../spotlight/types";
+import type { UseSpotlightReturn } from "../spotlight/useSpotlight";
+import { GenosSessionSidebar } from "./GenosSessionSidebar";
+import { useGenosSessions } from "./useGenosSessions";
+
+interface GenosHomeProps {
+    // The App-root Spotlight hook return — one instance, two viewports
+    // (this page + the Cmd-K overlay).
+    spotlight: UseSpotlightReturn;
+    accessToken: string | null;
+    teamId: string | null | undefined;
+    // Same prop bundle the overlay gets (see App.tsx) so SpotlightContent
+    // keeps one code path across hosts.
+    mentionMembers?: UserProps[];
+    mentionGroups?: MentionGroup[];
+    projects?: ProjectProps[];
+    onSelect: (r: SpotlightResult) => void;
+    onPreview: (r: SpotlightResult) => void;
+    onOpenSettings: () => void;
+}
+
+const SIDEBAR_WIDTH = 268;
+
+export const GenosHome = ({
+    spotlight,
+    accessToken,
+    teamId,
+    mentionMembers,
+    mentionGroups,
+    projects,
+    onSelect,
+    onPreview,
+    onOpenSettings,
+}: GenosHomeProps) => {
+    const { mode } = useColorScheme();
+    const { t } = useTranslation();
+    const isDark = mode === "dark";
+    const isMobile = useIsMobile();
+    // Mobile: the session sidebar is an overlay drawer, toggled from a
+    // floating history button. Desktop always shows it.
+    const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+
+    // Session list refresh: `turns.length` changes exactly when a turn
+    // completes (or a session is resumed / cleared), which is when the
+    // sidebar's rows can change.
+    const { sessions, isLoading: sessionsLoading } = useGenosSessions({
+        accessToken,
+        teamId,
+        refreshKey: spotlight.turns.length,
+    });
+
+    // Mirror of SpotlightContent's `inAgentMode`: hero-center the input
+    // while there's no conversation, chat-layout once there is one.
+    const conversationActive =
+        spotlight.turns.length > 0 ||
+        Boolean(spotlight.ask.sessionId) ||
+        hasAskContent(spotlight.ask) ||
+        spotlight.historyMode !== "closed";
+
+    const handleSelectSession = useCallback(
+        (sessionId: string) => {
+            spotlight.resumeSession(sessionId);
+            setMobileSidebarOpen(false);
+        },
+        [spotlight]
+    );
+
+    const handleNewChat = useCallback(() => {
+        spotlight.onNewConversation();
+        setMobileSidebarOpen(false);
+    }, [spotlight]);
+
+    // Leaving the page closes the mobile drawer so it doesn't reopen
+    // stale on the next visit.
+    useEffect(() => () => setMobileSidebarOpen(false), []);
+
+    const sidebar = (
+        <GenosSessionSidebar
+            activeSessionId={spotlight.ask.sessionId}
+            isLoading={sessionsLoading || spotlight.resumeIsLoading}
+            resumeError={spotlight.resumeError}
+            sessions={sessions}
+            onNewChat={handleNewChat}
+            onSelectSession={handleSelectSession}
+        />
+    );
+
+    return (
+        <Box
+            sx={{
+                flex: 1,
+                minWidth: 0,
+                display: "flex",
+                // Clear the BottomTabBar on mobile; full height on desktop.
+                height: {
+                    xs: "calc(100dvh - var(--BottomTabBar-height, 60px))",
+                    md: "100dvh",
+                },
+                position: "relative",
+                overflow: "hidden",
+            }}
+        >
+            {/* Session sidebar — static column on desktop. */}
+            {!isMobile && (
+                <Box
+                    sx={{
+                        width: SIDEBAR_WIDTH,
+                        flexShrink: 0,
+                        borderRight: "1px solid",
+                        borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
+                        background: isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.015)",
+                        minHeight: 0,
+                    }}
+                >
+                    {sidebar}
+                </Box>
+            )}
+
+            {/* Mobile: drawer-style overlay + backdrop. */}
+            {isMobile && mobileSidebarOpen && (
+                <>
+                    <Box
+                        sx={{
+                            position: "absolute",
+                            inset: 0,
+                            zIndex: 5,
+                            background: "rgba(0,0,0,0.35)",
+                        }}
+                        onClick={() => setMobileSidebarOpen(false)}
+                    />
+                    <Box
+                        sx={{
+                            position: "absolute",
+                            top: 0,
+                            bottom: 0,
+                            left: 0,
+                            zIndex: 6,
+                            width: "min(85vw, 320px)",
+                            background: isDark
+                                ? "rgba(var(--gp-dark-surface-a-rgb), 0.98)"
+                                : "rgba(250,248,255,0.99)",
+                            borderRight: "1px solid",
+                            borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)",
+                            boxShadow: "0 8px 32px rgba(0,0,0,0.35)",
+                        }}
+                    >
+                        {sidebar}
+                    </Box>
+                </>
+            )}
+
+            {/* Main conversation column. */}
+            <Box
+                sx={{
+                    flex: 1,
+                    minWidth: 0,
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    px: { xs: 1, sm: 3 },
+                    py: { xs: 1, sm: 2 },
+                }}
+            >
+                {isMobile && (
+                    <AppTooltip
+                        placement="right"
+                        size="sm"
+                        title={
+                            mobileSidebarOpen
+                                ? t.genos.sidebar.closeLabel
+                                : t.genos.sidebar.openLabel
+                        }
+                    >
+                        <IconButton
+                            color="neutral"
+                            size="sm"
+                            sx={{ alignSelf: "flex-start", mb: 0.5 }}
+                            variant="soft"
+                            onClick={() => setMobileSidebarOpen((v) => !v)}
+                        >
+                            <HistoryRoundedIcon sx={{ fontSize: 18 }} />
+                        </IconButton>
+                    </AppTooltip>
+                )}
+                <Box
+                    sx={{
+                        width: "100%",
+                        maxWidth: 860,
+                        flex: 1,
+                        minHeight: 0,
+                        display: "flex",
+                        flexDirection: "column",
+                        // Empty state: center the input hero-style (the
+                        // fragment's DOM order is input → chips → results,
+                        // exactly the ChatGPT-like hero). With a
+                        // conversation, SpotlightContent's agent-mode
+                        // `order` flip pins the input to the bottom and
+                        // the panel fills the column.
+                        justifyContent: conversationActive ? "flex-start" : "center",
+                    }}
+                >
+                    <SpotlightContent
+                        aiAnswersEnabled={spotlight.aiAnswersEnabled}
+                        ask={spotlight.ask}
+                        backToHistoryList={spotlight.backToHistoryList}
+                        closeHistory={spotlight.closeHistory}
+                        error={spotlight.error}
+                        filterProjectIds={spotlight.filterProjectIds}
+                        filterServices={spotlight.filterServices}
+                        historyDetail={spotlight.historyDetail}
+                        historyIsLoading={spotlight.historyIsLoading}
+                        historyMode={spotlight.historyMode}
+                        historySessions={spotlight.historySessions}
+                        isLoading={spotlight.isLoading}
+                        mentionGroups={mentionGroups}
+                        mentionMembers={mentionMembers}
+                        openHistory={spotlight.openHistory}
+                        projects={projects}
+                        query={spotlight.query}
+                        registerInputFocus={spotlight.registerPageInputFocus}
+                        results={spotlight.results}
+                        turns={spotlight.turns}
+                        variant="page"
+                        viewHistorySession={spotlight.viewHistorySession}
+                        onApprove={spotlight.onApprove}
+                        onAsk={spotlight.onAsk}
+                        onCancel={spotlight.onCancel}
+                        onChangeFilterProjects={spotlight.onChangeFilterProjects}
+                        onFeedback={spotlight.submitFeedback}
+                        onNewConversation={spotlight.onNewConversation}
+                        onOpenSettings={onOpenSettings}
+                        onPreview={onPreview}
+                        onQueryChange={spotlight.setQuery}
+                        onReject={spotlight.onReject}
+                        onSelect={onSelect}
+                        onToggleFilterService={spotlight.onToggleFilterService}
+                    />
+                </Box>
+            </Box>
+        </Box>
+    );
+};

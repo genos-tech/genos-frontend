@@ -120,6 +120,12 @@ const IntegrationsHome = lazy(() =>
 const PlansHome = lazy(() =>
     import("./features/billing/PlansHome").then((m) => ({ default: m.PlansHome }))
 );
+// The Genos main page — the app's landing surface. A plain lazy route
+// (all conversation state lives in the App-root useSpotlight instance,
+// so unmounting on navigation loses nothing).
+const GenosHome = lazy(() =>
+    import("./features/genos/GenosHome").then((m) => ({ default: m.GenosHome }))
+);
 // The v3 chat shell's import graph reaches the message composer and
 // the whole BlockNote editor stack (the ~900 kB gzipped vendor-editor
 // chunk). Loading it lazily keeps that out of the initial entry — the
@@ -751,6 +757,11 @@ export const App = () => {
     // stub (Phase 1 just logs; Phase 2 will dispatch the Gemini RAG
     // call). Navigation on result-click is handled here so we have
     // every navigator (useCM / navigate) in scope.
+    // The Genos main page renders the same SpotlightContent this hook
+    // drives — one conversation, two viewports. `startsWith` (not
+    // `includes`) so a hypothetical sub-path stays a match while other
+    // services' paths can never collide.
+    const isGenosPage = location.pathname.startsWith("/workspace/genos");
     const spotlight = useSpotlight({
         accessToken,
         teamId: useTEM.currentTeamId,
@@ -758,7 +769,22 @@ export const App = () => {
         // so it can't reach the manager through context. Used only to
         // announce an answer that finished after the overlay was closed.
         notificationManager: useNotif.manager,
+        isPageActive: isGenosPage,
     });
+    // The page and the overlay never show simultaneously: navigating to
+    // the page (sidebar button, deep link, notification onOpen) closes
+    // the overlay. State survives — useSpotlight skips its close-reset
+    // while the page is active.
+    const spotlightClose = spotlight.close;
+    useEffect(() => {
+        if (isGenosPage && spotlight.isOpen) spotlightClose();
+    }, [isGenosPage, spotlight.isOpen, spotlightClose]);
+    // Sidebar "Genos" button + mobile FAB: go to the page (the overlay
+    // stays reachable everywhere via Cmd/Ctrl-K).
+    const openGenosPage = useCallback(() => {
+        spotlightClose();
+        navigate("/workspace/genos");
+    }, [spotlightClose, navigate]);
     // Spotlight-scoped settings modal (LLM model picker + AI-answer
     // toggles), opened from the gear icon on the Spotlight bar. Local
     // to the App root so the dialog can layer above the overlay.
@@ -1136,6 +1162,7 @@ export const App = () => {
             void import("./features/tasks/taskHome");
             void import("./features/notes/NoteHome");
             void import("./features/inbox/inboxHome");
+            void import("./features/genos/GenosHome");
         });
         return () => cic(handle);
     }, [useUISM.isLoading]);
@@ -1539,8 +1566,8 @@ export const App = () => {
                                                                                                     onOpenHistory={
                                                                                                         openHistory
                                                                                                     }
-                                                                                                    onOpenSpotlight={
-                                                                                                        spotlight.open
+                                                                                                    onOpenGenos={
+                                                                                                        openGenosPage
                                                                                                     }
                                                                                                 />
                                                                                                 <Routes>
@@ -1654,12 +1681,60 @@ export const App = () => {
                                                                                                             />
                                                                                                         </>
                                                                                                     )}
-                                                                                                    {/* Default redirect to inbox */}
+                                                                                                    {/* The Genos main page. Inside the provider tree
+                                                                                        (unlike the overlay), but mention/project data
+                                                                                        still rides in as props so SpotlightContent has
+                                                                                        one code path across its two hosts. */}
+                                                                                                    <Route
+                                                                                                        path="genos"
+                                                                                                        element={
+                                                                                                            <FeatureErrorBoundary feature="Genos">
+                                                                                                                <Suspense
+                                                                                                                    fallback={
+                                                                                                                        <RouteLoadingFallback />
+                                                                                                                    }
+                                                                                                                >
+                                                                                                                    <GenosHome
+                                                                                                                        accessToken={
+                                                                                                                            accessToken
+                                                                                                                        }
+                                                                                                                        mentionGroups={
+                                                                                                                            useMGM.mentionGroups
+                                                                                                                        }
+                                                                                                                        mentionMembers={
+                                                                                                                            spotlightMentionMembers
+                                                                                                                        }
+                                                                                                                        projects={
+                                                                                                                            spotlightFilterProjects
+                                                                                                                        }
+                                                                                                                        spotlight={
+                                                                                                                            spotlight
+                                                                                                                        }
+                                                                                                                        teamId={
+                                                                                                                            useTEM.currentTeamId
+                                                                                                                        }
+                                                                                                                        onOpenSettings={() =>
+                                                                                                                            setSpotlightSettingsOpen(
+                                                                                                                                true
+                                                                                                                            )
+                                                                                                                        }
+                                                                                                                        onPreview={
+                                                                                                                            handleSpotlightPreview
+                                                                                                                        }
+                                                                                                                        onSelect={
+                                                                                                                            handleSpotlightSelect
+                                                                                                                        }
+                                                                                                                    />
+                                                                                                                </Suspense>
+                                                                                                            </FeatureErrorBoundary>
+                                                                                                        }
+                                                                                                    />
+                                                                                                    {/* Default redirect to the Genos main page */}
                                                                                                     <Route
                                                                                                         path=""
                                                                                                         element={
                                                                                                             <Navigate
-                                                                                                                to="inbox"
+                                                                                                                to="genos"
                                                                                                                 replace
                                                                                                             />
                                                                                                         }
@@ -1804,11 +1879,16 @@ export const App = () => {
                                                                                                         )
                                                                                                     }
                                                                                                 />
-                                                                                                <MobileSpotlightFab
-                                                                                                    onOpenSpotlight={
-                                                                                                        spotlight.open
-                                                                                                    }
-                                                                                                />
+                                                                                                {/* Hidden on the Genos page itself — a
+                                                                                    "go to Genos" button there is dead
+                                                                                    weight over the conversation. */}
+                                                                                                {!isGenosPage && (
+                                                                                                    <MobileSpotlightFab
+                                                                                                        onPress={
+                                                                                                            openGenosPage
+                                                                                                        }
+                                                                                                    />
+                                                                                                )}
                                                                                             </Box>
                                                                                         </HistoryProvider>
                                                                                     </MentionGroupModalProvider>
