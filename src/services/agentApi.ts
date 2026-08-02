@@ -168,6 +168,13 @@ export interface AskAgentArgs extends BaseStreamHandlers {
     // the next ask doesn't accidentally inherit the cleared turns via
     // the per-entity lookup.
     newConversation?: boolean;
+    // When true, the ask continues a conversation whose transcript the
+    // user can SEE (live overlay/page turns, or a session restored from
+    // history). The backend then reuses `sessionId` even past its idle
+    // TTL — bounded by the user's history-retention window — instead of
+    // silently minting a fresh session under a visible transcript.
+    // Omitted when false so older backends see an unchanged payload.
+    resume?: boolean;
     signal?: AbortSignal;
 }
 
@@ -585,6 +592,7 @@ export async function askAgentStream(args: AskAgentArgs): Promise<void> {
                   }
                 : {}),
             ...(args.newConversation ? { new_conversation: true } : {}),
+            ...(args.resume ? { resume: true } : {}),
         },
         args.accessToken,
         args.signal,

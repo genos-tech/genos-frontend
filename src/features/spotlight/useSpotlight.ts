@@ -27,6 +27,15 @@
 //   - Closing the overlay preserves `{ sessionId, turns }` so an
 //     accidental Escape doesn't lose the conversation. Only the
 //     explicit "New conversation" button clears them.
+//
+// Page mode (Genos main page): the same hook instance also drives the
+// full-page surface at /workspace/genos. `isPageActive` marks that the
+// page is showing, which (a) keeps the search pipeline live and the
+// transient query/filter state intact while the overlay is closed, and
+// (b) reroutes Cmd-K to focus the page's input (via
+// `registerPageInputFocus`) instead of opening a redundant overlay.
+// `resumeSession` restores a past session from the server archive into
+// the live conversation so follow-up asks continue it server-side.
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import axios, { CanceledError } from "axios";
@@ -49,6 +58,7 @@ import { searchSpotlight } from "../../services/searchApi";
 import { isMac } from "../../utils/platform";
 import {
     MAX_TURNS_IN_HISTORY,
+    sessionTurnToCompleted,
     toWireMentions,
     type AgentMentionRef,
     type AskState,
@@ -107,6 +117,13 @@ export interface UseSpotlightArgs {
     // supply it. Optional so the Spotlight tests (and any consumer that
     // doesn't care) can leave it out — the notice is then skipped.
     notificationManager?: NotificationManager | null;
+    // True while the full-page Genos surface (/workspace/genos) is the
+    // active route. The page renders the same SpotlightContent this
+    // hook drives, so while it's showing: the search pipeline stays
+    // live with the overlay closed, transient query/filter state is
+    // NOT wiped, and Cmd-K focuses the page input instead of opening
+    // the overlay. Optional so existing consumers/tests are unchanged.
+    isPageActive?: boolean;
 }
 
 // History feature (Phase ~4.6): read-only archive of past agent
@@ -166,6 +183,21 @@ export interface UseSpotlightReturn {
     closeHistory: () => void;
     // F1 — persist a 👍/👎 rating for a finished turn (keyed by run_id).
     submitFeedback: (runId: string, rating: number) => void;
+    // ----- Genos page (page mode) -----
+    // Restore a past session from the server archive into the LIVE
+    // conversation: transcript replaces `turns`, `sessionId` continues
+    // the session server-side (the next ask sends `resume: true` so an
+    // idle-expired session is reused rather than silently forked).
+    resumeSession: (sessionId: string) => void;
+    resumeIsLoading: boolean;
+    // Non-null after a failed resume (session outside retention → 404,
+    // network error). The current conversation is left intact; cleared
+    // on the next resume attempt or "New conversation".
+    resumeError: string | null;
+    // The Genos page registers its input-focus function here so Cmd-K
+    // focuses the page input while the page is active (instead of
+    // opening the overlay). Pass null on unmount.
+    registerPageInputFocus: (fn: (() => void) | null) => void;
 }
 
 const EMPTY_ASK_STATE: AskState = {
@@ -184,6 +216,7 @@ export const useSpotlight = ({
     accessToken,
     teamId,
     notificationManager,
+    isPageActive = false,
 }: UseSpotlightArgs): UseSpotlightReturn => {
     const { t } = useTranslation();
     const [isOpen, setIsOpen] = useState(false);
@@ -206,6 +239,9 @@ export const useSpotlight = ({
     const [historySessions, setHistorySessions] = useState<AgentSessionSummary[]>([]);
     const [historyDetail, setHistoryDetail] = useState<AgentSessionDetail | null>(null);
     const [historyIsLoading, setHistoryIsLoading] = useState(false);
+    // ----- Session resume (Genos page) -----
+    const [resumeIsLoading, setResumeIsLoading] = useState(false);
+    const [resumeError, setResumeError] = useState<string | null>(null);
 
     // User-toggleable gate for the LLM path. `aiAnswers` is checked at
     // the overlay layer (the Ask button is disabled when it's off, and
@@ -234,6 +270,17 @@ export const useSpotlight = ({
     useEffect(() => {
         isOpenRef.current = isOpen;
     }, [isOpen]);
+    // Same pattern for the page-active flag (read by the Cmd-K branch).
+    const isPageActiveRef = useRef(isPageActive);
+    useEffect(() => {
+        isPageActiveRef.current = isPageActive;
+    }, [isPageActive]);
+    // Focus function the Genos page registers so Cmd-K can hand focus
+    // to the page's input instead of opening the overlay over it.
+    const pageInputFocusRef = useRef<(() => void) | null>(null);
+    const registerPageInputFocus = useCallback((fn: (() => void) | null) => {
+        pageInputFocusRef.current = fn;
+    }, []);
 
     // ---- Backgrounded-run completion notice. ----
     //
@@ -257,7 +304,9 @@ export const useSpotlight = ({
         (turnId: number, runId: string | null, error: string | null) => {
             const live = liveRunRef.current;
             if (!live || live.turnId !== turnId) return;
-            if (isOpenRef.current) return; // user watched it finish
+            // User watched it finish — overlay open OR the Genos page
+            // showing the same conversation full-page.
+            if (isOpenRef.current || isPageActiveRef.current) return;
             if (notifiedTurnIdsRef.current.has(turnId)) return;
             notifiedTurnIdsRef.current.add(turnId);
             notifyAgentRunComplete(notificationManagerRef.current, {
@@ -283,6 +332,15 @@ export const useSpotlight = ({
                 // inputs that explicitly handle it (e.g. some editors),
                 // but for the app shell this is what we want.
                 e.preventDefault();
+                // On the Genos page the same surface is already on
+                // screen full-page — opening the overlay on top of it
+                // would show the conversation twice. Hand focus to the
+                // page's input instead. (With the overlay somehow open
+                // anyway, fall through so Cmd-K still closes it.)
+                if (isPageActiveRef.current && !isOpenRef.current) {
+                    pageInputFocusRef.current?.();
+                    return;
+                }
                 setIsOpen((prev) => !prev);
                 return;
             }
@@ -352,7 +410,13 @@ export const useSpotlight = ({
     // Only the SEARCH request is aborted here — typeahead results are
     // throwaway once the overlay is dismissed.
     useEffect(() => {
-        if (isOpen) return;
+        // Page mode: the Genos page shows the same query/results/filter
+        // state full-page, so "overlay closed" must not wipe it while
+        // the page is active. This also makes an overlay→page handoff
+        // seamless (App closes the overlay when navigating to the page;
+        // the state survives because the page is already active).
+        // Leaving the page (both false) wipes, matching close semantics.
+        if (isOpen || isPageActive) return;
         abortRef.current?.abort();
         abortRef.current = null;
         setQuery("");
@@ -366,7 +430,7 @@ export const useSpotlight = ({
         // would read as "search is broken".
         setFilterServices([]);
         setFilterProjectIds([]);
-    }, [isOpen]);
+    }, [isOpen, isPageActive]);
 
     // ---- Persist conversation to localStorage on turns / sessionId change. ----
     // Debounced 500 ms so high-frequency answer_delta updates (which don't
@@ -397,9 +461,10 @@ export const useSpotlight = ({
         return () => window.clearTimeout(timer);
     }, [turns, ask.sessionId, teamId]);
 
-    // ---- Debounced search on query change while overlay is open. ----
+    // ---- Debounced search on query change while the surface shows
+    // (overlay open OR the Genos page active). ----
     useEffect(() => {
-        if (!isOpen) return;
+        if (!isOpen && !isPageActive) return;
         const trimmed = query.trim();
         if (!trimmed) {
             // Empty query: clear out any previous results immediately.
@@ -521,7 +586,7 @@ export const useSpotlight = ({
             window.clearTimeout(timer);
             controller.abort();
         };
-    }, [query, isOpen, teamId, accessToken, t, filterServices, filterProjectIds]);
+    }, [query, isOpen, isPageActive, teamId, accessToken, t, filterServices, filterProjectIds]);
 
     // Chip toggle for the overlay's filter row. Selection order is
     // preserved (pure helper); the search effect above re-fires with
@@ -848,6 +913,11 @@ export const useSpotlight = ({
                 teamId,
                 accessToken,
                 sessionId: ask.sessionId ?? undefined,
+                // Continuing a conversation the user can SEE (there are
+                // completed turns under a live session) → tell the
+                // backend so an idle-expired session is resumed rather
+                // than silently forked. First-ever asks omit it.
+                ...(turns.length > 0 && ask.sessionId ? { resume: true } : {}),
                 signal: controller.signal,
                 ...(mentions?.length ? { mentions: toWireMentions(mentions) } : {}),
                 ...buildStreamHandlers(askedTurnId),
@@ -867,6 +937,7 @@ export const useSpotlight = ({
             ask.pendingApproval,
             ask.turnId,
             ask.sessionId,
+            turns.length,
             aiAnswers,
             t,
         ]
@@ -1031,9 +1102,11 @@ export const useSpotlight = ({
         setAsk(EMPTY_ASK_STATE);
         // Close any open history view too — otherwise "New conversation"
         // would clear the live session but leave the panel showing a
-        // past archive, which is incoherent.
+        // past archive, which is incoherent. A stale resume error is
+        // equally moot once the user starts fresh.
         setHistoryMode("closed");
         setHistoryDetail(null);
+        setResumeError(null);
         // Wipe persisted state immediately so a reload after "New conversation"
         // opens a blank overlay rather than restoring the cleared history.
         if (teamId) {
@@ -1044,6 +1117,73 @@ export const useSpotlight = ({
             }
         }
     }, [teamId]);
+
+    // ---- Resume a past session from the server archive (Genos page). ----
+    //
+    // Unlike `viewHistorySession` (read-only render), this restores the
+    // archived turns into the LIVE conversation: `turns` becomes the
+    // transcript, `ask.sessionId` continues the session server-side,
+    // and the next `onAsk` sends `resume: true` so an idle-expired
+    // session is reused (bounded by history retention) instead of
+    // silently forked. No extra LLM call — the visible transcript plus
+    // the backend's prior-turn context IS the recap.
+    //
+    // A sequence counter guards rapid re-clicks: only the latest
+    // resume's response applies. On failure the current conversation is
+    // left untouched and `resumeError` surfaces the miss.
+    const resumeSeqRef = useRef(0);
+    const resumeSession = useCallback(
+        (sessionId: string) => {
+            if (!accessToken || !teamId) return;
+            const seq = ++resumeSeqRef.current;
+            setResumeIsLoading(true);
+            setResumeError(null);
+            fetchAgentSessionDetail({ accessToken, teamId, sessionId })
+                .then((detail) => {
+                    if (seq !== resumeSeqRef.current) return;
+                    // fetchAgentSessionDetail resolves null on any
+                    // failure (404 outside retention, network) rather
+                    // than throwing.
+                    if (!detail) {
+                        setResumeError(t.spotlight.history.loadFailed);
+                        return;
+                    }
+                    // The restored session replaces whatever was live.
+                    askAbortRef.current?.abort();
+                    askAbortRef.current = null;
+                    liveRunRef.current = null;
+                    notifiedTurnIdsRef.current.clear();
+                    promotedTurnIdsRef.current.clear();
+                    // Slice BEFORE mapping so restored ids stay 1..n and
+                    // the next turn id (n+1) can never collide with a
+                    // seeded promoted id.
+                    const recent = (detail.turns || []).slice(-MAX_TURNS_IN_HISTORY);
+                    const restored = recent.map(sessionTurnToCompleted);
+                    restored.forEach((turn) => promotedTurnIdsRef.current.add(turn.id));
+                    setTurns(restored);
+                    // Error turns restore too (they're part of the
+                    // transcript), so the transcript matches what the
+                    // detail view would have shown.
+                    setAsk({
+                        ...EMPTY_ASK_STATE,
+                        sessionId: detail.session_id,
+                        turnId: restored.length,
+                    });
+                    setHistoryMode("closed");
+                    setHistoryDetail(null);
+                    // The localStorage persistence effect snapshots the
+                    // restored transcript automatically (same schema).
+                })
+                .catch(() => {
+                    if (seq !== resumeSeqRef.current) return;
+                    setResumeError(t.spotlight.history.loadFailed);
+                })
+                .finally(() => {
+                    if (seq === resumeSeqRef.current) setResumeIsLoading(false);
+                });
+        },
+        [accessToken, teamId, t]
+    );
 
     // ---- View a collected past answer (entity_type "spotlight_answer")
     // inline, reusing the live-answer renderer (TurnView). No network call —
@@ -1112,5 +1252,9 @@ export const useSpotlight = ({
         backToHistoryList,
         closeHistory,
         submitFeedback,
+        resumeSession,
+        resumeIsLoading,
+        resumeError,
+        registerPageInputFocus,
     };
 };
