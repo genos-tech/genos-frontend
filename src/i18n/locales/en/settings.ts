@@ -231,6 +231,7 @@ export const settings = {
         capReachWeb: "Web search",
         capReachCalendar: "Google Calendar integration",
         capReachGithub: "GitHub integration",
+        capMcp: "Connect an AI coding agent (MCP)",
         capDigestNone: "Proactive digest from Genos",
         capDigestWeekly: "Weekly digest from Genos",
         capDigestDaily: "Daily digest + alerts from Genos",

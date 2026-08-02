@@ -14,6 +14,7 @@
 import { describe, expect, it } from "vitest";
 
 import { planBenefitRows } from "../features/billing/planBenefits";
+import { planCapabilityRows } from "../features/billing/planComparisonRows";
 import { planMatrixGroups } from "../features/billing/planMatrix";
 import { en } from "../i18n/locales/en";
 import type { PlanTier } from "../services/billingApi";
@@ -175,6 +176,21 @@ describe("planMatrixGroups", () => {
 
         const older = tier("older", { monthly_ai_credits: 5 });
         expect(flat([older]).some(([, r]) => r.key === "mcp")).toBe(false);
+    });
+
+    it("agrees with the in-app cards about MCP specifically", () => {
+        // The divergence this catches actually happened: MCP was added
+        // to the matrix (marketing) and not to the capability rows
+        // (in-app), so the refusal message told people to upgrade under
+        // Settings → Plan & Usage and sent them to a page that never
+        // mentioned MCP. A capability the product REFUSES people over
+        // has to appear wherever plans are compared.
+        for (const t of [FREE, PRO]) {
+            const cell = rowByKey([t], "mcp").cells[0];
+            const card = planCapabilityRows(t, p).find((r) => r.key === "mcp");
+            expect(card, `${t.tier}: the in-app card has no MCP row`).toBeDefined();
+            expect(card!.included, `${t.tier}: the two pages disagree`).toBe(cell.kind === "yes");
+        }
     });
 
     it("agrees with the card rows the in-app page renders", () => {

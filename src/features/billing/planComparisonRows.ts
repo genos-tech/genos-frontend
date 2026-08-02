@@ -104,6 +104,14 @@ export const planCapabilityRows = (tier: PlanTier, p: PlanStrings): PlanCapabili
         { key: "github", label: p.capReachGithub, included: integrations.has("github") }
     );
 
+    // Hand it to an AI agent. This row is what the MCP refusal message
+    // sends people here to find: an agent told them to "upgrade under
+    // Settings → Plan & Usage", and without it they arrive at a page
+    // that never mentions MCP and cannot tell which plan fixes it.
+    if (L.mcp_enabled !== undefined) {
+        rows.push({ key: "mcp", label: p.capMcp, included: Boolean(L.mcp_enabled) });
+    }
+
     // Comes to you. Absent key = a server that predates the digest —
     // the one row we SKIP rather than cross, because a cross would
     // advertise the absence of a feature the product doesn't have yet.
