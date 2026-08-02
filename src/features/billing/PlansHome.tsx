@@ -205,14 +205,17 @@ export const PlansHome = () => {
 
     if (failed) {
         return (
-            <Box sx={{ p: 3 }}>
+            <Box sx={{ flex: 1, minWidth: 0, p: 3 }}>
                 <Typography level="body-sm">{p.loadError}</Typography>
             </Box>
         );
     }
+    // `flex: 1` on every branch, not just the loaded one: a content-sized
+    // flex item here renders as a ~50px sliver beside the sidebar, then
+    // snaps to full width the moment the plans arrive.
     if (!plans) {
         return (
-            <Box sx={{ p: 3 }}>
+            <Box sx={{ flex: 1, minWidth: 0, p: 3 }}>
                 <LinearProgress size="sm" />
             </Box>
         );
@@ -353,487 +356,516 @@ export const PlansHome = () => {
     };
 
     return (
-        <Box sx={{ p: 3, maxWidth: 1440, mx: "auto" }}>
-            <Stack alignItems="center" spacing={1} sx={{ mb: 4, mt: 1, textAlign: "center" }}>
-                <Typography level="h2">{p.plansHero}</Typography>
-                <Typography level="body-md" sx={{ color: "text.tertiary", maxWidth: 640 }}>
-                    {p.plansHeroSub}
-                </Typography>
-                {/* Renders nothing until a second currency is configured
-                    server-side, so this is invisible today and appears on
-                    its own once USD prices exist in Stripe. */}
-                <CurrencyPicker
-                    ariaLabel={p.currencyLabel}
-                    supported={plans?.supported_currencies}
-                    value={plans?.currency || currency}
-                    onChange={setCurrency}
-                />
-            </Stack>
+        <Box
+            sx={{
+                // The page owns its scroll. The app shell (`#root`) is
+                // `overflow: hidden`, so a route taller than the viewport
+                // scrolls the DOCUMENT instead — and the sidebar rides up with
+                // it, because its `position: sticky` can only pin against a
+                // scrollport it shares, which the document isn't. Bounding the
+                // page at one viewport keeps the shell that tall and leaves the
+                // sidebar where it belongs.
+                flex: 1,
+                minWidth: 0,
+                height: "100dvh",
+                overflowY: "auto",
+            }}
+        >
+            <Box sx={{ p: 3, maxWidth: 1440, mx: "auto" }}>
+                <Stack alignItems="center" spacing={1} sx={{ mb: 4, mt: 1, textAlign: "center" }}>
+                    <Typography level="h2">{p.plansHero}</Typography>
+                    <Typography level="body-md" sx={{ color: "text.tertiary", maxWidth: 640 }}>
+                        {p.plansHeroSub}
+                    </Typography>
+                    {/* Renders nothing until a second currency is configured
+                        server-side, so this is invisible today and appears on
+                        its own once USD prices exist in Stripe. */}
+                    <CurrencyPicker
+                        ariaLabel={p.currencyLabel}
+                        supported={plans?.supported_currencies}
+                        value={plans?.currency || currency}
+                        onChange={setCurrency}
+                    />
+                </Stack>
 
-            {/* Manage-your-subscription banner.
-                Without this the ONLY route to a downgrade or a cancel was
-                the portal button buried on some OTHER tier's card, which
-                (a) reads as "switch to that plan" and (b) doesn't render
-                at all for an operator-set tier (`has_billing_account`
-                false) — leaving a paying-looking user with no visible way
-                out. The banner is the single answer to "how do I change
-                or cancel my plan", and it states plainly when there is
-                nothing to self-manage instead of offering a dead button. */}
-            {personalTier && (personalTier !== "free" || config?.has_billing_account) && (
-                <Card sx={{ mb: 3 }} variant="soft">
-                    <Stack
-                        alignItems={{ xs: "flex-start", sm: "center" }}
-                        direction={{ xs: "column", sm: "row" }}
-                        spacing={1.5}
-                        sx={{ width: "100%" }}
-                    >
-                        <Stack spacing={0.5} sx={{ flex: 1, minWidth: 0 }}>
-                            <Typography level="body-xs" sx={{ color: "text.tertiary" }}>
-                                {p.yourPlanHeading}
-                            </Typography>
-                            <Stack alignItems="center" direction="row" flexWrap="wrap" gap={1}>
-                                <Chip
-                                    color={TIER_COLOR[personalTier as SubscriptionTier]}
-                                    size="sm"
-                                    variant="soft"
-                                >
-                                    {tierLabel[personalTier as SubscriptionTier] ?? personalTier}
-                                </Chip>
-                                {config?.has_billing_account ? (
-                                    renewalLabel()
-                                ) : (
-                                    <Typography level="body-sm" sx={{ color: "text.tertiary" }}>
-                                        {p.planSetByAdmin}
+                {/* Manage-your-subscription banner.
+                    Without this the ONLY route to a downgrade or a cancel was
+                    the portal button buried on some OTHER tier's card, which
+                    (a) reads as "switch to that plan" and (b) doesn't render
+                    at all for an operator-set tier (`has_billing_account`
+                    false) — leaving a paying-looking user with no visible way
+                    out. The banner is the single answer to "how do I change
+                    or cancel my plan", and it states plainly when there is
+                    nothing to self-manage instead of offering a dead button. */}
+                {personalTier && (personalTier !== "free" || config?.has_billing_account) && (
+                    <Card sx={{ mb: 3 }} variant="soft">
+                        <Stack
+                            alignItems={{ xs: "flex-start", sm: "center" }}
+                            direction={{ xs: "column", sm: "row" }}
+                            spacing={1.5}
+                            sx={{ width: "100%" }}
+                        >
+                            <Stack spacing={0.5} sx={{ flex: 1, minWidth: 0 }}>
+                                <Typography level="body-xs" sx={{ color: "text.tertiary" }}>
+                                    {p.yourPlanHeading}
+                                </Typography>
+                                <Stack alignItems="center" direction="row" flexWrap="wrap" gap={1}>
+                                    <Chip
+                                        color={TIER_COLOR[personalTier as SubscriptionTier]}
+                                        size="sm"
+                                        variant="soft"
+                                    >
+                                        {tierLabel[personalTier as SubscriptionTier] ??
+                                            personalTier}
+                                    </Chip>
+                                    {config?.has_billing_account ? (
+                                        renewalLabel()
+                                    ) : (
+                                        <Typography
+                                            level="body-sm"
+                                            sx={{ color: "text.tertiary" }}
+                                        >
+                                            {p.planSetByAdmin}
+                                        </Typography>
+                                    )}
+                                </Stack>
+                                {/* With a live subscription the cards below
+                                    carry the switch/cancel buttons, so point
+                                    at them; the generic hint (portal does
+                                    everything) only applies when there's no
+                                    subscription for those buttons to act on. */}
+                                <Typography level="body-xs" sx={{ color: "text.tertiary" }}>
+                                    {!config?.has_billing_account
+                                        ? p.planSetByAdminHint
+                                        : subscription
+                                          ? p.planChangeHint
+                                          : p.manageBillingHint}
+                                </Typography>
+                                {subscription?.status === "past_due" && (
+                                    <Typography color="danger" level="body-xs">
+                                        {p.pastDue}
                                     </Typography>
                                 )}
                             </Stack>
-                            {/* With a live subscription the cards below
-                                carry the switch/cancel buttons, so point
-                                at them; the generic hint (portal does
-                                everything) only applies when there's no
-                                subscription for those buttons to act on. */}
-                            <Typography level="body-xs" sx={{ color: "text.tertiary" }}>
-                                {!config?.has_billing_account
-                                    ? p.planSetByAdminHint
-                                    : subscription
-                                      ? p.planChangeHint
-                                      : p.manageBillingHint}
-                            </Typography>
-                            {subscription?.status === "past_due" && (
-                                <Typography color="danger" level="body-xs">
-                                    {p.pastDue}
-                                </Typography>
+                            {config?.has_billing_account && (
+                                <Button
+                                    disabled={busy}
+                                    size="sm"
+                                    variant="solid"
+                                    onClick={() =>
+                                        runBillingAction(() => openBillingPortal(accessToken!))
+                                    }
+                                >
+                                    {p.manageBilling}
+                                </Button>
                             )}
                         </Stack>
-                        {config?.has_billing_account && (
-                            <Button
-                                disabled={busy}
-                                size="sm"
-                                variant="solid"
-                                onClick={() =>
-                                    runBillingAction(() => openBillingPortal(accessToken!))
-                                }
-                            >
-                                {p.manageBilling}
-                            </Button>
-                        )}
-                    </Stack>
-                </Card>
-            )}
+                    </Card>
+                )}
 
-            {/* One table, not five cards. A card answers "what do I get
-                on Pro?"; someone on this page is asking "what does the
-                next plan give me that mine doesn't", and five parallel
-                lists make them diff by eye.
+                {/* One table, not five cards. A card answers "what do I get
+                    on Pro?"; someone on this page is asking "what does the
+                    next plan give me that mine doesn't", and five parallel
+                    lists make them diff by eye.
 
-                Rendered from `planMatrixGroups` — the SAME builder the
-                public /plans page uses. That is the point: this page and
-                marketing previously had separate row builders and drifted,
-                most recently over MCP. One renderer, one set of facts. */}
-            <Sheet
-                sx={{ borderRadius: "lg", overflowX: "auto", overflowY: "hidden" }}
-                variant="outlined"
-            >
-                <Box
-                    component="table"
-                    sx={{
-                        width: "100%",
-                        minWidth: 900,
-                        borderCollapse: "collapse",
-                        textAlign: "start",
-                        // Digits are read DOWN a column as much as across
-                        // a row; proportional figures make 150 and 30 sit
-                        // at different optical widths.
-                        fontVariantNumeric: "tabular-nums",
-                        "& th, & td": { p: 1.5, verticalAlign: "middle" },
-                        "& thead th": { verticalAlign: "top", pt: 4, pb: 2 },
-                    }}
+                    Rendered from `planMatrixGroups` — the SAME builder the
+                    public /plans page uses. That is the point: this page and
+                    marketing previously had separate row builders and drifted,
+                    most recently over MCP. One renderer, one set of facts. */}
+                <Sheet
+                    sx={{ borderRadius: "lg", overflowX: "auto", overflowY: "hidden" }}
+                    variant="outlined"
                 >
-                    <Box component="thead">
-                        <Box component="tr">
-                            <Box
-                                component="th"
-                                scope="col"
-                                sx={{
-                                    position: "sticky",
-                                    insetInlineStart: 0,
-                                    zIndex: 2,
-                                    width: 210,
-                                    // Opaque, and the same colour as the
-                                    // Sheet: a translucent pinned column
-                                    // shows the rows sliding under it.
-                                    bgcolor: "background.surface",
-                                    verticalAlign: "bottom !important",
-                                }}
-                            >
-                                <Typography
-                                    level="body-xs"
-                                    sx={{ textTransform: "uppercase", letterSpacing: "0.14em" }}
-                                >
-                                    {p.matrixFeature}
-                                </Typography>
-                            </Box>
-                            {plans.tiers.map((tier) => {
-                                const priceLabel = tier.price
-                                    ? formatPrice(tier.price, locale)
-                                    : null;
-                                const highlighted = tier.tier === "pro";
-                                return (
-                                    <Box
-                                        key={tier.tier}
-                                        component="th"
-                                        scope="col"
-                                        sx={{
-                                            position: "relative",
-                                            borderInlineStart: "1px solid",
-                                            borderColor: highlighted
-                                                ? "primary.solidBg"
-                                                : "divider",
-                                            bgcolor: highlighted
-                                                ? "primary.softBg"
-                                                : "transparent",
-                                        }}
-                                    >
-                                        {highlighted && (
-                                            <Chip
-                                                color="primary"
-                                                size="sm"
-                                                variant="solid"
-                                                sx={{
-                                                    // Out of flow, or it
-                                                    // pushes this column's
-                                                    // name, price and CTA
-                                                    // down by its own
-                                                    // height while the
-                                                    // other four stay put.
-                                                    position: "absolute",
-                                                    top: 8,
-                                                    insetInlineStart: 12,
-                                                }}
-                                            >
-                                                {p.bestValue}
-                                            </Chip>
-                                        )}
-                                        <Typography level="title-lg">
-                                            {tierLabel[tier.tier]}
-                                        </Typography>
-                                        <Typography
-                                            level="body-xs"
-                                            sx={{ color: "text.tertiary", minHeight: 34 }}
-                                        >
-                                            {tagline[tier.tier]}
-                                        </Typography>
-                                        <Stack
-                                            alignItems="baseline"
-                                            direction="row"
-                                            spacing={0.5}
-                                            sx={{ minHeight: 40 }}
-                                        >
-                                            {tier.contact_sales ? (
-                                                <Typography level="title-md">
-                                                    {p.contactSales}
-                                                </Typography>
-                                            ) : tier.price?.amount === 0 ? (
-                                                <>
-                                                    <Typography level="h3">
-                                                        {p.freePrice}
-                                                    </Typography>
-                                                    <Typography
-                                                        level="body-xs"
-                                                        sx={{ color: "text.tertiary" }}
-                                                    >
-                                                        {p.freeForever}
-                                                    </Typography>
-                                                </>
-                                            ) : priceLabel ? (
-                                                <>
-                                                    <Typography level="h3">
-                                                        {priceLabel}
-                                                    </Typography>
-                                                    <Typography
-                                                        level="body-xs"
-                                                        sx={{ color: "text.tertiary" }}
-                                                    >
-                                                        {p.perMonth}
-                                                    </Typography>
-                                                </>
-                                            ) : null}
-                                        </Stack>
-                                        <Box sx={{ minHeight: 36, mt: 1 }}>{renderCta(tier)}</Box>
-                                    </Box>
-                                );
-                            })}
-                        </Box>
-                    </Box>
-
-                    {planMatrixGroups(plans.tiers, p, locale).map((group) => (
-                        <Box key={group.key} component="tbody">
+                    <Box
+                        component="table"
+                        sx={{
+                            width: "100%",
+                            minWidth: 900,
+                            borderCollapse: "collapse",
+                            textAlign: "start",
+                            // Digits are read DOWN a column as much as across
+                            // a row; proportional figures make 150 and 30 sit
+                            // at different optical widths.
+                            fontVariantNumeric: "tabular-nums",
+                            "& th, & td": { p: 1.5, verticalAlign: "middle" },
+                            "& thead th": { verticalAlign: "top", pt: 4, pb: 2 },
+                        }}
+                    >
+                        <Box component="thead">
                             <Box component="tr">
                                 <Box
-                                    colSpan={plans.tiers.length + 1}
                                     component="th"
-                                    scope="colgroup"
+                                    scope="col"
                                     sx={{
                                         position: "sticky",
                                         insetInlineStart: 0,
-                                        bgcolor: "background.level1",
-                                        borderBlock: "1px solid",
-                                        borderColor: "divider",
-                                        textAlign: "start",
+                                        zIndex: 2,
+                                        width: 210,
+                                        // Opaque, and the same colour as the
+                                        // Sheet: a translucent pinned column
+                                        // shows the rows sliding under it.
+                                        bgcolor: "background.surface",
+                                        verticalAlign: "bottom !important",
                                     }}
                                 >
                                     <Typography
                                         level="body-xs"
                                         sx={{
-                                            fontWeight: "lg",
                                             textTransform: "uppercase",
                                             letterSpacing: "0.14em",
                                         }}
                                     >
-                                        {group.label}
+                                        {p.matrixFeature}
                                     </Typography>
                                 </Box>
+                                {plans.tiers.map((tier) => {
+                                    const priceLabel = tier.price
+                                        ? formatPrice(tier.price, locale)
+                                        : null;
+                                    const highlighted = tier.tier === "pro";
+                                    return (
+                                        <Box
+                                            key={tier.tier}
+                                            component="th"
+                                            scope="col"
+                                            sx={{
+                                                position: "relative",
+                                                borderInlineStart: "1px solid",
+                                                borderColor: highlighted
+                                                    ? "primary.solidBg"
+                                                    : "divider",
+                                                bgcolor: highlighted
+                                                    ? "primary.softBg"
+                                                    : "transparent",
+                                            }}
+                                        >
+                                            {highlighted && (
+                                                <Chip
+                                                    color="primary"
+                                                    size="sm"
+                                                    variant="solid"
+                                                    sx={{
+                                                        // Out of flow, or it
+                                                        // pushes this column's
+                                                        // name, price and CTA
+                                                        // down by its own
+                                                        // height while the
+                                                        // other four stay put.
+                                                        position: "absolute",
+                                                        top: 8,
+                                                        insetInlineStart: 12,
+                                                    }}
+                                                >
+                                                    {p.bestValue}
+                                                </Chip>
+                                            )}
+                                            <Typography level="title-lg">
+                                                {tierLabel[tier.tier]}
+                                            </Typography>
+                                            <Typography
+                                                level="body-xs"
+                                                sx={{ color: "text.tertiary", minHeight: 34 }}
+                                            >
+                                                {tagline[tier.tier]}
+                                            </Typography>
+                                            <Stack
+                                                alignItems="baseline"
+                                                direction="row"
+                                                spacing={0.5}
+                                                sx={{ minHeight: 40 }}
+                                            >
+                                                {tier.contact_sales ? (
+                                                    <Typography level="title-md">
+                                                        {p.contactSales}
+                                                    </Typography>
+                                                ) : tier.price?.amount === 0 ? (
+                                                    <>
+                                                        <Typography level="h3">
+                                                            {p.freePrice}
+                                                        </Typography>
+                                                        <Typography
+                                                            level="body-xs"
+                                                            sx={{ color: "text.tertiary" }}
+                                                        >
+                                                            {p.freeForever}
+                                                        </Typography>
+                                                    </>
+                                                ) : priceLabel ? (
+                                                    <>
+                                                        <Typography level="h3">
+                                                            {priceLabel}
+                                                        </Typography>
+                                                        <Typography
+                                                            level="body-xs"
+                                                            sx={{ color: "text.tertiary" }}
+                                                        >
+                                                            {p.perMonth}
+                                                        </Typography>
+                                                    </>
+                                                ) : null}
+                                            </Stack>
+                                            <Box sx={{ minHeight: 36, mt: 1 }}>
+                                                {renderCta(tier)}
+                                            </Box>
+                                        </Box>
+                                    );
+                                })}
                             </Box>
-                            {group.rows.map((row) => (
-                                <Box
-                                    key={row.key}
-                                    component="tr"
-                                    sx={{
-                                        borderBottom: "1px solid",
-                                        borderColor: "divider",
-                                        "&:last-of-type": { borderBottom: "none" },
-                                    }}
-                                >
+                        </Box>
+
+                        {planMatrixGroups(plans.tiers, p, locale).map((group) => (
+                            <Box key={group.key} component="tbody">
+                                <Box component="tr">
                                     <Box
+                                        colSpan={plans.tiers.length + 1}
                                         component="th"
-                                        scope="row"
+                                        scope="colgroup"
                                         sx={{
                                             position: "sticky",
                                             insetInlineStart: 0,
-                                            zIndex: 1,
-                                            bgcolor: "background.surface",
+                                            bgcolor: "background.level1",
+                                            borderBlock: "1px solid",
+                                            borderColor: "divider",
                                             textAlign: "start",
                                         }}
                                     >
-                                        <Typography level="body-sm" sx={{ fontWeight: "md" }}>
-                                            {row.label}
-                                        </Typography>
-                                    </Box>
-                                    {row.cells.map((cell, i) => (
-                                        <Box
-                                            key={plans.tiers[i].tier}
-                                            component="td"
-                                            sx={{
-                                                borderInlineStart: "1px solid",
-                                                borderColor:
-                                                    plans.tiers[i].tier === "pro"
-                                                        ? "primary.solidBg"
-                                                        : "divider",
-                                                bgcolor:
-                                                    plans.tiers[i].tier === "pro"
-                                                        ? "primary.softBg"
-                                                        : "transparent",
-                                            }}
-                                        >
-                                            <PlanCell cell={cell} p={p} />
-                                        </Box>
-                                    ))}
-                                </Box>
-                            ))}
-                        </Box>
-                    ))}
-                </Box>
-            </Sheet>
-
-            {/* Team plans — only for teams the viewer OWNS (the config
-                endpoint returns an empty list for everyone else). Per-seat
-                on the SAME prices as the personal cards above; price math
-                comes from the plans payload so it can't drift. */}
-            {teamConfig?.enabled && teamConfig.teams.length > 0 && (
-                <>
-                    <Typography level="h4" sx={{ mt: 4, mb: 0.5 }}>
-                        {p.teamPlansHeading}
-                    </Typography>
-                    <Typography level="body-sm" sx={{ color: "text.tertiary", mb: 1.5 }}>
-                        {p.teamPlansSubheading}
-                    </Typography>
-                    <Stack spacing={1.5}>
-                        {teamConfig.teams.map((team) => {
-                            const seatPrice = (plan: PurchasablePlan) => {
-                                const tierInfo = plans.tiers.find((t) => t.tier === plan);
-                                const label = tierInfo?.price
-                                    ? formatPrice(tierInfo.price, locale)
-                                    : null;
-                                return label
-                                    ? fmt(p.perSeatMonth, {
-                                          price: label,
-                                          n: String(team.seats),
-                                      })
-                                    : null;
-                            };
-                            return (
-                                <Card key={team.team_id} variant="outlined">
-                                    <Stack
-                                        alignItems="center"
-                                        direction="row"
-                                        flexWrap="wrap"
-                                        spacing={1.5}
-                                        useFlexGap
-                                    >
-                                        <Typography level="title-md">{team.team_name}</Typography>
-                                        <Chip
-                                            color={TIER_COLOR[team.plan]}
-                                            size="sm"
-                                            variant="soft"
-                                        >
-                                            {tierLabel[team.plan]}
-                                        </Chip>
-                                        <Typography
-                                            level="body-sm"
-                                            sx={{ color: "text.tertiary" }}
-                                        >
-                                            {fmt(p.teamSeats, { n: String(team.seats) })}
-                                        </Typography>
-                                        <Box sx={{ flex: 1 }} />
-                                        {team.plan === "free" ? (
-                                            <>
-                                                {PURCHASABLE_PLANS.map((plan) => (
-                                                    <Button
-                                                        key={plan}
-                                                        disabled={busy}
-                                                        size="sm"
-                                                        variant={plan === "pro" ? "solid" : "soft"}
-                                                        onClick={() =>
-                                                            runBillingAction(() =>
-                                                                startTeamCheckout(
-                                                                    accessToken!,
-                                                                    team.team_id,
-                                                                    plan,
-                                                                    currency
-                                                                )
-                                                            )
-                                                        }
-                                                    >
-                                                        {p[TEAM_UPGRADE_LABEL_KEY[plan]]}
-                                                    </Button>
-                                                ))}
-                                            </>
-                                        ) : (
-                                            team.has_billing_account && (
-                                                // A paying team had ONE
-                                                // generic portal button and
-                                                // therefore no visible answer
-                                                // to "switch plan" or "cancel"
-                                                // — same complaint as the
-                                                // personal cards. Switching
-                                                // uses the "switch" PICKER,
-                                                // not a per-plan deep link: a
-                                                // team row is one row for all
-                                                // tiers, so no button here
-                                                // could name a target plan
-                                                // honestly.
-                                                <>
-                                                    <Button
-                                                        disabled={busy}
-                                                        size="sm"
-                                                        variant="soft"
-                                                        onClick={() =>
-                                                            runBillingAction(() =>
-                                                                openTeamBillingPortal(
-                                                                    accessToken!,
-                                                                    team.team_id,
-                                                                    "switch"
-                                                                )
-                                                            )
-                                                        }
-                                                    >
-                                                        {p.changeTeamPlan}
-                                                    </Button>
-                                                    <Button
-                                                        color="neutral"
-                                                        disabled={busy}
-                                                        size="sm"
-                                                        variant="outlined"
-                                                        onClick={() =>
-                                                            runBillingAction(() =>
-                                                                openTeamBillingPortal(
-                                                                    accessToken!,
-                                                                    team.team_id,
-                                                                    "cancel"
-                                                                )
-                                                            )
-                                                        }
-                                                    >
-                                                        {p.cancelPlan}
-                                                    </Button>
-                                                    <Button
-                                                        disabled={busy}
-                                                        size="sm"
-                                                        variant="plain"
-                                                        onClick={() =>
-                                                            runBillingAction(() =>
-                                                                openTeamBillingPortal(
-                                                                    accessToken!,
-                                                                    team.team_id
-                                                                )
-                                                            )
-                                                        }
-                                                    >
-                                                        {p.manageTeamBilling}
-                                                    </Button>
-                                                </>
-                                            )
-                                        )}
-                                    </Stack>
-                                    {team.plan === "free" && (
                                         <Typography
                                             level="body-xs"
-                                            sx={{ color: "text.tertiary" }}
+                                            sx={{
+                                                fontWeight: "lg",
+                                                textTransform: "uppercase",
+                                                letterSpacing: "0.14em",
+                                            }}
                                         >
-                                            {PURCHASABLE_PLANS.map(seatPrice)
-                                                .filter(Boolean)
-                                                .join(" · ")}
+                                            {group.label}
                                         </Typography>
-                                    )}
-                                </Card>
-                            );
-                        })}
-                    </Stack>
-                </>
-            )}
+                                    </Box>
+                                </Box>
+                                {group.rows.map((row) => (
+                                    <Box
+                                        key={row.key}
+                                        component="tr"
+                                        sx={{
+                                            borderBottom: "1px solid",
+                                            borderColor: "divider",
+                                            "&:last-of-type": { borderBottom: "none" },
+                                        }}
+                                    >
+                                        <Box
+                                            component="th"
+                                            scope="row"
+                                            sx={{
+                                                position: "sticky",
+                                                insetInlineStart: 0,
+                                                zIndex: 1,
+                                                bgcolor: "background.surface",
+                                                textAlign: "start",
+                                            }}
+                                        >
+                                            <Typography level="body-sm" sx={{ fontWeight: "md" }}>
+                                                {row.label}
+                                            </Typography>
+                                        </Box>
+                                        {row.cells.map((cell, i) => (
+                                            <Box
+                                                key={plans.tiers[i].tier}
+                                                component="td"
+                                                sx={{
+                                                    borderInlineStart: "1px solid",
+                                                    borderColor:
+                                                        plans.tiers[i].tier === "pro"
+                                                            ? "primary.solidBg"
+                                                            : "divider",
+                                                    bgcolor:
+                                                        plans.tiers[i].tier === "pro"
+                                                            ? "primary.softBg"
+                                                            : "transparent",
+                                                }}
+                                            >
+                                                <PlanCell cell={cell} p={p} />
+                                            </Box>
+                                        ))}
+                                    </Box>
+                                ))}
+                            </Box>
+                        ))}
+                    </Box>
+                </Sheet>
 
-            <Typography level="body-xs" sx={{ color: "text.tertiary", mt: 2 }}>
-                {p.premiumNote} {plans.billing_enabled ? p.upgradeHint : ""}{" "}
-                {/* New tab so the legal doc doesn't interrupt a purchase. */}
-                <Link href="/legal" level="body-xs" rel="noreferrer" target="_blank">
-                    {p.legalNotice}
-                </Link>
-            </Typography>
-            {actionError && (
-                <Typography color="danger" level="body-sm" sx={{ mt: 1 }}>
-                    {actionError}
+                {/* Team plans — only for teams the viewer OWNS (the config
+                    endpoint returns an empty list for everyone else). Per-seat
+                    on the SAME prices as the personal cards above; price math
+                    comes from the plans payload so it can't drift. */}
+                {teamConfig?.enabled && teamConfig.teams.length > 0 && (
+                    <>
+                        <Typography level="h4" sx={{ mt: 4, mb: 0.5 }}>
+                            {p.teamPlansHeading}
+                        </Typography>
+                        <Typography level="body-sm" sx={{ color: "text.tertiary", mb: 1.5 }}>
+                            {p.teamPlansSubheading}
+                        </Typography>
+                        <Stack spacing={1.5}>
+                            {teamConfig.teams.map((team) => {
+                                const seatPrice = (plan: PurchasablePlan) => {
+                                    const tierInfo = plans.tiers.find((t) => t.tier === plan);
+                                    const label = tierInfo?.price
+                                        ? formatPrice(tierInfo.price, locale)
+                                        : null;
+                                    return label
+                                        ? fmt(p.perSeatMonth, {
+                                              price: label,
+                                              n: String(team.seats),
+                                          })
+                                        : null;
+                                };
+                                return (
+                                    <Card key={team.team_id} variant="outlined">
+                                        <Stack
+                                            alignItems="center"
+                                            direction="row"
+                                            flexWrap="wrap"
+                                            spacing={1.5}
+                                            useFlexGap
+                                        >
+                                            <Typography level="title-md">
+                                                {team.team_name}
+                                            </Typography>
+                                            <Chip
+                                                color={TIER_COLOR[team.plan]}
+                                                size="sm"
+                                                variant="soft"
+                                            >
+                                                {tierLabel[team.plan]}
+                                            </Chip>
+                                            <Typography
+                                                level="body-sm"
+                                                sx={{ color: "text.tertiary" }}
+                                            >
+                                                {fmt(p.teamSeats, { n: String(team.seats) })}
+                                            </Typography>
+                                            <Box sx={{ flex: 1 }} />
+                                            {team.plan === "free" ? (
+                                                <>
+                                                    {PURCHASABLE_PLANS.map((plan) => (
+                                                        <Button
+                                                            key={plan}
+                                                            disabled={busy}
+                                                            size="sm"
+                                                            variant={
+                                                                plan === "pro" ? "solid" : "soft"
+                                                            }
+                                                            onClick={() =>
+                                                                runBillingAction(() =>
+                                                                    startTeamCheckout(
+                                                                        accessToken!,
+                                                                        team.team_id,
+                                                                        plan,
+                                                                        currency
+                                                                    )
+                                                                )
+                                                            }
+                                                        >
+                                                            {p[TEAM_UPGRADE_LABEL_KEY[plan]]}
+                                                        </Button>
+                                                    ))}
+                                                </>
+                                            ) : (
+                                                team.has_billing_account && (
+                                                    // A paying team had ONE
+                                                    // generic portal button and
+                                                    // therefore no visible answer
+                                                    // to "switch plan" or "cancel"
+                                                    // — same complaint as the
+                                                    // personal cards. Switching
+                                                    // uses the "switch" PICKER,
+                                                    // not a per-plan deep link: a
+                                                    // team row is one row for all
+                                                    // tiers, so no button here
+                                                    // could name a target plan
+                                                    // honestly.
+                                                    <>
+                                                        <Button
+                                                            disabled={busy}
+                                                            size="sm"
+                                                            variant="soft"
+                                                            onClick={() =>
+                                                                runBillingAction(() =>
+                                                                    openTeamBillingPortal(
+                                                                        accessToken!,
+                                                                        team.team_id,
+                                                                        "switch"
+                                                                    )
+                                                                )
+                                                            }
+                                                        >
+                                                            {p.changeTeamPlan}
+                                                        </Button>
+                                                        <Button
+                                                            color="neutral"
+                                                            disabled={busy}
+                                                            size="sm"
+                                                            variant="outlined"
+                                                            onClick={() =>
+                                                                runBillingAction(() =>
+                                                                    openTeamBillingPortal(
+                                                                        accessToken!,
+                                                                        team.team_id,
+                                                                        "cancel"
+                                                                    )
+                                                                )
+                                                            }
+                                                        >
+                                                            {p.cancelPlan}
+                                                        </Button>
+                                                        <Button
+                                                            disabled={busy}
+                                                            size="sm"
+                                                            variant="plain"
+                                                            onClick={() =>
+                                                                runBillingAction(() =>
+                                                                    openTeamBillingPortal(
+                                                                        accessToken!,
+                                                                        team.team_id
+                                                                    )
+                                                                )
+                                                            }
+                                                        >
+                                                            {p.manageTeamBilling}
+                                                        </Button>
+                                                    </>
+                                                )
+                                            )}
+                                        </Stack>
+                                        {team.plan === "free" && (
+                                            <Typography
+                                                level="body-xs"
+                                                sx={{ color: "text.tertiary" }}
+                                            >
+                                                {PURCHASABLE_PLANS.map(seatPrice)
+                                                    .filter(Boolean)
+                                                    .join(" · ")}
+                                            </Typography>
+                                        )}
+                                    </Card>
+                                );
+                            })}
+                        </Stack>
+                    </>
+                )}
+
+                <Typography level="body-xs" sx={{ color: "text.tertiary", mt: 2 }}>
+                    {p.premiumNote} {plans.billing_enabled ? p.upgradeHint : ""}{" "}
+                    {/* New tab so the legal doc doesn't interrupt a purchase. */}
+                    <Link href="/legal" level="body-xs" rel="noreferrer" target="_blank">
+                        {p.legalNotice}
+                    </Link>
                 </Typography>
-            )}
+                {actionError && (
+                    <Typography color="danger" level="body-sm" sx={{ mt: 1 }}>
+                        {actionError}
+                    </Typography>
+                )}
+            </Box>
         </Box>
     );
 };
