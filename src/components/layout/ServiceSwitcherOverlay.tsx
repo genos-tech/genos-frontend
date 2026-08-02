@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import AllInboxRoundedIcon from "@mui/icons-material/AllInboxRounded";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
+import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import NoteAltRoundedIcon from "@mui/icons-material/NoteAltRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
 import { Box, Sheet, Typography } from "@mui/joy";
@@ -15,13 +16,16 @@ import { isMac } from "../../utils/platform";
 // and `NAV_ITEMS` (components/layout/sidebar.tsx). All three lists must stay
 // in sync — order and ids must match.
 const OVERLAY_SERVICES: Array<{
-    labelKey: "inbox" | "chats" | "tasks" | "notes";
+    labelKey: "inbox" | "chats" | "tasks" | "notes" | "search";
     icon: typeof AllInboxRoundedIcon;
 }> = [
     { labelKey: "inbox", icon: AllInboxRoundedIcon },
     { labelKey: "chats", icon: QuestionAnswerRoundedIcon },
     { labelKey: "tasks", icon: AssignmentRoundedIcon },
     { labelKey: "notes", icon: NoteAltRoundedIcon },
+    // The Genos page. `search` is the sidebar key that carries the
+    // "Genos" label (kept to avoid a cross-locale rename).
+    { labelKey: "search", icon: AutoAwesomeRoundedIcon },
 ];
 
 type ServiceSwitcherOverlayProps = {

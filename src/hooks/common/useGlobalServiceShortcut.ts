@@ -7,11 +7,14 @@ import { isMac } from "../../utils/platform";
 // which is what `mruOrder` stores. Mirrors the NAV_ITEMS table in
 // `components/layout/sidebar.tsx` and the OVERLAY_SERVICES table in
 // `components/layout/ServiceSwitcherOverlay.tsx` — keep all three in sync.
+// (Genos, id 4, is the one exception to the NAV_ITEMS mirror: the sidebar
+// renders it as its own dedicated button above the nav list.)
 const SERVICES_BY_ID: Array<{ id: number; path: string }> = [
     { id: 0, path: "/workspace/inbox" },
     { id: 1, path: "/workspace/chat" },
     { id: 2, path: "/workspace/tasks" },
     { id: 3, path: "/workspace/notes" },
+    { id: 4, path: "/workspace/genos" },
 ];
 
 // Derive the active service id from the current URL. Returns -1 when the
