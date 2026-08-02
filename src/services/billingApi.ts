@@ -57,6 +57,54 @@ async function postForUrl(path: string, accessToken: string, body?: unknown): Pr
 }
 
 /** Create a Checkout Session and navigate the browser to it. */
+/** One purchasable credit pack, as `/billing/credit-packs/` returns it. */
+export interface CreditPack {
+    pack: string;
+    credits: number;
+    /** From Stripe, so the page cannot advertise a price it won't charge.
+     *  `null` when the lookup failed — render the pack without a price
+     *  rather than hiding it. No `interval`: a pack does not recur. */
+    price: { amount: number; currency: string } | null;
+}
+
+export interface CreditPackCatalogue {
+    packs: CreditPack[];
+    currency: string;
+    /** False on an unlimited plan, or where credits are not enforced. */
+    available: boolean;
+    unavailable_reason: string;
+}
+
+export async function fetchCreditPacks(
+    accessToken: string,
+    currency?: string
+): Promise<CreditPackCatalogue | null> {
+    // Fail-soft to null, exactly like `fetchBillingPlans`: a page that
+    // cannot list packs should simply not offer them, not break.
+    try {
+        const qs = currency ? `?currency=${encodeURIComponent(currency)}` : "";
+        const resp = await fetch(`${API_BASE}/billing/credit-packs/${qs}`, {
+            headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        if (!resp.ok) return null;
+        return (await resp.json()) as CreditPackCatalogue;
+    } catch {
+        return null;
+    }
+}
+
+export async function startCreditPackCheckout(
+    accessToken: string,
+    pack: string,
+    currency?: string
+): Promise<void> {
+    const url = await postForUrl("/billing/credit-packs/checkout/", accessToken, {
+        pack,
+        currency,
+    });
+    window.location.assign(url);
+}
+
 export async function startCheckout(
     accessToken: string,
     plan: PurchasablePlan,

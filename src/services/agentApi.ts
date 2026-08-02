@@ -226,6 +226,14 @@ export interface CreditsBlock {
     // starts failing — which is the moment the UI needs to warn about,
     // not zero.
     per_request_max: number;
+    // Credits bought as one-off packs. A SEPARATE possession: the
+    // monthly allowance is spent first and this is what remains after
+    // it, and unlike the allowance it never expires.
+    //
+    // Optional because a server that predates packs does not send it —
+    // the same payload-shape convention `credits` itself uses. `null`
+    // on an unlimited plan.
+    purchased_balance?: number | null;
 }
 
 // The single fetch behind Settings → Plan & Usage: the user's
