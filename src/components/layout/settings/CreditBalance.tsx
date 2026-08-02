@@ -70,12 +70,19 @@ export const CreditBalance = ({ credits, hideUpgradeNote, tier }: Props) => {
 
     const balance = Math.max(credits.balance, 0);
     const used = Math.max(credits.limit - balance, 0);
-    // The bar fills with what has been USED, so a fresh month reads
-    // empty and fills as you spend. Matches the task/note quota bars in
-    // `PlanUsageSection` — same direction, same `used / limit` ratio,
-    // same at-cap colour — because two meters in one Settings modal
-    // filling in opposite directions is a misreading waiting to happen.
-    const pctUsed = credits.limit > 0 ? Math.min((used / credits.limit) * 100, 100) : 0;
+    // The bar shows what is LEFT, not what has been spent: full on a
+    // fresh month, empty at the cap. It is a fuel gauge, and it drains.
+    //
+    // This is the reverse of what it did until 2026-08-02, and the
+    // constraint the old comment named still holds — every meter in
+    // Settings must run the same direction, or one of them gets
+    // misread. So `PlanUsageSection`'s quota bars were flipped in the
+    // same change; do not invert one of these without the other.
+    //
+    // A zero limit is 0% rather than 100%: nothing available is not the
+    // same as nothing spent.
+    const pctRemaining =
+        credits.limit > 0 ? Math.max(100 - Math.min((used / credits.limit) * 100, 100), 0) : 0;
     // Two states, not one, mirroring what the server actually does.
     // `empty` is the only one that refuses a request; `low` means the
     // balance can no longer cover a request's quoted maximum, so a long
@@ -108,7 +115,7 @@ export const CreditBalance = ({ credits, hideUpgradeNote, tier }: Props) => {
                 color={empty ? "warning" : "primary"}
                 size="sm"
                 sx={{ "--LinearProgress-radius": "6px" }}
-                value={pctUsed}
+                value={pctRemaining}
             />
 
             {(empty || low) && (

@@ -104,6 +104,12 @@ export const settings = {
         unlimited: "Unlimited",
         todaySuffix: "today",
         monthSuffix: "this month",
+        // Reads "47 of 50 left this month". The bar beside it fills with
+        // what REMAINS, so the number has to be the remainder too — the
+        // old "3 / 50 this month" was a used-count, and next to a
+        // nearly-full bar it said two opposite things at once. Matches
+        // the phrasing `creditsRemaining` already uses.
+        quotaRemaining: "{remaining} of {limit} left {window}",
         aiAsks: "AI asks",
         webSearches: "Web searches",
         tasksCreated: "Tasks created",
