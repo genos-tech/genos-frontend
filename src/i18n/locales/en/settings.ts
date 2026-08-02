@@ -25,6 +25,7 @@ export const settings = {
             revoke: "Revoke",
             empty: "No API keys yet.",
         },
+        docsLink: "Read the API docs →",
         webhooks: {
             title: "Webhooks",
             blurb: "Get an HTTPS request when something happens in this team. Each delivery is signed so you can verify it came from us.",
