@@ -53,6 +53,7 @@ import type {
     PendingApprovalPayload,
 } from "../../services/agentApi";
 import type { MentionGroup } from "../../services/mentionGroupsApi";
+import { purplePalette } from "../../theme/purplePalette";
 // Dark-mode text colors tuned for legibility against the translucent
 // purple sheet background (rgba(var(--gp-dark-surface-a-rgb), 0.92)). These replace
 // opacity-based dimming, which compounds with the bg translucency to
@@ -264,6 +265,10 @@ export const SpotlightContent = ({
     const { mode } = useColorScheme();
     const { t } = useTranslation();
     const isDark = mode === "dark";
+    // Theme-reactive tokens (CSS variables — repaint with the active
+    // color theme). Used by the page variant's card treatments; the
+    // overlay keeps its original hard-coded sheet styling.
+    const palette = isDark ? purplePalette.dark : purplePalette.light;
     const inputRef = useRef<HTMLTextAreaElement | null>(null);
     // Positioned anchor for the mention dropdown + highlight overlay.
     const inputRowRef = useRef<HTMLDivElement | null>(null);
@@ -526,10 +531,13 @@ export const SpotlightContent = ({
                         display: "flex",
                         // Anchor for the @/# mention dropdown.
                         position: "relative",
-                        // Top-align so the SearchIcon / Ask button stay
-                        // anchored to the first line as the textarea
-                        // grows downward.
-                        alignItems: "flex-start",
+                        // Overlay: top-align so the SearchIcon / Ask button
+                        // stay anchored to the first line as the textarea
+                        // grows downward. Page: the hero pill is taller, so
+                        // top-aligning left the single-line placeholder
+                        // visibly above center — center instead (the
+                        // textarea still grows; icons ride its middle).
+                        alignItems: variant === "page" ? "center" : "flex-start",
                         // Tighter on mobile so SearchIcon + input + Ask
                         // all fit on a 390px-wide viewport.
                         gap: { xs: 0.5, sm: 1 },
@@ -550,18 +558,23 @@ export const SpotlightContent = ({
                                     // overlay's row-with-separator — the
                                     // sheet chrome that made a bare border
                                     // read as "one row of a panel" isn't
-                                    // there on the page.
+                                    // there on the page. Accent-tinted
+                                    // border + focus ring follow the active
+                                    // color theme (purplePalette CSS vars).
                                     border: "1px solid",
-                                    borderColor: isDark
-                                        ? "rgba(255,255,255,0.12)"
-                                        : "rgba(0,0,0,0.10)",
+                                    borderColor: `rgba(${palette.accentRgb}, ${isDark ? 0.28 : 0.22})`,
                                     borderRadius: "16px",
-                                    background: isDark
-                                        ? "rgba(255,255,255,0.03)"
-                                        : "rgba(255,255,255,0.6)",
+                                    background: palette.surfaceSolid,
                                     boxShadow: isDark
-                                        ? "0 4px 24px rgba(0,0,0,0.25)"
-                                        : "0 4px 24px rgba(15,15,30,0.06)",
+                                        ? `0 4px 24px rgba(0,0,0,0.25), 0 0 0 1px rgba(${palette.accentRgb}, 0.06)`
+                                        : `0 4px 24px rgba(${palette.accentRgb}, 0.10)`,
+                                    transition: "border-color 0.15s ease, box-shadow 0.15s ease",
+                                    "&:focus-within": {
+                                        borderColor: `rgba(${palette.accentRgb}, ${isDark ? 0.55 : 0.45})`,
+                                        boxShadow: isDark
+                                            ? `0 4px 28px rgba(0,0,0,0.3), 0 0 0 3px rgba(${palette.accentRgb}, 0.18)`
+                                            : `0 4px 28px rgba(${palette.accentRgb}, 0.14), 0 0 0 3px rgba(${palette.accentRgb}, 0.12)`,
+                                    },
                                 }
                               : {
                                     borderBottom: "1px solid",
@@ -576,10 +589,11 @@ export const SpotlightContent = ({
                             opacity: 0.7,
                             fontSize: { xs: 18, sm: 24 },
                             flexShrink: 0,
-                            // Nudge down so the icon sits on the first
-                            // line's baseline instead of the textarea's
-                            // top edge.
-                            mt: { xs: "2px", sm: "3px" },
+                            // Overlay (top-aligned row): nudge down so the
+                            // icon sits on the first line's baseline instead
+                            // of the textarea's top edge. Page rows are
+                            // center-aligned — no nudge needed.
+                            mt: variant === "page" ? 0 : { xs: "2px", sm: "3px" },
                         }}
                     />
                     {/* In agent mode the input row sits at the bottom
@@ -1004,6 +1018,7 @@ export const SpotlightContent = ({
                 isDark={isDark}
                 ts={t.spotlight}
                 turns={turns}
+                variant={variant}
                 onApprove={onApprove}
                 onAsk={onAsk}
                 onBackToHistoryList={backToHistoryList}
@@ -1028,17 +1043,33 @@ export const SpotlightContent = ({
                     // sheet. Page: it must size to content (bounded) so
                     // the host's hero layout can vertically center the
                     // input block — a flex:1 region would absorb all the
-                    // free space and pin the input to the top.
+                    // free space and pin the input to the top. On the
+                    // page it's also its own bordered card: free-floating
+                    // rows with no container read as unfinished there
+                    // (the overlay's sheet chrome provides the frame).
                     flex: variant === "page" ? "0 1 auto" : 1,
-                    ...(variant === "page" ? { maxHeight: "48vh" } : {}),
+                    ...(variant === "page"
+                        ? {
+                              maxHeight: "48vh",
+                              mt: 0.5,
+                              border: "1px solid",
+                              borderColor: palette.divider,
+                              borderRadius: "16px",
+                              background: palette.surfaceElevated,
+                              boxShadow: isDark
+                                  ? "0 12px 32px rgba(0,0,0,0.35)"
+                                  : "0 12px 32px rgba(15,15,30,0.08)",
+                          }
+                        : {}),
                     overflowY: "auto",
                     px: 1,
                     py: 1,
-                    display: inAgentMode ? "none" : undefined,
+                    // Nothing renders here with an empty query (the
+                    // "start typing" hint was removed), so collapse the
+                    // box instead of leaving stray padding.
+                    display: inAgentMode || !hasQuery ? "none" : undefined,
                 }}
             >
-                {!hasQuery && <EmptyHint isDark={isDark} text={t.spotlight.empty.initial} />}
-
                 {hasQuery && isLoading && !hasResults && (
                     <Box
                         sx={{
@@ -1163,6 +1194,9 @@ interface ConversationPanelProps {
     onViewHistorySession: (sessionId: string) => void;
     onBackToHistoryList: () => void;
     onCloseHistory: () => void;
+    // Page renders the panel as its own bordered card (the overlay's
+    // sheet already frames it).
+    variant?: "overlay" | "page";
 }
 
 // Exported for the Genos page (GenosHome), which needs the same
@@ -1201,6 +1235,7 @@ const ConversationPanel = memo(
         onViewHistorySession,
         onBackToHistoryList,
         onCloseHistory,
+        variant = "overlay",
     }: ConversationPanelProps) => {
         const scrollRef = useRef<HTMLDivElement | null>(null);
         // True when the user has scrolled away from the bottom. We pause
@@ -1282,6 +1317,25 @@ const ConversationPanel = memo(
                     display: "flex",
                     flexDirection: "column",
                     gap: 1.25,
+                    // Page: the panel is a free-standing card (the
+                    // overlay's sheet already frames it). Theme-reactive
+                    // tokens so the card follows the active color theme.
+                    ...(variant === "page"
+                        ? {
+                              border: "1px solid",
+                              borderColor: (isDark ? purplePalette.dark : purplePalette.light)
+                                  .divider,
+                              borderRadius: "16px",
+                              background: (isDark ? purplePalette.dark : purplePalette.light)
+                                  .surfaceElevated,
+                              boxShadow: isDark
+                                  ? "0 12px 32px rgba(0,0,0,0.30)"
+                                  : "0 12px 32px rgba(15,15,30,0.07)",
+                              px: 2.5,
+                              py: 2,
+                              mb: 1,
+                          }
+                        : {}),
                 }}
                 onScroll={handleScroll}
             >
@@ -1296,9 +1350,16 @@ const ConversationPanel = memo(
                             py: 0.25,
                             px: 0.5,
                             borderRadius: 10,
-                            background: isDark
-                                ? "rgba(var(--gp-dark-surface-a-rgb), 0.92)"
-                                : "rgba(250,248,255,0.96)",
+                            // Page: match the card surface so the sticky
+                            // header doesn't paint a foreign rectangle as
+                            // turns scroll beneath it.
+                            background:
+                                variant === "page"
+                                    ? (isDark ? purplePalette.dark : purplePalette.light)
+                                          .surfaceSolid
+                                    : isDark
+                                      ? "rgba(var(--gp-dark-surface-a-rgb), 0.92)"
+                                      : "rgba(250,248,255,0.96)",
                             zIndex: 1,
                         }}
                     >

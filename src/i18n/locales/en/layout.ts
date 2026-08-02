@@ -19,6 +19,8 @@ export const layout = {
         chats: "Chats",
         tasks: "Tasks",
         notes: "Notes",
+        // Key name mirrors sidebar.nav.search (the "Genos" label).
+        search: "Genos",
         hintMac: "Hold ⌘  ·  Tap Ctrl to cycle  ·  Release ⌘ to switch",
         hintOther: "Hold Alt  ·  Tap Ctrl to cycle  ·  Release Alt to switch",
     },

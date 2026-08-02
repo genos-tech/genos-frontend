@@ -18,13 +18,14 @@
 
 import { useCallback, useEffect, useState } from "react";
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
-import { Box, IconButton } from "@mui/joy";
+import { Box, IconButton, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { AppTooltip } from "../../components/ui/AppTooltip";
 import { useIsMobile } from "../../hooks/common/useIsMobile";
 import { useTranslation } from "../../i18n";
 import type { MentionGroup } from "../../services/mentionGroupsApi";
+import { purplePalette } from "../../theme/purplePalette";
 import type { UserProps } from "../../types/admin";
 import type { ProjectProps } from "../../types/tasks";
 import { hasAskContent, SpotlightContent } from "../spotlight/SpotlightContent";
@@ -65,6 +66,9 @@ export const GenosHome = ({
     const { mode } = useColorScheme();
     const { t } = useTranslation();
     const isDark = mode === "dark";
+    // Theme-reactive tokens (CSS variables) — the accent wash, card
+    // borders, and hero gradient all follow the active color theme.
+    const palette = isDark ? purplePalette.dark : purplePalette.light;
     const isMobile = useIsMobile();
     // Mobile: the session sidebar is an overlay drawer, toggled from a
     // floating history button. Desktop always shows it.
@@ -128,6 +132,12 @@ export const GenosHome = ({
                 },
                 position: "relative",
                 overflow: "hidden",
+                // Soft accent wash from the top — enough theme color to
+                // not read as a blank white/black sheet, subtle enough to
+                // stay out of the content's way. Theme-reactive.
+                background: `radial-gradient(1000px 480px at 50% -8%, rgba(${palette.accentRgb}, ${
+                    isDark ? 0.14 : 0.08
+                }) 0%, transparent 65%)`,
             }}
         >
             {/* Session sidebar — static column on desktop. */}
@@ -137,8 +147,10 @@ export const GenosHome = ({
                         width: SIDEBAR_WIDTH,
                         flexShrink: 0,
                         borderRight: "1px solid",
-                        borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
-                        background: isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.015)",
+                        borderColor: palette.divider,
+                        // The app-standard panel surface (theme-reactive
+                        // gradient) instead of a flat tint.
+                        background: palette.surface,
                         minHeight: 0,
                     }}
                 >
@@ -166,11 +178,9 @@ export const GenosHome = ({
                             left: 0,
                             zIndex: 6,
                             width: "min(85vw, 320px)",
-                            background: isDark
-                                ? "rgba(var(--gp-dark-surface-a-rgb), 0.98)"
-                                : "rgba(250,248,255,0.99)",
+                            background: palette.surfaceSolid,
                             borderRight: "1px solid",
-                            borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)",
+                            borderColor: palette.divider,
                             boxShadow: "0 8px 32px rgba(0,0,0,0.35)",
                         }}
                     >
@@ -229,6 +239,32 @@ export const GenosHome = ({
                         justifyContent: conversationActive ? "flex-start" : "center",
                     }}
                 >
+                    {/* Empty-state hero greeting. Gradient title picks up
+                        the active theme's accent (accentGradient is a
+                        CSS-var-driven linear-gradient). */}
+                    {!conversationActive && (
+                        <Box sx={{ textAlign: "center", mb: 3, px: 2 }}>
+                            <Typography
+                                level="h2"
+                                sx={{
+                                    fontWeight: 700,
+                                    letterSpacing: "-0.02em",
+                                    background: palette.accentGradient,
+                                    backgroundClip: "text",
+                                    WebkitBackgroundClip: "text",
+                                    WebkitTextFillColor: "transparent",
+                                }}
+                            >
+                                {t.genos.hero.title}
+                            </Typography>
+                            <Typography
+                                level="body-md"
+                                sx={{ mt: 0.75, opacity: isDark ? 0.7 : 0.6 }}
+                            >
+                                {t.genos.hero.subtitle}
+                            </Typography>
+                        </Box>
+                    )}
                     <SpotlightContent
                         aiAnswersEnabled={spotlight.aiAnswersEnabled}
                         ask={spotlight.ask}
