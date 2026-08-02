@@ -106,7 +106,9 @@ type SidebarProps = {
     useIM: InboxManagementState;
     useCM: ChatManagementState;
     useUISM: UIStateManagementState;
-    onOpenSpotlight: () => void;
+    // Navigates to the Genos main page (/workspace/genos). The Cmd-K
+    // overlay stays reachable from anywhere via the keyboard shortcut.
+    onOpenGenos: () => void;
     onOpenHistory: () => void;
 };
 
@@ -119,7 +121,7 @@ export const Sidebar = (props: SidebarProps) => {
         useIM,
         useCM,
         useUISM,
-        onOpenSpotlight,
+        onOpenGenos,
         onOpenHistory,
     } = props;
     const handleLogout = useSignOut();
@@ -134,6 +136,11 @@ export const Sidebar = (props: SidebarProps) => {
     const sidebarBg = isDark ? "rgba(var(--gp-dark-surface-b-rgb), 1)" : "rgba(252,250,255,1)";
     const navigate = useNavigate();
     const location = useLocation();
+    // The Genos entry navigates to a real route now, so it gets the
+    // same route-derived active treatment as the NAV_ITEMS below.
+    const genosActive = location.pathname.includes("/workspace/genos");
+    const genosColor = isDark ? NAV_ACCENT.dark : NAV_ACCENT.light;
+    const genosColorRgb = isDark ? NAV_ACCENT.darkRgb : NAV_ACCENT.lightRgb;
 
     const [openUserProfile, setOpenUserProfile] = useState<boolean>(false);
     const [avatarUserId, setAvatarUserId] = useState<string | undefined>(undefined);
@@ -245,9 +252,11 @@ export const Sidebar = (props: SidebarProps) => {
                         px: 1,
                     }}
                 >
-                    {/* Spotlight search — overlay, not a route, so no
-                        active state. Shortcut hint in the tooltip
-                        mirrors the binding in `useSpotlight.ts`. */}
+                    {/* Genos — navigates to the main page (/workspace/genos),
+                        so it carries a route-derived active state like the
+                        NAV_ITEMS below. The tooltip keeps the Cmd/Ctrl-K
+                        hint: the quick-ask OVERLAY (same conversation)
+                        stays bound to the shortcut in `useSpotlight.ts`. */}
                     <ListItem>
                         <Tooltip
                             placement="right"
@@ -268,19 +277,32 @@ export const Sidebar = (props: SidebarProps) => {
                                     px: 1.25,
                                     borderRadius: "12px",
                                     transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                                    background: "transparent",
-                                    border: "1px solid transparent",
+                                    background: genosActive
+                                        ? isDark
+                                            ? `linear-gradient(135deg, rgba(${genosColorRgb}, 0.125) 0%, rgba(${genosColorRgb}, 0.063) 100%)`
+                                            : `linear-gradient(135deg, rgba(${genosColorRgb}, 0.082) 0%, rgba(${genosColorRgb}, 0.031) 100%)`
+                                        : "transparent",
+                                    border: "1px solid",
+                                    borderColor: genosActive
+                                        ? isDark
+                                            ? `rgba(${genosColorRgb}, 0.208)`
+                                            : `rgba(${genosColorRgb}, 0.145)`
+                                        : "transparent",
                                     "&:hover": {
-                                        background: isDark
-                                            ? "rgba(255,255,255,0.04)"
-                                            : "rgba(0,0,0,0.03)",
+                                        background: genosActive
+                                            ? isDark
+                                                ? `linear-gradient(135deg, rgba(${genosColorRgb}, 0.145) 0%, rgba(${genosColorRgb}, 0.082) 100%)`
+                                                : `linear-gradient(135deg, rgba(${genosColorRgb}, 0.125) 0%, rgba(${genosColorRgb}, 0.071) 100%)`
+                                            : isDark
+                                              ? "rgba(255,255,255,0.04)"
+                                              : "rgba(0,0,0,0.03)",
                                         transform: "translateY(-1px)",
                                     },
                                     "&:active": {
                                         transform: "translateY(0)",
                                     },
                                 }}
-                                onClick={onOpenSpotlight}
+                                onClick={onOpenGenos}
                             >
                                 <Box
                                     sx={{
@@ -290,22 +312,27 @@ export const Sidebar = (props: SidebarProps) => {
                                         display: "flex",
                                         alignItems: "center",
                                         justifyContent: "center",
-                                        background: isDark
-                                            ? "rgba(255,255,255,0.04)"
-                                            : "rgba(0,0,0,0.03)",
+                                        background: genosActive
+                                            ? isDark
+                                                ? `linear-gradient(135deg, rgba(${genosColorRgb}, 0.145) 0%, rgba(${genosColorRgb}, 0.082) 100%)`
+                                                : `linear-gradient(135deg, rgba(${genosColorRgb}, 0.094) 0%, rgba(${genosColorRgb}, 0.063) 100%)`
+                                            : isDark
+                                              ? "rgba(255,255,255,0.04)"
+                                              : "rgba(0,0,0,0.03)",
                                         transition: "all 0.2s ease",
                                     }}
                                 >
-                                    {/* Spotlight's own brand icon (the AI
-                                        "sparkle") — matches SpotlightOverlay,
-                                        signaling the AI agent rather than plain
-                                        search. */}
+                                    {/* The AI "sparkle" — matches the
+                                                Spotlight surface, signaling the
+                                                AI agent rather than plain search. */}
                                     <AutoAwesomeRoundedIcon
                                         sx={{
                                             fontSize: 20,
-                                            color: isDark
-                                                ? "rgba(255,255,255,0.55)"
-                                                : "rgba(0,0,0,0.5)",
+                                            color: genosActive
+                                                ? genosColor
+                                                : isDark
+                                                  ? "rgba(255,255,255,0.55)"
+                                                  : "rgba(0,0,0,0.5)",
                                             transition: "color 0.2s ease",
                                         }}
                                     />
@@ -315,10 +342,12 @@ export const Sidebar = (props: SidebarProps) => {
                                     sx={{
                                         mt: 0.5,
                                         fontSize: "0.65rem",
-                                        fontWeight: 500,
-                                        color: isDark
-                                            ? "rgba(255,255,255,0.55)"
-                                            : "rgba(0,0,0,0.5)",
+                                        fontWeight: genosActive ? 600 : 500,
+                                        color: genosActive
+                                            ? genosColor
+                                            : isDark
+                                              ? "rgba(255,255,255,0.55)"
+                                              : "rgba(0,0,0,0.5)",
                                         transition: "all 0.2s ease",
                                     }}
                                 >

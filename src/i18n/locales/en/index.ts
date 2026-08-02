@@ -6,6 +6,7 @@ import { chat } from "./chat";
 import { common } from "./common";
 import { demoPage } from "./demoPage";
 import { featuresPage } from "./featuresPage";
+import { genos } from "./genos";
 import { history } from "./history";
 import { inbox } from "./inbox";
 import { layout } from "./layout";
@@ -29,6 +30,7 @@ export const en = {
     notes,
     inbox,
     spotlight,
+    genos,
     threadAsk,
     noteAsk,
     services,

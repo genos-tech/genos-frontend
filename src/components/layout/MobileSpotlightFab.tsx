@@ -17,7 +17,10 @@ import {
 } from "./spotlightFabPosition";
 
 type MobileSpotlightFabProps = {
-    onOpenSpotlight: () => void;
+    // Fires on tap (never on drag). Navigates to the Genos page —
+    // renamed from `onOpenSpotlight` when the FAB's destination changed
+    // from the overlay to /workspace/genos.
+    onPress: () => void;
 };
 
 /** Live value of `--mobile-bottom-inset` (the tab bar, or the keyboard
@@ -41,7 +44,7 @@ const readBottomInset = (): number => {
 // button and swallowed those taps. Rather than pick another corner that
 // happens to be free on the screens we thought of, the user drags it
 // wherever suits them; it snaps to the nearest side edge and persists.
-export const MobileSpotlightFab = ({ onOpenSpotlight }: MobileSpotlightFabProps) => {
+export const MobileSpotlightFab = ({ onPress }: MobileSpotlightFabProps) => {
     const isMobile = useIsMobile();
     const { mode } = useColorScheme();
 
@@ -135,14 +138,14 @@ export const MobileSpotlightFab = ({ onOpenSpotlight }: MobileSpotlightFabProps)
 
     const handleClick = useCallback(() => {
         // Swallow the click that follows a drag; the flag clears itself so
-        // the next real tap opens Spotlight. Keyboard activation never
-        // sets it, so Enter / Space still work.
+        // the next real tap fires. Keyboard activation never sets it, so
+        // Enter / Space still work.
         if (draggedRef.current) {
             draggedRef.current = false;
             return;
         }
-        onOpenSpotlight();
-    }, [onOpenSpotlight]);
+        onPress();
+    }, [onPress]);
 
     if (!isMobile) return null;
     const isDark = mode === "dark";

@@ -174,6 +174,17 @@ export interface SpotlightContentProps {
     // Mention groups for the `@` picker — same reason as mentionMembers:
     // the overlay mounts outside MentionGroupsProvider.
     mentionGroups?: MentionGroup[];
+    // Which host renders this content. "overlay" (default) = the Cmd-K
+    // sheet; "page" = the full-page Genos surface. Page mode hides the
+    // input row's History icon (the page's session sidebar owns history
+    // there — resumable, not read-only) — everything else renders the
+    // same.
+    variant?: "overlay" | "page";
+    // Page mode: lets the host register this content's input-focus
+    // function with `useSpotlight.registerPageInputFocus`, so Cmd-K
+    // focuses the page input instead of opening the overlay. Called
+    // with the focus fn on mount and null on unmount.
+    registerInputFocus?: (fn: (() => void) | null) => void;
 }
 
 // Distance from the bottom (px) under which we consider the user
@@ -247,6 +258,8 @@ export const SpotlightContent = ({
     onOpenSettings,
     mentionGroups,
     mentionMembers,
+    variant = "overlay",
+    registerInputFocus,
 }: SpotlightContentProps) => {
     const { mode } = useColorScheme();
     const { t } = useTranslation();
@@ -276,6 +289,16 @@ export const SpotlightContent = ({
         const t = window.setTimeout(() => inputRef.current?.focus(), 0);
         return () => window.clearTimeout(t);
     }, []);
+
+    // Page mode: hand the host a focus function so Cmd-K can focus this
+    // input (see `useSpotlight.registerPageInputFocus`). The ref-based
+    // closure stays valid for the component's whole life, so register
+    // once on mount.
+    useEffect(() => {
+        if (!registerInputFocus) return;
+        registerInputFocus(() => inputRef.current?.focus());
+        return () => registerInputFocus(null);
+    }, [registerInputFocus]);
 
     // Results are rendered in the order the backend returned them —
     // i.e. by relevance score, regardless of entity type. The icon and
@@ -520,12 +543,32 @@ export const SpotlightContent = ({
                                       ? "rgba(255,255,255,0.06)"
                                       : "rgba(0,0,0,0.06)",
                               }
-                            : {
-                                  borderBottom: "1px solid",
-                                  borderColor: isDark
-                                      ? "rgba(255,255,255,0.06)"
-                                      : "rgba(0,0,0,0.06)",
-                              }),
+                            : variant === "page"
+                              ? {
+                                    // Page hero: a free-standing rounded
+                                    // input (ChatGPT-style) rather than the
+                                    // overlay's row-with-separator — the
+                                    // sheet chrome that made a bare border
+                                    // read as "one row of a panel" isn't
+                                    // there on the page.
+                                    border: "1px solid",
+                                    borderColor: isDark
+                                        ? "rgba(255,255,255,0.12)"
+                                        : "rgba(0,0,0,0.10)",
+                                    borderRadius: "16px",
+                                    background: isDark
+                                        ? "rgba(255,255,255,0.03)"
+                                        : "rgba(255,255,255,0.6)",
+                                    boxShadow: isDark
+                                        ? "0 4px 24px rgba(0,0,0,0.25)"
+                                        : "0 4px 24px rgba(15,15,30,0.06)",
+                                }
+                              : {
+                                    borderBottom: "1px solid",
+                                    borderColor: isDark
+                                        ? "rgba(255,255,255,0.06)"
+                                        : "rgba(0,0,0,0.06)",
+                                }),
                     }}
                 >
                     <SearchRoundedIcon
@@ -766,22 +809,28 @@ export const SpotlightContent = ({
                         user with no live conversation in localStorage
                         can still reach their past sessions). Clicking
                         switches the panel into the History list view
-                        (re-fetches once per click; bounded ≤20 rows). */}
-                    <AppTooltip
-                        placement="bottom"
-                        size="sm"
-                        title={t.spotlight.history.openTooltip}
-                    >
-                        <IconButton
-                            color="neutral"
+                        (re-fetches once per click; bounded ≤20 rows).
+                        Hidden on the Genos page — its session sidebar is
+                        the history surface there, and clicking a session
+                        RESUMES it rather than opening this read-only
+                        archive. */}
+                    {variant !== "page" && (
+                        <AppTooltip
+                            placement="bottom"
                             size="sm"
-                            sx={{ minWidth: 0, p: "3px", flexShrink: 0 }}
-                            variant="plain"
-                            onClick={openHistory}
+                            title={t.spotlight.history.openTooltip}
                         >
-                            <HistoryRoundedIcon sx={{ fontSize: { xs: 18, sm: 20 } }} />
-                        </IconButton>
-                    </AppTooltip>
+                            <IconButton
+                                color="neutral"
+                                size="sm"
+                                sx={{ minWidth: 0, p: "3px", flexShrink: 0 }}
+                                variant="plain"
+                                onClick={openHistory}
+                            >
+                                <HistoryRoundedIcon sx={{ fontSize: { xs: 18, sm: 20 } }} />
+                            </IconButton>
+                        </AppTooltip>
+                    )}
                     {/* Spotlight settings — switch LLM model (Gemini /
                         Claude) + toggle AI answers / web search without
                         leaving the overlay. Sits right of History; opens a
@@ -822,8 +871,17 @@ export const SpotlightContent = ({
                         gap: 0.75,
                         px: { xs: 1, sm: 2 },
                         py: 0.75,
-                        borderBottom: "1px solid",
-                        borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
+                        // The separator belongs to the overlay's stacked
+                        // sheet; on the page the chips float free under
+                        // the hero input.
+                        ...(variant === "page"
+                            ? { pt: 1.25 }
+                            : {
+                                  borderBottom: "1px solid",
+                                  borderColor: isDark
+                                      ? "rgba(255,255,255,0.06)"
+                                      : "rgba(0,0,0,0.06)",
+                              }),
                     }}
                 >
                     <Typography
@@ -966,7 +1024,13 @@ export const SpotlightContent = ({
             <Box
                 className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                 sx={{
-                    flex: 1,
+                    // Overlay: the results region greedily fills the
+                    // sheet. Page: it must size to content (bounded) so
+                    // the host's hero layout can vertically center the
+                    // input block — a flex:1 region would absorb all the
+                    // free space and pin the input to the top.
+                    flex: variant === "page" ? "0 1 auto" : 1,
+                    ...(variant === "page" ? { maxHeight: "48vh" } : {}),
                     overflowY: "auto",
                     px: 1,
                     py: 1,
@@ -1101,7 +1165,11 @@ interface ConversationPanelProps {
     onCloseHistory: () => void;
 }
 
-const hasAskContent = (ask: AskState): boolean =>
+// Exported for the Genos page (GenosHome), which needs the same
+// "is the conversation surface active?" derivation to decide between
+// the centered-hero empty state and the chat-style filled state.
+// eslint-disable-next-line react-refresh/only-export-components
+export const hasAskContent = (ask: AskState): boolean =>
     ask.isStreaming ||
     Boolean(ask.answer) ||
     Boolean(ask.askError) ||
@@ -2391,6 +2459,8 @@ const HistoryArchiveTurn = ({
 // Relative-time helper for History list rows. Keeps the dependency
 // surface zero (no date-fns / dayjs) — just the buckets the i18n
 // bundle defines. Anything older than a day falls back to ISO date.
+// Exported (as `relativeTimeLabel` below) for the Genos page's session
+// sidebar, which renders the same "2h ago"-style stamps on its rows.
 function _relativeTime(iso: string, ts: SpotlightMessages): string {
     const then = new Date(iso).getTime();
     if (Number.isNaN(then)) return iso;
@@ -2407,3 +2477,6 @@ function _relativeTime(iso: string, ts: SpotlightMessages): string {
     // i18n-strict beyond message-bundle strings today.
     return new Date(then).toLocaleDateString();
 }
+
+// eslint-disable-next-line react-refresh/only-export-components
+export const relativeTimeLabel = _relativeTime;

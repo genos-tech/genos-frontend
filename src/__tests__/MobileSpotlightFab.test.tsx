@@ -37,13 +37,13 @@ const anchorOf = (el: HTMLElement) => {
     return { bottom: s.bottom, left: s.left, right: s.right, top: s.top };
 };
 
-const renderFab = (onOpenSpotlight = vi.fn()) => {
+const renderFab = (onPress = vi.fn()) => {
     render(
         <CssVarsProvider>
-            <MobileSpotlightFab onOpenSpotlight={onOpenSpotlight} />
+            <MobileSpotlightFab onPress={onPress} />
         </CssVarsProvider>
     );
-    return onOpenSpotlight;
+    return onPress;
 };
 
 /** pointerdown → (optional move) → pointerup, as a touch would deliver it. */
@@ -74,24 +74,24 @@ describe("MobileSpotlightFab", () => {
     });
 
     it("opens Spotlight on a tap that never moves", () => {
-        const onOpenSpotlight = renderFab();
+        const onPress = renderFab();
         drag({ x: 355, y: 755 });
-        expect(onOpenSpotlight).toHaveBeenCalledTimes(1);
+        expect(onPress).toHaveBeenCalledTimes(1);
     });
 
     it("still opens Spotlight after a sloppy tap inside the tolerance", () => {
-        const onOpenSpotlight = renderFab();
+        const onPress = renderFab();
         drag({ x: 355, y: 755 }, { x: 358, y: 758 });
-        expect(onOpenSpotlight).toHaveBeenCalledTimes(1);
+        expect(onPress).toHaveBeenCalledTimes(1);
     });
 
     it("parks the button on the far side of a drag and does NOT open Spotlight", () => {
-        const onOpenSpotlight = renderFab();
+        const onPress = renderFab();
 
         // Bottom-right → upper-left.
         drag({ x: 355, y: 755 }, { x: 40, y: 300 });
 
-        expect(onOpenSpotlight).not.toHaveBeenCalled();
+        expect(onPress).not.toHaveBeenCalled();
         const stored = JSON.parse(localStorage.getItem("mobile:spotlightFabPosition") ?? "null");
         expect(stored.side).toBe("left");
         // Grab offset was 355-336 = 19 across, 755-736 = 19 down, so the
@@ -102,12 +102,12 @@ describe("MobileSpotlightFab", () => {
     });
 
     it("opens Spotlight again on the tap AFTER a drag", () => {
-        const onOpenSpotlight = renderFab();
+        const onPress = renderFab();
         drag({ x: 355, y: 755 }, { x: 40, y: 300 });
-        expect(onOpenSpotlight).not.toHaveBeenCalled();
+        expect(onPress).not.toHaveBeenCalled();
 
         drag({ x: 30, y: 290 });
-        expect(onOpenSpotlight).toHaveBeenCalledTimes(1);
+        expect(onPress).toHaveBeenCalledTimes(1);
     });
 
     it("restores a parked position on the next mount", () => {
