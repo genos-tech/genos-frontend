@@ -38,20 +38,26 @@ export interface ChannelServiceBootstrapResult {
 
 /**
  * Mount once near the app root, AFTER auth is settled. Pass the
- * current access token and the user id (from `myself.userId` in the
- * existing app shell). Re-runs on token change.
+ * current access token, user id and team id (from `myself` in the
+ * existing app shell). Re-runs on token, user or team change.
  */
 export function useChannelServiceBootstrap(
     accessToken: string | null,
-    userId: string | null
+    userId: string | null,
+    teamId: string | null
 ): ChannelServiceBootstrapResult {
     const [socket, setSocket] = useState<Socket | null>(null);
 
-    // Push the latest token / user id into the service synchronously so
-    // any `channelService.send(...)` call inside the same render tick
-    // sees them set. (The socket lands a tick later via the effect.)
+    // Push the latest token / user id / team id into the service
+    // synchronously so any `channelService.send(...)` call inside the
+    // same render tick sees them set. (The socket lands a tick later via
+    // the effect.)
     channelService.setAccessToken(accessToken);
     channelService.setCurrentUserId(userId);
+    // Before the effect, so the reset lands ahead of the socket teardown
+    // below rather than a tick after it — otherwise events for the old
+    // team could still be applied into the new team's store.
+    channelService.setCurrentTeamId(teamId);
 
     useEffect(() => {
         if (!accessToken) {
@@ -76,7 +82,13 @@ export function useChannelServiceBootstrap(
             // query). The /v3 connect handler reads both.
             query: {
                 userId: userId ?? "",
-                teamId: localStorage.getItem("teamId") ?? "",
+                // From the argument, not localStorage. The effect now
+                // re-runs on team change, and re-reading localStorage
+                // here would be a second source of truth that can lag
+                // the prop by a render — the socket would join the
+                // previous team's `team:{id}` room and keep receiving
+                // its broadcasts.
+                teamId: teamId ?? "",
                 userName: localStorage.getItem("userName") ?? "",
                 userEmail: localStorage.getItem("userEmail") ?? "",
             },
@@ -155,7 +167,11 @@ export function useChannelServiceBootstrap(
             channelService.setSocket(null);
             setSocket(null);
         };
-    }, [accessToken, userId]);
+        // `teamId` is a dependency because the socket's `query.teamId`
+        // decides which `team:{id}` room the v3 connect handler joins.
+        // Left out, a team switch kept the connection in the previous
+        // team's room and re-hydrated its channels from IDB.
+    }, [accessToken, userId, teamId]);
 
     return { socket };
 }

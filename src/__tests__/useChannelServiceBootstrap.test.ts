@@ -60,12 +60,12 @@ describe("useChannelServiceBootstrap", () => {
     });
 
     it("does not open a socket when accessToken is null", () => {
-        renderHook(() => useChannelServiceBootstrap(null, "user-a"));
+        renderHook(() => useChannelServiceBootstrap(null, "user-a", "team-a"));
         expect(ioFactory).not.toHaveBeenCalled();
     });
 
     it("opens a /v3 socket on mount with auth in the headers + query", () => {
-        renderHook(() => useChannelServiceBootstrap("tok-1", "user-a"));
+        renderHook(() => useChannelServiceBootstrap("tok-1", "user-a", "team-a"));
         expect(ioFactory).toHaveBeenCalledTimes(1);
         const [url, opts] = ioFactory.mock.calls[0];
         expect(String(url)).toMatch(/\/v3$/);
@@ -75,7 +75,7 @@ describe("useChannelServiceBootstrap", () => {
     });
 
     it("registers router listeners (socket.on called for every v3 event)", () => {
-        renderHook(() => useChannelServiceBootstrap("tok-1", "user-a"));
+        renderHook(() => useChannelServiceBootstrap("tok-1", "user-a", "team-a"));
         const sock = ioFactory.mock.results[0].value as FakeSocket;
         // Every server-pushed v3 event must be wired. Eleven distinct
         // listeners as of this commit (see `socketRouter.ts`):
@@ -90,7 +90,9 @@ describe("useChannelServiceBootstrap", () => {
     });
 
     it("disconnects the socket on unmount and clears the service slot", () => {
-        const { unmount } = renderHook(() => useChannelServiceBootstrap("tok-1", "user-a"));
+        const { unmount } = renderHook(() =>
+            useChannelServiceBootstrap("tok-1", "user-a", "team-a")
+        );
         const sock = ioFactory.mock.results[0].value as FakeSocket;
         unmount();
         expect(sock.disconnect).toHaveBeenCalledTimes(1);
@@ -99,7 +101,7 @@ describe("useChannelServiceBootstrap", () => {
     it("re-rendering with the same token is idempotent (no second socket)", () => {
         const { rerender } = renderHook(
             ({ tok, uid }: { tok: string | null; uid: string | null }) =>
-                useChannelServiceBootstrap(tok, uid),
+                useChannelServiceBootstrap(tok, uid, "team-a"),
             { initialProps: { tok: "tok-1", uid: "user-a" } }
         );
         expect(ioFactory).toHaveBeenCalledTimes(1);
@@ -112,7 +114,7 @@ describe("useChannelServiceBootstrap", () => {
     it("changing the token disconnects the old socket and opens a fresh one", () => {
         const { rerender } = renderHook(
             ({ tok, uid }: { tok: string | null; uid: string | null }) =>
-                useChannelServiceBootstrap(tok, uid),
+                useChannelServiceBootstrap(tok, uid, "team-a"),
             { initialProps: { tok: "tok-1", uid: "user-a" } }
         );
         const oldSock = ioFactory.mock.results[0].value as FakeSocket;
@@ -123,5 +125,35 @@ describe("useChannelServiceBootstrap", () => {
         expect(oldSock.disconnect).toHaveBeenCalledTimes(1);
         const newSock = ioFactory.mock.results[1].value as FakeSocket;
         expect(newSock).not.toBe(oldSock);
+    });
+
+    it("reconnects on a team switch so the socket leaves the old team's room", () => {
+        const { rerender } = renderHook(
+            ({ team }: { team: string }) => useChannelServiceBootstrap("tok-1", "user-a", team),
+            { initialProps: { team: "team-a" } }
+        );
+        expect(ioFactory).toHaveBeenCalledTimes(1);
+        const oldSock = ioFactory.mock.results[0].value as FakeSocket;
+
+        act(() => {
+            rerender({ team: "team-b" });
+        });
+
+        // `query.teamId` decides which `team:{id}` broadcast room the v3
+        // connect handler joins, and it is fixed at construction. Without
+        // `teamId` in the effect deps the connection kept receiving the
+        // previous team's events after a switch.
+        expect(ioFactory).toHaveBeenCalledTimes(2);
+        expect(oldSock.disconnect).toHaveBeenCalledTimes(1);
+    });
+
+    it("builds the socket query from the team argument, not localStorage", () => {
+        // localStorage lags the prop by a render on a switch, and it was
+        // the previous source for this field — so a stale value here is
+        // exactly the bug, not a hypothetical.
+        localStorage.setItem("teamId", "stale-team");
+        renderHook(() => useChannelServiceBootstrap("tok-1", "user-a", "team-fresh"));
+        const opts = ioFactory.mock.calls[0][1] as { query: { teamId: string } };
+        expect(opts.query.teamId).toBe("team-fresh");
     });
 });
