@@ -147,6 +147,7 @@ export const featuresPage = {
                     "It reads the task itself — no more pasting the description in",
                     "It can set status and comment the result back when you allow writes",
                     "It sees exactly what you see: the key carries your own permissions",
+                    "Available on Pro and above — the REST API is on every plan",
                 ],
             },
         },
