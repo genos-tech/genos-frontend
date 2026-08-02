@@ -10,9 +10,10 @@
  * `planCta.test.ts`; these tests pin the wiring.
  */
 import { CssVarsProvider } from "@mui/joy/styles";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { BILLING_REFRESHED } from "../components/layout/BillingReturnSnackbar";
 import { PlansHome } from "../features/billing/PlansHome";
 import type { BillingPlans } from "../services/billingApi";
 
@@ -527,6 +528,45 @@ describe("PlansHome", () => {
             renderPage();
             await screen.findByText("Do more of your best work with Genos");
             expect(screen.queryByText("Need more credits?")).toBeNull();
+        });
+
+        it("refetches when the post-checkout reconcile finishes", async () => {
+            // The race that made a real purchase look like nothing
+            // happened: returning from Stripe is a full page load, so
+            // this page fetches its balance while the reconcile that
+            // GRANTS the credits is still in flight.
+            billingApi.fetchCreditPacks.mockResolvedValue(CATALOGUE);
+            agentApi.fetchAgentFeatures.mockResolvedValue({
+                credits: {
+                    unlimited: false,
+                    balance: 50,
+                    limit: 70,
+                    used: 20,
+                    period_end_iso: "2026-09-01T00:00:00+00:00",
+                    per_request_max: 5,
+                    purchased_balance: 0,
+                },
+            });
+            renderPage();
+            await screen.findByText(/50 of 70 AI credits left/);
+
+            // The grant lands server-side; the reconcile signals done.
+            agentApi.fetchAgentFeatures.mockResolvedValue({
+                credits: {
+                    unlimited: false,
+                    balance: 60,
+                    limit: 70,
+                    used: 20,
+                    period_end_iso: "2026-09-01T00:00:00+00:00",
+                    per_request_max: 5,
+                    purchased_balance: 10,
+                },
+            });
+            act(() => {
+                window.dispatchEvent(new CustomEvent(BILLING_REFRESHED));
+            });
+
+            expect(await screen.findByText(/\+10 bought credits/)).toBeTruthy();
         });
 
         it("shows the current balance beside the packs, both buckets", async () => {
