@@ -228,6 +228,7 @@ const copy = {
             creator: "Created by Kentaro Kamiya",
             legal: "特定商取引法に基づく表記",
             privacy: "プライバシーポリシー",
+            developers: "開発者向け API",
         },
     },
 
@@ -427,6 +428,7 @@ const copy = {
             creator: "Created by Kentaro Kamiya",
             legal: "Legal Notice",
             privacy: "Privacy Policy",
+            developers: "Developers",
         },
     },
 };
@@ -1315,6 +1317,16 @@ export default function GenosLandingPage() {
                                 to="/privacy"
                             >
                                 {t.footer.privacy}
+                            </Link>
+                            {/* The API reference. Footer rather than the
+                                top nav on purpose: it is a destination
+                                for someone already evaluating the
+                                product, not a step in the funnel. */}
+                            <Link
+                                className="transition hover:text-violet-700 dark:hover:text-white"
+                                to="/developers"
+                            >
+                                {t.footer.developers}
                             </Link>
                             <a
                                 className="inline-flex items-center gap-2 transition hover:text-violet-700 dark:hover:text-white"
