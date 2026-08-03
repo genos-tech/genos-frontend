@@ -4,10 +4,10 @@ import { isLegacyNumericId, isV3Uuid } from "../../utils/legacyId";
 import { parseInternalUrl } from "../../utils/parseInternalUrl";
 import { replaceSpacesWithUnderscore } from "../../utils/stringHelper";
 import {
+    ABSOLUTE_MAX_UPLOAD_BYTES,
     formatBytes,
+    formatLimitLabel,
     isFileSizeAllowed,
-    MAX_UPLOAD_FILE_SIZE_BYTES,
-    MAX_UPLOAD_FILE_SIZE_LABEL,
     partitionBySize,
 } from "../../utils/uploadLimits";
 import { getDomainFromUrl } from "../../utils/urlHandler";
@@ -440,12 +440,35 @@ describe("getDomainFromUrl", () => {
 
 // --------------------------------------------------------------------------
 // uploadLimits.ts
+//
+// The cap is the caller's TIER cap now, so every helper takes the limit
+// explicitly — there is no module constant to assert against. MiB, not
+// MB: `get_upload_max_bytes` computes `mb * 1024 * 1024`.
 // --------------------------------------------------------------------------
 
+const MIB = 1024 * 1024;
+/** Pro. Used wherever the test needs "some tier limit that isn't free's",
+ *  which is exactly the case the old flat 5 MB constant broke. */
+const PRO_LIMIT = 50 * MIB;
+
 describe("uploadLimits constants", () => {
-    it("caps uploads at 5 MB", () => {
-        expect(MAX_UPLOAD_FILE_SIZE_BYTES).toBe(5 * 1024 * 1024);
-        expect(MAX_UPLOAD_FILE_SIZE_LABEL).toBe("5 MB");
+    it("mirrors the server's absolute ceiling", () => {
+        // `upload_limits.ABSOLUTE_MAX_UPLOAD_BYTES` in genos-api. The
+        // client uses it for "tier unknown", so a drift makes the two
+        // halves disagree about the one number they share.
+        expect(ABSOLUTE_MAX_UPLOAD_BYTES).toBe(200 * 1024 * 1024);
+    });
+});
+
+describe("formatLimitLabel", () => {
+    it("renders each tier as the figure the plans page shows", () => {
+        // free / core / pro / max / enterprise — no ".0", because this
+        // sits next to a measured file size in the same toast.
+        expect(formatLimitLabel(5 * MIB)).toBe("5 MB");
+        expect(formatLimitLabel(25 * MIB)).toBe("25 MB");
+        expect(formatLimitLabel(50 * MIB)).toBe("50 MB");
+        expect(formatLimitLabel(100 * MIB)).toBe("100 MB");
+        expect(formatLimitLabel(200 * MIB)).toBe("200 MB");
     });
 });
 
@@ -463,7 +486,7 @@ describe("formatBytes", () => {
 
     it("formats megabytes at the 1 MB boundary with one decimal", () => {
         expect(formatBytes(1024 * 1024)).toBe("1.0 MB");
-        expect(formatBytes(MAX_UPLOAD_FILE_SIZE_BYTES)).toBe("5.0 MB");
+        expect(formatBytes(5 * MIB)).toBe("5.0 MB");
     });
 
     it("formats gigabytes at the 1 GB boundary with two decimals", () => {
@@ -482,61 +505,72 @@ const makeFile = (name: string, size: number): File => {
 
 describe("isFileSizeAllowed", () => {
     it("allows a file at exactly the cap", () => {
-        expect(isFileSizeAllowed(makeFile("a.txt", MAX_UPLOAD_FILE_SIZE_BYTES))).toBe(true);
+        expect(isFileSizeAllowed(makeFile("a.txt", PRO_LIMIT), PRO_LIMIT)).toBe(true);
     });
 
     it("allows a file below the cap", () => {
-        expect(isFileSizeAllowed(makeFile("a.txt", 1000))).toBe(true);
-        expect(isFileSizeAllowed(makeFile("a.txt", 0))).toBe(true);
+        expect(isFileSizeAllowed(makeFile("a.txt", 1000), PRO_LIMIT)).toBe(true);
+        expect(isFileSizeAllowed(makeFile("a.txt", 0), PRO_LIMIT)).toBe(true);
     });
 
     it("rejects a file one byte over the cap", () => {
-        expect(isFileSizeAllowed(makeFile("a.txt", MAX_UPLOAD_FILE_SIZE_BYTES + 1))).toBe(false);
+        expect(isFileSizeAllowed(makeFile("a.txt", PRO_LIMIT + 1), PRO_LIMIT)).toBe(false);
+    });
+
+    it("applies the caller's cap, not a fixed one", () => {
+        // The regression this whole change exists for: a 10 MB file is
+        // fine on pro and not on free, and the client must agree with
+        // the plan rather than with a constant.
+        const file = makeFile("a.pdf", 10 * MIB);
+        expect(isFileSizeAllowed(file, 5 * MIB)).toBe(false);
+        expect(isFileSizeAllowed(file, PRO_LIMIT)).toBe(true);
     });
 });
 
 describe("partitionBySize", () => {
     it("returns null rejected when every file is small enough", () => {
         const files = [makeFile("a.txt", 10), makeFile("b.txt", 20)];
-        const result = partitionBySize(files);
+        const result = partitionBySize(files, PRO_LIMIT);
         expect(result.accepted).toHaveLength(2);
         expect(result.rejected).toBeNull();
     });
 
     it("splits a mixed list, keeping order within each group", () => {
         const small1 = makeFile("small1.txt", 100);
-        const big1 = makeFile("big1.bin", MAX_UPLOAD_FILE_SIZE_BYTES + 1);
+        const big1 = makeFile("big1.bin", PRO_LIMIT + 1);
         const small2 = makeFile("small2.txt", 200);
-        const big2 = makeFile("big2.bin", MAX_UPLOAD_FILE_SIZE_BYTES * 2);
+        const big2 = makeFile("big2.bin", PRO_LIMIT * 2);
 
-        const result = partitionBySize([small1, big1, small2, big2]);
+        const result = partitionBySize([small1, big1, small2, big2], PRO_LIMIT);
 
         expect(result.accepted).toEqual([small1, small2]);
         expect(result.rejected).toEqual({
             files: [
-                { name: "big1.bin", size: MAX_UPLOAD_FILE_SIZE_BYTES + 1 },
-                { name: "big2.bin", size: MAX_UPLOAD_FILE_SIZE_BYTES * 2 },
+                { name: "big1.bin", size: PRO_LIMIT + 1 },
+                { name: "big2.bin", size: PRO_LIMIT * 2 },
             ],
+            // The applied limit rides along so the toast can name it.
+            limitBytes: PRO_LIMIT,
         });
     });
 
     it("only retains name and size for rejected files (not the File object)", () => {
-        const big = makeFile("big.bin", MAX_UPLOAD_FILE_SIZE_BYTES + 1);
-        const result = partitionBySize([big]);
+        const big = makeFile("big.bin", PRO_LIMIT + 1);
+        const result = partitionBySize([big], PRO_LIMIT);
         expect(result.rejected).not.toBeNull();
         expect(result.rejected!.files[0]).toEqual({ name: "big.bin", size: big.size });
         expect(result.rejected!.files[0]).not.toBeInstanceOf(File);
     });
 
     it("handles an empty iterable", () => {
-        const result = partitionBySize([]);
+        const result = partitionBySize([], PRO_LIMIT);
         expect(result.accepted).toEqual([]);
         expect(result.rejected).toBeNull();
     });
 
     it("accepts any iterable, not just arrays (Set)", () => {
         const f = makeFile("a.txt", 10);
-        const result = partitionBySize(new Set([f]));
+        const result = partitionBySize(new Set([f]), PRO_LIMIT);
         expect(result.accepted).toEqual([f]);
         expect(result.rejected).toBeNull();
     });

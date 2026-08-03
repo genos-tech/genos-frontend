@@ -3,11 +3,7 @@ import WarningRoundedIcon from "@mui/icons-material/WarningRounded";
 import { IconButton, Snackbar, Stack, Typography } from "@mui/joy";
 
 import { fmt, useTranslation } from "../../../i18n";
-import {
-    FileSizeRejection,
-    formatBytes,
-    MAX_UPLOAD_FILE_SIZE_LABEL,
-} from "../../../utils/uploadLimits";
+import { FileSizeRejection, formatBytes, formatLimitLabel } from "../../../utils/uploadLimits";
 
 type FileSizeRejectionSnackbarProps = {
     /** When non-null, the snackbar is open and lists the rejected files.
@@ -65,8 +61,12 @@ export const FileSizeRejectionSnackbar = ({
         >
             <Stack spacing={0.25}>
                 <Typography level="title-sm" sx={{ fontWeight: 600 }}>
+                    {/* The limit that was actually applied travels with
+                        the rejection — the alternative (re-reading a
+                        module constant) is what let the toast say
+                        "5 MB" while the guard rejected at 100. */}
                     {fmt(t.common.ui.fileSize.limitExceededTitle, {
-                        label: MAX_UPLOAD_FILE_SIZE_LABEL,
+                        label: formatLimitLabel(rejection?.limitBytes ?? 0),
                     })}
                 </Typography>
                 {previewFiles.map((f) => (

@@ -1,5 +1,7 @@
-import { getMessages } from "../../../i18n";
+import { fmt, getMessages } from "../../../i18n";
+import { resolveUploadLimitBytes } from "../../../services/uploadLimit";
 import { AttachmentFileProps } from "../../../types/tasks";
+import { formatLimitLabel, isFileSizeAllowed } from "../../../utils/uploadLimits";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
@@ -23,6 +25,15 @@ export const uploadTaskAttachments = async (
     accessToken: string | null
 ): Promise<any[]> => {
     const uploaded: any[] = [];
+    // The tier ceiling, resolved once for the whole batch (shared cache,
+    // so this is usually a cache read). This path had NO size check at
+    // all: an oversize attachment was uploaded in full, 413'd by the
+    // server, and the thrown error stringified the raw JSON body into a
+    // message both callers swallowed to the console — so the tile simply
+    // vanished and the task saved without it. Checking here turns that
+    // into a named failure before any bytes leave the browser.
+    const limitBytes = await resolveUploadLimitBytes(accessToken);
+
     for (const attachment of attachments) {
         if (attachment.attachment_id >= 0) continue;
 
@@ -52,6 +63,20 @@ export const uploadTaskAttachments = async (
             attachment.name ||
             (filePayload instanceof File ? filePayload.name : "") ||
             `attachment-${Date.now()}`;
+
+        // Only a real `File` carries a trustworthy name for the message;
+        // `limitBytes === null` means the tier never resolved, in which
+        // case stay permissive and let the server's 413 decide.
+        if (limitBytes !== null && filePayload instanceof File) {
+            if (!isFileSizeAllowed(filePayload, limitBytes)) {
+                throw new Error(
+                    fmt(getMessages().common.editor.fileSizeExceeded, {
+                        name: filename,
+                        label: formatLimitLabel(limitBytes),
+                    })
+                );
+            }
+        }
         const mime =
             attachment.type ||
             (filePayload instanceof File ? filePayload.type : "") ||

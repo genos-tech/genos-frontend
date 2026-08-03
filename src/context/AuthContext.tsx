@@ -360,3 +360,17 @@ export const useAuth = () => {
     if (!context) throw new Error("useAuth must be used within an AuthProvider");
     return context;
 };
+
+/**
+ * The access token, or `null` when there is no provider above — for
+ * hooks whose behaviour merely *improves* with a token and must not
+ * take the whole subtree down without one.
+ *
+ * The upload-size guards are the case this exists for: they degrade to
+ * a permissive default when they can't resolve the tier, which is
+ * strictly better than throwing. `useAuth` keeps throwing, deliberately
+ * — anything that actually needs to authenticate a request should fail
+ * loudly rather than silently act signed-out.
+ */
+export const useOptionalAccessToken = (): string | null =>
+    useContext(AuthContext)?.accessToken ?? null;

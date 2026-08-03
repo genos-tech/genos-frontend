@@ -16,15 +16,35 @@ import { act, fireEvent, render, renderHook, screen, waitFor } from "@testing-li
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { MessagesPaneV3 } from "../features/channel/components/MessagesPaneV3";
-import {
-    MAX_ATTACHMENT_BYTES,
-    useAttachmentDraft,
-} from "../features/channel/hooks/useAttachmentDraft";
+import { useAttachmentDraft } from "../features/channel/hooks/useAttachmentDraft";
 import { channelService } from "../services/channel/channelService";
 import { ChannelKind, type Channel, type Message, type MessageAttachment } from "../types/channel";
 
 vi.mock("../db/config/schema", () => ({
     initDB: vi.fn().mockRejectedValue(new Error("IDB stubbed off in tests")),
+}));
+
+// The composer's size guard is the user's TIER limit now, resolved from
+// `/agent/features/`. Both the token and the resolver are stubbed so the
+// tests state the limit outright instead of inheriting a constant — the
+// flat 25 MiB they used to assert against was itself the bug (it sat
+// ABOVE free's 5 MB server cap, so a free user's 20 MB file uploaded in
+// full before being rejected).
+vi.mock("../context/AuthContext", () => ({
+    useOptionalAccessToken: () => "test-token",
+}));
+
+const FREE_LIMIT = 5 * 1024 * 1024;
+
+/** Flush the hook's async limit resolution. Staging a file before this
+ *  is a real state the hook handles (see the re-flag test), so it is
+ *  awaited explicitly rather than hidden in a global setup. */
+const waitForLimit = async (result: { current: { limitBytes: number | null } }) =>
+    waitFor(() => expect(result.current.limitBytes).toBe(FREE_LIMIT));
+
+vi.mock("../services/uploadLimit", () => ({
+    resolveUploadLimitBytes: () => Promise.resolve(5 * 1024 * 1024),
+    invalidateUploadLimit: vi.fn(),
 }));
 
 const _origWarn = console.warn;
@@ -142,10 +162,25 @@ describe("useAttachmentDraft", () => {
         expect(result.current.pending[1].file).toBe(b);
     });
 
-    it("flags files larger than MAX_ATTACHMENT_BYTES with an error", () => {
+    it("flags files larger than the user's tier limit with an error", async () => {
         const { result } = renderHook(() => useAttachmentDraft());
-        const big = makeFile("big.bin", MAX_ATTACHMENT_BYTES + 1);
+        await waitForLimit(result);
+        const big = makeFile("big.bin", FREE_LIMIT + 1);
         act(() => result.current.addFiles([big]));
+        expect(result.current.pending[0].error).toMatch(/exceeds/);
+        expect(result.current.pending[0].error).toContain("5 MB");
+    });
+
+    it("re-flags a file staged before the tier limit had resolved", async () => {
+        // The limit arrives a tick after mount, so a file picked
+        // immediately is staged against the permissive default. It must
+        // not stay unflagged — otherwise it sits in the strip looking
+        // fine until the server rejects it mid-send.
+        const { result } = renderHook(() => useAttachmentDraft());
+        const big = makeFile("big.bin", FREE_LIMIT + 1);
+        act(() => result.current.addFiles([big]));
+        expect(result.current.pending[0].error).toBeNull(); // permissive, pre-resolve
+        await waitForLimit(result);
         expect(result.current.pending[0].error).toMatch(/exceeds/);
     });
 
@@ -219,8 +254,9 @@ describe("useAttachmentDraft", () => {
 
     it("uploadAll skips entries that already have a client-side error", async () => {
         const { result } = renderHook(() => useAttachmentDraft());
+        await waitForLimit(result);
         const ok = makeFile("ok.pdf", 10);
-        const big = makeFile("big.bin", MAX_ATTACHMENT_BYTES + 1);
+        const big = makeFile("big.bin", FREE_LIMIT + 1);
         act(() => result.current.addFiles([ok, big]));
         const spy = vi
             .spyOn(channelService, "uploadAttachment")
@@ -344,16 +380,19 @@ describe("MessagesPaneV3 attach + send integration", () => {
         expect(sendBtn.disabled).toBe(false);
     });
 
-    it("send is disabled when only an oversized attachment is staged", () => {
+    it("send is disabled when only an oversized attachment is staged", async () => {
         channelService.handleChannelCreated(fakeChannel("c-1"));
         render(<MessagesPaneV3 channelId="c-1" />);
 
         const fileInput = screen.getByTestId("messages-pane-v3-file-input") as HTMLInputElement;
-        const big = makeFile("big.bin", MAX_ATTACHMENT_BYTES + 1);
+        const big = makeFile("big.bin", FREE_LIMIT + 1);
         fireEvent.change(fileInput, { target: { files: [big] } });
 
         const sendBtn = screen.getByTestId("messages-pane-v3-send") as HTMLButtonElement;
-        expect(sendBtn.disabled).toBe(true);
+        // `waitFor`, not a bare assertion: the tier limit resolves
+        // asynchronously, and the re-check that flags the file runs when
+        // it lands.
+        await waitFor(() => expect(sendBtn.disabled).toBe(true));
     });
 
     it("remove × on a pending chip drops it from the strip", () => {
