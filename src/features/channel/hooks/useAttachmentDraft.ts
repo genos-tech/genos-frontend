@@ -16,18 +16,24 @@
  * "attachments exist" — partial failures leave the message intact and
  * the user can retry.
  *
- * Per-file size limit: 25 MiB, mirrored from the server constant in
- * `backend_django/.../message_views.py:MAX_ATTACHMENT_BYTES`. Files
- * above this are rejected client-side so the user gets immediate
- * feedback instead of a slow multipart upload that 413s at the end.
+ * Per-file size limit: the user's TIER limit (`upload_max_mb`). Files
+ * above it are rejected client-side so the user gets immediate feedback
+ * instead of a slow multipart upload that 413s at the end.
+ *
+ * This used to be a flat 25 MiB mirroring the chat endpoint's historical
+ * fallback — which had the opposite failure to the rest of the app: 25
+ * MiB sits ABOVE free's 5 MB tier limit, so a free user's 20 MB file was
+ * accepted here, uploaded in full, and only then rejected by the server.
+ * The fallback it mirrored is now unreachable anyway: `check_upload_size`
+ * only falls back when the tier supplies no cap, and every tier does.
  */
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
+import { useOptionalAccessToken } from "../../../context/AuthContext";
 import { channelService } from "../../../services/channel/channelService";
-
-/** Mirror of the server cap. Keep in sync. */
-export const MAX_ATTACHMENT_BYTES = 25 * 1024 * 1024;
+import { resolveUploadLimitBytes } from "../../../services/uploadLimit";
+import { ABSOLUTE_MAX_UPLOAD_BYTES, formatLimitLabel } from "../../../utils/uploadLimits";
 
 export interface PendingAttachment {
     /** Local-only id. Survives only until upload — the server assigns
@@ -56,6 +62,10 @@ export interface UseAttachmentDraftResult {
      *  removed from the pending list. */
     uploadAll: (channelId: string, messageId: string) => Promise<UploadAllReport>;
     reset: () => void;
+    /** The per-file ceiling currently applied, in bytes. `null` until
+     *  the tier resolves — during which staging stays permissive and
+     *  anything oversize is re-flagged once it lands. */
+    limitBytes: number | null;
 }
 
 function _nextLocalId(): string {
@@ -63,23 +73,66 @@ function _nextLocalId(): string {
 }
 
 export function useAttachmentDraft(): UseAttachmentDraftResult {
+    const accessToken = useOptionalAccessToken();
     const [pending, setPending] = useState<PendingAttachment[]>([]);
     const [isUploading, setIsUploading] = useState(false);
+    // Unknown tier ⇒ permissive, same rule as `useFileSizeGuard`: the
+    // server is the enforcement, this is only the fast feedback.
+    const [tierLimitBytes, setTierLimitBytes] = useState<number | null>(null);
+    const limitBytes = tierLimitBytes ?? ABSOLUTE_MAX_UPLOAD_BYTES;
 
-    const addFiles = useCallback((files: FileList | File[] | null | undefined) => {
-        if (!files) return;
-        const arr: File[] = Array.from(files as ArrayLike<File>);
-        if (arr.length === 0) return;
-        const next: PendingAttachment[] = arr.map((file) => ({
-            localId: _nextLocalId(),
-            file,
-            error:
-                file.size > MAX_ATTACHMENT_BYTES
-                    ? `File exceeds ${MAX_ATTACHMENT_BYTES}-byte limit.`
-                    : null,
-        }));
-        setPending((prev) => [...prev, ...next]);
-    }, []);
+    useEffect(() => {
+        let alive = true;
+        void resolveUploadLimitBytes(accessToken).then((bytes) => {
+            if (alive) setTierLimitBytes(bytes);
+        });
+        return () => {
+            alive = false;
+        };
+    }, [accessToken]);
+
+    // Re-check what's already staged whenever the limit moves. Two cases,
+    // and the first is not hypothetical: the limit resolves a tick after
+    // mount, so a file picked immediately is staged against the
+    // permissive default and would otherwise sit in the strip looking
+    // fine until the server rejected it. The second is an upgrade
+    // mid-session, where a previously-flagged file should clear.
+    useEffect(() => {
+        setPending((prev) => {
+            let changed = false;
+            const next = prev.map((p) => {
+                const error =
+                    p.file.size > limitBytes
+                        ? `File exceeds the ${formatLimitLabel(limitBytes)} limit for your plan.`
+                        : null;
+                if (error === p.error) return p;
+                changed = true;
+                return { ...p, error };
+            });
+            return changed ? next : prev;
+        });
+    }, [limitBytes]);
+
+    const addFiles = useCallback(
+        (files: FileList | File[] | null | undefined) => {
+            if (!files) return;
+            const arr: File[] = Array.from(files as ArrayLike<File>);
+            if (arr.length === 0) return;
+            const next: PendingAttachment[] = arr.map((file) => ({
+                localId: _nextLocalId(),
+                file,
+                // Reads as a plan limit ("File exceeds the 5 MB limit for
+                // your plan."), not as raw bytes — this string is shown
+                // verbatim in the composer's pending strip.
+                error:
+                    file.size > limitBytes
+                        ? `File exceeds the ${formatLimitLabel(limitBytes)} limit for your plan.`
+                        : null,
+            }));
+            setPending((prev) => [...prev, ...next]);
+        },
+        [limitBytes]
+    );
 
     const removeAt = useCallback((localId: string) => {
         setPending((prev) => prev.filter((p) => p.localId !== localId));
@@ -127,5 +180,13 @@ export function useAttachmentDraft(): UseAttachmentDraftResult {
         [pending]
     );
 
-    return { pending, isUploading, addFiles, removeAt, uploadAll, reset };
+    return {
+        pending,
+        isUploading,
+        addFiles,
+        removeAt,
+        uploadAll,
+        reset,
+        limitBytes: tierLimitBytes,
+    };
 }
