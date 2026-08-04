@@ -112,7 +112,7 @@ describe("useSpotlight page mode", () => {
         expect(result.current.filterServices).toEqual(["task"]);
     });
 
-    it("wipes transient state when neither surface is showing", async () => {
+    it("wipes derived state but keeps the draft query when neither surface is showing", async () => {
         const { result, rerender } = renderHook(
             ({ pageActive }: { pageActive: boolean }) =>
                 useSpotlight({
@@ -129,9 +129,29 @@ describe("useSpotlight page mode", () => {
         // Navigating away from the page (overlay closed the whole time).
         rerender({ pageActive: false });
         await waitFor(() => {
-            expect(result.current.query).toBe("");
+            expect(result.current.filterServices).toEqual([]);
         });
-        expect(result.current.filterServices).toEqual([]);
+        expect(result.current.results).toEqual([]);
+        // The unsent draft is user-authored — it survives so the next
+        // open (either surface) restores what was being composed.
+        expect(result.current.query).toBe("meeting");
+    });
+
+    it("still clears the input after an ask is submitted", async () => {
+        const { result } = renderHook(() =>
+            useSpotlight({ accessToken: "test-token", teamId: "team-1", isPageActive: true })
+        );
+        act(() => {
+            result.current.setQuery("what is blocked?");
+        });
+        act(() => {
+            result.current.onAsk();
+        });
+        await waitFor(() => {
+            expect(askAgentStream).toHaveBeenCalledTimes(1);
+        });
+        // Draft preservation must not resurrect a question already sent.
+        expect(result.current.query).toBe("");
     });
 
     it("Ctrl-K focuses the page input instead of opening the overlay while the page is active", () => {

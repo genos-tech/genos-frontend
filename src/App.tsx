@@ -1026,15 +1026,20 @@ export const App = () => {
         [spotlight, navigate, useCM, useTM, usePM]
     );
 
-    // Inline-citation preview. Opens the existing UrlLinkModal (the same
+    // Quick-look preview. Opens the existing UrlLinkModal (the same
     // surface chat-message links use) on top of the Spotlight overlay so
-    // the user can quick-look the entity without losing their place in
-    // the conversation. Spotlight sits at z=13100; we pass z=13200 to
-    // keep the preview on top.
+    // the user can inspect the entity without losing their place in the
+    // conversation. Spotlight sits at z=13100; we pass z=13200 to keep
+    // the preview on top.
     //
-    // For project citations there is no preview modal yet — fall through
-    // to handleSpotlightSelect which closes Spotlight and routes to the
-    // project's task list.
+    // Drives inline citations, answer source chips, AND a plain click on
+    // a search result row — the default way to open anything Genos
+    // returns. Cmd/Ctrl-click on a row routes to handleSpotlightSelect
+    // instead (see SpotlightContent's `handleRowSelect`).
+    //
+    // Kinds with no modal view fall through to handleSpotlightSelect:
+    // projects (closes Spotlight and routes to the task list) and stored
+    // answers (rendered inline in the conversation instead).
     const handleSpotlightPreview = useCallback(
         (r: SpotlightResult) => {
             const href = canonicalSpotlightHref(r);
@@ -1042,7 +1047,15 @@ export const App = () => {
                 handleSpotlightSelect(r);
                 return;
             }
-            const outcome = urlLinkModal.openModalByHref(href, { zIndex: 13200 });
+            // The preview's Move-to-page button hands off to the very
+            // navigation Cmd/Ctrl-click would have done, so the two
+            // routes to a result's page can't drift apart — and the
+            // per-kind landing rules (chats via moveToSpecificChat, etc.)
+            // stay in one place.
+            const outcome = urlLinkModal.openModalByHref(href, {
+                onOpenFullPage: () => handleSpotlightSelect(r),
+                zIndex: 13200,
+            });
             if (outcome !== "opened") {
                 // Either parseInternalUrl rejected our URL (shouldn't
                 // happen for the shapes we build) or the kind isn't
@@ -1433,6 +1446,10 @@ export const App = () => {
                                                                                                 }
                                                                                                 onClose={
                                                                                                     urlLinkModal.closeModal
+                                                                                                }
+                                                                                                onOpenFullPage={
+                                                                                                    urlLinkModal.openFullPage ??
+                                                                                                    undefined
                                                                                                 }
                                                                                             />
                                                                                             <CalendarModal

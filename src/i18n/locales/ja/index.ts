@@ -98,6 +98,7 @@ export const ja: DeepPartial<Messages> = {
             offlineBody: "現在サーバーに接続できません。接続が回復すると自動的に再開します。",
         },
         modalView: {
+            openFullPage: "ページに移動",
             chatUnavailable: "このチャットは利用できません。",
             noMessagesYet: "まだ表示できるメッセージはありません。",
             threadEmpty: "このスレッドは空か、利用できません。",

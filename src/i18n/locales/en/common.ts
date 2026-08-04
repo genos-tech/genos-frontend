@@ -168,6 +168,10 @@ export const common = {
             "Genos can't reach the server right now. It will pick up on its own as soon as your connection returns.",
     },
     modalView: {
+        // Chrome button beside the preview's ✕: leave the quick-look and
+        // open the entity's own page. Only shown when the surface that
+        // opened the preview supplied a navigation action.
+        openFullPage: "Move to page",
         chatUnavailable: "This chat isn't available.",
         noMessagesYet: "No messages to display yet.",
         threadEmpty: "This thread is empty or unavailable.",

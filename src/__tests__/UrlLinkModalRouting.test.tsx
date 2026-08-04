@@ -16,7 +16,8 @@
 
 import { CssVarsProvider } from "@mui/joy/styles";
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import userEvent from "@testing-library/user-event";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { UrlLinkModal } from "../components/modals/UrlLinkModal";
 import type { ModalTarget } from "../utils/parseInternalUrl";
@@ -66,10 +67,13 @@ const baseProps = {
     useTG: {},
 } as unknown as React.ComponentProps<typeof UrlLinkModal>;
 
-const renderModal = (target: ModalTarget | null) =>
+const renderModal = (
+    target: ModalTarget | null,
+    overrides: Partial<React.ComponentProps<typeof UrlLinkModal>> = {}
+) =>
     render(
         <CssVarsProvider>
-            <UrlLinkModal {...baseProps} target={target} />
+            <UrlLinkModal {...baseProps} target={target} {...overrides} />
         </CssVarsProvider>
     );
 
@@ -116,5 +120,68 @@ describe("UrlLinkModal view routing", () => {
         for (const id of ["view-chat", "view-task", "view-milestone", "view-todo", "view-note"]) {
             expect(screen.queryByTestId(id)).toBeNull();
         }
+    });
+});
+
+/**
+ * The chrome floating in the dialog's top-right corner: the ✕ and, for
+ * previews opened with a navigation action, "Move to page".
+ *
+ * Both are wrapped in AppTooltip. That's the load-bearing detail worth a
+ * test on the ✕: Joy's ModalClose takes its close handler from
+ * `CloseModalContext` rather than a prop, so a wrapper that rendered its
+ * own element (instead of cloning the child) would leave a ✕ that looks
+ * right and does nothing.
+ */
+describe("UrlLinkModal chrome", () => {
+    const TASK: ModalTarget = { kind: "task", projectId: 1, taskId: 2 };
+
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
+
+    it("closes via the tooltip-wrapped ✕", async () => {
+        const onClose = vi.fn();
+        renderModal(TASK, { onClose });
+
+        await userEvent.click(await screen.findByRole("button", { name: "Close" }));
+
+        expect(onClose).toHaveBeenCalled();
+    });
+
+    it("shows no Move-to-page button when the opener supplied no action", async () => {
+        renderModal(TASK);
+        // Wait for the dialog itself so this isn't a vacuous pass.
+        await screen.findByRole("button", { name: "Close" });
+
+        expect(screen.queryByRole("button", { name: "Move to page" })).toBeNull();
+    });
+
+    it("runs the opener's navigation from the Move-to-page button", async () => {
+        const onOpenFullPage = vi.fn();
+        renderModal(TASK, { onOpenFullPage });
+
+        await userEvent.click(await screen.findByRole("button", { name: "Move to page" }));
+
+        expect(onOpenFullPage).toHaveBeenCalledTimes(1);
+    });
+
+    // One hover per render: a dismissed tooltip lingers through its leave
+    // transition, so hovering both in one test leaves two in the DOM and
+    // the singular `tooltip` role query can't say which is which.
+    it("labels the Move-to-page button on hover", async () => {
+        renderModal(TASK, { onOpenFullPage: vi.fn() });
+
+        await userEvent.hover(await screen.findByRole("button", { name: "Move to page" }));
+
+        expect(await screen.findByRole("tooltip")).toHaveTextContent("Move to page");
+    });
+
+    it("labels the ✕ on hover", async () => {
+        renderModal(TASK);
+
+        await userEvent.hover(await screen.findByRole("button", { name: "Close" }));
+
+        expect(await screen.findByRole("tooltip")).toHaveTextContent("Close");
     });
 });
