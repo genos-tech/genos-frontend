@@ -132,12 +132,11 @@ export default defineConfig({
         //   2 workers               148s
         //   4 workers               407s
         //
-        // So: always use both cores, and never oversubscribe. Going past the
-        // core count is far worse than serial, because each worker builds its
-        // own jsdom and module graph (`isolate` is on — it has to be, 76
+        // So: always allow both cores, and never oversubscribe. Going past
+        // the core count is far worse than serial, because each worker builds
+        // its own jsdom and module graph (`isolate` is on — it has to be, 76
         // files fail without it) and they thrash. The floor of 2 is what CI
-        // gains; the ceiling keeps a dev machine's default behavior.
-        minWorkers: 2,
+        // gains; above that this is the default a dev machine already had.
         maxWorkers: Math.max(2, availableParallelism() - 1),
         coverage: {
             provider: "v8",
