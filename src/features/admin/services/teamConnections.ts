@@ -18,9 +18,9 @@
 import axios from "axios";
 
 import { authApi } from "../../../services/api";
+import type { ObjectShare, ShareParticipant, ShareStatus } from "../../../types/sharing";
 
-/** Lifecycle shared by connections and shares (`ShareStatus` server-side). */
-export type ShareStatus = "pending" | "active" | "declined" | "revoked";
+export type { ObjectShare, ShareParticipant, ShareStatus };
 
 export type TeamConnection = {
     connectionId: string;
@@ -51,11 +51,30 @@ export type ExternalShare = {
     tsUpdated: string;
 };
 
-export type ShareParticipant = {
-    userId: string;
-    userName: string;
-    email: string;
-    avatarUrl: string | null;
+/**
+ * GET the shares on one object, readable from either side of the share.
+ *
+ * Distinct from `fetchExternalShares` (the team-scoped list) because the
+ * object view can be read by the guest side, who belong to neither the team
+ * named in a team-scoped query nor the host team.
+ */
+export const fetchObjectShares = async (
+    accessToken: string | null,
+    objectType: ExternalShareObjectType,
+    objectId: string
+): Promise<ObjectShare[]> => {
+    try {
+        const api = authApi(accessToken);
+        if (!api) return [];
+        const res = await api.get("/team/share/object/", {
+            params: { object_id: objectId, object_type: objectType },
+        });
+        return (res.data as { shares: ObjectShare[] }).shares ?? [];
+    } catch {
+        // A 404 here means "no relationship with this object", which for
+        // a panel is the same as "nothing to show".
+        return [];
+    }
 };
 
 const errorText = (error: unknown, fallback: string): string => {

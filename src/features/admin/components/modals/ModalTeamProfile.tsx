@@ -1176,7 +1176,11 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                 </Box>
                                             </FormControl>
 
-                                            {!isTeamOwner && (
+                                            {/* Nothing to leave when there is no
+                                                membership: a guest is here through a
+                                                shared object, and `/team/leave/`
+                                                would find no row to soft-delete. */}
+                                            {!isTeamOwner && !teamProfile.isGuest && (
                                                 <Box
                                                     sx={{
                                                         mt: 2,

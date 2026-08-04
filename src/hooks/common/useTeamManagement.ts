@@ -2,6 +2,7 @@ import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 
 import { usersChannel } from "../../db/workers/channels";
 import { findTeam } from "../../features/admin/services/findTeam";
+import { loadMyTeams } from "../../features/admin/services/loadMyTeams";
 import { popTeamMembers } from "../../features/admin/services/popTeamMembers";
 import { FindTeamResponse, Team, UserProps } from "../../types/admin";
 
@@ -49,7 +50,17 @@ export const useTeamManagement = (
     const initCurrentTeam = async () => {
         const findTeamRes: FindTeamResponse = await findTeam(accessToken, myself.teamId);
         if (findTeamRes && findTeamRes.exist === true) {
-            setCurrentTeam(findTeamRes.teamDetails);
+            // `/team/exist/` answers "does this team exist and what is it
+            // called" for anyone, so it cannot say whether WE belong to it.
+            // The my-teams list can, and it is the heartbeat's endpoint —
+            // already warm and server-cached. Without this flag a host-team
+            // shell is indistinguishable from a small team, and every
+            // member-only control renders for someone the server will
+            // refuse. Failure leaves it undefined, i.e. treated as member,
+            // which is what the app did before this existed.
+            const teams: Team[] | undefined = await loadMyTeams(accessToken, myself.userId);
+            const mine = teams?.find((tm) => tm.teamId === myself.teamId);
+            setCurrentTeam({ ...findTeamRes.teamDetails, isGuest: mine?.isGuest });
         }
     };
 

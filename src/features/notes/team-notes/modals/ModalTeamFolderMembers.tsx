@@ -33,6 +33,8 @@ import {
     TeamNoteFolderMemberProps,
     TeamNoteFolderTreeNode,
 } from "../../../../types/notes";
+import { canManageMembers, resolveMyRole } from "../../../../utils/memberRoles";
+import { ObjectSharesSection } from "../../../admin/components/team/ObjectSharesSection";
 import {
     grantTeamFolderMembers,
     loadTeamFolderMembers,
@@ -91,7 +93,22 @@ export const ModalTeamFolderMembers = (props: Props) => {
     const [pendingGroups, setPendingGroups] = useState<NoteFolderInviteGroup[]>([]);
     const [inviteRole, setInviteRole] = useState<number>(ROLE_EDITOR);
 
-    const canManage = folder != null && folder.myRoleId < ROLE_VIEWER;
+    // An external participant can hold EDITOR on a shared folder — that is
+    // the point, they write notes in it — but the folder's roster belongs to
+    // the owning team. The server refuses their invites and removals
+    // outright, so the controls are hidden rather than shown and rejected.
+    // Their own way in and out is the cross-team section below, where their
+    // team's managers admit their colleagues.
+    const canManage =
+        folder != null && folder.myRoleId < ROLE_VIEWER && !useTEM.currentTeam.isGuest;
+
+    // Lending the folder to another organization is a TEAM decision, not a
+    // folder one: an editor of this folder who is only a viewer of the team
+    // may staff it, but must not hand the team's data outside. The server
+    // enforces the same rule — this just decides whether to offer it.
+    const canManageTeam = canManageMembers(
+        resolveMyRole(myself.userId, useTEM.currentTeam.teamOwnerId, useTEM.teamMembers)
+    );
 
     const reload = async () => {
         if (!folder) return;
@@ -425,17 +442,38 @@ export const ModalTeamFolderMembers = (props: Props) => {
                                 )}
                             </Box>
                             <Button
+                                loading={saving}
                                 disabled={
                                     saving ||
                                     (pendingUserIds.length === 0 && pendingGroups.length === 0)
                                 }
-                                loading={saving}
                                 onClick={() => void submit()}
                             >
                                 {t.notes.sharing.invite}
                             </Button>
                         </Box>
                     </>
+                )}
+
+                {/* Cross-team sharing, under the roster because it is the
+                    same question about a different unit: the list above is
+                    people, this is whole organizations. Only a PRIVATE
+                    folder can be lent out — public means "every host member
+                    is an editor" plus a team-wide search sentinel, which
+                    would make the folder's ACL mean two things at once — so
+                    the offer control is withheld rather than shown and
+                    refused. Renders nothing at all for an unshared folder. */}
+                {folder && (
+                    <ObjectSharesSection
+                        borderColor="var(--joy-palette-divider)"
+                        canOffer={canManageTeam && folder.visibility === "private"}
+                        hostTeamId={myself.teamId}
+                        labelColor="var(--joy-palette-text-tertiary)"
+                        myUserId={myself.userId}
+                        objectId={String(folder.folderId)}
+                        objectType="note_folder"
+                        valueColor="var(--joy-palette-text-primary)"
+                    />
                 )}
 
                 <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>

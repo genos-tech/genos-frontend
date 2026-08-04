@@ -11,6 +11,8 @@
  * top-level shape (see plan §1.4).
  */
 
+import type { ObjectShare } from "./sharing";
+
 export enum ChannelKind {
     DM = 1,
     GM = 2,
@@ -142,30 +144,10 @@ export interface Channel {
 }
 
 /**
- * One guest team's share of an external chat.
- *
- * `side` and `canAdmit` encode the asymmetry that makes cross-team sharing
- * work, and both come from the server rather than being derived here:
- * the host sees every team and may eject a person, the guest team's own
- * managers add and remove their own people. A client that lets the host
- * add the guest's people has misread the feature; `canAdmit` is never true
- * for the host.
+ * One guest team's share of an external chat — the same shape a shared
+ * project or note folder reports, since one grant model backs all three.
  */
-export interface ChannelShare {
-    grantId: string;
-    teamId: string;
-    teamName: string;
-    roleCeiling: "viewer" | "editor";
-    status: "pending" | "active" | "declined" | "revoked";
-    side: "given" | "received";
-    canAdmit: boolean;
-    participants: {
-        userId: string;
-        userName: string;
-        email: string;
-        avatarUrl: string | null;
-    }[];
-}
+export type ChannelShare = ObjectShare;
 
 export interface ReadCursor {
     id: string;

@@ -69,6 +69,7 @@ import { setProjectMemberRole } from "../../services/setProjectMemberRole";
 import { updateProjectProfile } from "../../services/updateProjectProfile";
 import { ModalManageProjectLabels } from "../projectLabels/ModalManageProjectLabels";
 import { ProjectLabelChips } from "../projectLabels/ProjectLabelChips";
+import { ObjectSharesSection } from "../team/ObjectSharesSection";
 import { ModalInviteMembers } from "./ModalInviteMembers";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
@@ -164,6 +165,16 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
         projectProfile?.projectMembers
     );
     const canManage = !!projectProfile && canManageMembers(myRole);
+
+    // Offering the project to another organization is a TEAM-level act, not
+    // a project-level one: the host team consents to the share, so a project
+    // editor who is only a viewer of the team must not be able to lend the
+    // team's data out. Hence the separate role lookup against the team
+    // roster rather than reusing `canManage` above. The server enforces the
+    // same rule; this only decides whether the control appears.
+    const canManageTeam = canManageMembers(
+        resolveMyRole(myself.userId, useTEM.currentTeam.teamOwnerId, useTEM.teamMembers)
+    );
 
     const handleMemberRoleChange = async (
         userId: string,
@@ -1219,6 +1230,28 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                     )}
                                                 </Box>
                                             </Box>
+
+                                            {/* Cross-team sharing sits directly under the member
+                                                list because it answers the same question one
+                                                level up — which OTHER organizations are in this
+                                                project — and because the two lists must be read
+                                                together: an external participant appears in both,
+                                                and only this section says which team they came
+                                                from. Renders nothing for an unshared project. */}
+                                            <ObjectSharesSection
+                                                borderColor={styles.border}
+                                                canOffer={canManageTeam}
+                                                hostTeamId={myself.teamId}
+                                                labelColor={styles.labelColor}
+                                                myUserId={myself.userId}
+                                                objectId={
+                                                    projectProfile?.projectId != null
+                                                        ? String(projectProfile.projectId)
+                                                        : undefined
+                                                }
+                                                objectType="project"
+                                                valueColor={styles.valueColor}
+                                            />
 
                                             {/* Metadata row. `flexWrap` because this row now
                                                 carries four fields and the Tags chips are

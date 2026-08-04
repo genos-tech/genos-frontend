@@ -8,6 +8,11 @@ type SwitchTeamArgs = {
     setMyself: (me: UserProps) => void;
     teamId: string;
     teamName: string;
+    /**
+     * True for a host team the user reaches through a cross-team share
+     * rather than a membership (`Team.isGuest` from `loadMyTeams`).
+     */
+    isGuest?: boolean;
 };
 
 /**
@@ -23,6 +28,7 @@ export const switchTeam = ({
     setMyself,
     teamId,
     teamName,
+    isGuest = false,
 }: SwitchTeamArgs): void => {
     localStorage.setItem("teamId", teamId);
     localStorage.setItem("teamName", teamName);
@@ -41,5 +47,13 @@ export const switchTeam = ({
         customStatus: myself.customStatus,
         avatarImgPath: myself.avatarImgPath,
     });
-    void joinTeam(accessToken, teamId, myself.userId);
+    // `/team/join/` is how a switch re-affirms a membership row and picks
+    // up the Genos Guide notes. A guest has no membership row to re-affirm
+    // — they are here through a shared chat, project or note folder — so
+    // the call can only come back 403. Skipping it keeps the switch quiet
+    // and keeps the endpoint's meaning intact: nothing about arriving in a
+    // host team's context should look like joining it.
+    if (!isGuest) {
+        void joinTeam(accessToken, teamId, myself.userId);
+    }
 };

@@ -1016,33 +1016,38 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     // Box root ON PURPOSE — see renderMyNotesSection.
     const renderTeamNotesSection = () => (
         <Box>
-            <ListItem>
-                <ListItemButton
-                    sx={{
-                        borderRadius: "8px",
-                        py: 0.5,
-                        px: 1,
-                        my: 0.25,
-                        gap: 0.75,
-                        minHeight: 30,
-                        border: "1px dashed",
-                        borderColor: isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.12)",
-                        color: isDark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.5)",
-                        "&:hover": {
-                            borderColor: isDark
-                                ? "rgba(var(--gp-brandalt-400-rgb), 0.6)"
-                                : "rgba(var(--gp-brand-700-rgb), 0.5)",
-                            color: isDark ? "var(--gp-brandalt-400)" : "var(--gp-brand-700)",
-                        },
-                    }}
-                    onClick={() => setTeamFolderModal({ mode: "create-root" })}
-                >
-                    <CreateNewFolderRoundedIcon sx={{ fontSize: 15 }} />
-                    <Typography level="body-xs" sx={{ fontWeight: 500, color: "inherit" }}>
-                        {t.notes.teamNotes.newFolder}
-                    </Typography>
-                </ListItemButton>
-            </ListItem>
+            {/* Creating a folder in Team Notes is member-only on the server.
+                A guest sees this section for the one folder shared with their
+                team, so the affordance would only ever fail for them. */}
+            {!useTEM.currentTeam.isGuest && (
+                <ListItem>
+                    <ListItemButton
+                        sx={{
+                            borderRadius: "8px",
+                            py: 0.5,
+                            px: 1,
+                            my: 0.25,
+                            gap: 0.75,
+                            minHeight: 30,
+                            border: "1px dashed",
+                            borderColor: isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.12)",
+                            color: isDark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.5)",
+                            "&:hover": {
+                                borderColor: isDark
+                                    ? "rgba(var(--gp-brandalt-400-rgb), 0.6)"
+                                    : "rgba(var(--gp-brand-700-rgb), 0.5)",
+                                color: isDark ? "var(--gp-brandalt-400)" : "var(--gp-brand-700)",
+                            },
+                        }}
+                        onClick={() => setTeamFolderModal({ mode: "create-root" })}
+                    >
+                        <CreateNewFolderRoundedIcon sx={{ fontSize: 15 }} />
+                        <Typography level="body-xs" sx={{ fontWeight: 500, color: "inherit" }}>
+                            {t.notes.teamNotes.newFolder}
+                        </Typography>
+                    </ListItemButton>
+                </ListItem>
+            )}
             {teamFolderTags.length > 0 && (
                 <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, px: 1, py: 0.5 }}>
                     {teamFolderTags.map((tag) => {
