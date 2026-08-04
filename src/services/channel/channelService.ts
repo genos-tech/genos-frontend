@@ -32,6 +32,7 @@
 import axios from "axios";
 import type { Socket } from "socket.io-client";
 
+import { rememberPeople } from "../../components/ui/avatars/userDirectory";
 import { INDEX_NAMES, STORES } from "../../db/config/constants";
 import { initDB } from "../../db/config/schema";
 import { CheckpointRepository } from "../../db/repositories/checkpoints";
@@ -946,6 +947,7 @@ export class ChannelService {
         }
         const next = Array.from(byId.values());
         this._members.set(channelId, next);
+        this._rememberMemberIdentities(next);
         this._bumpChannels();
         this._notify();
         // Persist each row — `_persistMember` is idempotent on member.id
@@ -2549,6 +2551,7 @@ export class ChannelService {
             const members = (c as Channel & { members?: ChannelMember[] }).members;
             if (members && members.length > 0) {
                 this._members.set(c.id, [...members]);
+                this._rememberMemberIdentities(members);
                 changed = true;
             }
         }
@@ -2596,6 +2599,7 @@ export class ChannelService {
             ? existing
             : [...existing, event.member];
         this._members.set(event.channelId, next);
+        this._rememberMemberIdentities([event.member]);
         this._bumpChannels();
         // If I'M the one being added (e.g. a peer's invite, or a
         // recovery path where `channel.created` was missed), the
@@ -2768,6 +2772,7 @@ export class ChannelService {
                 if (!arr.some((x) => x.id === m.id)) arr.push(m);
                 this._members.set(m.channelId, arr);
             }
+            this._rememberMemberIdentities(memberRows);
             // Sort messages by tsSent asc within each channel for stable
             // scroll / pagination behavior.
             const byChan = new Map<string, Message[]>();
@@ -2815,6 +2820,10 @@ export class ChannelService {
     // ---- Internal: in-memory helpers --------------------------------------
 
     private _upsertMessage(message: Message) {
+        // The sender, whoever's team they are on. A shared chat's whole
+        // point is that some of the people in it are not in any roster
+        // this client holds, and their bubbles carried a "?" avatar.
+        if (message.sender) rememberPeople([message.sender]);
         // Always produce a NEW array reference so `useMemo([allMessages])`
         // in the hook re-derives. Mutating the existing array in place
         // would keep its identity and skip the React re-derive.
@@ -3114,6 +3123,23 @@ export class ChannelService {
         } catch (e) {
             this._recordIdbError("_persistChannelDelete", e);
         }
+    }
+
+    /**
+     * File away the names and avatars on a member roster.
+     *
+     * Every member row carries `user` denormalized, and for anyone from
+     * another team that payload is the ONLY place their name and avatar
+     * ever appear: `teamMemberProfiles` is one team's roster, so the host
+     * team's people in a shared GM — its owner included — resolved to a
+     * blank row with a "?" avatar. This is also how a task in a shared
+     * project gets an assignee with a face, because the project's PM chat
+     * roster passes through here too.
+     */
+    private _rememberMemberIdentities(members: readonly ChannelMember[]): void {
+        rememberPeople(
+            members.map((m) => m.user).filter((u): u is NonNullable<typeof u> => u != null)
+        );
     }
 
     private async _persistMember(member: ChannelMember, channelId: string) {

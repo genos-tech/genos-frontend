@@ -18,8 +18,8 @@
  *   colleagues, usable any time, because their side of the roster is theirs
  *   to run.
  *
- * `canAdmit` and `side` come from the server. Deriving them from team ids
- * here would be a second, drifting copy of an authorization rule.
+ * `canAdmit` and `canSetCeiling` come from the server. Deriving them from
+ * team ids here would be a second, drifting copy of an authorization rule.
  */
 import { useState } from "react";
 import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
@@ -44,10 +44,16 @@ type Props = {
     onAdmit: (share: ObjectShare, userId: string) => Promise<unknown>;
     onWithdraw: (share: ObjectShare, userId: string) => Promise<unknown>;
     onRevoke: (share: ObjectShare) => Promise<unknown>;
+    /**
+     * Change what the guest team may hand its own people. Host managers
+     * only, which is what `share.canSetCeiling` says; omit the handler on
+     * surfaces that have no route for it and the chip stays a label.
+     */
+    onSetCeiling?: (share: ObjectShare, roleCeiling: "viewer" | "editor") => Promise<unknown>;
     /** Connected teams not yet offered this object. Host managers only;
      *  pass an empty list to hide the offer control entirely. */
     offerableTeams?: OfferableTeam[];
-    onOffer?: (teamId: string) => Promise<unknown>;
+    onOffer?: (teamId: string, roleCeiling: "viewer" | "editor") => Promise<unknown>;
     labelColor: string;
     valueColor: string;
     borderColor: string;
@@ -62,6 +68,7 @@ export const ObjectSharesPanel = ({
     onAdmit,
     onWithdraw,
     onRevoke,
+    onSetCeiling,
     offerableTeams = [],
     onOffer,
     labelColor,
@@ -76,6 +83,10 @@ export const ObjectSharesPanel = ({
     // actually about to add somebody.
     const [pickerTeamId, setPickerTeamId] = useState<string | null>(null);
     const [roster, setRoster] = useState<{ userId: string; userName: string }[]>([]);
+    // What the next offer grants. Editing by default: sharing a project so
+    // the other team can read it is the rare case, and it was the only one
+    // reachable before.
+    const [offerCeiling, setOfferCeiling] = useState<"viewer" | "editor">("editor");
 
     const openPicker = async (share: ObjectShare) => {
         setPickerTeamId(share.teamId);
@@ -84,6 +95,40 @@ export const ObjectSharesPanel = ({
 
     const visible = shares.filter((s) => s.status === "active" || s.status === "pending");
     if (visible.length === 0 && offerableTeams.length === 0) return null;
+
+    // The ceiling is the host's dial and nobody else's, so it is a plain
+    // label unless the server says this reader may turn it. Two values, so
+    // a toggle rather than a menu — and it is the only control the host has
+    // between "read-only" and "end the share".
+    const ceilingChip = (share: ObjectShare) => {
+        const label =
+            share.roleCeiling === "editor" ? strings.ceilingEditor : strings.ceilingViewer;
+        if (!share.canSetCeiling || !onSetCeiling) {
+            return (
+                <Chip color="neutral" size="sm" variant="soft">
+                    {label}
+                </Chip>
+            );
+        }
+        const next = share.roleCeiling === "editor" ? "viewer" : "editor";
+        return (
+            <Tooltip
+                size="sm"
+                title={fmt(strings.changeCeiling, { team: share.teamName })}
+                variant="outlined"
+            >
+                <Chip
+                    color="primary"
+                    disabled={busy}
+                    size="sm"
+                    variant="soft"
+                    onClick={() => void onSetCeiling(share, next)}
+                >
+                    {label}
+                </Chip>
+            </Tooltip>
+        );
+    };
 
     const shareRow = (share: ObjectShare) => {
         const admitted = new Set(share.participants.map((p) => p.userId));
@@ -101,20 +146,26 @@ export const ObjectSharesPanel = ({
                 <Stack alignItems="center" direction="row" spacing={1}>
                     <GroupsRoundedIcon sx={{ fontSize: 18, color: labelColor, flexShrink: 0 }} />
                     <Box sx={{ minWidth: 0, flex: 1 }}>
-                        <Typography
-                            level="body-sm"
-                            sx={{ color: valueColor, fontWeight: 600 }}
-                            noWrap
-                        >
-                            {share.teamName}
-                        </Typography>
+                        {/* Both teams, owner first, on the line that used
+                            to name one team and then tell the reader which
+                            side they were on. Which side you are on is not
+                            a property of the share, and anyone who belongs
+                            to both teams was told a flat contradiction. */}
+                        <Tooltip size="sm" title={strings.sharedDirectionHint} variant="outlined">
+                            <Typography
+                                level="body-sm"
+                                sx={{ color: valueColor, fontWeight: 600 }}
+                                noWrap
+                            >
+                                {share.ownerTeamName
+                                    ? fmt(strings.sharedFromTo, {
+                                          guest: share.teamName,
+                                          owner: share.ownerTeamName,
+                                      })
+                                    : share.teamName}
+                            </Typography>
+                        </Tooltip>
                         <Typography level="body-xs" sx={{ color: labelColor }}>
-                            {/* Who owns the thing, then how it stands. The
-                                name above is the other team on both sides
-                                of the share, so which side you are on has
-                                to be said rather than inferred. */}
-                            {(share.side === "given" ? strings.sideGiven : strings.sideReceived) +
-                                " · "}
                             {share.status === "pending"
                                 ? strings.awaitingTheirApproval
                                 : fmt(strings.participantCount, {
@@ -122,11 +173,7 @@ export const ObjectSharesPanel = ({
                                   })}
                         </Typography>
                     </Box>
-                    <Chip color="neutral" size="sm" variant="soft">
-                        {share.roleCeiling === "editor"
-                            ? strings.ceilingEditor
-                            : strings.ceilingViewer}
-                    </Chip>
+                    {ceilingChip(share)}
                     {share.canAdmit && share.status === "active" && (
                         <Tooltip title={strings.addFromYourTeam}>
                             <IconButton
@@ -245,6 +292,40 @@ export const ObjectSharesPanel = ({
                     <Typography level="body-xs" sx={{ mb: 0.5, color: labelColor }}>
                         {strings.offerPrompt}
                     </Typography>
+                    {/* Decided before the team is picked, because picking
+                        the team is what sends the offer. Edit is preselected
+                        — the ceiling can be lowered later, and a share
+                        nobody can write in is the exception. */}
+                    <Stack
+                        alignItems="center"
+                        direction="row"
+                        spacing={0.5}
+                        sx={{ mb: 0.75, flexWrap: "wrap", gap: 0.5 }}
+                    >
+                        <Typography level="body-xs" sx={{ color: labelColor }}>
+                            {strings.offerCeilingLabel}
+                        </Typography>
+                        {(["editor", "viewer"] as const).map((option) => {
+                            const label =
+                                option === "editor"
+                                    ? strings.offerCeilingEditor
+                                    : strings.offerCeilingViewer;
+                            return (
+                                <Chip
+                                    key={option}
+                                    color={offerCeiling === option ? "primary" : "neutral"}
+                                    size="sm"
+                                    variant={offerCeiling === option ? "solid" : "outlined"}
+                                    slotProps={{
+                                        action: { "aria-pressed": offerCeiling === option },
+                                    }}
+                                    onClick={() => setOfferCeiling(option)}
+                                >
+                                    {label}
+                                </Chip>
+                            );
+                        })}
+                    </Stack>
                     <Stack direction="row" spacing={0.5} sx={{ flexWrap: "wrap", gap: 0.5 }}>
                         {offerableTeams.map((team) => (
                             <Button
@@ -252,7 +333,7 @@ export const ObjectSharesPanel = ({
                                 disabled={busy}
                                 size="sm"
                                 variant="outlined"
-                                onClick={() => void onOffer(team.teamId)}
+                                onClick={() => void onOffer(team.teamId, offerCeiling)}
                             >
                                 {team.teamName}
                             </Button>

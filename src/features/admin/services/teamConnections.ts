@@ -39,6 +39,15 @@ export type TeamConnection = {
      * and who loses access if the connection ends.
      */
     isOwner: boolean;
+    /**
+     * They work in shared work WE own — the mirror of `isOwner`.
+     *
+     * Sent separately rather than inferred from `!isOwner`, because both
+     * false is a real third state: connected, with nothing shared either
+     * way yet. Collapsing that into "guest" labels a team as working in
+     * your data when they have no access to any of it.
+     */
+    isGuest: boolean;
     tsCreated: string;
     tsUpdated: string;
 };
@@ -243,12 +252,43 @@ export const offerExternalShare = async (
             guest_team_id: params.guestTeamId,
             object_type: params.objectType,
             object_id: params.objectId,
-            role_ceiling: params.roleCeiling ?? "viewer",
+            // Editing unless the caller says otherwise, matching the
+            // server's own default. A share exists so two teams can work
+            // on one thing; read-only was the default here and no UI could
+            // change it, so every share ever made was read-only.
+            role_ceiling: params.roleCeiling ?? "editor",
         });
         return res.data as ExternalShare;
     } catch (error: unknown) {
         setErrorMessage?.(errorText(error, "Couldn't share that. Please try again."));
         return null;
+    }
+};
+
+/**
+ * PUT — change what a guest team may hand its own people. Host managers.
+ *
+ * Raising it promotes the people already admitted; lowering it does not
+ * demote them (see `set_role_ceiling`). Both halves of that are the
+ * server's decision, so nothing here tries to predict the new roster.
+ */
+export const setShareRoleCeiling = async (
+    accessToken: string | null,
+    grantId: string,
+    roleCeiling: "viewer" | "editor",
+    setErrorMessage?: (value: string) => void
+): Promise<boolean> => {
+    try {
+        const api = authApi(accessToken);
+        if (!api) {
+            setErrorMessage?.("Authorization token is missing.");
+            return false;
+        }
+        await api.put("/team/share/", { grant_id: grantId, role_ceiling: roleCeiling });
+        return true;
+    } catch (error: unknown) {
+        setErrorMessage?.(errorText(error, "Couldn't change that. Please try again."));
+        return false;
     }
 };
 

@@ -14,7 +14,11 @@ import { useAuth } from "../../../../context/AuthContext";
 import { useTranslation } from "../../../../i18n";
 import { channelService } from "../../../../services/channel/channelService";
 import { ChannelKind, type ChannelShare } from "../../../../types/channel";
-import { fetchOwnTeamRoster, revokeExternalShare } from "../../../admin/services/teamConnections";
+import {
+    fetchOwnTeamRoster,
+    revokeExternalShare,
+    setShareRoleCeiling,
+} from "../../../admin/services/teamConnections";
 
 type Props = {
     channelId: string;
@@ -81,6 +85,9 @@ export const ExternalSharesPanel = ({
             onAdmit={(_share, userId) => run(() => channelService.addMembers(channelId, [userId]))}
             onRevoke={(share) =>
                 run(() => revokeExternalShare(accessToken, share.grantId, setError))
+            }
+            onSetCeiling={(share, roleCeiling) =>
+                run(() => setShareRoleCeiling(accessToken, share.grantId, roleCeiling, setError))
             }
             onWithdraw={(_share, userId) =>
                 run(() => channelService.removeMember(channelId, ChannelKind.GM, userId))

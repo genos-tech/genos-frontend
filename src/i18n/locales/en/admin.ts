@@ -188,19 +188,16 @@ export const admin = {
         disconnect: "Disconnect",
         incomingNote: "Wants to connect with your team",
         outgoingNote: "Waiting for them to approve",
-        // Who asked whom, on a connection that is already live. Not
-        // cosmetic: only the invited side can be shown as a guest inside
-        // your team, and "who invited whom" is the first thing anybody
-        // auditing this list wants to know.
-        activeInvitedByUs: "You invited them",
-        activeInvitedByThem: "They invited you",
-        // The one chip on a connection row. Who ASKED to connect is
-        // history and lives on the note line above; who OWNS the shared
-        // work decides what each side can do, so that is what gets a chip.
-        // Only ever on their row — no chip means the shared work is yours.
+        // The one chip on a live connection row, and it always describes
+        // THE OTHER TEAM: they host work we were let into, or they are
+        // guests in ours. Who asked to connect is history that stopped
+        // being actionable when they said yes, so it gets no line.
         ownerTeam: "Owner",
         ownerTeamHint:
             "They own the projects, chats or note folders shared with you. They decide what stays shared; you decide which of your people join.",
+        guestTeam: "Guest",
+        guestTeamHint:
+            "They work in projects, chats or note folders you own. You decide what stays shared; they decide which of their people join.",
         statusConnected: "Connected",
         statusPending: "Awaiting your owner",
         statusAwaiting: "Awaiting reply",

@@ -20,10 +20,13 @@ const share = (over: Partial<ObjectShare> = {}): ObjectShare => ({
     grantId: "g1",
     teamId: "22222222-2222-2222-2222-222222222222",
     teamName: "Acme",
+    ownerTeamId: "11111111-1111-1111-1111-111111111111",
+    ownerTeamName: "Initech",
     roleCeiling: "editor",
     status: "active",
     side: "given",
     canAdmit: false,
+    canSetCeiling: false,
     participants: [{ avatarUrl: null, email: "z@acme.test", userId: "u9", userName: "Zoe" }],
     ...over,
 });
@@ -33,6 +36,7 @@ const renderPanel = (props: Partial<Parameters<typeof ObjectSharesPanel>[0]> = {
         onAdmit: vi.fn().mockResolvedValue(undefined),
         onOffer: vi.fn().mockResolvedValue(undefined),
         onRevoke: vi.fn().mockResolvedValue(undefined),
+        onSetCeiling: vi.fn().mockResolvedValue(undefined),
         onWithdraw: vi.fn().mockResolvedValue(undefined),
     };
     render(
@@ -76,12 +80,43 @@ describe("ObjectSharesPanel", () => {
         expect(container.textContent).toBe("");
     });
 
-    it("offers connected teams to a host manager", async () => {
+    it("offers connected teams to a host manager, editing by default", async () => {
         const handlers = renderPanel({
             offerableTeams: [{ teamId: "t9", teamName: "Globex" }],
         });
         await userEvent.click(screen.getByRole("button", { name: "Globex" }));
-        expect(handlers.onOffer).toHaveBeenCalledWith("t9");
+        expect(handlers.onOffer).toHaveBeenCalledWith("t9", "editor");
+    });
+
+    it("offers read-only when the host picks view only", async () => {
+        const handlers = renderPanel({
+            offerableTeams: [{ teamId: "t9", teamName: "Globex" }],
+        });
+        await userEvent.click(screen.getByRole("button", { name: /view only/i }));
+        await userEvent.click(screen.getByRole("button", { name: "Globex" }));
+        expect(handlers.onOffer).toHaveBeenCalledWith("t9", "viewer");
+    });
+
+    it("names both teams rather than telling the reader which side they are on", () => {
+        renderPanel();
+        // Whoever is reading, and even if they belong to both teams.
+        expect(screen.getByText(/initech shared this with acme/i)).toBeTruthy();
+        expect(screen.queryByText(/you shared this/i)).toBeNull();
+    });
+
+    it("lets the host turn the ceiling down", async () => {
+        const handlers = renderPanel({ shares: [share({ canSetCeiling: true })] });
+        await userEvent.click(screen.getByRole("button", { name: /up to editor/i }));
+        await waitFor(() => expect(handlers.onSetCeiling).toHaveBeenCalled());
+        expect(handlers.onSetCeiling.mock.calls[0][1]).toBe("viewer");
+    });
+
+    it("shows the guest side the ceiling as a label, with nothing to press", () => {
+        renderPanel({
+            shares: [share({ canAdmit: true, canSetCeiling: false, side: "received" })],
+        });
+        expect(screen.getByText(/up to editor/i)).toBeTruthy();
+        expect(screen.queryByRole("button", { name: /up to editor/i })).toBeNull();
     });
 
     it("shows no offer control when the caller was given no teams to offer", () => {

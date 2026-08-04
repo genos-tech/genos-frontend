@@ -79,9 +79,12 @@ export const ObjectSharesSection = ({
             shares={shares.shares}
             valueColor={valueColor}
             onAdmit={(share, userId) => shares.admit(share.grantId, [userId])}
-            onOffer={canOffer ? (teamId) => shares.offer(teamId) : undefined}
             onRevoke={(share) => shares.revoke(share.grantId)}
+            onSetCeiling={(share, roleCeiling) => shares.setCeiling(share.grantId, roleCeiling)}
             onWithdraw={(share, userId) => shares.withdraw(share.grantId, [userId])}
+            onOffer={
+                canOffer ? (teamId, roleCeiling) => shares.offer(teamId, roleCeiling) : undefined
+            }
         />
     );
 };

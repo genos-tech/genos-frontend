@@ -35,6 +35,7 @@ import {
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
+import { useUserProfile } from "../../../../components/ui/avatars/AvatarContext";
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
 import { FileSizeRejectionSnackbar } from "../../../../components/ui/feedback/FileSizeRejectionSnackbar";
 import { useFileSizeGuard } from "../../../../components/ui/feedback/useFileSizeGuard";
@@ -122,6 +123,14 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
     const gmChatIdLegacy = resolveLegacyChatId(gmChat.chatId) ?? -1;
 
     const [gmProfile, setGmProfile] = useState<GMProfileProps | null>(null);
+
+    // The owner, through the resolver rather than out of this team's
+    // roster. In a shared chat the owner is usually on the OTHER team, so
+    // the roster has never heard of them and the field rendered blank —
+    // an unnamed owner with no email, in the section headed "Owner".
+    const ownerProfile = useUserProfile(gmProfile?.ownerUserId);
+    const ownerName = ownerProfile?.userName || t.chat.modals.gmProfile.na;
+    const ownerEmail = ownerProfile?.userEmail || t.chat.modals.gmProfile.na;
 
     // Pull the current chat row from `useCM.allChats` so the avatar
     // in this modal reflects the freshest profile-image filename
@@ -800,22 +809,12 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                                 whiteSpace: "nowrap",
                                                             }}
                                                         >
-                                                            {gmProfile
-                                                                ? useTEM.teamMemberProfiles[
-                                                                      gmProfile?.ownerUserId
-                                                                  ]?.userName
-                                                                : t.chat.modals.gmProfile.na}
+                                                            {ownerName}
                                                         </Typography>
                                                     </Button>
                                                     <Typography
                                                         component="a"
-                                                        href={`mailto:${
-                                                            gmProfile
-                                                                ? useTEM.teamMemberProfiles[
-                                                                      gmProfile?.ownerUserId
-                                                                  ]?.userEmail
-                                                                : t.chat.modals.gmProfile.na
-                                                        }`}
+                                                        href={`mailto:${ownerEmail}`}
                                                         startDecorator={
                                                             <EmailRoundedIcon
                                                                 fontSize="small"
@@ -832,11 +831,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                             },
                                                         }}
                                                     >
-                                                        {gmProfile
-                                                            ? useTEM.teamMemberProfiles[
-                                                                  gmProfile?.ownerUserId
-                                                              ]?.userEmail
-                                                            : t.chat.modals.gmProfile.na}
+                                                        {ownerEmail}
                                                     </Typography>
                                                 </Stack>
                                                 {isGMOwner && (
