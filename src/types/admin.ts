@@ -27,6 +27,21 @@ export type UserProps = {
     memberRole?: string;
     baseCountry?: string;
     isSystemUser?: boolean;
+    /** This person belongs to ANOTHER team and is in this roster only
+     *  because a cross-team share put the two of you on the same object.
+     *  Server-decided (`GetTeamMembersView`). `teamId` above stays the team
+     *  whose roster this row was fetched for — that is the key the client
+     *  caches and reads by — so their real team travels in `homeTeam*`.
+     *  Conflating the two is what makes another company's staff read as
+     *  your own colleague, which the avatar's team badge exists to prevent.
+     *
+     *  Recognizing them is not the same as being able to hand them things:
+     *  they must not appear in pickers that ADD a member to something
+     *  (chats, folders, projects), because the server refuses. */
+    isExternal?: boolean;
+    homeTeamId?: string;
+    homeTeamName?: string;
+    homeTeamImgPath?: string;
 };
 
 export type Team = {

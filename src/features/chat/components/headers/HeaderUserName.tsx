@@ -18,6 +18,7 @@ import { UIStateManagementState } from "../../../../hooks/common/useUIStateManag
 import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { ChatProps } from "../../../../types/chat";
+import { ExternalChatChip } from "../shared/ExternalChatChip";
 
 type HeaderUserNameProps = {
     useTEM: TeamManagementState;
@@ -215,6 +216,15 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                             {isYou ? `${dmDisplayName} (you)` : dmDisplayName}
                         </Typography>
                     )}
+
+                    {/* Who else is in the room. Beside the title, not in a
+                        menu: this is the one fact that changes what you are
+                        willing to type here. */}
+                    <ExternalChatChip
+                        allChats={useCM.allChats}
+                        chatId={chat?.chatId}
+                        chatType={chat?.chatType}
+                    />
 
                     {/* Online/Offline status chip */}
                     {chat && chat.chatType === 1 && !isMobile && (

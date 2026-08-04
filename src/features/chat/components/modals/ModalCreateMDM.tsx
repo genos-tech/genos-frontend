@@ -26,6 +26,7 @@ import { TeamManagementState } from "../../../../hooks/common/useTeamManagement"
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
+import { ownTeamOnly } from "../../../../utils/teamRoster";
 import { popTeamMembers } from "../../../admin/services/popTeamMembers";
 import { createMDMChatGroup } from "../../services/createMDMChatGroup";
 
@@ -87,11 +88,15 @@ export const ModalCreateMDM: React.FC<Props> = ({
     useEffect(() => {
         if (open && myself.userId) {
             // Use team members from useTEM if available, otherwise load them
+            // `ownTeamOnly`: see ModalCreateGM — the roster names people
+            // from other teams, but only a share can let them in.
             if (useTEM.teamMembers.length > 0) {
-                setTeamMembers(useTEM.teamMembers.filter((m) => m.userId !== myself.userId));
+                setTeamMembers(
+                    ownTeamOnly(useTEM.teamMembers).filter((m) => m.userId !== myself.userId)
+                );
             } else {
                 popTeamMembers(myself).then((members) => {
-                    setTeamMembers(members.filter((m) => m.userId !== myself.userId));
+                    setTeamMembers(ownTeamOnly(members).filter((m) => m.userId !== myself.userId));
                 });
             }
         }

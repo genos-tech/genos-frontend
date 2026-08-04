@@ -26,6 +26,7 @@ import { useOptionalAvatarContext } from "../../../../components/ui/avatars/Avat
 import { EmojiPicker } from "../../../../components/ui/emoji/EmojiPicker";
 import { FileSizeRejectionSnackbar } from "../../../../components/ui/feedback/FileSizeRejectionSnackbar";
 import { useFileSizeGuard } from "../../../../components/ui/feedback/useFileSizeGuard";
+import { ExternalChip } from "../../../../components/ui/misc/ExternalChip";
 import { ProfileModalStyles } from "../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../context/AuthContext";
 import { UserRepository } from "../../../../db/repositories/user";
@@ -100,6 +101,15 @@ export const UserProfile = (props: UserProfileProps) => {
             setProfileUser(user);
         }
     }, [user, myself]);
+
+    // Someone from another team is in this roster because a share put you
+    // on the same object, so their row is filed under YOUR team: reading
+    // `teamId` / `teamName` off it would tell you they work here. Their own
+    // team travels alongside, and it is the answer to the question this
+    // modal is usually opened to settle.
+    const isExternal = profileUser?.isExternal === true;
+    const shownTeamId = isExternal ? profileUser?.homeTeamId : profileUser?.teamId;
+    const shownTeamName = isExternal ? profileUser?.homeTeamName : profileUser?.teamName;
 
     // Profile image file upload manager
     const inputRef = useRef<HTMLInputElement | null>(null);
@@ -505,30 +515,42 @@ export const UserProfile = (props: UserProfileProps) => {
                                             >
                                                 {t.admin.userProfile.teamName}
                                             </FormLabel>
-                                            <Box
-                                                sx={{
-                                                    px: 1.5,
-                                                    py: 0.75,
-                                                    borderRadius: "8px",
-                                                    background: isDark
-                                                        ? "rgba(var(--gp-brand-700-rgb), 0.1)"
-                                                        : "rgba(var(--gp-brand-700-rgb), 0.05)",
-                                                    border: `1px solid ${styles.border}`,
-                                                    display: "inline-flex",
-                                                    width: "fit-content",
-                                                }}
+                                            <Stack
+                                                direction="row"
+                                                spacing={1}
+                                                sx={{ alignItems: "center" }}
                                             >
-                                                <Typography
-                                                    fontWeight="bold"
+                                                <Box
                                                     sx={{
-                                                        userSelect: "text",
-                                                        color: styles.valueColor,
-                                                        fontSize: "14px",
+                                                        px: 1.5,
+                                                        py: 0.75,
+                                                        borderRadius: "8px",
+                                                        background: isDark
+                                                            ? "rgba(var(--gp-brand-700-rgb), 0.1)"
+                                                            : "rgba(var(--gp-brand-700-rgb), 0.05)",
+                                                        border: `1px solid ${styles.border}`,
+                                                        display: "inline-flex",
+                                                        width: "fit-content",
                                                     }}
                                                 >
-                                                    {profileUser?.teamName}
-                                                </Typography>
-                                            </Box>
+                                                    <Typography
+                                                        fontWeight="bold"
+                                                        sx={{
+                                                            userSelect: "text",
+                                                            color: styles.valueColor,
+                                                            fontSize: "14px",
+                                                        }}
+                                                    >
+                                                        {shownTeamName}
+                                                    </Typography>
+                                                </Box>
+                                                {isExternal && (
+                                                    <ExternalChip
+                                                        hint={t.admin.userProfile.externalHint}
+                                                        label={t.admin.userProfile.externalBadge}
+                                                    />
+                                                )}
+                                            </Stack>
                                         </FormControl>
 
                                         {/* IDs Row */}
@@ -583,7 +605,7 @@ export const UserProfile = (props: UserProfileProps) => {
                                                             textOverflow: "ellipsis",
                                                         }}
                                                     >
-                                                        {profileUser?.teamId}
+                                                        {shownTeamId}
                                                     </Typography>
                                                 </Box>
                                             </FormControl>

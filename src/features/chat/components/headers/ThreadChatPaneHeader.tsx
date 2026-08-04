@@ -47,6 +47,7 @@ import { ThreadAskModal } from "../../../threadAsk/ThreadAskModal";
 import { useThreadAsk } from "../../../threadAsk/useThreadAsk";
 import { useChatContext } from "../../context/ChatContext";
 import { forgetThread } from "../../utils/threadMemory";
+import { ExternalChatChip } from "../shared/ExternalChatChip";
 
 // chatType → URL segment for building a thread deep-link
 // (/workspace/chat/{path}/{chatId}/thread/{threadId}).
@@ -423,6 +424,11 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                     >
                         {useCM.currentThreadChat?.chatName || "Thread"}
                     </Typography>
+                    <ExternalChatChip
+                        allChats={useCM.allChats}
+                        chatId={useCM.currentThreadChat?.chatId}
+                        chatType={useCM.currentThreadChat?.chatType}
+                    />
                 </Stack>
 
                 <Dropdown>
@@ -588,6 +594,15 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                             : useCM.currentThreadChat?.chatName}
                     </Typography>
                 )}
+
+                {/* A thread inherits its parent chat's audience, so the
+                    same warning belongs here — a reply is as visible to
+                    the other team as the message it hangs off. */}
+                <ExternalChatChip
+                    allChats={useCM.allChats}
+                    chatId={useCM.currentThreadChat?.chatId}
+                    chatType={useCM.currentThreadChat?.chatType}
+                />
             </Stack>
 
             {/* Right section: Task info + Actions */}

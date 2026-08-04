@@ -25,6 +25,7 @@ import { UIStateManagementState } from "../../../../hooks/common/useUIStateManag
 import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps } from "../../../../types/chat";
+import { ownTeamOnly } from "../../../../utils/teamRoster";
 import { popTeamMembers } from "../../../admin/services/popTeamMembers";
 import { addMembersToChat } from "../../services/addMembersToChat";
 
@@ -94,11 +95,16 @@ export const ModalAddMembers: React.FC<Props> = ({
     useEffect(() => {
         if (open && myself.userId) {
             // Use team members from useTEM if available, otherwise load them
+            // `ownTeamOnly`: the roster also carries the other teams'
+            // people you already work with, and the server will not let you
+            // add them here — access across teams comes from the share.
             if (useTEM.teamMembers.length > 0) {
-                setTeamMembers(useTEM.teamMembers.filter((m) => m.userId !== myself.userId));
+                setTeamMembers(
+                    ownTeamOnly(useTEM.teamMembers).filter((m) => m.userId !== myself.userId)
+                );
             } else {
                 popTeamMembers(myself).then((members) => {
-                    setTeamMembers(members.filter((m) => m.userId !== myself.userId));
+                    setTeamMembers(ownTeamOnly(members).filter((m) => m.userId !== myself.userId));
                 });
             }
 

@@ -1,9 +1,10 @@
 import React from "react";
 import LockOutlineRoundedIcon from "@mui/icons-material/LockOutlineRounded";
-import { Box, Chip, Stack, Tooltip, Typography } from "@mui/joy";
+import { Box, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { resolveDisplayName } from "../../../../components/ui/avatars/AvatarContext";
+import { ExternalChip } from "../../../../components/ui/misc/ExternalChip";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
@@ -103,31 +104,16 @@ export const ChatListItemTitle: React.FC<ChatListItemTitleProps> = ({
                         question a bare badge leaves you asking — the host
                         can close it, and its rules are theirs. */}
                     {chat.isExternal && (
-                        <Tooltip
-                            size="sm"
-                            variant="outlined"
-                            title={
+                        <ExternalChip
+                            hint={
                                 chat.hostTeamName
                                     ? fmt(t.chat.sidebar.sharedByTeamHint, {
                                           team: chat.hostTeamName,
                                       })
                                     : t.chat.sidebar.externalBadgeHint
                             }
-                        >
-                            <Chip
-                                color="warning"
-                                size="sm"
-                                variant="soft"
-                                sx={{
-                                    flexShrink: 0,
-                                    fontSize: "0.65rem",
-                                    maxWidth: 120,
-                                    "--Chip-gap": "2px",
-                                }}
-                            >
-                                {chat.hostTeamName || t.chat.sidebar.externalBadge}
-                            </Chip>
-                        </Tooltip>
+                            label={chat.hostTeamName || t.chat.sidebar.externalBadge}
+                        />
                     )}
                 </Stack>
 

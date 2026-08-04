@@ -27,6 +27,7 @@ import { TeamManagementState } from "../../../../hooks/common/useTeamManagement"
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
+import { ownTeamOnly } from "../../../../utils/teamRoster";
 import { useTeamConnections } from "../../../admin/components/team/useTeamConnections";
 import { relayCrossTeamRequest } from "../../../admin/services/crossTeamNotice";
 import { popTeamMembers } from "../../../admin/services/popTeamMembers";
@@ -103,11 +104,17 @@ export const ModalCreateGM: React.FC<Props> = ({
     // never get auto-joined), the exact bug this fixes.
     useEffect(() => {
         if (open && myself.userId) {
+            // `ownTeamOnly`: the other teams' people in the roster are
+            // reachable through a share, not addable to a new chat. Offering
+            // them here creates a group the server then refuses to admit
+            // them to. Sharing the chat afterwards is the way.
             if (useTEM.teamMembers.length > 0) {
-                setTeamMembers(useTEM.teamMembers.filter((m) => m.userId !== myself.userId));
+                setTeamMembers(
+                    ownTeamOnly(useTEM.teamMembers).filter((m) => m.userId !== myself.userId)
+                );
             } else {
                 popTeamMembers(myself).then((members) => {
-                    setTeamMembers(members.filter((m) => m.userId !== myself.userId));
+                    setTeamMembers(ownTeamOnly(members).filter((m) => m.userId !== myself.userId));
                 });
             }
         }

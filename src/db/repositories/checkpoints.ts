@@ -35,4 +35,26 @@ export class CheckpointRepository extends BaseRepository<CheckpointRecord> {
             lastUpdated: new Date().toISOString(),
         });
     }
+
+    // Forget one watermark, so the next sync of that loader asks for
+    // everything again.
+    //
+    // Whoever empties a store owes this call. A watermark says "I already
+    // hold everything up to here", and after a `clear()` that is a lie the
+    // server will happily agree with: it answers the next `?since=` with
+    // the handful of rows that changed and the client keeps serving an
+    // almost-empty store forever, with no error anywhere to explain it.
+    async forgetCheckpoint(key: string): Promise<void> {
+        await this.delete(key);
+    }
+
+    // Same, for the scoped keys of one loader ("tasks:7", "tasks:8", ...),
+    // whose store is shared and therefore cleared as a whole.
+    async forgetCheckpointsWithPrefix(prefix: string): Promise<void> {
+        const res = await this.getAll();
+        if (!res.success || !res.data) return;
+        for (const row of res.data) {
+            if (row.key.startsWith(prefix)) await this.delete(row.key);
+        }
+    }
 }

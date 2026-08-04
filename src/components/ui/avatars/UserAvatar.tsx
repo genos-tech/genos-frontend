@@ -138,6 +138,16 @@ const UserAvatarInner = (props: UserAvatarProps) => {
     const avatarBaselineBottom = Math.max(0, Math.min(6, _size - 26));
     const avatarBaselineRight = Math.max(0, Math.min(1, _size - 31));
 
+    // Somebody from another team wears their team's icon. Without it their
+    // face is indistinguishable from a colleague's, and the whole point of
+    // a cross-team share is knowing whose side of the wall a person is on
+    // before you write to them. Top-left, because bottom-right is presence
+    // and the two must never overlap.
+    const homeTeam = isYou || profile?.isExternal !== true ? undefined : profile;
+    const badgeSize = Math.max(10, Math.round(_size * 0.4));
+    const badgeSrc = buildSrc(homeTeam?.homeTeamImgPath);
+    const badgeTitle = homeTeam?.homeTeamName || homeTeam?.userName || "";
+
     const avatarJsx = useMemo(
         () => (
             <Stack direction="row" spacing={1}>
@@ -167,6 +177,29 @@ const UserAvatarInner = (props: UserAvatarProps) => {
                             <PulseDot color={isOnline ? "#4caf50" : "#999"} size={dotSize} />
                         </Box>
                     )}
+                    {homeTeam && (
+                        <Avatar
+                            size="sm"
+                            src={badgeSrc}
+                            sx={{
+                                position: "absolute",
+                                top: -2,
+                                left: -2,
+                                height: badgeSize,
+                                width: badgeSize,
+                                fontSize: Math.max(7, Math.round(badgeSize * 0.6)),
+                                border: "1.5px solid",
+                                borderColor: "background.surface",
+                                // The team icon is an identifier, not a
+                                // control: it must not eat the click that
+                                // opens the person's profile.
+                                pointerEvents: "none",
+                            }}
+                            title={badgeTitle}
+                        >
+                            {(badgeTitle || "?").charAt(0).toUpperCase()}
+                        </Avatar>
+                    )}
                 </Box>
                 {showNameAndEmail === true && (
                     <Typography
@@ -189,6 +222,10 @@ const UserAvatarInner = (props: UserAvatarProps) => {
             src,
             initial,
             isOnline,
+            homeTeam,
+            badgeSize,
+            badgeSrc,
+            badgeTitle,
             showNameAndEmail,
             showPulseDot,
             displayName,

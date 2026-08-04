@@ -326,6 +326,11 @@ export const chat = {
             isPrivate: "Is Private",
             createdDate: "Created Date",
             na: "N/A",
+            // Names the KIND of chat, not just the fact of a share: this
+            // sits beside a title that already names the group, and
+            // "External" alone next to a group name reads as an attribute
+            // of the group's owner rather than of who is in it.
+            externalBadge: "External GM chat",
         },
         joinGM: {
             sendInboxError: "Failed to send a inbox message",

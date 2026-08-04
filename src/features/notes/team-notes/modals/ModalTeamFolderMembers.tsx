@@ -34,6 +34,7 @@ import {
     TeamNoteFolderTreeNode,
 } from "../../../../types/notes";
 import { canManageMembers, resolveMyRole } from "../../../../utils/memberRoles";
+import { ownTeamOnly } from "../../../../utils/teamRoster";
 import { ObjectSharesSection } from "../../../admin/components/team/ObjectSharesSection";
 import {
     grantTeamFolderMembers,
@@ -195,7 +196,10 @@ export const ModalTeamFolderMembers = (props: Props) => {
 
     const candidates = useMemo(() => {
         const q = search.trim().toLowerCase();
-        return (useTEM.teamMembers ?? []).filter((m) => {
+        // `ownTeamOnly`: folder permissions are a team-internal ACL. Another
+        // team reaches this folder through a share, and their side decides
+        // who among them is in it.
+        return ownTeamOnly(useTEM.teamMembers ?? []).filter((m) => {
             if (existingIds.has(m.userId) || pendingUserIds.includes(m.userId)) return false;
             if (!q) return false;
             return m.userName?.toLowerCase().includes(q) || m.userEmail?.toLowerCase().includes(q);

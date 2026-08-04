@@ -15,6 +15,7 @@ import PublicRoundedIcon from "@mui/icons-material/PublicRounded";
 import { Box, Chip, List, ListItem, ListItemButton, ListItemContent, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { ExternalChip } from "../../../../components/ui/misc/ExternalChip";
 import { MoreMenu, MoreMenuItem } from "../../../../components/ui/MoreMenu";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { fmt, useTranslation } from "../../../../i18n";
@@ -233,26 +234,17 @@ function TeamNoteFolderTreeComponent(props: TeamNoteFolderTreeProps) {
                         my list", and repeating it down every level of the
                         subtree would crowd out the names. */}
                     {isExternal && folder.parentFolderId === null && (
-                        <Chip
-                            color="warning"
-                            size="sm"
-                            variant="soft"
-                            sx={{
-                                flexShrink: 0,
-                                fontSize: 10,
-                                maxWidth: 110,
-                                "--Chip-gap": "2px",
-                            }}
-                            title={
+                        <ExternalChip
+                            hint={
                                 folder.hostTeamName
                                     ? fmt(t.notes.teamNotes.sharedByTeamHint, {
                                           team: folder.hostTeamName,
                                       })
                                     : t.notes.teamNotes.sharedByAnotherTeamHint
                             }
-                        >
-                            {folder.hostTeamName || t.notes.teamNotes.sharedBadge}
-                        </Chip>
+                            label={folder.hostTeamName || t.notes.teamNotes.sharedBadge}
+                            maxWidth={110}
+                        />
                     )}
 
                     {/* Tags, capped at two on the row. The sidebar is
