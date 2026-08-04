@@ -40,6 +40,7 @@ import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithSt
 import { FileSizeRejectionSnackbar } from "../../../../components/ui/feedback/FileSizeRejectionSnackbar";
 import { useFileSizeGuard } from "../../../../components/ui/feedback/useFileSizeGuard";
 import { MemberRoleControl } from "../../../../components/ui/memberRoles/MemberRoleControl";
+import { ExternalChip } from "../../../../components/ui/misc/ExternalChip";
 import { ModalLeaveConfirm } from "../../../../components/ui/misc/ModalLeaveConfirm";
 import { ModalTransferOwner } from "../../../../components/ui/misc/ModalTransferOwner";
 import {
@@ -381,6 +382,19 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
     useEffect(() => {
         if (!openModalGMProfile) return;
         setMemberSearchQuery("");
+        // Ask for the roster every time this opens, rather than trusting
+        // the cached one. The cache is filled once, on the channel's first
+        // open, and `syncChannel` refuses to refill it while it holds
+        // anything at all — so a member admitted afterwards is invisible
+        // here until the tab reloads. That is the normal case for a chat
+        // shared with another team: the share, and every person it admits,
+        // arrives after the host has already opened the chat, so the host
+        // opened this modal and saw their own team and nobody else.
+        //
+        // Fire-and-forget: the snapshot subscription below re-derives the
+        // list when it lands, and a failed refresh should leave the cached
+        // roster on screen rather than emptying it.
+        void channelService.refreshChannelMembers(gmChat.chatId);
         let lastChannelRef: unknown;
         let lastMembersRef: unknown;
         const apply = () => {
@@ -501,6 +515,24 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                 >
                                     Group Message Profile - {liveChat.chatName}
                                 </Typography>
+                                {/* The member list below mixes two companies'
+                                    people. Say so at the top, next to the
+                                    name, before anyone reads the list and
+                                    assumes one team. */}
+                                {gmProfile?.isExternal === true && (
+                                    <ExternalChip
+                                        hint={
+                                            gmChat.hostTeamName
+                                                ? fmt(t.chat.sidebar.sharedByTeamHint, {
+                                                      team: gmChat.hostTeamName,
+                                                  })
+                                                : t.chat.sidebar.externalBadgeHint
+                                        }
+                                        label={t.chat.modals.gmProfile.externalBadge}
+                                        maxWidth={200}
+                                        size="md"
+                                    />
+                                )}
                                 {/* Close button — without it mobile users
                                     have no way to dismiss the modal,
                                     since it's full-screen on xs and

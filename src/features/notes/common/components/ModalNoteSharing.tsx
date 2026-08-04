@@ -29,6 +29,7 @@ import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { NoteRoleMember } from "../../../../types/notes";
+import { ownTeamOnly } from "../../../../utils/teamRoster";
 import { getMyNoteRoleId, NOTE_ROLE_OWNER } from "../utils/noteRoles";
 
 interface ModalNoteSharingProps {
@@ -98,7 +99,10 @@ export const ModalNoteSharing = ({
 
     const candidates = useMemo(() => {
         const q = search.trim().toLowerCase();
-        return teamMembers.filter((u) => {
+        // `ownTeamOnly`: a note is granted to people in your team. The other
+        // teams' people in the roster are there to be recognized, and this
+        // grant is not a thing the server would accept for them.
+        return ownTeamOnly(teamMembers).filter((u) => {
             if (String(u.userId) === String(myself.userId)) return false;
             if (memberByUserId.has(String(u.userId))) return false;
             if (!q) return true;

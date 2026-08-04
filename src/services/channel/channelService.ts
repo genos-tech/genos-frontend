@@ -956,6 +956,33 @@ export class ChannelService {
         for (const m of next) void this._persistMember(m, channelId);
     }
 
+    /**
+     * Re-read one channel's roster from the server, now.
+     *
+     * `syncChannel` fetches the roster once and then never again while the
+     * cache holds anything, trusting live `channel.member_added` events to
+     * keep it current. Those events only reach people who were already in
+     * the channel when they fired, so anyone admitted through a share made
+     * after this tab loaded is missing here — the owning team would open a
+     * shared chat's profile and see their own side and nobody else.
+     *
+     * For surfaces that display the roster as their subject (a profile
+     * modal), refresh on open instead of trusting the cache. Resolves to
+     * false when the request failed, leaving the cached roster in place: a
+     * stale list beats an empty one.
+     */
+    async refreshChannelMembers(channelId: string): Promise<boolean> {
+        try {
+            this.handleChannelMembersReplaced(
+                channelId,
+                await this.fetchChannelMembers(channelId)
+            );
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
     // ---- Per-channel incremental sync ------------------------------------
     //
     // `syncChannel(channelId)` is the single entry point that callers

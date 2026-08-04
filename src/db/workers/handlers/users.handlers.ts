@@ -27,9 +27,38 @@ const checkIsOnline = (
     return diffInMs >= 0 && diffInMs <= 60 * 1000;
 };
 
+// Which team a stored row belongs to, and what it says about the person's
+// own team, are the roster's answers — never a heartbeat's.
+//
+// A heartbeat carries the SENDER's `myself`, so its `teamId` is whichever
+// team that person is looking at right now. Written straight over the
+// stored row (one row per `userId`, keyed on it, indexed by `teamId`) it
+// moves them off the roster they were read from: `getTeamMembers(myTeam)`
+// stops returning them and every avatar drawn from that roster goes blank
+// until the next full roster load. For someone from another team that is
+// the common case rather than an edge one — their `myself` says their own
+// team, and the row saying so drops them out of mine, along with the
+// `isExternal` / `homeTeam*` fields that told the UI they were a guest at
+// all.
+const withStoredIdentity = async (user: UserProps): Promise<UserProps> => {
+    const stored = await userService.getUser(user.userId);
+    if (!stored) return user;
+    return {
+        ...user,
+        teamId: stored.teamId,
+        teamName: stored.teamName,
+        memberRole: stored.memberRole,
+        isExternal: stored.isExternal,
+        homeTeamId: stored.homeTeamId,
+        homeTeamName: stored.homeTeamName,
+        homeTeamImgPath: stored.homeTeamImgPath,
+    };
+};
+
 export const usersHandlers: HandlerMap<UsersRequests> = {
+    // Presence only (the `userStatus` socket message is the sole caller).
     addUser: async ({ user }) => {
-        await userService.saveUser(user);
+        await userService.saveUser(await withStoredIdentity(user));
     },
 
     loadTeamMembers: async ({ myself, accessToken }) => {

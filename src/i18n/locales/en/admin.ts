@@ -271,6 +271,11 @@ export const admin = {
         dmToUserFallback: "DM to the user",
         sendDm: "Send DM",
         uploadFailed: "Failed to upload user profile image.",
+        // Beside the team name, which for this person is their OWN team —
+        // not yours. Without the badge the row reads as a colleague in a
+        // team you have never heard of.
+        externalBadge: "External",
+        externalHint: "Works at another team. You share an object with them.",
     },
     projectProfile: {
         title: "Project Profile - {projectName}",

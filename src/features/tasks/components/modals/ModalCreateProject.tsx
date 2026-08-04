@@ -25,6 +25,7 @@ import { ProjectManagementState } from "../../../../hooks/common/useProjectManag
 import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { replaceSpacesWithUnderscore } from "../../../../utils/stringHelper";
+import { ownTeamOnly } from "../../../../utils/teamRoster";
 import { joinTeam } from "../../../admin/services/joinTeam";
 import { popTeamMembers } from "../../../admin/services/popTeamMembers";
 import { signUp } from "../../../admin/services/signup";
@@ -73,7 +74,11 @@ export const ModalCreateProject: React.FC<Props> = ({
         if (!usePM.openCreateProject || !myself.userId) return;
         let cancelled = false;
         popTeamMembers(myself).then((members) => {
-            if (!cancelled) setTeamMembers(members.filter((m) => m.userId !== myself.userId));
+            // `ownTeamOnly`: the roster includes the other teams' people you
+            // already work with; a new project reaches them by being shared,
+            // not by adding them as members.
+            if (!cancelled)
+                setTeamMembers(ownTeamOnly(members).filter((m) => m.userId !== myself.userId));
         });
         return () => {
             cancelled = true;

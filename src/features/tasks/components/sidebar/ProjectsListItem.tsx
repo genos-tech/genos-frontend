@@ -455,11 +455,22 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                                                         ) {
                                                             return;
                                                         }
-                                                        const safeCached = cached.filter(
-                                                            (t) =>
-                                                                String(t.teamId) ===
-                                                                String(myself.teamId)
-                                                        );
+                                                        // In a project another team shared
+                                                        // with us every row is filed under
+                                                        // THEIR team by design, so the
+                                                        // team-scope guard below would
+                                                        // discard the whole cache and paint
+                                                        // an empty table. Project ids are
+                                                        // global, and this read is keyed by
+                                                        // one, so the guard is not what
+                                                        // keeps these rows straight.
+                                                        const safeCached = isExternal
+                                                            ? cached
+                                                            : cached.filter(
+                                                                  (t) =>
+                                                                      String(t.teamId) ===
+                                                                      String(myself.teamId)
+                                                              );
                                                         if (safeCached.length === 0) return;
                                                         // Functional update so we never overwrite
                                                         // a fresh network result that landed
