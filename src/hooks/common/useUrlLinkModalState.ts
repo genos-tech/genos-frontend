@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { NavigateFunction } from "react-router-dom";
 
 import { ModalTarget, parseInternalUrl } from "../../utils/parseInternalUrl";
@@ -21,6 +21,14 @@ const SUPPORTED_KINDS: ReadonlySet<ModalTarget["kind"]> = new Set([
 ]);
 
 export type OpenModalByHrefOptions = {
+    // "Leave the preview, open the real page" action for this target.
+    // When supplied, UrlLinkModal shows a Move-to-page button beside its
+    // ✕. It's per-open rather than derived here because only the OPENER
+    // knows how to land correctly: `ModalTarget` keeps the parsed ids but
+    // drops the href, and several kinds need more than a bare navigate
+    // (a chat the user hasn't opened this session needs
+    // `moveToSpecificChat`, or the chat surface renders blank).
+    onOpenFullPage?: () => void;
     // Override the modal's stacking context. Default (omitted) uses
     // UrlLinkModal's own default (10020), correct for the chat-message
     // link case. Callers that open the preview from a higher surface
@@ -31,6 +39,10 @@ export type OpenModalByHrefOptions = {
 export type UrlLinkModalState = {
     target: ModalTarget | null;
     zIndex: number | undefined;
+    /** Present only while the open preview was given an
+     *  `onOpenFullPage`. Closes the modal before running it — the
+     *  navigation would otherwise happen BEHIND the still-open dialog. */
+    openFullPage: (() => void) | null;
     openModalByHref: (
         href: string,
         opts?: OpenModalByHrefOptions
@@ -47,10 +59,14 @@ export const useUrlLinkModalState = ({
 }: UseUrlLinkModalStateProps): UrlLinkModalState => {
     const [target, setTarget] = useState<ModalTarget | null>(null);
     const [zIndex, setZIndex] = useState<number | undefined>(undefined);
+    // Wrapped in an object because `useState` treats a bare function
+    // argument as an updater.
+    const [fullPage, setFullPage] = useState<{ run: () => void } | null>(null);
 
     const closeModal = useCallback(() => {
         setTarget(null);
         setZIndex(undefined);
+        setFullPage(null);
     }, []);
 
     const openModalByHref = useCallback(
@@ -81,6 +97,12 @@ export const useUrlLinkModalState = ({
                 // drop back to the 10020 default mid-flow and vanish
                 // behind its opener.
                 setZIndex(opts?.zIndex ?? (target !== null ? zIndex : undefined));
+                // NOT preserved across a re-target, unlike the stacking
+                // above: a link followed from inside the modal puts a
+                // different entity on screen, and the previous action
+                // would send the user to the one they navigated away
+                // from. No action ⇒ no button, which is right.
+                setFullPage(opts?.onOpenFullPage ? { run: opts.onOpenFullPage } : null);
                 setTarget(classified);
                 return "opened";
             }
@@ -95,5 +117,16 @@ export const useUrlLinkModalState = ({
         [navigate, closeModal, target, zIndex]
     );
 
-    return { closeModal, openModalByHref, target, zIndex };
+    const openFullPage = useMemo(
+        () =>
+            fullPage === null
+                ? null
+                : () => {
+                      closeModal();
+                      fullPage.run();
+                  },
+        [fullPage, closeModal]
+    );
+
+    return { closeModal, openFullPage, openModalByHref, target, zIndex };
 };

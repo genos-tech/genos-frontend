@@ -236,6 +236,17 @@ export const GenosHome = ({
                         // conversation, SpotlightContent's agent-mode
                         // `order` flip pins the input to the bottom and
                         // the panel fills the column.
+                        //
+                        // The input has exactly TWO search-mode positions:
+                        // centered while the box is empty, and lifted to a
+                        // fixed offset the moment anything is typed. The
+                        // flip is NOT driven from here — SpotlightContent
+                        // overrides this centering with a spacer + an auto
+                        // margin on the results card. That keeps it keyed
+                        // to the *input's own* text rather than to the
+                        // debounced `query` or the result count, so the
+                        // box can't drift as results land and re-narrow
+                        // while the user types.
                         justifyContent: conversationActive ? "flex-start" : "center",
                     }}
                 >

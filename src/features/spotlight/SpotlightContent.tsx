@@ -11,11 +11,18 @@
 //     ChatGPT-style surface that renders this inside its own layout.
 //
 // The host owns visibility: this component is only mounted while its
-// surface is showing, so the input autofocuses on mount and all state
-// (draft input, result highlight, mention picker) resets naturally
-// when the host unmounts it. Conversation state does NOT live here —
-// it belongs to `useSpotlight` at the App root, which is what lets a
-// close/reopen (or an overlay→page switch) keep the conversation.
+// surface is showing, so the input autofocuses on mount and view-local
+// state (result highlight, mention picker) resets naturally when the
+// host unmounts it. Conversation state does NOT live here — it belongs
+// to `useSpotlight` at the App root, which is what lets a close/reopen
+// (or an overlay→page switch) keep the conversation.
+//
+// The draft text is App-root state for the same reason: `localInput` is
+// only a debounce buffer in front of the hook's `query`, seeded back
+// from it on mount, so an unsent question survives a close. Picked
+// mention refs don't survive, but they don't need to — the inserted
+// `@Label` / `#Label` tokens re-resolve against the candidate pool
+// (see `useAgentMentionDraft`), so a restored draft asks identically.
 //
 // Behavioral notes carried over from the overlay:
 //   - Typing fires debounced search-only calls; results update live.
@@ -127,12 +134,18 @@ export interface SpotlightContentProps {
     projects?: ProjectProps[];
     filterProjectIds?: number[];
     onChangeFilterProjects?: (projectIds: number[]) => void;
+    // Navigate to the entity's own page, closing Spotlight. Now the
+    // ESCAPE HATCH rather than the default: reached by Cmd/Ctrl-clicking
+    // a result row (see `handleRowSelect`), and still the fallback
+    // `onPreview` uses for kinds with no modal view.
     onSelect: (r: SpotlightResult) => void;
-    // Inline citations AND source chips in the agent answer open a
-    // quick-look preview (existing UrlLinkModal) on top of Spotlight
-    // rather than navigating away — the user keeps their conversation.
+    // Quick-look preview (the existing UrlLinkModal) layered on top of
+    // Spotlight rather than navigating away, so the user keeps their
+    // place and their conversation. The DEFAULT activation for result
+    // rows, inline citations, and answer source chips alike.
     // (`handleSpotlightPreview` falls back to `onSelect` navigation for
-    // kinds with no preview modal.) Search result rows keep `onSelect`.
+    // kinds with no preview modal — project rows, and stored answers,
+    // which render inline instead.)
     onPreview: (r: SpotlightResult) => void;
     // `mentions` carries the structured @/# refs the input's picker
     // collected for the live query (absent on retry — see useSpotlight).
@@ -394,10 +407,25 @@ export const SpotlightContent = ({
         pendingQueryRef.current = null;
     }, [query]);
 
+    // Unmount = the surface was dismissed (overlay closed / navigated off
+    // the Genos page). FLUSH the pending write instead of dropping it: the
+    // hook `query` is where the draft survives an unmount, so a user who
+    // types and hits Escape inside the debounce window would otherwise
+    // lose those last keystrokes. Safe to setState from here — the hook
+    // lives at the App root and outlives this component. `submitAsk`
+    // nulls the timer, so an ask can't be resurrected as a draft.
+    const onQueryChangeRef = useRef(onQueryChange);
+    useEffect(() => {
+        onQueryChangeRef.current = onQueryChange;
+    }, [onQueryChange]);
     useEffect(
         () => () => {
-            if (queryWriteTimerRef.current !== null) {
-                window.clearTimeout(queryWriteTimerRef.current);
+            if (queryWriteTimerRef.current === null) return;
+            window.clearTimeout(queryWriteTimerRef.current);
+            queryWriteTimerRef.current = null;
+            if (pendingQueryRef.current !== null) {
+                onQueryChangeRef.current(pendingQueryRef.current);
+                pendingQueryRef.current = null;
             }
         },
         []
@@ -461,15 +489,27 @@ export const SpotlightContent = ({
         setSelectedIndex(-1);
     }, [localInput]);
 
-    // Stable click handler shared by every result row. Without this each
-    // row would receive a fresh inline arrow on every keystroke and
+    // Stable activation handler shared by every result row. Without this
+    // each row would receive a fresh inline arrow on every keystroke and
     // memoised `SpotlightResultItem` would re-render anyway.
+    //
+    // A plain click quick-looks the hit in the preview modal, keeping
+    // Spotlight (and the conversation behind it) intact — browsing several
+    // hits in a row is the common case, and navigating away on the first
+    // one threw the search away. Cmd/Ctrl-click is the "actually take me
+    // there" escape hatch. Ctrl counts too so the habit transfers off
+    // macOS; the rows are <button>s, not links, so neither chord collides
+    // with a browser open-in-new-tab.
     const handleRowSelect = useCallback(
-        (selected: SpotlightResult) => {
+        (selected: SpotlightResult, opts?: { viaModifier?: boolean }) => {
             setSelectedIndex(-1);
-            onSelect(selected);
+            if (opts?.viaModifier) {
+                onSelect(selected);
+                return;
+            }
+            onPreview(selected);
         },
-        [onSelect]
+        [onSelect, onPreview]
     );
 
     // React schedules updates that depend on `deferredQuery` at low
@@ -514,6 +554,19 @@ export const SpotlightContent = ({
     // as direct flex items of the host container.
     return (
         <>
+            {/* Search-mode resting offset — page only.
+                    Sets how far down the input block sits once the user
+                    starts typing. `order: -1` puts this above the host's
+                    hero greeting (default order 0), and the fixed height
+                    means the offset can't vary with the results card's
+                    height — the point of the whole arrangement. Roughly
+                    half the empty-state centered offset on both phone and
+                    desktop columns, so typing lifts the box noticeably
+                    without slamming it against the top of the page. */}
+            {variant === "page" && !inAgentMode && hasQuery && (
+                <Box aria-hidden sx={{ order: -1, flexShrink: 0, height: "18dvh" }} />
+            )}
+
             {/* Input row + Ask button.
                     In agent mode the input moves to the bottom of the
                     sheet (chat-style) via `order: 2`; the border flips
@@ -752,11 +805,15 @@ export const SpotlightContent = ({
                                     return;
                                 }
                                 e.preventDefault();
-                                // If a result row is highlighted, navigate to
-                                // it rather than firing the AI ask.
+                                // If a result row is highlighted, open it
+                                // rather than firing the AI ask. Routed
+                                // through `handleRowSelect` so the keyboard
+                                // lands on the same preview modal a click
+                                // does. (No Cmd-Enter navigate variant: the
+                                // modifier guard above deliberately makes
+                                // any modified Enter a no-op.)
                                 if (selectedIndex >= 0 && results[selectedIndex]) {
-                                    onSelect(results[selectedIndex]);
-                                    setSelectedIndex(-1);
+                                    handleRowSelect(results[selectedIndex]);
                                     return;
                                 }
                                 // Block Enter from firing a new ask while the
@@ -1040,18 +1097,37 @@ export const SpotlightContent = ({
                 className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                 sx={{
                     // Overlay: the results region greedily fills the
-                    // sheet. Page: it must size to content (bounded) so
-                    // the host's hero layout can vertically center the
-                    // input block — a flex:1 region would absorb all the
-                    // free space and pin the input to the top. On the
-                    // page it's also its own bordered card: free-floating
-                    // rows with no container read as unfinished there
-                    // (the overlay's sheet chrome provides the frame).
+                    // sheet. Page: it sizes to content (bounded) — a
+                    // flex:1 card would stretch to the viewport bottom
+                    // and read as a mostly-empty box behind two rows.
+                    // On the page it's also its own bordered card:
+                    // free-floating rows with no container read as
+                    // unfinished there (the overlay's sheet chrome
+                    // provides the frame).
                     flex: variant === "page" ? "0 1 auto" : 1,
                     ...(variant === "page"
                         ? {
                               maxHeight: "48vh",
                               mt: 0.5,
+                              // Soak up the column's leftover height
+                              // BELOW the card. An auto margin consumes
+                              // free space before `justify-content` gets
+                              // any, so the host's hero centering is
+                              // bypassed while this card is in the flex
+                              // flow: what's above the input is then only
+                              // the fixed spacer at the top of this
+                              // fragment, so the input holds still no
+                              // matter how the card's own height changes.
+                              // That's what stops it drifting up and down
+                              // as the result count shifts mid-typing.
+                              // With an empty query the card is
+                              // `display: none` (below) and leaves the
+                              // flex flow, so the host re-centers the
+                              // hero. Net effect: the input has exactly
+                              // TWO positions — centered when empty, and
+                              // the spacer's offset once anything is typed
+                              // (including a query that finds nothing).
+                              mb: "auto",
                               border: "1px solid",
                               borderColor: palette.divider,
                               borderRadius: "16px",

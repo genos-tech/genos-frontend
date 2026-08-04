@@ -1,5 +1,6 @@
 import { lazy, Suspense } from "react";
-import { CircularProgress, Modal, ModalClose, ModalDialog, Stack } from "@mui/joy";
+import LaunchRoundedIcon from "@mui/icons-material/LaunchRounded";
+import { CircularProgress, IconButton, Modal, ModalClose, ModalDialog, Stack } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
@@ -11,8 +12,10 @@ import { NoteManagementState } from "../../hooks/notes/useNoteManagement";
 import { SprintMilestoneManagementState } from "../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
 import { UseTodoGroupsState } from "../../hooks/useTodoGroups";
+import { useTranslation } from "../../i18n";
 import { UserProps } from "../../types/admin";
 import { ModalTarget } from "../../utils/parseInternalUrl";
+import { AppTooltip } from "../ui/AppTooltip";
 
 // Lazy on purpose: these views transitively import the chat panes,
 // task preview and note editor — the whole BlockNote stack (~900 kB
@@ -42,9 +45,32 @@ const ViewLoadingFallback = () => (
     </Stack>
 );
 
+// Shared look for chrome that floats over whichever view is mounted:
+// translucent + blurred so it stays legible against the header (or the
+// content) scrolling underneath it. Both background and colour are
+// per-mode — a hardcoded white-on-white made the ✕ vanish in dark mode,
+// where Joy's default icon colour is already light.
+const floatingChromeSx = (isDark: boolean) => ({
+    zIndex: 2,
+    backdropFilter: "blur(6px)",
+    backgroundColor: isDark ? "rgba(15, 15, 22, 0.6)" : "rgba(255, 255, 255, 0.6)",
+    color: isDark ? "rgba(255, 255, 255, 0.92)" : "rgba(15, 23, 42, 0.78)",
+    "&:hover": {
+        backgroundColor: isDark ? "rgba(15, 15, 22, 0.85)" : "rgba(255, 255, 255, 0.85)",
+        color: isDark ? "rgba(255, 255, 255, 1)" : "rgba(15, 23, 42, 1)",
+    },
+});
+
 type UrlLinkModalProps = {
     target: ModalTarget | null;
     onClose: () => void;
+    // Swap this preview for the target's own page. Rendered as a button
+    // beside the ✕ when present, and absent for previews whose opener
+    // didn't supply one (a link clicked in a chat message: the user is
+    // reading that chat and the link itself is the way to the page).
+    // It's the discoverable twin of ⌘/Ctrl-clicking a Spotlight result,
+    // which skips the preview and navigates outright.
+    onOpenFullPage?: () => void;
     accessToken: string | null;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
@@ -71,7 +97,8 @@ type UrlLinkModalProps = {
 export const UrlLinkModal = (props: UrlLinkModalProps) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
-    const { target, onClose, zIndex, useTG, ...rest } = props;
+    const { t } = useTranslation();
+    const { target, onClose, onOpenFullPage, zIndex, useTG, ...rest } = props;
     const effectiveZIndex = zIndex ?? 10020;
 
     const renderBody = () => {
@@ -197,31 +224,46 @@ export const UrlLinkModal = (props: UrlLinkModalProps) => {
                     width: "min(1200px, 92vw)",
                 })}
             >
-                <ModalClose
-                    sx={(theme) => {
-                        const isDark = theme.palette.mode === "dark";
-                        // Hardcoded white-on-white made the ✕ icon disappear
-                        // in dark mode (Joy's default icon colour is light
-                        // there). Pick a translucent background that
-                        // contrasts with the icon for each mode.
-                        return {
+                {/* Both labels open BELOW their button: this chrome is
+                    flush against the dialog's top edge, so the default
+                    `top` placement would float the label off the dialog
+                    and over the backdrop. Portaled at the theme's 13300
+                    tooltip token, which clears every dialog level this
+                    modal is opened at (10020 … 13200). */}
+                {onOpenFullPage && (
+                    <AppTooltip placement="bottom" title={t.common.modalView.openFullPage}>
+                        <IconButton
+                            aria-label={t.common.modalView.openFullPage}
+                            size="md"
+                            variant="plain"
+                            sx={(theme) => ({
+                                ...floatingChromeSx(theme.palette.mode === "dark"),
+                                // Immediately left of the ✕ (12 + its 36px
+                                // width + an 8px gap). Both sit in the same
+                                // corner the views keep clear for chrome.
+                                position: "absolute",
+                                right: 56,
+                                top: 12,
+                            })}
+                            onClick={onOpenFullPage}
+                        >
+                            <LaunchRoundedIcon sx={{ fontSize: 18 }} />
+                        </IconButton>
+                    </AppTooltip>
+                )}
+                <AppTooltip placement="bottom" title={t.common.actions.close}>
+                    <ModalClose
+                        // Joy ships the ✕ with no accessible name, and a
+                        // tooltip is only a description — so name it here
+                        // too, matching the label the tooltip shows.
+                        aria-label={t.common.actions.close}
+                        sx={(theme) => ({
+                            ...floatingChromeSx(theme.palette.mode === "dark"),
                             right: 12,
                             top: 12,
-                            zIndex: 2,
-                            backdropFilter: "blur(6px)",
-                            backgroundColor: isDark
-                                ? "rgba(15, 15, 22, 0.6)"
-                                : "rgba(255, 255, 255, 0.6)",
-                            color: isDark ? "rgba(255, 255, 255, 0.92)" : "rgba(15, 23, 42, 0.78)",
-                            "&:hover": {
-                                backgroundColor: isDark
-                                    ? "rgba(15, 15, 22, 0.85)"
-                                    : "rgba(255, 255, 255, 0.85)",
-                                color: isDark ? "rgba(255, 255, 255, 1)" : "rgba(15, 23, 42, 1)",
-                            },
-                        };
-                    }}
-                />
+                        })}
+                    />
+                </AppTooltip>
                 <Suspense fallback={<ViewLoadingFallback />}>{renderBody()}</Suspense>
             </ModalDialog>
         </Modal>

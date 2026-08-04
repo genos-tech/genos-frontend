@@ -26,7 +26,8 @@
 //     continuation of the same turn, completed by the resumed stream.
 //   - Closing the overlay preserves `{ sessionId, turns }` so an
 //     accidental Escape doesn't lose the conversation. Only the
-//     explicit "New conversation" button clears them.
+//     explicit "New conversation" button clears them. The unsent draft
+//     `query` survives a close too — see the close effect.
 //
 // Page mode (Genos main page): the same hook instance also drives the
 // full-page surface at /workspace/genos. `isPageActive` marks that the
@@ -391,8 +392,8 @@ export const useSpotlight = ({
         }
     }, [teamId]);
 
-    // ---- Overlay close: clear transient query / results, preserve
-    // conversation AND any in-flight answer. ----
+    // ---- Overlay close: clear transient results, preserve the draft
+    // query, the conversation, AND any in-flight answer. ----
     //
     // Phase 12 behavior change: a close (Escape, click-outside, Cmd-K
     // toggle) preserves `sessionId` and `turns` so the conversation
@@ -419,7 +420,14 @@ export const useSpotlight = ({
         if (isOpen || isPageActive) return;
         abortRef.current?.abort();
         abortRef.current = null;
-        setQuery("");
+        // `query` is deliberately NOT cleared. A half-composed question
+        // is user-authored content, so a stray Escape (or a quick detour
+        // to another route) must not discard it — both surfaces seed
+        // their input from `query`, so the draft reappears wherever the
+        // user comes back. Results / filters / errors ARE dropped:
+        // they're derived, and stale rows under a restored draft would
+        // misrepresent the index. The next open re-runs the search from
+        // the surviving query.
         setResults([]);
         setIsLoading(false);
         setError(null);

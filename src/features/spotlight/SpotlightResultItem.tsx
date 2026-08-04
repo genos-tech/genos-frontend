@@ -1,7 +1,7 @@
 // Single row in the Spotlight results list. Renders an entity icon,
 // title, snippet, and a small chunk-type chip. The whole row is a
-// button — clicking calls `onSelect(result)` which the parent uses to
-// navigate.
+// button — clicking calls `onSelect(result, …)`, which the parent maps to
+// a preview modal or to navigation depending on the held modifier.
 
 import { memo } from "react";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
@@ -34,7 +34,10 @@ interface Props {
      *  project (DMs, personal notes, todos) and for a project the
      *  viewer's `teamProjects` hasn't loaded. */
     project?: ProjectProps;
-    onSelect: (r: SpotlightResult) => void;
+    /** Row activation. `viaModifier` reports whether Cmd/Ctrl was held,
+     *  which the parent reads as "navigate to the page instead of opening
+     *  the preview modal" — the row itself stays unaware of that rule. */
+    onSelect: (r: SpotlightResult, opts: { viaModifier: boolean }) => void;
 }
 
 // Which rows are "task-related" enough to carry the metadata chips.
@@ -319,7 +322,9 @@ const SpotlightResultItemInner = ({ result, query, isHighlighted, project, onSel
                     background: palette.hoverBg,
                 },
             }}
-            onClick={() => onSelect(result)}
+            onClick={(e: React.MouseEvent) =>
+                onSelect(result, { viaModifier: e.metaKey || e.ctrlKey })
+            }
         >
             <Box
                 sx={{
