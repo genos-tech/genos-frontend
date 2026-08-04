@@ -41,6 +41,7 @@ import type {
     ChannelKind,
     ChannelMember,
     ChannelRetention,
+    ChannelShare,
     DeltaEnvelope,
     Flag,
     Message,
@@ -874,6 +875,25 @@ export class ChannelService {
                 `/api/v3/channels/${channelId}/members/`
             );
             return res.data.members ?? [];
+        } catch (e) {
+            throw unwrapAxiosError(e);
+        }
+    }
+
+    /**
+     * The guest teams in an external chat, with each team's participants.
+     *
+     * Channel-scoped rather than team-scoped because a guest reads the
+     * chat from the HOST team's shell while belonging to neither — see
+     * `ChannelSharesView`. Empty for every internal channel, so callers
+     * can ask unconditionally.
+     */
+    async fetchChannelShares(channelId: string): Promise<ChannelShare[]> {
+        try {
+            const res = await this.api().get<{ shares: ChannelShare[] }>(
+                `/api/v3/channels/${channelId}/shares/`
+            );
+            return res.data.shares ?? [];
         } catch (e) {
             throw unwrapAxiosError(e);
         }
@@ -1811,6 +1831,12 @@ export class ChannelService {
         isPrivate?: boolean;
         memberUserIds?: string[];
         otherUserId?: string; // DM only
+        /** GM only — make this a cross-team chat. Forces privacy on. */
+        isExternal?: boolean;
+        /** Connected teams to offer the new chat to. Each is offered a
+         *  grant they accept once; after that their own owner/editors
+         *  admit their people. `memberUserIds` stays host-side only. */
+        guestTeamIds?: string[];
     }): Promise<Channel | undefined> {
         return this.socketEmitOrThrow<Channel>("channel.create", {
             kind: payload.kind,
@@ -1819,6 +1845,8 @@ export class ChannelService {
             is_private: payload.isPrivate,
             member_user_ids: payload.memberUserIds,
             other_user_id: payload.otherUserId,
+            is_external: payload.isExternal,
+            guest_team_ids: payload.guestTeamIds,
         });
     }
 

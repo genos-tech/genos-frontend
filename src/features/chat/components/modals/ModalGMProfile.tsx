@@ -64,6 +64,7 @@ import {
 import { canManageMembers, MemberRole, resolveMyRole } from "../../../../utils/memberRoles";
 import { setGMMemberRole } from "../../services/setGMMemberRole";
 import { resolveLegacyChatId } from "../../utils/channelIdResolvers";
+import { ExternalSharesPanel } from "./ExternalSharesPanel";
 import { ModalAddMembers } from "./ModalAddMembers";
 
 // GM profile-image upload uses the v3 host root (v3ApiBaseURL); the
@@ -407,6 +408,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                 profileImagePath: channel.profileImageUrl || "",
                 gmMembers,
                 isPrivate: channel.isPrivate,
+                isExternal: channel.isExternal,
                 tsCreatedAt: channel.tsCreated || "",
             });
         };
@@ -1180,6 +1182,16 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                     </Box>
                                                 </FormControl>
                                             </Stack>
+
+                                            {gmProfile?.isExternal && (
+                                                <ExternalSharesPanel
+                                                    borderColor={styles.border}
+                                                    channelId={gmChat.chatId}
+                                                    labelColor={styles.labelColor}
+                                                    myUserId={myself.userId}
+                                                    valueColor={styles.valueColor}
+                                                />
+                                            )}
 
                                             {canShowLeave && (
                                                 <Box

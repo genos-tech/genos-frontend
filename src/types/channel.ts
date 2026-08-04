@@ -123,6 +123,12 @@ export interface Channel {
     projectId: number | null;
     ownerId: string | null;
     isPrivate: boolean;
+    /** A cross-team chat: one host team owns it, and one or more guest
+     *  teams hold a grant on it. Always private. Server-decided at
+     *  creation and never editable, so treat it as a label, not a
+     *  setting — member management differs (each team admits its own
+     *  people) and the sidebar badges it. */
+    isExternal?: boolean;
     /** The legacy per-kind integer chat id this channel was backfilled
      *  from. Null for v3-native channels. Surfaced so FE entry points
      *  that still carry legacy ids (Spotlight, ChatSearch, activity /
@@ -133,6 +139,32 @@ export interface Channel {
     unreadCount: number;
     tsCreated: string;
     tsUpdated: string;
+}
+
+/**
+ * One guest team's share of an external chat.
+ *
+ * `side` and `canAdmit` encode the asymmetry that makes cross-team sharing
+ * work, and both come from the server rather than being derived here:
+ * the host sees every team and may eject a person, the guest team's own
+ * managers add and remove their own people. A client that lets the host
+ * add the guest's people has misread the feature; `canAdmit` is never true
+ * for the host.
+ */
+export interface ChannelShare {
+    grantId: string;
+    teamId: string;
+    teamName: string;
+    roleCeiling: "viewer" | "editor";
+    status: "pending" | "active" | "declined" | "revoked";
+    side: "given" | "received";
+    canAdmit: boolean;
+    participants: {
+        userId: string;
+        userName: string;
+        email: string;
+        avatarUrl: string | null;
+    }[];
 }
 
 export interface ReadCursor {

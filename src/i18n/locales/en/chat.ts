@@ -81,6 +81,10 @@ export const chat = {
         previewTable: "Table",
         unreadCount: "{count, plural, one {# unread message} other {# unread messages}}",
         allCaughtUp: "All caught up",
+        // Short on purpose — it sits inline next to the chat name, and
+        // "people from another organization are in here" has to be legible
+        // before the row is clicked, not after.
+        externalBadge: "External",
         newGroupMessageMenu: "New Group Message",
         newDmWithFriendsMenu: "New DM with friends",
         markFilteredActivitiesReadMenu: "Mark filtered as read",
@@ -276,6 +280,25 @@ export const chat = {
                 "{count} {count, plural, one {member} other {members}} selected (optional)",
             cancel: "Cancel",
             createGroup: "Create Group",
+            externalChat: "Include another organization",
+            // Says who chooses whom, because that is the part people get
+            // wrong: you invite the TEAM, they pick their own people.
+            externalChatExplainer:
+                "Pick connected teams to invite. Each team approves once, then their owner or editor chooses which of their members join. External chats are always private.",
+        },
+        externalShares: {
+            title: "Teams in this chat",
+            explainer:
+                "Each team manages its own participants. You can remove someone from another team, but only their owner or editor can add them.",
+            participantCount: "{count, plural, one {# participant} other {# participants}}",
+            awaitingTheirApproval: "Waiting for this team to accept",
+            ceilingViewer: "Up to viewer",
+            ceilingEditor: "Up to editor",
+            addFromYourTeam: "Add someone from your team",
+            removeParticipant: "Remove {name} from this chat",
+            everyoneAlreadyIn: "Everyone on your team is already in this chat.",
+            endShare: "Stop sharing with this team",
+            actionFailed: "That didn't work. Please try again.",
         },
         createMDM: {
             title: "New Multi-user DM",

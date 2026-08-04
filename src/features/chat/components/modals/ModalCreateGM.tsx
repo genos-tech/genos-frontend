@@ -27,6 +27,7 @@ import { TeamManagementState } from "../../../../hooks/common/useTeamManagement"
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
+import { useTeamConnections } from "../../../admin/components/team/useTeamConnections";
 import { popTeamMembers } from "../../../admin/services/popTeamMembers";
 import { createChatGroup } from "../../services/createChatGroup";
 
@@ -85,6 +86,13 @@ export const ModalCreateGM: React.FC<Props> = ({
     const [selectedMembers, setSelectedMembers] = useState<UserProps[]>([]);
     const [teamMembers, setTeamMembers] = useState<UserProps[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+    // Cross-team options. The whole block is hidden unless this team is
+    // actually connected to someone: an "invite another organization"
+    // control that can only ever be empty is worse than absent, and the
+    // connection is set up in team settings, not here.
+    const [isExternal, setIsExternal] = useState(false);
+    const [guestTeamIds, setGuestTeamIds] = useState<string[]>([]);
+    const { active: connectedTeams } = useTeamConnections(myself.teamId);
 
     // Load team members when the modal opens. Mirrors ModalCreateMDM: use
     // the live `useTEM.teamMembers` when it's populated, otherwise fall
@@ -109,6 +117,8 @@ export const ModalCreateGM: React.FC<Props> = ({
             setSearchQuery("");
             setSelectedMembers([]);
             setCreateCGErrorMessage(null);
+            setIsExternal(false);
+            setGuestTeamIds([]);
         }
     }, [open]);
 
@@ -133,6 +143,12 @@ export const ModalCreateGM: React.FC<Props> = ({
         setSelectedMembers((prev) => prev.filter((m) => m.userId !== memberId));
     };
 
+    const handleToggleGuestTeam = (teamId: string) => {
+        setGuestTeamIds((prev) =>
+            prev.includes(teamId) ? prev.filter((id) => id !== teamId) : [...prev, teamId]
+        );
+    };
+
     const handleCreateGroup = async () => {
         if (!chatName.trim() || isLoading) return;
         setIsLoading(true);
@@ -146,8 +162,11 @@ export const ModalCreateGM: React.FC<Props> = ({
                 setCreateCGErrorMessage,
                 setOpen,
                 setGroupName,
-                isPrivate,
-                memberIds
+                // An external chat is always private. Sending the toggle's
+                // value would let the UI imply a choice the server refuses.
+                isExternal ? true : isPrivate,
+                memberIds,
+                isExternal ? { guestTeamIds } : undefined
             );
         } finally {
             setIsLoading(false);
@@ -243,7 +262,9 @@ export const ModalCreateGM: React.FC<Props> = ({
                     }}
                 />
 
-                {/* Private/Public Toggle */}
+                {/* Private/Public Toggle. Locked on for an external chat:
+                    a public one would be self-joinable by the whole host
+                    team, which no guest team agreed to. */}
                 <Box
                     sx={{
                         display: "flex",
@@ -252,23 +273,28 @@ export const ModalCreateGM: React.FC<Props> = ({
                         p: 1.5,
                         mb: 2,
                         borderRadius: "10px",
-                        backgroundColor: isPrivate
-                            ? "rgba(var(--gp-brand-500-rgb), 0.1)"
-                            : "rgba(34, 197, 94, 0.1)",
-                        border: `1px solid ${isPrivate ? "rgba(var(--gp-brand-500-rgb), 0.2)" : "rgba(34, 197, 94, 0.2)"}`,
-                        cursor: "pointer",
+                        backgroundColor:
+                            isPrivate || isExternal
+                                ? "rgba(var(--gp-brand-500-rgb), 0.1)"
+                                : "rgba(34, 197, 94, 0.1)",
+                        border: `1px solid ${isPrivate || isExternal ? "rgba(var(--gp-brand-500-rgb), 0.2)" : "rgba(34, 197, 94, 0.2)"}`,
+                        cursor: isExternal ? "not-allowed" : "pointer",
+                        opacity: isExternal ? 0.75 : 1,
                         transition: "all 0.2s ease",
                     }}
-                    onClick={() => setIsPrivate(!isPrivate)}
+                    onClick={() => {
+                        if (!isExternal) setIsPrivate(!isPrivate);
+                    }}
                 >
                     <Checkbox
-                        checked={isPrivate}
+                        checked={isPrivate || isExternal}
                         color="neutral"
+                        disabled={isExternal}
                         sx={{ pointerEvents: "none" }}
                         variant="soft"
                         onChange={(e) => setIsPrivate(e.target.checked)}
                     />
-                    {isPrivate ? (
+                    {isPrivate || isExternal ? (
                         <LockOutlinedIcon
                             sx={{ color: "rgba(var(--gp-brand-500-rgb), 0.8)", fontSize: 18 }}
                         />
@@ -278,16 +304,89 @@ export const ModalCreateGM: React.FC<Props> = ({
                     <Typography
                         level="body-sm"
                         sx={{
-                            color: isPrivate
-                                ? "rgba(var(--gp-brand-500-rgb), 0.9)"
-                                : "rgba(34, 197, 94, 0.9)",
+                            color:
+                                isPrivate || isExternal
+                                    ? "rgba(var(--gp-brand-500-rgb), 0.9)"
+                                    : "rgba(34, 197, 94, 0.9)",
                         }}
                     >
-                        {isPrivate
+                        {isPrivate || isExternal
                             ? t.chat.modals.createGM.privateGroup
                             : t.chat.modals.createGM.publicGroup}
                     </Typography>
                 </Box>
+
+                {connectedTeams.length > 0 && (
+                    <Box
+                        sx={{
+                            mb: 2,
+                            p: 1.5,
+                            borderRadius: "10px",
+                            backgroundColor: isExternal
+                                ? "rgba(var(--gp-brand-700-rgb), 0.12)"
+                                : "rgba(255, 255, 255, 0.03)",
+                            border: `1px solid ${
+                                isExternal
+                                    ? "rgba(var(--gp-brand-700-rgb), 0.25)"
+                                    : "rgba(255, 255, 255, 0.08)"
+                            }`,
+                            transition: "all 0.2s ease",
+                        }}
+                    >
+                        <Box
+                            sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 1.5,
+                                cursor: "pointer",
+                            }}
+                            onClick={() => setIsExternal(!isExternal)}
+                        >
+                            <Checkbox
+                                checked={isExternal}
+                                color="primary"
+                                sx={{ pointerEvents: "none" }}
+                                variant="soft"
+                            />
+                            <PublicIcon
+                                sx={{ color: "rgba(var(--gp-brand-700-rgb), 0.9)", fontSize: 18 }}
+                            />
+                            <Typography
+                                level="body-sm"
+                                sx={{ color: "rgba(255, 255, 255, 0.9)", fontWeight: 500 }}
+                            >
+                                {t.chat.modals.createGM.externalChat}
+                            </Typography>
+                        </Box>
+                        <Typography
+                            level="body-xs"
+                            sx={{ mt: 0.75, ml: 0.5, color: "rgba(255, 255, 255, 0.5)" }}
+                        >
+                            {t.chat.modals.createGM.externalChatExplainer}
+                        </Typography>
+
+                        {isExternal && (
+                            <Box sx={{ mt: 1.5, display: "flex", flexWrap: "wrap", gap: 0.75 }}>
+                                {connectedTeams.map((connection) => {
+                                    const selected = guestTeamIds.includes(connection.teamId);
+                                    return (
+                                        <Chip
+                                            key={connection.teamId}
+                                            color={selected ? "primary" : "neutral"}
+                                            size="sm"
+                                            variant={selected ? "solid" : "outlined"}
+                                            onClick={() =>
+                                                handleToggleGuestTeam(connection.teamId)
+                                            }
+                                        >
+                                            {connection.teamName}
+                                        </Chip>
+                                    );
+                                })}
+                            </Box>
+                        )}
+                    </Box>
+                )}
 
                 {/* Selected Members Chips */}
                 {selectedMembers.length > 0 && (
