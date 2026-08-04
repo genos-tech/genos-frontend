@@ -188,6 +188,16 @@ export const admin = {
         disconnect: "Disconnect",
         incomingNote: "Wants to connect with your team",
         outgoingNote: "Waiting for them to approve",
+        // Who asked whom, on a connection that is already live. Not
+        // cosmetic: only the invited side can be shown as a guest inside
+        // your team, and "who invited whom" is the first thing anybody
+        // auditing this list wants to know.
+        activeInvitedByUs: "You invited them",
+        activeInvitedByThem: "They invited you",
+        // Chips beside the team name in the pending lists, so the two
+        // directions can't be mistaken for each other at a glance.
+        roleAsked: "You asked",
+        roleAsking: "They asked",
         statusConnected: "Connected",
         statusPending: "Awaiting your owner",
         statusAwaiting: "Awaiting reply",

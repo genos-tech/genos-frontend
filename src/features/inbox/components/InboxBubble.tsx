@@ -5,7 +5,9 @@ import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
 import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
+import HubRoundedIcon from "@mui/icons-material/HubRounded";
 import ScheduleRoundedIcon from "@mui/icons-material/ScheduleRounded";
+import ShareRoundedIcon from "@mui/icons-material/ShareRounded";
 import ShieldRoundedIcon from "@mui/icons-material/ShieldRounded";
 import StickyNote2RoundedIcon from "@mui/icons-material/StickyNote2Rounded";
 import { Box, Button, Card, Chip, Stack, Typography } from "@mui/joy";
@@ -25,6 +27,10 @@ import { InboxItemProps } from "../../../types/common";
 import { extractYYYYMMDD, extractYYYYMMDDHHMM } from "../../../utils/dateUtils";
 import { addInboxItem } from "../../admin/services/addInboxItem";
 import { respondToOwnershipClaim } from "../../admin/services/ownershipClaim";
+import {
+    respondToExternalShare,
+    respondToTeamConnection,
+} from "../../admin/services/teamConnections";
 import { DigestHeadline } from "./DigestHeadline";
 import { InboxTargetChip } from "./InboxTargetChip";
 
@@ -42,7 +48,9 @@ type RequestLabelKey =
     | "gmRequest"
     | "noteAccessRequest"
     | "ownershipClaim"
-    | "digest";
+    | "digest"
+    | "teamConnection"
+    | "externalShare";
 
 const ITEM_TYPE_CONFIG: Record<
     number,
@@ -100,6 +108,21 @@ const ITEM_TYPE_CONFIG: Record<
         icon: <AutoAwesomeRoundedIcon sx={{ fontSize: 14 }} />,
         colorScheme: { dark: "#c084fc", light: "#9333ea" },
     },
+    // Cross-team sharing (7, 8). Teal, apart from the in-team request
+    // hues above, because the thing that matters about these two is that
+    // the other party is a different ORGANIZATION — the distinction worth
+    // seeing before you read a word of the card. Answered over HTTP, like
+    // the ownership claim, so they carry no socket events.
+    7: {
+        labelKey: "teamConnection",
+        icon: <HubRoundedIcon sx={{ fontSize: 14 }} />,
+        colorScheme: { dark: "#2dd4bf", light: "#0d9488" },
+    },
+    8: {
+        labelKey: "externalShare",
+        icon: <ShareRoundedIcon sx={{ fontSize: 14 }} />,
+        colorScheme: { dark: "#2dd4bf", light: "#0d9488" },
+    },
 };
 
 /** `item_type` for a team-ownership claim. See `ownershipClaim.ts`. */
@@ -107,6 +130,13 @@ const OWNERSHIP_CLAIM = 5;
 
 /** `item_type` for a proactive Genos digest (UX tier model §8). */
 const DIGEST = 6;
+
+/** `item_type`s for cross-team sharing. See `teamConnections.ts`. */
+const TEAM_CONNECTION = 7;
+const EXTERNAL_SHARE = 8;
+
+/** The request types answered over HTTP rather than a socket event. */
+const HTTP_ANSWERED = [OWNERSHIP_CLAIM, TEAM_CONNECTION, EXTERNAL_SHARE];
 
 // Where the card's body text actually starts, measured from the card's own
 // content edge. The body is inset TWICE — MessageBody wraps it in a box with
@@ -139,13 +169,22 @@ export const InboxBubble = (props: InboxBubbleProps) => {
     const palette = isDark ? purplePalette.dark : purplePalette.light;
     const [localStatus, setLocalStatus] = useState<"approved" | "rejected" | null>(null);
     const [isHovered, setIsHovered] = useState<boolean>(false);
-    // Only the HTTP (ownership-claim) path can report a refusal — a
-    // socket emit is fire-and-forget. Rejecting a claim you no longer
-    // have standing to answer has to say so, not no-op.
-    const [claimError, setClaimError] = useState<string | null>(null);
+    // Only the HTTP paths can report a refusal — a socket emit is
+    // fire-and-forget. Answering something you no longer have standing to
+    // answer (a claim after ownership moved, a share the host withdrew)
+    // has to say so, not no-op.
+    const [respondError, setRespondError] = useState<string | null>(null);
 
     const config = ITEM_TYPE_CONFIG[inboxItem.itemType];
-    const isRequest = inboxItem.itemType >= 1 && inboxItem.itemType <= OWNERSHIP_CLAIM;
+    // Everything except an activity (0) and a digest (6) is something
+    // somebody is waiting on an answer to. Spelled out rather than left as
+    // `>= 1 && <= 5`, which is how the two cross-team types shipped as
+    // cards with no Approve button on a request that could not be answered
+    // anywhere else in the product.
+    const isRequest =
+        inboxItem.itemType >= 1 &&
+        inboxItem.itemType <= EXTERNAL_SHARE &&
+        inboxItem.itemType !== DIGEST;
     // Cards that can name an openable target: team/project/GM join requests
     // (1-3) and activities (0). Note-access (4) is excluded — it has its own
     // open-note chip. The chip renders nothing when nothing resolves, so this
@@ -157,6 +196,24 @@ export const InboxBubble = (props: InboxBubbleProps) => {
         inboxItem.itemType === OWNERSHIP_CLAIM
             ? (inboxItem.itemOptionals?.deadline as string | undefined)
             : undefined;
+    const crossTeamHint =
+        inboxItem.itemType === TEAM_CONNECTION
+            ? t.inbox.crossTeam.connectionHint
+            : inboxItem.itemType === EXTERNAL_SHARE
+              ? t.inbox.crossTeam.shareHint
+              : null;
+    const labelSubtleColor = isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.5)";
+    // The cross-team types were first written with a digest-style
+    // `{title, text}` body, which the BlockNote renderer below reads as an
+    // empty document — the rows already filed that way would stay blank
+    // cards forever. Read either shape rather than migrate them.
+    const legacyBody =
+        inboxItem.itemType !== DIGEST && !Array.isArray(inboxItem.itemBody)
+            ? (inboxItem.itemBody as unknown as { title?: string; text?: string } | null)
+            : null;
+    const legacyText = legacyBody
+        ? [legacyBody.title, legacyBody.text].filter(Boolean).join("\n")
+        : "";
 
     // Note-access requests (itemType 4) can open the referenced note in the
     // URL-link modal. Only personal notes (note_type 1) are routable from
@@ -173,22 +230,45 @@ export const InboxBubble = (props: InboxBubbleProps) => {
               }
             : null;
 
-    // An ownership claim is answered over HTTP rather than the socket
-    // events types 1-4 use, so the two paths are dispatched separately.
-    // The optimistic `setLocalStatus` only moves once the call resolves
-    // — unlike a socket emit, this one can be refused (you may no longer
-    // be the owner), and showing "Approved" on a rejected transfer would
-    // be a lie about who owns the team.
-    const respondToClaim = async (decision: "approve" | "reject") => {
-        setClaimError(null);
-        const ok = await respondToOwnershipClaim(
-            accessToken,
-            inboxItem.itemId,
-            decision,
-            setClaimError
-        );
-        if (!ok) return;
-        const status = decision === "approve" ? "approved" : "rejected";
+    // Three request types are answered over HTTP rather than the socket
+    // events types 1-4 use — the ownership claim, and both cross-team
+    // ones, whose rules live in a Django transaction. Which endpoint is
+    // decided by the type; what they have in common is everything after.
+    const answerOverHttp = async (accept: boolean): Promise<boolean> => {
+        const optionals = inboxItem.itemOptionals ?? {};
+        if (inboxItem.itemType === OWNERSHIP_CLAIM) {
+            return respondToOwnershipClaim(
+                accessToken,
+                inboxItem.itemId,
+                accept ? "approve" : "reject",
+                setRespondError
+            );
+        }
+        if (inboxItem.itemType === TEAM_CONNECTION) {
+            const connectionId = optionals.connection_id as string | undefined;
+            if (!connectionId) {
+                setRespondError(t.inbox.crossTeam.failed);
+                return false;
+            }
+            return respondToTeamConnection(accessToken, connectionId, accept, setRespondError);
+        }
+        const grantId = optionals.grant_id as string | undefined;
+        if (!grantId) {
+            setRespondError(t.inbox.crossTeam.failed);
+            return false;
+        }
+        return respondToExternalShare(accessToken, grantId, accept, setRespondError);
+    };
+
+    // The optimistic `setLocalStatus` only moves once the call resolves —
+    // unlike a socket emit, these can be refused (you may no longer be the
+    // owner; the other team may have withdrawn the offer), and showing
+    // "Approved" on a request the server rejected would be a lie about
+    // what access exists.
+    const respondOverHttp = async (accept: boolean) => {
+        setRespondError(null);
+        if (!(await answerOverHttp(accept))) return;
+        const status = accept ? "approved" : "rejected";
         setLocalStatus(status);
         // PERSIST IT, don't just flip local state. These rows render
         // inside a Virtuoso list, so component state dies whenever a row
@@ -196,15 +276,15 @@ export const InboxBubble = (props: InboxBubbleProps) => {
         // card came back with Approve/Reject live on a request that had
         // already been answered. Types 1-4 avoid this for free: they
         // answer over Socket.IO and the service pushes the updated card
-        // back, which writes to IndexedDB and re-reads the list. This
-        // one answers over HTTP, so it has to do both itself.
+        // back, which writes to IndexedDB and re-reads the list. These
+        // answer over HTTP, so they have to do both themselves.
         await addInboxItem({ ...inboxItem, requestStatus: status, isRead: true });
         onItemChanged?.();
     };
 
     const handleApprove = () => {
-        if (inboxItem.itemType === OWNERSHIP_CLAIM) {
-            void respondToClaim("approve");
+        if (HTTP_ANSWERED.includes(inboxItem.itemType)) {
+            void respondOverHttp(true);
         } else if (socket && config?.approveEvent) {
             socket.emit(config.approveEvent, { item_id: inboxItem.itemId });
             setLocalStatus("approved");
@@ -212,8 +292,8 @@ export const InboxBubble = (props: InboxBubbleProps) => {
     };
 
     const handleReject = () => {
-        if (inboxItem.itemType === OWNERSHIP_CLAIM) {
-            void respondToClaim("reject");
+        if (HTTP_ANSWERED.includes(inboxItem.itemType)) {
+            void respondOverHttp(false);
         } else if (socket && config?.rejectEvent) {
             socket.emit(config.rejectEvent, { item_id: inboxItem.itemId });
             setLocalStatus("rejected");
@@ -353,29 +433,42 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                         />
                     </Suspense>
                 )}
-                {inboxItem.itemType !== DIGEST && inboxItem.itemBody[0]?.content?.length > 0 && (
-                    <Box
+                {legacyText !== "" && (
+                    <Typography
+                        level="body-sm"
                         sx={{
-                            "& .inbox-preview": {
-                                fontSize: "0.85rem",
-                                color: isDark ? "rgba(255,255,255,0.8)" : "rgba(0,0,0,0.75)",
-                            },
+                            whiteSpace: "pre-wrap",
+                            color: isDark ? "rgba(255,255,255,0.8)" : "rgba(0,0,0,0.75)",
                         }}
                     >
-                        <MessageBody
-                            key={`${inboxItem.itemType}-${inboxItem.itemId}-${inboxItem.tsSent}`}
-                            content={inboxItem.itemBody}
-                            customClassName="inbox-preview"
-                            isSent={true}
-                            myself={myself}
-                            setMyself={setMyself}
-                            socket={socket}
-                            useCM={useCM}
-                            useTEM={useTEM}
-                            useUISM={useUISM}
-                        />
-                    </Box>
+                        {legacyText}
+                    </Typography>
                 )}
+                {inboxItem.itemType !== DIGEST &&
+                    Array.isArray(inboxItem.itemBody) &&
+                    inboxItem.itemBody[0]?.content?.length > 0 && (
+                        <Box
+                            sx={{
+                                "& .inbox-preview": {
+                                    fontSize: "0.85rem",
+                                    color: isDark ? "rgba(255,255,255,0.8)" : "rgba(0,0,0,0.75)",
+                                },
+                            }}
+                        >
+                            <MessageBody
+                                key={`${inboxItem.itemType}-${inboxItem.itemId}-${inboxItem.tsSent}`}
+                                content={inboxItem.itemBody}
+                                customClassName="inbox-preview"
+                                isSent={true}
+                                myself={myself}
+                                setMyself={setMyself}
+                                socket={socket}
+                                useCM={useCM}
+                                useTEM={useTEM}
+                                useUISM={useUISM}
+                            />
+                        </Box>
+                    )}
 
                 {/* What the card is ABOUT. The body names the target in plain
                     text, so you could read it but not open it — forcing you
@@ -454,10 +547,21 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                     </Box>
                 )}
 
-                {claimError && (
+                {/* What answering this actually does. The body says who is
+                    asking; this says what the button means, which for both
+                    cross-team types is narrower than it sounds. */}
+                {crossTeamHint && !isHandled && (
+                    <Box sx={{ pl: BODY_TEXT_INDENT }}>
+                        <Typography level="body-xs" sx={{ color: labelSubtleColor }}>
+                            {crossTeamHint}
+                        </Typography>
+                    </Box>
+                )}
+
+                {respondError && (
                     <Box sx={{ pl: BODY_TEXT_INDENT }}>
                         <Typography color="danger" level="body-xs">
-                            {claimError}
+                            {respondError}
                         </Typography>
                     </Box>
                 )}

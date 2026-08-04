@@ -26,6 +26,16 @@ export const inbox = {
         noteAccessRequest: "Note Access",
         ownershipClaim: "Ownership Request",
         digest: "Genos digest",
+        teamConnection: "Team Connection",
+        externalShare: "Shared With Your Team",
+    },
+    crossTeam: {
+        // Both of these are answered from the card, so the card is where
+        // the consequence has to be stated. Approving a connection grants
+        // nothing; accepting a share admits nobody until you add people.
+        connectionHint: "Connecting shares nothing on its own.",
+        shareHint: "Accept, then add your own people from the shared item.",
+        failed: "Couldn’t respond. Please try again.",
     },
     ownershipClaim: {
         // The card's body already says how many days. This is the date,

@@ -13,6 +13,7 @@ import {
     Box,
     Button,
     Card,
+    Chip,
     FormControl,
     FormLabel,
     IconButton,
@@ -161,7 +162,9 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
 
     // Cross-team relationships. Membership one level up, so it lives in
     // the same modal as members rather than in a settings page of its own.
-    const teamConnections = useTeamConnections(teamProfile.teamId);
+    // The socket only delivers a new request to the other team's open
+    // inbox; the request itself is filed over HTTP either way.
+    const teamConnections = useTeamConnections(teamProfile.teamId, socket);
 
     const handleNameSave = async () => {
         const next = nameDraft.trim();
@@ -379,6 +382,27 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                         teamName: teamProfile.teamName,
                                     })}
                                 </Typography>
+                                {/* Whose team this is. A host team you reach
+                                    through a share looks exactly like one you
+                                    belong to — narrow member list, your name
+                                    absent from it — and most of the controls
+                                    below are refused by the server for you. */}
+                                {teamProfile.isGuest && (
+                                    <Tooltip
+                                        size="sm"
+                                        title={t.admin.teamDropdown.guestTeamHint}
+                                        variant="outlined"
+                                    >
+                                        <Chip
+                                            color="warning"
+                                            size="sm"
+                                            sx={{ flexShrink: 0, fontWeight: 600 }}
+                                            variant="soft"
+                                        >
+                                            {t.admin.teamDropdown.guestTeam}
+                                        </Chip>
+                                    </Tooltip>
+                                )}
                                 {/* Close button — without it mobile users
                                     have no way to dismiss the modal,
                                     since it's full-screen on xs and

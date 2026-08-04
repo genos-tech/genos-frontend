@@ -102,24 +102,33 @@ export const fetchTeamConnections = async (
     }
 };
 
-/** POST — ask another team to connect. Owner/editor only; server re-checks. */
+/**
+ * POST — ask another team to connect. Owner/editor only; server re-checks.
+ *
+ * Resolves the created row rather than a bare success because the caller
+ * needs its `connectionId` to relay the request into the other team's open
+ * inbox — see `relayCrossTeamRequest`.
+ */
 export const requestTeamConnection = async (
     accessToken: string | null,
     teamId: string,
     targetTeamId: string,
     setErrorMessage?: (value: string) => void
-): Promise<boolean> => {
+): Promise<TeamConnection | null> => {
     try {
         const api = authApi(accessToken);
         if (!api) {
             setErrorMessage?.("Authorization token is missing.");
-            return false;
+            return null;
         }
-        await api.post("/team/connection/", { team_id: teamId, target_team_id: targetTeamId });
-        return true;
+        const res = await api.post("/team/connection/", {
+            team_id: teamId,
+            target_team_id: targetTeamId,
+        });
+        return res.data as TeamConnection;
     } catch (error: unknown) {
         setErrorMessage?.(errorText(error, "Couldn't send the request. Please try again."));
-        return false;
+        return null;
     }
 };
 

@@ -16,6 +16,7 @@
 import { useMemo } from "react";
 
 import { ObjectSharesPanel } from "../../../../components/ui/sharing/ObjectSharesPanel";
+import { useOptionalSocket } from "../../../../context/socketContext";
 import type { SharedObjectType } from "../../../../types/sharing";
 import { useObjectShares } from "./useObjectShares";
 import { useTeamConnections } from "./useTeamConnections";
@@ -43,7 +44,11 @@ export const ObjectSharesSection = ({
     valueColor,
     borderColor,
 }: Props) => {
-    const shares = useObjectShares(objectType, objectId, hostTeamId);
+    // Taken from context rather than a prop: it is only used to deliver a
+    // new offer to the guest team's open inbox, so a surface that renders
+    // this section shouldn't have to thread a socket down for it.
+    const socket = useOptionalSocket();
+    const shares = useObjectShares(objectType, objectId, hostTeamId, socket);
     // Guests have no business listing the host team's connections, and the
     // endpoint would refuse them anyway; skip the request entirely.
     const connections = useTeamConnections(canOffer ? hostTeamId : "");

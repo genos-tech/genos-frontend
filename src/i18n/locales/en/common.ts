@@ -65,6 +65,11 @@ export const common = {
         awaitingTheirApproval: "Waiting for this team to accept",
         ceilingViewer: "Up to viewer",
         ceilingEditor: "Up to editor",
+        // Which side of the share you are on. The row names the OTHER
+        // team either way, so without this a shared project looks the
+        // same whether you own it or were let into it.
+        sideGiven: "You shared this",
+        sideReceived: "They shared this with you",
         addFromYourTeam: "Add someone from your team",
         removeParticipant: "Remove {name}",
         everyoneAlreadyIn: "Everyone on your team already has access.",
