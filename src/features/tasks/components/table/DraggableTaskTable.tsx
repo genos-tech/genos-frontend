@@ -30,6 +30,7 @@ import { createQuickTask } from "../../services/createQuickTask";
 import { emitTaskTouched } from "../../services/taskEvents";
 import { updateTaskFromTable } from "../../services/updateTaskFromTable";
 import { FilterProps } from "../../types/TaskTableTypes";
+import { applyTreePositionToDescendants, TreePosition } from "../../utils/cascadeTreePosition";
 import { buildCustomFieldColumns, parseCustomFieldColKey } from "../../utils/customFields";
 import { deriveGhostAncestors } from "../../utils/ghostAncestors";
 import { sortTableTasks, SortTier } from "../../utils/sortTask";
@@ -895,20 +896,36 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         };
         if (isDescendant(draggedId, targetId)) return;
 
+        // Where the dragged row now sits. The drop target's milestone,
+        // sprint and chain root all transfer to it — and, below, to
+        // everything under it, which is what the server does with the
+        // same move.
+        const position: TreePosition = {
+            milestoneId: target.milestoneId ?? null,
+            sprintId: target.sprintId ?? null,
+            rootTaskId: Number(target.rootTaskId ?? target.id),
+        };
         const updated: TaskTableProps = {
             ...dragged,
             parentTaskId: String(target.id),
-            milestoneId: target.milestoneId ?? null,
+            ...position,
         };
 
         // Optimistic state update — mirrors the milestone-edit path
         // in `handleRowUpdate` (see lines ~902 / 905).
-        setCurrentDisplayingTasks((prev) =>
-            prev.map((t) => (String(t.id) === String(dragged.id) ? updated : t))
-        );
-        useTM.setAllTasks((prev) =>
-            prev.map((t) => (String(t.id) === String(dragged.id) ? updated : t))
-        );
+        //
+        // The sub-tree has to come along: milestone-scoped views filter
+        // on `milestoneId`, so descendants left on the old milestone
+        // vanish from under their own parent. The PUT doesn't trigger a
+        // project refetch, so nothing else would correct them.
+        const applyMove = (rows: TaskTableProps[]): TaskTableProps[] =>
+            applyTreePositionToDescendants(
+                rows.map((t) => (String(t.id) === String(dragged.id) ? updated : t)),
+                dragged.id ?? "",
+                position
+            );
+        setCurrentDisplayingTasks(applyMove);
+        useTM.setAllTasks(applyMove);
 
         // Mirror the move onto the open preview's task object, the same
         // way `handleRowUpdate` mirrors an inline cell edit. Without
@@ -1810,11 +1827,12 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
             </div>
 
             {/* Shared task-graph modal for the per-row gutter trigger.
-                Anchored on the row's OWN id: the trigger only renders on
-                depth-0 rows (root tasks / milestones), so the row IS the
-                top of its hierarchy — same net anchor the preview header
-                computes via `rootTaskId ?? id`. Page-hosted surface, so
-                the diagram's default 9999 layer applies (no zIndex). */}
+                Anchored on the row's OWN id — as every diagram caller is:
+                the loader walks up the parent chain itself. Here the
+                trigger only renders on depth-0 rows (root tasks /
+                milestones), so the row is already the top and the walk is
+                a no-op. Page-hosted surface, so the diagram's default 9999
+                layer applies (no zIndex). */}
             {diagramTask != null &&
                 diagramTask.id != null &&
                 (diagramTask.projectId ?? usePM.currentProject?.projectId) != null && (
@@ -1822,7 +1840,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                         myself={myself}
                         open={true}
                         rootLabel={`${formatTaskDisplayId(diagramTask)} · ${diagramTask.title || "Untitled"}`}
-                        rootTaskId={Number(diagramTask.rootTaskId ?? diagramTask.id)}
+                        rootTaskId={Number(diagramTask.id)}
                         usePM={usePM}
                         useSM={useSM}
                         useTM={useTM}

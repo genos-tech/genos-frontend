@@ -613,9 +613,14 @@ export const App = () => {
             return {
                 projectId: task.project.projectId,
                 rootLabel: task.displayId ? `${task.displayId} · ${task.title}` : task.title,
-                // Walk up to the hierarchy root so the diagram shows the
+                // Pass the previewed task itself and let the graph loader
+                // walk up to the hierarchy root, so the diagram shows the
                 // milestone / parent / siblings rather than a lone leaf.
-                rootTaskId: Number(task.rootTaskId ?? task.id),
+                // Deliberately NOT `task.rootTaskId`: that column is
+                // denormalized and a row whose ancestor changed milestone
+                // can still hold the root from before the move, which
+                // anchored the diagram on a tree the task had left.
+                rootTaskId: Number(task.id),
             };
         }
         if (useTM.currentPreviewKind === "milestone") {

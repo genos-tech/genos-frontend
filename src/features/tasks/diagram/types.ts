@@ -116,6 +116,16 @@ export type DependencyEdgeData = {
 // tasks array — `deps[i]` belongs to `tasks[i]`. (Caller hydrates from
 // these into nodes/edges.)
 export type TaskGraph = {
+    /**
+     * The task the tree is actually rooted at: the top of the parent
+     * chain above the anchor the caller asked for, resolved from the
+     * fetched rows rather than read off the stored `rootTaskId` column
+     * (which can lag a milestone move). Consumers key "is root" and the
+     * rollups off THIS, not off what they passed in — opening the
+     * diagram from a sub-task passes that sub-task, and the root is its
+     * milestone or parent.
+     */
+    rootTaskId: number;
     /** Every task in the descendant tree, including the root. */
     tasks: TaskTableProps[];
     /**

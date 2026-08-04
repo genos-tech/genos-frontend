@@ -39,7 +39,14 @@ export type ModalTaskDiagramProps = {
     open: boolean;
     onClose: () => void;
     myself: UserProps;
-    /** Root task or milestone-backing task — defines what tree is drawn. */
+    /**
+     * Any task in the tree to be drawn — the graph loader walks up
+     * `parentTaskId` from here to find the chain top and draws that whole
+     * hierarchy. Callers opening the diagram from a task preview can pass
+     * the previewed task even when it's a leaf sub-task; they do NOT need
+     * to resolve the root themselves (and shouldn't use the stored
+     * `rootTaskId` column for it, which can lag a milestone move).
+     */
     rootTaskId: number;
     /** Required so we can fetch project tasks in one call. */
     projectId: number;

@@ -4,18 +4,60 @@ import { loadProjectTasksFromApi } from "../../services/loadProjectTasksFromApi"
 import { loadTaskDependenciesForTasks } from "../../services/loadTaskDependencies";
 import { TaskGraph } from "../types";
 
-const MAX_DEPTH = 10; // mirrors backend `_cascade_milestone_to_subtasks`
+const MAX_DEPTH = 10; // mirrors backend `_cascade_tree_position_to_subtasks`
 
-/** Collect the root + every descendant via BFS over parent_task_id. */
-const collectDescendantTree = (
-    rootTaskId: number,
-    allTasks: TaskTableProps[]
-): TaskTableProps[] => {
+// Deeper than MAX_DEPTH: walking UP a chain is bounded by how deep the
+// anchor sits, and bailing early would anchor the diagram mid-chain.
+const MAX_ANCESTOR_DEPTH = 64;
+
+/**
+ * The top of the parent chain the anchor task sits in, resolved by
+ * walking `parentTaskId` through the tasks we just fetched.
+ *
+ * Callers pass whatever task the user opened the diagram from, which may
+ * be a leaf sub-task. The diagram has to anchor on the WHOLE hierarchy —
+ * the milestone, the parent, the siblings — so it needs the chain top.
+ *
+ * This is deliberately computed rather than read from the stored
+ * `rootTaskId`: that column is denormalized, and a row whose ancestor
+ * moved between milestones can still be carrying the root it had before
+ * the move. Trusting it meant opening the diagram on a tree the task had
+ * already left (or, when the column was null, on the lone leaf itself).
+ * The project's tasks are already in hand here, so walking up costs
+ * nothing.
+ */
+const resolveChainTop = (anchorTaskId: number, byId: Map<number, TaskTableProps>): number => {
+    let current = anchorTaskId;
+    const visited = new Set<number>([current]);
+    for (let hop = 0; hop < MAX_ANCESTOR_DEPTH; hop++) {
+        const task = byId.get(current);
+        if (!task || task.parentTaskId == null) return current;
+        const parentId = Number(task.parentTaskId);
+        // A parent outside the fetched set (deleted, or in another
+        // project) makes the current row the highest one we can render.
+        if (!byId.has(parentId)) return current;
+        // Corrupt data: a cycle. Anchor here rather than spin.
+        if (visited.has(parentId)) return current;
+        visited.add(parentId);
+        current = parentId;
+    }
+    return current;
+};
+
+const indexById = (allTasks: TaskTableProps[]): Map<number, TaskTableProps> => {
     const byId = new Map<number, TaskTableProps>();
     for (const t of allTasks) {
         if (t.id != null) byId.set(Number(t.id), t);
     }
+    return byId;
+};
 
+/** Collect the root + every descendant via BFS over parent_task_id. */
+const collectDescendantTree = (
+    rootTaskId: number,
+    allTasks: TaskTableProps[],
+    byId: Map<number, TaskTableProps>
+): TaskTableProps[] => {
     const byParent = new Map<number, TaskTableProps[]>();
     for (const t of allTasks) {
         const pid = t.parentTaskId == null ? null : Number(t.parentTaskId);
@@ -98,6 +140,8 @@ const refToGhostTask = (ref: TaskDependencyRef): TaskTableProps => {
 /**
  * Compose the data the diagram needs:
  *  1. Pull every task in the project (one network call, cache-warm).
+ *  1b. Resolve the chain top above `anchorTaskId` (see
+ *     `resolveChainTop`) — callers may hand us a leaf sub-task.
  *  2. BFS-filter to the root's descendant tree.
  *  3. Fetch dependency edges for every task in the visible set in
  *     parallel; flatten into a single dedup'd edge list (each edge
@@ -110,14 +154,17 @@ const refToGhostTask = (ref: TaskDependencyRef): TaskTableProps => {
 export const loadTaskGraph = async (
     myself: UserProps,
     projectId: number,
-    rootTaskId: number,
+    anchorTaskId: number,
     accessToken: string | null
 ): Promise<TaskGraph | null> => {
     const response = await loadProjectTasksFromApi(myself, projectId, accessToken, null);
     const allTasks = response?.tasks;
     if (!Array.isArray(allTasks)) return null;
 
-    const visibleTasks = collectDescendantTree(rootTaskId, allTasks as TaskTableProps[]);
+    const byId = indexById(allTasks as TaskTableProps[]);
+    const rootTaskId = resolveChainTop(anchorTaskId, byId);
+
+    const visibleTasks = collectDescendantTree(rootTaskId, allTasks as TaskTableProps[], byId);
     if (visibleTasks.length === 0) return null;
 
     const visibleIds = new Set(visibleTasks.map((t) => Number(t.id)));
@@ -174,6 +221,7 @@ export const loadTaskGraph = async (
     });
 
     return {
+        rootTaskId,
         tasks: visibleTasks,
         externalTasks: Array.from(externalById.values()),
         dependencyEdges,
