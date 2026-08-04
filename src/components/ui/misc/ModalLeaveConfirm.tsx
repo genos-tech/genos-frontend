@@ -21,6 +21,11 @@ type Props = {
      *  error message displayed. */
     onConfirm: () => Promise<boolean>;
     onCancel: () => void;
+    /** Overrides the "Leave" verb. This dialog is the house style for
+     *  "confirm something irreversible about a relationship", and
+     *  cross-team disconnect reuses it — but a button reading "Leave"
+     *  when the act is "Disconnect" names the wrong thing. */
+    confirmLabel?: string;
 };
 
 export const ModalLeaveConfirm = ({
@@ -30,6 +35,7 @@ export const ModalLeaveConfirm = ({
     entityName,
     onConfirm,
     onCancel,
+    confirmLabel,
 }: Props) => {
     const { t } = useTranslation();
     const [submitting, setSubmitting] = useState(false);
@@ -176,7 +182,7 @@ export const ModalLeaveConfirm = ({
                         }}
                         onClick={handleConfirm}
                     >
-                        {t.common.leaveConfirm.leave}
+                        {confirmLabel ?? t.common.leaveConfirm.leave}
                     </Button>
                 </Stack>
             </ModalDialog>

@@ -1,0 +1,321 @@
+/**
+ * Cross-team sharing — `/api/v2/team/connection/` and `/api/v2/team/share/`.
+ *
+ * Two nouns with different rhythms, and the difference is the whole design:
+ *
+ * - A **connection** and a **share** are each approved ONCE, by the side
+ *   being asked. Rare, deliberate, two-sided.
+ * - **Participants** are then managed repeatedly and unilaterally by the
+ *   guest team's own managers, with no request back to the host.
+ *
+ * So a UI that puts participant management behind an approval flow has
+ * misread the feature. See `origin/services/external_grants.py`.
+ *
+ * Nothing here is an authorisation check. Roles decide what to render;
+ * every operation is re-authorised in the Django service layer, which is
+ * also where the "may you" rules are written down.
+ */
+import axios from "axios";
+
+import { authApi } from "../../../services/api";
+
+/** Lifecycle shared by connections and shares (`ShareStatus` server-side). */
+export type ShareStatus = "pending" | "active" | "declined" | "revoked";
+
+export type TeamConnection = {
+    connectionId: string;
+    /** The OTHER team — the row stores its pair sorted, so this is derived. */
+    teamId: string;
+    teamName: string;
+    status: ShareStatus;
+    /** "outgoing" = we asked. "incoming" = the ball is in our court. */
+    direction: "outgoing" | "incoming";
+    tsCreated: string;
+    tsUpdated: string;
+};
+
+export type ExternalShareObjectType = "channel" | "project" | "note_folder";
+
+export type ExternalShare = {
+    grantId: string;
+    objectType: ExternalShareObjectType;
+    objectId: string;
+    /** The most the guest team may hand its own people. */
+    roleCeiling: "viewer" | "editor";
+    status: ShareStatus;
+    /** "given" = we own the object. "received" = we were let in. */
+    side: "given" | "received";
+    teamId: string;
+    teamName: string;
+    tsCreated: string;
+    tsUpdated: string;
+};
+
+export type ShareParticipant = {
+    userId: string;
+    userName: string;
+    email: string;
+    avatarUrl: string | null;
+};
+
+const errorText = (error: unknown, fallback: string): string => {
+    if (axios.isAxiosError(error)) {
+        return (error.response?.data as { error?: string })?.error || fallback;
+    }
+    return fallback;
+};
+
+/** GET every connection this team is part of, in either direction. */
+export const fetchTeamConnections = async (
+    accessToken: string | null,
+    teamId: string
+): Promise<TeamConnection[]> => {
+    try {
+        const api = authApi(accessToken);
+        if (!api) return [];
+        const res = await api.get("/team/connection/", { params: { team_id: teamId } });
+        return (res.data as { connections: TeamConnection[] }).connections ?? [];
+    } catch {
+        // The panel renders empty rather than erroring: a team with no
+        // connections and a failed fetch look the same to the user, and
+        // this section is never the reason they opened the modal.
+        return [];
+    }
+};
+
+/** POST — ask another team to connect. Owner/editor only; server re-checks. */
+export const requestTeamConnection = async (
+    accessToken: string | null,
+    teamId: string,
+    targetTeamId: string,
+    setErrorMessage?: (value: string) => void
+): Promise<boolean> => {
+    try {
+        const api = authApi(accessToken);
+        if (!api) {
+            setErrorMessage?.("Authorization token is missing.");
+            return false;
+        }
+        await api.post("/team/connection/", { team_id: teamId, target_team_id: targetTeamId });
+        return true;
+    } catch (error: unknown) {
+        setErrorMessage?.(errorText(error, "Couldn't send the request. Please try again."));
+        return false;
+    }
+};
+
+/** POST — approve or decline. Only the team that was ASKED may answer. */
+export const respondToTeamConnection = async (
+    accessToken: string | null,
+    connectionId: string,
+    accept: boolean,
+    setErrorMessage?: (value: string) => void
+): Promise<boolean> => {
+    try {
+        const api = authApi(accessToken);
+        if (!api) {
+            setErrorMessage?.("Authorization token is missing.");
+            return false;
+        }
+        await api.post("/team/connection/respond/", {
+            connection_id: connectionId,
+            accept,
+        });
+        return true;
+    } catch (error: unknown) {
+        setErrorMessage?.(errorText(error, "Couldn't respond. Please try again."));
+        return false;
+    }
+};
+
+/**
+ * POST — end a connection and every share inside it.
+ *
+ * Either side may revoke, and it deletes real access, so the caller is
+ * expected to confirm first. Resolves the number of participation rows
+ * withdrawn — worth showing, because "disconnect" quietly removing nine
+ * people from three projects is exactly the surprise a confirmation is
+ * meant to prevent.
+ */
+export const revokeTeamConnection = async (
+    accessToken: string | null,
+    connectionId: string,
+    setErrorMessage?: (value: string) => void
+): Promise<number | null> => {
+    try {
+        const api = authApi(accessToken);
+        if (!api) {
+            setErrorMessage?.("Authorization token is missing.");
+            return null;
+        }
+        const res = await api.post("/team/connection/revoke/", { connection_id: connectionId });
+        return (res.data as { withdrawn: number }).withdrawn ?? 0;
+    } catch (error: unknown) {
+        setErrorMessage?.(errorText(error, "Couldn't disconnect. Please try again."));
+        return null;
+    }
+};
+
+/** GET the shares this team has given out and been let into. */
+export const fetchExternalShares = async (
+    accessToken: string | null,
+    teamId: string
+): Promise<ExternalShare[]> => {
+    try {
+        const api = authApi(accessToken);
+        if (!api) return [];
+        const res = await api.get("/team/share/", { params: { team_id: teamId } });
+        return (res.data as { shares: ExternalShare[] }).shares ?? [];
+    } catch {
+        return [];
+    }
+};
+
+/** POST — offer one object to a connected team. Host managers only. */
+export const offerExternalShare = async (
+    accessToken: string | null,
+    params: {
+        teamId: string;
+        guestTeamId: string;
+        objectType: ExternalShareObjectType;
+        objectId: string;
+        roleCeiling?: "viewer" | "editor";
+    },
+    setErrorMessage?: (value: string) => void
+): Promise<ExternalShare | null> => {
+    try {
+        const api = authApi(accessToken);
+        if (!api) {
+            setErrorMessage?.("Authorization token is missing.");
+            return null;
+        }
+        const res = await api.post("/team/share/", {
+            team_id: params.teamId,
+            guest_team_id: params.guestTeamId,
+            object_type: params.objectType,
+            object_id: params.objectId,
+            role_ceiling: params.roleCeiling ?? "viewer",
+        });
+        return res.data as ExternalShare;
+    } catch (error: unknown) {
+        setErrorMessage?.(errorText(error, "Couldn't share that. Please try again."));
+        return null;
+    }
+};
+
+/** POST — the guest team accepts or declines. Accepting admits nobody. */
+export const respondToExternalShare = async (
+    accessToken: string | null,
+    grantId: string,
+    accept: boolean,
+    setErrorMessage?: (value: string) => void
+): Promise<boolean> => {
+    try {
+        const api = authApi(accessToken);
+        if (!api) {
+            setErrorMessage?.("Authorization token is missing.");
+            return false;
+        }
+        await api.post("/team/share/respond/", { grant_id: grantId, accept });
+        return true;
+    } catch (error: unknown) {
+        setErrorMessage?.(errorText(error, "Couldn't respond. Please try again."));
+        return false;
+    }
+};
+
+/** POST — withdraw one share. Either side's managers. */
+export const revokeExternalShare = async (
+    accessToken: string | null,
+    grantId: string,
+    setErrorMessage?: (value: string) => void
+): Promise<number | null> => {
+    try {
+        const api = authApi(accessToken);
+        if (!api) {
+            setErrorMessage?.("Authorization token is missing.");
+            return null;
+        }
+        const res = await api.post("/team/share/revoke/", { grant_id: grantId });
+        return (res.data as { withdrawn: number }).withdrawn ?? 0;
+    } catch (error: unknown) {
+        setErrorMessage?.(errorText(error, "Couldn't stop sharing. Please try again."));
+        return null;
+    }
+};
+
+/** GET who from the guest team is currently in. Both sides may read it. */
+export const fetchShareParticipants = async (
+    accessToken: string | null,
+    grantId: string
+): Promise<ShareParticipant[]> => {
+    try {
+        const api = authApi(accessToken);
+        if (!api) return [];
+        const res = await api.get("/team/share/participants/", {
+            params: { grant_id: grantId },
+        });
+        return (res.data as { participants: ShareParticipant[] }).participants ?? [];
+    } catch {
+        return [];
+    }
+};
+
+/**
+ * POST — admit people. GUEST-team managers only, any time after the share
+ * went active. This is the repeatable half of the feature; it needs no
+ * host involvement whatsoever.
+ */
+export const addShareParticipants = async (
+    accessToken: string | null,
+    grantId: string,
+    userIds: string[],
+    role?: "viewer" | "editor",
+    setErrorMessage?: (value: string) => void
+): Promise<boolean> => {
+    try {
+        const api = authApi(accessToken);
+        if (!api) {
+            setErrorMessage?.("Authorization token is missing.");
+            return false;
+        }
+        await api.post("/team/share/participants/", {
+            grant_id: grantId,
+            user_ids: userIds,
+            ...(role ? { role } : {}),
+        });
+        return true;
+    } catch (error: unknown) {
+        setErrorMessage?.(errorText(error, "Couldn't add those people. Please try again."));
+        return false;
+    }
+};
+
+/**
+ * DELETE — withdraw people.
+ *
+ * Deliberately open to BOTH sides' managers, unlike adding: the guest
+ * team administers its roster, and the host keeps a veto over one person
+ * so that ejecting somebody doesn't mean ending the whole share.
+ */
+export const removeShareParticipants = async (
+    accessToken: string | null,
+    grantId: string,
+    userIds: string[],
+    setErrorMessage?: (value: string) => void
+): Promise<boolean> => {
+    try {
+        const api = authApi(accessToken);
+        if (!api) {
+            setErrorMessage?.("Authorization token is missing.");
+            return false;
+        }
+        await api.delete("/team/share/participants/", {
+            data: { grant_id: grantId, user_ids: userIds },
+        });
+        return true;
+    } catch (error: unknown) {
+        setErrorMessage?.(errorText(error, "Couldn't remove those people. Please try again."));
+        return false;
+    }
+};

@@ -171,6 +171,30 @@ export const admin = {
         createdDate: "Created Date",
         uploadFailed: "Failed to upload team profile image.",
     },
+    // Cross-team sharing, relationship layer. The explainer is load-
+    // bearing: a connection grants nothing, and "connect" read as "give
+    // them access" is the one misunderstanding that would matter.
+    connectedTeams: {
+        title: "Connected teams",
+        explainer:
+            "Connecting lets you share a specific chat, project, or note folder with another organization later. On its own it gives them access to nothing.",
+        empty: "Not connected to any other team yet.",
+        teamIdPlaceholder: "Paste the other team's ID",
+        connectButton: "Request connection",
+        approve: "Approve",
+        decline: "Decline",
+        disconnect: "Disconnect",
+        incomingNote: "Wants to connect with your team",
+        outgoingNote: "Waiting for them to approve",
+        statusConnected: "Connected",
+        statusPending: "Awaiting your owner",
+        statusAwaiting: "Awaiting reply",
+        disconnectTitle: "Disconnect from this team?",
+        disconnectDescription:
+            "This ends every chat, project, and note folder shared between you, and removes their people from your data immediately. You can reconnect later.",
+        withdrawnNotice: "Removed {count} external participant(s) from your shared items.",
+        errorSelf: "That's your own team's ID.",
+    },
     inviteMembers: {
         openButton: "Invite members",
         title: "Invite team members",

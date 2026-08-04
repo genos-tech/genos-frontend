@@ -51,9 +51,11 @@ import { canManageMembers, MemberRole, resolveMyRole } from "../../../../utils/m
 import { leaveTeam } from "../../services/leaveTeam";
 import { setTeamMemberRole } from "../../services/setTeamMemberRole";
 import { updateTeamProfile } from "../../services/updateTeamProfile";
+import { ConnectedTeamsPanel } from "../team/ConnectedTeamsPanel";
 import { ModalRequestOwnership } from "../team/ModalRequestOwnership";
 import { TeamOwnershipClaimPanel } from "../team/TeamOwnershipClaimPanel";
 import { useOwnershipClaim } from "../team/useOwnershipClaim";
+import { useTeamConnections } from "../team/useTeamConnections";
 import { ModalInviteMembers } from "./ModalInviteMembers";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
@@ -156,6 +158,10 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
     // it) and re-deriving them here would drift.
     const ownershipClaim = useOwnershipClaim(teamProfile.teamId, isTeamOwner, socket);
     const [openClaimRequest, setOpenClaimRequest] = useState(false);
+
+    // Cross-team relationships. Membership one level up, so it lives in
+    // the same modal as members rather than in a settings page of its own.
+    const teamConnections = useTeamConnections(teamProfile.teamId);
 
     const handleNameSave = async () => {
         const next = nameDraft.trim();
@@ -1119,6 +1125,19 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                     </Box>
                                                 </Box>
                                             )}
+
+                                            {/* Sits after the member list because it
+                                                is the same question one level up —
+                                                who this team works with — and before
+                                                the created date, which is trivia. */}
+                                            <ConnectedTeamsPanel
+                                                borderColor={styles.border}
+                                                canManage={canManage}
+                                                connections={teamConnections}
+                                                labelColor={styles.labelColor}
+                                                myTeamId={teamProfile.teamId}
+                                                valueColor={styles.valueColor}
+                                            />
 
                                             <FormControl sx={{ mt: 1 }}>
                                                 <FormLabel
