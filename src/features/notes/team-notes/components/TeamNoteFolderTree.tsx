@@ -17,7 +17,7 @@ import { useColorScheme } from "@mui/joy/styles";
 
 import { MoreMenu, MoreMenuItem } from "../../../../components/ui/MoreMenu";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
-import { useTranslation } from "../../../../i18n";
+import { fmt, useTranslation } from "../../../../i18n";
 import { MyNoteMetaTreeNode, TeamNoteFolderTreeNode } from "../../../../types/notes";
 import { NOTE_ROLE_VIEWER } from "../../common/utils/noteRoles";
 import { folderTagChipSx } from "../modals/ModalTeamFolderTags";
@@ -74,6 +74,12 @@ function TeamNoteFolderTreeComponent(props: TeamNoteFolderTreeProps) {
     const FolderIcon = isExpanded ? FolderOpenRoundedIcon : FolderRoundedIcon;
     const canWrite = folder.myRoleId < NOTE_ROLE_VIEWER;
     const isOwner = folder.myRoleId === 1;
+    // Another team's folder, sitting in your list because they shared it.
+    // Content is yours to write; the FOLDER is not yours to administer —
+    // the server refuses re-scoping, moving and roster changes to
+    // outsiders, so the menu must not offer them. Set on the whole shared
+    // subtree, including subfolders you made inside it.
+    const isExternal = folder.isExternal === true;
     // Null visibility = inherits, so fall back to what it resolves to.
     const shownVisibility = folder.visibility ?? folder.effectiveVisibility;
     const inherits = folder.visibility === null;
@@ -101,29 +107,40 @@ function TeamNoteFolderTreeComponent(props: TeamNoteFolderTreeProps) {
             },
             {
                 id: "members",
-                label: t.notes.teamNotes.manageAccess,
+                label: isExternal ? t.notes.teamNotes.viewAccess : t.notes.teamNotes.manageAccess,
                 icon: <GroupRoundedIcon sx={{ fontSize: 16 }} />,
                 onClick: () => actions.onManageMembers(folder),
-            },
-            {
+            }
+        );
+        // Tags come from the owning team's catalog, and re-parenting a
+        // folder out of the share would take the host's content with it.
+        // Renaming stays available on a subfolder you own — you can make
+        // and delete those inside a share, so being unable to fix a typo
+        // was the odd one out.
+        if (!isExternal) {
+            menuItems.push({
                 id: "tags",
                 label: t.notes.teamNotes.editTags,
                 icon: <LocalOfferRoundedIcon sx={{ fontSize: 16 }} />,
                 onClick: () => actions.onEditTags(folder),
-            },
-            {
+            });
+        }
+        if (!isExternal || isOwner) {
+            menuItems.push({
                 id: "rename",
                 label: t.notes.folders.rename,
                 icon: <DriveFileRenameOutlineRoundedIcon sx={{ fontSize: 16 }} />,
                 onClick: () => actions.onRenameFolder(folder),
-            },
-            {
+            });
+        }
+        if (!isExternal) {
+            menuItems.push({
                 id: "move",
                 label: t.notes.folders.moveFolder,
                 icon: <DriveFileMoveRoundedIcon sx={{ fontSize: 16 }} />,
                 onClick: () => actions.onMoveFolder(folder),
-            }
-        );
+            });
+        }
     } else {
         // A viewer can still see who else has access.
         menuItems.push({
@@ -211,6 +228,33 @@ function TeamNoteFolderTreeComponent(props: TeamNoteFolderTreeProps) {
                         </Typography>
                     </ListItemContent>
 
+                    {/* Whose folder this is. Only on the share's own root:
+                        the label answers "why is another team's folder in
+                        my list", and repeating it down every level of the
+                        subtree would crowd out the names. */}
+                    {isExternal && folder.parentFolderId === null && (
+                        <Chip
+                            color="warning"
+                            size="sm"
+                            variant="soft"
+                            sx={{
+                                flexShrink: 0,
+                                fontSize: 10,
+                                maxWidth: 110,
+                                "--Chip-gap": "2px",
+                            }}
+                            title={
+                                folder.hostTeamName
+                                    ? fmt(t.notes.teamNotes.sharedByTeamHint, {
+                                          team: folder.hostTeamName,
+                                      })
+                                    : t.notes.teamNotes.sharedByAnotherTeamHint
+                            }
+                        >
+                            {folder.hostTeamName || t.notes.teamNotes.sharedBadge}
+                        </Chip>
+                    )}
+
                     {/* Tags, capped at two on the row. The sidebar is
                         narrow and the folder NAME has to stay readable;
                         the rest are reachable from the tag filter and the
@@ -238,31 +282,31 @@ function TeamNoteFolderTreeComponent(props: TeamNoteFolderTreeProps) {
                         from "private in its own right". */}
                     {shownVisibility === "private" ? (
                         <LockRoundedIcon
+                            sx={{
+                                fontSize: 12,
+                                flexShrink: 0,
+                                opacity: inherits ? 0.4 : 0.75,
+                                color: isDark ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.55)",
+                            }}
                             titleAccess={
                                 inherits
                                     ? t.notes.teamNotes.privateInherited
                                     : t.notes.teamNotes.private
                             }
+                        />
+                    ) : shownVisibility === "public" ? (
+                        <PublicRoundedIcon
                             sx={{
                                 fontSize: 12,
                                 flexShrink: 0,
                                 opacity: inherits ? 0.4 : 0.75,
                                 color: isDark ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.55)",
                             }}
-                        />
-                    ) : shownVisibility === "public" ? (
-                        <PublicRoundedIcon
                             titleAccess={
                                 inherits
                                     ? t.notes.teamNotes.publicInherited
                                     : t.notes.teamNotes.public
                             }
-                            sx={{
-                                fontSize: 12,
-                                flexShrink: 0,
-                                opacity: inherits ? 0.4 : 0.75,
-                                color: isDark ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.55)",
-                            }}
                         />
                     ) : null}
 

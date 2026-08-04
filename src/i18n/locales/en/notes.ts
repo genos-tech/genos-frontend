@@ -73,6 +73,11 @@ export const notes = {
         visibilityPrivateHint: "Invite individuals or a whole group.",
         visibilityInherit: "Same as the parent folder",
         visibilityInheritHint: "Everyone who can open the parent can open this too.",
+        // Folders another team shared with yours. Short label, because it
+        // shares a narrow sidebar row with the folder's name.
+        sharedBadge: "Shared",
+        sharedByTeamHint: "{team} shared this folder with your team",
+        sharedByAnotherTeamHint: "Another team shared this folder with yours",
         // Members
         manageAccess: "Manage access…",
         viewAccess: "View access…",

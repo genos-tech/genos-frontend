@@ -288,6 +288,12 @@ export const tasks = {
     },
 
     // Picker components.
+    // Cross-team sharing, wherever a project identifies itself in a list.
+    projects: {
+        sharedByTeam: "Shared with your team by {team}",
+        sharedByAnotherTeam: "Shared with your team by another team",
+    },
+
     picker: {
         noSprintLabel: "No sprint",
         noMilestoneLabel: "No milestone",

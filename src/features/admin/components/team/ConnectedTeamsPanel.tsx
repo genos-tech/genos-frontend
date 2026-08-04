@@ -83,21 +83,28 @@ export const ConnectedTeamsPanel = ({
         if (ok) setTeamIdDraft("");
     };
 
-    // A connection has two sides and they are not interchangeable, so
-    // every row says which one you are on. Without it the list reads as
-    // "these teams exist", and a live connection looks identical whether
-    // you invited them or they invited you — the one fact you need before
-    // deciding whether to disconnect.
-    const directionChip = (connection: TeamConnection): React.ReactNode => (
-        <Chip
-            color="neutral"
-            size="sm"
-            sx={{ borderRadius: "6px", fontSize: "0.65rem", flexShrink: 0 }}
-            variant="outlined"
-        >
-            {connection.direction === "outgoing" ? strings.roleAsked : strings.roleAsking}
-        </Chip>
-    );
+    // Which side OWNS the shared work — the only asymmetry in a connection
+    // that changes what you can do. Who asked to connect is on the row's
+    // note line below, where a piece of history belongs; it was a chip
+    // once, and two chips saying different things about the same
+    // relationship read as one contradicting the other.
+    //
+    // Nothing at all on our own rows: absence of the chip is what says the
+    // shared work is ours, and a "Guest" counter-chip would label the
+    // majority of rows to distinguish the minority.
+    const ownerChip = (connection: TeamConnection): React.ReactNode =>
+        connection.isOwner ? (
+            <Tooltip size="sm" title={strings.ownerTeamHint} variant="outlined">
+                <Chip
+                    color="primary"
+                    size="sm"
+                    sx={{ borderRadius: "6px", fontSize: "0.65rem", flexShrink: 0 }}
+                    variant="soft"
+                >
+                    {strings.ownerTeam}
+                </Chip>
+            </Tooltip>
+        ) : null;
 
     const row = (
         connection: TeamConnection,
@@ -124,7 +131,7 @@ export const ConnectedTeamsPanel = ({
                     <Typography level="body-sm" sx={{ color: valueColor, fontWeight: 600 }} noWrap>
                         {connection.teamName}
                     </Typography>
-                    {directionChip(connection)}
+                    {ownerChip(connection)}
                 </Stack>
                 {note && (
                     <Typography level="body-xs" sx={{ color: labelColor }}>

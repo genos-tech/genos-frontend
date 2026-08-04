@@ -97,6 +97,21 @@ export type ProjectProps = {
     isPrivate?: boolean;
     isJoined?: boolean;
     systemUserId?: string;
+    /**
+     * Another team owns this project and shared it with yours.
+     *
+     * Absent on an ordinary project rather than false — see
+     * `_external_fields` in `prj_views.py` for why the API omits it. Read
+     * it as a truthy check, never as `=== false`.
+     *
+     * `hostTeamId` matters beyond the label: task, milestone and member
+     * endpoints are scoped to the team that OWNS the project, so anything
+     * loading its contents has to address the host rather than the team
+     * the user is currently viewing.
+     */
+    isExternal?: boolean;
+    hostTeamId?: string;
+    hostTeamName?: string;
 };
 
 export type TaskPriorityProps = {

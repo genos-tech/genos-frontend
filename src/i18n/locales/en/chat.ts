@@ -85,6 +85,8 @@ export const chat = {
         // "people from another organization are in here" has to be legible
         // before the row is clicked, not after.
         externalBadge: "External",
+        externalBadgeHint: "People from another team are in this chat",
+        sharedByTeamHint: "{team} shared this chat with your team",
         newGroupMessageMenu: "New Group Message",
         newDmWithFriendsMenu: "New DM with friends",
         markFilteredActivitiesReadMenu: "Mark filtered as read",

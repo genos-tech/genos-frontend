@@ -1,11 +1,11 @@
 import React from "react";
 import LockOutlineRoundedIcon from "@mui/icons-material/LockOutlineRounded";
-import { Box, Chip, Stack, Typography } from "@mui/joy";
+import { Box, Chip, Stack, Tooltip, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { resolveDisplayName } from "../../../../components/ui/avatars/AvatarContext";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
-import { useTranslation } from "../../../../i18n";
+import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps } from "../../../../types/chat";
 import { ChatListItemTags } from "./ChatListItemTags";
@@ -95,16 +95,39 @@ export const ChatListItemTitle: React.FC<ChatListItemTitleProps> = ({
                     </Typography>
                     {/* Never a hover-only affordance: people outside the
                         company are in this room, and that has to be
-                        visible at a glance before anything is typed. */}
+                        visible at a glance before anything is typed.
+
+                        On the guest side the chip names the owning team
+                        instead of saying "External": the row sits among
+                        your own chats, and "whose room is this" is the
+                        question a bare badge leaves you asking — the host
+                        can close it, and its rules are theirs. */}
                     {chat.isExternal && (
-                        <Chip
-                            color="warning"
+                        <Tooltip
                             size="sm"
-                            sx={{ flexShrink: 0, fontSize: "0.65rem", "--Chip-gap": "2px" }}
-                            variant="soft"
+                            variant="outlined"
+                            title={
+                                chat.hostTeamName
+                                    ? fmt(t.chat.sidebar.sharedByTeamHint, {
+                                          team: chat.hostTeamName,
+                                      })
+                                    : t.chat.sidebar.externalBadgeHint
+                            }
                         >
-                            {t.chat.sidebar.externalBadge}
-                        </Chip>
+                            <Chip
+                                color="warning"
+                                size="sm"
+                                variant="soft"
+                                sx={{
+                                    flexShrink: 0,
+                                    fontSize: "0.65rem",
+                                    maxWidth: 120,
+                                    "--Chip-gap": "2px",
+                                }}
+                            >
+                                {chat.hostTeamName || t.chat.sidebar.externalBadge}
+                            </Chip>
+                        </Tooltip>
                     )}
                 </Stack>
 

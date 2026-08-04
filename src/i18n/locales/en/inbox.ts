@@ -32,10 +32,25 @@ export const inbox = {
     crossTeam: {
         // Both of these are answered from the card, so the card is where
         // the consequence has to be stated. Approving a connection grants
-        // nothing; accepting a share admits nobody until you add people.
+        // nothing; accepting a share puts the item in your workspace and
+        // lets you bring colleagues in afterwards.
         connectionHint: "Connecting shares nothing on its own.",
-        shareHint: "Accept, then add your own people from the shared item.",
+        shareHint: "Accept to open it, then add your own people to it.",
         failed: "Couldn’t respond. Please try again.",
+        // WHERE the thing you just accepted now is. Approving used to leave
+        // no trace anywhere a person would look, which made a working
+        // feature indistinguishable from a broken one.
+        acceptedIn: {
+            channel: "It’s in your chat list now.",
+            project: "It’s in your project list now.",
+            note_folder: "It’s in your Team Notes now.",
+        },
+        // Fallback chip label when the offered object has no name to show.
+        objectKinds: {
+            channel: "Chat",
+            project: "Project",
+            note_folder: "Note folder",
+        },
     },
     ownershipClaim: {
         // The card's body already says how many days. This is the date,

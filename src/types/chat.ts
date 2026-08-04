@@ -41,6 +41,10 @@ export type AllChatProps = {
     /** A cross-team chat — drives the sidebar badge. Optional because
      *  every other chat kind and every cached pre-feature row lacks it. */
     isExternal?: boolean;
+    /** The team that shared this chat with yours, set only when the chat
+     *  is theirs. The host's own external chat leaves it null, so its
+     *  presence is exactly "this room belongs to another team". */
+    hostTeamName?: string | null;
     profileImagePath?: string;
     isPinned?: boolean;
     tsLastAllReadActivity?: string;
