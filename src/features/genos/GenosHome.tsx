@@ -77,7 +77,14 @@ export const GenosHome = ({
     // Session list refresh: `turns.length` changes exactly when a turn
     // completes (or a session is resumed / cleared), which is when the
     // sidebar's rows can change.
-    const { sessions, isLoading: sessionsLoading } = useGenosSessions({
+    const {
+        sessions,
+        isLoading: sessionsLoading,
+        search: sessionSearch,
+        setSearch: setSessionSearch,
+        pinError: sessionPinError,
+        togglePin: toggleSessionPin,
+    } = useGenosSessions({
         accessToken,
         teamId,
         refreshKey: spotlight.turns.length,
@@ -112,10 +119,14 @@ export const GenosHome = ({
         <GenosSessionSidebar
             activeSessionId={spotlight.ask.sessionId}
             isLoading={sessionsLoading || spotlight.resumeIsLoading}
+            pinError={sessionPinError}
             resumeError={spotlight.resumeError}
+            search={sessionSearch}
             sessions={sessions}
             onNewChat={handleNewChat}
+            onSearchChange={setSessionSearch}
             onSelectSession={handleSelectSession}
+            onTogglePin={toggleSessionPin}
         />
     );
 

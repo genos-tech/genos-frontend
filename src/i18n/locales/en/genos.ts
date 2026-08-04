@@ -22,5 +22,20 @@ export const genos = {
         // Shown under the header when a clicked session failed to
         // restore (outside retention, network error).
         resumeFailed: "Couldn't reopen that conversation.",
+        // Server-side search over every question in a past session, so
+        // the placeholder promises asks rather than "titles" — the row
+        // label is just the session's first question.
+        searchPlaceholder: "Search past asks",
+        searchClear: "Clear search",
+        // Distinct from `empty`: history isn't empty, this search just
+        // didn't hit.
+        noMatches: "No past asks match that search.",
+        // Group headings. `recent` is only drawn when there are pinned
+        // rows above it to distinguish from.
+        pinned: "Pinned",
+        recent: "Recent",
+        pin: "Pin this ask",
+        unpin: "Unpin",
+        pinFailed: "Couldn't change that pin.",
     },
 } as const;
