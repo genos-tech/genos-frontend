@@ -35,6 +35,12 @@ export type Team = {
     teamEmail: string;
     teamOwnerId: string;
     teamImgPath?: string;
+    /** The caller reaches this team from OUTSIDE — as a project guest or
+     *  through a cross-team share — so it is a shell with a deliberately
+     *  narrowed roster rather than a membership. Server-decided
+     *  (`GetMyTeamsView`). Member-only affordances must stay hidden here:
+     *  they would offer actions the server refuses. Absent means member. */
+    isGuest?: boolean;
 };
 
 // Response
@@ -120,4 +126,7 @@ export type TeamProfileProps = {
     teamImgPath: string;
     teamMembers: UserProps[];
     tsCreatedAt: string;
+    /** See `Team.isGuest` — the same server field, carried here because
+     *  the profile modal is where team-membership actions live. */
+    isGuest?: boolean;
 };

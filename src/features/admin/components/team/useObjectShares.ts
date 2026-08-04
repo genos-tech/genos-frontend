@@ -1,23 +1,23 @@
 /**
- * The cross-team shares on ONE object, from the point of view of the team
- * the user is currently in.
+ * The cross-team shares on ONE object, from whichever side the caller is on.
  *
- * Written once and shared by all three surfaces (chat, project, note
- * folder) because the rules are identical and only the object type
- * differs — the same reason the backend has one grant service rather than
- * three. A surface-specific copy of this would be where the surfaces
- * quietly started disagreeing about who may do what.
+ * Written once and used by every surface (project, note folder, and the
+ * chat panel's sibling) because the rules are identical and only the object
+ * type differs — the same reason the backend has one grant service rather
+ * than three. Per-surface copies are where the surfaces would quietly start
+ * disagreeing about who may do what.
  *
- * The two `side` values need genuinely different UI, which is the main
- * thing a caller reads off this hook:
+ * The asymmetry callers render is the whole point, and it arrives from the
+ * server rather than being derived here:
  *
- * - `"given"` — we own the object. We see who the other team let in and
- *   may eject an individual, but we may NOT add their people. Adding is
- *   theirs.
- * - `"received"` — we were let in. Our managers add and remove our own
- *   people freely, any time, with no request back to the host.
+ * - `side: "given"` — we own the object. We see who the other team let in
+ *   and may eject an individual or end the share, but we may not add their
+ *   people.
+ * - `canAdmit` — we are a manager of a guest team on an active share, so we
+ *   add and remove our OWN colleagues freely, any time, with no request
+ *   back to the host.
  *
- * Every mutation refetches instead of patching locally: these rows are
+ * Every mutation refetches rather than patching locally: these rows are
  * written by the other organization too, so local state is a guess.
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -25,22 +25,17 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../../../context/AuthContext";
 import {
     addShareParticipants,
-    fetchExternalShares,
-    fetchShareParticipants,
+    fetchObjectShares,
+    fetchOwnTeamRoster,
     offerExternalShare,
     removeShareParticipants,
     revokeExternalShare,
-    type ExternalShare,
     type ExternalShareObjectType,
-    type ShareParticipant,
+    type ObjectShare,
 } from "../../services/teamConnections";
 
-export type ObjectShare = ExternalShare & {
-    participants: ShareParticipant[];
-};
-
 export type ObjectShareControls = {
-    /** Active and pending shares on this object, newest first. */
+    /** Every share on this object the caller may see, newest first. */
     shares: ObjectShare[];
     loading: boolean;
     busy: boolean;
@@ -49,19 +44,21 @@ export type ObjectShareControls = {
     refresh: () => Promise<void>;
     /** Offer the object to a connected team. Host managers only. */
     offer: (guestTeamId: string, roleCeiling?: "viewer" | "editor") => Promise<boolean>;
-    /** Admit our own people to a share we received. */
+    /** Admit our own colleagues to a share we received. */
     admit: (grantId: string, userIds: string[], role?: "viewer" | "editor") => Promise<boolean>;
     /** Withdraw people. Either side's managers, one person at a time. */
     withdraw: (grantId: string, userIds: string[]) => Promise<boolean>;
     /** End the whole share. Resolves how many people it removed. */
     revoke: (grantId: string) => Promise<number | null>;
+    /** A guest team's own roster, for the admit picker. Empty otherwise. */
+    rosterFor: (teamId: string) => Promise<{ userId: string; userName: string }[]>;
 };
 
 export const useObjectShares = (
-    teamId: string | undefined,
     objectType: ExternalShareObjectType,
     objectId: string | undefined,
-    enabled = true
+    /** The team the object belongs to. Only needed to OFFER a new share. */
+    hostTeamId?: string
 ): ObjectShareControls => {
     const { accessToken } = useAuth();
     const [shares, setShares] = useState<ObjectShare[]>([]);
@@ -70,26 +67,14 @@ export const useObjectShares = (
     const [error, setError] = useState<string | null>(null);
 
     const refresh = useCallback(async () => {
-        if (!enabled || !teamId || !objectId) {
+        if (!objectId) {
             setShares([]);
             setLoading(false);
             return;
         }
-        const rows = await fetchExternalShares(accessToken, teamId, { objectId, objectType });
-        // Rosters in parallel: a chat shared with four teams would
-        // otherwise be four sequential round trips before anything renders.
-        const withRosters = await Promise.all(
-            rows.map(async (share) => ({
-                ...share,
-                participants:
-                    share.status === "active"
-                        ? await fetchShareParticipants(accessToken, share.grantId)
-                        : [],
-            }))
-        );
-        setShares(withRosters);
+        setShares(await fetchObjectShares(accessToken, objectType, String(objectId)));
         setLoading(false);
-    }, [accessToken, enabled, objectId, objectType, teamId]);
+    }, [accessToken, objectId, objectType]);
 
     useEffect(() => {
         void refresh();
@@ -112,11 +97,17 @@ export const useObjectShares = (
             offer: (guestTeamId: string, roleCeiling: "viewer" | "editor" = "viewer") =>
                 run(async () =>
                     Boolean(
-                        teamId &&
+                        hostTeamId &&
                             objectId &&
                             (await offerExternalShare(
                                 accessToken,
-                                { guestTeamId, objectId, objectType, roleCeiling, teamId },
+                                {
+                                    guestTeamId,
+                                    objectId: String(objectId),
+                                    objectType,
+                                    roleCeiling,
+                                    teamId: hostTeamId,
+                                },
                                 setError
                             ))
                     )
@@ -127,8 +118,9 @@ export const useObjectShares = (
                 run(() => removeShareParticipants(accessToken, grantId, userIds, setError)),
             revoke: (grantId: string) =>
                 run(() => revokeExternalShare(accessToken, grantId, setError)),
+            rosterFor: (teamId: string) => fetchOwnTeamRoster(accessToken, teamId),
         }),
-        [accessToken, objectId, objectType, run, teamId]
+        [accessToken, hostTeamId, objectId, objectType, run]
     );
 
     return {

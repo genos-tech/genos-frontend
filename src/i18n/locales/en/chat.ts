@@ -286,20 +286,6 @@ export const chat = {
             externalChatExplainer:
                 "Pick connected teams to invite. Each team approves once, then their owner or editor chooses which of their members join. External chats are always private.",
         },
-        externalShares: {
-            title: "Teams in this chat",
-            explainer:
-                "Each team manages its own participants. You can remove someone from another team, but only their owner or editor can add them.",
-            participantCount: "{count, plural, one {# participant} other {# participants}}",
-            awaitingTheirApproval: "Waiting for this team to accept",
-            ceilingViewer: "Up to viewer",
-            ceilingEditor: "Up to editor",
-            addFromYourTeam: "Add someone from your team",
-            removeParticipant: "Remove {name} from this chat",
-            everyoneAlreadyIn: "Everyone on your team is already in this chat.",
-            endShare: "Stop sharing with this team",
-            actionFailed: "That didn't work. Please try again.",
-        },
         createMDM: {
             title: "New Multi-user DM",
             description: "Start a conversation with multiple people without creating a group.",

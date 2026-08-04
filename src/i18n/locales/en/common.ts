@@ -53,6 +53,25 @@ export const common = {
         headingProject: "Add members to {projectName}",
         headingGM: "Add members to {gmName}",
     },
+    // Cross-team sharing, shared by chats, projects and note folders. Kept
+    // object-neutral ("has access", not "in this chat") because one panel
+    // renders all three; a shared string that names one surface is how the
+    // copy starts lying on the others.
+    externalShares: {
+        title: "Teams with access",
+        explainer:
+            "Each team manages its own participants. You can remove someone from another team, but only their owner or editor can add them.",
+        participantCount: "{count, plural, one {# participant} other {# participants}}",
+        awaitingTheirApproval: "Waiting for this team to accept",
+        ceilingViewer: "Up to viewer",
+        ceilingEditor: "Up to editor",
+        addFromYourTeam: "Add someone from your team",
+        removeParticipant: "Remove {name}",
+        everyoneAlreadyIn: "Everyone on your team already has access.",
+        endShare: "Stop sharing with this team",
+        offerPrompt: "Share with a connected team",
+        actionFailed: "That didn't work. Please try again.",
+    },
     // Permission roles shared by Team / Project / GM. Distinct from
     // `admin.role.*`, which labels the user's job title.
     memberRoles: {
