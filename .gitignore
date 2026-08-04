@@ -18,6 +18,11 @@ dist-ssr
 
 stats.html
 
+# `vitest run --coverage` output. CI uploads it as an artifact; locally it
+# just litters the tree after any coverage run.
+coverage/
+.vitest-reports/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

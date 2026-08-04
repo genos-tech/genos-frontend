@@ -1,3 +1,4 @@
+import { availableParallelism } from "node:os";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react-swc";
 import { visualizer } from "rollup-plugin-visualizer";
@@ -120,6 +121,24 @@ export default defineConfig({
         environment: "jsdom",
         globals: true,
         setupFiles: ["./src/__tests__/setup.ts"],
+        // Vitest sizes its worker pool from `os.availableParallelism()` and
+        // leaves a core spare, which on a 2-vCPU CI runner means exactly ONE
+        // worker — the suite runs serially there while using ~6 workers on a
+        // dev machine. That single fact was most of a 10-minute CI job for
+        // 44 seconds of local work.
+        //
+        // Measured on this suite, pinned to 2 CPUs (`taskset -c 0,1`):
+        //   1 worker (the default)  214s
+        //   2 workers               148s
+        //   4 workers               407s
+        //
+        // So: always use both cores, and never oversubscribe. Going past the
+        // core count is far worse than serial, because each worker builds its
+        // own jsdom and module graph (`isolate` is on — it has to be, 76
+        // files fail without it) and they thrash. The floor of 2 is what CI
+        // gains; the ceiling keeps a dev machine's default behavior.
+        minWorkers: 2,
+        maxWorkers: Math.max(2, availableParallelism() - 1),
         coverage: {
             provider: "v8",
             reporter: ["text-summary", "lcov"],
