@@ -187,8 +187,32 @@ export const GenosSessionSidebar = ({
                             // but focus must reveal it too or the button
                             // is unreachable by keyboard.
                             opacity: s.is_pinned ? 1 : 0,
-                            transition: "opacity 100ms ease",
+                            // Opacity stays fast so the reveal keeps up with
+                            // a pointer travelling down the rows; the hover
+                            // feedback below is slower and eased, because
+                            // that one is meant to be watched.
+                            transition:
+                                "opacity 100ms ease, transform 180ms cubic-bezier(0.4, 0, 0.2, 1), background 180ms ease, color 180ms ease",
+                            "& svg": {
+                                transition: "transform 180ms cubic-bezier(0.4, 0, 0.2, 1)",
+                            },
+                            "&:hover": {
+                                background: isDark
+                                    ? "rgba(var(--gp-brand-700-rgb), 0.28)"
+                                    : "rgba(var(--gp-brand-700-rgb), 0.15)",
+                                color: isDark ? "var(--gp-brandalt-300)" : "var(--gp-brand-700)",
+                                transform: "scale(1.12)",
+                                // The tilt is on the pin alone — rotating the
+                                // button would take its tinted square with it.
+                                // Reads as pushing the pin in, or backwards,
+                                // pulling it out of a row already pinned.
+                                "& svg": { transform: "rotate(-15deg)" },
+                            },
                             "&:focus-visible": { opacity: 1 },
+                            // After `&:hover` deliberately: same specificity,
+                            // so source order is what lets the press win
+                            // while the pointer is still over the button.
+                            "&:active": { transform: "scale(0.95)" },
                         }}
                         onClick={() => onTogglePin(s.session_id)}
                     >
