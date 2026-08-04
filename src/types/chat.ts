@@ -38,6 +38,9 @@ export type AllChatProps = {
     TSLastMessage: string;
     project?: ProjectProps;
     isPrivate?: boolean;
+    /** A cross-team chat — drives the sidebar badge. Optional because
+     *  every other chat kind and every cached pre-feature row lacks it. */
+    isExternal?: boolean;
     profileImagePath?: string;
     isPinned?: boolean;
     tsLastAllReadActivity?: string;
@@ -94,6 +97,8 @@ export type GMProfileProps = {
     profileImagePath: string;
     gmMembers: UserProps[];
     isPrivate: boolean;
+    /** A cross-team chat. Optional so cached pre-feature rows type-check. */
+    isExternal?: boolean;
     tsCreatedAt: string;
 };
 

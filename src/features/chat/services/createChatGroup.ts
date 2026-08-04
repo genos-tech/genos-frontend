@@ -53,7 +53,12 @@ export const createChatGroup = async (
     setOpen: (e: boolean) => void,
     setGroupName: (e: string) => void,
     isPrivate: boolean,
-    selectedMemberIds: string[] = []
+    selectedMemberIds: string[] = [],
+    /** Present only for a cross-team chat. `guestTeamIds` names connected
+     *  teams to offer it to; each accepts once and then admits its own
+     *  people. `selectedMemberIds` stays host-side either way — the host
+     *  does not get to choose the other organization's participants. */
+    external?: { guestTeamIds: string[] }
 ): Promise<Channel | undefined> => {
     const trimmedName = chatName.trim();
     if (!trimmedName) {
@@ -63,6 +68,8 @@ export const createChatGroup = async (
 
     try {
         const channel = await channelService.createChannel({
+            guestTeamIds: external?.guestTeamIds,
+            isExternal: Boolean(external),
             isPrivate,
             kind: ChannelKind.GM,
             memberUserIds: selectedMemberIds,

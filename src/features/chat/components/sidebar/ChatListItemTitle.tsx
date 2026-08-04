@@ -5,6 +5,7 @@ import { useColorScheme } from "@mui/joy/styles";
 
 import { resolveDisplayName } from "../../../../components/ui/avatars/AvatarContext";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
+import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps } from "../../../../types/chat";
 import { ChatListItemTags } from "./ChatListItemTags";
@@ -23,6 +24,7 @@ export const ChatListItemTitle: React.FC<ChatListItemTitleProps> = ({
     myself,
 }) => {
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
 
     const showMyCustomStatus =
@@ -91,6 +93,19 @@ export const ChatListItemTitle: React.FC<ChatListItemTitleProps> = ({
                     >
                         {isYou ? `${displayName} (you)` : displayName}
                     </Typography>
+                    {/* Never a hover-only affordance: people outside the
+                        company are in this room, and that has to be
+                        visible at a glance before anything is typed. */}
+                    {chat.isExternal && (
+                        <Chip
+                            color="warning"
+                            size="sm"
+                            sx={{ flexShrink: 0, fontSize: "0.65rem", "--Chip-gap": "2px" }}
+                            variant="soft"
+                        >
+                            {t.chat.sidebar.externalBadge}
+                        </Chip>
+                    )}
                 </Stack>
 
                 {/* Custom status row - only shown when status exists */}

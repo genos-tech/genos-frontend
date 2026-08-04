@@ -156,15 +156,27 @@ export const revokeTeamConnection = async (
     }
 };
 
-/** GET the shares this team has given out and been let into. */
+/**
+ * GET the shares this team has given out and been let into.
+ *
+ * Pass `object` to narrow to one object — what a chat's or project's own
+ * "shared with" panel wants. Narrowing is a convenience; the team scope is
+ * what makes the response safe.
+ */
 export const fetchExternalShares = async (
     accessToken: string | null,
-    teamId: string
+    teamId: string,
+    object?: { objectType: ExternalShareObjectType; objectId: string }
 ): Promise<ExternalShare[]> => {
     try {
         const api = authApi(accessToken);
         if (!api) return [];
-        const res = await api.get("/team/share/", { params: { team_id: teamId } });
+        const res = await api.get("/team/share/", {
+            params: {
+                team_id: teamId,
+                ...(object ? { object_type: object.objectType, object_id: object.objectId } : {}),
+            },
+        });
         return (res.data as { shares: ExternalShare[] }).shares ?? [];
     } catch {
         return [];
@@ -241,6 +253,29 @@ export const revokeExternalShare = async (
     } catch (error: unknown) {
         setErrorMessage?.(errorText(error, "Couldn't stop sharing. Please try again."));
         return null;
+    }
+};
+
+/**
+ * GET the roster of a team the caller belongs to.
+ *
+ * For the guest-side "who of ours should join this share" picker. The
+ * caller's *current* team is the HOST's shell when they are looking at a
+ * shared object, so the roster they need is their own team's and has to be
+ * asked for by id. Never the host's roster — that stays withheld.
+ */
+export const fetchOwnTeamRoster = async (
+    accessToken: string | null,
+    teamId: string
+): Promise<{ userId: string; userName: string; userEmail: string }[]> => {
+    try {
+        const api = authApi(accessToken);
+        if (!api) return [];
+        const res = await api.get(`/team/getTeamMembers/?team_id=${teamId}`);
+        const members = (res.data as { data?: { members?: unknown[] } }).data?.members ?? [];
+        return members as { userId: string; userName: string; userEmail: string }[];
+    } catch {
+        return [];
     }
 };
 

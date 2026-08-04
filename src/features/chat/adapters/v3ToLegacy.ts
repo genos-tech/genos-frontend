@@ -338,6 +338,7 @@ export function channelToLegacyChat(args: {
         latestMessageText: latest.contentText,
         TSLastMessage: latest.tsSent,
         isPrivate: channel.isPrivate,
+        isExternal: channel.isExternal,
         profileImagePath: channel.profileImageUrl || undefined,
         isPinned,
         // PM channels carry `project` on the legacy shape. We only
