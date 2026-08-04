@@ -1,8 +1,10 @@
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import LockOutlineIcon from "@mui/icons-material/LockOutline";
+import ShareRoundedIcon from "@mui/icons-material/ShareRounded";
 import { Avatar, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { fmt, useTranslation } from "../../../i18n";
 import { ProjectProps } from "../../../types/tasks";
 import { ProjectLabelChips } from "../../admin/components/projectLabels/ProjectLabelChips";
 
@@ -22,7 +24,10 @@ import { ProjectLabelChips } from "../../admin/components/projectLabels/ProjectL
  */
 
 type ProjectIdentityRowProps = {
-    project: Pick<ProjectProps, "projectId" | "projectName" | "projectLabels" | "isPrivate">;
+    project: Pick<
+        ProjectProps,
+        "projectId" | "projectName" | "projectLabels" | "isPrivate" | "isExternal" | "hostTeamName"
+    >;
     /** Resolved via `projectAvatarSrc`. Passed in rather than derived so
      *  a list of options doesn't re-scan the chat array per row. */
     avatarSrc?: string;
@@ -40,6 +45,7 @@ type ProjectIdentityRowProps = {
 export const ProjectIdentityRow = (props: ProjectIdentityRowProps) => {
     const { project, avatarSrc, maxLabels = 1, nameColor, nameWeight = 500, iconColor } = props;
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
 
     return (
@@ -67,6 +73,32 @@ export const ProjectIdentityRow = (props: ProjectIdentityRowProps) => {
                         flexShrink: 0,
                         color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.35)",
                     }}
+                />
+            )}
+
+            {/* Somebody else's project, in your list. It has to be marked:
+                these rows sit among your own, and the difference is not
+                cosmetic — the other team can end the share, and rules you
+                take for granted in your own projects are theirs to set
+                here. An icon rather than a chip because the name's
+                truncation budget is the scarce thing in this row; the team
+                is named on hover, which is where somebody asking "whose is
+                this?" will look. `titleAccess` rather than a Joy Tooltip
+                so the name is in the accessibility tree and not only in a
+                popper — same as the lock above. */}
+            {project.isExternal === true && (
+                <ShareRoundedIcon
+                    sx={{
+                        fontSize: 14,
+                        mx: -0.25,
+                        flexShrink: 0,
+                        color: isDark ? "#2dd4bf" : "#0d9488",
+                    }}
+                    titleAccess={
+                        project.hostTeamName
+                            ? fmt(t.tasks.projects.sharedByTeam, { team: project.hostTeamName })
+                            : t.tasks.projects.sharedByAnotherTeam
+                    }
                 />
             )}
 

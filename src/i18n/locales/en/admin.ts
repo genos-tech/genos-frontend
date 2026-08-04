@@ -194,10 +194,13 @@ export const admin = {
         // auditing this list wants to know.
         activeInvitedByUs: "You invited them",
         activeInvitedByThem: "They invited you",
-        // Chips beside the team name in the pending lists, so the two
-        // directions can't be mistaken for each other at a glance.
-        roleAsked: "You asked",
-        roleAsking: "They asked",
+        // The one chip on a connection row. Who ASKED to connect is
+        // history and lives on the note line above; who OWNS the shared
+        // work decides what each side can do, so that is what gets a chip.
+        // Only ever on their row — no chip means the shared work is yours.
+        ownerTeam: "Owner",
+        ownerTeamHint:
+            "They own the projects, chats or note folders shared with you. They decide what stays shared; you decide which of your people join.",
         statusConnected: "Connected",
         statusPending: "Awaiting your owner",
         statusAwaiting: "Awaiting reply",

@@ -176,6 +176,14 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
         resolveMyRole(myself.userId, useTEM.currentTeam.teamOwnerId, useTEM.teamMembers)
     );
 
+    // Whose project this is. A project shared with the viewer's team opens
+    // from that team's own list, so this modal now renders over someone
+    // else's project — and lending it onward is the host's to do. Treating
+    // the viewer's team as the host would offer a control the server
+    // refuses, against a list of connections that are not the host's.
+    const hostTeamId = projectProfile?.teamId ? String(projectProfile.teamId) : myself.teamId;
+    const isExternalProject = hostTeamId !== myself.teamId;
+
     const handleMemberRoleChange = async (
         userId: string,
         nextRole: MemberRole
@@ -1017,36 +1025,50 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                             {/* Any member can add teammates — no
                                                             owner gate. Disabled until the
                                                             profile (and so the project id)
-                                                            has loaded. */}
-                                                            <Button
-                                                                disabled={
-                                                                    !projectProfile?.projectId
-                                                                }
-                                                                size="sm"
-                                                                variant="soft"
-                                                                startDecorator={
-                                                                    <PersonAddAltRoundedIcon
-                                                                        sx={{ fontSize: 14 }}
-                                                                    />
-                                                                }
-                                                                sx={{
-                                                                    borderRadius: "8px",
-                                                                    fontSize: "12px",
-                                                                    fontWeight: 600,
-                                                                    flexShrink: 0,
-                                                                }}
-                                                                onClick={() =>
-                                                                    setOpenAddMembers(true)
-                                                                }
-                                                            >
-                                                                {t.common.addMembers.openButton}
-                                                            </Button>
+                                                            has loaded.
+
+                                                            Gone on a project shared with you:
+                                                            it adds people to the HOST's
+                                                            project directly, which the server
+                                                            refuses to an outsider. Your
+                                                            colleagues come in through the
+                                                            share panel below instead — so this
+                                                            is a control with a replacement,
+                                                            not a missing one. */}
+                                                            {!isExternalProject && (
+                                                                <Button
+                                                                    disabled={
+                                                                        !projectProfile?.projectId
+                                                                    }
+                                                                    size="sm"
+                                                                    variant="soft"
+                                                                    startDecorator={
+                                                                        <PersonAddAltRoundedIcon
+                                                                            sx={{ fontSize: 14 }}
+                                                                        />
+                                                                    }
+                                                                    sx={{
+                                                                        borderRadius: "8px",
+                                                                        fontSize: "12px",
+                                                                        fontWeight: 600,
+                                                                        flexShrink: 0,
+                                                                    }}
+                                                                    onClick={() =>
+                                                                        setOpenAddMembers(true)
+                                                                    }
+                                                                >
+                                                                    {
+                                                                        t.common.addMembers
+                                                                            .openButton
+                                                                    }
+                                                                </Button>
+                                                            )}
                                                             {/* Guests are invited BY EMAIL, not picked
                                                                 from the team roster, because the whole
                                                                 point is that they aren't in it. Hence a
                                                                 second button rather than a mode on the
                                                                 member picker. */}
-                                                            {canManage && (
+                                                            {canManage && !isExternalProject && (
                                                                 <Button
                                                                     color="neutral"
                                                                     size="sm"
@@ -1240,8 +1262,8 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                 from. Renders nothing for an unshared project. */}
                                             <ObjectSharesSection
                                                 borderColor={styles.border}
-                                                canOffer={canManageTeam}
-                                                hostTeamId={myself.teamId}
+                                                canOffer={canManageTeam && !isExternalProject}
+                                                hostTeamId={hostTeamId}
                                                 labelColor={styles.labelColor}
                                                 myUserId={myself.userId}
                                                 objectId={

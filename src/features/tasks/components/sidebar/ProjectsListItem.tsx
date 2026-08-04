@@ -337,6 +337,8 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                             projectLabels,
                             isPrivate,
                             systemUserId,
+                            isExternal,
+                            hostTeamName,
                         }) => {
                             const isSelected = projectId === usePM.currentProject?.projectId;
                             // Selected-project emphasis. Lives here, not in
@@ -482,6 +484,8 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                                                             projectLabels: projectLabels,
                                                             isPrivate: isPrivate,
                                                             systemUserId: systemUserId,
+                                                            isExternal: isExternal,
+                                                            hostTeamName: hostTeamName,
                                                         });
                                                     })();
                                                 }
@@ -504,6 +508,8 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                                                     projectName,
                                                     projectLabels,
                                                     isPrivate,
+                                                    isExternal,
+                                                    hostTeamName,
                                                 }}
                                             />
                                             <KeyboardArrowDownIcon

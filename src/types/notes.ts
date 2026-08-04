@@ -88,6 +88,13 @@ export type TeamNoteFolderProps = MyNoteFolderProps & {
     ownerName: string | null;
     memberCount: number;
     tags: NoteFolderTagProps[];
+    // A folder another team shared with yours. It lives in THEIR tree and
+    // is re-rooted into this list, so the row has to say so: the host can
+    // end the share, and the folder's own rules are set over there.
+    // Absent on the host's own folders and on pre-feature cached rows.
+    isExternal?: boolean;
+    hostTeamId?: string;
+    hostTeamName?: string;
 };
 
 export type TeamNoteFolderTreeNode = TeamNoteFolderProps & {

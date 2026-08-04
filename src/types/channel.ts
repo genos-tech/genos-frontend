@@ -131,6 +131,13 @@ export interface Channel {
      *  setting — member management differs (each team admits its own
      *  people) and the sidebar badges it. */
     isExternal?: boolean;
+    /** The owning team. Present because the chat list now mixes in chats
+     *  another team shared with yours. */
+    teamId?: string | null;
+    /** The owning team's name, set only when that team is not the one you
+     *  are viewing — i.e. only on the guest side of a share, which is the
+     *  only side that needs telling whose room this is. */
+    hostTeamName?: string | null;
     /** The legacy per-kind integer chat id this channel was backfilled
      *  from. Null for v3-native channels. Surfaced so FE entry points
      *  that still carry legacy ids (Spotlight, ChatSearch, activity /

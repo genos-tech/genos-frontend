@@ -103,6 +103,10 @@ export type CreateTeamResponse = {
 export type ProjectProfileProps = {
     projectId: number;
     projectName: string;
+    /** The team that OWNS the project. Differs from the viewer's team when
+     *  the project was shared with theirs, which is what host-only
+     *  controls in the profile modal key off. */
+    teamId?: string;
     ownerUserId: string;
     profileImagePath: string;
     projectMembers: UserProps[];

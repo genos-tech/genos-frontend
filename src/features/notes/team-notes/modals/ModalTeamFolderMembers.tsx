@@ -99,8 +99,16 @@ export const ModalTeamFolderMembers = (props: Props) => {
     // outright, so the controls are hidden rather than shown and rejected.
     // Their own way in and out is the cross-team section below, where their
     // team's managers admit their colleagues.
+    //
+    // Two ways to be looking at someone else's folder: switched into the
+    // host team's shell (`isGuest`), or — since shared folders started
+    // appearing in your own Team Notes — the folder itself being theirs.
+    const isExternalFolder = folder?.isExternal === true;
     const canManage =
-        folder != null && folder.myRoleId < ROLE_VIEWER && !useTEM.currentTeam.isGuest;
+        folder != null &&
+        folder.myRoleId < ROLE_VIEWER &&
+        !useTEM.currentTeam.isGuest &&
+        !isExternalFolder;
 
     // Lending the folder to another organization is a TEAM decision, not a
     // folder one: an editor of this folder who is only a viewer of the team
@@ -466,13 +474,15 @@ export const ModalTeamFolderMembers = (props: Props) => {
                 {folder && (
                     <ObjectSharesSection
                         borderColor="var(--joy-palette-divider)"
-                        canOffer={canManageTeam && folder.visibility === "private"}
-                        hostTeamId={myself.teamId}
+                        hostTeamId={folder.hostTeamId ?? myself.teamId}
                         labelColor="var(--joy-palette-text-tertiary)"
                         myUserId={myself.userId}
                         objectId={String(folder.folderId)}
                         objectType="note_folder"
                         valueColor="var(--joy-palette-text-primary)"
+                        canOffer={
+                            canManageTeam && folder.visibility === "private" && !isExternalFolder
+                        }
                     />
                 )}
 

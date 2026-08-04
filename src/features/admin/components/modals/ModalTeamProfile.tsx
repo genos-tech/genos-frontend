@@ -386,20 +386,25 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                     through a share looks exactly like one you
                                     belong to — narrow member list, your name
                                     absent from it — and most of the controls
-                                    below are refused by the server for you. */}
+                                    below are refused by the server for you.
+
+                                    Labelled by what this team IS rather than
+                                    by your standing in it: it owns the work
+                                    shared with you, which is the fact that
+                                    explains everything else on the page. */}
                                 {teamProfile.isGuest && (
                                     <Tooltip
                                         size="sm"
-                                        title={t.admin.teamDropdown.guestTeamHint}
+                                        title={t.admin.connectedTeams.ownerTeamHint}
                                         variant="outlined"
                                     >
                                         <Chip
-                                            color="warning"
+                                            color="primary"
                                             size="sm"
                                             sx={{ flexShrink: 0, fontWeight: 600 }}
                                             variant="soft"
                                         >
-                                            {t.admin.teamDropdown.guestTeam}
+                                            {t.admin.connectedTeams.ownerTeam}
                                         </Chip>
                                     </Tooltip>
                                 )}

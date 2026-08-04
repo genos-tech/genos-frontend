@@ -30,6 +30,15 @@ export type TeamConnection = {
     status: ShareStatus;
     /** "outgoing" = we asked. "incoming" = the ball is in our court. */
     direction: "outgoing" | "incoming";
+    /**
+     * They own shared work we have access to.
+     *
+     * Distinct from `direction`, which only records who asked to connect.
+     * Connecting is symmetric; owning the shared project is not, and this
+     * is the asymmetry worth showing — it decides who can add people to it
+     * and who loses access if the connection ends.
+     */
+    isOwner: boolean;
     tsCreated: string;
     tsUpdated: string;
 };

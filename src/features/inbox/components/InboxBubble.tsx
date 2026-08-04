@@ -32,6 +32,7 @@ import {
     respondToTeamConnection,
 } from "../../admin/services/teamConnections";
 import { DigestHeadline } from "./DigestHeadline";
+import { InboxCrossTeamChips } from "./InboxCrossTeamChips";
 import { InboxTargetChip } from "./InboxTargetChip";
 
 // Lazy: keeps react-markdown (and its remark deps) out of the inbox's
@@ -196,12 +197,25 @@ export const InboxBubble = (props: InboxBubbleProps) => {
         inboxItem.itemType === OWNERSHIP_CLAIM
             ? (inboxItem.itemOptionals?.deadline as string | undefined)
             : undefined;
+    const isCrossTeam =
+        inboxItem.itemType === TEAM_CONNECTION || inboxItem.itemType === EXTERNAL_SHARE;
     const crossTeamHint =
         inboxItem.itemType === TEAM_CONNECTION
             ? t.inbox.crossTeam.connectionHint
             : inboxItem.itemType === EXTERNAL_SHARE
               ? t.inbox.crossTeam.shareHint
               : null;
+    // Where the accepted thing actually IS. Accepting a share admits the
+    // approver and the object joins their own lists, but nothing said so —
+    // the card went quiet and the only way to learn it had worked was to
+    // go looking. This is the one sentence that closes that loop.
+    const acceptedObjectType = String(inboxItem.itemOptionals?.object_type ?? "");
+    const acceptedIn =
+        inboxItem.itemType === EXTERNAL_SHARE && resolvedStatus === "approved"
+            ? (t.inbox.crossTeam.acceptedIn[
+                  acceptedObjectType as keyof typeof t.inbox.crossTeam.acceptedIn
+              ] ?? null)
+            : null;
     const labelSubtleColor = isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.5)";
     // The cross-team types were first written with a digest-style
     // `{title, text}` body, which the BlockNote renderer below reads as an
@@ -543,6 +557,25 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                             {fmt(t.inbox.ownershipClaim.respondBy, {
                                 date: extractYYYYMMDD(claimDeadline),
                             })}
+                        </Typography>
+                    </Box>
+                )}
+
+                {/* WHO is asking, and WHAT for. The body says both in a
+                    sentence; these two cards are the ones where the subject
+                    is the whole decision — another organization, and one
+                    named thing of yours — so it gets to be a chip too. */}
+                {isCrossTeam && (
+                    <Box sx={{ pl: BODY_TEXT_INDENT }}>
+                        <InboxCrossTeamChips inboxItem={inboxItem} />
+                    </Box>
+                )}
+
+                {/* Where the thing you just accepted has landed. */}
+                {acceptedIn && (
+                    <Box sx={{ pl: BODY_TEXT_INDENT }}>
+                        <Typography level="body-xs" sx={{ color: labelSubtleColor }}>
+                            {acceptedIn}
                         </Typography>
                     </Box>
                 )}
