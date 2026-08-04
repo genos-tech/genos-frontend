@@ -974,15 +974,16 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                     // graph above the host dialog or it opens invisibly
                     // behind it — see diagramZIndex.ts.
                     zIndex={hostZIndex != null ? hostZIndex + DIAGRAM_LIFT : undefined}
-                    // Always anchor the diagram on the WHOLE hierarchy
-                    // the task lives in. `rootTaskId` walks up to the
-                    // top of the parent chain (or self for unparented
-                    // tasks). Without this fallback, opening the
-                    // diagram from a leaf sub-task would only show
-                    // that single node — the user expects to see the
-                    // milestone / parent + all siblings + sub-tree.
+                    // Always anchor the diagram on the WHOLE hierarchy the
+                    // task lives in: pass this task and let the graph
+                    // loader walk up the parent chain. Opening the diagram
+                    // from a leaf sub-task must still show the milestone /
+                    // parent + all siblings + sub-tree, not that single
+                    // node. The stored `rootTaskId` is deliberately not
+                    // used — it can still hold the root from before an
+                    // ancestor changed milestone.
                     rootLabel={`${taskContent.displayId ?? `#${taskContent.id}`} · ${taskContent.title || "Untitled"}`}
-                    rootTaskId={Number(taskContent.rootTaskId ?? taskContent.id)}
+                    rootTaskId={Number(taskContent.id)}
                     usePM={usePM}
                     useSM={useSM}
                     useTM={useTM}

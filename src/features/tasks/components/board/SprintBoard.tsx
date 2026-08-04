@@ -634,11 +634,12 @@ export const SprintBoard = (props: SprintBoardProps) => {
             </div>
 
             {/* Shared task-graph modal for the per-card footer trigger.
-                The trigger only renders on root cards (parentTaskId
-                null — root tasks / milestone backing rows), so the card
-                is the top of its hierarchy; `rootTaskId ?? id` mirrors
-                the preview header's anchor. Page-hosted surface, so the
-                diagram's default 9999 layer applies (no zIndex). */}
+                Anchored on the card's OWN id — as every diagram caller is:
+                the loader walks up the parent chain itself. Here the
+                trigger only renders on root cards (parentTaskId null —
+                root tasks / milestone backing rows), so the walk is a
+                no-op. Page-hosted surface, so the diagram's default 9999
+                layer applies (no zIndex). */}
             {diagramTask != null &&
                 diagramTask.id != null &&
                 (diagramTask.projectId ?? usePM.currentProject?.projectId) != null && (
@@ -646,7 +647,7 @@ export const SprintBoard = (props: SprintBoardProps) => {
                         myself={myself}
                         open={true}
                         rootLabel={`${formatTaskDisplayId(diagramTask)} · ${diagramTask.title || "Untitled"}`}
-                        rootTaskId={Number(diagramTask.rootTaskId ?? diagramTask.id)}
+                        rootTaskId={Number(diagramTask.id)}
                         usePM={usePM}
                         useSM={useSM}
                         useTM={useTM}

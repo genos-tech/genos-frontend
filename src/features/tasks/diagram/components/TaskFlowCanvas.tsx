@@ -69,6 +69,11 @@ import { TaskNodeCard } from "./TaskNodeCard";
 
 type Props = {
     myself: UserProps;
+    /**
+     * Anchor: any task in the tree to draw. `loadTaskGraph` resolves the
+     * chain top above it, and everything downstream ("is root", the
+     * rollups) reads that resolved id off the graph rather than this prop.
+     */
     rootTaskId: number;
     projectId: number;
     useTM: TaskManagementState;
@@ -135,10 +140,14 @@ const isDeletedStatus = (status: string | null | undefined): boolean =>
 
 const computeOverview = (
     graph: TaskGraph,
-    rootTaskId: number,
     sprintByTaskId: Map<number, Sprint>,
     openBlockerCountByTask: Map<number, number>
 ): ScheduleOverview => {
+    // The tree's real top, resolved by the loader from the parent chain.
+    // Taken off the graph rather than from the caller's anchor: the two
+    // differ whenever the diagram was opened from a sub-task, and a
+    // mismatched pair would count the root as its own descendant.
+    const rootTaskId = graph.rootTaskId;
     // Deleted tasks are excluded from every overview figure (progress,
     // span, overdue/due-soon/blocked) so the header matches the graph,
     // which never renders them.
@@ -299,7 +308,6 @@ const computeDescendantCounts = (
 // this rather than asserting on the helper alone.
 export const buildNodesAndEdges = (
     graph: TaskGraph,
-    rootTaskId: number,
     // Task id of the preview pane the user opened the diagram from
     // (or null when none). Module-scope here can't read `useTM` —
     // the caller passes the snapshot at assembly time.
@@ -319,6 +327,10 @@ export const buildNodesAndEdges = (
     // Assigned Milestones section) leaves every node un-highlighted.
     highlightAssigneeId: number | string | null
 ): { nodes: Node[]; edges: Edge[]; titleByTaskId: Map<number, string> } => {
+    // The tree's real top, resolved by the loader (see `TaskGraph`).
+    // `isRoot` has to agree with the set of tasks actually in the graph,
+    // and only the loader knows which chain it walked.
+    const rootTaskId = graph.rootTaskId;
     // Descendant counts power the milestone progress bar.
     const descendantCounts = computeDescendantCounts(graph.tasks);
 
@@ -589,7 +601,7 @@ const CanvasInner = ({
         if (onOverviewChange) {
             const sprintByTaskId = buildSprintLookup(graph, useSM, projectId);
             const blockerMap = buildOpenBlockerCountByTask(graph);
-            const overview = computeOverview(graph, rootTaskId, sprintByTaskId, blockerMap);
+            const overview = computeOverview(graph, sprintByTaskId, blockerMap);
             onOverviewChange(overview);
 
             // Fire-and-forget burndown fetch. Uses the same window the
@@ -772,8 +784,9 @@ const CanvasInner = ({
                     assigneeImgPath: null,
                     parentTaskId: String(parentTaskId),
                     // task.rootTaskId isn't used for rendering (the diagram
-                    // keys "is root" off the rootTaskId prop), but keep it
-                    // sane for any downstream reader.
+                    // resolves the root by walking parents in
+                    // `loadTaskGraph`), but keep it sane for any
+                    // downstream reader.
                     rootTaskId:
                         parent.rootTaskId ?? (parent.id != null ? Number(parent.id) : null),
                     threadId: null,
@@ -905,7 +918,6 @@ const CanvasInner = ({
                     : null;
             const { nodes: rawNodes, edges: rawEdges } = buildNodesAndEdges(
                 graph,
-                rootTaskId,
                 // Snapshot the preview-pane target at assemble time so
                 // the "you are here" highlight lands on the right card.
                 // Captured here (inside CanvasInner) because the module-
@@ -936,15 +948,7 @@ const CanvasInner = ({
                 pendingFitRef.current = true;
             }
         },
-        [
-            dagreLayout,
-            rootTaskId,
-            useSM,
-            projectId,
-            usePM.currentProject,
-            hideClosed,
-            highlightAssigneeId,
-        ]
+        [dagreLayout, useSM, projectId, usePM.currentProject, hideClosed, highlightAssigneeId]
     );
 
     // Perform a pending fit once React Flow has measured the nodes.

@@ -190,6 +190,7 @@ describe("buildNodesAndEdges — closed tasks take their blockers with them", ()
         ({ ...task(id, status, null), projectId: 99 }) as TaskTableProps;
 
     const graph: TaskGraph = {
+        rootTaskId: 1,
         tasks: [task(1, "Open", null), task(2, "Closed", 1), task(3, "Open", 1)],
         externalTasks: [ghost(90, "Open"), ghost(91, "Open")],
         dependencyEdges: [
@@ -201,7 +202,6 @@ describe("buildNodesAndEdges — closed tasks take their blockers with them", ()
     const nodeIdsWith = (hideClosed: boolean): number[] =>
         buildNodesAndEdges(
             graph,
-            1,
             null,
             new Map(),
             new Map(),
@@ -231,7 +231,6 @@ describe("buildNodesAndEdges — closed tasks take their blockers with them", ()
     it("drops the dependency edge along with its endpoints", () => {
         const { edges } = buildNodesAndEdges(
             graph,
-            1,
             null,
             new Map(),
             new Map(),
