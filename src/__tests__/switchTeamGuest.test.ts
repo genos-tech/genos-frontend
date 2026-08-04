@@ -14,13 +14,13 @@
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("../features/admin/services/joinTeam", () => ({
-    joinTeam: vi.fn(() => Promise.resolve({})),
-}));
-
 import { joinTeam } from "../features/admin/services/joinTeam";
 import { switchTeam } from "../features/admin/services/switchTeam";
 import type { UserProps } from "../types/admin";
+
+vi.mock("../features/admin/services/joinTeam", () => ({
+    joinTeam: vi.fn(() => Promise.resolve({})),
+}));
 
 const myself: UserProps = {
     userId: "u-1",
