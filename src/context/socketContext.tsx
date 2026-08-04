@@ -49,3 +49,13 @@ export const useSocket = () => {
     }
     return context;
 };
+
+/**
+ * The socket if a provider is above us, `null` if not.
+ *
+ * For best-effort uses — a live relay that saves the other side a reload —
+ * where the component's job does not depend on the socket existing. Those
+ * should not throw, and should not force every test that renders them to
+ * mount the provider.
+ */
+export const useOptionalSocket = (): Socket | null => useContext(SocketContext)?.socket ?? null;

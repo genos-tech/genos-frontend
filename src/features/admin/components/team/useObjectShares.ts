@@ -21,8 +21,10 @@
  * written by the other organization too, so local state is a guess.
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
+import type { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
+import { relayCrossTeamRequest } from "../../services/crossTeamNotice";
 import {
     addShareParticipants,
     fetchObjectShares,
@@ -58,7 +60,13 @@ export const useObjectShares = (
     objectType: ExternalShareObjectType,
     objectId: string | undefined,
     /** The team the object belongs to. Only needed to OFFER a new share. */
-    hostTeamId?: string
+    hostTeamId?: string,
+    /**
+     * Optional, and only used to deliver a new offer live. Without it the
+     * guest team still gets the inbox row and the push — it just doesn't
+     * appear until their next load.
+     */
+    socket?: Socket | null
 ): ObjectShareControls => {
     const { accessToken } = useAuth();
     const [shares, setShares] = useState<ObjectShare[]>([]);
@@ -95,23 +103,22 @@ export const useObjectShares = (
     const controls = useMemo(
         () => ({
             offer: (guestTeamId: string, roleCeiling: "viewer" | "editor" = "viewer") =>
-                run(async () =>
-                    Boolean(
-                        hostTeamId &&
-                            objectId &&
-                            (await offerExternalShare(
-                                accessToken,
-                                {
-                                    guestTeamId,
-                                    objectId: String(objectId),
-                                    objectType,
-                                    roleCeiling,
-                                    teamId: hostTeamId,
-                                },
-                                setError
-                            ))
-                    )
-                ),
+                run(async () => {
+                    if (!hostTeamId || !objectId) return false;
+                    const offered = await offerExternalShare(
+                        accessToken,
+                        {
+                            guestTeamId,
+                            objectId: String(objectId),
+                            objectType,
+                            roleCeiling,
+                            teamId: hostTeamId,
+                        },
+                        setError
+                    );
+                    if (offered) relayCrossTeamRequest(socket, { grantId: offered.grantId });
+                    return Boolean(offered);
+                }),
             admit: (grantId: string, userIds: string[], role?: "viewer" | "editor") =>
                 run(() => addShareParticipants(accessToken, grantId, userIds, role, setError)),
             withdraw: (grantId: string, userIds: string[]) =>
@@ -120,7 +127,7 @@ export const useObjectShares = (
                 run(() => revokeExternalShare(accessToken, grantId, setError)),
             rosterFor: (teamId: string) => fetchOwnTeamRoster(accessToken, teamId),
         }),
-        [accessToken, hostTeamId, objectId, objectType, run]
+        [accessToken, hostTeamId, objectId, objectType, run, socket]
     );
 
     return {

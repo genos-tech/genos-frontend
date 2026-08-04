@@ -9,8 +9,10 @@
  * the moment the counterparty answers.
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
+import type { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
+import { relayCrossTeamRequest } from "../../services/crossTeamNotice";
 import {
     fetchTeamConnections,
     requestTeamConnection,
@@ -37,7 +39,15 @@ export type TeamConnectionControls = {
     revoke: (connectionId: string) => Promise<number | null>;
 };
 
-export const useTeamConnections = (teamId: string): TeamConnectionControls => {
+export const useTeamConnections = (
+    teamId: string,
+    /**
+     * Optional, and only used to deliver a request live. Without it the
+     * other team still gets the inbox row and the push — they just don't
+     * see it appear until their next load.
+     */
+    socket?: Socket | null
+): TeamConnectionControls => {
     const { accessToken } = useAuth();
     const [rows, setRows] = useState<TeamConnection[]>([]);
     const [loading, setLoading] = useState(true);
@@ -92,8 +102,19 @@ export const useTeamConnections = (teamId: string): TeamConnectionControls => {
         refresh,
         request: useCallback(
             (targetTeamId: string) =>
-                run(() => requestTeamConnection(accessToken, teamId, targetTeamId, setError)),
-            [accessToken, teamId, run]
+                run(async () => {
+                    const created = await requestTeamConnection(
+                        accessToken,
+                        teamId,
+                        targetTeamId,
+                        setError
+                    );
+                    if (created) {
+                        relayCrossTeamRequest(socket, { connectionId: created.connectionId });
+                    }
+                    return Boolean(created);
+                }),
+            [accessToken, socket, teamId, run]
         ),
         respond: useCallback(
             (connectionId: string, accept: boolean) =>

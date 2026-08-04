@@ -109,6 +109,12 @@ export const ObjectSharesPanel = ({
                             {share.teamName}
                         </Typography>
                         <Typography level="body-xs" sx={{ color: labelColor }}>
+                            {/* Who owns the thing, then how it stands. The
+                                name above is the other team on both sides
+                                of the share, so which side you are on has
+                                to be said rather than inferred. */}
+                            {(share.side === "given" ? strings.sideGiven : strings.sideReceived) +
+                                " · "}
                             {share.status === "pending"
                                 ? strings.awaitingTheirApproval
                                 : fmt(strings.participantCount, {

@@ -28,6 +28,7 @@ import { UIStateManagementState } from "../../../../hooks/common/useUIStateManag
 import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { useTeamConnections } from "../../../admin/components/team/useTeamConnections";
+import { relayCrossTeamRequest } from "../../../admin/services/crossTeamNotice";
 import { popTeamMembers } from "../../../admin/services/popTeamMembers";
 import { createChatGroup } from "../../services/createChatGroup";
 
@@ -155,7 +156,7 @@ export const ModalCreateGM: React.FC<Props> = ({
         setCreateCGErrorMessage(null);
         try {
             const memberIds = selectedMembers.map((m) => m.userId);
-            await createChatGroup(
+            const channel = await createChatGroup(
                 myself,
                 chatName,
                 useCM,
@@ -168,6 +169,16 @@ export const ModalCreateGM: React.FC<Props> = ({
                 memberIds,
                 isExternal ? { guestTeamIds } : undefined
             );
+            // Put the invitation in each guest team owner's open inbox.
+            // Keyed by the CHANNEL because the offers are created inside
+            // the create call and their grant ids never come back here —
+            // and there can be several, one per invited team.
+            if (channel && isExternal && guestTeamIds.length > 0) {
+                relayCrossTeamRequest(socket, {
+                    objectId: channel.id,
+                    objectType: "channel",
+                });
+            }
         } finally {
             setIsLoading(false);
         }
