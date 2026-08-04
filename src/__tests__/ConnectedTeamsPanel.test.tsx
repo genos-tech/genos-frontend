@@ -30,6 +30,8 @@ const connection = (over: Partial<TeamConnection> = {}): TeamConnection => ({
     teamName: "Acme",
     status: "active",
     direction: "outgoing",
+    isOwner: false,
+    isGuest: false,
     tsCreated: "2026-01-01T00:00:00Z",
     tsUpdated: "2026-01-01T00:00:00Z",
     ...over,
@@ -50,12 +52,19 @@ const controls = (over: Partial<TeamConnectionControls> = {}): TeamConnectionCon
     ...over,
 });
 
-const renderPanel = (over: Partial<TeamConnectionControls> = {}, canManage = true) => {
+const renderPanel = (
+    over: Partial<TeamConnectionControls> = {},
+    canManage = true,
+    // The owner, unless a test is about somebody who isn't one. Defaults
+    // to `canManage` so the existing cases keep describing one person.
+    canDisconnect = canManage
+) => {
     const c = controls(over);
     render(
         <CssVarsProvider>
             <ConnectedTeamsPanel
                 borderColor="#ccc"
+                canDisconnect={canDisconnect}
                 canManage={canManage}
                 connections={c}
                 labelColor="#666"
@@ -175,6 +184,42 @@ describe("ConnectedTeamsPanel", () => {
         expect(screen.queryByRole("button", { name: /Disconnect/i })).toBeNull();
         expect(screen.queryByRole("button", { name: /^Approve$/i })).toBeNull();
         expect(screen.queryByRole("button", { name: /Request connection/i })).toBeNull();
+    });
+
+    it("keeps disconnect away from an editor, who can do everything else", () => {
+        // Ending a connection deletes live access in two companies with no
+        // way back but to negotiate it again. The server refuses an editor;
+        // offering them the button would only produce a 403.
+        renderPanel({ active: [connection()] }, true, false);
+        expect(screen.queryByRole("button", { name: /Disconnect/i })).toBeNull();
+        expect(screen.getByRole("button", { name: /Request connection/i })).toBeTruthy();
+    });
+
+    it("labels the team that owns the shared work, not the reader's own", () => {
+        renderPanel({ active: [connection({ isOwner: true })] });
+        expect(screen.getByText("Owner")).toBeTruthy();
+        expect(screen.queryByText("Guest")).toBeNull();
+    });
+
+    it("labels a team that works in our data as the guest", () => {
+        renderPanel({ active: [connection({ isGuest: true })] });
+        expect(screen.getByText("Guest")).toBeTruthy();
+        expect(screen.queryByText("Owner")).toBeNull();
+    });
+
+    it("labels neither side while nothing has been shared yet", () => {
+        // A real third state, not a fallback: connected, with no host and
+        // no guest to name.
+        renderPanel({ active: [connection()] });
+        expect(screen.queryByText("Owner")).toBeNull();
+        expect(screen.queryByText("Guest")).toBeNull();
+    });
+
+    it("drops the who-invited-whom line from a live connection", () => {
+        // History that stopped being actionable the moment they accepted,
+        // and it read as a second, contradicting claim beside the chip.
+        renderPanel({ active: [connection({ isOwner: true })] });
+        expect(screen.queryByText(/invited/i)).toBeNull();
     });
 
     it("surfaces a server error from the hook", () => {

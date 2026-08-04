@@ -45,6 +45,14 @@ type Props = {
     connections: TeamConnectionControls;
     /** Owner or editor. Gates the actions, not the list. */
     canManage: boolean;
+    /**
+     * The team owner, and only them. Disconnecting deletes live access
+     * for everybody in every share the connection carries, in BOTH
+     * companies, and the only way back is to negotiate the whole thing
+     * again — so it is not an editor's call. The server agrees; this
+     * merely stops offering a button it would refuse.
+     */
+    canDisconnect: boolean;
     /** So the "connect" form can refuse the team you are already in. */
     myTeamId: string;
     labelColor: string;
@@ -55,6 +63,7 @@ type Props = {
 export const ConnectedTeamsPanel = ({
     connections,
     canManage,
+    canDisconnect,
     myTeamId,
     labelColor,
     valueColor,
@@ -83,28 +92,36 @@ export const ConnectedTeamsPanel = ({
         if (ok) setTeamIdDraft("");
     };
 
-    // Which side OWNS the shared work — the only asymmetry in a connection
-    // that changes what you can do. Who asked to connect is on the row's
-    // note line below, where a piece of history belongs; it was a chip
-    // once, and two chips saying different things about the same
-    // relationship read as one contradicting the other.
+    // Which side owns the shared work — the only asymmetry in a connection
+    // that changes what you can do, and the one thing a reader wants from
+    // this row. It says something about THE OTHER TEAM, always: "Owner"
+    // means they own work we were let into, "Guest" means they work in
+    // ours. An absent chip used to carry the "Guest" case, which read as
+    // the reader's own team being labelled owner — the chip appeared to be
+    // about whoever was looking rather than about the row.
     //
-    // Nothing at all on our own rows: absence of the chip is what says the
-    // shared work is ours, and a "Guest" counter-chip would label the
-    // majority of rows to distinguish the minority.
-    const ownerChip = (connection: TeamConnection): React.ReactNode =>
-        connection.isOwner ? (
-            <Tooltip size="sm" title={strings.ownerTeamHint} variant="outlined">
+    // Both false is a real third state (connected, nothing shared yet) and
+    // gets no chip, because there is no host and no guest to name.
+    const sideChip = (connection: TeamConnection): React.ReactNode => {
+        if (!connection.isOwner && !connection.isGuest) return null;
+        const owner = connection.isOwner;
+        return (
+            <Tooltip
+                size="sm"
+                title={owner ? strings.ownerTeamHint : strings.guestTeamHint}
+                variant="outlined"
+            >
                 <Chip
-                    color="primary"
+                    color={owner ? "primary" : "neutral"}
                     size="sm"
                     sx={{ borderRadius: "6px", fontSize: "0.65rem", flexShrink: 0 }}
                     variant="soft"
                 >
-                    {strings.ownerTeam}
+                    {owner ? strings.ownerTeam : strings.guestTeam}
                 </Chip>
             </Tooltip>
-        ) : null;
+        );
+    };
 
     const row = (
         connection: TeamConnection,
@@ -131,7 +148,7 @@ export const ConnectedTeamsPanel = ({
                     <Typography level="body-sm" sx={{ color: valueColor, fontWeight: 600 }} noWrap>
                         {connection.teamName}
                     </Typography>
-                    {ownerChip(connection)}
+                    {sideChip(connection)}
                 </Stack>
                 {note && (
                     <Typography level="body-xs" sx={{ color: labelColor }}>
@@ -230,7 +247,7 @@ export const ConnectedTeamsPanel = ({
                             >
                                 {strings.statusConnected}
                             </Chip>
-                            {canManage && (
+                            {canDisconnect && (
                                 <Tooltip size="sm" title={strings.disconnect} variant="outlined">
                                     <IconButton
                                         color="danger"
@@ -243,10 +260,11 @@ export const ConnectedTeamsPanel = ({
                                     </IconButton>
                                 </Tooltip>
                             )}
-                        </Stack>,
-                        c.direction === "outgoing"
-                            ? strings.activeInvitedByUs
-                            : strings.activeInvitedByThem
+                        </Stack>
+                        // No note. Who asked to connect is history that
+                        // stopped being actionable the moment they said
+                        // yes, and the Owner/Guest chip above is the fact
+                        // that decides what this row lets you do.
                     )
                 )}
 

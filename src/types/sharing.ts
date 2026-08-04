@@ -32,11 +32,25 @@ export type SharedObjectType = "channel" | "project" | "note_folder";
  */
 export interface ObjectShare {
     grantId: string;
+    /** The GUEST team on this share — never the owner. */
     teamId: string;
     teamName: string;
+    /**
+     * The team the object belongs to, named rather than implied.
+     *
+     * `side` says which side the READER is on, which is a fact about the
+     * reader: somebody who belongs to both teams gets a different answer
+     * from the same row than their colleague does. Naming both teams is
+     * true for everybody, so the copy uses these and `side` is left for
+     * deciding what to render.
+     */
+    ownerTeamId: string | null;
+    ownerTeamName: string;
     roleCeiling: "viewer" | "editor";
     status: ShareStatus;
     side: "given" | "received";
     canAdmit: boolean;
+    /** The host's managers, who alone decide how much the guests may do. */
+    canSetCeiling: boolean;
     participants: ShareParticipant[];
 }

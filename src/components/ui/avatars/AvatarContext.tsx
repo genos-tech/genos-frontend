@@ -4,6 +4,7 @@ import { Socket } from "socket.io-client";
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { UIStateManagementState } from "../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../types/admin";
+import { rememberedPerson, useRememberedPerson } from "./userDirectory";
 
 // Single source of truth for everything an avatar needs to render itself
 // without taking a fan-out of props at every callsite. The provider lives
@@ -55,7 +56,11 @@ export const useOptionalAvatarContext = (): AvatarContextValue | null => {
  *     locally-cached avatar update (e.g. immediately after a profile-image
  *     upload) is reflected before `teamMemberProfiles` re-pops.
  *   - Otherwise looks up `teamMemberProfiles[String(userId)]`.
- *   - Returns `undefined` when neither resolves; callers should render an
+ *   - Failing that, the cross-team directory (`userDirectory`) — people
+ *     from another team, who are in no roster we hold and used to resolve
+ *     to nothing at all. The roster wins where both have the person: it is
+ *     fetched, complete, and carries presence.
+ *   - Returns `undefined` when none resolve; callers should render an
  *     initials fallback.
  *
  * All id comparisons are stringified to avoid `"12"` vs `12` misses.
@@ -65,12 +70,13 @@ export const useUserProfile = (
     userId: string | number | null | undefined
 ): UserProps | undefined => {
     const { myself, teamMemberProfiles } = useAvatarContext();
+    const remembered = useRememberedPerson(userId);
     return useMemo(() => {
         if (userId == null || userId === "") return undefined;
         const idStr = String(userId);
         if (idStr === String(myself.userId)) return myself;
-        return teamMemberProfiles[idStr];
-    }, [userId, myself, teamMemberProfiles]);
+        return teamMemberProfiles[idStr] ?? remembered;
+    }, [userId, myself, teamMemberProfiles, remembered]);
 };
 
 /**
@@ -95,7 +101,15 @@ export const resolveDisplayName = (
     if (userId == null || userId === "") return fallbackName;
     const idStr = String(userId);
     if (myself && idStr === String(myself.userId)) return myself.userName || fallbackName;
-    return teamMemberProfiles?.[idStr]?.userName || fallbackName;
+    return (
+        teamMemberProfiles?.[idStr]?.userName ||
+        // Somebody from another team, whom no roster here can name. Read
+        // without subscribing: this is a pure function so it can run in a
+        // `.map()`, and the stored `fallbackName` is already a real name in
+        // the cases where this matters.
+        rememberedPerson(idStr)?.userName ||
+        fallbackName
+    );
 };
 
 /**

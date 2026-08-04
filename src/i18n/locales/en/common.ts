@@ -65,16 +65,25 @@ export const common = {
         awaitingTheirApproval: "Waiting for this team to accept",
         ceilingViewer: "Up to viewer",
         ceilingEditor: "Up to editor",
-        // Which side of the share you are on. The row names the OTHER
-        // team either way, so without this a shared project looks the
-        // same whether you own it or were let into it.
-        sideGiven: "You shared this",
-        sideReceived: "They shared this with you",
+        // Both teams, named, owner first. The row used to say "You shared
+        // this" or "They shared this with you" — a claim about the READER,
+        // which is wrong for anyone who belongs to both teams and useless
+        // to anyone comparing two rows. Two names cannot be wrong.
+        sharedFromTo: "{owner} shared this with {guest}",
+        sharedDirectionHint: "The team on the left owns it. The team on the right was let in.",
+        changeCeiling: "Click to switch what {team} may do here.",
         addFromYourTeam: "Add someone from your team",
         removeParticipant: "Remove {name}",
         everyoneAlreadyIn: "Everyone on your team already has access.",
         endShare: "Stop sharing with this team",
         offerPrompt: "Share with a connected team",
+        // What the other team gets. Editing by default: a share exists so
+        // two teams can work on the same thing, and read-only-by-default
+        // meant every project ever shared arrived as something the guest
+        // team could look at and not touch.
+        offerCeilingLabel: "They can",
+        offerCeilingEditor: "Edit",
+        offerCeilingViewer: "View only",
         actionFailed: "That didn't work. Please try again.",
     },
     // Permission roles shared by Team / Project / GM. Distinct from

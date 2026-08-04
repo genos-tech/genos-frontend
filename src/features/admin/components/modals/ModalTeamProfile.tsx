@@ -1161,6 +1161,7 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                 the created date, which is trivia. */}
                                             <ConnectedTeamsPanel
                                                 borderColor={styles.border}
+                                                canDisconnect={isTeamOwner}
                                                 canManage={canManage}
                                                 connections={teamConnections}
                                                 labelColor={styles.labelColor}

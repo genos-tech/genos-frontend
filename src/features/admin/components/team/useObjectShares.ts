@@ -23,6 +23,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Socket } from "socket.io-client";
 
+import { rememberPeople } from "../../../../components/ui/avatars/userDirectory";
 import { useAuth } from "../../../../context/AuthContext";
 import { relayCrossTeamRequest } from "../../services/crossTeamNotice";
 import {
@@ -32,6 +33,7 @@ import {
     offerExternalShare,
     removeShareParticipants,
     revokeExternalShare,
+    setShareRoleCeiling,
     type ExternalShareObjectType,
     type ObjectShare,
 } from "../../services/teamConnections";
@@ -46,6 +48,8 @@ export type ObjectShareControls = {
     refresh: () => Promise<void>;
     /** Offer the object to a connected team. Host managers only. */
     offer: (guestTeamId: string, roleCeiling?: "viewer" | "editor") => Promise<boolean>;
+    /** Change what an admitted team may do. Host managers only. */
+    setCeiling: (grantId: string, roleCeiling: "viewer" | "editor") => Promise<boolean>;
     /** Admit our own colleagues to a share we received. */
     admit: (grantId: string, userIds: string[], role?: "viewer" | "editor") => Promise<boolean>;
     /** Withdraw people. Either side's managers, one person at a time. */
@@ -80,7 +84,13 @@ export const useObjectShares = (
             setLoading(false);
             return;
         }
-        setShares(await fetchObjectShares(accessToken, objectType, String(objectId)));
+        const rows = await fetchObjectShares(accessToken, objectType, String(objectId));
+        // The participants are the other team's people by definition, so
+        // this payload is the only thing that can name them anywhere else
+        // in the app — a task they own, a note they wrote, a message they
+        // sent — until some other cross-team payload does.
+        rememberPeople(rows.flatMap((row) => row.participants));
+        setShares(rows);
         setLoading(false);
     }, [accessToken, objectId, objectType]);
 
@@ -102,7 +112,7 @@ export const useObjectShares = (
 
     const controls = useMemo(
         () => ({
-            offer: (guestTeamId: string, roleCeiling: "viewer" | "editor" = "viewer") =>
+            offer: (guestTeamId: string, roleCeiling: "viewer" | "editor" = "editor") =>
                 run(async () => {
                     if (!hostTeamId || !objectId) return false;
                     const offered = await offerExternalShare(
@@ -119,6 +129,8 @@ export const useObjectShares = (
                     if (offered) relayCrossTeamRequest(socket, { grantId: offered.grantId });
                     return Boolean(offered);
                 }),
+            setCeiling: (grantId: string, roleCeiling: "viewer" | "editor") =>
+                run(() => setShareRoleCeiling(accessToken, grantId, roleCeiling, setError)),
             admit: (grantId: string, userIds: string[], role?: "viewer" | "editor") =>
                 run(() => addShareParticipants(accessToken, grantId, userIds, role, setError)),
             withdraw: (grantId: string, userIds: string[]) =>
