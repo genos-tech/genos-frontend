@@ -365,6 +365,9 @@ export interface AgentSessionSummary {
     last_active_at: string;
     first_query: string;
     turn_count: number;
+    // Pinned rows are returned first and are exempt from the recent-list
+    // cap, so a pin keeps a session reachable however old it gets.
+    is_pinned: boolean;
 }
 
 // One completed turn inside a past session. `answer` is the final text
@@ -507,14 +510,23 @@ export async function fetchThreadSummary(args: {
     return (await resp.json()) as ThreadSummaryResponse;
 }
 
+// `search` filters server-side across every question in a session, not
+// just the `first_query` the row is labelled with — and across the whole
+// retention window rather than the capped recent slice, which is the
+// point: the asks worth searching for are usually the ones too old to
+// scroll to. Omitted from the URL when blank so browsing stays a plain
+// cacheable GET.
 export async function fetchAgentSessions(args: {
     accessToken: string;
     teamId: string;
+    search?: string;
 }): Promise<AgentSessionSummary[]> {
     if (!args.accessToken || !args.teamId) return [];
+    const search = (args.search || "").trim();
     try {
         const resp = await fetch(
-            `${API_BASE}/agent/sessions/?team_id=${encodeURIComponent(args.teamId)}`,
+            `${API_BASE}/agent/sessions/?team_id=${encodeURIComponent(args.teamId)}` +
+                (search ? `&search=${encodeURIComponent(search)}` : ""),
             { headers: { Authorization: `Bearer ${args.accessToken}` } }
         );
         if (!resp.ok) return [];
@@ -522,6 +534,31 @@ export async function fetchAgentSessions(args: {
         return data.sessions || [];
     } catch {
         return [];
+    }
+}
+
+// Pin / unpin one of the caller's own past asks. Both directions are
+// idempotent server-side, and re-pinning keeps the original pin time, so
+// a double-click can't reshuffle the sidebar. Best-effort like
+// `submitAgentFeedback`: returns whether it stuck, never throws, so the
+// caller can roll back its optimistic flip.
+export async function setAgentSessionPin(args: {
+    accessToken: string;
+    sessionId: string;
+    pinned: boolean;
+}): Promise<boolean> {
+    if (!args.accessToken || !args.sessionId) return false;
+    try {
+        const resp = await fetch(
+            `${API_BASE}/agent/sessions/${encodeURIComponent(args.sessionId)}/pin/`,
+            {
+                method: args.pinned ? "POST" : "DELETE",
+                headers: { Authorization: `Bearer ${args.accessToken}` },
+            }
+        );
+        return resp.ok;
+    } catch {
+        return false;
     }
 }
 
