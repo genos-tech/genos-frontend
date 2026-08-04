@@ -8,13 +8,17 @@ name: CI
 # `continue-on-error` (which would mask a red baseline).
 #
 # Path filtering happens INSIDE the workflow (the `changes` job below +
-# job-level `if`), NOT via `on.pull_request.paths`. All three CI jobs are
+# job-level `if`), NOT via `on.pull_request.paths`. The CI checks are
 # listed as required-check contexts in the (currently disabled) branch
 # ruleset; a trigger-level filter would leave those checks "Expected"
 # forever on a docs-only PR and block its merge, whereas a job skipped by
 # an `if` condition reports success. Pushes to main are never filtered —
 # the deploy job below rides `needs: frontend-test`, and a detection bug
 # must never be able to skip a deploy.
+#
+# `frontend-test` is a thin gate over a 3-way vitest shard matrix, kept as
+# its own job so the required context name stays stable. Coverage moved to
+# its own report-only job when the tests were sharded. See each job.
 
 on:
     push:
@@ -62,8 +66,90 @@ jobs:
                       echo "code=false" >> "$GITHUB_OUTPUT"
                   fi
 
+    # Vitest, split three ways. The suite is ~45s of work on a dev machine but
+    # took 10 MINUTES here, and almost none of that was the test count: a
+    # 2-vCPU runner makes vitest choose a single worker (see the pool comment
+    # in vite.config.ts), so it ran serially, and this runner is ~2.5x slower
+    # per unit of work than a local core on top of that.
+    #
+    # Two fixes, and this is the second: `vite.config.ts` now floors the pool
+    # at 2 workers (214s -> 148s on 2 cores), and the shards below cut the
+    # remainder across three runners. Shards come out even — 84 files each,
+    # 40-46s — because vitest balances by file.
+    #
+    # Coverage is deliberately NOT collected here. Combining it across shards
+    # needs blob reports plus a merge job, and it gates nothing (no
+    # thresholds; it's an uploaded artifact), so it lives in its own
+    # report-only job and stays off the path to a merge.
+    frontend-test-shards:
+        name: frontend-test shard ${{ matrix.shard }}/3
+        needs: changes
+        if: needs.changes.outputs.code == 'true'
+        runs-on: ubuntu-latest
+        strategy:
+            # Report every failing shard, not just the first to go red.
+            fail-fast: false
+            matrix:
+                shard: [1, 2, 3]
+        steps:
+            - uses: actions/checkout@v4
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 22
+                  cache: npm
+                  cache-dependency-path: package-lock.json
+            - run: npm ci
+            - name: Vitest (shard ${{ matrix.shard }}/3)
+              run: npx vitest run --shard=${{ matrix.shard }}/3
+
+    # Single stable check context for the shards above.
+    #
+    # This job exists for its NAME: `frontend-test (required-first)` is listed
+    # as a required-check context in the (currently disabled) branch ruleset,
+    # and a matrix would report three differently-named contexts instead,
+    # leaving the required one "Expected" forever and blocking every merge.
+    # The deploy job below also hangs off this id.
     frontend-test:
         name: frontend-test (required-first)
+        needs: [changes, frontend-test-shards]
+        # `always()` so this still reports on a docs-only PR, where the shards
+        # are skipped by the `changes` filter — the whole reason that filtering
+        # lives inside the workflow rather than in `on.pull_request.paths`.
+        if: always()
+        runs-on: ubuntu-latest
+        steps:
+            - name: Gate on the shards
+              env:
+                  # A matrix result is `success` only when every shard passed.
+                  SHARDS: ${{ needs.frontend-test-shards.result }}
+                  # Both needed, because a skipped shard set is only benign
+                  # when `changes` MEANT to skip it: a job whose dependency
+                  # died also reports `skipped`, so reading the result alone
+                  # would turn a broken `changes` job into a green required
+                  # check. Assert why it was skipped, not just that it was.
+                  DETECT: ${{ needs.changes.result }}
+                  CODE: ${{ needs.changes.outputs.code }}
+              run: |
+                  echo "detect=$DETECT code=$CODE shards=$SHARDS"
+                  if [ "$DETECT" != "success" ]; then
+                      echo "::error::change detection did not succeed — refusing to report green"
+                      exit 1
+                  fi
+                  # Fail closed: every path not named here is a failure.
+                  if [ "$CODE" = "false" ]; then
+                      [ "$SHARDS" = "skipped" ] && exit 0
+                      echo "::error::docs-only PR but shards did not skip"
+                      exit 1
+                  fi
+                  [ "$SHARDS" = "success" ] && exit 0
+                  echo "::error::vitest shards reported '$SHARDS'"
+                  exit 1
+
+    # Coverage, off the critical path: report-only and unsharded, so its
+    # runtime never delays a merge. Split out of `frontend-test` when that
+    # became sharded (see above).
+    frontend-coverage:
+        name: frontend-coverage (report-only)
         needs: changes
         if: needs.changes.outputs.code == 'true'
         runs-on: ubuntu-latest
