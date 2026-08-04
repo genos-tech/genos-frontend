@@ -180,6 +180,22 @@ export const GenosSessionSidebar = ({
                         sx={{
                             flexShrink: 0,
                             mt: 0.25,
+                            // No plate behind the pin in any state — the icon
+                            // carries this on its own. Fed to Joy's own
+                            // variables (which its variant styles read first)
+                            // rather than overridden per-selector, so there's
+                            // no specificity fight to lose.
+                            //
+                            // `plainActiveBg` matters beyond the press: Joy
+                            // applies its "active" variant to
+                            // `[aria-pressed="true"]` as well, which framed
+                            // every PINNED pin even at rest. The attribute
+                            // stays — it's how the toggle state reaches a
+                            // screen reader — but the frame goes, because the
+                            // filled icon already says the same thing.
+                            "--variant-plainHoverBg": "transparent",
+                            "--variant-plainActiveBg": "transparent",
+                            // Only shapes the focus ring now.
                             borderRadius: "8px",
                             // Pinned rows keep their pin visible — it's
                             // state, not just an action. Unpinned ones
@@ -192,18 +208,13 @@ export const GenosSessionSidebar = ({
                             // feedback below is slower and eased, because
                             // that one is meant to be watched.
                             transition:
-                                "opacity 100ms ease, transform 180ms cubic-bezier(0.4, 0, 0.2, 1), background 180ms ease, color 180ms ease",
+                                "opacity 100ms ease, transform 180ms cubic-bezier(0.4, 0, 0.2, 1), color 180ms ease",
                             "& svg": {
                                 transition: "transform 180ms cubic-bezier(0.4, 0, 0.2, 1)",
                             },
                             "&:hover": {
-                                background: isDark
-                                    ? "rgba(var(--gp-brand-700-rgb), 0.28)"
-                                    : "rgba(var(--gp-brand-700-rgb), 0.15)",
                                 color: isDark ? "var(--gp-brandalt-300)" : "var(--gp-brand-700)",
                                 transform: "scale(1.12)",
-                                // The tilt is on the pin alone — rotating the
-                                // button would take its tinted square with it.
                                 // Reads as pushing the pin in, or backwards,
                                 // pulling it out of a row already pinned.
                                 "& svg": { transform: "rotate(-15deg)" },
