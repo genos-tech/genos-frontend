@@ -111,7 +111,7 @@ jobs:
     # The deploy job below also hangs off this id.
     frontend-test:
         name: frontend-test (required-first)
-        needs: frontend-test-shards
+        needs: [changes, frontend-test-shards]
         # `always()` so this still reports on a docs-only PR, where the shards
         # are skipped by the `changes` filter — the whole reason that filtering
         # lives inside the workflow rather than in `on.pull_request.paths`.
@@ -122,15 +122,28 @@ jobs:
               env:
                   # A matrix result is `success` only when every shard passed.
                   SHARDS: ${{ needs.frontend-test-shards.result }}
+                  # Both needed, because a skipped shard set is only benign
+                  # when `changes` MEANT to skip it: a job whose dependency
+                  # died also reports `skipped`, so reading the result alone
+                  # would turn a broken `changes` job into a green required
+                  # check. Assert why it was skipped, not just that it was.
+                  DETECT: ${{ needs.changes.result }}
+                  CODE: ${{ needs.changes.outputs.code }}
               run: |
-                  echo "shards: $SHARDS"
-                  # `skipped` is the docs-only PR, which is a pass. Anything
-                  # else (failure / cancelled) must fail the required check —
-                  # never default to green here.
-                  case "$SHARDS" in
-                      success|skipped) exit 0 ;;
-                      *) exit 1 ;;
-                  esac
+                  echo "detect=$DETECT code=$CODE shards=$SHARDS"
+                  if [ "$DETECT" != "success" ]; then
+                      echo "::error::change detection did not succeed — refusing to report green"
+                      exit 1
+                  fi
+                  # Fail closed: every path not named here is a failure.
+                  if [ "$CODE" = "false" ]; then
+                      [ "$SHARDS" = "skipped" ] && exit 0
+                      echo "::error::docs-only PR but shards did not skip"
+                      exit 1
+                  fi
+                  [ "$SHARDS" = "success" ] && exit 0
+                  echo "::error::vitest shards reported '$SHARDS'"
+                  exit 1
 
     # Coverage, off the critical path: report-only and unsharded, so its
     # runtime never delays a merge. Split out of `frontend-test` when that
