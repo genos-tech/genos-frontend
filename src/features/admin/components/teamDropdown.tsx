@@ -7,6 +7,7 @@ import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
 import {
     Avatar,
     Box,
+    Chip,
     Divider,
     Dropdown,
     IconButton,
@@ -78,8 +79,15 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
         setAnchorEl(null);
     };
 
-    const handleClicked = (teamId: string, teamName: string) => {
-        switchTeam({ accessToken, myself, setMyself, teamId, teamName });
+    const handleClicked = (team: Team) => {
+        switchTeam({
+            accessToken,
+            myself,
+            setMyself,
+            teamId: team.teamId,
+            teamName: team.teamName,
+            isGuest: team.isGuest,
+        });
         handleClose();
     };
 
@@ -308,7 +316,7 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
                                         transform: "translateX(4px)",
                                     },
                                 }}
-                                onClick={() => handleClicked(team.teamId, team.teamName)}
+                                onClick={() => handleClicked(team)}
                             >
                                 <ListItemDecorator>
                                     <Box
@@ -336,17 +344,37 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
                                     </Box>
                                 </ListItemDecorator>
                                 <Box sx={{ flex: 1 }}>
-                                    <Typography
-                                        level="body-sm"
-                                        sx={{
-                                            fontWeight: isCurrentTeam ? 600 : 500,
-                                            color: isCurrentTeam
-                                                ? styles.iconColor
-                                                : styles.textColor,
-                                        }}
-                                    >
-                                        {team.teamName}
-                                    </Typography>
+                                    <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+                                        <Typography
+                                            level="body-sm"
+                                            sx={{
+                                                fontWeight: isCurrentTeam ? 600 : 500,
+                                                color: isCurrentTeam
+                                                    ? styles.iconColor
+                                                    : styles.textColor,
+                                            }}
+                                        >
+                                            {team.teamName}
+                                        </Typography>
+                                        {/* Another organization's team, listed here
+                                            because something in it was shared with
+                                            ours. Without the label it is
+                                            indistinguishable from our own teams, and
+                                            the narrowed roster inside reads as a
+                                            small team rather than a partial view. */}
+                                        {team.isGuest && (
+                                            <Tooltip
+                                                placement="top"
+                                                size="sm"
+                                                title={t.admin.teamDropdown.guestTeamHint}
+                                                variant="outlined"
+                                            >
+                                                <Chip color="neutral" size="sm" variant="soft">
+                                                    {t.admin.teamDropdown.guestTeam}
+                                                </Chip>
+                                            </Tooltip>
+                                        )}
+                                    </Box>
                                     {isCurrentTeam && (
                                         <Typography
                                             level="body-xs"

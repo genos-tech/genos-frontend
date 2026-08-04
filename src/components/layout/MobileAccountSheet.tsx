@@ -8,6 +8,7 @@ import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import {
     Box,
     Button,
+    Chip,
     DialogActions,
     DialogContent,
     DialogTitle,
@@ -135,8 +136,15 @@ export const MobileAccountSheet = (props: MobileAccountSheetProps) => {
         };
     }, [open, accessToken, myself.userId]);
 
-    const handleSwitchTeam = (teamId: string, teamName: string) => {
-        switchTeam({ accessToken, myself, setMyself, teamId, teamName });
+    const handleSwitchTeam = (team: Team) => {
+        switchTeam({
+            accessToken,
+            myself,
+            setMyself,
+            teamId: team.teamId,
+            teamName: team.teamName,
+            isGuest: team.isGuest,
+        });
         setTeamsOpen(false);
         onClose();
     };
@@ -249,13 +257,18 @@ export const MobileAccountSheet = (props: MobileAccountSheetProps) => {
                                         cursor: "pointer",
                                         "&:active": { opacity: 0.7 },
                                     }}
-                                    onClick={() =>
-                                        !isCurrent && handleSwitchTeam(team.teamId, team.teamName)
-                                    }
+                                    onClick={() => !isCurrent && handleSwitchTeam(team)}
                                 >
                                     <Typography level="body-md" sx={{ flex: 1, minWidth: 0 }}>
                                         {team.teamName}
                                     </Typography>
+                                    {/* Someone else's team, here because they
+                                        shared something with ours. */}
+                                    {team.isGuest && (
+                                        <Chip color="neutral" size="sm" variant="soft">
+                                            {t.admin.teamDropdown.guestTeam}
+                                        </Chip>
+                                    )}
                                     {isCurrent && (
                                         <CheckCircleRoundedIcon
                                             sx={{ fontSize: 18, color: palette.accent }}

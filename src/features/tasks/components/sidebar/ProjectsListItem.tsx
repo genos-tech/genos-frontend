@@ -536,9 +536,21 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                         }
                     )}
 
-                    <JoinProjectListItem setOpenJoinProject={setOpenJoinProject} usePM={usePM} />
+                    {/* Both are member-only on the server: creating a project
+                        in someone else's team, and joining one by id, are
+                        refused for a guest. A guest is here to work in the one
+                        project that was shared with their team, so offering
+                        either can only produce an error. */}
+                    {!useTEM.currentTeam.isGuest && (
+                        <>
+                            <JoinProjectListItem
+                                setOpenJoinProject={setOpenJoinProject}
+                                usePM={usePM}
+                            />
 
-                    <NewProjectListItem usePM={usePM} />
+                            <NewProjectListItem usePM={usePM} />
+                        </>
+                    )}
                 </List>
             </Toggler>
         </ListItem>
