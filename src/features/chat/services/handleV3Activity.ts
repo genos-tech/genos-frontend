@@ -52,10 +52,22 @@ export const V3_ACTIVITY_CREATED_EVENT = "v3:activity:created";
 
 export async function handleV3Activity(payload: unknown): Promise<void> {
     try {
+        const myself = getMyself();
         const legacy = v3ActivityToLegacy(
             payload as Parameters<typeof v3ActivityToLegacy>[0],
-            getMyself()
+            myself
         );
+
+        // `activity.created` is routed to the recipient's `user:{id}`
+        // room, which is per-USER — so someone in two teams receives the
+        // other team's entries while this team is on screen. Ignore them
+        // rather than storing them: nothing is lost, because switching
+        // teams wipes this store and re-syncs the new team's feed from
+        // the server. A row with no `teamId` comes from a backend that
+        // predates the field and is kept.
+        if (legacy.teamId && myself.teamId && legacy.teamId !== myself.teamId) {
+            return;
+        }
 
         await addActivityMessage(legacy);
 

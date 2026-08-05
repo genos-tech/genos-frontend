@@ -110,6 +110,12 @@ export type GMProfileProps = {
 export type ActivityMessageProps = {
     activityId: string;
     activityType: number;
+    // Which team's feed this row belongs to. The recipient may be in
+    // several teams and the sidebar shows one at a time, so the feed
+    // drops rows belonging to another team. Optional for rows that
+    // predate the field, which are shown rather than hidden — see
+    // `popActivityMessages`.
+    teamId?: string;
     chatType: number;
     chatId: number;
     chatName: string;

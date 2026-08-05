@@ -100,3 +100,24 @@ which show live presence.
 Feed it `ownTeamOnly(...)` (`utils/teamRoster.ts`) unless you have a specific
 reason not to: the roster deliberately includes people from teams you share work
 with, and offering them is offering an action the server refuses.
+
+### One team at a time
+
+A person can belong to several teams, and the workspace shows exactly one. So
+"mine" is never a sufficient scope for a list: every user-scoped list is also
+team-scoped, or it shows another team's data in this team's shell. The chat list
+(`?team_id=` on `GET /api/v3/channels/`) and the activity feed (`?team_id=` on
+`GET /api/v3/activities/`) were each fixed for this, in that order.
+
+Two things make it easy to get wrong:
+
+- **User socket rooms carry every team.** `activity.created`, `read.advanced`,
+  `pin.*` and `flag.*` are pushed to `user:{id}`, which the client is in
+  regardless of which team is on screen. A handler that writes the payload
+  straight to IndexedDB has just imported another team's row — see the team
+  check in `features/chat/services/handleV3Activity.ts`.
+- **A cached row can outlive its scope.** Switching teams wipes the team-scoped
+  stores (`useAppInitialization` → `DatabaseUtils.clearTeamScopedStores`), but a
+  row already in a store keeps whatever fields it was written with. Adding a
+  team to a stored shape means bumping that store's `syncWithCheckpoint` key too,
+  or an incremental sync will never re-fetch the rows that lack it.
