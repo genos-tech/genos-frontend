@@ -92,45 +92,38 @@ export const ConnectedTeamsPanel = ({
         if (ok) setTeamIdDraft("");
     };
 
-    // Which side owns the shared work — the only asymmetry in a connection
-    // that changes what you can do, and the one thing a reader wants from
-    // this row. It says something about THE OTHER TEAM, always: "Owner"
-    // means they own work we were let into, "Guest" means they work in
-    // ours. An absent chip used to carry the "Guest" case, which read as
-    // the reader's own team being labelled owner — the chip appeared to be
-    // about whoever was looking rather than about the row.
+    // Who invited whom, which is the only asymmetry a connection has. It
+    // describes THE OTHER TEAM, always: "Owner" means they asked us to
+    // connect, "Guest" means we asked them.
     //
-    // Both false is a real third state (connected, nothing shared yet) and
-    // gets no chip, because there is no host and no guest to name.
+    // This chip used to be built from live shares instead — the other team
+    // owning a project we were let into made them the "Owner". That reads
+    // fine until both teams share something with the other, at which point
+    // each side is host and guest at once and the row has to either claim
+    // both or pick one and contradict the same row seen from the other
+    // team. Ownership of shared work belongs to the work: each chat,
+    // project and note folder names its own owner where you open it.
     //
-    // Both TRUE is a real fourth state, and the one this row used to get
-    // wrong: once each team has shared something with the other, they are
-    // host AND guest to each other at the same time. Reading `isOwner`
-    // first collapsed that to "Owner" alone, so BOTH teams' profiles
-    // labelled the other the owner — a claim that contradicts itself the
-    // moment you switch teams and look back at the same connection. The
-    // two directions are independent facts, so each gets its own chip.
-    const sideChip = (owner: boolean): React.ReactNode => (
-        <AppTooltip
-            key={owner ? "owner" : "guest"}
-            size="sm"
-            title={owner ? strings.ownerTeamHint : strings.guestTeamHint}
-        >
-            <Chip
-                color={owner ? "primary" : "neutral"}
+    // Live rows only. On a pending request the note beside it already says
+    // whose move it is, and a team that has not accepted yet is neither.
+    const sideChip = (connection: TeamConnection): React.ReactNode => {
+        const theyInvitedUs = connection.direction === "incoming";
+        return (
+            <AppTooltip
                 size="sm"
-                sx={{ borderRadius: "6px", fontSize: "0.65rem", flexShrink: 0 }}
-                variant="soft"
+                title={theyInvitedUs ? strings.ownerTeamHint : strings.guestTeamHint}
             >
-                {owner ? strings.ownerTeam : strings.guestTeam}
-            </Chip>
-        </AppTooltip>
-    );
-
-    const sideChips = (connection: TeamConnection): React.ReactNode[] => [
-        ...(connection.isOwner ? [sideChip(true)] : []),
-        ...(connection.isGuest ? [sideChip(false)] : []),
-    ];
+                <Chip
+                    color={theyInvitedUs ? "primary" : "neutral"}
+                    size="sm"
+                    sx={{ borderRadius: "6px", fontSize: "0.65rem", flexShrink: 0 }}
+                    variant="soft"
+                >
+                    {theyInvitedUs ? strings.ownerTeam : strings.guestTeam}
+                </Chip>
+            </AppTooltip>
+        );
+    };
 
     const row = (
         connection: TeamConnection,
@@ -157,7 +150,7 @@ export const ConnectedTeamsPanel = ({
                     <Typography level="body-sm" sx={{ color: valueColor, fontWeight: 600 }} noWrap>
                         {connection.teamName}
                     </Typography>
-                    {sideChips(connection)}
+                    {connection.status === "active" && sideChip(connection)}
                 </Stack>
                 {note && (
                     <Typography level="body-xs" sx={{ color: labelColor }}>
@@ -270,10 +263,9 @@ export const ConnectedTeamsPanel = ({
                                 </AppTooltip>
                             )}
                         </Stack>
-                        // No note. Who asked to connect is history that
-                        // stopped being actionable the moment they said
-                        // yes, and the Owner/Guest chip above is the fact
-                        // that decides what this row lets you do.
+                        // No note: the Owner/Guest chip above already says
+                        // who asked, and spelling it out again in prose
+                        // read as a second, competing claim.
                     )
                 )}
 

@@ -189,15 +189,15 @@ export const admin = {
         incomingNote: "Wants to connect with your team",
         outgoingNote: "Waiting for them to approve",
         // The one chip on a live connection row, and it always describes
-        // THE OTHER TEAM: they host work we were let into, or they are
-        // guests in ours. Who asked to connect is history that stopped
-        // being actionable when they said yes, so it gets no line.
+        // THE OTHER TEAM: they invited us, or we invited them. The hints
+        // have to send ownership questions to the shared item itself,
+        // because this chip deliberately says nothing about it.
         ownerTeam: "Owner",
         ownerTeamHint:
-            "They own the projects, chats or note folders shared with you. They decide what stays shared; you decide which of your people join.",
+            "They invited your team to connect, and your team approved. Who owns a shared chat, project or note folder is shown on that item.",
         guestTeam: "Guest",
         guestTeamHint:
-            "They work in projects, chats or note folders you own. You decide what stays shared; they decide which of their people join.",
+            "Your team invited them to connect, and they approved. Who owns a shared chat, project or note folder is shown on that item.",
         statusConnected: "Connected",
         statusPending: "Awaiting your owner",
         statusAwaiting: "Awaiting reply",

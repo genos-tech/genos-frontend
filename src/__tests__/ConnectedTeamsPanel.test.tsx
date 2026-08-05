@@ -30,8 +30,6 @@ const connection = (over: Partial<TeamConnection> = {}): TeamConnection => ({
     teamName: "Acme",
     status: "active",
     direction: "outgoing",
-    isOwner: false,
-    isGuest: false,
     tsCreated: "2026-01-01T00:00:00Z",
     tsUpdated: "2026-01-01T00:00:00Z",
     ...over,
@@ -195,42 +193,50 @@ describe("ConnectedTeamsPanel", () => {
         expect(screen.getByRole("button", { name: /Request connection/i })).toBeTruthy();
     });
 
-    it("labels the team that owns the shared work, not the reader's own", () => {
-        renderPanel({ active: [connection({ isOwner: true })] });
+    it("labels the team that invited us the owner of the connection", () => {
+        renderPanel({ active: [connection({ direction: "incoming" })] });
         expect(screen.getByText("Owner")).toBeTruthy();
         expect(screen.queryByText("Guest")).toBeNull();
     });
 
-    it("labels a team that works in our data as the guest", () => {
-        renderPanel({ active: [connection({ isGuest: true })] });
+    it("labels a team we invited the guest", () => {
+        renderPanel({ active: [connection({ direction: "outgoing" })] });
         expect(screen.getByText("Guest")).toBeTruthy();
         expect(screen.queryByText("Owner")).toBeNull();
     });
 
-    it("names both directions once each team has shared with the other", () => {
-        // Reciprocal sharing makes the other team a host AND a guest, and
-        // reading `isOwner` first collapsed that to "Owner" alone. Both
-        // teams' profiles then claimed the other owned the relationship —
-        // a claim that contradicts itself the moment you switch teams and
-        // look back at the same connection.
-        renderPanel({ active: [connection({ isOwner: true, isGuest: true })] });
-        expect(screen.getByText("Owner")).toBeTruthy();
-        expect(screen.getByText("Guest")).toBeTruthy();
+    it("names exactly one side, whatever the two teams have shared", () => {
+        // The chip used to be read off live shares, and reciprocal
+        // sharing made each team the other's host AND guest — so both
+        // teams' profiles labelled the other "Owner", a claim that
+        // contradicts itself the moment you switch teams and look back at
+        // the same connection. Who asked cannot be true in both
+        // directions, so the row can only say one thing.
+        renderPanel({
+            active: [
+                connection({ direction: "incoming" }),
+                connection({ connectionId: "c2", teamName: "Globex", direction: "outgoing" }),
+            ],
+        });
+        expect(screen.getAllByText("Owner")).toHaveLength(1);
+        expect(screen.getAllByText("Guest")).toHaveLength(1);
     });
 
-    it("labels neither side while nothing has been shared yet", () => {
-        // A real third state, not a fallback: connected, with no host and
-        // no guest to name.
-        renderPanel({ active: [connection()] });
+    it("keeps the chip off a request nobody has accepted yet", () => {
+        // Nothing has been agreed, so there is no connection to own or be
+        // a guest of. The note beside the row already says whose move it
+        // is, which is the only useful thing to say at this point.
+        renderPanel({ incoming: [connection({ status: "pending", direction: "incoming" })] });
         expect(screen.queryByText("Owner")).toBeNull();
         expect(screen.queryByText("Guest")).toBeNull();
     });
 
-    it("drops the who-invited-whom line from a live connection", () => {
-        // History that stopped being actionable the moment they accepted,
-        // and it read as a second, contradicting claim beside the chip.
-        renderPanel({ active: [connection({ isOwner: true })] });
-        expect(screen.queryByText(/invited/i)).toBeNull();
+    it("leaves the who-asked prose to the pending rows", () => {
+        // On a live row the chip carries it; repeating it underneath read
+        // as a second, competing claim.
+        renderPanel({ active: [connection({ direction: "incoming" })] });
+        expect(screen.queryByText(/Wants to connect with your team/i)).toBeNull();
+        expect(screen.queryByText(/Waiting for them to approve/i)).toBeNull();
     });
 
     it("surfaces a server error from the hook", () => {

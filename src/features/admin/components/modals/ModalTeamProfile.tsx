@@ -13,7 +13,6 @@ import {
     Box,
     Button,
     Card,
-    Chip,
     FormControl,
     FormLabel,
     IconButton,
@@ -382,31 +381,6 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                         teamName: teamProfile.teamName,
                                     })}
                                 </Typography>
-                                {/* Whose team this is. A host team you reach
-                                    through a share looks exactly like one you
-                                    belong to — narrow member list, your name
-                                    absent from it — and most of the controls
-                                    below are refused by the server for you.
-
-                                    Labelled by what this team IS rather than
-                                    by your standing in it: it owns the work
-                                    shared with you, which is the fact that
-                                    explains everything else on the page. */}
-                                {teamProfile.isGuest && (
-                                    <AppTooltip
-                                        size="sm"
-                                        title={t.admin.connectedTeams.ownerTeamHint}
-                                    >
-                                        <Chip
-                                            color="primary"
-                                            size="sm"
-                                            sx={{ flexShrink: 0, fontWeight: 600 }}
-                                            variant="soft"
-                                        >
-                                            {t.admin.connectedTeams.ownerTeam}
-                                        </Chip>
-                                    </AppTooltip>
-                                )}
                                 {/* Close button — without it mobile users
                                     have no way to dismiss the modal,
                                     since it's full-screen on xs and
