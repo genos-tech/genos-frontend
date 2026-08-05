@@ -14,7 +14,7 @@ import NotificationsActiveRoundedIcon from "@mui/icons-material/NotificationsAct
 import NotificationsOffRoundedIcon from "@mui/icons-material/NotificationsOffRounded";
 import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
 import PersonAddRoundedIcon from "@mui/icons-material/PersonAddRounded";
-import { Box, IconButton, Stack, Tooltip, Typography } from "@mui/joy";
+import { Box, IconButton, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { useNavigate } from "react-router-dom";
 
@@ -340,15 +340,8 @@ export const NoteHeaderActions = ({
         >
             {/* My Notes: New Note Button */}
             {noteType === 1 && (
-                <Tooltip
+                <AppTooltip
                     size="sm"
-                    variant="outlined"
-                    sx={{
-                        background: styles.menuBg,
-                        border: `1px solid ${styles.menuBorder}`,
-                        borderRadius: "8px",
-                        backdropFilter: "blur(8px)",
-                    }}
                     title={
                         <Box
                             sx={{
@@ -382,7 +375,7 @@ export const NoteHeaderActions = ({
                             {t.notes.header.newNote}
                         </Typography>
                     </IconButton>
-                </Tooltip>
+                </AppTooltip>
             )}
 
             {/* Task Notes: Project Avatar + Task Info Chips */}
@@ -438,9 +431,8 @@ export const NoteHeaderActions = ({
                 tooltip naming the owner. */}
             {activeNoteId != null && members.length > 0 && (
                 <Stack alignItems="center" direction="row" spacing={0.75}>
-                    <Tooltip
+                    <AppTooltip
                         size="sm"
-                        variant="outlined"
                         title={
                             ownerMember
                                 ? otherMembers.length > 0
@@ -546,7 +538,7 @@ export const NoteHeaderActions = ({
                                 </Box>
                             )}
                         </Box>
-                    </Tooltip>
+                    </AppTooltip>
 
                     {/* {isOwner && (
                         <Tooltip size="sm" title={t.notes.header.share} variant="outlined">
@@ -781,17 +773,7 @@ export const NoteHeaderActions = ({
 
             {/* Close Button (only in task page) */}
             {isInTaskPage && (
-                <Tooltip
-                    size="sm"
-                    title={t.notes.header.close}
-                    variant="outlined"
-                    sx={{
-                        background: styles.menuBg,
-                        border: `1px solid ${styles.menuBorder}`,
-                        borderRadius: "8px",
-                        backdropFilter: "blur(8px)",
-                    }}
-                >
+                <AppTooltip size="sm" title={t.notes.header.close}>
                     <IconButton
                         size="sm"
                         sx={dangerButtonStyle}
@@ -807,7 +789,7 @@ export const NoteHeaderActions = ({
                             }}
                         />
                     </IconButton>
-                </Tooltip>
+                </AppTooltip>
             )}
 
             {/* Version-history modal — opened from the ⋮ menu (the chip

@@ -14,12 +14,12 @@ import {
     ListItemDecorator,
     Menu,
     MenuItem,
-    Tooltip,
     Typography,
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
+import { AppTooltip } from "../../../components/ui/AppTooltip";
 import { TeamDropdownStyles } from "../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../context/AuthContext";
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
@@ -140,16 +140,10 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
             )}
 
             <Dropdown>
-                <Tooltip
+                <AppTooltip
                     placement="right-start"
                     size="sm"
                     title={t.admin.teamDropdown.openMenu}
-                    variant="outlined"
-                    sx={{
-                        background: styles.menuBg,
-                        border: `1px solid ${styles.menuBorder}`,
-                        borderRadius: "8px",
-                    }}
                 >
                     <IconButton
                         sx={{
@@ -200,7 +194,7 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
                             </Avatar>
                         </Box>
                     </IconButton>
-                </Tooltip>
+                </AppTooltip>
 
                 <Menu
                     ref={dropdownRef}
@@ -363,16 +357,15 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
                                             the narrowed roster inside reads as a
                                             small team rather than a partial view. */}
                                         {team.isGuest && (
-                                            <Tooltip
+                                            <AppTooltip
                                                 placement="top"
                                                 size="sm"
                                                 title={t.admin.teamDropdown.guestTeamHint}
-                                                variant="outlined"
                                             >
                                                 <Chip color="neutral" size="sm" variant="soft">
                                                     {t.admin.teamDropdown.guestTeam}
                                                 </Chip>
-                                            </Tooltip>
+                                            </AppTooltip>
                                         )}
                                     </Box>
                                     {isCurrentTeam && (

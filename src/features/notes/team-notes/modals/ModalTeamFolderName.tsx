@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import {
     Box,
     Button,
+    Chip,
     FormLabel,
     Input,
     Modal,
@@ -18,6 +19,7 @@ import {
 } from "../../../../components/modals/noteModalHostZIndex";
 import { fmt, useTranslation } from "../../../../i18n";
 import { NoteFolderVisibility } from "../../../../types/notes";
+import { useTeamConnections } from "../../../admin/components/team/useTeamConnections";
 
 export type TeamFolderNameMode = "create-root" | "create-child" | "rename";
 
@@ -29,8 +31,15 @@ type Props = {
     // Only shown on a subfolder, where "inherit" is a real option (and
     // the default). A top-level folder has no ancestor to inherit from.
     parentName?: string;
+    /** Whose connections to offer when sharing across teams. */
+    teamId: string;
     onClose: () => void;
-    onSubmit: (name: string, visibility: NoteFolderVisibility | null) => void;
+    onSubmit: (
+        name: string,
+        visibility: NoteFolderVisibility | null,
+        /** Teams to offer the new folder to. Empty unless sharing. */
+        guestTeamIds: string[]
+    ) => void;
 };
 
 // Create or rename a team folder. Unlike the My Notes dialog this also
@@ -40,8 +49,18 @@ type Props = {
 // `null` visibility means INHERIT and is the default for a subfolder —
 // that is what makes "accessible to everyone who can reach the parent"
 // the zero-effort path, with narrowing a deliberate choice.
+//
+// "Share with another organization" sits in the same list as a fourth
+// answer, and resolves to private plus an offer to the teams picked.
+// Sharing does require a restricted folder — public means "every host
+// member is an editor" plus a team-wide search sentinel, which cannot
+// also mean "and one other company" — but that is a rule about the
+// implementation, and leaving the user to deduce it from a list of two
+// visibilities is how the feature stayed invisible to the people it is
+// for.
 export const ModalTeamFolderName = (props: Props) => {
-    const { open, mode, initialName, initialVisibility, parentName, onClose, onSubmit } = props;
+    const { open, mode, initialName, initialVisibility, parentName, teamId, onClose, onSubmit } =
+        props;
     const { t } = useTranslation();
     const hostZIndex = useNoteModalHostZIndex();
 
@@ -50,6 +69,11 @@ export const ModalTeamFolderName = (props: Props) => {
     const [visibility, setVisibility] = useState<NoteFolderVisibility | null>(
         initialVisibility !== undefined ? initialVisibility : isChild ? null : "public"
     );
+    const [shareExternally, setShareExternally] = useState(false);
+    const [guestTeamIds, setGuestTeamIds] = useState<string[]>([]);
+    // Only asked while the dialog is open — this component stays mounted
+    // for the sidebar's whole life, and an empty team id skips the fetch.
+    const { active: connectedTeams } = useTeamConnections(open ? teamId : "");
 
     useEffect(() => {
         if (!open) return;
@@ -57,15 +81,28 @@ export const ModalTeamFolderName = (props: Props) => {
         setVisibility(
             initialVisibility !== undefined ? initialVisibility : isChild ? null : "public"
         );
+        setShareExternally(false);
+        setGuestTeamIds([]);
     }, [open, initialName, initialVisibility, isChild]);
 
     const trimmed = name.trim();
-    const isValid = trimmed.length > 0 && trimmed.length <= 255;
+    // Sharing with nobody is not sharing: it would create a folder whose
+    // only distinguishing feature is a restriction the user did not ask for.
+    const isValid =
+        trimmed.length > 0 &&
+        trimmed.length <= 255 &&
+        (!shareExternally || guestTeamIds.length > 0);
 
     const submit = () => {
         if (!isValid) return;
-        onSubmit(trimmed, visibility);
+        onSubmit(trimmed, shareExternally ? "private" : visibility, guestTeamIds);
         onClose();
+    };
+
+    const choose = (value: string) => {
+        setShareExternally(value === "external");
+        if (value === "external") return;
+        setVisibility(value === "inherit" ? null : (value as NoteFolderVisibility));
     };
 
     const title = mode === "rename" ? t.notes.folders.renameTitle : t.notes.teamNotes.newFolder;
@@ -92,14 +129,14 @@ export const ModalTeamFolderName = (props: Props) => {
                                 {t.notes.teamNotes.visibilityLabel}
                             </FormLabel>
                             <RadioGroup
-                                value={visibility === null ? "inherit" : visibility}
-                                onChange={(e) =>
-                                    setVisibility(
-                                        e.target.value === "inherit"
-                                            ? null
-                                            : (e.target.value as NoteFolderVisibility)
-                                    )
+                                value={
+                                    shareExternally
+                                        ? "external"
+                                        : visibility === null
+                                          ? "inherit"
+                                          : visibility
                                 }
+                                onChange={(e) => choose(e.target.value)}
                             >
                                 <Stack spacing={1.25}>
                                     {isChild && (
@@ -125,6 +162,69 @@ export const ModalTeamFolderName = (props: Props) => {
                                         label={t.notes.teamNotes.visibilityPrivate}
                                         value="private"
                                     />
+                                    {/* Absent, not disabled, when there is
+                                        nobody to share with: an option that
+                                        can only ever be empty is worse than
+                                        one that isn't there, and connections
+                                        are made in team settings. */}
+                                    {connectedTeams.length > 0 && (
+                                        <Box>
+                                            <OptionRow
+                                                hint={t.notes.teamNotes.visibilityExternalHint}
+                                                label={t.notes.teamNotes.visibilityExternal}
+                                                value="external"
+                                            />
+                                            {shareExternally && (
+                                                <Box
+                                                    sx={{
+                                                        display: "flex",
+                                                        flexWrap: "wrap",
+                                                        gap: 0.75,
+                                                        ml: 3.5,
+                                                        mt: 1,
+                                                    }}
+                                                >
+                                                    {connectedTeams.map((connection) => {
+                                                        const selected = guestTeamIds.includes(
+                                                            connection.teamId
+                                                        );
+                                                        return (
+                                                            <Chip
+                                                                key={connection.teamId}
+                                                                color={
+                                                                    selected
+                                                                        ? "primary"
+                                                                        : "neutral"
+                                                                }
+                                                                size="sm"
+                                                                variant={
+                                                                    selected ? "solid" : "outlined"
+                                                                }
+                                                                onClick={() =>
+                                                                    setGuestTeamIds((prev) =>
+                                                                        prev.includes(
+                                                                            connection.teamId
+                                                                        )
+                                                                            ? prev.filter(
+                                                                                  (id) =>
+                                                                                      id !==
+                                                                                      connection.teamId
+                                                                              )
+                                                                            : [
+                                                                                  ...prev,
+                                                                                  connection.teamId,
+                                                                              ]
+                                                                    )
+                                                                }
+                                                            >
+                                                                {connection.teamName}
+                                                            </Chip>
+                                                        );
+                                                    })}
+                                                </Box>
+                                            )}
+                                        </Box>
+                                    )}
                                 </Stack>
                             </RadioGroup>
                         </Box>

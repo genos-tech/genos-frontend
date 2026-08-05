@@ -12,6 +12,8 @@
 
 import { useMemo, useRef, useState, useSyncExternalStore } from "react";
 
+import { AppTooltip } from "../../../components/ui/AppTooltip";
+import { useTranslation } from "../../../i18n";
 import { channelService, ChannelServiceError } from "../../../services/channel/channelService";
 import { useAttachmentDraft } from "../hooks/useAttachmentDraft";
 import { useChannelThread } from "../hooks/useChannelThread";
@@ -27,6 +29,7 @@ interface ThreadPanelV3Props {
 }
 
 export function ThreadPanelV3({ channelId, rootMessageId, onClose }: ThreadPanelV3Props) {
+    const { t } = useTranslation();
     const { root, replies, replyInThread, isLoading } = useChannelThread(channelId, rootMessageId);
     const currentUserId = typeof window === "undefined" ? null : localStorage.getItem("userId");
     // Picker candidates come from the people we've already seen in this
@@ -148,29 +151,36 @@ export function ThreadPanelV3({ channelId, rootMessageId, onClose }: ThreadPanel
                                 />
                             )}
                             {!root.deletedAt && (
-                                <button
-                                    data-testid={`thread-panel-v3-flag-${root.id}`}
-                                    type="button"
-                                    style={{
-                                        marginLeft: 6,
-                                        background: "transparent",
-                                        border: "none",
-                                        cursor: "pointer",
-                                        fontSize: 12,
-                                        opacity: snapshot.flagByMessageId.has(root.id) ? 1 : 0.45,
-                                    }}
+                                <AppTooltip
                                     title={
-                                        snapshot.flagByMessageId.has(root.id) ? "Unflag" : "Flag"
-                                    }
-                                    onClick={() =>
-                                        void toggleFlag(
-                                            root.id,
-                                            snapshot.flagByMessageId.has(root.id)
-                                        )
+                                        snapshot.flagByMessageId.has(root.id)
+                                            ? t.chat.channel.thread.unflag
+                                            : t.chat.channel.thread.flag
                                     }
                                 >
-                                    ⭐
-                                </button>
+                                    <button
+                                        data-testid={`thread-panel-v3-flag-${root.id}`}
+                                        type="button"
+                                        style={{
+                                            marginLeft: 6,
+                                            background: "transparent",
+                                            border: "none",
+                                            cursor: "pointer",
+                                            fontSize: 12,
+                                            opacity: snapshot.flagByMessageId.has(root.id)
+                                                ? 1
+                                                : 0.45,
+                                        }}
+                                        onClick={() =>
+                                            void toggleFlag(
+                                                root.id,
+                                                snapshot.flagByMessageId.has(root.id)
+                                            )
+                                        }
+                                    >
+                                        ⭐
+                                    </button>
+                                </AppTooltip>
                             )}
                             {!root.deletedAt && root.attachments.length > 0 && (
                                 <MessageAttachments
@@ -214,33 +224,36 @@ export function ThreadPanelV3({ channelId, rootMessageId, onClose }: ThreadPanel
                                         </span>
                                     )}
                                     {!r.deletedAt && (
-                                        <button
-                                            data-testid={`thread-panel-v3-flag-${r.id}`}
-                                            type="button"
-                                            style={{
-                                                marginLeft: 6,
-                                                background: "transparent",
-                                                border: "none",
-                                                cursor: "pointer",
-                                                fontSize: 12,
-                                                opacity: snapshot.flagByMessageId.has(r.id)
-                                                    ? 1
-                                                    : 0.45,
-                                            }}
+                                        <AppTooltip
                                             title={
                                                 snapshot.flagByMessageId.has(r.id)
-                                                    ? "Unflag"
-                                                    : "Flag"
-                                            }
-                                            onClick={() =>
-                                                void toggleFlag(
-                                                    r.id,
-                                                    snapshot.flagByMessageId.has(r.id)
-                                                )
+                                                    ? t.chat.channel.thread.unflag
+                                                    : t.chat.channel.thread.flag
                                             }
                                         >
-                                            ⭐
-                                        </button>
+                                            <button
+                                                data-testid={`thread-panel-v3-flag-${r.id}`}
+                                                type="button"
+                                                style={{
+                                                    marginLeft: 6,
+                                                    background: "transparent",
+                                                    border: "none",
+                                                    cursor: "pointer",
+                                                    fontSize: 12,
+                                                    opacity: snapshot.flagByMessageId.has(r.id)
+                                                        ? 1
+                                                        : 0.45,
+                                                }}
+                                                onClick={() =>
+                                                    void toggleFlag(
+                                                        r.id,
+                                                        snapshot.flagByMessageId.has(r.id)
+                                                    )
+                                                }
+                                            >
+                                                ⭐
+                                            </button>
+                                        </AppTooltip>
                                     )}
                                     {!r.deletedAt && r.attachments.length > 0 && (
                                         <MessageAttachments
@@ -345,16 +358,17 @@ export function ThreadPanelV3({ channelId, rootMessageId, onClose }: ThreadPanel
                         e.target.value = "";
                     }}
                 />
-                <button
-                    data-testid="thread-panel-v3-attach"
-                    disabled={busy || !root}
-                    style={{ fontSize: 14 }}
-                    title="Attach file(s)"
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                >
-                    📎
-                </button>
+                <AppTooltip title={t.chat.channel.composer.attachFiles}>
+                    <button
+                        data-testid="thread-panel-v3-attach"
+                        disabled={busy || !root}
+                        style={{ fontSize: 14 }}
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                    >
+                        📎
+                    </button>
+                </AppTooltip>
                 <input
                     data-testid="thread-panel-v3-input"
                     disabled={busy || !root}

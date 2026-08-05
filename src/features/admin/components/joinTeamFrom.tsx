@@ -24,6 +24,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { useNavigate } from "react-router-dom";
 import { io, Socket } from "socket.io-client";
 
+import { AppTooltip } from "../../../components/ui/AppTooltip";
 import { JoinTeamFormStyles } from "../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../context/AuthContext";
 import { wsJoinTeamHook } from "../../../hooks/common/useWebSocket";
@@ -348,58 +349,58 @@ export const JoinTeam = () => {
                         }}
                     >
                         {joinedTeams.map((team) => (
-                            <ListItemButton
-                                key={team.teamId}
-                                title={team.teamEmail}
-                                sx={{
-                                    background: styles.listItemBg,
-                                    border: `1px solid ${styles.listItemBorder}`,
-                                    borderRadius: "12px",
-                                    py: 1.5,
-                                    px: 2,
-                                    transition: "all 0.2s ease",
-                                    "&:hover": {
-                                        background: styles.listItemHover,
-                                        borderColor: styles.accentColor,
-                                        transform: "translateX(4px)",
-                                    },
-                                }}
-                                onClick={() => {
-                                    moveToTeam(team.teamId, team.teamName);
-                                }}
-                            >
-                                <ListItemDecorator>
-                                    <Box
-                                        sx={{
-                                            width: 32,
-                                            height: 32,
-                                            borderRadius: "8px",
-                                            background: `linear-gradient(135deg, rgba(${styles.accentColorRgb}, 0.188) 0%, rgba(${styles.accentColorRgb}, 0.063) 100%)`,
-                                            display: "flex",
-                                            alignItems: "center",
-                                            justifyContent: "center",
-                                            mr: 1,
-                                        }}
-                                    >
-                                        <GroupsRoundedIcon
-                                            sx={{
-                                                color: styles.accentColor,
-                                                fontSize: 18,
-                                            }}
-                                        />
-                                    </Box>
-                                </ListItemDecorator>
-                                <Typography level="title-md" sx={{ fontWeight: 500 }}>
-                                    {team.teamName}
-                                </Typography>
-                                <LoginRoundedIcon
+                            <AppTooltip key={team.teamId} title={team.teamEmail}>
+                                <ListItemButton
                                     sx={{
-                                        ml: "auto",
-                                        color: styles.subtitleColor,
-                                        fontSize: 18,
+                                        background: styles.listItemBg,
+                                        border: `1px solid ${styles.listItemBorder}`,
+                                        borderRadius: "12px",
+                                        py: 1.5,
+                                        px: 2,
+                                        transition: "all 0.2s ease",
+                                        "&:hover": {
+                                            background: styles.listItemHover,
+                                            borderColor: styles.accentColor,
+                                            transform: "translateX(4px)",
+                                        },
                                     }}
-                                />
-                            </ListItemButton>
+                                    onClick={() => {
+                                        moveToTeam(team.teamId, team.teamName);
+                                    }}
+                                >
+                                    <ListItemDecorator>
+                                        <Box
+                                            sx={{
+                                                width: 32,
+                                                height: 32,
+                                                borderRadius: "8px",
+                                                background: `linear-gradient(135deg, rgba(${styles.accentColorRgb}, 0.188) 0%, rgba(${styles.accentColorRgb}, 0.063) 100%)`,
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                mr: 1,
+                                            }}
+                                        >
+                                            <GroupsRoundedIcon
+                                                sx={{
+                                                    color: styles.accentColor,
+                                                    fontSize: 18,
+                                                }}
+                                            />
+                                        </Box>
+                                    </ListItemDecorator>
+                                    <Typography level="title-md" sx={{ fontWeight: 500 }}>
+                                        {team.teamName}
+                                    </Typography>
+                                    <LoginRoundedIcon
+                                        sx={{
+                                            ml: "auto",
+                                            color: styles.subtitleColor,
+                                            fontSize: 18,
+                                        }}
+                                    />
+                                </ListItemButton>
+                            </AppTooltip>
                         ))}
                     </List>
                 </Box>

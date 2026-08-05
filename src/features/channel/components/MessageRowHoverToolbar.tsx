@@ -27,6 +27,9 @@
 
 import { useCallback } from "react";
 
+import { AppTooltip } from "../../../components/ui/AppTooltip";
+import { useTranslation } from "../../../i18n";
+
 export interface MessageRowHoverToolbarProps {
     messageId: string;
     /** Visible when true (caller computes from hover + popover state). */
@@ -76,6 +79,7 @@ export function MessageRowHoverToolbar({
     onEdit,
     onDelete,
 }: MessageRowHoverToolbarProps) {
+    const { t } = useTranslation();
     return (
         <span
             data-testid={`message-row-toolbar-${messageId}`}
@@ -93,64 +97,76 @@ export function MessageRowHoverToolbar({
                 transition: "opacity 0.12s ease-out",
             }}
         >
-            <button
-                data-testid={`message-row-flag-${messageId}`}
-                style={{ ...BTN_STYLE, opacity: isFlagged ? 1 : 0.55 }}
-                title={isFlagged ? "Unflag message" : "Flag message"}
-                type="button"
-                onClick={onFlag}
+            <AppTooltip
+                title={
+                    isFlagged
+                        ? t.chat.channel.messageActions.unflagMessage
+                        : t.chat.channel.messageActions.flagMessage
+                }
             >
-                ⭐
-            </button>
-            <button
-                data-testid={`message-row-react-${messageId}`}
-                style={BTN_STYLE}
-                title="Add reaction"
-                type="button"
-                onClick={onReact}
-            >
-                🙂+
-            </button>
-            {onReply && (
                 <button
-                    data-testid={`message-row-thread-${messageId}`}
-                    style={BTN_STYLE}
-                    title="Reply in thread"
+                    data-testid={`message-row-flag-${messageId}`}
+                    style={{ ...BTN_STYLE, opacity: isFlagged ? 1 : 0.55 }}
                     type="button"
-                    onClick={onReply}
+                    onClick={onFlag}
                 >
-                    💬{replyCount > 0 ? ` ${replyCount}` : ""}
+                    ⭐
                 </button>
+            </AppTooltip>
+            <AppTooltip title={t.chat.channel.messageActions.addReaction}>
+                <button
+                    data-testid={`message-row-react-${messageId}`}
+                    style={BTN_STYLE}
+                    type="button"
+                    onClick={onReact}
+                >
+                    🙂+
+                </button>
+            </AppTooltip>
+            {onReply && (
+                <AppTooltip title={t.chat.channel.messageActions.replyInThread}>
+                    <button
+                        data-testid={`message-row-thread-${messageId}`}
+                        style={BTN_STYLE}
+                        type="button"
+                        onClick={onReply}
+                    >
+                        💬{replyCount > 0 ? ` ${replyCount}` : ""}
+                    </button>
+                </AppTooltip>
             )}
-            <button
-                data-testid={`message-row-copy-link-${messageId}`}
-                style={BTN_STYLE}
-                title="Copy link to message"
-                type="button"
-                onClick={onCopyLink}
-            >
-                🔗
-            </button>
+            <AppTooltip title={t.chat.channel.messageActions.copyLink}>
+                <button
+                    data-testid={`message-row-copy-link-${messageId}`}
+                    style={BTN_STYLE}
+                    type="button"
+                    onClick={onCopyLink}
+                >
+                    🔗
+                </button>
+            </AppTooltip>
             {isMine && (
                 <>
-                    <button
-                        data-testid={`message-row-edit-${messageId}`}
-                        style={BTN_STYLE}
-                        title="Edit"
-                        type="button"
-                        onClick={onEdit}
-                    >
-                        ✏️
-                    </button>
-                    <button
-                        data-testid={`message-row-delete-${messageId}`}
-                        style={BTN_STYLE}
-                        title="Delete"
-                        type="button"
-                        onClick={onDelete}
-                    >
-                        🗑️
-                    </button>
+                    <AppTooltip title={t.chat.channel.messageActions.edit}>
+                        <button
+                            data-testid={`message-row-edit-${messageId}`}
+                            style={BTN_STYLE}
+                            type="button"
+                            onClick={onEdit}
+                        >
+                            ✏️
+                        </button>
+                    </AppTooltip>
+                    <AppTooltip title={t.chat.channel.messageActions.delete}>
+                        <button
+                            data-testid={`message-row-delete-${messageId}`}
+                            style={BTN_STYLE}
+                            type="button"
+                            onClick={onDelete}
+                        >
+                            🗑️
+                        </button>
+                    </AppTooltip>
                 </>
             )}
         </span>

@@ -979,6 +979,11 @@ export const tasks = {
             // DiagramLegend collapse / expand chevron.
             collapse: "Collapse",
             expand: "Expand",
+            // DependencyEdge — the dashed "blocks" arrow. The generic
+            // form is the fallback for an edge whose endpoint titles
+            // the canvas hasn't resolved yet.
+            dependencyBlocks: "{source} blocks {target}",
+            dependencyDirection: "Blocker → Blocked",
         },
     },
 } as const;

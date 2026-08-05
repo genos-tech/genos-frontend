@@ -16,6 +16,7 @@
 
 import type { CSSProperties } from "react";
 
+import { AppTooltip } from "../../../components/ui/AppTooltip";
 import type { MessageAttachment } from "../../../types/channel";
 
 interface MessageAttachmentsProps {
@@ -84,27 +85,28 @@ function AttachmentChip({ messageId, attachment }: AttachmentChipProps) {
                     style={PREVIEW_STYLE}
                 />
             )}
-            <a
-                data-testid={`message-attachment-link-${attachment.id}`}
-                download={filename}
-                href={attachment.fileUrl}
-                rel="noreferrer"
-                style={CHIP_STYLE}
-                target="_blank"
-                title={`${filename} — ${sizeLabel}`}
-            >
-                <span aria-hidden="true">{isImage ? "🖼️" : "📎"}</span>
-                <span
-                    style={{
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                    }}
+            <AppTooltip title={`${filename} — ${sizeLabel}`}>
+                <a
+                    data-testid={`message-attachment-link-${attachment.id}`}
+                    download={filename}
+                    href={attachment.fileUrl}
+                    rel="noreferrer"
+                    style={CHIP_STYLE}
+                    target="_blank"
                 >
-                    {filename}
-                </span>
-                <span style={{ opacity: 0.6, flexShrink: 0 }}>{sizeLabel}</span>
-            </a>
+                    <span aria-hidden="true">{isImage ? "🖼️" : "📎"}</span>
+                    <span
+                        style={{
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                        }}
+                    >
+                        {filename}
+                    </span>
+                    <span style={{ opacity: 0.6, flexShrink: 0 }}>{sizeLabel}</span>
+                </a>
+            </AppTooltip>
         </div>
     );
 }

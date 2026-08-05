@@ -1,8 +1,9 @@
 import { ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
-import { Box, Stack, Tooltip, Typography } from "@mui/joy";
+import { Box, Stack, Typography } from "@mui/joy";
 
+import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { useIsMobile } from "../../../../hooks/common/useIsMobile";
 import { useTranslation } from "../../../../i18n";
 import { collapseCrumbs, DEFAULT_VISIBLE_TAIL } from "../utils/collapseCrumbs";
@@ -260,15 +261,10 @@ export const NoteBreadcrumbs = ({
             {canExpand && !expanded && (
                 <Stack alignItems="center" direction="row" spacing={0.5}>
                     <ChevronRightIcon sx={{ fontSize: 16, color: "neutral.400", opacity: 0.7 }} />
-                    <Tooltip
+                    <AppTooltip
+                        maxWidth={280}
                         placement="bottom"
                         size="sm"
-                        variant="outlined"
-                        arrow
-                        sx={{
-                            maxWidth: 280,
-                            "& .MuiTooltip-arrow": { color: "background.level2" },
-                        }}
                         title={
                             // Names what's behind the control rather than
                             // just counting it — "Documents / Specs / 2026"
@@ -314,7 +310,7 @@ export const NoteBreadcrumbs = ({
                             <MoreHorizRoundedIcon sx={{ fontSize: 16 }} />
                             <span>{hidden.length}</span>
                         </Typography>
-                    </Tooltip>
+                    </AppTooltip>
                 </Stack>
             )}
 
@@ -325,15 +321,10 @@ export const NoteBreadcrumbs = ({
             {shown.map((item) => (
                 <Stack key={item.id} alignItems="center" direction="row" spacing={0.5}>
                     <ChevronRightIcon sx={{ fontSize: 16, color: "neutral.400", opacity: 0.7 }} />
-                    <Tooltip
+                    <AppTooltip
+                        maxWidth={280}
                         placement="bottom"
                         size="sm"
-                        variant="outlined"
-                        arrow
-                        sx={{
-                            maxWidth: 280,
-                            "& .MuiTooltip-arrow": { color: "background.level2" },
-                        }}
                         title={item.kind === "context" ? item.crumb.label : item.node.title}
                     >
                         {item.kind === "context" ? (
@@ -412,7 +403,7 @@ export const NoteBreadcrumbs = ({
                                 </span>
                             </Typography>
                         )}
-                    </Tooltip>
+                    </AppTooltip>
                 </Stack>
             ))}
         </Stack>

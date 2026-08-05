@@ -54,7 +54,7 @@ describe("EmojiGlyph", () => {
     it("resolves a known :shortcode: to the catalog image", () => {
         setTeamEmojiList([partyBlob]);
         render(<EmojiGlyph emoji=":party-blob:" />);
-        const img = screen.getByTitle(":party-blob:");
+        const img = screen.getByAltText(":party-blob:");
         expect(img.tagName).toBe("IMG");
         expect(img).toHaveAttribute("src", partyBlob.url);
         // The editors' image-click zoom/download handlers key off this

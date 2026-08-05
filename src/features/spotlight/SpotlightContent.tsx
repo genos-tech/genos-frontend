@@ -2118,33 +2118,35 @@ const TurnViewInner = ({
                         />
                     )}
                     {showCopy && (
-                        <IconButton
-                            color={copied ? "success" : "neutral"}
-                            size="sm"
-                            sx={{ minWidth: 0, p: "3px" }}
-                            title={ts.actions.copyAnswer}
-                            variant="plain"
-                            onClick={handleCopy}
-                        >
-                            {copied ? (
-                                <CheckRoundedIcon sx={{ fontSize: 14 }} />
-                            ) : (
-                                <ContentCopyRoundedIcon sx={{ fontSize: 14 }} />
-                            )}
-                        </IconButton>
+                        <AppTooltip title={ts.actions.copyAnswer}>
+                            <IconButton
+                                color={copied ? "success" : "neutral"}
+                                size="sm"
+                                sx={{ minWidth: 0, p: "3px" }}
+                                variant="plain"
+                                onClick={handleCopy}
+                            >
+                                {copied ? (
+                                    <CheckRoundedIcon sx={{ fontSize: 14 }} />
+                                ) : (
+                                    <ContentCopyRoundedIcon sx={{ fontSize: 14 }} />
+                                )}
+                            </IconButton>
+                        </AppTooltip>
                     )}
                     {showRetry && (
-                        <IconButton
-                            color="neutral"
-                            disabled={askDisabled}
-                            size="sm"
-                            sx={{ minWidth: 0, p: "3px" }}
-                            title={ts.actions.retry}
-                            variant="plain"
-                            onClick={onRetry}
-                        >
-                            <ReplayRoundedIcon sx={{ fontSize: 14 }} />
-                        </IconButton>
+                        <AppTooltip title={ts.actions.retry}>
+                            <IconButton
+                                color="neutral"
+                                disabled={askDisabled}
+                                size="sm"
+                                sx={{ minWidth: 0, p: "3px" }}
+                                variant="plain"
+                                onClick={onRetry}
+                            >
+                                <ReplayRoundedIcon sx={{ fontSize: 14 }} />
+                            </IconButton>
+                        </AppTooltip>
                     )}
                 </Box>
             )}

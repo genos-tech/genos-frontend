@@ -1,6 +1,5 @@
 import { ReactElement, ReactNode, useState } from "react";
 import { Tooltip } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
 
 import { purplePalette } from "../../theme/purplePalette";
 
@@ -24,7 +23,14 @@ export type AppTooltipProps = {
     /** Single React element trigger — same constraint Joy's <Tooltip> has. */
     children: ReactElement;
     placement?: Placement;
-    /** Default `true`. Most tooltips in this app point at the trigger. */
+    /**
+     * Most tooltips in this app point at their trigger, so this defaults
+     * to `true` — EXCEPT with `surface="none"`, where the wrapper has no
+     * surface for the arrow to be an arrow of and drawing one puts a bare
+     * untinted wedge under a card that paints itself. There it defaults to
+     * whether you passed `arrowColor`, which is the only way anything here
+     * can know what color the card's edge is.
+     */
     arrow?: boolean;
     /** Joy's Tooltip size token. Default `"sm"`. */
     size?: "sm" | "md" | "lg";
@@ -48,32 +54,60 @@ export type AppTooltipProps = {
     enterDelay?: number;
     /** Skip the hover listener entirely (useful when `title` may be empty). */
     disableHoverListener?: boolean;
+    /**
+     * Cap the width so a long sentence wraps instead of spanning the
+     * viewport. A real layout decision, which is why it is a prop and not
+     * something to reach for `sx` over.
+     */
+    maxWidth?: number | "none";
+    /**
+     * `"chip"` (default) is the design-system surface. `"none"` is for a
+     * hover CARD — a `title` that paints its own panel — where the
+     * tooltip's own background would stack a second surface behind it.
+     */
+    surface?: "chip" | "none";
+    /**
+     * Point the arrow at a self-painted card's surface color. Only
+     * meaningful with `surface="none"`, where nothing else can know it.
+     */
+    arrowColor?: string;
 };
 
+const LIGHT = purplePalette.light;
+const DARK = purplePalette.dark;
+
 /**
- * Canonical tooltip for the app. Bakes in the design-system style so
- * every site uses the same purple-tinted, outlined chip. No `sx` escape
- * hatch on purpose: when a site needs a different look (danger color,
- * different padding, etc.) it should fall back to Joy's raw <Tooltip>
- * so the divergence is visible in grep.
+ * Canonical tooltip for the app. Bakes in the design-system style so every
+ * site uses the same purple-tinted, outlined chip, and so "is this the app's
+ * tooltip or the browser's" is answered by one grep.
  *
  * `title` MUST be already-localized text. Pass `t.foo.bar` from
  * `useTranslation()`, not a string literal.
+ *
+ * The light/dark split is a CSS ancestor selector rather than
+ * `useColorScheme()`, which is not a style preference: that hook THROWS
+ * without a `CssVarsProvider` above it, where Joy's own Tooltip renders
+ * fine. So the design-system tooltip was the one component that could not
+ * be used in a bare-rendered tree, and swapping it in broke component
+ * tests that had every reason to expect a tooltip to be inert. Joy sets
+ * `data-joy-color-scheme` on `<html>`, above the portal this renders into,
+ * and the browser re-resolves it on repaint — see `App.css`, which leans on
+ * the same attribute.
  */
 export const AppTooltip = ({
     title,
     children,
     placement = "top",
-    arrow = true,
+    arrow,
     size = "sm",
     open,
     suppressed,
     enterDelay,
     disableHoverListener,
+    maxWidth,
+    surface = "chip",
+    arrowColor,
 }: AppTooltipProps) => {
-    const { mode } = useColorScheme();
-    const P = mode === "dark" ? purplePalette.dark : purplePalette.light;
-
     // Hover state is only tracked when the caller opted into
     // suppression; otherwise Joy manages its own and this stays unused.
     const [hoverOpen, setHoverOpen] = useState(false);
@@ -89,20 +123,39 @@ export const AppTooltip = ({
               ? !suppressed && hoverOpen
               : undefined;
 
+    const painted = surface === "chip";
+    const showArrow = arrow ?? (painted || arrowColor !== undefined);
+
     return (
         <Tooltip
-            arrow={arrow}
+            arrow={showArrow}
             disableHoverListener={disableHoverListener}
             enterDelay={enterDelay}
             open={resolvedOpen}
             placement={placement}
             size={size}
             title={title}
-            variant="outlined"
+            variant={painted ? "outlined" : "plain"}
             sx={{
-                background: P.menuBg,
-                border: `1px solid ${P.menuBorder}`,
-                borderRadius: "8px",
+                ...(painted
+                    ? {
+                          background: LIGHT.menuBg,
+                          border: `1px solid ${LIGHT.menuBorder}`,
+                          borderRadius: "8px",
+                          '[data-joy-color-scheme="dark"] &': {
+                              background: DARK.menuBg,
+                              border: `1px solid ${DARK.menuBorder}`,
+                          },
+                      }
+                    : {
+                          bgcolor: "transparent",
+                          border: "none",
+                          boxShadow: "none",
+                          p: 0,
+                          maxWidth: "none",
+                      }),
+                ...(maxWidth !== undefined ? { maxWidth } : {}),
+                ...(arrowColor ? { "--Tooltip-arrowColor": arrowColor } : {}),
             }}
             onClose={() => setHoverOpen(false)}
             onOpen={() => setHoverOpen(true)}

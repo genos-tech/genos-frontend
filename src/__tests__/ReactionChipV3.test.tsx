@@ -157,7 +157,7 @@ describe("ShowEmojiReaction chip toggle → channelService (v3)", () => {
             reactions: [mkReaction(":party-blob:", other)],
         });
 
-        const img = container.querySelector("img[title=':party-blob:']");
+        const img = container.querySelector("img[alt=':party-blob:']");
         expect(img).not.toBeNull();
         expect(img?.getAttribute("src")).toContain("/media/team_emoji/");
 
@@ -166,7 +166,7 @@ describe("ShowEmojiReaction chip toggle → channelService (v3)", () => {
         // Matched by the rendered <img> rather than text, since a custom
         // emoji chip has no shortcode text to start with.
         const chip = [...container.querySelectorAll("button")].find((b) =>
-            b.querySelector("img[title=':party-blob:']")
+            b.querySelector("img[alt=':party-blob:']")
         );
         if (!chip) throw new Error("no reaction chip for :party-blob:");
         fireEvent.click(chip);

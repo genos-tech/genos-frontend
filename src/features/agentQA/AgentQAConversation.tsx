@@ -15,6 +15,7 @@ import { Box, IconButton, Stack, Typography } from "@mui/joy";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
+import { AppTooltip } from "../../components/ui/AppTooltip";
 import { SpotlightResult } from "../spotlight/types";
 import { ApprovalCard } from "./ApprovalCard";
 import { agentQAUrlTransform, CitationAnchor } from "./CitationAnchor";
@@ -262,32 +263,36 @@ const TurnRowInner = ({
                         />
                     )}
                     {showCopy && (
-                        <IconButton
-                            color={copied ? "success" : "neutral"}
-                            size="sm"
-                            sx={{ minWidth: 0, p: "3px" }}
+                        <AppTooltip
                             title={copied ? labels.actions.copied : labels.actions.copyAnswer}
-                            variant="plain"
-                            onClick={handleCopy}
                         >
-                            {copied ? (
-                                <CheckRoundedIcon sx={{ fontSize: 14 }} />
-                            ) : (
-                                <ContentCopyRoundedIcon sx={{ fontSize: 14 }} />
-                            )}
-                        </IconButton>
+                            <IconButton
+                                color={copied ? "success" : "neutral"}
+                                size="sm"
+                                sx={{ minWidth: 0, p: "3px" }}
+                                variant="plain"
+                                onClick={handleCopy}
+                            >
+                                {copied ? (
+                                    <CheckRoundedIcon sx={{ fontSize: 14 }} />
+                                ) : (
+                                    <ContentCopyRoundedIcon sx={{ fontSize: 14 }} />
+                                )}
+                            </IconButton>
+                        </AppTooltip>
                     )}
                     {showRetry && (
-                        <IconButton
-                            color="neutral"
-                            size="sm"
-                            sx={{ minWidth: 0, p: "3px" }}
-                            title={labels.actions.retry}
-                            variant="plain"
-                            onClick={handleRetry}
-                        >
-                            <ReplayRoundedIcon sx={{ fontSize: 14 }} />
-                        </IconButton>
+                        <AppTooltip title={labels.actions.retry}>
+                            <IconButton
+                                color="neutral"
+                                size="sm"
+                                sx={{ minWidth: 0, p: "3px" }}
+                                variant="plain"
+                                onClick={handleRetry}
+                            >
+                                <ReplayRoundedIcon sx={{ fontSize: 14 }} />
+                            </IconButton>
+                        </AppTooltip>
                     )}
                 </Box>
             )}

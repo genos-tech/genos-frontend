@@ -23,13 +23,13 @@ import {
     ModalClose,
     ModalDialog,
     Stack,
-    Tooltip,
     Typography,
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { useNavigate } from "react-router-dom";
 import { Socket } from "socket.io-client";
 
+import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
 import { FileSizeRejectionSnackbar } from "../../../../components/ui/feedback/FileSizeRejectionSnackbar";
 import { useFileSizeGuard } from "../../../../components/ui/feedback/useFileSizeGuard";
@@ -393,10 +393,9 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                     shared with you, which is the fact that
                                     explains everything else on the page. */}
                                 {teamProfile.isGuest && (
-                                    <Tooltip
+                                    <AppTooltip
                                         size="sm"
                                         title={t.admin.connectedTeams.ownerTeamHint}
-                                        variant="outlined"
                                     >
                                         <Chip
                                             color="primary"
@@ -406,7 +405,7 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                         >
                                             {t.admin.connectedTeams.ownerTeam}
                                         </Chip>
-                                    </Tooltip>
+                                    </AppTooltip>
                                 )}
                                 {/* Close button — without it mobile users
                                     have no way to dismiss the modal,
@@ -503,11 +502,9 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                     type="file"
                                                     onChange={handleSelectedFiles}
                                                 />
-                                                <Tooltip
+                                                <AppTooltip
                                                     size="sm"
-                                                    sx={{ zIndex: 9000 }}
                                                     title={t.admin.teamProfile.editTeamImage}
-                                                    variant="outlined"
                                                 >
                                                     <IconButton
                                                         variant="soft"
@@ -535,7 +532,7 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                             }}
                                                         />
                                                     </IconButton>
-                                                </Tooltip>
+                                                </AppTooltip>
                                             </Box>
                                         )}
                                     </Box>
@@ -659,9 +656,8 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                                 </Typography>
                                                             </Box>
                                                             {canManage && (
-                                                                <Tooltip
+                                                                <AppTooltip
                                                                     size="sm"
-                                                                    variant="outlined"
                                                                     title={
                                                                         t.common.profileEdit.rename
                                                                     }
@@ -681,7 +677,7 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                                             sx={{ fontSize: 18 }}
                                                                         />
                                                                     </IconButton>
-                                                                </Tooltip>
+                                                                </AppTooltip>
                                                             )}
                                                         </Stack>
                                                     )}

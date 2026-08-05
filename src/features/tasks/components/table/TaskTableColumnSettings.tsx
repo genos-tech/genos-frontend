@@ -327,28 +327,31 @@ export const TaskTableColumnSettings = ({ open, onClose, customColumns }: Props)
                                                                     "background-color 0.1s ease",
                                                             }}
                                                         >
-                                                            <Box
-                                                                {...dragProvided.dragHandleProps}
-                                                                sx={{
-                                                                    display: "flex",
-                                                                    alignItems: "center",
-                                                                    cursor: "grab",
-                                                                    color: isDark
-                                                                        ? "rgba(255,255,255,0.4)"
-                                                                        : "rgba(0,0,0,0.35)",
-                                                                    "&:active": {
-                                                                        cursor: "grabbing",
-                                                                    },
-                                                                }}
+                                                            <AppTooltip
                                                                 title={
                                                                     t.tasks.table.columnSettings
                                                                         .dragHandle
                                                                 }
                                                             >
-                                                                <DragIndicatorRoundedIcon
-                                                                    sx={{ fontSize: 18 }}
-                                                                />
-                                                            </Box>
+                                                                <Box
+                                                                    {...dragProvided.dragHandleProps}
+                                                                    sx={{
+                                                                        display: "flex",
+                                                                        alignItems: "center",
+                                                                        cursor: "grab",
+                                                                        color: isDark
+                                                                            ? "rgba(255,255,255,0.4)"
+                                                                            : "rgba(0,0,0,0.35)",
+                                                                        "&:active": {
+                                                                            cursor: "grabbing",
+                                                                        },
+                                                                    }}
+                                                                >
+                                                                    <DragIndicatorRoundedIcon
+                                                                        sx={{ fontSize: 18 }}
+                                                                    />
+                                                                </Box>
+                                                            </AppTooltip>
                                                             <Typography
                                                                 level="body-sm"
                                                                 sx={{ flex: 1, fontWeight: 500 }}

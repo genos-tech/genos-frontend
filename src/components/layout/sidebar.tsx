@@ -21,7 +21,6 @@ import {
     Modal,
     ModalDialog,
     Sheet,
-    Tooltip,
     Typography,
 } from "@mui/joy";
 import ListItemButton, { listItemButtonClasses } from "@mui/joy/ListItemButton";
@@ -41,6 +40,7 @@ import { useTranslation } from "../../i18n";
 import { purplePalette } from "../../theme/purplePalette";
 import { UserProps } from "../../types/admin";
 import { isMac } from "../../utils/platform";
+import { AppTooltip } from "../ui/AppTooltip";
 import { AvatarWithStatus } from "../ui/avatars/avatarWithStatus";
 import { ColorSchemeToggle } from "./colorSchemeToggle";
 import { SettingsModal } from "./SettingsModal";
@@ -258,11 +258,9 @@ export const Sidebar = (props: SidebarProps) => {
                         hint: the quick-ask OVERLAY (same conversation)
                         stays bound to the shortcut in `useSpotlight.ts`. */}
                     <ListItem>
-                        <Tooltip
+                        <AppTooltip
                             placement="right"
                             size="sm"
-                            sx={{ zIndex: 10020 }}
-                            variant="outlined"
                             title={
                                 isMac()
                                     ? t.sidebar.tooltips.spotlightShortcut.mac
@@ -354,7 +352,7 @@ export const Sidebar = (props: SidebarProps) => {
                                     {t.sidebar.nav.search}
                                 </Typography>
                             </ListItemButton>
-                        </Tooltip>
+                        </AppTooltip>
                     </ListItem>
 
                     {NAV_ITEMS.map((item) => {
@@ -385,13 +383,7 @@ export const Sidebar = (props: SidebarProps) => {
 
                         return (
                             <ListItem key={item.id}>
-                                <Tooltip
-                                    placement="right"
-                                    size="sm"
-                                    sx={{ zIndex: 10020 }}
-                                    title={tooltipText}
-                                    variant="outlined"
-                                >
+                                <AppTooltip placement="right" size="sm" title={tooltipText}>
                                     <ListItemButton
                                         sx={{
                                             flexDirection: "column",
@@ -498,7 +490,7 @@ export const Sidebar = (props: SidebarProps) => {
                                             {t.sidebar.nav[item.labelKey]}
                                         </Typography>
                                     </ListItemButton>
-                                </Tooltip>
+                                </AppTooltip>
                             </ListItem>
                         );
                     })}
@@ -515,11 +507,9 @@ export const Sidebar = (props: SidebarProps) => {
                     }}
                 >
                     <ListItem>
-                        <Tooltip
+                        <AppTooltip
                             placement="right"
                             size="sm"
-                            sx={{ zIndex: 10020 }}
-                            variant="outlined"
                             title={
                                 isMac()
                                     ? t.sidebar.tooltips.historyShortcut.mac
@@ -573,15 +563,13 @@ export const Sidebar = (props: SidebarProps) => {
                                     />
                                 </Box>
                             </ListItemButton>
-                        </Tooltip>
+                        </AppTooltip>
                     </ListItem>
                     <ListItem>
-                        <Tooltip
+                        <AppTooltip
                             placement="right"
                             size="sm"
-                            sx={{ zIndex: 10020 }}
                             title={t.sidebar.tooltips.settings}
-                            variant="outlined"
                         >
                             <ListItemButton
                                 sx={{
@@ -630,16 +618,10 @@ export const Sidebar = (props: SidebarProps) => {
                                     />
                                 </Box>
                             </ListItemButton>
-                        </Tooltip>
+                        </AppTooltip>
                     </ListItem>
                     <ListItem>
-                        <Tooltip
-                            placement="right"
-                            size="sm"
-                            sx={{ zIndex: 10020 }}
-                            title={t.sidebar.tooltips.signOut}
-                            variant="outlined"
-                        >
+                        <AppTooltip placement="right" size="sm" title={t.sidebar.tooltips.signOut}>
                             <ListItemButton
                                 sx={{
                                     flexDirection: "column",
@@ -683,7 +665,7 @@ export const Sidebar = (props: SidebarProps) => {
                                     />
                                 </Box>
                             </ListItemButton>
-                        </Tooltip>
+                        </AppTooltip>
                     </ListItem>
                 </List>
             </Box>
@@ -704,13 +686,7 @@ export const Sidebar = (props: SidebarProps) => {
                     position: "relative",
                 }}
             >
-                <Tooltip
-                    placement="right"
-                    size="sm"
-                    sx={{ zIndex: 10020 }}
-                    title={t.sidebar.tooltips.openProfile}
-                    variant="outlined"
-                >
+                <AppTooltip placement="right" size="sm" title={t.sidebar.tooltips.openProfile}>
                     <Box
                         sx={{
                             position: "relative",
@@ -746,7 +722,7 @@ export const Sidebar = (props: SidebarProps) => {
                             useUISM={useUISM}
                         />
                     </Box>
-                </Tooltip>
+                </AppTooltip>
             </Box>
 
             {/* User profile for team members */}

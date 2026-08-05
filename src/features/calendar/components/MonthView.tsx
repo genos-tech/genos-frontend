@@ -2,10 +2,11 @@ import { useMemo } from "react";
 import ArrowLeftRoundedIcon from "@mui/icons-material/ArrowLeftRounded";
 import ArrowRightRoundedIcon from "@mui/icons-material/ArrowRightRounded";
 import VideoCameraFrontRoundedIcon from "@mui/icons-material/VideoCameraFrontRounded";
-import { Box, Chip, Sheet, Stack, Tooltip, Typography } from "@mui/joy";
+import { Box, Chip, Sheet, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import dayjs, { Dayjs } from "dayjs";
 
+import { AppTooltip } from "../../../components/ui/AppTooltip";
 import { CalendarEvent } from "../../integrations/services/calendar";
 import { eventLabel } from "../utils/eventLabel";
 import { buildMonthGrid, weekdayLabels } from "../utils/monthGrid";
@@ -133,14 +134,12 @@ export const MonthView = ({
         const palette = paletteForEvent(segment.event._source, colorBySource, isDark);
         const label = eventLabel(segment.event, freeBusySources, busyLabel);
         return (
-            <Tooltip
+            <AppTooltip
                 // Keyed per (event, week): the same event appears in
                 // every week row it crosses, so the event id alone would
                 // collide across rows.
                 key={`${segment.event.id}-w${weekIndex}`}
                 size="sm"
-                sx={{ borderRadius: "8px" }}
-                variant="outlined"
                 title={
                     segment.event._source?.account_email
                         ? `${label} — ${segment.event._source.account_email}`
@@ -221,7 +220,7 @@ export const MonthView = ({
                         <ArrowRightRoundedIcon sx={{ fontSize: 14, flexShrink: 0, mr: -0.5 }} />
                     )}
                 </Box>
-            </Tooltip>
+            </AppTooltip>
         );
     };
 
@@ -427,11 +426,9 @@ export const MonthView = ({
                                                         busyLabel
                                                     );
                                                     return (
-                                                        <Tooltip
+                                                        <AppTooltip
                                                             key={`${e.id}-${idx}`}
                                                             size="sm"
-                                                            sx={{ borderRadius: "8px" }}
-                                                            variant="outlined"
                                                             title={
                                                                 e._source?.account_email
                                                                     ? `${label} — ${e._source.account_email}`
@@ -487,7 +484,7 @@ export const MonthView = ({
                                                             >
                                                                 {label}
                                                             </Chip>
-                                                        </Tooltip>
+                                                        </AppTooltip>
                                                     );
                                                 })}
                                                 {overflow > 0 && (

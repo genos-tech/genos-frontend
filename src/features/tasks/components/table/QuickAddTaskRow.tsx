@@ -16,6 +16,7 @@ import {
 } from "@mui/material";
 import { alpha } from "@mui/system";
 
+import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
 import { useQuickAddRequiredFieldsPreference } from "../../../../hooks/common/useQuickAddRequiredFieldsPreference";
 import { fmt, useTranslation } from "../../../../i18n";
@@ -864,21 +865,22 @@ export const QuickAddTaskRow = (props: QuickAddTaskRowProps) => {
                     justifyContent: "center",
                 }}
             >
-                <IconButton
-                    disabled={isSubmitting || title.trim() === ""}
-                    size="small"
-                    title={t.tasks.table.quickAddConfirm}
-                    sx={{
-                        width: 24,
-                        height: 24,
-                        p: 0,
-                        color: accent,
-                        "&.Mui-disabled": { color: dimText },
-                    }}
-                    onClick={() => void submit()}
-                >
-                    <CheckRoundedIcon sx={{ fontSize: 18 }} />
-                </IconButton>
+                <AppTooltip title={t.tasks.table.quickAddConfirm}>
+                    <IconButton
+                        disabled={isSubmitting || title.trim() === ""}
+                        size="small"
+                        sx={{
+                            width: 24,
+                            height: 24,
+                            p: 0,
+                            color: accent,
+                            "&.Mui-disabled": { color: dimText },
+                        }}
+                        onClick={() => void submit()}
+                    >
+                        <CheckRoundedIcon sx={{ fontSize: 18 }} />
+                    </IconButton>
+                </AppTooltip>
             </div>
 
             {/* Cells — same width/border chrome as DraggableTaskRow so the

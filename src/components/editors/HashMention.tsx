@@ -8,7 +8,7 @@ import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
 import ForumRoundedIcon from "@mui/icons-material/ForumRounded";
 import StickyNote2RoundedIcon from "@mui/icons-material/StickyNote2Rounded";
 import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
-import { Box, Tooltip, Typography } from "@mui/joy";
+import { Box, Typography } from "@mui/joy";
 
 import {
     HashMentionData,
@@ -22,6 +22,7 @@ import { AllChatProps } from "../../types/chat";
 import { ProjectProps, SearchTeamTasksResponse, TaskTableProps } from "../../types/tasks";
 import { chatTypeCodeToSlug, entityRefToHref, HashEntityRef } from "../../utils/entityHref";
 import { filterAndRankSuggestionItems } from "../../utils/suggestionRanking";
+import { AppTooltip } from "../ui/AppTooltip";
 import { MentionPalette, MentionSuggestionMenu } from "./Mention";
 
 // Sibling palettes to the `@` user/group chips (see `mentionChipSx`). One
@@ -125,19 +126,10 @@ export const CreateHashTaskSpec = () =>
                 const label = title ? `${idText} · ${title}` : idText;
                 const href = entityRefToHref({ entityType: "task", projectId, taskId });
                 return (
-                    <Tooltip
+                    <AppTooltip
                         enterDelay={250}
                         placement="top-start"
-                        sx={{
-                            bgcolor: "transparent",
-                            border: "none",
-                            boxShadow: "none",
-                            p: 0,
-                            maxWidth: "none",
-                        }}
-                        variant="plain"
-                        // The hover card paints its own surface; keep the
-                        // tooltip wrapper transparent so two panels don't stack.
+                        surface="none"
                         title={
                             <TaskMentionHoverCard
                                 displayId={idText}
@@ -155,7 +147,7 @@ export const CreateHashTaskSpec = () =>
                         <span>
                             <HashChip href={href} label={label} palette={TASK_PALETTE} />
                         </span>
-                    </Tooltip>
+                    </AppTooltip>
                 );
             },
         }

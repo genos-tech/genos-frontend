@@ -85,7 +85,7 @@ describe("HistoryModal chat-row subtitle", () => {
         });
 
         renderModal([]);
-        expect(screen.getByTitle(":party-blob:")).toHaveAttribute("src", partyBlob.url);
+        expect(screen.getByAltText(":party-blob:")).toHaveAttribute("src", partyBlob.url);
     });
 
     it("labels a chat whose latest message is a GIF", () => {

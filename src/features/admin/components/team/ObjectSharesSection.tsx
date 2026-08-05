@@ -14,9 +14,9 @@
  * here.
  */
 import { useMemo } from "react";
+import type { Socket } from "socket.io-client";
 
 import { ObjectSharesPanel } from "../../../../components/ui/sharing/ObjectSharesPanel";
-import { useOptionalSocket } from "../../../../context/socketContext";
 import type { SharedObjectType } from "../../../../types/sharing";
 import { useObjectShares } from "./useObjectShares";
 import { useTeamConnections } from "./useTeamConnections";
@@ -29,6 +29,16 @@ type Props = {
     myUserId: string;
     /** Is the viewer a manager of the host team? Shows the offer control. */
     canOffer: boolean;
+    /**
+     * The app's live socket, used to put a new offer in the other team's
+     * open inbox. Optional in the type only so a test can render this
+     * without one; every real mount must pass it. It was read from a
+     * context here to save callers the thread — but nothing mounted the
+     * provider, so it was `null` for the feature's whole life and the
+     * other team saw nothing until they reloaded. A prop makes the
+     * omission a type error instead of silence.
+     */
+    socket: Socket | null;
     labelColor: string;
     valueColor: string;
     borderColor: string;
@@ -40,14 +50,11 @@ export const ObjectSharesSection = ({
     hostTeamId,
     myUserId,
     canOffer,
+    socket,
     labelColor,
     valueColor,
     borderColor,
 }: Props) => {
-    // Taken from context rather than a prop: it is only used to deliver a
-    // new offer to the guest team's open inbox, so a surface that renders
-    // this section shouldn't have to thread a socket down for it.
-    const socket = useOptionalSocket();
     const shares = useObjectShares(objectType, objectId, hostTeamId, socket);
     // Guests have no business listing the host team's connections, and the
     // endpoint would refuse them anyway; skip the request entirely.

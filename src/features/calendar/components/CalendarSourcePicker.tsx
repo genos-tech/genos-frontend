@@ -9,11 +9,11 @@ import {
     Divider,
     Sheet,
     Stack,
-    Tooltip,
     Typography,
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { AppTooltip } from "../../../components/ui/AppTooltip";
 import { useTranslation } from "../../../i18n";
 import { CalendarSummary, sourceKey } from "../../integrations/services/calendar";
 
@@ -126,14 +126,13 @@ export const CalendarSourcePicker = ({
                         {groupIndex > 0 && <Divider sx={{ my: 0.75 }} />}
                         {/* Account header — one click ticks or unticks
                             every calendar under this account. */}
-                        <Tooltip
+                        <AppTooltip
                             size="sm"
                             title={
                                 allSelected
                                     ? t.calendar.sources.hideAllFrom
                                     : t.calendar.sources.showAllFrom
                             }
-                            variant="outlined"
                         >
                             <Box
                                 sx={{
@@ -171,7 +170,7 @@ export const CalendarSourcePicker = ({
                                     {group.accountEmail}
                                 </Typography>
                             </Box>
-                        </Tooltip>
+                        </AppTooltip>
 
                         <Stack spacing={0} sx={{ pl: 0.5 }}>
                             {group.calendars.map((c) => {
@@ -219,14 +218,15 @@ export const CalendarSourcePicker = ({
                                             onChange={() => onToggle(key)}
                                             onClick={(e) => e.stopPropagation()}
                                         />
-                                        <Typography
-                                            level="body-xs"
-                                            sx={{ minWidth: 0, flex: 1 }}
-                                            noWrap
-                                            title={c.summary || c.id}
-                                        >
-                                            {c.summary || c.id}
-                                        </Typography>
+                                        <AppTooltip title={c.summary || c.id}>
+                                            <Typography
+                                                level="body-xs"
+                                                sx={{ minWidth: 0, flex: 1 }}
+                                                noWrap
+                                            >
+                                                {c.summary || c.id}
+                                            </Typography>
+                                        </AppTooltip>
                                         {isShared && (
                                             <Chip
                                                 color="neutral"

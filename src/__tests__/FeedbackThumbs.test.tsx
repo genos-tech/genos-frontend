@@ -19,8 +19,12 @@ const renderThumbs = (props: Parameters<typeof FeedbackThumbs>[0]) =>
         </CssVarsProvider>
     );
 
-const isDisabled = (title: string) =>
-    (screen.getByTitle(title) as HTMLButtonElement).disabled === true;
+// The buttons are icon-only, so their label lives on `aria-label` (and
+// is also what the tooltip says). Query by accessible name rather than
+// the tooltip's own markup.
+const thumb = (label: string) => screen.getByRole("button", { name: label }) as HTMLButtonElement;
+
+const isDisabled = (label: string) => thumb(label).disabled === true;
 
 describe("FeedbackThumbs", () => {
     beforeEach(() => {
@@ -35,7 +39,7 @@ describe("FeedbackThumbs", () => {
         const onFeedback = vi.fn();
         renderThumbs({ runId: "run-42", onFeedback });
 
-        await user.click(screen.getByTitle("Good answer"));
+        await user.click(thumb("Good answer"));
         expect(onFeedback).toHaveBeenCalledTimes(1);
         expect(onFeedback).toHaveBeenLastCalledWith("run-42", 1);
 
@@ -49,7 +53,7 @@ describe("FeedbackThumbs", () => {
         const onFeedback = vi.fn();
         renderThumbs({ runId: "run-42", onFeedback });
 
-        await user.click(screen.getByTitle("Needs work"));
+        await user.click(thumb("Needs work"));
         expect(onFeedback).toHaveBeenCalledTimes(1);
         expect(onFeedback).toHaveBeenLastCalledWith("run-42", -1);
         expect(isDisabled("Good answer")).toBe(true);
@@ -63,7 +67,7 @@ describe("FeedbackThumbs", () => {
 
         // Before voting the buttons are live.
         expect(isDisabled("Good answer")).toBe(false);
-        await user.click(screen.getByTitle("Good answer"));
+        await user.click(thumb("Good answer"));
         expect(onFeedback).toHaveBeenCalledTimes(1);
         unmount();
 
@@ -93,9 +97,9 @@ describe("FeedbackThumbs", () => {
             labels: { up: "良い回答", down: "要改善" },
         });
 
-        await user.click(screen.getByTitle("良い回答"));
+        await user.click(thumb("良い回答"));
         expect(onFeedback).toHaveBeenLastCalledWith("run-42", 1);
-        expect(screen.getByTitle("要改善")).toBeTruthy();
+        expect(thumb("要改善")).toBeTruthy();
     });
 
     it("renders nothing without a runId (error/legacy turns)", () => {

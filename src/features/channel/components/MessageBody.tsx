@@ -18,6 +18,9 @@
 
 import type { CSSProperties } from "react";
 
+import { AppTooltip } from "../../../components/ui/AppTooltip";
+import { fmt, useTranslation } from "../../../i18n";
+
 interface MessageBodyProps {
     body: unknown[];
     bodyText: string;
@@ -110,19 +113,27 @@ interface InlineSpanProps {
 }
 
 function InlineSpan({ node, currentUserId }: InlineSpanProps) {
+    const { t } = useTranslation();
     if (node?.type === "mention") {
         const userId = String(node.props?.userId ?? "");
         const userName = String(node.props?.userName ?? "user");
         const isSelf = currentUserId !== null && userId === currentUserId;
         return (
-            <span
-                data-self={isSelf ? "true" : "false"}
-                data-testid={`message-body-mention-${userId}`}
-                style={isSelf ? MENTION_SELF : MENTION_OTHER}
-                title={isSelf ? "Mentions you" : `Mentions ${userName}`}
+            <AppTooltip
+                title={
+                    isSelf
+                        ? t.chat.channel.body.mentionsYou
+                        : fmt(t.chat.channel.body.mentionsUser, { name: userName })
+                }
             >
-                @{userName}
-            </span>
+                <span
+                    data-self={isSelf ? "true" : "false"}
+                    data-testid={`message-body-mention-${userId}`}
+                    style={isSelf ? MENTION_SELF : MENTION_OTHER}
+                >
+                    @{userName}
+                </span>
+            </AppTooltip>
         );
     }
     if (node?.type === "mentionGroup") {
@@ -130,13 +141,17 @@ function InlineSpan({ node, currentUserId }: InlineSpanProps) {
         const groupName = String(node.props?.groupName ?? "group");
         const memberCount = String(node.props?.memberCount ?? "");
         return (
-            <span
-                data-testid={`message-body-mention-group-${groupId}`}
-                style={MENTION_GROUP}
-                title={memberCount ? `${memberCount} members` : groupName}
+            <AppTooltip
+                title={
+                    memberCount
+                        ? fmt(t.chat.channel.body.groupMembers, { count: memberCount })
+                        : groupName
+                }
             >
-                @{groupName}
-            </span>
+                <span data-testid={`message-body-mention-group-${groupId}`} style={MENTION_GROUP}>
+                    @{groupName}
+                </span>
+            </AppTooltip>
         );
     }
     if (node?.type === "customEmoji") {
@@ -144,20 +159,21 @@ function InlineSpan({ node, currentUserId }: InlineSpanProps) {
         const url = String(node.props?.url ?? "");
         if (url) {
             return (
-                <img
-                    alt={`:${name}:`}
-                    data-testid={`message-body-custom-emoji-${name}`}
-                    loading="lazy"
-                    src={url}
-                    style={{
-                        height: "1.4em",
-                        width: "auto",
-                        verticalAlign: "text-bottom",
-                        objectFit: "contain",
-                        display: "inline-block",
-                    }}
-                    title={`:${name}:`}
-                />
+                <AppTooltip title={`:${name}:`}>
+                    <img
+                        alt={`:${name}:`}
+                        data-testid={`message-body-custom-emoji-${name}`}
+                        loading="lazy"
+                        src={url}
+                        style={{
+                            height: "1.4em",
+                            width: "auto",
+                            verticalAlign: "text-bottom",
+                            objectFit: "contain",
+                            display: "inline-block",
+                        }}
+                    />
+                </AppTooltip>
             );
         }
         return <span>{name ? `:${name}:` : ""}</span>;

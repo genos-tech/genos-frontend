@@ -32,10 +32,10 @@ import {
     IconButton,
     Input,
     Stack,
-    Tooltip,
     Typography,
 } from "@mui/joy";
 
+import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { ModalLeaveConfirm } from "../../../../components/ui/misc/ModalLeaveConfirm";
 import { fmt, useTranslation } from "../../../../i18n";
 import type { TeamConnection } from "../../services/teamConnections";
@@ -106,11 +106,7 @@ export const ConnectedTeamsPanel = ({
         if (!connection.isOwner && !connection.isGuest) return null;
         const owner = connection.isOwner;
         return (
-            <Tooltip
-                size="sm"
-                title={owner ? strings.ownerTeamHint : strings.guestTeamHint}
-                variant="outlined"
-            >
+            <AppTooltip size="sm" title={owner ? strings.ownerTeamHint : strings.guestTeamHint}>
                 <Chip
                     color={owner ? "primary" : "neutral"}
                     size="sm"
@@ -119,7 +115,7 @@ export const ConnectedTeamsPanel = ({
                 >
                     {owner ? strings.ownerTeam : strings.guestTeam}
                 </Chip>
-            </Tooltip>
+            </AppTooltip>
         );
     };
 
@@ -189,7 +185,7 @@ export const ConnectedTeamsPanel = ({
                         c,
                         canManage ? (
                             <Stack direction="row" spacing={0.5}>
-                                <Tooltip size="sm" title={strings.approve} variant="outlined">
+                                <AppTooltip size="sm" title={strings.approve}>
                                     <IconButton
                                         color="success"
                                         disabled={busy}
@@ -201,8 +197,8 @@ export const ConnectedTeamsPanel = ({
                                     >
                                         <CheckRoundedIcon sx={{ fontSize: 18 }} />
                                     </IconButton>
-                                </Tooltip>
-                                <Tooltip size="sm" title={strings.decline} variant="outlined">
+                                </AppTooltip>
+                                <AppTooltip size="sm" title={strings.decline}>
                                     <IconButton
                                         color="neutral"
                                         disabled={busy}
@@ -214,7 +210,7 @@ export const ConnectedTeamsPanel = ({
                                     >
                                         <CloseRoundedIcon sx={{ fontSize: 18 }} />
                                     </IconButton>
-                                </Tooltip>
+                                </AppTooltip>
                             </Stack>
                         ) : (
                             <Chip color="warning" size="sm" variant="soft">
@@ -248,7 +244,7 @@ export const ConnectedTeamsPanel = ({
                                 {strings.statusConnected}
                             </Chip>
                             {canDisconnect && (
-                                <Tooltip size="sm" title={strings.disconnect} variant="outlined">
+                                <AppTooltip size="sm" title={strings.disconnect}>
                                     <IconButton
                                         color="danger"
                                         disabled={busy}
@@ -258,7 +254,7 @@ export const ConnectedTeamsPanel = ({
                                     >
                                         <LinkOffRoundedIcon sx={{ fontSize: 18 }} />
                                     </IconButton>
-                                </Tooltip>
+                                </AppTooltip>
                             )}
                         </Stack>
                         // No note. Who asked to connect is history that

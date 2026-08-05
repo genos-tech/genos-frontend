@@ -354,4 +354,49 @@ export const chat = {
         reacted: " reacted",
         reactedLabel: "reacted",
     },
+    // v3 channel surface (`src/features/channel/**`). Kept in its own
+    // section rather than folded into `composer` / `messageActions` /
+    // `listItem` above: those belong to the legacy chat UI, and the two
+    // implementations run side by side until the v3 cutover. Merging
+    // them would make a later legacy deletion take v3 strings with it.
+    channel: {
+        list: {
+            pinned: "Pinned",
+            pinChannel: "Pin channel",
+            unpinChannel: "Unpin channel",
+        },
+        pane: {
+            backToChannels: "Back to channels",
+            mentionsYouBadge: "This message mentions you",
+            flaggedIndicator: "You flagged this message",
+        },
+        // Per-message hover toolbar (MessageRowHoverToolbar). Labels
+        // are terser than the legacy `messageActions` ones above
+        // because these sit on icon-only buttons, not menu rows.
+        messageActions: {
+            flagMessage: "Flag message",
+            unflagMessage: "Unflag message",
+            addReaction: "Add reaction",
+            replyInThread: "Reply in thread",
+            copyLink: "Copy link to message",
+            edit: "Edit",
+            delete: "Delete",
+        },
+        thread: {
+            flag: "Flag",
+            unflag: "Unflag",
+        },
+        composer: {
+            attachFiles: "Attach file(s)",
+        },
+        attachments: {
+            remove: "Remove",
+        },
+        // Inline chips rendered inside a message body (MessageBody).
+        body: {
+            mentionsYou: "Mentions you",
+            mentionsUser: "Mentions {name}",
+            groupMembers: "{count, plural, one {# member} other {# members}}",
+        },
+    },
 } as const;

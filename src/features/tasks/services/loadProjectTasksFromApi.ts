@@ -14,6 +14,13 @@ export interface ProjectTasksDeltaResponse {
     serverTime: string;
     tasks: ProjectTaskDeltaItem[];
     forceFull?: boolean;
+    /**
+     * How many rows our store should hold for this project once the delta
+     * above is applied. Present on incremental answers only — a full one
+     * is its own count. Lets the caller notice it is missing rows a
+     * changes-since request will never send it again.
+     */
+    totalCount?: number;
 }
 
 // Direct API call to `getProjectTasks`. Used by `loadProjectTasksWorker`
@@ -41,6 +48,7 @@ export const loadProjectTasksFromApi = async (
             serverTime: res.data.server_time,
             tasks: res.data.data.tasks,
             forceFull: res.data.force_full_reload,
+            totalCount: res.data.data.totalCount,
         };
     } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
