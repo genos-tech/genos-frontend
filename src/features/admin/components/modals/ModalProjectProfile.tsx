@@ -29,7 +29,6 @@ import {
     ModalClose,
     ModalDialog,
     Stack,
-    Tooltip,
     Typography,
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
@@ -681,11 +680,9 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                     type="file"
                                                     onChange={handleSelectedFiles}
                                                 />
-                                                <Tooltip
+                                                <AppTooltip
                                                     size="sm"
-                                                    sx={{ zIndex: 9000 }}
                                                     title={t.admin.projectProfile.editProfileImage}
-                                                    variant="outlined"
                                                 >
                                                     <IconButton
                                                         variant="soft"
@@ -717,7 +714,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                             }}
                                                         />
                                                     </IconButton>
-                                                </Tooltip>
+                                                </AppTooltip>
                                             </Box>
                                         )}
                                     </Box>
@@ -1272,6 +1269,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                         : undefined
                                                 }
                                                 objectType="project"
+                                                socket={socket}
                                                 valueColor={styles.valueColor}
                                             />
 

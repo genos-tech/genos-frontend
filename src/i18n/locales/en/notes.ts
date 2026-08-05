@@ -73,6 +73,14 @@ export const notes = {
         visibilityPrivateHint: "Invite individuals or a whole group.",
         visibilityInherit: "Same as the parent folder",
         visibilityInheritHint: "Everyone who can open the parent can open this too.",
+        // Third way to answer "who can access this", offered only when the
+        // team is connected to another one. It is a visibility choice from
+        // the user's side even though it resolves to "private" plus a share
+        // — reaching it by deducing that "only people I invite" is the
+        // restriction sharing requires is not something to ask of anyone.
+        visibilityExternal: "Share with another organization",
+        visibilityExternalHint:
+            "Pick connected teams. Each team approves once, then their owner or editor chooses which of their members join. Shared folders are always restricted.",
         // Folders another team shared with yours. Short label, because it
         // shares a narrow sidebar row with the folder's name.
         sharedBadge: "Shared",

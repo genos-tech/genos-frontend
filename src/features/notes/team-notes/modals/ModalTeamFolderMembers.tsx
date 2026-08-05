@@ -16,11 +16,13 @@ import {
     Stack,
     Typography,
 } from "@mui/joy";
+import type { Socket } from "socket.io-client";
 
 import {
     noteModalChildStackSx,
     useNoteModalHostZIndex,
 } from "../../../../components/modals/noteModalHostZIndex";
+import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
 import { useAuth } from "../../../../context/AuthContext";
 import { useMentionGroupsContext } from "../../../../context/MentionGroupsContext";
@@ -54,6 +56,8 @@ type Props = {
     // Source of the project and GM invite options — both are "a set of
     // people" the user already maintains elsewhere.
     useCM: ChatManagementState;
+    /** Only to hand a new cross-team offer to the other team's inbox live. */
+    socket: Socket | null;
     onClose: () => void;
     onChanged: () => void;
 };
@@ -80,7 +84,7 @@ type GroupOption = {
 // request. The group is still sent to the server, which re-expands it
 // authoritatively; the client list is never the permission source.
 export const ModalTeamFolderMembers = (props: Props) => {
-    const { open, folder, myself, useTEM, useCM, onClose, onChanged } = props;
+    const { open, folder, myself, useTEM, useCM, socket, onClose, onChanged } = props;
     const { t } = useTranslation();
     const { accessToken } = useAuth();
     const hostZIndex = useNoteModalHostZIndex();
@@ -299,16 +303,17 @@ export const ModalTeamFolderMembers = (props: Props) => {
                                               : t.notes.sharing.roles.viewer}
                                     </Chip>
                                     {canManage && m.roleId !== ROLE_OWNER && (
-                                        <IconButton
-                                            color="danger"
-                                            disabled={saving}
-                                            size="sm"
-                                            title={t.notes.teamNotes.removeAccess}
-                                            variant="plain"
-                                            onClick={() => void revoke(m.userId)}
-                                        >
-                                            <PersonRemoveRoundedIcon sx={{ fontSize: 16 }} />
-                                        </IconButton>
+                                        <AppTooltip title={t.notes.teamNotes.removeAccess}>
+                                            <IconButton
+                                                color="danger"
+                                                disabled={saving}
+                                                size="sm"
+                                                variant="plain"
+                                                onClick={() => void revoke(m.userId)}
+                                            >
+                                                <PersonRemoveRoundedIcon sx={{ fontSize: 16 }} />
+                                            </IconButton>
+                                        </AppTooltip>
                                     )}
                                 </Box>
                             );
@@ -483,6 +488,7 @@ export const ModalTeamFolderMembers = (props: Props) => {
                         myUserId={myself.userId}
                         objectId={String(folder.folderId)}
                         objectType="note_folder"
+                        socket={socket}
                         valueColor="var(--joy-palette-text-primary)"
                         canOffer={
                             canManageTeam && folder.visibility === "private" && !isExternalFolder

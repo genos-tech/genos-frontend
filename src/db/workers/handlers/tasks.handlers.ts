@@ -30,6 +30,10 @@ export const tasksHandlers: HandlerMap<TasksRequests> = {
         // pre-incremental behavior (append-only); incremental loads now
         // additionally evict server-side soft-deletes.
         const key = `tasks:${projectId}`;
+        // How many rows the server says we should end up with. Only an
+        // incremental answer carries it, so it stays null on a full load —
+        // which needs no check, being the whole truth by definition.
+        let serverCount: number | null = null;
         const sync = () =>
             syncWithCheckpoint({
                 key,
@@ -43,6 +47,7 @@ export const tasksHandlers: HandlerMap<TasksRequests> = {
                     if (!response) {
                         throw new Error("Failed to load project tasks");
                     }
+                    serverCount = response.totalCount ?? null;
                     return {
                         serverTime: response.serverTime,
                         data: response.tasks,
@@ -67,25 +72,31 @@ export const tasksHandlers: HandlerMap<TasksRequests> = {
                 },
             });
 
-        const hadCheckpoint = (await checkpointRepo.getCheckpoint(key)) !== null;
         await sync();
 
-        // A watermark with nothing behind it is a dead end: every later
-        // sync asks only for changes, and a project whose rows never
-        // arrived stays empty for good — an empty task table, board and
-        // dashboard, with a working single-task preview beside them
-        // because that path doesn't read this store.
+        // A checkpoint claims we already hold everything older than it.
+        // When that is untrue there is nothing in a later answer to reveal
+        // it — a changes-since request cannot mention a row that has not
+        // changed — so the missing rows stay missing for good: an empty
+        // task table, board and dashboard, with a working single-task
+        // preview beside them because that path doesn't read this store.
         //
-        // Two ways to get there, both of which happened: a full load that
+        // Three ways to get there, all of which happened: a full load that
         // returned nothing because the server was refusing the caller
         // (guests in a shared project, before the API was taught to answer
-        // for them), and `loadTeamTasks` below emptying the shared store
-        // out from under this checkpoint.
+        // for them), `loadTeamTasks` below emptying the shared store out
+        // from under this checkpoint, and a share that arrives AFTER the
+        // watermark — the guest's own new task lands, so the store isn't
+        // empty, while the project's existing work never does. That last
+        // one is why the test is "fewer rows than the server has" and not
+        // "no rows at all".
         //
-        // A project with genuinely no tasks pays one extra full request
-        // per load, which for an empty project is the cheapest request in
-        // the app.
-        if (hadCheckpoint && (await taskRepo.getTasksByProject(projectId)).length === 0) {
+        // Counting is the client's half of the bargain; asking again is
+        // cheap, and only ever happens once per gap.
+        if (
+            serverCount !== null &&
+            (await taskRepo.getTasksByProject(projectId)).length < serverCount
+        ) {
             await checkpointRepo.forgetCheckpoint(key);
             await sync();
         }

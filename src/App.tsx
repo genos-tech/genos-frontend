@@ -448,11 +448,18 @@ export const App = () => {
             useCM.funcSetFlaggedMessages(),
             useCM.funcSetActivityMessages(),
             useTEM.funcSetTeamMembers(),
+            // The inbox was missing from this list, and it is the one store
+            // whose whole purpose is to show something that arrived while
+            // you weren't looking. `useInboxManagement` reads IDB once on
+            // mount, so a request that landed in this refresh sat in the
+            // database unrendered until the NEXT page load — which is
+            // exactly how a cross-team request took two reloads to appear.
+            useIM.funcSetInboxItems(),
             usePM.currentProject?.projectId
                 ? usePM.refreshProjectTasks(usePM.currentProject.projectId)
                 : Promise.resolve(),
         ]);
-    }, [useCM, useTEM, usePM]);
+    }, [useCM, useIM, useTEM, usePM]);
     // Held in a ref so the once-per-team boot effect below doesn't re-run (and
     // re-fire the refresh) every time these manager objects get a new identity.
     const onIDBRefreshedRef = useRef(onIDBRefreshed);

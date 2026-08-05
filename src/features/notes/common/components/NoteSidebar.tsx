@@ -54,6 +54,8 @@ import {
     TaskNoteMetaProps,
     TeamNoteFolderTreeNode,
 } from "../../../../types/notes";
+import { relayCrossTeamRequest } from "../../../admin/services/crossTeamNotice";
+import { offerExternalShare } from "../../../admin/services/teamConnections";
 import { formatTaskDisplayId } from "../../../tasks/utils/taskDisplayId";
 import { ChildNoteCreator } from "../../chat-notes/components/ChildNoteCreator";
 import {
@@ -2003,27 +2005,45 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                         ? teamFolderModal.folder.visibility
                         : undefined
                 }
+                teamId={myself.teamId}
                 onClose={() => setTeamFolderModal(null)}
-                onSubmit={(name, visibility) => {
+                onSubmit={(name, visibility, guestTeamIds) => {
                     if (!teamFolderModal) return;
                     if (teamFolderModal.mode === "rename") {
                         void useNM.renameTeamNoteFolder(teamFolderModal.folder.folderId, name);
                         return;
                     }
-                    void useNM.createTeamNoteFolder({
-                        name,
-                        visibility,
-                        parentFolderId:
-                            teamFolderModal.mode === "create-child"
-                                ? teamFolderModal.parent.folderId
-                                : null,
-                    });
+                    void (async () => {
+                        const folder = await useNM.createTeamNoteFolder({
+                            name,
+                            visibility,
+                            parentFolderId:
+                                teamFolderModal.mode === "create-child"
+                                    ? teamFolderModal.parent.folderId
+                                    : null,
+                        });
+                        if (!folder) return;
+                        // One offer per team the user picked, each relayed
+                        // so it lands in that team's open inbox instead of
+                        // waiting for their next reload.
+                        for (const guestTeamId of guestTeamIds) {
+                            const offered = await offerExternalShare(accessToken, {
+                                guestTeamId,
+                                objectId: String(folder.folderId),
+                                objectType: "note_folder",
+                                teamId: myself.teamId,
+                            });
+                            if (offered)
+                                relayCrossTeamRequest(socket, { grantId: offered.grantId });
+                        }
+                    })();
                 }}
             />
             <ModalTeamFolderMembers
                 folder={teamMembersModal}
                 myself={myself}
                 open={teamMembersModal !== null}
+                socket={socket}
                 useCM={useCM}
                 useTEM={useTEM}
                 onClose={() => setTeamMembersModal(null)}
