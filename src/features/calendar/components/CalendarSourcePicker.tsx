@@ -28,6 +28,9 @@ interface CalendarSourcePickerProps {
     onToggleAccount: (accountId: string, selected: boolean) => void;
     /** Start the OAuth connect flow to attach another Google account. */
     onAddAccount: () => void;
+    /** `rail` = desktop side column. `strip` = compact horizontal
+     *  scroller for mobile, so the grid keeps the full viewport width. */
+    layout?: "rail" | "strip";
 }
 
 interface AccountGroup {
@@ -45,9 +48,10 @@ interface AccountGroup {
  * distinction the user actually thinks in, and the account header
  * doubles as a one-click toggle for the whole group.
  *
- * Rendered as a persistent side rail rather than a dropdown: with
- * several calendars overlaid, the color legend IS the key to reading
- * the grid, so it has to stay visible while looking at events.
+ * Desktop (`rail`): persistent side column — the color legend stays
+ * visible while looking at events. Mobile (`strip`): a short
+ * horizontally-scrolling chip bar above the grid so a 232px rail
+ * doesn't steal half the phone's width.
  */
 export const CalendarSourcePicker = ({
     calendars,
@@ -57,10 +61,12 @@ export const CalendarSourcePicker = ({
     onToggle,
     onToggleAccount,
     onAddAccount,
+    layout = "rail",
 }: CalendarSourcePickerProps) => {
     const { t } = useTranslation();
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
+    const isStrip = layout === "strip";
 
     // Group in the order the server returned (login-identity account
     // first) so the rail doesn't reshuffle between loads.
@@ -83,6 +89,100 @@ export const CalendarSourcePicker = ({
 
     const borderColor = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.10)";
     const mutedText = isDark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.55)";
+
+    if (isStrip) {
+        // Flat list of calendars as chips — account grouping stays
+        // available via long-press/tooltip on the chip label rather
+        // than eating vertical space on a phone.
+        const flat = groups.flatMap((g) =>
+            g.calendars.map((c) => ({
+                ...c,
+                accountEmail: g.accountEmail,
+            }))
+        );
+        return (
+            <Sheet
+                variant="outlined"
+                sx={{
+                    flexShrink: 0,
+                    borderRadius: "sm",
+                    borderColor,
+                    px: 0.75,
+                    py: 0.5,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 0.5,
+                    overflowX: "auto",
+                    overflowY: "hidden",
+                    scrollbarWidth: "none",
+                    "&::-webkit-scrollbar": { display: "none" },
+                    maxWidth: "100%",
+                }}
+            >
+                <Typography
+                    level="body-xs"
+                    sx={{
+                        fontWeight: 700,
+                        letterSpacing: "0.04em",
+                        textTransform: "uppercase",
+                        color: mutedText,
+                        flexShrink: 0,
+                        pr: 0.25,
+                    }}
+                >
+                    {t.calendar.sources.title}
+                </Typography>
+                {loading && <CircularProgress size="sm" />}
+                {flat.map((c) => {
+                    const key = sourceKey(c.account_id, c.id);
+                    const checked = selectedKeys.has(key);
+                    const color = colorBySource[key];
+                    const label = c.summary || c.id;
+                    return (
+                        <AppTooltip key={key} size="sm" title={`${label} — ${c.accountEmail}`}>
+                            <Chip
+                                size="sm"
+                                variant={checked ? "solid" : "outlined"}
+                                sx={{
+                                    flexShrink: 0,
+                                    cursor: "pointer",
+                                    // Color swatch doubles as the chip
+                                    // accent so the strip stays a legend.
+                                    "--Chip-bg": checked ? color : undefined,
+                                    borderColor: color,
+                                    color: checked ? "#fff" : undefined,
+                                    maxWidth: 140,
+                                }}
+                                onClick={() => onToggle(key)}
+                            >
+                                <Box
+                                    component="span"
+                                    sx={{
+                                        display: "block",
+                                        overflow: "hidden",
+                                        textOverflow: "ellipsis",
+                                        whiteSpace: "nowrap",
+                                        maxWidth: 120,
+                                    }}
+                                >
+                                    {label}
+                                </Box>
+                            </Chip>
+                        </AppTooltip>
+                    );
+                })}
+                <Button
+                    size="sm"
+                    startDecorator={<AddRoundedIcon />}
+                    sx={{ flexShrink: 0 }}
+                    variant="plain"
+                    onClick={onAddAccount}
+                >
+                    {t.calendar.sources.addAccount}
+                </Button>
+            </Sheet>
+        );
+    }
 
     return (
         <Sheet
@@ -164,8 +264,8 @@ export const CalendarSourcePicker = ({
                                 <Typography
                                     level="body-xs"
                                     sx={{ fontWeight: 600, minWidth: 0 }}
-                                    noWrap
                                     title={group.accountEmail}
+                                    noWrap
                                 >
                                     {group.accountEmail}
                                 </Typography>
