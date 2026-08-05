@@ -1002,12 +1002,18 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     }, [teamTagFilter, useNM.teamNoteFolders]);
 
     // Every tag actually in use, so the filter row never offers a chip
-    // that would match nothing.
+    // that would match nothing. Our folders only: the chips sit in the
+    // Team Notes section and filter it, and a lent folder is shown in
+    // another section entirely — offering the host's tag here would be a
+    // control that empties the list under it and changes something
+    // elsewhere.
     const teamFolderTags = useMemo(() => {
         // Keep the whole tag, not just id+name — the filter chips render
         // in the user's chosen colour, same as the folder-row chips.
         const map = new Map<number, NoteFolderTagProps>();
-        useNM.teamNoteFolders.forEach((f) => f.tags.forEach((tg) => map.set(tg.tagId, tg)));
+        useNM.teamNoteFolders
+            .filter((f) => f.isExternal !== true)
+            .forEach((f) => f.tags.forEach((tg) => map.set(tg.tagId, tg)));
         return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
     }, [useNM.teamNoteFolders]);
 
@@ -1041,9 +1047,18 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     // Same trees either way: a shared folder is still a team folder, with
     // the same rows, actions and role checks. Only which section it hangs
     // under changes.
-    const renderTeamFolderTrees = (folders: typeof ownRootFolders) =>
+    //
+    // `visibleFolderIds` is passed per call rather than read from the
+    // closure, because the tag filter belongs to the section whose chips
+    // set it. Applied to both, toggling a chip in Team Notes would add or
+    // remove a folder from Shared Notes, which is a filter reaching
+    // outside the list it is attached to.
+    const renderTeamFolderTrees = (
+        folders: typeof ownRootFolders,
+        visibleFolderIds: Set<number> | null
+    ) =>
         folders
-            .filter((f) => !visibleTeamFolderIds || visibleTeamFolderIds.has(f.folderId))
+            .filter((f) => !visibleFolderIds || visibleFolderIds.has(f.folderId))
             .map((folder) => (
                 <TeamNoteFolderTree
                     key={`team-folder-${folder.folderId}`}
@@ -1051,7 +1066,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                     folder={folder}
                     renderNote={renderTeamNoteTreeItem}
                     useNM={useNM}
-                    visibleFolderIds={visibleTeamFolderIds}
+                    visibleFolderIds={visibleFolderIds}
                 />
             ));
 
@@ -1168,7 +1183,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                     </Typography>
                 </Box>
             ) : (
-                renderTeamFolderTrees(ownRootFolders)
+                renderTeamFolderTrees(ownRootFolders, visibleTeamFolderIds)
             )}
         </Box>
     );
@@ -1498,8 +1513,9 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         <Box>
             {/* Folders first: a folder is the bigger unit, and it is the
                 one thing in here that arrived from outside the company
-                rather than from a colleague. */}
-            {renderTeamFolderTrees(guestRootFolders)}
+                rather than from a colleague. Unfiltered — the tag chips
+                that could narrow these are in the other section. */}
+            {renderTeamFolderTrees(guestRootFolders, null)}
             {groupedSharedNotes.map((sharer) => (
                 <GroupedNoteSection
                     key={`sharer-${sharer.ownerId}`}
