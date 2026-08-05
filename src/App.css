@@ -1255,3 +1255,48 @@ body
         padding-inline-start: 10px;
     }
 }
+
+/* ==========================================================================
+   Mobile form controls — stop iOS zooming the page on focus
+   ==========================================================================
+   iOS Safari magnifies the whole page when a focused text field's
+   font-size is under 16px, and it does NOT zoom back out on blur. So
+   tapping the Spotlight search box (15px), the project filter, or an
+   assignee autocomplete (Joy `size="sm"` — 14px) left the workspace
+   zoomed in until the user pinched it back by hand.
+
+   A 16px floor is the fix. The alternative — `maximum-scale=1` on the
+   viewport meta — would also stop it, but it takes pinch-zoom away from
+   Android too, where this auto-zoom doesn't exist in the first place.
+
+   `max(16px, 1em)` is a FLOOR, not an override. Joy declares font-size
+   on the Input / Autocomplete root and the inner control inherits it, so
+   `1em` — which resolves against the parent — is the very size the
+   control would otherwise have rendered at. Anything already ≥ 16px is
+   therefore left alone: the task title input (1.35rem, `TaskTitleBlock`)
+   stays large instead of collapsing to 16px. Only a control that sizes
+   ITSELF (the Spotlight textarea) resolves `1em` from its row instead,
+   which lands it on the 16px floor — the intended outcome there anyway.
+
+   `!important` is load-bearing, not defensive: those sizes come from
+   emotion classes (and from `sx` on the element itself), each of which
+   outranks any plain element selector.
+
+   `any-pointer: coarse` limits this to devices with a touchscreen — the
+   only ones that zoom on focus — so narrowing a desktop window past
+   900px doesn't quietly resize every field in the app.
+
+   The selector stays three bare element names on purpose: font-size is
+   inert on checkbox / radio / range, and excluding them via
+   `:not([type="checkbox"], [type="radio"])` would make iOS below 16.4
+   fail to parse and drop the whole rule — killing the fix on exactly the
+   browsers that need it. BlockNote is untouched (it's contenteditable,
+   not a textarea), so editor typography stays as authored.
+   ========================================================================== */
+@media (max-width: 899.95px) and (any-pointer: coarse) {
+    input,
+    textarea,
+    select {
+        font-size: max(16px, 1em) !important;
+    }
+}
