@@ -13,6 +13,16 @@ interface NoteTypeSectionProps {
     children: ReactNode;
     useNM: NoteManagementState;
     isDisabled?: boolean;
+    /**
+     * Override "is the open note mine?", which is otherwise the note's
+     * bucket matching this section's. Needed by the one case where a row
+     * renders outside its bucket's section: a folder another team shared
+     * with us keeps bucket 8 (it is a team note in storage and in every
+     * bucket-keyed lookup) but hangs under Shared Notes. Without this,
+     * opening one lights up and unfolds Team Notes — a section the row
+     * isn't in.
+     */
+    isSelected?: boolean;
 }
 
 export function NoteTypeSection({
@@ -22,11 +32,12 @@ export function NoteTypeSection({
     children,
     useNM,
     isDisabled = false,
+    isSelected: isSelectedOverride,
 }: NoteTypeSectionProps) {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const { t } = useTranslation();
-    const isSelected = useNM.currentNoteType === noteType;
+    const isSelected = isSelectedOverride ?? useNM.currentNoteType === noteType;
 
     // Initialize open state based on whether this section is selected
     const [open, setOpen] = useState(isSelected);

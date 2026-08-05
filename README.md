@@ -83,3 +83,20 @@ itself the one exemption. A native `title` can't be linted — `title` is a real
 prop on `ModalDialog`, `Section` and friends — so that half is on review. On an
 icon, prefer MUI's `titleAccess`: it puts the name in the accessibility tree
 rather than only in a popper.
+
+### Picking a person: `PersonPicker`
+
+Any "add somebody" control uses `src/components/ui/PersonPicker.tsx` — type to
+filter, one pick at a time, self first, avatar beside "Name - email". A roster
+rendered as a row of buttons or behind a bare search box works for four
+colleagues and not for forty, and the app already answered this question in the
+assignee and reporter fields.
+
+It resolves avatars from `AvatarContext` (via `UserAvatar`) rather than taking
+the four hooks `AvatarWithStatus` needs, so a modal can use it without that
+plumbing. A task's own pickers stay on `ACTeamUsers` / `MultiMemberPicker`,
+which show live presence.
+
+Feed it `ownTeamOnly(...)` (`utils/teamRoster.ts`) unless you have a specific
+reason not to: the roster deliberately includes people from teams you share work
+with, and offering them is offering an action the server refuses.

@@ -57,7 +57,9 @@ export type ObjectShareControls = {
     /** End the whole share. Resolves how many people it removed. */
     revoke: (grantId: string) => Promise<number | null>;
     /** A guest team's own roster, for the admit picker. Empty otherwise. */
-    rosterFor: (teamId: string) => Promise<{ userId: string; userName: string }[]>;
+    rosterFor: (
+        teamId: string
+    ) => Promise<{ userId: string; userName: string; userEmail?: string }[]>;
 };
 
 export const useObjectShares = (

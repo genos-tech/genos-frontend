@@ -13,7 +13,9 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
+import { AvatarContextProvider } from "../components/ui/avatars/AvatarContext";
 import { ObjectSharesPanel } from "../components/ui/sharing/ObjectSharesPanel";
+import type { UserProps } from "../types/admin";
 import type { ObjectShare } from "../types/sharing";
 
 const share = (over: Partial<ObjectShare> = {}): ObjectShare => ({
@@ -40,20 +42,34 @@ const renderPanel = (props: Partial<Parameters<typeof ObjectSharesPanel>[0]> = {
         onWithdraw: vi.fn().mockResolvedValue(undefined),
     };
     render(
-        <CssVarsProvider>
-            <ObjectSharesPanel
-                borderColor="#ccc"
-                busy={false}
-                error={null}
-                labelColor="#666"
-                myUserId="me"
-                rosterFor={vi.fn().mockResolvedValue([{ userId: "u1", userName: "Ann" }])}
-                shares={[share()]}
-                valueColor="#111"
-                {...handlers}
-                {...props}
-            />
-        </CssVarsProvider>
+        // The admit picker avatars its candidates, which reads the roster
+        // from context — the same context the authenticated shell provides.
+        <AvatarContextProvider
+            value={{
+                myself: { userId: "me", userName: "Me" } as unknown as UserProps,
+                setMyself: () => {},
+                teamMemberProfiles: {},
+                setTeamMemberProfiles: () => {},
+                socket: null,
+                useCM: {} as never,
+                useUISM: {} as never,
+            }}
+        >
+            <CssVarsProvider>
+                <ObjectSharesPanel
+                    borderColor="#ccc"
+                    busy={false}
+                    error={null}
+                    labelColor="#666"
+                    myUserId="me"
+                    rosterFor={vi.fn().mockResolvedValue([{ userId: "u1", userName: "Ann" }])}
+                    shares={[share()]}
+                    valueColor="#111"
+                    {...handlers}
+                    {...props}
+                />
+            </CssVarsProvider>
+        </AvatarContextProvider>
     );
     return handlers;
 };
@@ -127,8 +143,13 @@ describe("ObjectSharesPanel", () => {
     it("lets a guest manager pick a colleague, and admits the one they pick", async () => {
         const handlers = renderPanel({ shares: [share({ canAdmit: true, side: "received" })] });
         await userEvent.click(screen.getByLabelText(/add someone from your team/i));
-        const candidate = await screen.findByRole("button", { name: "Ann" });
-        await userEvent.click(candidate);
+        // Typed at, not scanned: a roster of forty was a row of forty
+        // buttons before, which is what the autocomplete replaces.
+        await userEvent.type(
+            await screen.findByPlaceholderText(/add someone from your team/i),
+            "An"
+        );
+        await userEvent.click(await screen.findByRole("option", { name: /ann/i }));
         await waitFor(() => expect(handlers.onAdmit).toHaveBeenCalled());
         expect(handlers.onAdmit.mock.calls[0][1]).toBe("u1");
     });

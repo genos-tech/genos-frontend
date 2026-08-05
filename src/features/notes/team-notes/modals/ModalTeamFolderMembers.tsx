@@ -8,7 +8,6 @@ import {
     CircularProgress,
     Divider,
     IconButton,
-    Input,
     Modal,
     ModalDialog,
     Option,
@@ -24,6 +23,7 @@ import {
 } from "../../../../components/modals/noteModalHostZIndex";
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
+import { PersonPicker } from "../../../../components/ui/PersonPicker";
 import { useAuth } from "../../../../context/AuthContext";
 import { useMentionGroupsContext } from "../../../../context/MentionGroupsContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
@@ -93,7 +93,6 @@ export const ModalTeamFolderMembers = (props: Props) => {
     const [members, setMembers] = useState<TeamNoteFolderMemberProps[]>([]);
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
-    const [search, setSearch] = useState("");
     const [pendingUserIds, setPendingUserIds] = useState<string[]>([]);
     const [pendingGroups, setPendingGroups] = useState<NoteFolderInviteGroup[]>([]);
     const [inviteRole, setInviteRole] = useState<number>(ROLE_EDITOR);
@@ -132,7 +131,6 @@ export const ModalTeamFolderMembers = (props: Props) => {
 
     useEffect(() => {
         if (!open || !folder) return;
-        setSearch("");
         setPendingUserIds([]);
         setPendingGroups([]);
         setInviteRole(ROLE_EDITOR);
@@ -198,17 +196,20 @@ export const ModalTeamFolderMembers = (props: Props) => {
         [pendingGroups, groupOptions]
     );
 
-    const candidates = useMemo(() => {
-        const q = search.trim().toLowerCase();
-        // `ownTeamOnly`: folder permissions are a team-internal ACL. Another
-        // team reaches this folder through a share, and their side decides
-        // who among them is in it.
-        return ownTeamOnly(useTEM.teamMembers ?? []).filter((m) => {
-            if (existingIds.has(m.userId) || pendingUserIds.includes(m.userId)) return false;
-            if (!q) return false;
-            return m.userName?.toLowerCase().includes(q) || m.userEmail?.toLowerCase().includes(q);
-        });
-    }, [search, useTEM.teamMembers, existingIds, pendingUserIds]);
+    // Everyone still addable. Unfiltered by any query of ours — the picker
+    // does the matching, which is why the roster no longer has to be typed
+    // at before it will show anybody.
+    //
+    // `ownTeamOnly`: folder permissions are a team-internal ACL. Another
+    // team reaches this folder through a share, and their side decides who
+    // among them is in it.
+    const candidates = useMemo(
+        () =>
+            ownTeamOnly(useTEM.teamMembers ?? []).filter(
+                (m) => !existingIds.has(m.userId) && !pendingUserIds.includes(m.userId)
+            ),
+        [useTEM.teamMembers, existingIds, pendingUserIds]
+    );
 
     const availableGroups = useMemo(
         () =>
@@ -229,7 +230,6 @@ export const ModalTeamFolderMembers = (props: Props) => {
         );
         setPendingUserIds([]);
         setPendingGroups([]);
-        setSearch("");
         await reload();
         setSaving(false);
         onChanged();
@@ -360,33 +360,14 @@ export const ModalTeamFolderMembers = (props: Props) => {
                         <Typography level="title-sm" sx={{ mt: 1.5 }}>
                             {t.notes.teamNotes.addPeople}
                         </Typography>
-                        <Input
+                        <PersonPicker
+                            myUserId={myself.userId}
+                            options={candidates}
                             placeholder={t.notes.sharing.searchPlaceholder}
-                            size="sm"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
+                            onPick={(person) =>
+                                setPendingUserIds((prev) => [...prev, person.userId])
+                            }
                         />
-                        {candidates.length > 0 && (
-                            <Stack
-                                spacing={0.5}
-                                sx={{ maxHeight: 130, mt: 0.5, overflowY: "auto" }}
-                            >
-                                {candidates.map((m) => (
-                                    <Button
-                                        key={m.userId}
-                                        size="sm"
-                                        sx={{ justifyContent: "flex-start" }}
-                                        variant="plain"
-                                        onClick={() => {
-                                            setPendingUserIds((prev) => [...prev, m.userId]);
-                                            setSearch("");
-                                        }}
-                                    >
-                                        {m.userName}
-                                    </Button>
-                                ))}
-                            </Stack>
-                        )}
 
                         {/* What the pending selection actually resolves to,
                             so a group add is never a blind action. */}

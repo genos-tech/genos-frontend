@@ -31,6 +31,7 @@ import { Box, Button, Chip, FormLabel, IconButton, Stack, Typography } from "@mu
 import type { ObjectShare } from "../../../features/admin/services/teamConnections";
 import { fmt, useTranslation } from "../../../i18n";
 import { AppTooltip } from "../AppTooltip";
+import { PersonPicker, PickablePerson } from "../PersonPicker";
 
 export type OfferableTeam = { teamId: string; teamName: string };
 
@@ -41,7 +42,7 @@ type Props = {
     /** The current user, so the admit picker never offers them to themselves. */
     myUserId: string;
     /** A guest team's own roster, fetched on demand for the admit picker. */
-    rosterFor: (teamId: string) => Promise<{ userId: string; userName: string }[]>;
+    rosterFor: (teamId: string) => Promise<PickablePerson[]>;
     onAdmit: (share: ObjectShare, userId: string) => Promise<unknown>;
     onWithdraw: (share: ObjectShare, userId: string) => Promise<unknown>;
     onRevoke: (share: ObjectShare) => Promise<unknown>;
@@ -83,7 +84,7 @@ export const ObjectSharesPanel = ({
     // demand: it is the guest team's own roster, needed only when they are
     // actually about to add somebody.
     const [pickerTeamId, setPickerTeamId] = useState<string | null>(null);
-    const [roster, setRoster] = useState<{ userId: string; userName: string }[]>([]);
+    const [roster, setRoster] = useState<PickablePerson[]>([]);
     // What the next offer grants. Editing by default: sharing a project so
     // the other team can read it is the rare case, and it was the only one
     // reachable before.
@@ -239,26 +240,16 @@ export const ObjectSharesPanel = ({
                                 {strings.everyoneAlreadyIn}
                             </Typography>
                         ) : (
-                            <Stack
-                                direction="row"
-                                spacing={0.5}
-                                sx={{ flexWrap: "wrap", gap: 0.5 }}
-                            >
-                                {addable.map((candidate) => (
-                                    <Button
-                                        key={candidate.userId}
-                                        disabled={busy}
-                                        size="sm"
-                                        variant="outlined"
-                                        onClick={() => {
-                                            setPickerTeamId(null);
-                                            void onAdmit(share, candidate.userId);
-                                        }}
-                                    >
-                                        {candidate.userName}
-                                    </Button>
-                                ))}
-                            </Stack>
+                            <PersonPicker
+                                disabled={busy}
+                                myUserId={myUserId}
+                                options={addable}
+                                placeholder={strings.addFromYourTeam}
+                                onPick={(person) => {
+                                    setPickerTeamId(null);
+                                    void onAdmit(share, person.userId);
+                                }}
+                            />
                         )}
                     </Box>
                 )}
