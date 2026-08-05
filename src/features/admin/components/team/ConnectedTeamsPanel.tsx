@@ -102,22 +102,35 @@ export const ConnectedTeamsPanel = ({
     //
     // Both false is a real third state (connected, nothing shared yet) and
     // gets no chip, because there is no host and no guest to name.
-    const sideChip = (connection: TeamConnection): React.ReactNode => {
-        if (!connection.isOwner && !connection.isGuest) return null;
-        const owner = connection.isOwner;
-        return (
-            <AppTooltip size="sm" title={owner ? strings.ownerTeamHint : strings.guestTeamHint}>
-                <Chip
-                    color={owner ? "primary" : "neutral"}
-                    size="sm"
-                    sx={{ borderRadius: "6px", fontSize: "0.65rem", flexShrink: 0 }}
-                    variant="soft"
-                >
-                    {owner ? strings.ownerTeam : strings.guestTeam}
-                </Chip>
-            </AppTooltip>
-        );
-    };
+    //
+    // Both TRUE is a real fourth state, and the one this row used to get
+    // wrong: once each team has shared something with the other, they are
+    // host AND guest to each other at the same time. Reading `isOwner`
+    // first collapsed that to "Owner" alone, so BOTH teams' profiles
+    // labelled the other the owner — a claim that contradicts itself the
+    // moment you switch teams and look back at the same connection. The
+    // two directions are independent facts, so each gets its own chip.
+    const sideChip = (owner: boolean): React.ReactNode => (
+        <AppTooltip
+            key={owner ? "owner" : "guest"}
+            size="sm"
+            title={owner ? strings.ownerTeamHint : strings.guestTeamHint}
+        >
+            <Chip
+                color={owner ? "primary" : "neutral"}
+                size="sm"
+                sx={{ borderRadius: "6px", fontSize: "0.65rem", flexShrink: 0 }}
+                variant="soft"
+            >
+                {owner ? strings.ownerTeam : strings.guestTeam}
+            </Chip>
+        </AppTooltip>
+    );
+
+    const sideChips = (connection: TeamConnection): React.ReactNode[] => [
+        ...(connection.isOwner ? [sideChip(true)] : []),
+        ...(connection.isGuest ? [sideChip(false)] : []),
+    ];
 
     const row = (
         connection: TeamConnection,
@@ -144,7 +157,7 @@ export const ConnectedTeamsPanel = ({
                     <Typography level="body-sm" sx={{ color: valueColor, fontWeight: 600 }} noWrap>
                         {connection.teamName}
                     </Typography>
-                    {sideChip(connection)}
+                    {sideChips(connection)}
                 </Stack>
                 {note && (
                     <Typography level="body-xs" sx={{ color: labelColor }}>
