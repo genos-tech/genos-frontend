@@ -759,6 +759,8 @@ export const es: DeepPartial<Messages> = {
             unauthorizedNoToken: "No autorizado. No se encontró el token de autenticación.",
             messageIdExists: "El ID del mensaje ya existe.",
             unauthorizedPleaseLogin: "No autorizado. Inicia sesión de nuevo.",
+            subTaskProjectMoveForbidden:
+                "Una subtarea pertenece al proyecto de su tarea principal. Mueve la tarea de nivel superior y la subtarea se moverá con ella.",
         },
         autocomplete: {
             statusPlaceholder: "Estado",
@@ -823,6 +825,8 @@ export const es: DeepPartial<Messages> = {
             refreshBranches: "Actualizar ramas",
             refreshPullRequests: "Actualizar PRs vinculadas",
             addStartDate: "Añadir fecha de inicio",
+            subTaskProjectLocked:
+                "Una subtarea pertenece al proyecto de su tarea principal. Mueve la tarea de nivel superior y la subtarea se moverá con ella.",
         },
         buttons: {
             create: "Crear",

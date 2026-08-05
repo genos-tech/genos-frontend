@@ -842,6 +842,8 @@ export const ja: DeepPartial<Messages> = {
             unauthorizedNoToken: "認証されていません。認証トークンが見つかりません。",
             messageIdExists: "メッセージIDはすでに存在します。",
             unauthorizedPleaseLogin: "認証されていません。再度サインインしてください。",
+            subTaskProjectMoveForbidden:
+                "サブタスクは親タスクのプロジェクトに属します。移動するには親のトップレベルタスクを移動してください。",
         },
         autocomplete: {
             statusPlaceholder: "ステータス",
@@ -906,6 +908,8 @@ export const ja: DeepPartial<Messages> = {
             refreshBranches: "ブランチを更新",
             refreshPullRequests: "連携PRを更新",
             addStartDate: "開始日を追加",
+            subTaskProjectLocked:
+                "サブタスクは親タスクのプロジェクトに属します。移動するには親のトップレベルタスクを移動してください。",
         },
         buttons: {
             create: "作成",

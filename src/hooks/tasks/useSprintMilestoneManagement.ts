@@ -28,6 +28,7 @@ import {
 } from "../../features/tasks/sprint-milestone/services";
 import type { MilestoneMentionContext } from "../../features/tasks/sprint-milestone/services/updateMilestone";
 import { Milestone, Sprint, SprintConfig } from "../../features/tasks/sprint-milestone/types";
+import { upsertMilestoneInList } from "../../features/tasks/sprint-milestone/utils/milestoneListState";
 
 // Every milestone mutation goes through `_sync_backing_task` on the
 // backend, which mirrors the milestone's status / dates / sprint /
@@ -352,18 +353,6 @@ export const useSprintMilestoneManagement = (
         },
         [accessToken, currentSprint]
     );
-
-    const upsertMilestoneInList = (
-        prev: Record<number, Milestone[]>,
-        m: Milestone
-    ): Record<number, Milestone[]> => {
-        const list = prev[m.projectId] ?? [];
-        const exists = list.some((x) => x.milestoneId === m.milestoneId);
-        const next = exists
-            ? list.map((x) => (x.milestoneId === m.milestoneId ? m : x))
-            : [m, ...list];
-        return { ...prev, [m.projectId]: next };
-    };
 
     const createNewMilestone = useCallback(
         async (input: CreateMilestoneInput): Promise<Milestone | null> => {

@@ -9,6 +9,7 @@ import { UserProps } from "../../../types/admin";
 import { TaskProps } from "../../../types/tasks";
 import { taskMessageTemplate } from "../utils/TaskMessageTemplate";
 import { addTask } from "./addTask";
+import { emitTasksBulkChanged } from "./taskEvents";
 import { uploadTaskAttachments } from "./uploadTaskAttachments";
 
 export const sendUpdatedSpecificTask = async (
@@ -272,6 +273,18 @@ export const sendUpdatedSpecificTask = async (
                     await invalidateCachedFullTask(updatedTask.id);
                 }
 
+                // A project move rewrote more than the row above: the task's
+                // sub-tasks came along, every moved row got a fresh
+                // `<CODE>-<n>`, and both projects' tables are now short or
+                // long a sub-tree. Re-pull both rather than trying to mirror
+                // a server-side cascade into IndexedDB from here. The
+                // response is the only place the SOURCE project id survives.
+                const movedFromProjectId: number | null = res.data?.movedFromProjectId ?? null;
+                if (movedFromProjectId != null) {
+                    emitTasksBulkChanged(movedFromProjectId);
+                    emitTasksBulkChanged(updatedTask.project.projectId);
+                }
+
                 return uploadAttachments;
             }
         } else {
@@ -285,7 +298,16 @@ export const sendUpdatedSpecificTask = async (
             if (error.response?.status === 400) {
                 console.error("HTTP 400 error:", error.response?.data);
                 if (setErrorMessage) {
-                    setErrorMessage(errMsgs.messageIdExists);
+                    // The server rejects a project change on a sub-task —
+                    // the picker is read-only there, so this only fires for
+                    // a client that predates the rule or a non-picker
+                    // caller. Naming the reason beats the generic 400 text,
+                    // which claims a duplicate message id.
+                    setErrorMessage(
+                        error.response?.data?.code === "subtask_project_move_forbidden"
+                            ? errMsgs.subTaskProjectMoveForbidden
+                            : errMsgs.messageIdExists
+                    );
                 }
             } else if (error.response?.status === 401) {
                 console.error("HTTP 401 error:", error.response?.data);
