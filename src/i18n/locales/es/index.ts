@@ -216,8 +216,16 @@ export const es: DeepPartial<Messages> = {
             exportDescription:
                 "Descarga todo lo que has creado — perfil, notas, tareas, mensajes y comentarios — en un archivo JSON. No incluye contenido del equipo escrito por otras personas.",
             exportButton: "Descargar mis datos",
+            teamsHeading: "Tus equipos",
+            teamsDescription:
+                "Salir de un equipo termina tu acceso a sus chats, proyectos y notas. Tu cuenta y tus demás equipos no cambian, y alguien puede volver a invitarte más adelante.",
+            teamsCurrent: "Actual",
+            teamsOwnerHint:
+                "Eres propietario de este equipo: transfiere la propiedad desde su perfil antes de salir.",
+            teamsEmpty: "Todavía no perteneces a ningún equipo.",
             deleteHeading: "Eliminar tu cuenta",
-            deleteDescription: "Borra tu cuenta de forma permanente. No se puede deshacer.",
+            deleteDescription:
+                "Borra tu cuenta de forma permanente y te saca de todos los equipos a los que perteneces. No se puede deshacer; para salir de un solo equipo y conservar el resto, usa Tus equipos arriba.",
             deleteButton: "Eliminar cuenta",
             ownershipBlocked:
                 "Eres propietario de equipos que aún tienen otros miembros. Transfiere la propiedad desde el perfil de cada equipo antes de eliminar tu cuenta.",

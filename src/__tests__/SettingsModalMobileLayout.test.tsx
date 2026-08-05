@@ -1,5 +1,6 @@
 import { CssVarsProvider } from "@mui/joy/styles";
 import { render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { SettingsModal } from "../components/layout/SettingsModal";
@@ -50,10 +51,15 @@ beforeEach(() => {
     localStorage.clear();
 });
 
+// The Account panel navigates to the team-picker after you leave the team
+// you're in, so the tree needs a router even though the rail is what's
+// under test.
 const renderModal = () =>
     render(
         <CssVarsProvider>
-            <SettingsModal open onClose={vi.fn()} />
+            <MemoryRouter>
+                <SettingsModal open onClose={vi.fn()} />
+            </MemoryRouter>
         </CssVarsProvider>
     );
 
