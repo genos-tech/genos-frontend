@@ -43,9 +43,10 @@ export const TaskNoteHeader = ({ useNM }: TaskNoteHeaderProps) => {
     // Mobile: title only — shares the single header row with back +
     // actions (breadcrumbs are desktop chrome).
     if (isMobile) {
+        const chain = useNM.currentTaskNoteChain ?? [];
         const title =
             useNM.currentTaskNote?.title ||
-            useNM.currentTaskNoteChain?.at(-1)?.title ||
+            chain[chain.length - 1]?.title ||
             t.notes.header.taskNotesLabel;
         return (
             <Typography level="title-sm" sx={{ flex: 1, minWidth: 0, fontWeight: 700 }} noWrap>
