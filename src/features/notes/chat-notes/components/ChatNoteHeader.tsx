@@ -14,7 +14,7 @@ import NotificationsOffRoundedIcon from "@mui/icons-material/NotificationsOffRou
 import QuestionAnswerIcon from "@mui/icons-material/QuestionAnswer";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
 import TagRoundedIcon from "@mui/icons-material/TagRounded";
-import { Box, IconButton, Stack, Tooltip } from "@mui/joy";
+import { Box, IconButton, Stack } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { useNavigate } from "react-router-dom";
 import { Socket } from "socket.io-client";
@@ -364,17 +364,7 @@ export const ChatNoteHeader = ({
                     "Chat not found: chatId=0"). We pass the chat's own
                     verified chatType/chatId so the lookup can't miss. */}
                 {isInChatPage === false && chat && (
-                    <Tooltip
-                        size="sm"
-                        title={t.notes.header.openRelatedChat}
-                        variant="outlined"
-                        sx={{
-                            background: styles.menuBg,
-                            border: `1px solid ${styles.menuBorder}`,
-                            borderRadius: "8px",
-                            backdropFilter: "blur(8px)",
-                        }}
-                    >
+                    <AppTooltip size="sm" title={t.notes.header.openRelatedChat}>
                         <IconButton
                             size="sm"
                             sx={actionButtonStyle}
@@ -405,7 +395,7 @@ export const ChatNoteHeader = ({
                         >
                             <QuestionAnswerIcon sx={{ fontSize: 18, color: styles.accentColor }} />
                         </IconButton>
-                    </Tooltip>
+                    </AppTooltip>
                 )}
 
                 {/* "Ask about this note" — opens the AI Q&A modal.
@@ -559,17 +549,7 @@ export const ChatNoteHeader = ({
 
                 {/* Close Button */}
                 {(isInChatPage === true || isInTaskPage === true) && (
-                    <Tooltip
-                        size="sm"
-                        title={t.notes.header.close}
-                        variant="outlined"
-                        sx={{
-                            background: styles.menuBg,
-                            border: `1px solid ${styles.menuBorder}`,
-                            borderRadius: "8px",
-                            backdropFilter: "blur(8px)",
-                        }}
-                    >
+                    <AppTooltip size="sm" title={t.notes.header.close}>
                         <IconButton
                             size="sm"
                             sx={dangerButtonStyle}
@@ -593,7 +573,7 @@ export const ChatNoteHeader = ({
                                 }}
                             />
                         </IconButton>
-                    </Tooltip>
+                    </AppTooltip>
                 )}
 
                 {/* Delete Modal */}

@@ -62,14 +62,17 @@ const chat = (over: Partial<AllChatProps>): AllChatProps =>
 describe("an outsider's avatar wears their team", () => {
     it("badges the face of somebody from another team", () => {
         withRoster(<UserAvatar userId="u-outsider" />);
-        // The team's name is the badge's accessible label, so this is also
-        // the assertion that a reader can tell WHICH team.
-        expect(screen.getByTitle("Team B")).toBeTruthy();
+        // The team's name is the badge's accessible name, so this asserts
+        // both that a reader can tell WHICH team and that the mark is not
+        // sighted-only. Queried by label rather than by the old `title`
+        // attribute: that hint sat on an element with `pointer-events:
+        // none` and could never have appeared for anyone.
+        expect(screen.getByLabelText("Team B")).toBeTruthy();
     });
 
     it("leaves a colleague's face alone", () => {
         withRoster(<UserAvatar userId="u-colleague" />);
-        expect(screen.queryByTitle("Team B")).toBeNull();
+        expect(screen.queryByLabelText("Team B")).toBeNull();
     });
 });
 

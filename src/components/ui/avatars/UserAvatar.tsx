@@ -2,6 +2,7 @@ import { memo, useCallback, useMemo, useState } from "react";
 import { Avatar, Box, Stack, Typography } from "@mui/joy";
 
 import { UserProfile } from "../../../features/admin/components/modals/ModalUserProfile";
+import { AppTooltip } from "../AppTooltip";
 import { PulseDot } from "../misc/PulseDot";
 import { useAvatarContext, useUserProfile } from "./AvatarContext";
 
@@ -178,27 +179,33 @@ const UserAvatarInner = (props: UserAvatarProps) => {
                         </Box>
                     )}
                     {homeTeam && (
-                        <Avatar
-                            size="sm"
-                            src={badgeSrc}
-                            sx={{
-                                position: "absolute",
-                                top: -2,
-                                left: -2,
-                                height: badgeSize,
-                                width: badgeSize,
-                                fontSize: Math.max(7, Math.round(badgeSize * 0.6)),
-                                border: "1.5px solid",
-                                borderColor: "background.surface",
-                                // The team icon is an identifier, not a
-                                // control: it must not eat the click that
-                                // opens the person's profile.
-                                pointerEvents: "none",
-                            }}
-                            title={badgeTitle}
-                        >
-                            {(badgeTitle || "?").charAt(0).toUpperCase()}
-                        </Avatar>
+                        // The team's name is the badge's accessible name, so a
+                        // reader can tell WHICH team and a screen reader says
+                        // it. The hover hint used to be a native `title` on an
+                        // element with `pointer-events: none` — a hint that
+                        // could never fire, on the one mark whose job is to
+                        // answer "who is this person". Pointer events are back
+                        // on: the click still opens the profile, because the
+                        // handler is on the wrapper this bubbles to.
+                        <AppTooltip title={badgeTitle}>
+                            <Avatar
+                                aria-label={badgeTitle}
+                                size="sm"
+                                src={badgeSrc}
+                                sx={{
+                                    position: "absolute",
+                                    top: -2,
+                                    left: -2,
+                                    height: badgeSize,
+                                    width: badgeSize,
+                                    fontSize: Math.max(7, Math.round(badgeSize * 0.6)),
+                                    border: "1.5px solid",
+                                    borderColor: "background.surface",
+                                }}
+                            >
+                                {(badgeTitle || "?").charAt(0).toUpperCase()}
+                            </Avatar>
+                        </AppTooltip>
                     )}
                 </Box>
                 {showNameAndEmail === true && (

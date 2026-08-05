@@ -54,7 +54,7 @@ describe("EmojiText", () => {
         setTeamEmojiList([partyBlob]);
         render(<EmojiText text="shipped it :party-blob: today" />);
 
-        const img = screen.getByTitle(":party-blob:");
+        const img = screen.getByAltText(":party-blob:");
         expect(img.tagName).toBe("IMG");
         expect(img).toHaveAttribute("src", partyBlob.url);
         // The surrounding prose survives on both sides of the glyph.
@@ -65,7 +65,7 @@ describe("EmojiText", () => {
     it("resolves several shortcodes in one line", () => {
         setTeamEmojiList([partyBlob]);
         render(<EmojiText text=":party-blob: x :party-blob:" />);
-        expect(screen.getAllByTitle(":party-blob:")).toHaveLength(2);
+        expect(screen.getAllByAltText(":party-blob:")).toHaveLength(2);
     });
 
     it("leaves unknown shortcodes as literal text (deleted emoji)", () => {
@@ -211,7 +211,7 @@ describe("ChatListItemMessage", () => {
     it("renders custom emoji in the preview line as images", () => {
         setTeamEmojiList([partyBlob]);
         renderRow(chatWith({ latestMessageText: "ship it :party-blob:" }));
-        expect(screen.getByTitle(":party-blob:")).toHaveAttribute("src", partyBlob.url);
+        expect(screen.getByAltText(":party-blob:")).toHaveAttribute("src", partyBlob.url);
     });
 
     it("still renders nothing when there is neither text nor media", () => {

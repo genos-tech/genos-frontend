@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { Box, Stack, Tooltip } from "@mui/joy";
+import { Box, Stack } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { AppTooltip } from "../../../components/ui/AppTooltip";
 import { purplePalette } from "../../../theme/purplePalette";
 import { loadLinkedPullsBatched, type LinkedPull } from "../services/github";
 import { getCachedOrFetchPrStatus, type PrStatusResult } from "../services/prStatusCache";
@@ -188,28 +189,13 @@ const SinglePrBadge = ({
     );
 
     return (
-        <Tooltip
+        <AppTooltip
+            arrowColor={hasDetail ? palette.surfaceSolid : undefined}
+            maxWidth={hasDetail ? 320 : undefined}
             placement="top"
             size="sm"
+            surface={hasDetail ? "none" : "chip"}
             title={hoverTitle}
-            variant={hasDetail ? "plain" : undefined}
-            sx={
-                hasDetail
-                    ? {
-                          maxWidth: 320,
-                          // Surface lives on the inner Stack — keep the
-                          // outer wrapper transparent so we don't stack
-                          // two card surfaces.
-                          bgcolor: "transparent",
-                          border: "none",
-                          boxShadow: "none",
-                          p: 0,
-                          color: palette.text,
-                          "--Tooltip-arrowColor": palette.surfaceSolid,
-                      }
-                    : undefined
-            }
-            arrow
         >
             <Box
                 component="a"
@@ -256,7 +242,7 @@ const SinglePrBadge = ({
                     />
                 )}
             </Box>
-        </Tooltip>
+        </AppTooltip>
     );
 };
 

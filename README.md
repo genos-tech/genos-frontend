@@ -59,3 +59,27 @@ and Railway's Nixpacks Node major should be 22 to match.
 > Prettier and ESLint are wired to the repo config (`.prettierrc`,
 > `eslint.config.js`). Note `.prettierrc` sets `tabWidth: 4`, which applies to
 > YAML and JSON too — run `npm run format` before committing.
+
+## Conventions
+
+### Tooltips: `AppTooltip`, always
+
+Every hover hint goes through `src/components/ui/AppTooltip.tsx`. Neither Joy's
+raw `Tooltip` nor a native `title=` attribute used as a hint is allowed.
+
+`AppTooltip` owns the design-system surface, so the look is decided in one
+place, and it sets no `z-index`: the theme gives tooltips 13300, above every
+modal in the app (`theme/purplePalette.ts`), which is higher than any of the
+hand-rolled values that used to be copied around. It also renders safely with
+no `CssVarsProvider` above it, so a component under test doesn't have to know
+it contains a tooltip.
+
+Needs a look the props don't cover? Add the prop to `AppTooltip` — that's what
+`maxWidth`, `surface` (`"none"` for a `title` that paints its own hover card)
+and `arrowColor` are. Don't reach past it with `sx`.
+
+ESLint fails the raw import (`no-restricted-imports`), with `AppTooltip.tsx`
+itself the one exemption. A native `title` can't be linted — `title` is a real
+prop on `ModalDialog`, `Section` and friends — so that half is on review. On an
+icon, prefer MUI's `titleAccess`: it puts the name in the accessibility tree
+rather than only in a popper.

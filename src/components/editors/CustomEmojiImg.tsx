@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { upgradeInsecureUrl } from "../../utils/downloadUtils";
+import { AppTooltip } from "../ui/AppTooltip";
 
 // The BlockNote-free half of the custom-emoji feature: the <img> glyph
 // and the shortcode pattern.
@@ -44,25 +45,29 @@ export const CustomEmojiImg = ({
         return <span>{`:${name}:`}</span>;
     }
     return (
-        <img
-            alt={`:${name}:`}
-            // Editor surfaces open an image-zoom/download modal on ANY
-            // <img> click; this attribute is their opt-out marker so an
-            // emoji never gets treated as a downloadable image block.
-            data-custom-emoji="true"
-            loading="lazy"
-            // Inline-spec props bypass the editor-level `resolveFileUrl`
-            // hook, so the baked-http:// upgrade has to happen here.
-            src={upgradeInsecureUrl(url)}
-            title={`:${name}:`}
-            style={{
-                height: size ?? "1.4em",
-                width: "auto",
-                verticalAlign: "text-bottom",
-                objectFit: "contain",
-                display: "inline-block",
-            }}
-            onError={() => setBroken(true)}
-        />
+        <AppTooltip title={`:${name}:`}>
+            <img
+                // Also the hover label's text, so the shortcode stays
+                // reachable by name once the tooltip stops being a DOM
+                // attribute on this element.
+                alt={`:${name}:`}
+                // Editor surfaces open an image-zoom/download modal on ANY
+                // <img> click; this attribute is their opt-out marker so an
+                // emoji never gets treated as a downloadable image block.
+                data-custom-emoji="true"
+                loading="lazy"
+                // Inline-spec props bypass the editor-level `resolveFileUrl`
+                // hook, so the baked-http:// upgrade has to happen here.
+                src={upgradeInsecureUrl(url)}
+                style={{
+                    height: size ?? "1.4em",
+                    width: "auto",
+                    verticalAlign: "text-bottom",
+                    objectFit: "contain",
+                    display: "inline-block",
+                }}
+                onError={() => setBroken(true)}
+            />
+        </AppTooltip>
     );
 };

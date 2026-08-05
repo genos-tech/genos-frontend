@@ -44,7 +44,7 @@ import {
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import CheckIcon from "@mui/icons-material/Check";
 import DownloadIcon from "@mui/icons-material/Download";
-import { Box, Chip, IconButton, Modal, ModalDialog, Tooltip } from "@mui/joy";
+import { Box, Chip, IconButton, Modal, ModalDialog } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { RiAlertFill } from "react-icons/ri";
 import { Socket } from "socket.io-client";
@@ -715,13 +715,10 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
                                         display: "block",
                                     }}
                                 />
-                                <Tooltip
-                                    component="div"
+                                <AppTooltip
                                     placement="top"
                                     size="sm"
-                                    sx={{ zIndex: 10010 }}
                                     title={t.common.editor.download}
-                                    variant="outlined"
                                 >
                                     <IconButton
                                         color="neutral"
@@ -731,7 +728,7 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
                                     >
                                         <DownloadIcon />
                                     </IconButton>
-                                </Tooltip>
+                                </AppTooltip>
                             </Box>
                         ) : null}
                     </ModalDialog>

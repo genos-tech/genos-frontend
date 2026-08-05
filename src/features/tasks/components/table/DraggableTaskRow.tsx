@@ -988,18 +988,19 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                 {storedString === "" ? (
                     emptyCellPlaceholder
                 ) : (
-                    <Typography
-                        level="body-sm"
-                        title={storedString}
-                        sx={{
-                            fontSize: "0.8rem",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                        }}
-                    >
-                        {storedString}
-                    </Typography>
+                    <AppTooltip title={storedString}>
+                        <Typography
+                            level="body-sm"
+                            sx={{
+                                fontSize: "0.8rem",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                            }}
+                        >
+                            {storedString}
+                        </Typography>
+                    </AppTooltip>
                 )}
             </Box>
         );
@@ -2197,41 +2198,44 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                 const name = sprintNamesById?.get(task.sprintId) ?? `Sprint #${task.sprintId}`;
                 const resolved = sprintNamesById?.has(task.sprintId) ?? false;
                 return (
-                    <Chip
-                        label={name}
-                        size="small"
-                        title={name}
-                        sx={{
-                            maxWidth: "100%",
-                            // Composed with rgba() rather than MUI's `alpha()`:
-                            // brand colors are CSS variables now, and
-                            // `alpha()` runs `decomposeColor`, which throws on
-                            // a `var()`.
-                            backgroundColor:
-                                mode === "dark"
-                                    ? "rgba(var(--gp-brandalt-400-rgb), 0.18)"
-                                    : "rgba(var(--gp-brand-700-rgb), 0.1)",
-                            color:
-                                mode === "dark" ? "var(--gp-brandalt-300)" : "var(--gp-brand-900)",
-                            fontWeight: 600,
-                            fontSize: "0.72rem",
-                            borderRadius: "6px",
-                            border: `1px solid ${
-                                mode === "dark"
-                                    ? "rgba(var(--gp-brandalt-400-rgb), 0.32)"
-                                    : "rgba(var(--gp-brand-700-rgb), 0.22)"
-                            }`,
-                            // Italicize the fallback so the user can tell at a
-                            // glance that the sprint hasn't been loaded yet.
-                            fontStyle: resolved ? "normal" : "italic",
-                            "& .MuiChip-label": {
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                                whiteSpace: "nowrap",
-                                px: 1,
-                            },
-                        }}
-                    />
+                    <AppTooltip title={name}>
+                        <Chip
+                            label={name}
+                            size="small"
+                            sx={{
+                                maxWidth: "100%",
+                                // Composed with rgba() rather than MUI's `alpha()`:
+                                // brand colors are CSS variables now, and
+                                // `alpha()` runs `decomposeColor`, which throws on
+                                // a `var()`.
+                                backgroundColor:
+                                    mode === "dark"
+                                        ? "rgba(var(--gp-brandalt-400-rgb), 0.18)"
+                                        : "rgba(var(--gp-brand-700-rgb), 0.1)",
+                                color:
+                                    mode === "dark"
+                                        ? "var(--gp-brandalt-300)"
+                                        : "var(--gp-brand-900)",
+                                fontWeight: 600,
+                                fontSize: "0.72rem",
+                                borderRadius: "6px",
+                                border: `1px solid ${
+                                    mode === "dark"
+                                        ? "rgba(var(--gp-brandalt-400-rgb), 0.32)"
+                                        : "rgba(var(--gp-brand-700-rgb), 0.22)"
+                                }`,
+                                // Italicize the fallback so the user can tell at a
+                                // glance that the sprint hasn't been loaded yet.
+                                fontStyle: resolved ? "normal" : "italic",
+                                "& .MuiChip-label": {
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    whiteSpace: "nowrap",
+                                    px: 1,
+                                },
+                            }}
+                        />
+                    </AppTooltip>
                 );
             }
 
@@ -2481,14 +2485,15 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                 minWidth: LEADING_GUTTER_WIDTH,
                             }}
                         >
-                            <div
-                                {...provided.dragHandleProps}
-                                className="task-row-drag-handle"
-                                style={getDragHandleStyles(snapshot.isDragging, mode)}
-                                title={t.tasks.table.dragToReorder}
-                            >
-                                <DragIndicatorIcon sx={{ fontSize: 20 }} />
-                            </div>
+                            <AppTooltip title={t.tasks.table.dragToReorder}>
+                                <div
+                                    {...provided.dragHandleProps}
+                                    className="task-row-drag-handle"
+                                    style={getDragHandleStyles(snapshot.isDragging, mode)}
+                                >
+                                    <DragIndicatorIcon sx={{ fontSize: 20 }} />
+                                </div>
+                            </AppTooltip>
                             {/* Open the task graph anchored on this row.
                                 Root tasks / milestones only: a sub-task's
                                 graph is reachable from its root, and the

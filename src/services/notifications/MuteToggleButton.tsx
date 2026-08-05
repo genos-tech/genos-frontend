@@ -1,7 +1,8 @@
 import NotificationsActiveRounded from "@mui/icons-material/NotificationsActiveRounded";
 import NotificationsOffRounded from "@mui/icons-material/NotificationsOffRounded";
-import { IconButton, Tooltip } from "@mui/joy";
+import { IconButton } from "@mui/joy";
 
+import { AppTooltip } from "../../components/ui/AppTooltip";
 import { useTranslation } from "../../i18n";
 import { useNotificationsContext } from "./NotificationsContext";
 
@@ -51,13 +52,7 @@ export const MuteToggleButton = ({
     };
 
     return (
-        <Tooltip
-            placement="bottom"
-            size="sm"
-            sx={{ zIndex: 10020 }}
-            title={label}
-            variant="outlined"
-        >
+        <AppTooltip placement="bottom" size="sm" title={label}>
             <IconButton
                 aria-label={label}
                 color={color}
@@ -67,6 +62,6 @@ export const MuteToggleButton = ({
             >
                 {muted ? <NotificationsOffRounded /> : <NotificationsActiveRounded />}
             </IconButton>
-        </Tooltip>
+        </AppTooltip>
     );
 };

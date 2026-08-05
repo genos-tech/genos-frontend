@@ -1,7 +1,8 @@
 import React from "react";
-import { Box, Stack, Tooltip, Typography } from "@mui/joy";
+import { Box, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { AppTooltip } from "../../../../../components/ui/AppTooltip";
 import { EmojiGlyph } from "../../../../../components/ui/emoji/EmojiGlyph";
 import { useTranslation } from "../../../../../i18n";
 import { UserProps } from "../../../../../types/admin";
@@ -80,15 +81,10 @@ export const ActivityReactions: React.FC<ActivityReactionsProps> = ({
                     const reactionColor = isDark ? "#fbbf24" : "#f59e0b";
 
                     return (
-                        <Tooltip
+                        <AppTooltip
                             key={`tooltip-${index}`}
                             placement="top"
                             size="sm"
-                            variant="outlined"
-                            sx={{
-                                borderRadius: "8px",
-                                fontSize: "0.75rem",
-                            }}
                             title={
                                 senders
                                     .slice(0, 5)
@@ -148,19 +144,14 @@ export const ActivityReactions: React.FC<ActivityReactionsProps> = ({
                                     {count}
                                 </Typography>
                             </Box>
-                        </Tooltip>
+                        </AppTooltip>
                     );
                 })}
 
                 {hidden.length > 0 && (
-                    <Tooltip
+                    <AppTooltip
                         placement="top"
                         size="sm"
-                        variant="outlined"
-                        sx={{
-                            borderRadius: "8px",
-                            fontSize: "0.75rem",
-                        }}
                         title={
                             <Stack
                                 direction="row"
@@ -208,7 +199,7 @@ export const ActivityReactions: React.FC<ActivityReactionsProps> = ({
                         >
                             +{hidden.length}
                         </Box>
-                    </Tooltip>
+                    </AppTooltip>
                 )}
             </Stack>
         </Stack>

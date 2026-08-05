@@ -21,7 +21,6 @@ import {
     MenuButton,
     MenuItem,
     Stack,
-    Tooltip,
     Typography,
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
@@ -640,12 +639,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                     visible (no chatType guard) because the summary +
                     follow-up flow is useful regardless of whether the
                     thread is in DM / GM / PM / MDM. */}
-                <Tooltip
-                    size="sm"
-                    title={t.threadAsk.headerButton.tooltip}
-                    variant="outlined"
-                    sx={{ borderRadius: "8px" }}
-                >
+                <AppTooltip size="sm" title={t.threadAsk.headerButton.tooltip}>
                     <IconButton
                         size="sm"
                         variant="plain"
@@ -655,7 +649,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                     >
                         <AutoAwesomeRoundedIcon sx={{ fontSize: 18, color: styles.accentColor }} />
                     </IconButton>
-                </Tooltip>
+                </AppTooltip>
 
                 {/* Secondary actions (Open Note + Create Task) live in
                     a MoreMenu so the header's right edge stays focused
@@ -728,12 +722,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                 })()}
 
                 {/* Close Button */}
-                <Tooltip
-                    size="sm"
-                    title={t.chat.headers.close}
-                    variant="outlined"
-                    sx={{ borderRadius: "8px" }}
-                >
+                <AppTooltip size="sm" title={t.chat.headers.close}>
                     <IconButton
                         size="sm"
                         variant="plain"
@@ -744,7 +733,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                             sx={{ fontSize: 18, color: "var(--gp-tint-danger-alt)" }}
                         />
                     </IconButton>
-                </Tooltip>
+                </AppTooltip>
             </Stack>
 
             {/* Thread Q&A modal — mounted once per header instance so

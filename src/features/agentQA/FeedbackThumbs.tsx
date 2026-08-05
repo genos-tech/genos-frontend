@@ -24,6 +24,8 @@ import ThumbDownAltRoundedIcon from "@mui/icons-material/ThumbDownAltRounded";
 import ThumbUpAltRoundedIcon from "@mui/icons-material/ThumbUpAltRounded";
 import { IconButton } from "@mui/joy";
 
+import { AppTooltip } from "../../components/ui/AppTooltip";
+
 const VOTE_STORAGE_PREFIX = "agent_feedback_vote:";
 
 // Read the persisted vote for a run. Returns 1 / -1, or null when the
@@ -101,30 +103,39 @@ export const FeedbackThumbs = ({
         writeStoredVote(runId, next);
         onFeedback(runId, next);
     };
+    // Both labels do double duty: the hover tooltip AND the button's
+    // accessible name. The buttons are icon-only, so without the
+    // aria-label a screen reader would announce them as "button".
+    const upLabel = labels?.up ?? "Good answer";
+    const downLabel = labels?.down ?? "Needs work";
     return (
         <>
-            <IconButton
-                color={rating === 1 ? "success" : "neutral"}
-                disabled={locked}
-                size="sm"
-                sx={{ minWidth: 0, p: "3px" }}
-                title={labels?.up ?? "Good answer"}
-                variant={rating === 1 ? "soft" : "plain"}
-                onClick={() => handleFeedback(1)}
-            >
-                <ThumbUpAltRoundedIcon sx={{ fontSize: 14 }} />
-            </IconButton>
-            <IconButton
-                color={rating === -1 ? "danger" : "neutral"}
-                disabled={locked}
-                size="sm"
-                sx={{ minWidth: 0, p: "3px" }}
-                title={labels?.down ?? "Needs work"}
-                variant={rating === -1 ? "soft" : "plain"}
-                onClick={() => handleFeedback(-1)}
-            >
-                <ThumbDownAltRoundedIcon sx={{ fontSize: 14 }} />
-            </IconButton>
+            <AppTooltip title={upLabel}>
+                <IconButton
+                    aria-label={upLabel}
+                    color={rating === 1 ? "success" : "neutral"}
+                    disabled={locked}
+                    size="sm"
+                    sx={{ minWidth: 0, p: "3px" }}
+                    variant={rating === 1 ? "soft" : "plain"}
+                    onClick={() => handleFeedback(1)}
+                >
+                    <ThumbUpAltRoundedIcon sx={{ fontSize: 14 }} />
+                </IconButton>
+            </AppTooltip>
+            <AppTooltip title={downLabel}>
+                <IconButton
+                    aria-label={downLabel}
+                    color={rating === -1 ? "danger" : "neutral"}
+                    disabled={locked}
+                    size="sm"
+                    sx={{ minWidth: 0, p: "3px" }}
+                    variant={rating === -1 ? "soft" : "plain"}
+                    onClick={() => handleFeedback(-1)}
+                >
+                    <ThumbDownAltRoundedIcon sx={{ fontSize: 14 }} />
+                </IconButton>
+            </AppTooltip>
         </>
     );
 };

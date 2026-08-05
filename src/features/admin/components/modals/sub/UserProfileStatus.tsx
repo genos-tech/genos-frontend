@@ -13,11 +13,11 @@ import {
     MenuButton,
     MenuItem,
     Stack,
-    Tooltip,
     Typography,
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { AppTooltip } from "../../../../../components/ui/AppTooltip";
 import { useOptionalAvatarContext } from "../../../../../components/ui/avatars/AvatarContext";
 import { PulseDot } from "../../../../../components/ui/misc/PulseDot";
 import { ProfileModalStyles } from "../../../../../components/ui/styles/commonStyle";
@@ -442,7 +442,7 @@ export const UserProfileStatus = ({
                                 after a successful rename. */}
                             {myself.userName}
                         </Box>
-                        <Tooltip size="sm" title={t.common.profileEdit.rename} variant="outlined">
+                        <AppTooltip size="sm" title={t.common.profileEdit.rename}>
                             <IconButton
                                 size="sm"
                                 sx={{ flexShrink: 0 }}
@@ -455,7 +455,7 @@ export const UserProfileStatus = ({
                             >
                                 <EditIcon sx={{ fontSize: 18 }} />
                             </IconButton>
-                        </Tooltip>
+                        </AppTooltip>
                     </Stack>
                 )}
             </Typography>

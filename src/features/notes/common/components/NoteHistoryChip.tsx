@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
-import { Box, Tooltip, Typography } from "@mui/joy";
+import { Box, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { useIsMobile } from "../../../../hooks/common/useIsMobile";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
@@ -83,15 +84,7 @@ export const NoteHistoryChip = ({
 
     return (
         <>
-            <Tooltip
-                size="sm"
-                title={t.notes.history.chipTooltip}
-                variant="outlined"
-                sx={{
-                    background: isDark ? "rgba(20,16,28,0.95)" : "rgba(255,255,255,0.98)",
-                    borderRadius: "8px",
-                }}
-            >
+            <AppTooltip size="sm" title={t.notes.history.chipTooltip}>
                 <Box
                     aria-label={summary}
                     component="button"
@@ -145,7 +138,7 @@ export const NoteHistoryChip = ({
                         {summary}
                     </Typography>
                 </Box>
-            </Tooltip>
+            </AppTooltip>
 
             <ModalNoteHistory
                 myself={myself}

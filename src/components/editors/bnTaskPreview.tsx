@@ -41,7 +41,7 @@ import {
     TextAlignButton,
 } from "@blocknote/react";
 import DownloadIcon from "@mui/icons-material/Download";
-import { Box, IconButton, Modal, ModalDialog, Tooltip } from "@mui/joy";
+import { Box, IconButton, Modal, ModalDialog } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { RiAlertFill } from "react-icons/ri";
 import { Socket } from "socket.io-client";
@@ -61,6 +61,7 @@ import { getUserColor } from "../../utils/collabUtils";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { downloadFile } from "../../utils/downloadUtils";
 import { filterAndRankSuggestionItems } from "../../utils/suggestionRanking";
+import { AppTooltip } from "../ui/AppTooltip";
 import { FileSizeRejectionSnackbar } from "../ui/feedback/FileSizeRejectionSnackbar";
 import { FileUploadStatusBadge } from "../ui/feedback/FileUploadProgress";
 import { useFileSizeGuard } from "../ui/feedback/useFileSizeGuard";
@@ -649,13 +650,10 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                                         display: "block",
                                     }}
                                 />
-                                <Tooltip
-                                    component="div"
+                                <AppTooltip
                                     placement="top"
                                     size="sm"
-                                    sx={{ zIndex: 10010 }}
                                     title={t.common.editor.download}
-                                    variant="outlined"
                                 >
                                     <IconButton
                                         color="neutral"
@@ -665,7 +663,7 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                                     >
                                         <DownloadIcon />
                                     </IconButton>
-                                </Tooltip>
+                                </AppTooltip>
                             </Box>
                         ) : null}
                     </ModalDialog>

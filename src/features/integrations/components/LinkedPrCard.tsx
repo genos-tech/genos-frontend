@@ -2,17 +2,7 @@ import React, { useEffect, useState } from "react";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import LinkRoundedIcon from "@mui/icons-material/LinkRounded";
 import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
-import {
-    Alert,
-    Box,
-    Button,
-    Card,
-    Chip,
-    CircularProgress,
-    Stack,
-    Tooltip,
-    Typography,
-} from "@mui/joy";
+import { Alert, Box, Button, Card, Chip, CircularProgress, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { AppTooltip } from "../../../components/ui/AppTooltip";
@@ -214,27 +204,13 @@ export const LinkedPrCard = ({ url, accessToken, hideOnNotConnected }: Props) =>
     const ci = deriveCiState(combined_status, check_runs);
 
     return (
-        <Tooltip
+        <AppTooltip
+            arrowColor={palette.surfaceSolid}
+            maxWidth={320}
             placement="top-start"
             size="sm"
+            surface="none"
             title={<PrHoverDetails isDark={isDark} payload={result.payload} />}
-            variant="plain"
-            sx={{
-                maxWidth: 320,
-                // The visible surface lives on `HoverDetails`' inner
-                // Stack (palette.surfaceSolid + border + shadow), so
-                // make this outer wrapper transparent / unpadded —
-                // otherwise we'd render two stacked card surfaces.
-                bgcolor: "transparent",
-                border: "none",
-                boxShadow: "none",
-                p: 0,
-                color: palette.text,
-                // Tint the arrow to the same solid surface so it looks
-                // attached to the inner panel.
-                "--Tooltip-arrowColor": palette.surfaceSolid,
-            }}
-            arrow
         >
             <Card
                 component="a"
@@ -302,6 +278,6 @@ export const LinkedPrCard = ({ url, accessToken, hideOnNotConnected }: Props) =>
                     <OpenInNewRoundedIcon sx={{ color: "text.tertiary", fontSize: 16 }} />
                 </Stack>
             </Card>
-        </Tooltip>
+        </AppTooltip>
     );
 };

@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import VideoCameraFrontRoundedIcon from "@mui/icons-material/VideoCameraFrontRounded";
-import { Box, Stack, Tooltip, Typography } from "@mui/joy";
+import { Box, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import dayjs, { Dayjs } from "dayjs";
 
+import { AppTooltip } from "../../../components/ui/AppTooltip";
 import { useTranslation } from "../../../i18n";
 import { CalendarEvent } from "../../integrations/services/calendar";
 import { eventLabel } from "../utils/eventLabel";
@@ -283,11 +284,9 @@ export const TimelineView = ({
                         );
                         const label = eventLabel(segment.event, freeBusySources, busyLabel);
                         return (
-                            <Tooltip
+                            <AppTooltip
                                 key={`span-${segment.event.id}`}
                                 size="sm"
-                                sx={{ borderRadius: "8px" }}
-                                variant="outlined"
                                 title={
                                     segment.event._source?.account_email
                                         ? `${label} — ${segment.event._source.account_email}`
@@ -333,7 +332,7 @@ export const TimelineView = ({
                                     {label}
                                     {segment.continuesAfter ? " →" : ""}
                                 </Box>
-                            </Tooltip>
+                            </AppTooltip>
                         );
                     })}
 
@@ -363,11 +362,9 @@ export const TimelineView = ({
                                     );
                                     const label = eventLabel(e, freeBusySources, busyLabel);
                                     return (
-                                        <Tooltip
+                                        <AppTooltip
                                             key={e.id}
                                             size="sm"
-                                            sx={{ borderRadius: "8px" }}
-                                            variant="outlined"
                                             title={
                                                 e._source?.account_email
                                                     ? `${label} — ${e._source.account_email}`
@@ -398,7 +395,7 @@ export const TimelineView = ({
                                             >
                                                 {label}
                                             </Box>
-                                        </Tooltip>
+                                        </AppTooltip>
                                     );
                                 })}
                             </Stack>
@@ -504,12 +501,10 @@ export const TimelineView = ({
                                         isDark
                                     );
                                     return (
-                                        <Tooltip
+                                        <AppTooltip
                                             key={event.id}
                                             size="sm"
-                                            sx={{ borderRadius: "8px" }}
                                             title={`${event.summary || "(no title)"} · ${start.format("h:mm A")}–${end.format("h:mm A")}${event._source?.account_email ? ` — ${event._source.account_email}` : ""}`}
-                                            variant="outlined"
                                         >
                                             <Box
                                                 sx={{
@@ -576,7 +571,7 @@ export const TimelineView = ({
                                                     </Box>
                                                 )}
                                             </Box>
-                                        </Tooltip>
+                                        </AppTooltip>
                                     );
                                 })}
 

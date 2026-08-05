@@ -22,6 +22,7 @@ import {
     noteModalChildStackSx,
     useNoteModalHostZIndex,
 } from "../../../../components/modals/noteModalHostZIndex";
+import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
@@ -300,16 +301,17 @@ export const ModalNoteSharing = ({
                                                 {ROLE_LABEL[ROLE_VIEWER]}
                                             </Option>
                                         </Select>
-                                        <IconButton
-                                            color="danger"
-                                            disabled={disableEdit || m.roleId === ROLE_OWNER}
-                                            size="sm"
-                                            title={t.notes.sharing.removeAccess}
-                                            variant="plain"
-                                            onClick={() => handleRevoke(m.userId)}
-                                        >
-                                            <CloseRoundedIcon sx={{ fontSize: 18 }} />
-                                        </IconButton>
+                                        <AppTooltip title={t.notes.sharing.removeAccess}>
+                                            <IconButton
+                                                color="danger"
+                                                disabled={disableEdit || m.roleId === ROLE_OWNER}
+                                                size="sm"
+                                                variant="plain"
+                                                onClick={() => handleRevoke(m.userId)}
+                                            >
+                                                <CloseRoundedIcon sx={{ fontSize: 18 }} />
+                                            </IconButton>
+                                        </AppTooltip>
                                     </Stack>
                                 );
                             })}

@@ -1,7 +1,8 @@
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
-import { Box, Tooltip, Typography } from "@mui/joy";
+import { Box, Typography } from "@mui/joy";
 import { alpha } from "@mui/system";
 
+import { AppTooltip } from "../../../components/ui/AppTooltip";
 import { fmt, useTranslation } from "../../../i18n";
 import { TaskProps } from "../../../types/tasks";
 import { formatTaskDisplayId } from "../utils/taskDisplayId";
@@ -40,10 +41,8 @@ export const TaskInfoPill = ({ task, onOpen, styles, isDark }: TaskInfoPillProps
     const dotColor = status?.color || styles.accentColor;
 
     return (
-        <Tooltip
+        <AppTooltip
             size="sm"
-            sx={{ borderRadius: "8px" }}
-            variant="outlined"
             title={
                 task.title
                     ? fmt(t.notes.header.openTaskTooltipWithTitle, {
@@ -185,6 +184,6 @@ export const TaskInfoPill = ({ task, onOpen, styles, isDark }: TaskInfoPillProps
                     </>
                 )}
             </Box>
-        </Tooltip>
+        </AppTooltip>
     );
 };

@@ -26,10 +26,11 @@ import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
 import LinkOffRoundedIcon from "@mui/icons-material/LinkOffRounded";
 import PersonAddAltRoundedIcon from "@mui/icons-material/PersonAddAltRounded";
 import PersonRemoveRoundedIcon from "@mui/icons-material/PersonRemoveRounded";
-import { Box, Button, Chip, FormLabel, IconButton, Stack, Tooltip, Typography } from "@mui/joy";
+import { Box, Button, Chip, FormLabel, IconButton, Stack, Typography } from "@mui/joy";
 
 import type { ObjectShare } from "../../../features/admin/services/teamConnections";
 import { fmt, useTranslation } from "../../../i18n";
+import { AppTooltip } from "../AppTooltip";
 
 export type OfferableTeam = { teamId: string; teamName: string };
 
@@ -112,11 +113,7 @@ export const ObjectSharesPanel = ({
         }
         const next = share.roleCeiling === "editor" ? "viewer" : "editor";
         return (
-            <Tooltip
-                size="sm"
-                title={fmt(strings.changeCeiling, { team: share.teamName })}
-                variant="outlined"
-            >
+            <AppTooltip size="sm" title={fmt(strings.changeCeiling, { team: share.teamName })}>
                 <Chip
                     color="primary"
                     disabled={busy}
@@ -126,7 +123,7 @@ export const ObjectSharesPanel = ({
                 >
                     {label}
                 </Chip>
-            </Tooltip>
+            </AppTooltip>
         );
     };
 
@@ -151,7 +148,7 @@ export const ObjectSharesPanel = ({
                             side they were on. Which side you are on is not
                             a property of the share, and anyone who belongs
                             to both teams was told a flat contradiction. */}
-                        <Tooltip size="sm" title={strings.sharedDirectionHint} variant="outlined">
+                        <AppTooltip size="sm" title={strings.sharedDirectionHint}>
                             <Typography
                                 level="body-sm"
                                 sx={{ color: valueColor, fontWeight: 600 }}
@@ -164,7 +161,7 @@ export const ObjectSharesPanel = ({
                                       })
                                     : share.teamName}
                             </Typography>
-                        </Tooltip>
+                        </AppTooltip>
                         <Typography level="body-xs" sx={{ color: labelColor }}>
                             {share.status === "pending"
                                 ? strings.awaitingTheirApproval
@@ -175,7 +172,7 @@ export const ObjectSharesPanel = ({
                     </Box>
                     {ceilingChip(share)}
                     {share.canAdmit && share.status === "active" && (
-                        <Tooltip title={strings.addFromYourTeam}>
+                        <AppTooltip title={strings.addFromYourTeam}>
                             <IconButton
                                 aria-label={strings.addFromYourTeam}
                                 color="primary"
@@ -186,9 +183,9 @@ export const ObjectSharesPanel = ({
                             >
                                 <PersonAddAltRoundedIcon fontSize="small" />
                             </IconButton>
-                        </Tooltip>
+                        </AppTooltip>
                     )}
-                    <Tooltip title={strings.endShare}>
+                    <AppTooltip title={strings.endShare}>
                         <IconButton
                             aria-label={strings.endShare}
                             color="danger"
@@ -199,7 +196,7 @@ export const ObjectSharesPanel = ({
                         >
                             <LinkOffRoundedIcon fontSize="small" />
                         </IconButton>
-                    </Tooltip>
+                    </AppTooltip>
                 </Stack>
 
                 {share.participants.length > 0 && (

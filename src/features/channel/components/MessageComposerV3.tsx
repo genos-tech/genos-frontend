@@ -57,7 +57,9 @@ import {
     CreateHashTaskSpec,
     HashSuggestionMenuController,
 } from "../../../components/editors/HashMention";
+import { AppTooltip } from "../../../components/ui/AppTooltip";
 import { useEditorDraft } from "../../../hooks/common/useEditorDraft";
+import { useTranslation } from "../../../i18n";
 import { channelService, ChannelServiceError } from "../../../services/channel/channelService";
 import { resolveInsecureFileUrl } from "../../../utils/downloadUtils";
 import { filterAndRankSuggestionItems } from "../../../utils/suggestionRanking";
@@ -151,6 +153,7 @@ export function MessageComposerV3({
     placeholder = "Message…  (type @ to mention, Cmd+Enter to send)",
     testIdPrefix = "message-composer-v3",
 }: MessageComposerV3Props) {
+    const { t } = useTranslation();
     // Subscribe to channelService so the mention picker stays in sync
     // with live `channel.member_added` / `channel.member_removed`
     // broadcasts. Reading members on every render is cheap (small map
@@ -307,21 +310,22 @@ export function MessageComposerV3({
                         e.target.value = "";
                     }}
                 />
-                <button
-                    data-testid={`${testIdPrefix}-attach`}
-                    disabled={busy}
-                    title="Attach file(s)"
-                    type="button"
-                    style={{
-                        alignSelf: "flex-end",
-                        marginBottom: 4,
-                        fontSize: 16,
-                        padding: "4px 8px",
-                    }}
-                    onClick={() => fileInputRef.current?.click()}
-                >
-                    📎
-                </button>
+                <AppTooltip title={t.chat.channel.composer.attachFiles}>
+                    <button
+                        data-testid={`${testIdPrefix}-attach`}
+                        disabled={busy}
+                        type="button"
+                        style={{
+                            alignSelf: "flex-end",
+                            marginBottom: 4,
+                            fontSize: 16,
+                            padding: "4px 8px",
+                        }}
+                        onClick={() => fileInputRef.current?.click()}
+                    >
+                        📎
+                    </button>
+                </AppTooltip>
                 <div
                     data-testid={`${testIdPrefix}-editor-host`}
                     style={{ flex: 1, minWidth: 0 }}

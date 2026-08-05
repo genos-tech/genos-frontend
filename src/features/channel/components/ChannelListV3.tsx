@@ -24,6 +24,8 @@
 
 import { Fragment, useMemo, useState, useSyncExternalStore } from "react";
 
+import { AppTooltip } from "../../../components/ui/AppTooltip";
+import { useTranslation } from "../../../i18n";
 import { channelService } from "../../../services/channel/channelService";
 import { ChannelKind, type Channel } from "../../../types/channel";
 import { useChannelList } from "../hooks/useChannelList";
@@ -63,6 +65,7 @@ function channelMatchesQuery(c: Channel, q: string): boolean {
 }
 
 export function ChannelListV3({ selectedChannelId, onSelect, fullWidth }: ChannelListV3Props) {
+    const { t } = useTranslation();
     const { channels, unreadByKind, totalUnread, isLoading } = useChannelList();
     const snapshot = useSyncExternalStore(
         channelService.subscribe,
@@ -136,13 +139,13 @@ export function ChannelListV3({ selectedChannelId, onSelect, fullWidth }: Channe
                 }}
             >
                 <strong>Channels (v3)</strong>
-                <span
-                    data-testid="channel-list-v3-total-unread"
-                    style={{ opacity: 0.7 }}
+                <AppTooltip
                     title={`DM ${unreadByKind[ChannelKind.DM]} | GM ${unreadByKind[ChannelKind.GM]} | PM ${unreadByKind[ChannelKind.PM]} | MDM ${unreadByKind[ChannelKind.MDM]}`}
                 >
-                    {totalUnread}
-                </span>
+                    <span data-testid="channel-list-v3-total-unread" style={{ opacity: 0.7 }}>
+                        {totalUnread}
+                    </span>
+                </AppTooltip>
             </header>
 
             <div
@@ -277,13 +280,17 @@ export function ChannelListV3({ selectedChannelId, onSelect, fullWidth }: Channe
                                                 }}
                                             >
                                                 {isPinned && (
-                                                    <span
-                                                        data-testid={`channel-list-v3-pinned-indicator-${c.id}`}
-                                                        style={{ marginRight: 4, fontSize: 11 }}
-                                                        title="Pinned"
-                                                    >
-                                                        📌
-                                                    </span>
+                                                    <AppTooltip title={t.chat.channel.list.pinned}>
+                                                        <span
+                                                            data-testid={`channel-list-v3-pinned-indicator-${c.id}`}
+                                                            style={{
+                                                                marginRight: 4,
+                                                                fontSize: 11,
+                                                            }}
+                                                        >
+                                                            📌
+                                                        </span>
+                                                    </AppTooltip>
                                                 )}
                                                 <strong>{c.title || c.id.slice(0, 8)}</strong>
                                                 <div
@@ -311,28 +318,35 @@ export function ChannelListV3({ selectedChannelId, onSelect, fullWidth }: Channe
                                                     {c.unreadCount}
                                                 </span>
                                             )}
-                                            <button
-                                                data-testid={`channel-list-v3-pin-${c.id}`}
-                                                title={isPinned ? "Unpin channel" : "Pin channel"}
-                                                type="button"
-                                                style={{
-                                                    background: "transparent",
-                                                    border: "none",
-                                                    cursor: "pointer",
-                                                    padding: 0,
-                                                    fontSize: 14,
-                                                    opacity: isPinned ? 1 : 0.35,
-                                                }}
-                                                onClick={(e) => {
-                                                    // Stop the row's click handler from firing
-                                                    // → toggling pin shouldn't ALSO open the
-                                                    // channel.
-                                                    e.stopPropagation();
-                                                    void togglePin(c.id, isPinned);
-                                                }}
+                                            <AppTooltip
+                                                title={
+                                                    isPinned
+                                                        ? t.chat.channel.list.unpinChannel
+                                                        : t.chat.channel.list.pinChannel
+                                                }
                                             >
-                                                📌
-                                            </button>
+                                                <button
+                                                    data-testid={`channel-list-v3-pin-${c.id}`}
+                                                    type="button"
+                                                    style={{
+                                                        background: "transparent",
+                                                        border: "none",
+                                                        cursor: "pointer",
+                                                        padding: 0,
+                                                        fontSize: 14,
+                                                        opacity: isPinned ? 1 : 0.35,
+                                                    }}
+                                                    onClick={(e) => {
+                                                        // Stop the row's click handler from
+                                                        // firing → toggling pin shouldn't
+                                                        // ALSO open the channel.
+                                                        e.stopPropagation();
+                                                        void togglePin(c.id, isPinned);
+                                                    }}
+                                                >
+                                                    📌
+                                                </button>
+                                            </AppTooltip>
                                         </li>
                                     );
                                 })}

@@ -1,5 +1,7 @@
 import ShareRoundedIcon from "@mui/icons-material/ShareRounded";
-import { Chip, Tooltip } from "@mui/joy";
+import { Chip } from "@mui/joy";
+
+import { AppTooltip } from "../AppTooltip";
 
 type ExternalChipProps = {
     /** What to show. The other team's name where we know it, otherwise a
@@ -47,8 +49,8 @@ export const ExternalChip = ({ label, hint, size = "sm", maxWidth = 120 }: Exter
     );
     if (!hint) return chip;
     return (
-        <Tooltip size="sm" title={hint} variant="outlined">
+        <AppTooltip size="sm" title={hint}>
             {chip}
-        </Tooltip>
+        </AppTooltip>
     );
 };

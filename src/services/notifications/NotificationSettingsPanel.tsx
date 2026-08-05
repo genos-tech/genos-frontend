@@ -12,6 +12,7 @@ import {
     Typography,
 } from "@mui/joy";
 
+import { AppTooltip } from "../../components/ui/AppTooltip";
 import { useDigestPreference } from "../../hooks/common/useDigestPreference";
 import { fmt, Messages, useTranslation } from "../../i18n";
 import { CATEGORY_BY_KEY, CATEGORY_GROUPS, CoarseGroup, NotificationCategory } from "./categories";
@@ -333,14 +334,15 @@ export const NotificationSettingsPanel = () => {
                                         {labelForChatType(m.chatType, t)}
                                     </Chip>
                                     <Stack sx={{ minWidth: 0 }}>
-                                        <Typography
-                                            level="body-sm"
-                                            sx={{ fontWeight: 600 }}
-                                            title={displayName}
-                                            noWrap
-                                        >
-                                            {displayName}
-                                        </Typography>
+                                        <AppTooltip title={displayName}>
+                                            <Typography
+                                                level="body-sm"
+                                                sx={{ fontWeight: 600 }}
+                                                noWrap
+                                            >
+                                                {displayName}
+                                            </Typography>
+                                        </AppTooltip>
                                     </Stack>
                                 </Stack>
                                 <IconButton
@@ -395,14 +397,15 @@ export const NotificationSettingsPanel = () => {
                                     <Chip size="sm" variant="soft">
                                         {labelForTargetType(target.targetType, t)}
                                     </Chip>
-                                    <Typography
-                                        level="body-sm"
-                                        sx={{ fontWeight: 600, minWidth: 0 }}
-                                        title={displayName}
-                                        noWrap
-                                    >
-                                        {displayName}
-                                    </Typography>
+                                    <AppTooltip title={displayName}>
+                                        <Typography
+                                            level="body-sm"
+                                            sx={{ fontWeight: 600, minWidth: 0 }}
+                                            noWrap
+                                        >
+                                            {displayName}
+                                        </Typography>
+                                    </AppTooltip>
                                     {/* Optional category scope. Absent = all. */}
                                     {target.categories?.map((c) => (
                                         <Chip key={c} color="neutral" size="sm" variant="outlined">

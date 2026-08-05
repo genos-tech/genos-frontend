@@ -29,12 +29,12 @@ import {
     ModalClose,
     ModalDialog,
     Stack,
-    Tooltip,
     Typography,
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
+import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { useUserProfile } from "../../../../components/ui/avatars/AvatarContext";
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
 import { FileSizeRejectionSnackbar } from "../../../../components/ui/feedback/FileSizeRejectionSnackbar";
@@ -624,10 +624,8 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                     type="file"
                                                     onChange={handleSelectedFiles}
                                                 />
-                                                <Tooltip
+                                                <AppTooltip
                                                     size="sm"
-                                                    sx={{ zIndex: 9000 }}
-                                                    variant="outlined"
                                                     title={
                                                         t.chat.modals.gmProfile
                                                             .editProfileImageTooltip
@@ -657,7 +655,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                             }}
                                                         />
                                                     </IconButton>
-                                                </Tooltip>
+                                                </AppTooltip>
                                             </Box>
                                         )}
                                     </Box>
@@ -751,10 +749,9 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                             {liveChat.chatName}
                                                         </Typography>
                                                         {canManage && (
-                                                            <Tooltip
+                                                            <AppTooltip
                                                                 size="sm"
                                                                 title={t.common.profileEdit.rename}
-                                                                variant="outlined"
                                                             >
                                                                 <IconButton
                                                                     size="sm"
@@ -771,7 +768,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                                         sx={{ fontSize: 16 }}
                                                                     />
                                                                 </IconButton>
-                                                            </Tooltip>
+                                                            </AppTooltip>
                                                         )}
                                                     </Stack>
                                                 )}

@@ -5,10 +5,11 @@ import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import DoneAllRoundedIcon from "@mui/icons-material/DoneAllRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
 import SwapVertRoundedIcon from "@mui/icons-material/SwapVertRounded";
-import { Badge, IconButton, Stack, Tooltip } from "@mui/joy";
+import { Badge, IconButton, Stack } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
+import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
@@ -204,12 +205,7 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
             <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
                 {/* Mark all activity in this chat as read */}
                 {subChat && unreadActivityCount > 0 && (
-                    <Tooltip
-                        size="sm"
-                        sx={{ borderRadius: "8px" }}
-                        title={t.chat.headers.markAllReadAria}
-                        variant="outlined"
-                    >
+                    <AppTooltip size="sm" title={t.chat.headers.markAllReadAria}>
                         <IconButton
                             aria-label={t.chat.headers.markAllReadAria}
                             size="sm"
@@ -219,19 +215,14 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                         >
                             <DoneAllRoundedIcon sx={{ fontSize: 18, color: styles.accentColor }} />
                         </IconButton>
-                    </Tooltip>
+                    </AppTooltip>
                 )}
 
                 {/* Create Task Button */}
                 {useCM.currentSubChat &&
                     (useCM.currentSubChat.chatType === 3 ||
                         useCM.currentSubChat.chatType === 4) && (
-                        <Tooltip
-                            size="sm"
-                            sx={{ borderRadius: "8px" }}
-                            title={t.chat.headers.createNewTaskTooltip}
-                            variant="outlined"
-                        >
+                        <AppTooltip size="sm" title={t.chat.headers.createNewTaskTooltip}>
                             <IconButton
                                 size="sm"
                                 sx={primaryButtonStyle}
@@ -251,16 +242,11 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                             >
                                 <AddTaskRoundedIcon sx={{ fontSize: 18, color: "#fff" }} />
                             </IconButton>
-                        </Tooltip>
+                        </AppTooltip>
                     )}
 
                 {/* Swap Chat Button */}
-                <Tooltip
-                    size="sm"
-                    sx={{ borderRadius: "8px" }}
-                    title={t.chat.headers.swapChats}
-                    variant="outlined"
-                >
+                <AppTooltip size="sm" title={t.chat.headers.swapChats}>
                     <IconButton
                         size="sm"
                         sx={actionButtonStyle}
@@ -269,18 +255,13 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                     >
                         <SwapVertRoundedIcon sx={{ fontSize: 18, color: styles.accentColor }} />
                     </IconButton>
-                </Tooltip>
+                </AppTooltip>
 
                 {/* To-Do Button (only for self chat) */}
                 {isYou === true && (
                     <>
                         {isToDoVisible === true ? (
-                            <Tooltip
-                                size="sm"
-                                sx={{ borderRadius: "8px" }}
-                                title={t.chat.headers.backToDM}
-                                variant="outlined"
-                            >
+                            <AppTooltip size="sm" title={t.chat.headers.backToDM}>
                                 <IconButton
                                     size="sm"
                                     sx={actionButtonStyle}
@@ -291,14 +272,9 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                                         sx={{ fontSize: 18, color: styles.accentColor }}
                                     />
                                 </IconButton>
-                            </Tooltip>
+                            </AppTooltip>
                         ) : (
-                            <Tooltip
-                                size="sm"
-                                sx={{ borderRadius: "8px" }}
-                                title={t.chat.headers.todoTooltip}
-                                variant="outlined"
-                            >
+                            <AppTooltip size="sm" title={t.chat.headers.todoTooltip}>
                                 <Badge
                                     anchorOrigin={{ vertical: "top", horizontal: "right" }}
                                     badgeContent={incompleteTodoCount}
@@ -324,18 +300,13 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                                         />
                                     </IconButton>
                                 </Badge>
-                            </Tooltip>
+                            </AppTooltip>
                         )}
                     </>
                 )}
 
                 {/* Close Button */}
-                <Tooltip
-                    size="sm"
-                    sx={{ borderRadius: "8px" }}
-                    title={t.chat.headers.close}
-                    variant="outlined"
-                >
+                <AppTooltip size="sm" title={t.chat.headers.close}>
                     <IconButton
                         size="sm"
                         sx={dangerButtonStyle}
@@ -346,7 +317,7 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                             sx={{ fontSize: 18, color: "var(--gp-tint-danger-alt)" }}
                         />
                     </IconButton>
-                </Tooltip>
+                </AppTooltip>
             </Stack>
         </Stack>
     );

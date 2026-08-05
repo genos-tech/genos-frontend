@@ -172,6 +172,43 @@ export default tseslint.config(
             "no-case-declarations": "warn",
             "no-empty": "warn",
             "@typescript-eslint/ban-ts-comment": "warn",
+            // One tooltip in the product, and one grep that finds it. Joy's
+            // raw Tooltip drifted into ~30 files, each restating the same
+            // purple-tinted surface slightly differently (and a few
+            // hand-rolled z-indexes that were worse than the theme's).
+            // `AppTooltip` owns that look and carries the props the real
+            // divergences needed (`maxWidth`, `surface`, `arrowColor`), so
+            // reaching past it is now a mistake rather than a shortcut.
+            // The native `title` attribute is the other half of this rule and
+            // cannot be linted: `title` is a legitimate prop on Section,
+            // ModalDialog and friends. It is on reviewers.
+            "no-restricted-imports": [
+                "error",
+                {
+                    paths: [
+                        {
+                            name: "@mui/joy",
+                            importNames: ["Tooltip"],
+                            message:
+                                "Use <AppTooltip> (components/ui/AppTooltip.tsx). It needs a look this one can't express? Add the prop there.",
+                        },
+                        {
+                            name: "@mui/material",
+                            importNames: ["Tooltip"],
+                            message:
+                                "Use <AppTooltip> (components/ui/AppTooltip.tsx). This app is on Joy, not Material.",
+                        },
+                    ],
+                },
+            ],
+        },
+    },
+    {
+        // The one place Joy's Tooltip is the right import: the component
+        // that wraps it for everybody else.
+        files: ["src/components/ui/AppTooltip.tsx"],
+        rules: {
+            "no-restricted-imports": "off",
         },
     },
     {

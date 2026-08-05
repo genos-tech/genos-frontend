@@ -13,7 +13,7 @@ import {
 import { BlockNoteView } from "@blocknote/mantine";
 import { useCreateBlockNote } from "@blocknote/react";
 import DownloadIcon from "@mui/icons-material/Download";
-import { Box, IconButton, Modal, ModalDialog, Stack, Tooltip } from "@mui/joy";
+import { Box, IconButton, Modal, ModalDialog, Stack } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
@@ -29,6 +29,7 @@ import { useTranslation } from "../../i18n";
 import { UserProps } from "../../types/admin";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { downloadFile, resolveInsecureFileUrl } from "../../utils/downloadUtils";
+import { AppTooltip } from "../ui/AppTooltip";
 import { CreateCustomEmojiSpec } from "./CustomEmoji";
 import {
     CreateHashChatSpec,
@@ -233,14 +234,7 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
                                     display: "block",
                                 }}
                             />
-                            <Tooltip
-                                component="div"
-                                placement="top"
-                                size="sm"
-                                sx={{ zIndex: 10010 }}
-                                title={t.common.editor.download}
-                                variant="outlined"
-                            >
+                            <AppTooltip placement="top" size="sm" title={t.common.editor.download}>
                                 <IconButton
                                     color="neutral"
                                     sx={{ position: "absolute", top: "10px", right: "10px" }}
@@ -249,7 +243,7 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
                                 >
                                     <DownloadIcon />
                                 </IconButton>
-                            </Tooltip>
+                            </AppTooltip>
                         </Box>
                     ) : null}
                 </ModalDialog>

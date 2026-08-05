@@ -15,13 +15,13 @@ import {
     ModalClose,
     ModalDialog,
     Stack,
-    Tooltip,
     Typography,
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { useNavigate } from "react-router-dom";
 import { Socket } from "socket.io-client";
 
+import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { useOptionalAvatarContext } from "../../../../components/ui/avatars/AvatarContext";
 import { EmojiPicker } from "../../../../components/ui/emoji/EmojiPicker";
 import { FileSizeRejectionSnackbar } from "../../../../components/ui/feedback/FileSizeRejectionSnackbar";
@@ -398,11 +398,9 @@ export const UserProfile = (props: UserProfileProps) => {
                                                     type="file"
                                                     onChange={handleSelectedFiles}
                                                 />
-                                                <Tooltip
+                                                <AppTooltip
                                                     size="sm"
-                                                    sx={{ zIndex: 9000 }}
                                                     title={t.admin.userProfile.editProfileImage}
-                                                    variant="outlined"
                                                 >
                                                     <IconButton
                                                         size="sm"
@@ -429,7 +427,7 @@ export const UserProfile = (props: UserProfileProps) => {
                                                             }}
                                                         />
                                                     </IconButton>
-                                                </Tooltip>
+                                                </AppTooltip>
                                             </Box>
                                         )}
                                     </Box>
@@ -756,9 +754,7 @@ export const UserProfile = (props: UserProfileProps) => {
                                 pb: 1,
                             }}
                         >
-                            <Tooltip
-                                sx={{ zIndex: 10100 }}
-                                variant="outlined"
+                            <AppTooltip
                                 title={
                                     isYou === true
                                         ? t.admin.userProfile.dmToMyself
@@ -869,7 +865,7 @@ export const UserProfile = (props: UserProfileProps) => {
                                 >
                                     {t.admin.userProfile.sendDm}
                                 </Button>
-                            </Tooltip>
+                            </AppTooltip>
                         </Box>
                     </Box>
                 </ModalDialog>

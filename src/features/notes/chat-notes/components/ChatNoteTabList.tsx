@@ -3,8 +3,9 @@ import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
-import { Box, IconButton, Tab, TabList, Tooltip, Typography, useColorScheme } from "@mui/joy";
+import { Box, IconButton, Tab, TabList, Typography, useColorScheme } from "@mui/joy";
 
+import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { ChatNoteProps } from "../../../../types/notes";
 
 interface ChatNoteTabListProps {
@@ -185,19 +186,12 @@ export const ChatNoteTabList = ({
                     }}
                 >
                     {tabItems.map((tab, index) => (
-                        <Tooltip
+                        <AppTooltip
                             key={`tab-tooltip-${index}`}
+                            maxWidth={280}
                             placement="bottom"
                             size="sm"
                             title={tab.title}
-                            variant="outlined"
-                            sx={{
-                                maxWidth: 280,
-                                "& .MuiTooltip-arrow": {
-                                    color: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)",
-                                },
-                            }}
-                            arrow
                         >
                             <Tab
                                 key={`tab-${tab.noteType}-${tab.noteId}`}
@@ -310,7 +304,7 @@ export const ChatNoteTabList = ({
                                     </IconButton>
                                 </Box>
                             </Tab>
-                        </Tooltip>
+                        </AppTooltip>
                     ))}
                 </TabList>
             </Box>

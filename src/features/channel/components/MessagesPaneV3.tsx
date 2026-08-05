@@ -16,8 +16,10 @@
 
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 
+import { AppTooltip } from "../../../components/ui/AppTooltip";
 import { EmojiGlyph } from "../../../components/ui/emoji/EmojiGlyph";
 import { useLongPress } from "../../../hooks/common/useLongPress";
+import { useTranslation } from "../../../i18n";
 import { channelService, ChannelServiceError } from "../../../services/channel/channelService";
 import type { Message } from "../../../types/channel";
 import { useChannel } from "../hooks/useChannel";
@@ -46,6 +48,7 @@ interface MessagesPaneV3Props {
 const QUICK_EMOJI = ["👍", "❤️", "🎉", "🤔", "😄"];
 
 export function MessagesPaneV3({ channelId, onOpenThread, onBack }: MessagesPaneV3Props) {
+    const { t } = useTranslation();
     const { channel, messages, readCursor, isLoading } = useChannel(channelId);
     // Separate subscription for the flag index so each row knows
     // whether it's flagged without a prop dance from useChannel.
@@ -105,22 +108,23 @@ export function MessagesPaneV3({ channelId, onOpenThread, onBack }: MessagesPane
                 }}
             >
                 {onBack && (
-                    <button
-                        data-testid="messages-pane-v3-back"
-                        style={{
-                            fontSize: 14,
-                            padding: "4px 10px",
-                            border: "1px solid #ddd",
-                            borderRadius: 4,
-                            background: "#fff",
-                            cursor: "pointer",
-                        }}
-                        title="Back to channels"
-                        type="button"
-                        onClick={onBack}
-                    >
-                        ←
-                    </button>
+                    <AppTooltip title={t.chat.channel.pane.backToChannels}>
+                        <button
+                            data-testid="messages-pane-v3-back"
+                            type="button"
+                            style={{
+                                fontSize: 14,
+                                padding: "4px 10px",
+                                border: "1px solid #ddd",
+                                borderRadius: 4,
+                                background: "#fff",
+                                cursor: "pointer",
+                            }}
+                            onClick={onBack}
+                        >
+                            ←
+                        </button>
+                    </AppTooltip>
                 )}
                 <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis" }}>
                     {channel.title || channel.id} <span style={{ opacity: 0.6 }}>(v3)</span>
@@ -199,6 +203,7 @@ function MessageRow({
     onError,
     onOpenThread,
 }: MessageRowProps) {
+    const { t } = useTranslation();
     const [editing, setEditing] = useState(false);
     const [editDraft, setEditDraft] = useState(message.bodyText);
     const [showEmoji, setShowEmoji] = useState(false);
@@ -379,22 +384,23 @@ function MessageRow({
                             />
                         )}
                         {!message.deletedAt && mentionsMe(message) && (
-                            <span
-                                data-testid={`message-row-mention-me-${message.id}`}
-                                title="This message mentions you"
-                                style={{
-                                    marginLeft: 6,
-                                    padding: "0 4px",
-                                    background: "rgba(239, 68, 68, 0.18)",
-                                    color: "#b91c1c",
-                                    borderRadius: 3,
-                                    fontSize: 10,
-                                    fontWeight: 700,
-                                    textTransform: "uppercase",
-                                }}
-                            >
-                                @you
-                            </span>
+                            <AppTooltip title={t.chat.channel.pane.mentionsYouBadge}>
+                                <span
+                                    data-testid={`message-row-mention-me-${message.id}`}
+                                    style={{
+                                        marginLeft: 6,
+                                        padding: "0 4px",
+                                        background: "rgba(239, 68, 68, 0.18)",
+                                        color: "#b91c1c",
+                                        borderRadius: 3,
+                                        fontSize: 10,
+                                        fontWeight: 700,
+                                        textTransform: "uppercase",
+                                    }}
+                                >
+                                    @you
+                                </span>
+                            </AppTooltip>
                         )}
                         {message.editedAt && !message.deletedAt && (
                             <span style={{ marginLeft: 8, opacity: 0.5, fontSize: 12 }}>
@@ -404,13 +410,14 @@ function MessageRow({
                     </>
                 )}
                 {!editing && !message.deletedAt && isFlagged && (
-                    <span
-                        data-testid={`message-row-flagged-indicator-${message.id}`}
-                        style={{ marginLeft: 6, fontSize: 12 }}
-                        title="You flagged this message"
-                    >
-                        ⭐
-                    </span>
+                    <AppTooltip title={t.chat.channel.pane.flaggedIndicator}>
+                        <span
+                            data-testid={`message-row-flagged-indicator-${message.id}`}
+                            style={{ marginLeft: 6, fontSize: 12 }}
+                        >
+                            ⭐
+                        </span>
+                    </AppTooltip>
                 )}
                 {!editing && !message.deletedAt && (
                     <MessageRowHoverToolbar
@@ -520,23 +527,23 @@ function ReactionChips({ messageId, reactions, onToggle }: ReactionChipsProps) {
             style={{ display: "flex", gap: 4, marginTop: 4 }}
         >
             {Array.from(byEmoji.entries()).map(([emoji, info]) => (
-                <button
-                    key={emoji}
-                    data-testid={`message-row-reaction-chip-${messageId}-${emoji}`}
-                    title={info.names.join(", ")}
-                    type="button"
-                    style={{
-                        fontSize: 12,
-                        padding: "0 6px",
-                        borderRadius: 10,
-                        border: info.mine ? "1px solid #44a" : "1px solid #ccc",
-                        background: info.mine ? "#eaf" : "#f4f4f4",
-                        cursor: "pointer",
-                    }}
-                    onClick={() => onToggle(emoji)}
-                >
-                    <EmojiGlyph emoji={emoji} size={14} /> {info.count}
-                </button>
+                <AppTooltip key={emoji} title={info.names.join(", ")}>
+                    <button
+                        data-testid={`message-row-reaction-chip-${messageId}-${emoji}`}
+                        type="button"
+                        style={{
+                            fontSize: 12,
+                            padding: "0 6px",
+                            borderRadius: 10,
+                            border: info.mine ? "1px solid #44a" : "1px solid #ccc",
+                            background: info.mine ? "#eaf" : "#f4f4f4",
+                            cursor: "pointer",
+                        }}
+                        onClick={() => onToggle(emoji)}
+                    >
+                        <EmojiGlyph emoji={emoji} size={14} /> {info.count}
+                    </button>
+                </AppTooltip>
             ))}
         </div>
     );

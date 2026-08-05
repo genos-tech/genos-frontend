@@ -22,12 +22,12 @@ import {
     MenuItem,
     Sheet,
     Stack,
-    Tooltip,
     Typography,
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
+import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { usePersonalGMTags } from "../../../../hooks/common/usePersonalGMTags";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
@@ -460,13 +460,11 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                 const unreadCount = getUnreadCount(item.type);
 
                                 return (
-                                    <Tooltip
+                                    <AppTooltip
                                         key={item.type}
                                         placement="top"
                                         size="sm"
-                                        sx={{ zIndex: 10020 }}
                                         title={t.chat.sidebar[item.labelKey]}
-                                        variant="outlined"
                                     >
                                         <Badge
                                             badgeContent={unreadCount > 0 ? unreadCount : 0}
@@ -541,7 +539,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                                 />
                                             </Box>
                                         </Badge>
-                                    </Tooltip>
+                                    </AppTooltip>
                                 );
                             })}
                         </Stack>
