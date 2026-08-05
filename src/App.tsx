@@ -89,6 +89,7 @@ import { refreshAllData } from "./services/refreshAllData";
 import { useRuntimeConfigBootstrap } from "./services/runtimeConfig/useRuntimeConfig";
 import { SearchTeamTasksResponse } from "./types/tasks";
 import { canonicalSpotlightHref, milestoneIdFromEntityId } from "./utils/canonicalSpotlightHref";
+import { saveLastWorkspacePath } from "./utils/lastWorkspacePath";
 import { parseInternalUrl } from "./utils/parseInternalUrl";
 
 import { I18nProvider } from "./i18n";
@@ -774,6 +775,11 @@ export const App = () => {
     // `includes`) so a hypothetical sub-path stays a match while other
     // services' paths can never collide.
     const isGenosPage = location.pathname.startsWith("/workspace/genos");
+    // Remember the workspace URL so a later visit to `/` while still
+    // signed in can restore this page (GuestGuard → last path).
+    useEffect(() => {
+        saveLastWorkspacePath(location.pathname + location.search);
+    }, [location.pathname, location.search]);
     const spotlight = useSpotlight({
         accessToken,
         teamId: useTEM.currentTeamId,
