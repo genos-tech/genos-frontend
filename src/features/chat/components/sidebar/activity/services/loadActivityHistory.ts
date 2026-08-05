@@ -39,6 +39,12 @@ export const loadActivityHistory = async (
             const cutoff = new Date(Date.now() - periodDays * 24 * 60 * 60 * 1000).toISOString();
             params.push(`since=${encodeURIComponent(cutoff)}`);
         }
+        // Without this the endpoint answers for every team the user
+        // belongs to at once, and a two-team user saw the other team's
+        // mentions and replies in this team's sidebar.
+        if (myself.teamId) {
+            params.push(`team_id=${encodeURIComponent(myself.teamId)}`);
+        }
         const res = await axios.get(`${v3ApiBaseURL()}/api/v3/activities/?${params.join("&")}`, {
             headers: { Authorization: `Bearer ${accessToken}` },
             withCredentials: true,

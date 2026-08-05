@@ -29,6 +29,10 @@ interface V3ActivityWire {
     // live in `meta`.
     surfaceType?: number | null;
     recipientUserId: string;
+    // The team the entry belongs to — the feed shows one team at a time
+    // and filters on it. Optional so a payload from a backend that
+    // predates the field still adapts.
+    teamId?: string;
     channelId: string;
     channelKind: number;
     messageId: string;
@@ -137,6 +141,7 @@ export function v3ActivityToLegacy(a: V3ActivityWire, myself: UserProps): Activi
         return {
             activityId: a.id,
             activityType: a.activityType,
+            teamId: a.teamId,
             chatType: a.surfaceType,
             chatId: chatId as unknown as number,
             chatName: str(meta.projectName) ?? str(meta.noteTitle) ?? "",
@@ -198,6 +203,7 @@ export function v3ActivityToLegacy(a: V3ActivityWire, myself: UserProps): Activi
     return {
         activityId: a.id,
         activityType: a.activityType,
+        teamId: a.teamId,
         chatType: a.channelKind,
         // `chatId`, `messageId`, `threadId` are typed `number` in the
         // legacy shape but downstream callers compare them as strings —

@@ -31,7 +31,14 @@ export const activityHandlers: HandlerMap<ActivityRequests> = {
 
     loadActivityHistory: async ({ myself, accessToken }) => {
         await syncWithCheckpoint({
-            // Bumped to "activity-v6": the adapter now stores
+            // Bumped to "activity-v7": rows now carry `teamId`, which the
+            // feed filters on. Rows already in IDB don't have it and an
+            // incremental sync never re-fetches them, so without the bump
+            // a returning user's whole feed would read as "not this
+            // team's" and disappear. The bump forces the full reload that
+            // re-adapts every row with its team.
+            //
+            // Previous bump (activity-v6): the adapter now stores
             // `firstLineMediaKind` so a media-only message (a GIF posts
             // an image block and NO body_text) can be labelled instead
             // of rendering an empty row. The field is written at adapt
@@ -57,7 +64,7 @@ export const activityHandlers: HandlerMap<ActivityRequests> = {
             //   insufficient alone, the meta was never stored to re-adapt.
             // Previous bump (activity-v3): picked up `mentionedViaGroups`.
             // Previous bump (activity-v2): de-duped live-push vs REST ids.
-            key: "activity-v6",
+            key: "activity-v7",
             fetcher: async (since) => {
                 const response = await loadActivityHistory(myself, accessToken, since);
                 if (!response) {
@@ -104,7 +111,17 @@ export const activityHandlers: HandlerMap<ActivityRequests> = {
     popActivityMessages: async ({ myself }) => {
         const messages: ActivityMessageProps[] = await activityService.getAllActivityMessages();
         const filtered = messages.filter(
-            (m) => !(m.activityType === 2 && myself.userId !== m.senderId)
+            (m) =>
+                // Reactions are only interesting to the person reacted to.
+                !(m.activityType === 2 && myself.userId !== m.senderId) &&
+                // One team's feed at a time: the store can hold another
+                // team's rows, because a live `activity.created` push
+                // arrives in the recipient's per-USER socket room whichever
+                // team is on screen. Only rows that positively belong to
+                // another team are dropped — a row with no team at all came
+                // from a backend that predates the field, and hiding those
+                // would empty the feed if the API hasn't been deployed yet.
+                !(m.teamId && myself.teamId && m.teamId !== myself.teamId)
         );
 
         return [...filtered].sort(
