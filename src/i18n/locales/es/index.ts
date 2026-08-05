@@ -593,9 +593,29 @@ export const es: DeepPartial<Messages> = {
             replyInThread: "Responder en el hilo",
             flagForLater: "Destacar para después",
             removeFlag: "Quitar destacado",
+            remindMe: "Recordármelo…",
+            reminderSetFor: "Recordatorio: {time}",
             copyMessageLink: "Copiar enlace del mensaje",
             editMessage: "Editar mensaje",
             deleteMessage: "Eliminar mensaje",
+        },
+        remindMe: {
+            title: "Recordarme esto",
+            description:
+                "Recibirás una notificación y una actividad en la bandeja. El mensaje seguirá destacado.",
+            currentlySetFor: "Recordatorio para {time}. Elige otra hora para cambiarlo.",
+            presets: {
+                in20m: "En 20 minutos",
+                in1h: "En 1 hora",
+                in3h: "En 3 horas",
+                tomorrow: "Mañana por la mañana",
+                nextWeek: "La próxima semana",
+            },
+            customLabel: "O elige una fecha y una hora",
+            customInvalid: "Elige una hora futura, dentro del próximo año.",
+            setButton: "Establecer",
+            remove: "Quitar recordatorio",
+            failed: "No se pudo actualizar el recordatorio. Inténtalo de nuevo.",
         },
         modals: {
             deleteMessage: {
@@ -1445,6 +1465,13 @@ export const es: DeepPartial<Messages> = {
             gmRequest: "Solicitud de GM",
             noteAccessRequest: "Acceso a nota",
             ownershipClaim: "Solicitud de propiedad",
+            messageReminder: "Recordatorio",
+        },
+        messageReminder: {
+            headline: "Pediste que te recordáramos este mensaje.",
+            headlineFrom: "Pediste que te recordáramos el mensaje de {name}.",
+            openMessage: "Abrir mensaje",
+            openInNamed: "Abrir en {chat}",
         },
         ownershipClaim: {
             respondBy: "Responde antes del {date} o podrán tomar la propiedad",

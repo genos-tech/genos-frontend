@@ -5,6 +5,7 @@ import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
+import NotificationsActiveRoundedIcon from "@mui/icons-material/NotificationsActiveRounded";
 import WrapTextIcon from "@mui/icons-material/WrapText";
 import { Box, IconButton, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
@@ -12,11 +13,14 @@ import { createPortal } from "react-dom";
 import { Socket } from "socket.io-client";
 
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
-import { useTranslation } from "../../../../i18n";
+import { fmt, useTranslation } from "../../../../i18n";
 import { channelService } from "../../../../services/channel/channelService";
 import { UserProps } from "../../../../types/admin";
 import { FlaggedMessageProps, ThreadMessageProps, ThreadProps } from "../../../../types/chat";
+import { useMessageReminder } from "../../hooks/useMessageReminder";
+import { formatReminderTime } from "../../utils/reminderPresets";
 import { ModalDeleteMessage } from "../modals/ModalDeleteMessage";
+import { ModalRemindMe } from "../modals/ModalRemindMe";
 
 type BubbleThreadMoreMenuProps = {
     accessToken: string | null;
@@ -81,10 +85,12 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
 
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
-    const { t } = useTranslation();
+    const { t, locale } = useTranslation();
     const [isOpen, setIsOpen] = useState(false);
     const [openDeleteMessage, setOpenDeleteMessage] = useState(false);
+    const [openRemindMe, setOpenRemindMe] = useState(false);
     const [isFlagged, setIsFlagged] = useState(message.isFlagged || false);
+    const reminder = useMessageReminder(message.messageIdWithChatIdAndThreadId);
     const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
     const [focusedIndex, setFocusedIndex] = useState(-1);
     const buttonRef = useRef<HTMLButtonElement>(null);
@@ -336,6 +342,30 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
                 : { light: "rgba(245,158,11,0.12)", dark: "rgba(251,191,36,0.18)" },
             visible: true,
             active: isFlagged,
+        },
+        {
+            // The flag with a time on it, so it sits with the flag. Amber
+            // like an unset flag when there's nothing scheduled; violet
+            // once something is, because then it is a promise the app has
+            // made rather than an action on offer.
+            id: "remindMe",
+            label: reminder
+                ? fmt(t.chat.messageActions.reminderSetFor, {
+                      time: formatReminderTime(new Date(reminder.remindAt), locale),
+                  })
+                : t.chat.messageActions.remindMe,
+            icon: <NotificationsActiveRoundedIcon sx={{ fontSize: 18 }} />,
+            onClick: () => {
+                setOpenRemindMe(true);
+                closeMenu();
+            },
+            color: { light: "#7c3aed", dark: "#c4b5fd" },
+            colorRgb: { light: "124, 58, 237", dark: "196, 181, 253" },
+            hoverBg: { light: "rgba(124,58,237,0.12)", dark: "rgba(196,181,253,0.18)" },
+            // Same condition that gates the dialog below, so the item can't
+            // open an empty modal.
+            visible: Boolean(message.messageIdWithChatIdAndThreadId),
+            active: reminder !== null,
         },
         {
             id: "edit",
@@ -597,6 +627,15 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
                 setOpenDeleteMessage={setOpenDeleteMessage}
                 socket={socket}
             />
+
+            {message.messageIdWithChatIdAndThreadId && (
+                <ModalRemindMe
+                    messageId={message.messageIdWithChatIdAndThreadId}
+                    open={openRemindMe}
+                    reminder={reminder}
+                    onClose={() => setOpenRemindMe(false)}
+                />
+            )}
         </Box>
     );
 };

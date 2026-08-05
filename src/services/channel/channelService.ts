@@ -48,6 +48,7 @@ import type {
     Message,
     MessageAttachment,
     MessageReaction,
+    MessageReminder,
     MessagesDeltaData,
     Pin,
     ReadCursor,
@@ -70,6 +71,21 @@ function v3BaseURL(): string {
     const legacy = import.meta.env.VITE_API_BASE_URL ?? "";
     return legacy.replace(/\/api\/v\d+$/, "").replace(/\/$/, "");
 }
+
+/**
+ * Bounds on the reminder sweep — the re-read that follows a reminder's time
+ * so the UI stops promising a nudge that has already been delivered. See
+ * `ChannelService._scheduleReminderSweep`.
+ *
+ * GRACE: the server drains due reminders on a minutely cron, so waiting a
+ * little past the time avoids a round trip that returns the row unchanged.
+ * MIN: a floor, so a reminder the server hasn't drained yet can't become a
+ * tight polling loop. MAX: `setTimeout` overflows past ~24.8 days and would
+ * fire immediately, so a reminder set for next month re-arms instead.
+ */
+const REMINDER_SWEEP_GRACE_MS = 90_000;
+const REMINDER_SWEEP_MIN_MS = 60_000;
+const REMINDER_SWEEP_MAX_MS = 6 * 60 * 60 * 1000;
 
 /**
  * Errors raised by `ChannelService` REST + socket methods.
@@ -228,6 +244,16 @@ export interface ChannelStoreSnapshot {
      *  track this counter instead of the Map reference (which never
      *  changes). */
     flagsVersion: number;
+    /** Secondary index: the user's PENDING reminder (if any) per
+     *  `messageId` — "remind me about this message at T", which also
+     *  flags it. Only pending ones are held: a reminder that has fired
+     *  or been cancelled has nothing left to show. Server-authoritative
+     *  (loaded by `fetchReminders`, no socket broadcast), so a reminder
+     *  set on another device appears here at the next boot. */
+    reminderByMessageId: ReadonlyMap<string, MessageReminder>;
+    /** Monotonic version of the reminder state, for the same reason
+     *  `flagsVersion` exists — the Map is mutated in place. */
+    remindersVersion: number;
     /** Monotonic version of the chat-LIST inputs: `channels`,
      *  `membersByChannel`, and pins. Message-only events (reactions,
      *  edits of non-latest rows, thread replies, read cursors that
@@ -352,6 +378,14 @@ export class ChannelService {
      *  subscribers can detect flag-only changes without relying on Map
      *  reference identity (the Maps are mutated in place). */
     private _flagsVersion = 0;
+    /** Pending message reminders, keyed by message id. See the snapshot
+     *  field doc. Not persisted to IDB: it is one small GET at boot, and
+     *  a stale cached reminder would claim a nudge is coming that the
+     *  server has already fired. */
+    private _reminderByMessageId = new Map<string, MessageReminder>();
+    private _remindersVersion = 0;
+    /** The single pending reminder sweep — see `_scheduleReminderSweep`. */
+    private _reminderSweep: ReturnType<typeof setTimeout> | null = null;
     /** Bumped on every `_channels` / `_members` / pin mutation — the
      *  inputs the chat-list derive reads. See the snapshot field doc. */
     private _channelsVersion = 0;
@@ -406,6 +440,8 @@ export class ChannelService {
             pinByChannelId: this._pinByChannelId,
             flagByMessageId: this._flagByMessageId,
             flagsVersion: this._flagsVersion,
+            reminderByMessageId: this._reminderByMessageId,
+            remindersVersion: this._remindersVersion,
             channelsVersion: this._channelsVersion,
             idbHealth: {
                 status: this._idbErrorCount > 0 ? "degraded" : "ok",
@@ -544,6 +580,11 @@ export class ChannelService {
         this._pinByChannelId.clear();
         this._flagByMessageId.clear();
         this._flagsVersion += 1;
+        this._reminderByMessageId.clear();
+        this._remindersVersion += 1;
+        // Disarms the sweep: nothing is pending, and the next user's
+        // reminders arrive through their own bootstrap.
+        this._scheduleReminderSweep();
         this._bumpChannels();
         this._pendingByChannel.clear();
         // Reject in-flight send promises so callers don't await forever
@@ -621,6 +662,12 @@ export class ChannelService {
         this._flags.clear();
         this._flagByMessageId.clear();
         this._flagsVersion += 1;
+        // Reminders are per-message and a message belongs to one team, so
+        // they are as team-scoped as the flags they ride on. Re-read by
+        // `fetchReminders` in the new team's bootstrap.
+        this._reminderByMessageId.clear();
+        this._remindersVersion += 1;
+        this._scheduleReminderSweep();
         this._bumpChannels();
         // Same reasoning as the user-switch path: hooks should render
         // their loading state until the new team's list lands, rather
@@ -2218,6 +2265,128 @@ export class ChannelService {
         this._notify();
     }
 
+    // ---- Message reminders ("remind me in 3 hours") -----------------------
+    //
+    // A reminder is a flag with a time on it, and the two are kept in step
+    // in both directions:
+    //   - setting one flags the message (the server does it too; the socket
+    //     emit here is what tells the OTHER tabs),
+    //   - losing the flag drops the reminder locally, mirroring the server's
+    //     cascade, so the UI never offers to cancel something already gone.
+    //
+    // These go over HTTP rather than the socket the flag mutations use.
+    // Reminders are per-user state with no one to broadcast to, and the
+    // request carries a validated instant that can be REFUSED (past, too
+    // far out) — a fire-and-forget emit has nowhere to put that answer.
+
+    private _upsertReminder(reminder: MessageReminder): void {
+        this._reminderByMessageId.set(reminder.messageId, reminder);
+        this._remindersVersion += 1;
+        this._scheduleReminderSweep();
+        this._notify();
+    }
+
+    private _dropReminder(messageId: string): void {
+        if (!this._reminderByMessageId.delete(messageId)) return;
+        this._remindersVersion += 1;
+        this._scheduleReminderSweep();
+        this._notify();
+    }
+
+    /**
+     * Arm one timer for the soonest pending reminder, so that shortly after
+     * it is delivered the UI stops promising a nudge that has already come.
+     *
+     * Re-reads the pending set rather than expiring the row locally: the
+     * server decides what fired (it may have retired the reminder as moot),
+     * and the same GET picks up anything set on another device. Only ever
+     * one timer, and only while the user has a reminder outstanding.
+     */
+    private _scheduleReminderSweep(): void {
+        if (this._reminderSweep !== null) {
+            clearTimeout(this._reminderSweep);
+            this._reminderSweep = null;
+        }
+        let soonest = Number.POSITIVE_INFINITY;
+        for (const r of this._reminderByMessageId.values()) {
+            const at = Date.parse(r.remindAt);
+            if (!Number.isNaN(at) && at < soonest) soonest = at;
+        }
+        if (!Number.isFinite(soonest)) return;
+        const delay = Math.min(
+            Math.max(soonest + REMINDER_SWEEP_GRACE_MS - Date.now(), REMINDER_SWEEP_MIN_MS),
+            REMINDER_SWEEP_MAX_MS
+        );
+        this._reminderSweep = setTimeout(() => {
+            this._reminderSweep = null;
+            void this.fetchReminders();
+        }, delay);
+        // Node only (tests): a pending sweep must not hold the process open.
+        (this._reminderSweep as unknown as { unref?: () => void }).unref?.();
+    }
+
+    /** Load the user's pending reminders. The only source: reminders are
+     *  never broadcast, so without this a reminder set on another device
+     *  (or before a reload) is invisible — and an invisible reminder is
+     *  one the user sets twice. */
+    async fetchReminders(): Promise<void> {
+        let reminders: MessageReminder[];
+        try {
+            const res = await this.api().get<{ reminders: MessageReminder[] }>(
+                "/api/v3/reminders/"
+            );
+            reminders = res.data?.reminders ?? [];
+        } catch {
+            // Offline / auth blip: keep what we have rather than claiming
+            // the user has no reminders.
+            return;
+        }
+        // Reconcile, don't merge: one cancelled elsewhere must disappear.
+        this._reminderByMessageId.clear();
+        for (const r of reminders) this._reminderByMessageId.set(r.messageId, r);
+        this._remindersVersion += 1;
+        this._scheduleReminderSweep();
+        this._notify();
+    }
+
+    /**
+     * Ask to be reminded about `messageId` at `remindAt` (an absolute
+     * instant — see `reminderPresets`). Resolves once the server has
+     * accepted it; rejects when it refuses the time, so the caller can
+     * say so rather than silently dropping the request.
+     */
+    async setReminder(messageId: string, remindAt: Date): Promise<MessageReminder> {
+        const res = await this.api().post<{ reminder: MessageReminder }>(
+            `/api/v3/messages/${messageId}/reminder/`,
+            { remindAt: remindAt.toISOString() }
+        );
+        const reminder = res.data.reminder;
+        this._upsertReminder(reminder);
+        // The server flagged it as part of the same request; this emit is
+        // how every OTHER tab (and this one's optimistic state) finds out,
+        // since the reminder endpoint broadcasts nothing. `flag.add` is
+        // idempotent server-side, so re-flagging costs nothing.
+        if (!this._flagByMessageId.has(messageId)) {
+            void this.flagMessage(messageId).catch((e) =>
+                console.error("[ChannelService] mirroring reminder flag failed:", e)
+            );
+        }
+        return reminder;
+    }
+
+    /** Cancel the pending reminder, leaving the flag alone — "stop nagging
+     *  me" is not "forget about this". Idempotent. */
+    async cancelReminder(messageId: string): Promise<void> {
+        const existing = this._reminderByMessageId.get(messageId);
+        this._dropReminder(messageId);
+        try {
+            await this.api().delete(`/api/v3/messages/${messageId}/reminder/`);
+        } catch (e) {
+            if (existing) this._upsertReminder(existing);
+            throw e;
+        }
+    }
+
     // Load the user's pinned channels from the server.
     //
     // Pins are durable server-side, but until now nothing read them back:
@@ -2951,6 +3120,10 @@ export class ChannelService {
         this._flagsVersion += 1;
         this._notify();
         void this._persistFlag(flag, previous?.id !== flag.id ? previous?.id : undefined);
+        // Marking a flag done retires its reminder server-side (FlagView),
+        // so drop ours too — otherwise the bubble keeps offering to cancel
+        // a reminder that no longer exists.
+        if (flag.completedAt) this._dropReminder(flag.messageId);
     }
 
     private _removeFlagByMessage(messageId: string) {
@@ -2971,6 +3144,9 @@ export class ChannelService {
         this._flagsVersion += 1;
         this._notify();
         for (const id of ids) void this._persistFlagDelete(id);
+        // Unflagging cancels the reminder server-side (FlagView.delete) —
+        // mirror it, same reason as in `_upsertFlag`.
+        this._dropReminder(messageId);
     }
 
     private async _persistPin(pin: Pin, supersededId?: string) {

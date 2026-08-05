@@ -245,6 +245,10 @@ export const chat = {
         replyInThread: "Reply in thread",
         flagForLater: "Flag for later",
         removeFlag: "Remove flag",
+        remindMe: "Remind me…",
+        // Replaces the label above once a reminder exists, so the menu
+        // states the promise instead of hiding it behind another click.
+        reminderSetFor: "Reminder: {time}",
         copyMessageLink: "Copy message link",
         editMessage: "Edit message",
         deleteMessage: "Delete message",
@@ -254,6 +258,27 @@ export const chat = {
         wrapAll: "Wrap content",
         unwrapCode: "Unwrap code blocks",
         wrapCode: "Wrap code blocks",
+    },
+    // The "remind me about this message" picker (ModalRemindMe). Preset
+    // keys match `ReminderPresetId` in `utils/reminderPresets.ts`; the
+    // times beside them are computed, so these labels say only the shape
+    // of the delay.
+    remindMe: {
+        title: "Remind me about this",
+        description: "You'll get a notification and an inbox activity. The message stays flagged.",
+        currentlySetFor: "Reminder set for {time}. Pick another time to change it.",
+        presets: {
+            in20m: "In 20 minutes",
+            in1h: "In 1 hour",
+            in3h: "In 3 hours",
+            tomorrow: "Tomorrow morning",
+            nextWeek: "Next week",
+        },
+        customLabel: "Or pick a date and time",
+        customInvalid: "Choose a time in the future, within the next year.",
+        setButton: "Set",
+        remove: "Remove reminder",
+        failed: "Couldn't update the reminder. Please try again.",
     },
     modals: {
         deleteMessage: {
