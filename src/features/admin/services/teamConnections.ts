@@ -29,26 +29,17 @@ export type TeamConnection = {
     teamId: string;
     teamName: string;
     status: ShareStatus;
-    /** "outgoing" = we asked. "incoming" = the ball is in our court. */
+    /**
+     * Who asked. "outgoing" = we did; "incoming" = the ball is in our court.
+     *
+     * While pending it says whose move it is. Once accepted it is what the
+     * row's Owner/Guest chip is built from: the team that invited is the
+     * owner of the connection, the team that accepted is its guest. That is
+     * the only asymmetry a connection has — everything else about it is
+     * symmetric, and who owns a shared project or chat is a fact about that
+     * object, shown on the object.
+     */
     direction: "outgoing" | "incoming";
-    /**
-     * They own shared work we have access to.
-     *
-     * Distinct from `direction`, which only records who asked to connect.
-     * Connecting is symmetric; owning the shared project is not, and this
-     * is the asymmetry worth showing — it decides who can add people to it
-     * and who loses access if the connection ends.
-     */
-    isOwner: boolean;
-    /**
-     * They work in shared work WE own — the mirror of `isOwner`.
-     *
-     * Sent separately rather than inferred from `!isOwner`, because both
-     * false is a real third state: connected, with nothing shared either
-     * way yet. Collapsing that into "guest" labels a team as working in
-     * your data when they have no access to any of it.
-     */
-    isGuest: boolean;
     tsCreated: string;
     tsUpdated: string;
 };
