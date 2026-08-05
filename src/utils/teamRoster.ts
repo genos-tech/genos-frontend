@@ -1,5 +1,3 @@
-import { UserProps } from "../types/admin";
-
 /**
  * The roster, minus the other teams' people in it.
  *
@@ -14,6 +12,10 @@ import { UserProps } from "../types/admin";
  * So: every "add / invite someone" list filters through here. Lists that
  * merely NAME people (mentions, assignee cells, filters, search) must not
  * — that is the blank-avatar problem this whole feature exists to fix.
+ *
+ * Generic over the row rather than typed to `UserProps`, because the roster
+ * reaches the sharing surfaces as a three-field subset of it and they need
+ * this rule just as much.
  */
-export const ownTeamOnly = (members: UserProps[]): UserProps[] =>
+export const ownTeamOnly = <T extends { isExternal?: boolean }>(members: T[]): T[] =>
     members.filter((m) => m.isExternal !== true);

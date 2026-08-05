@@ -72,6 +72,7 @@ import {
 import { ModalTeamFolderMembers } from "../../team-notes/modals/ModalTeamFolderMembers";
 import { ModalTeamFolderName } from "../../team-notes/modals/ModalTeamFolderName";
 import { folderTagChipSx, ModalTeamFolderTags } from "../../team-notes/modals/ModalTeamFolderTags";
+import { isInGuestFolder, splitFoldersByOwnership } from "../../team-notes/utils/guestFolders";
 import { useNoteUnread } from "../context/NoteUnreadContext";
 import {
     chatContainerId,
@@ -1010,6 +1011,50 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
     }, [useNM.teamNoteFolders]);
 
+    // Ours stay in Team Notes; the ones another team lent us move to
+    // Shared Notes, where everything else somebody shared with us already
+    // is. The owning team still sees theirs under Team Notes — from their
+    // side it isn't shared-in, it's theirs.
+    const [ownRootFolders, guestRootFolders] = useMemo(
+        () => splitFoldersByOwnership(useNM.teamNoteFolderForest.rootFolders),
+        [useNM.teamNoteFolderForest.rootFolders]
+    );
+
+    // The open note sits in a folder another team shared with us, so its
+    // row is under Shared Notes — while the note itself stays a TEAM note
+    // (bucket 8) for the tab, the deep-link reveal and the delete path,
+    // all of which are keyed on the bucket. So the section highlight is
+    // redirected here instead of the note being relabelled, which would
+    // silently collapse the tree it lives in.
+    const openNoteIsInGuestFolder = useMemo(() => {
+        const noteId = useNM.currentMyNote?.noteId;
+        if (useNM.currentNoteType !== 8 || noteId == null) return false;
+        const row = useNM.teamNoteMeta.find((n) => n.noteId === noteId);
+        return row != null && isInGuestFolder(useNM.teamNoteFolders, row.folderId);
+    }, [
+        useNM.currentNoteType,
+        useNM.currentMyNote?.noteId,
+        useNM.teamNoteMeta,
+        useNM.teamNoteFolders,
+    ]);
+
+    // Same trees either way: a shared folder is still a team folder, with
+    // the same rows, actions and role checks. Only which section it hangs
+    // under changes.
+    const renderTeamFolderTrees = (folders: typeof ownRootFolders) =>
+        folders
+            .filter((f) => !visibleTeamFolderIds || visibleTeamFolderIds.has(f.folderId))
+            .map((folder) => (
+                <TeamNoteFolderTree
+                    key={`team-folder-${folder.folderId}`}
+                    actions={teamFolderActions}
+                    folder={folder}
+                    renderNote={renderTeamNoteTreeItem}
+                    useNM={useNM}
+                    visibleFolderIds={visibleTeamFolderIds}
+                />
+            ));
+
     // Team Notes section: the folder forest, headed by a "New team
     // folder" affordance. No drop targets — moving a note between team
     // folders crosses an ACL boundary, so it goes through the explicit
@@ -1110,7 +1155,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                     })}
                 </Box>
             )}
-            {useNM.teamNoteFolderForest.rootFolders.length === 0 ? (
+            {ownRootFolders.length === 0 ? (
                 <Box sx={{ px: 2, py: 1 }}>
                     <Typography
                         level="body-xs"
@@ -1123,18 +1168,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                     </Typography>
                 </Box>
             ) : (
-                useNM.teamNoteFolderForest.rootFolders
-                    .filter((f) => !visibleTeamFolderIds || visibleTeamFolderIds.has(f.folderId))
-                    .map((folder) => (
-                        <TeamNoteFolderTree
-                            key={`team-folder-${folder.folderId}`}
-                            actions={teamFolderActions}
-                            folder={folder}
-                            renderNote={renderTeamNoteTreeItem}
-                            useNM={useNM}
-                            visibleFolderIds={visibleTeamFolderIds}
-                        />
-                    ))
+                renderTeamFolderTrees(ownRootFolders)
             )}
         </Box>
     );
@@ -1456,20 +1490,30 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             );
         });
 
-    // Render grouped shared notes (Sharer → Notes)
-    const renderGroupedSharedNotes = () =>
-        groupedSharedNotes.map((sharer) => (
-            <GroupedNoteSection
-                key={`sharer-${sharer.ownerId}`}
-                groupKey={`sharer-${sharer.ownerId}`}
-                groupLabel={sharer.ownerName}
-                defaultExpanded={sharer.notes.some(
-                    (note) => note.noteId === useNM.currentMyNote?.noteId
-                )}
-            >
-                {sharer.notes.map((note) => renderSharedNoteTreeItem(note))}
-            </GroupedNoteSection>
-        ));
+    // Render shared notes: whole folders another team lent us, then the
+    // individual notes people shared (Sharer → Notes).
+    //
+    // Box root ON PURPOSE — see renderMyNotesSection.
+    const renderGroupedSharedNotes = () => (
+        <Box>
+            {/* Folders first: a folder is the bigger unit, and it is the
+                one thing in here that arrived from outside the company
+                rather than from a colleague. */}
+            {renderTeamFolderTrees(guestRootFolders)}
+            {groupedSharedNotes.map((sharer) => (
+                <GroupedNoteSection
+                    key={`sharer-${sharer.ownerId}`}
+                    groupKey={`sharer-${sharer.ownerId}`}
+                    groupLabel={sharer.ownerName}
+                    defaultExpanded={sharer.notes.some(
+                        (note) => note.noteId === useNM.currentMyNote?.noteId
+                    )}
+                >
+                    {sharer.notes.map((note) => renderSharedNoteTreeItem(note))}
+                </GroupedNoteSection>
+            ))}
+        </Box>
+    );
 
     // Render grouped chat notes (Chat Type → Chat Name → Notes)
     const renderGroupedChatNotes = () =>
@@ -1760,6 +1804,9 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             renderTree: null,
             renderGrouped: renderGroupedSharedNotes,
             isGrouped: true,
+            // Folders lent to us by another team live here, and their
+            // notes are bucket 8 — see `openNoteIsInGuestFolder`.
+            isSelected: useNM.currentNoteType === 4 || openNoteIsInGuestFolder,
         },
         // Team Notes — the shared "general" space. Sits with the two
         // personal-note buckets it shares storage with (type 8 is the
@@ -1773,6 +1820,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             renderTree: null,
             renderGrouped: renderTeamNotesSection,
             isGrouped: true,
+            isSelected: useNM.currentNoteType === 8 && !openNoteIsInGuestFolder,
         },
         {
             noteType: 2,
@@ -1900,6 +1948,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                             <NoteTypeSection
                                 key={config.noteType}
                                 icon={config.icon}
+                                isSelected={config.isSelected}
                                 noteType={config.noteType}
                                 title={config.title}
                                 useNM={useNM}

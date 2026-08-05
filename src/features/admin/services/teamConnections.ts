@@ -19,6 +19,7 @@ import axios from "axios";
 
 import { authApi } from "../../../services/api";
 import type { ObjectShare, ShareParticipant, ShareStatus } from "../../../types/sharing";
+import { ownTeamOnly } from "../../../utils/teamRoster";
 
 export type { ObjectShare, ShareParticipant, ShareStatus };
 
@@ -340,6 +341,12 @@ export const revokeExternalShare = async (
  * caller's *current* team is the HOST's shell when they are looking at a
  * shared object, so the roster they need is their own team's and has to be
  * asked for by id. Never the host's roster — that stays withheld.
+ *
+ * `ownTeamOnly` is what makes the name true. `getTeamMembers` also returns
+ * the people from other teams you share work with, so this picker had begun
+ * offering the HOST team's members as candidates to admit — nonsense the
+ * server would refuse, and alarming to read: it looks like your side can
+ * hand their colleagues access to their own folder.
  */
 export const fetchOwnTeamRoster = async (
     accessToken: string | null,
@@ -350,7 +357,14 @@ export const fetchOwnTeamRoster = async (
         if (!api) return [];
         const res = await api.get(`/team/getTeamMembers/?team_id=${teamId}`);
         const members = (res.data as { data?: { members?: unknown[] } }).data?.members ?? [];
-        return members as { userId: string; userName: string; userEmail: string }[];
+        return ownTeamOnly(
+            members as {
+                userId: string;
+                userName: string;
+                userEmail: string;
+                isExternal?: boolean;
+            }[]
+        );
     } catch {
         return [];
     }

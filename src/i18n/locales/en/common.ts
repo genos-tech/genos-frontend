@@ -86,6 +86,11 @@ export const common = {
         offerCeilingViewer: "View only",
         actionFailed: "That didn't work. Please try again.",
     },
+    // The "add a person" autocomplete, wherever people are added.
+    personPicker: {
+        youSuffix: "(You)",
+        noMatches: "No matches",
+    },
     // Permission roles shared by Team / Project / GM. Distinct from
     // `admin.role.*`, which labels the user's job title.
     memberRoles: {
