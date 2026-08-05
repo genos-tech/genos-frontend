@@ -760,7 +760,7 @@ export const es: DeepPartial<Messages> = {
             messageIdExists: "El ID del mensaje ya existe.",
             unauthorizedPleaseLogin: "No autorizado. Inicia sesión de nuevo.",
             subTaskProjectMoveForbidden:
-                "Una subtarea pertenece al proyecto de su tarea principal. Mueve la tarea de nivel superior y la subtarea se moverá con ella.",
+                "Esta tarea pertenece al proyecto de la tarea o el hito en el que está. Mueve ese elemento y la tarea se moverá con él.",
         },
         autocomplete: {
             statusPlaceholder: "Estado",
@@ -827,6 +827,8 @@ export const es: DeepPartial<Messages> = {
             addStartDate: "Añadir fecha de inicio",
             subTaskProjectLocked:
                 "Una subtarea pertenece al proyecto de su tarea principal. Mueve la tarea de nivel superior y la subtarea se moverá con ella.",
+            milestoneTaskProjectLocked:
+                "Una tarea de un hito pertenece al proyecto de ese hito. Mueve el hito y la tarea se moverá con él.",
         },
         buttons: {
             create: "Crear",

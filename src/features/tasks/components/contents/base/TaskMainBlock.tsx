@@ -30,6 +30,7 @@ import { extractPrUrlsFromBlocks } from "../../../../integrations/utils/extractP
 import { parsePrUrl } from "../../../../integrations/utils/parsePrUrl";
 import { loadSpecificTask } from "../../../services/loadSpecificTask";
 import { SprintMilestonePicker } from "../../../sprint-milestone/components/SprintMilestonePicker";
+import { ownsItsProject } from "../../../utils/taskKind";
 import { ACProjectTags } from "../../autocompletes/ACProjectTags";
 import { ACTaskEffortLevel } from "../../autocompletes/ACTaskEffortLevel";
 import { ACTaskPriority } from "../../autocompletes/ACTaskPriority";
@@ -213,10 +214,24 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
     const { t } = useTranslation();
     const urlLinkModal = useUrlLinkModal();
     const isRequired = (field: string) => requiredFields?.includes(field) === true;
-    // Only a milestone or a top-level task picks a project; a sub-task's
-    // project IS its parent's. See the Project row for why. Create mounts
-    // are exempt — the row doesn't exist to the user yet.
-    const projectLocked = isSubTask === true && isPreviewMode;
+    // Only a milestone or a ROOT task picks a project. Anything with a
+    // parent follows what it is filed under, and that includes a task
+    // living in a milestone: those hang off the milestone's backing row,
+    // so the milestone owns which project they are in. See the Project
+    // row for why. Create mounts are exempt — the row doesn't exist to
+    // the user yet.
+    //
+    // Not `isSubTask`: that means the parent is an ORDINARY task, and it
+    // also hides the Sprint/Milestone row, which a task inside a
+    // milestone still needs. So it was false for exactly the rows this
+    // has to lock, and the picker stayed live for them.
+    const projectLocked = isPreviewMode && !ownsItsProject(taskContent);
+    // Same lock, two reasons — and the useful half of the message is
+    // WHICH thing to move instead, so it has to name the right one.
+    const projectLockHint =
+        isSubTask === true
+            ? t.tasks.tooltips.subTaskProjectLocked
+            : t.tasks.tooltips.milestoneTaskProjectLocked;
 
     const [openManageTags, setOpenManageTags] = useState(false);
     const [parentTask, setParentTask] = useState<TaskProps>();
@@ -686,26 +701,27 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             <FieldLabel isDark={isDark} required={isRequired("project")}>
                                 {t.tasks.fields.project}
                             </FieldLabel>
-                            {/* Only a milestone or a top-level task picks a
-                                project. A sub-task's project IS its parent's:
-                                letting one move alone stranded it under a
-                                parent in the project it came from, so the
-                                destination's table — which nests rows under
-                                their parent — had nowhere to draw it and the
-                                row was invisible in both projects. Moving the
-                                top-level task takes its whole sub-tree along.
+                            {/* Only a milestone or a root task picks a
+                                project. Anything with a parent — a sub-task,
+                                or a task inside a milestone — belongs to the
+                                project of what it sits under: letting one
+                                move alone stranded it under a parent in the
+                                project it came from, so the destination's
+                                table — which nests rows under their parent —
+                                had nowhere to draw it and the row was
+                                invisible in both projects. Moving the parent
+                                task, or the milestone, takes the whole
+                                sub-tree along.
 
                                 Create mounts stay editable: the row doesn't
-                                exist to the user yet, and a sub-task being
+                                exist to the user yet, and a child being
                                 created inherits the project it's created
                                 under anyway. */}
                             <Box sx={{ flex: 1, minWidth: 0 }}>
                                 <AppTooltip
                                     disableHoverListener={!projectLocked}
                                     maxWidth={280}
-                                    title={
-                                        projectLocked ? t.tasks.tooltips.subTaskProjectLocked : ""
-                                    }
+                                    title={projectLocked ? projectLockHint : ""}
                                 >
                                     {/* The disabled input swallows its own
                                         pointer events, so the tooltip needs a

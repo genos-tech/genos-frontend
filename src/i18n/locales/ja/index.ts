@@ -843,7 +843,7 @@ export const ja: DeepPartial<Messages> = {
             messageIdExists: "メッセージIDはすでに存在します。",
             unauthorizedPleaseLogin: "認証されていません。再度サインインしてください。",
             subTaskProjectMoveForbidden:
-                "サブタスクは親タスクのプロジェクトに属します。移動するには親のトップレベルタスクを移動してください。",
+                "このタスクは、その上位にあるタスクまたはマイルストーンのプロジェクトに属します。一緒に移動するには、そちらを移動してください。",
         },
         autocomplete: {
             statusPlaceholder: "ステータス",
@@ -910,6 +910,8 @@ export const ja: DeepPartial<Messages> = {
             addStartDate: "開始日を追加",
             subTaskProjectLocked:
                 "サブタスクは親タスクのプロジェクトに属します。移動するには親のトップレベルタスクを移動してください。",
+            milestoneTaskProjectLocked:
+                "マイルストーン内のタスクはマイルストーンのプロジェクトに属します。一緒に移動するにはマイルストーンを移動してください。",
         },
         buttons: {
             create: "作成",

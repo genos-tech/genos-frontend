@@ -754,7 +754,7 @@ export const ar: DeepPartial<Messages> = {
             messageIdExists: "معرّف الرسالة موجود بالفعل.",
             unauthorizedPleaseLogin: "غير مصرّح. يُرجى تسجيل الدخول مرة أخرى.",
             subTaskProjectMoveForbidden:
-                "تنتمي المهمة الفرعية إلى مشروع مهمتها الأصلية. انقل المهمة الرئيسية لتنقلها معها.",
+                "تنتمي هذه المهمة إلى مشروع المهمة أو المرحلة التي توجد داخلها. انقل تلك لتنتقل هذه المهمة معها.",
         },
         autocomplete: {
             statusPlaceholder: "الحالة",
@@ -821,6 +821,8 @@ export const ar: DeepPartial<Messages> = {
             addStartDate: "إضافة تاريخ البدء",
             subTaskProjectLocked:
                 "تنتمي المهمة الفرعية إلى مشروع مهمتها الأصلية. انقل المهمة الرئيسية لتنقلها معها.",
+            milestoneTaskProjectLocked:
+                "تنتمي المهمة الموجودة داخل مرحلة إلى مشروع تلك المرحلة. انقل المرحلة لتنقلها معها.",
         },
         buttons: {
             create: "إنشاء",
