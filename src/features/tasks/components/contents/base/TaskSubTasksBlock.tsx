@@ -29,7 +29,7 @@ import { UserProps } from "../../../../../types/admin";
 import { TaskProps } from "../../../../../types/tasks";
 import { createQuickTask } from "../../../services/createQuickTask";
 import { loadSpecificChildTasks } from "../../../services/loadSpecificChildTasks";
-import { emitTaskTouched, onTaskTouched } from "../../../services/taskEvents";
+import { emitTaskTouched, onTasksBulkChanged, onTaskTouched } from "../../../services/taskEvents";
 import { formatTaskDisplayId } from "../../../utils/taskDisplayId";
 
 type TaskSubTasksBlockProps = {
@@ -129,6 +129,22 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
             }
         });
     }, [currentTaskContent.id]);
+
+    // A project move is the one change this block cannot hear about on
+    // the touched bus: that event names a single task, and which tasks
+    // travelled with a move is known only to the server. The bulk signal
+    // fires for the source and the destination once the move has landed —
+    // which is exactly when the list this block loaded mid-move (empty,
+    // because it asked under the destination project before the server had
+    // moved anything there) has to be asked for again. Scoped to our own
+    // project so the two emits of a single move cost one refetch.
+    useEffect(() => {
+        const ownProjectId = currentTaskContent.project?.projectId;
+        return onTasksBulkChanged(({ projectId }) => {
+            if (projectId != null && ownProjectId != null && projectId !== ownProjectId) return;
+            setChildRefreshNonce((n) => n + 1);
+        });
+    }, [currentTaskContent.project?.projectId]);
 
     useEffect(() => {
         // Cancelled-flag guard: slow child-task responses for an old
