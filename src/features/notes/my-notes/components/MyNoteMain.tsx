@@ -1,9 +1,11 @@
 import { useCallback, useMemo, useState } from "react";
-import { Stack, Tabs } from "@mui/joy";
+import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRounded";
+import { IconButton, Stack, Tabs } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { useIsMobile } from "../../../../hooks/common/useIsMobile";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
@@ -41,13 +43,26 @@ interface MyNoteMainProps {
     /** Host modal's z-index when rendered inside the UrlLinkModal, so the
      *  header's ⋮ menu lifts above it. Undefined on page surfaces. */
     hostZIndex?: number;
+    /** Mobile notes-home: back to the sidebar list. */
+    onMobileBack?: () => void;
 }
 
 export const MyNoteMain = (props: MyNoteMainProps) => {
-    const { isInTaskPage, useTEM, socket, myself, setMyself, useUISM, useNM, useCM, hostZIndex } =
-        props;
+    const {
+        isInTaskPage,
+        useTEM,
+        socket,
+        myself,
+        setMyself,
+        useUISM,
+        useNM,
+        useCM,
+        hostZIndex,
+        onMobileBack,
+    } = props;
 
     const { accessToken } = useAuth();
+    const isMobile = useIsMobile();
     const [openDeleteNote, setOpenDeleteNote] = useState<boolean>(false);
 
     // Which personal-backed space the open note belongs to. Read off the
@@ -166,15 +181,31 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                     justifyContent="space-between"
                     sx={{
                         width: "100%",
-                        height: "30px",
-                        // Task-page panel wraps this Main with its
-                        // own header zone, so we pull up by 15px to
-                        // sit flush with that surround. Notes-home
-                        // uses the standard 10px top gap.
-                        mt: isInTaskPage ? "-15px" : "10px",
+                        // Fixed 30px height forced the title + actions
+                        // onto two rows on mobile once the back button
+                        // joined them. Use minHeight and never wrap.
+                        minHeight: isMobile ? 48 : 30,
+                        height: isMobile ? "auto" : "30px",
+                        mt: isInTaskPage ? "-15px" : isMobile ? "4px" : "10px",
                         mb: "5px",
+                        px: isMobile ? 0.5 : 0,
+                        gap: 0.5,
+                        flexWrap: "nowrap",
+                        minWidth: 0,
                     }}
                 >
+                    {isMobile && onMobileBack && (
+                        <IconButton
+                            aria-label="Back to notes list"
+                            size="sm"
+                            sx={{ flexShrink: 0 }}
+                            variant="plain"
+                            onClick={onMobileBack}
+                        >
+                            <ArrowBackIosNewRoundedIcon sx={{ fontSize: 18 }} />
+                        </IconButton>
+                    )}
+
                     {/* One Main serves all three personal-backed
                             buckets, so the header is chosen by the
                             ACTIVE TAB's bucket rather than hardcoded —

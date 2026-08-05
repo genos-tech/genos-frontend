@@ -25,6 +25,7 @@ import { MoreMenu, MoreMenuItem } from "../../../../components/ui/MoreMenu";
 import { NoteHeaderActionsStyles } from "../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { useIsMobile } from "../../../../hooks/common/useIsMobile";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
@@ -96,6 +97,7 @@ export const NoteHeaderActions = ({
     const styles = isDark ? NoteHeaderActionsStyles.dark : NoteHeaderActionsStyles.light;
     const navigate = useNavigate();
     const { t } = useTranslation();
+    const isMobile = useIsMobile();
     // Per-note notification mute (in the ⋮ menu, not a header icon).
     const notifCtx = useNotificationsContext();
 
@@ -122,8 +124,9 @@ export const NoteHeaderActions = ({
 
     // Cap the inline avatar count so the strip stays compact next to
     // the other 36px header buttons. The remainder collapses into a
-    // `+N` pill at the end.
-    const MAX_AVATARS_INLINE = 3;
+    // `+N` pill at the end. Mobile keeps a single avatar so the
+    // header fits on one row with back + title.
+    const MAX_AVATARS_INLINE = isMobile ? 1 : 3;
     const visibleMembers = members.slice(0, MAX_AVATARS_INLINE);
     const overflowCount = Math.max(members.length - MAX_AVATARS_INLINE, 0);
 
@@ -338,8 +341,11 @@ export const NoteHeaderActions = ({
                 "& > *": { flexShrink: 0 },
             }}
         >
-            {/* My Notes: New Note Button */}
-            {noteType === 1 && (
+            {/* My Notes: New Note Button — desktop only. On mobile the
+                ⋮ menu already has New Note, and the labeled button
+                forced the action strip past the title onto a second
+                header row. */}
+            {noteType === 1 && !isMobile && (
                 <AppTooltip
                     size="sm"
                     title={
@@ -378,7 +384,9 @@ export const NoteHeaderActions = ({
                 </AppTooltip>
             )}
 
-            {/* Task Notes: Project Avatar + Task Info Chips */}
+            {/* Task Notes: Project Avatar + Task Info Chips.
+                On mobile drop the wide TaskInfoPill — Open Task is
+                still in the ⋮ menu. */}
             {noteType === 2 && !isInTaskPage && currentTask && currentTask.id && pmChat && (
                 <Stack alignItems="center" direction="row" spacing={1}>
                     {/* Project Avatar with container. Tooltip names it as
@@ -409,15 +417,14 @@ export const NoteHeaderActions = ({
                         </Box>
                     </AppTooltip>
 
-                    {/* Unified Task pill (Task #<id> │ Title │ Status),
-                        shared with the chat thread header so both surfaces
-                        render the identical control. */}
-                    <TaskInfoPill
-                        isDark={isDark}
-                        styles={styles}
-                        task={currentTask}
-                        onOpen={onOpenTask}
-                    />
+                    {!isMobile && (
+                        <TaskInfoPill
+                            isDark={isDark}
+                            styles={styles}
+                            task={currentTask}
+                            onOpen={onOpenTask}
+                        />
+                    )}
                 </Stack>
             )}
 
