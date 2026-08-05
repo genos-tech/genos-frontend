@@ -4,7 +4,7 @@ import { authApi } from "../../../services/api";
 import { createRequestCache } from "../../../services/requestCache";
 import { UserProps } from "../../../types/admin";
 import { TaskProps } from "../../../types/tasks";
-import { onTaskTouched } from "./taskEvents";
+import { onTasksBulkChanged, onTaskTouched } from "./taskEvents";
 
 // Child lists change rarely (subtask create / status / reparent), and
 // the local mutation paths emit a scoped "children" event, so a 30s
@@ -28,6 +28,22 @@ onTaskTouched(({ taskId, kind }) => {
         // for up to the 30s TTL after editing it.
         childTasksCache.invalidate("children:");
     }
+});
+onTasksBulkChanged(() => {
+    // A project move rewrites the project of a whole sub-tree — a
+    // milestone's move carries every task filed under it — and entries
+    // here are keyed per (parent, project). One of those entries is
+    // actively wrong by the time this fires: the picker switches the
+    // preview's project OPTIMISTICALLY, so the sub-task block refetches
+    // under the DESTINATION project id while the server still has the
+    // children in the source, and caches the empty list that comes back.
+    // Nothing else clears it — a move is not describable as
+    // `genos:task-touched`, which names one task — so the block read "no
+    // sub-tasks" from cache through every remount, and only a page reload
+    // (which takes this module with it) appeared to fix it. The event
+    // names a project, not the parents whose lists changed, so drop them
+    // all and let the mounted blocks ask again.
+    childTasksCache.invalidate("children:");
 });
 
 export const loadSpecificChildTasks = async (
