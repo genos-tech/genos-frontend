@@ -759,7 +759,7 @@ export const hi: DeepPartial<Messages> = {
             messageIdExists: "मेसेज ID पहले से मौजूद है।",
             unauthorizedPleaseLogin: "अनधिकृत। कृपया फिर से लॉग इन करें।",
             subTaskProjectMoveForbidden:
-                "सब-टास्क अपने पैरेंट टास्क के प्रोजेक्ट में रहता है। इसे साथ ले जाने के लिए टॉप-लेवल टास्क को मूव करें।",
+                "यह टास्क उस टास्क या माइलस्टोन के प्रोजेक्ट में रहता है जिसके अंदर यह है। इसे साथ ले जाने के लिए उसी को मूव करें।",
         },
         autocomplete: {
             statusPlaceholder: "स्टेटस",
@@ -826,6 +826,8 @@ export const hi: DeepPartial<Messages> = {
             addStartDate: "प्रारंभ तिथि जोड़ें",
             subTaskProjectLocked:
                 "सब-टास्क अपने पैरेंट टास्क के प्रोजेक्ट में रहता है। इसे साथ ले जाने के लिए टॉप-लेवल टास्क को मूव करें।",
+            milestoneTaskProjectLocked:
+                "माइलस्टोन के अंदर का टास्क उस माइलस्टोन के प्रोजेक्ट में रहता है। इसे साथ ले जाने के लिए माइलस्टोन को मूव करें।",
         },
         buttons: {
             create: "बनाएँ",

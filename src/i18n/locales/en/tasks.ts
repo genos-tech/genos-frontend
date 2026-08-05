@@ -61,7 +61,7 @@ export const tasks = {
         messageIdExists: "Message Id already exists.",
         unauthorizedPleaseLogin: "Unauthorized. Please log in again.",
         subTaskProjectMoveForbidden:
-            "A sub-task lives in its parent task's project. Move the top-level task to move this one with it.",
+            "This task lives in the project of the task or milestone it sits under. Move that one to bring this task with it.",
     },
 
     // Common autocomplete placeholders.
@@ -141,6 +141,8 @@ export const tasks = {
         addStartDate: "Add start date",
         subTaskProjectLocked:
             "A sub-task lives in its parent task's project. Move the top-level task to move this one with it.",
+        milestoneTaskProjectLocked:
+            "A task in a milestone lives in the milestone's project. Move the milestone to move this one with it.",
         // Shared diagram-trigger tooltip used by the milestone-pane
         // button and the TaskTitleBlock graph button. The "WithShortcut"
         // variant suffixes the keyboard combo for the TaskPreview button,

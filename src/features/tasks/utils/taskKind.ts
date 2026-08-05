@@ -78,3 +78,24 @@ export const getTaskKind = (
     }
     return "task";
 };
+
+/**
+ * Does this task decide its own project, or follow something above it?
+ *
+ * Only a milestone or a ROOT task — one with no parent task — decides.
+ * Everything else belongs to the project of what it is filed under, and
+ * that includes a task living directly in a milestone: those hang off the
+ * milestone's backing row, so the milestone owns which project they are
+ * in and they travel when IT moves. Moving one alone left it pointing at
+ * a parent in the project it came from, and the destination's table nests
+ * rows under their parent, so the row went missing from both. The server
+ * enforces the same rule (`task_views._is_nested_task`).
+ *
+ * Not expressible as a `TaskKind`: a milestone's own task is "task" there
+ * and must stay that way, since it still picks a milestone and a sprint.
+ * A milestone reads as owning its project — `MilestonePreview` synthesizes
+ * `parentTaskId: null` — and moves through the milestone endpoint, which
+ * also resets the sprint.
+ */
+export const ownsItsProject = (task: Pick<TaskProps, "parentTaskId">): boolean =>
+    task.parentTaskId == null;
