@@ -207,6 +207,17 @@ describe("ConnectedTeamsPanel", () => {
         expect(screen.queryByText("Owner")).toBeNull();
     });
 
+    it("names both directions once each team has shared with the other", () => {
+        // Reciprocal sharing makes the other team a host AND a guest, and
+        // reading `isOwner` first collapsed that to "Owner" alone. Both
+        // teams' profiles then claimed the other owned the relationship —
+        // a claim that contradicts itself the moment you switch teams and
+        // look back at the same connection.
+        renderPanel({ active: [connection({ isOwner: true, isGuest: true })] });
+        expect(screen.getByText("Owner")).toBeTruthy();
+        expect(screen.getByText("Guest")).toBeTruthy();
+    });
+
     it("labels neither side while nothing has been shared yet", () => {
         // A real third state, not a fallback: connected, with no host and
         // no guest to name.
