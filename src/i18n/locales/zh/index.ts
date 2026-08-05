@@ -213,8 +213,15 @@ export const zh: DeepPartial<Messages> = {
             exportDescription:
                 "将你创建的内容（个人资料、笔记、待办、任务、消息和评论）下载为 JSON 文件。不包含其他成员撰写的团队内容。",
             exportButton: "下载我的数据",
+            teamsHeading: "你的团队",
+            teamsDescription:
+                "退出团队后，你将无法再访问该团队的聊天、项目和笔记。你的账户和其他团队不受影响，之后也可以再次被邀请加入。",
+            teamsCurrent: "当前",
+            teamsOwnerHint: "你是该团队的所有者——退出前请先在团队资料中转移所有权。",
+            teamsEmpty: "你还没有加入任何团队。",
             deleteHeading: "删除账户",
-            deleteDescription: "永久删除你的账户，此操作无法撤销。",
+            deleteDescription:
+                "永久删除你的账户，并将你从所有所属团队中移除，此操作无法撤销。若只想退出某一个团队并保留其他团队，请使用上方的“你的团队”。",
             deleteButton: "删除账户",
             ownershipBlocked:
                 "你是仍有其他成员的团队所有者。请先在各团队资料中转移所有权，然后再删除账户。",

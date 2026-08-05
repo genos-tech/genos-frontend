@@ -88,10 +88,11 @@ import { TeamEmojiPanel } from "./TeamEmojiPanel";
 type Props = {
     open: boolean;
     onClose: () => void;
-    // The following are only consumed by the Mention groups tab — the
-    // panel reads team members from `useTEM` for the add-member picker,
-    // and forwards `myself` / `setMyself` / `socket` / `useCM` /
-    // `useUISM` down to `AvatarWithStatus`.
+    // The following are consumed by the Mention groups tab — the panel
+    // reads team members from `useTEM` for the add-member picker, and
+    // forwards `myself` / `setMyself` / `socket` / `useCM` / `useUISM`
+    // down to `AvatarWithStatus`. The Account tab also reads `myself`
+    // for the team list it lets you leave.
     useTEM?: import("../../hooks/common/useTeamManagement").TeamManagementState;
     myself?: import("../../types/admin").UserProps;
     setMyself?: (value: import("../../types/admin").UserProps) => void;
@@ -1523,7 +1524,7 @@ const KeyboardShortcutsSection = () => {
  *   5. Language         – locale switcher (English / 日本語).
  *   6. Notifications    – delegates to `NotificationSettingsPanel`.
  *   7. Keyboard shortcuts – read-only reference for the global service shortcuts.
- *   8. Account          – data export + account deletion (GDPR).
+ *   8. Account          – data export, leaving a team, account deletion (GDPR).
  *
  * Notification state is read from `NotificationsContext` provided at the
  * App root, so the modal needs no notification-specific props.
@@ -1855,7 +1856,7 @@ export const SettingsModal = ({
                         value="account"
                     >
                         <Stack spacing={2}>
-                            <AccountSettingsSection />
+                            <AccountSettingsSection myself={myself} onNavigateAway={onClose} />
                         </Stack>
                     </TabPanel>
                     {OAUTH_INTEGRATIONS_ENABLED && (

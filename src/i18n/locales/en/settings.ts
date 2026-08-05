@@ -71,8 +71,15 @@ export const settings = {
         exportDescription:
             "Download everything you've created here — your profile, notes, todos, tasks, messages and comments — as a JSON file. Team content written by other people isn't included.",
         exportButton: "Download my data",
+        teamsHeading: "Your teams",
+        teamsDescription:
+            "Leaving a team ends your access to its chats, projects and notes. Your account and your other teams are untouched, and someone can invite you back later.",
+        teamsCurrent: "Current",
+        teamsOwnerHint: "You own this team — transfer ownership from its profile before leaving.",
+        teamsEmpty: "You don't belong to any team yet.",
         deleteHeading: "Delete your account",
-        deleteDescription: "Permanently erase your account. This cannot be undone.",
+        deleteDescription:
+            "Permanently erase your account and remove you from every team you belong to. This cannot be undone — to leave a single team and keep the rest, use Your teams above.",
         deleteButton: "Delete account",
         ownershipBlocked:
             "You own teams that still have other members. Transfer ownership from each team's profile before deleting your account.",

@@ -1,4 +1,11 @@
-// Settings → Account: data export and account deletion (GDPR).
+// Settings → Account: leaving a team, data export, account deletion (GDPR).
+//
+// The team list sits here because deletion is account-wide: it erases the
+// user everywhere, and someone who only wants out of ONE of their teams
+// used to have no way to discover that from this screen. Leaving lived on
+// a team's own profile modal, so the only visible exit next to "belongs to
+// two teams" was the irreversible one. The list is the reversible answer,
+// placed above deletion and named in its copy.
 //
 // Two deliberate UX rules, both because deletion is irreversible:
 //   * the ownership blocker is shown BEFORE the user commits — the
@@ -11,6 +18,7 @@
 import { useEffect, useState } from "react";
 import DeleteForeverRoundedIcon from "@mui/icons-material/DeleteForeverRounded";
 import DownloadRoundedIcon from "@mui/icons-material/DownloadRounded";
+import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import {
     Alert,
     Box,
@@ -23,9 +31,11 @@ import {
     Input,
     Modal,
     ModalDialog,
+    Sheet,
     Stack,
     Typography,
 } from "@mui/joy";
+import { useNavigate } from "react-router-dom";
 
 import { useAuth } from "../../context/AuthContext";
 import {
@@ -34,16 +44,35 @@ import {
     downloadAccountExport,
     getAccountDeletionStatus,
 } from "../../features/admin/services/accountLifecycle";
+import { leaveTeam } from "../../features/admin/services/leaveTeam";
+import { loadMyTeams } from "../../features/admin/services/loadMyTeams";
 import { useSignOut } from "../../hooks/common/useSignOut";
 import { useTranslation } from "../../i18n";
+import { Team, UserProps } from "../../types/admin";
+import { ModalLeaveConfirm } from "../ui/misc/ModalLeaveConfirm";
 
 const CONFIRM_WORD = "DELETE";
 
-export const AccountSettingsSection = () => {
+type Props = {
+    /** Absent when the modal is rendered without workspace context (the
+     *  tab-rail test does this); the identifiers then come from
+     *  localStorage, which the workspace bootstrap has already written. */
+    myself?: UserProps;
+    /** Close the surrounding Settings modal. Leaving the team you're
+     *  currently in navigates away, and a modal left open over the
+     *  team-picker would cover it. */
+    onNavigateAway?: () => void;
+};
+
+export const AccountSettingsSection = ({ myself, onNavigateAway }: Props = {}) => {
     const { accessToken } = useAuth();
     const { t } = useTranslation();
     const signOut = useSignOut();
+    const navigate = useNavigate();
     const m = t.settings.account;
+
+    const userId = myself?.userId || localStorage.getItem("userId") || "";
+    const activeTeamId = myself?.teamId || localStorage.getItem("teamId") || "";
 
     const [status, setStatus] = useState<AccountDeletionStatus | null>(null);
     const [loading, setLoading] = useState(true);
@@ -54,6 +83,35 @@ export const AccountSettingsSection = () => {
     const [password, setPassword] = useState("");
     const [deleting, setDeleting] = useState(false);
     const [deleteError, setDeleteError] = useState<string | null>(null);
+    const [teams, setTeams] = useState<Team[]>([]);
+    const [teamsLoading, setTeamsLoading] = useState(true);
+    const [leaveTarget, setLeaveTarget] = useState<Team | null>(null);
+
+    useEffect(() => {
+        let cancelled = false;
+        void (async () => {
+            if (!userId) {
+                setTeamsLoading(false);
+                return;
+            }
+            try {
+                const loaded: Team[] = (await loadMyTeams(accessToken, userId)) ?? [];
+                // Guest shells are teams the user only reaches through a
+                // share or as a project guest — there is no membership to
+                // give up, and the server refuses a leave. Listing them
+                // would offer an exit that doesn't exist.
+                if (!cancelled) setTeams(loaded.filter((team) => !team.isGuest));
+            } catch {
+                // Non-fatal: the section then shows the empty line, and
+                // the per-team profile still has its own Leave button.
+            } finally {
+                if (!cancelled) setTeamsLoading(false);
+            }
+        })();
+        return () => {
+            cancelled = true;
+        };
+    }, [accessToken, userId]);
 
     useEffect(() => {
         let cancelled = false;
@@ -73,6 +131,25 @@ export const AccountSettingsSection = () => {
         const ok = await downloadAccountExport(accessToken);
         setExporting(false);
         if (!ok) setExportError(true);
+    };
+
+    const handleLeave = async (team: Team) => {
+        const ok = await leaveTeam(accessToken, team.teamId, userId);
+        if (!ok) return false;
+        setLeaveTarget(null);
+        if (team.teamId === activeTeamId) {
+            // Same exit as the team profile's own Leave: /jointeam reads
+            // teamId/teamName fresh, so clearing them is what forces a
+            // clean re-entry instead of the workspace rendering a team
+            // this user is no longer in.
+            localStorage.removeItem("teamId");
+            localStorage.removeItem("teamName");
+            onNavigateAway?.();
+            navigate("/jointeam");
+            return true;
+        }
+        setTeams((prev) => prev.filter((entry) => entry.teamId !== team.teamId));
+        return true;
     };
 
     const canSubmit = typed === CONFIRM_WORD && (!status?.requiresPassword || password.length > 0);
@@ -119,6 +196,73 @@ export const AccountSettingsSection = () => {
                     <Alert color="danger" size="sm" sx={{ mt: 1.5 }}>
                         {m.errorGeneric}
                     </Alert>
+                )}
+            </Box>
+
+            <Divider />
+
+            {/* Teams — the reversible way out, deliberately above deletion */}
+            <Box>
+                <Typography level="title-sm">{m.teamsHeading}</Typography>
+                <Typography level="body-xs" sx={{ mt: 0.5, mb: 1.5 }}>
+                    {m.teamsDescription}
+                </Typography>
+                {teamsLoading ? (
+                    <CircularProgress size="sm" />
+                ) : teams.length === 0 ? (
+                    <Typography level="body-xs" sx={{ opacity: 0.7 }}>
+                        {m.teamsEmpty}
+                    </Typography>
+                ) : (
+                    <Stack spacing={0.5}>
+                        {teams.map((team) => {
+                            // Owners are refused server-side, so the button
+                            // is replaced by the reason rather than shown
+                            // and then failing.
+                            const isOwner = team.teamOwnerId === userId;
+                            return (
+                                <Sheet
+                                    key={team.teamId}
+                                    variant="soft"
+                                    sx={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 1,
+                                        flexWrap: "wrap",
+                                        minHeight: 44,
+                                        px: 1.5,
+                                        py: 0.75,
+                                        borderRadius: "md",
+                                    }}
+                                >
+                                    <Typography level="body-sm" sx={{ minWidth: 0 }}>
+                                        {team.teamName}
+                                    </Typography>
+                                    {team.teamId === activeTeamId && (
+                                        <Chip color="primary" size="sm" variant="soft">
+                                            {m.teamsCurrent}
+                                        </Chip>
+                                    )}
+                                    <Box sx={{ flex: 1 }} />
+                                    {isOwner ? (
+                                        <Typography level="body-xs" sx={{ opacity: 0.7 }}>
+                                            {m.teamsOwnerHint}
+                                        </Typography>
+                                    ) : (
+                                        <Button
+                                            color="danger"
+                                            size="sm"
+                                            startDecorator={<LogoutRoundedIcon />}
+                                            variant="plain"
+                                            onClick={() => setLeaveTarget(team)}
+                                        >
+                                            {t.common.actions.leave}
+                                        </Button>
+                                    )}
+                                </Sheet>
+                            );
+                        })}
+                    </Stack>
                 )}
             </Box>
 
@@ -173,6 +317,15 @@ export const AccountSettingsSection = () => {
                     </>
                 )}
             </Box>
+
+            <ModalLeaveConfirm
+                description={t.common.leaveConfirm.teamDescription}
+                entityName={leaveTarget?.teamName ?? ""}
+                open={leaveTarget !== null}
+                title={t.common.leaveConfirm.teamTitle}
+                onCancel={() => setLeaveTarget(null)}
+                onConfirm={() => (leaveTarget ? handleLeave(leaveTarget) : Promise.resolve(false))}
+            />
 
             <Modal open={confirmOpen} onClose={() => !deleting && setConfirmOpen(false)}>
                 <ModalDialog sx={{ maxWidth: 460 }} variant="outlined">
