@@ -51,7 +51,9 @@ type BubbleMoreMenuProps = {
     setUnwrapAll: (value: boolean) => void;
     unwrapCode: boolean;
     setUnwrapCode: (value: boolean) => void;
-    /** Notified when the embedded More menu opens/closes. */
+    /** Notified while this menu owns something on screen — the menu itself
+     *  or a dialog opened from it. The parent keeps the hover toolbar
+     *  mounted for as long as this is `true`; see `overlayOpen` below. */
     onMenuOpenChange?: (open: boolean) => void;
 };
 
@@ -89,10 +91,23 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
     } = props;
 
     const { t, locale } = useTranslation();
+    const [menuOpen, setMenuOpen] = useState(false);
     const [openDeleteMessage, setOpenDeleteMessage] = useState(false);
     const [openRemindMe, setOpenRemindMe] = useState(false);
     const [isFlagged, setIsFlagged] = useState(message.isFlagged || false);
     const reminder = useMessageReminder(message.messageIdWithChatId);
+
+    // This menu — and the dialogs below it — live inside the bubble's
+    // hover toolbar, which the parent unmounts as soon as the cursor
+    // leaves the bubble. A dialog opened from the menu outlives the menu,
+    // and reaching it takes the cursor off the bubble, so reporting only
+    // the MENU's state let the dialog be torn out mid-interaction. The
+    // reminder dialog made that unmissable: opening the browser's own
+    // date picker and moving the mouse towards it closed everything.
+    const overlayOpen = menuOpen || openRemindMe || openDeleteMessage;
+    useEffect(() => {
+        onMenuOpenChange?.(overlayOpen);
+    }, [overlayOpen, onMenuOpenChange]);
 
     useEffect(() => {
         setIsFlagged(message.isFlagged || false);
@@ -252,7 +267,7 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
             <MoreMenu
                 items={items}
                 placement={isSent ? "bottom-end" : "bottom-start"}
-                onOpenChange={onMenuOpenChange}
+                onOpenChange={setMenuOpen}
             />
 
             <ModalDeleteMessage

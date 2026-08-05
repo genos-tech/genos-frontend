@@ -42,6 +42,10 @@ type BubbleThreadMoreMenuProps = {
     setUnwrapAll: (value: boolean) => void;
     unwrapCode: boolean;
     setUnwrapCode: (value: boolean) => void;
+    /** Notified while this menu owns something on screen — the menu itself
+     *  or a dialog opened from it. The parent keeps the hover toolbar
+     *  mounted for as long as this is `true`; see `overlayOpen` below. */
+    onMenuOpenChange?: (open: boolean) => void;
 };
 
 type MenuItemConfig = {
@@ -81,6 +85,7 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
         setUnwrapAll,
         unwrapCode,
         setUnwrapCode,
+        onMenuOpenChange,
     } = props;
 
     const { mode } = useColorScheme();
@@ -99,6 +104,16 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
     useEffect(() => {
         setIsFlagged(message.isFlagged || false);
     }, [message]);
+
+    // Same reasoning as `BubbleMoreMenu.overlayOpen`: this menu and its
+    // dialogs sit inside a toolbar the parent unmounts the moment the
+    // cursor leaves the bubble, and a dialog outlives the menu that opened
+    // it. Without this the reminder dialog vanished as soon as the user
+    // moved the mouse towards the date picker.
+    const overlayOpen = isOpen || openRemindMe || openDeleteMessage;
+    useEffect(() => {
+        onMenuOpenChange?.(overlayOpen);
+    }, [overlayOpen, onMenuOpenChange]);
 
     // Calculate menu position when opening
     const updateMenuPosition = useCallback(() => {

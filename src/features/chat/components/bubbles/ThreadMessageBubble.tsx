@@ -128,7 +128,14 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
     };
 
     // Reaction handling
-    const [showUnderBarOption, setShowUnderBarOption] = useState(false);
+    const [isHovered, setIsHovered] = useState(false);
+    // While the More menu — or a dialog it opened — is on screen, keep the
+    // toolbar mounted after the cursor leaves the bubble. Same lock as
+    // `MessageBubble.isMoreMenuOpen`, and for the same reason: without it
+    // the hover state flips false and unmounts the menu (or its dialog)
+    // out from under the user.
+    const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
+    const showUnderBarOption = isHovered || isMoreMenuOpen;
     const [reactions, setReactions] = useState<ReactionProps[]>([]);
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
     const [selectedEmoji, setSelectedEmoji] = useState<any>(null);
@@ -244,7 +251,14 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
         setSelectedEmoji(null);
     }, [selectedEmoji]);
 
-    // Thread bubble action buttons - consolidated into a single "More" menu
+    // Thread bubble action buttons - consolidated into a single "More" menu.
+    //
+    // CALLED as `BubbleActions()` below, never rendered as a JSX element:
+    // an inline component is a NEW type on every render, so React would
+    // unmount and rebuild this subtree — menu, open dialog and all — each
+    // time the bubble re-rendered. Calling it inlines the elements into this
+    // component's tree instead, which is what lets a dialog opened from the
+    // menu survive the hover state change that follows the cursor leaving.
     const BubbleActions = () => (
         <Stack
             alignItems="center"
@@ -304,6 +318,7 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
                 unwrapAll={unwrapAll}
                 unwrapCode={unwrapCode}
                 useCM={useCM}
+                onMenuOpenChange={setIsMoreMenuOpen}
             />
         </Stack>
     );
@@ -362,8 +377,8 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
                     transition: "background-color 0.15s ease",
                 }}
                 onClick={handleMessageClick}
-                onMouseEnter={() => setShowUnderBarOption(true)}
-                onMouseLeave={() => setShowUnderBarOption(false)}
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={() => setIsHovered(false)}
                 onDoubleClick={
                     doubleClickTodoEnabled
                         ? () => {
@@ -405,7 +420,7 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
                         onClick={(e) => e.stopPropagation()}
                         onDoubleClick={(e) => e.stopPropagation()}
                     >
-                        <BubbleActions />
+                        {BubbleActions()}
                     </Box>
                 )}
 
@@ -538,8 +553,8 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
                             },
                         }}
                         onClick={handleMessageClick}
-                        onMouseEnter={() => setShowUnderBarOption(true)}
-                        onMouseLeave={() => setShowUnderBarOption(false)}
+                        onMouseEnter={() => setIsHovered(true)}
+                        onMouseLeave={() => setIsHovered(false)}
                         onDoubleClick={
                             doubleClickTodoEnabled
                                 ? () => {
@@ -587,7 +602,7 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
                                         tsUpdated={message.tsUpdated}
                                         userName={message.sender.userName}
                                     />
-                                    <BubbleActions />
+                                    {BubbleActions()}
                                 </Stack>
                             )}
 
@@ -618,7 +633,7 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
                                                 tsUpdated={message.tsUpdated}
                                                 userName={message.sender.userName}
                                             />
-                                            {showUnderBarOption === true && <BubbleActions />}
+                                            {showUnderBarOption === true && BubbleActions()}
                                         </Stack>
                                     </Box>
                                 </Stack>
