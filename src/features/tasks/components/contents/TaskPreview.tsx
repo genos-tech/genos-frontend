@@ -55,7 +55,7 @@ import { DIAGRAM_LIFT } from "../../diagram/diagramZIndex";
 import { loadSpecificTask } from "../../services/loadSpecificTask";
 import { loadTaskActivities } from "../../services/loadTaskActivities";
 import { loadTaskComments } from "../../services/loadTaskComments";
-import { onTaskTouched } from "../../services/taskEvents";
+import { emitTasksBulkChanged, onTaskTouched } from "../../services/taskEvents";
 import {
     updateProjectOptions,
     updateTagOptions,
@@ -1289,6 +1289,20 @@ const MilestonePreviewInner = ({
         return null;
     }, [usePM.currentProject?.projectId, useSM.projectMilestones, milestoneId]);
 
+    // The project this milestone actually belongs to, which needn't be the
+    // page's current project — see the fallback scan above. Now that a
+    // milestone can be MOVED between projects, this is also what the
+    // project picker has to show: seeding it from `currentProject` instead
+    // would make the save path's project diff read as a MOVE on any
+    // unrelated edit whenever the two disagreed.
+    const milestoneProject = useMemo(() => {
+        if (milestone?.projectId == null) return usePM.currentProject;
+        return (
+            usePM.teamProjects.find((p) => p.projectId === milestone.projectId) ??
+            usePM.currentProject
+        );
+    }, [milestone?.projectId, usePM.teamProjects, usePM.currentProject]);
+
     // Per-status task counts for this milestone, computed from
     // `useTM.allTasks` (the Milestone payload only carries `tasksTotal`
     // / `tasksClosed`, not the per-status breakdown). Statuses outside
@@ -1408,7 +1422,7 @@ const MilestonePreviewInner = ({
     // the per-save sync this defers).
     useEffect(() => () => flushPendingMilestoneSyncRef.current(), []);
     const [taskContentLike, setTaskContentLike] = useState<TaskProps>(() =>
-        milestoneToTaskProps(milestone ?? ({} as Milestone), usePM.currentProject, myself)
+        milestoneToTaskProps(milestone ?? ({} as Milestone), milestoneProject, myself)
     );
     // Opens the React Flow task-graph modal anchored on this milestone.
     const [openTaskDiagram, setOpenTaskDiagram] = useState(false);
@@ -1491,7 +1505,7 @@ const MilestonePreviewInner = ({
         setTaskContentLike(
             milestoneToTaskProps(
                 milestone,
-                usePM.currentProject,
+                milestoneProject,
                 myself,
                 backingTask?.attachments ?? [],
                 firstAssignee,
@@ -1503,6 +1517,10 @@ const MilestonePreviewInner = ({
     }, [
         milestone?.milestoneId,
         milestone?.tsUpdatedAt,
+        // A project move changes which project the picker must show, and
+        // `tsUpdatedAt` alone wouldn't re-seed it if the resolved project
+        // arrived (team projects finished loading) after the milestone did.
+        milestoneProject?.projectId,
         teamMembersSyncKey,
         backingTask?.id,
         backingTask?.attachments,
@@ -1853,8 +1871,30 @@ const MilestonePreviewInner = ({
         ) {
             patch.links = next.links ?? [];
         }
+        // Project move. Unlike a sub-task, a milestone tops its own
+        // hierarchy, so it can change project — and the server takes its
+        // backing task, every task filed under it, and their sub-trees
+        // along, landing them all with no sprint (sprints are per-project).
+        // The `teamProjects` membership check means only a value that could
+        // have come from the picker is ever treated as a move.
+        const nextProjectId = next.project?.projectId;
+        const movedFromProjectId =
+            nextProjectId != null &&
+            nextProjectId !== milestone.projectId &&
+            usePM.teamProjects.some((p) => p.projectId === nextProjectId)
+                ? milestone.projectId
+                : null;
+        if (movedFromProjectId != null) {
+            patch.projectId = nextProjectId;
+        }
         const nextSprintId = (next as unknown as { sprintId?: number | null }).sprintId;
-        if (nextSprintId !== undefined && nextSprintId !== milestone.sprintId) {
+        // A project move already clears the sprint server-side, and the
+        // sprint the picker still shows belongs to the project being left.
+        if (
+            movedFromProjectId == null &&
+            nextSprintId !== undefined &&
+            nextSprintId !== milestone.sprintId
+        ) {
             patch.sprintId = nextSprintId ?? null;
         }
         // Custom-field values (CustomFieldsBlock edits). Only diff when
@@ -1904,6 +1944,14 @@ const MilestonePreviewInner = ({
         if (updated) {
             syncMilestoneToAllTasks(updated);
             syncMilestoneCard(updated);
+            if (movedFromProjectId != null) {
+                // The move rewrote far more rows than this preview tracks —
+                // the backing task, every task in the milestone, all their
+                // sub-tasks, and each one's re-minted `<CODE>-<n>`. Re-pull
+                // both projects instead of trying to mirror that locally.
+                emitTasksBulkChanged(movedFromProjectId);
+                emitTasksBulkChanged(updated.projectId);
+            }
         }
     };
 

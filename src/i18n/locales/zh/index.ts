@@ -732,6 +732,8 @@ export const zh: DeepPartial<Messages> = {
             unauthorizedNoToken: "未授权。未找到认证令牌。",
             messageIdExists: "消息 ID 已存在。",
             unauthorizedPleaseLogin: "未授权，请重新登录。",
+            subTaskProjectMoveForbidden:
+                "子任务归属于其父任务的项目。请移动顶层任务，子任务会随之移动。",
         },
         autocomplete: {
             statusPlaceholder: "状态",
@@ -796,6 +798,7 @@ export const zh: DeepPartial<Messages> = {
             refreshBranches: "刷新分支",
             refreshPullRequests: "刷新关联的 PR",
             addStartDate: "添加开始日期",
+            subTaskProjectLocked: "子任务归属于其父任务的项目。请移动顶层任务，子任务会随之移动。",
         },
         buttons: {
             create: "创建",

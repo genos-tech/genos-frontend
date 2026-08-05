@@ -758,6 +758,8 @@ export const hi: DeepPartial<Messages> = {
             unauthorizedNoToken: "अनधिकृत। ऑथ टोकन नहीं मिला।",
             messageIdExists: "मेसेज ID पहले से मौजूद है।",
             unauthorizedPleaseLogin: "अनधिकृत। कृपया फिर से लॉग इन करें।",
+            subTaskProjectMoveForbidden:
+                "सब-टास्क अपने पैरेंट टास्क के प्रोजेक्ट में रहता है। इसे साथ ले जाने के लिए टॉप-लेवल टास्क को मूव करें।",
         },
         autocomplete: {
             statusPlaceholder: "स्टेटस",
@@ -822,6 +824,8 @@ export const hi: DeepPartial<Messages> = {
             refreshBranches: "ब्रांच रिफ्रेश करें",
             refreshPullRequests: "लिंक्ड PR रिफ्रेश करें",
             addStartDate: "प्रारंभ तिथि जोड़ें",
+            subTaskProjectLocked:
+                "सब-टास्क अपने पैरेंट टास्क के प्रोजेक्ट में रहता है। इसे साथ ले जाने के लिए टॉप-लेवल टास्क को मूव करें।",
         },
         buttons: {
             create: "बनाएँ",

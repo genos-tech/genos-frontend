@@ -29,6 +29,9 @@ type ACTeamProjectsProps = {
      *  chat. Optional: without it the options still render, just with
      *  the generic project icon instead of the uploaded image. */
     useCM?: ChatManagementState;
+    /** Read-only mount. Set for sub-tasks, whose project is their parent's
+     *  — see `TaskMainBlock`, which owns that rule and explains it. */
+    disabled?: boolean;
 };
 export const ACTeamProjects = (props: ACTeamProjectsProps) => {
     const {
@@ -40,11 +43,13 @@ export const ACTeamProjects = (props: ACTeamProjectsProps) => {
         setTaskUpdated,
         resetMilestoneOnChange = false,
         useCM,
+        disabled = false,
     } = props;
 
     return (
         <Autocomplete
             key={taskContent.id}
+            disabled={disabled}
             // Still the plain name: this is what type-to-filter matches
             // on and what the closed input displays. The richer content
             // below is presentation only.

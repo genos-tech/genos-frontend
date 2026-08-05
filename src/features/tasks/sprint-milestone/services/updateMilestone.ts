@@ -7,6 +7,12 @@ import { MilestoneResponse } from "../types";
 export type UpdateMilestoneInput = {
     milestoneId: number;
     title?: string;
+    /** Move the milestone to another project. The server takes its backing
+     *  task and every task filed under it along, and lands the milestone
+     *  with NO sprint — sprints are defined per project, so the one it sat
+     *  in doesn't exist in the destination. Any `sprintId` sent alongside
+     *  is ignored for that reason. */
+    projectId?: number;
     sprintId?: number | null;
     description?: unknown;
     status?: string;
@@ -52,6 +58,7 @@ export const updateMilestone = async (
         if (api) {
             const body: Record<string, unknown> = {};
             if (input.title !== undefined) body.title = input.title;
+            if (input.projectId !== undefined) body.project_id = input.projectId;
             // Sprint reassignment is intentionally explicit: callers
             // pass `sprintId: null` to clear the sprint, omit the key
             // entirely to leave it untouched.

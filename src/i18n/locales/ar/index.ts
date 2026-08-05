@@ -753,6 +753,8 @@ export const ar: DeepPartial<Messages> = {
             unauthorizedNoToken: "غير مصرّح. لم يتم العثور على رمز المصادقة.",
             messageIdExists: "معرّف الرسالة موجود بالفعل.",
             unauthorizedPleaseLogin: "غير مصرّح. يُرجى تسجيل الدخول مرة أخرى.",
+            subTaskProjectMoveForbidden:
+                "تنتمي المهمة الفرعية إلى مشروع مهمتها الأصلية. انقل المهمة الرئيسية لتنقلها معها.",
         },
         autocomplete: {
             statusPlaceholder: "الحالة",
@@ -817,6 +819,8 @@ export const ar: DeepPartial<Messages> = {
             refreshBranches: "تحديث الفروع",
             refreshPullRequests: "تحديث طلبات السحب المرتبطة",
             addStartDate: "إضافة تاريخ البدء",
+            subTaskProjectLocked:
+                "تنتمي المهمة الفرعية إلى مشروع مهمتها الأصلية. انقل المهمة الرئيسية لتنقلها معها.",
         },
         buttons: {
             create: "إنشاء",

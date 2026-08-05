@@ -213,6 +213,10 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
     const { t } = useTranslation();
     const urlLinkModal = useUrlLinkModal();
     const isRequired = (field: string) => requiredFields?.includes(field) === true;
+    // Only a milestone or a top-level task picks a project; a sub-task's
+    // project IS its parent's. See the Project row for why. Create mounts
+    // are exempt — the row doesn't exist to the user yet.
+    const projectLocked = isSubTask === true && isPreviewMode;
 
     const [openManageTags, setOpenManageTags] = useState(false);
     const [parentTask, setParentTask] = useState<TaskProps>();
@@ -682,23 +686,50 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             <FieldLabel isDark={isDark} required={isRequired("project")}>
                                 {t.tasks.fields.project}
                             </FieldLabel>
+                            {/* Only a milestone or a top-level task picks a
+                                project. A sub-task's project IS its parent's:
+                                letting one move alone stranded it under a
+                                parent in the project it came from, so the
+                                destination's table — which nests rows under
+                                their parent — had nowhere to draw it and the
+                                row was invisible in both projects. Moving the
+                                top-level task takes its whole sub-tree along.
+
+                                Create mounts stay editable: the row doesn't
+                                exist to the user yet, and a sub-task being
+                                created inherits the project it's created
+                                under anyway. */}
                             <Box sx={{ flex: 1, minWidth: 0 }}>
-                                <ACTeamProjects
-                                    isOpenProjectList={isOpenProjectList}
-                                    // Create mounts only (see the prop doc). Sub-task
-                                    // creation is excluded: its parentTaskId comes from
-                                    // `isCreatingTask`, not the milestone picker, and
-                                    // must survive a project switch.
-                                    resetMilestoneOnChange={!isPreviewMode && !isSubTask}
-                                    setIsOpenProjectList={setIsOpenProjectList}
-                                    setTaskContent={setTaskContent}
-                                    setTaskUpdated={setTaskUpdated}
-                                    taskContent={taskContent}
-                                    // Resolves each option's avatar from
-                                    // its PM chat.
-                                    useCM={useCM}
-                                    usePM={usePM}
-                                />
+                                <AppTooltip
+                                    disableHoverListener={!projectLocked}
+                                    maxWidth={280}
+                                    title={
+                                        projectLocked ? t.tasks.tooltips.subTaskProjectLocked : ""
+                                    }
+                                >
+                                    {/* The disabled input swallows its own
+                                        pointer events, so the tooltip needs a
+                                        wrapper that still receives them. */}
+                                    <Box sx={{ minWidth: 0 }}>
+                                        <ACTeamProjects
+                                            disabled={projectLocked}
+                                            isOpenProjectList={isOpenProjectList}
+                                            // Create mounts only (see the prop doc). Sub-task
+                                            // creation is excluded: its parentTaskId comes from
+                                            // `isCreatingTask`, not the milestone picker, and
+                                            // must survive a project switch.
+                                            resetMilestoneOnChange={!isPreviewMode && !isSubTask}
+                                            setIsOpenProjectList={setIsOpenProjectList}
+                                            setTaskContent={setTaskContent}
+                                            setTaskUpdated={setTaskUpdated}
+                                            taskContent={taskContent}
+                                            // Resolves each option's avatar from
+                                            // its PM chat.
+                                            useCM={useCM}
+                                            usePM={usePM}
+                                        />
+                                    </Box>
+                                </AppTooltip>
                             </Box>
                         </ListItem>
                     </Grid>

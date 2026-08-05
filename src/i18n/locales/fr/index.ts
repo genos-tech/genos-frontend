@@ -765,6 +765,8 @@ export const fr: DeepPartial<Messages> = {
             unauthorizedNoToken: "Non autorisé. Le jeton d'authentification est introuvable.",
             messageIdExists: "L'ID du message existe déjà.",
             unauthorizedPleaseLogin: "Non autorisé. Veuillez vous reconnecter.",
+            subTaskProjectMoveForbidden:
+                "Une sous-tâche appartient au projet de sa tâche parente. Déplacez la tâche de premier niveau pour l'emmener avec elle.",
         },
         autocomplete: {
             statusPlaceholder: "Statut",
@@ -829,6 +831,8 @@ export const fr: DeepPartial<Messages> = {
             refreshBranches: "Actualiser les branches",
             refreshPullRequests: "Actualiser les PR liées",
             addStartDate: "Ajouter une date de début",
+            subTaskProjectLocked:
+                "Une sous-tâche appartient au projet de sa tâche parente. Déplacez la tâche de premier niveau pour l'emmener avec elle.",
         },
         buttons: {
             create: "Créer",
