@@ -589,9 +589,28 @@ export const ar: DeepPartial<Messages> = {
             replyInThread: "الرد في الموضوع",
             flagForLater: "تعليم لوقت لاحق",
             removeFlag: "إزالة العلامة",
+            remindMe: "ذكّرني…",
+            reminderSetFor: "تذكير: {time}",
             copyMessageLink: "نسخ رابط الرسالة",
             editMessage: "تعديل الرسالة",
             deleteMessage: "حذف الرسالة",
+        },
+        remindMe: {
+            title: "ذكّرني بهذه الرسالة",
+            description: "سيصلك إشعار ونشاط في صندوق الوارد. وتبقى الرسالة معلَّمة.",
+            currentlySetFor: "التذكير مضبوط على {time}. اختر وقتًا آخر لتغييره.",
+            presets: {
+                in20m: "بعد 20 دقيقة",
+                in1h: "بعد ساعة",
+                in3h: "بعد 3 ساعات",
+                tomorrow: "صباح الغد",
+                nextWeek: "الأسبوع القادم",
+            },
+            customLabel: "أو اختر تاريخًا ووقتًا",
+            customInvalid: "اختر وقتًا في المستقبل خلال السنة القادمة.",
+            setButton: "ضبط",
+            remove: "إزالة التذكير",
+            failed: "تعذّر تحديث التذكير. يرجى المحاولة مرة أخرى.",
         },
         modals: {
             deleteMessage: {
@@ -1436,6 +1455,13 @@ export const ar: DeepPartial<Messages> = {
             gmRequest: "طلب مجموعة",
             noteAccessRequest: "الوصول إلى الملاحظة",
             ownershipClaim: "طلب ملكية",
+            messageReminder: "تذكير",
+        },
+        messageReminder: {
+            headline: "لقد طلبت تذكيرك بهذه الرسالة.",
+            headlineFrom: "لقد طلبت تذكيرك برسالة {name}.",
+            openMessage: "فتح الرسالة",
+            openInNamed: "فتح في {chat}",
         },
         ownershipClaim: {
             respondBy: "يُرجى الرد قبل {date}، وإلا أصبح بإمكانهم الحصول على الملكية",

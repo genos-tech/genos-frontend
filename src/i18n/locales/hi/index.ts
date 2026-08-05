@@ -594,9 +594,29 @@ export const hi: DeepPartial<Messages> = {
             replyInThread: "थ्रेड में जवाब दें",
             flagForLater: "बाद के लिए फ्लैग करें",
             removeFlag: "फ्लैग हटाएँ",
+            remindMe: "मुझे याद दिलाएँ…",
+            reminderSetFor: "रिमाइंडर: {time}",
             copyMessageLink: "मेसेज लिंक कॉपी करें",
             editMessage: "मेसेज एडिट करें",
             deleteMessage: "मेसेज हटाएँ",
+        },
+        remindMe: {
+            title: "इस मेसेज की याद दिलाएँ",
+            description:
+                "आपको नोटिफिकेशन और इनबॉक्स में एक ऐक्टिविटी मिलेगी। मेसेज फ्लैग किया हुआ रहेगा।",
+            currentlySetFor: "{time} के लिए रिमाइंडर सेट है। बदलने के लिए दूसरा समय चुनें।",
+            presets: {
+                in20m: "20 मिनट में",
+                in1h: "1 घंटे में",
+                in3h: "3 घंटे में",
+                tomorrow: "कल सुबह",
+                nextWeek: "अगले हफ़्ते",
+            },
+            customLabel: "या तारीख और समय चुनें",
+            customInvalid: "अगले एक साल के भीतर का कोई भविष्य का समय चुनें।",
+            setButton: "सेट करें",
+            remove: "रिमाइंडर हटाएँ",
+            failed: "रिमाइंडर अपडेट नहीं हो सका। कृपया फिर कोशिश करें।",
         },
         modals: {
             deleteMessage: {
@@ -1450,6 +1470,13 @@ export const hi: DeepPartial<Messages> = {
             gmRequest: "GM अनुरोध",
             noteAccessRequest: "नोट एक्सेस",
             ownershipClaim: "स्वामित्व अनुरोध",
+            messageReminder: "रिमाइंडर",
+        },
+        messageReminder: {
+            headline: "आपने इस मेसेज की याद दिलाने के लिए कहा था।",
+            headlineFrom: "आपने {name} के मेसेज की याद दिलाने के लिए कहा था।",
+            openMessage: "मेसेज खोलें",
+            openInNamed: "{chat} में खोलें",
         },
         ownershipClaim: {
             respondBy: "{date} तक उत्तर दें, अन्यथा वे स्वामित्व ले सकते हैं",

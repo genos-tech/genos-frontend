@@ -28,6 +28,15 @@ export const inbox = {
         digest: "Genos digest",
         teamConnection: "Team Connection",
         externalShare: "Shared With Your Team",
+        messageReminder: "Reminder",
+    },
+    // A reminder that has come due (item_type 9). The card is written from
+    // the reader's side — they asked for this, so it says so.
+    messageReminder: {
+        headline: "You asked to be reminded about this message.",
+        headlineFrom: "You asked to be reminded about {name}'s message.",
+        openMessage: "Open message",
+        openInNamed: "Open in {chat}",
     },
     crossTeam: {
         // Both of these are answered from the card, so the card is where

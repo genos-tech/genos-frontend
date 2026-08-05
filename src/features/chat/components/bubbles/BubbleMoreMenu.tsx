@@ -7,6 +7,7 @@ import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
+import NotificationsActiveRoundedIcon from "@mui/icons-material/NotificationsActiveRounded";
 import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
 import ReplyRoundedIcon from "@mui/icons-material/ReplyRounded";
 import WrapTextIcon from "@mui/icons-material/WrapText";
@@ -17,11 +18,14 @@ import { MoreMenu, MoreMenuItem } from "../../../../components/ui/MoreMenu";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
-import { useTranslation } from "../../../../i18n";
+import { fmt, useTranslation } from "../../../../i18n";
 import { channelService } from "../../../../services/channel/channelService";
 import { UserProps } from "../../../../types/admin";
 import { ChatProps, FlaggedMessageProps, MessageProps } from "../../../../types/chat";
+import { useMessageReminder } from "../../hooks/useMessageReminder";
+import { formatReminderTime } from "../../utils/reminderPresets";
 import { ModalDeleteMessage } from "../modals/ModalDeleteMessage";
+import { ModalRemindMe } from "../modals/ModalRemindMe";
 
 type BubbleMoreMenuProps = {
     accessToken: string | null;
@@ -84,9 +88,11 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
         // review). They are intentionally not destructured here.
     } = props;
 
-    const { t } = useTranslation();
+    const { t, locale } = useTranslation();
     const [openDeleteMessage, setOpenDeleteMessage] = useState(false);
+    const [openRemindMe, setOpenRemindMe] = useState(false);
     const [isFlagged, setIsFlagged] = useState(message.isFlagged || false);
+    const reminder = useMessageReminder(message.messageIdWithChatId);
 
     useEffect(() => {
         setIsFlagged(message.isFlagged || false);
@@ -186,6 +192,25 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
             onClick: handleFlagClick,
         },
         {
+            // Sits right below the flag: it IS the flag, with a time on it.
+            // A set reminder shows the time in the label rather than a
+            // generic "Remind me", so the menu answers "when?" without
+            // making the user open the picker to find out.
+            active: reminder !== null,
+            icon: <NotificationsActiveRoundedIcon sx={{ fontSize: 18 }} />,
+            id: "remindMe",
+            label: reminder
+                ? fmt(t.chat.messageActions.reminderSetFor, {
+                      time: formatReminderTime(new Date(reminder.remindAt), locale),
+                  })
+                : t.chat.messageActions.remindMe,
+            onClick: () => setOpenRemindMe(true),
+            // A reminder is keyed by the v3 message id; without one there is
+            // nothing to hand back to the user later. Same condition that
+            // gates the dialog below, so the item can't open an empty modal.
+            visible: Boolean(message.messageIdWithChatId),
+        },
+        {
             icon: <ContentCopyRoundedIcon sx={{ fontSize: 18 }} />,
             id: "copyLink",
             label: t.chat.messageActions.copyMessageLink,
@@ -242,6 +267,15 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
                 setOpenDeleteMessage={setOpenDeleteMessage}
                 socket={socket}
             />
+
+            {message.messageIdWithChatId && (
+                <ModalRemindMe
+                    messageId={message.messageIdWithChatId}
+                    open={openRemindMe}
+                    reminder={reminder}
+                    onClose={() => setOpenRemindMe(false)}
+                />
+            )}
         </Box>
     );
 };

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { popInboxItems } from "../../features/inbox/services/popInboxItems";
+import { isActivityItemType } from "../../features/inbox/utils/inboxItemTypes";
 import { InboxItemProps } from "../../types/common";
 
 export interface InboxManagementState {
@@ -36,13 +37,12 @@ export const useInboxManagement = (): InboxManagementState => {
     }, []);
 
     useEffect(() => {
-        // The badge sits on the REQUESTS tab, so it counts unread request
-        // items only (item_type 1-5) — not activity notices (0) and not
-        // the Genos digest (6), which lives on the Activities tab.
+        // The badge sits on the REQUESTS tab, so it counts unread REQUESTS
+        // only. Anything on the Activities tab — a notice, the digest, a
+        // message reminder — is excluded by the same rule that put it
+        // there, rather than by a second list that can fall behind.
         setUnReadInboxItemCount(
-            countUnReadInboxItem(
-                inboxItems.filter((item) => item.itemType > 0 && item.itemType !== 6)
-            )
+            countUnReadInboxItem(inboxItems.filter((item) => !isActivityItemType(item.itemType)))
         );
     }, [inboxItems]);
 

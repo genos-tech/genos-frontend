@@ -571,9 +571,28 @@ export const zh: DeepPartial<Messages> = {
             replyInThread: "在话题中回复",
             flagForLater: "标记以便稍后查看",
             removeFlag: "移除标记",
+            remindMe: "提醒我…",
+            reminderSetFor: "提醒：{time}",
             copyMessageLink: "复制消息链接",
             editMessage: "编辑消息",
             deleteMessage: "删除消息",
+        },
+        remindMe: {
+            title: "提醒我这条消息",
+            description: "你会收到通知，并在收件箱动态中看到它。消息将保持标记状态。",
+            currentlySetFor: "已设置在 {time} 提醒。选择其他时间即可更改。",
+            presets: {
+                in20m: "20 分钟后",
+                in1h: "1 小时后",
+                in3h: "3 小时后",
+                tomorrow: "明天早上",
+                nextWeek: "下周",
+            },
+            customLabel: "或选择日期和时间",
+            customInvalid: "请选择一年内的将来时间。",
+            setButton: "设置",
+            remove: "移除提醒",
+            failed: "无法更新提醒，请重试。",
         },
         modals: {
             deleteMessage: {
@@ -1415,6 +1434,13 @@ export const zh: DeepPartial<Messages> = {
             gmRequest: "群组申请",
             noteAccessRequest: "笔记访问",
             ownershipClaim: "所有权申请",
+            messageReminder: "提醒",
+        },
+        messageReminder: {
+            headline: "你要求提醒你这条消息。",
+            headlineFrom: "你要求提醒你 {name} 的这条消息。",
+            openMessage: "打开消息",
+            openInNamed: "在「{chat}」中打开",
         },
         ownershipClaim: {
             respondBy: "请在 {date} 前回复，否则对方可以取得所有权",

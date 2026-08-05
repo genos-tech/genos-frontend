@@ -9,6 +9,7 @@ import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlin
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import FlagIcon from "@mui/icons-material/Flag";
 import GroupsIcon from "@mui/icons-material/Groups";
+import NotificationsActiveRoundedIcon from "@mui/icons-material/NotificationsActiveRounded";
 import PeopleRoundedIcon from "@mui/icons-material/PeopleRounded";
 import ReplayRoundedIcon from "@mui/icons-material/ReplayRounded";
 import { Avatar, Box, Chip, IconButton, ListDivider, ListItem, Stack, Typography } from "@mui/joy";
@@ -41,8 +42,10 @@ import { ProjectProps } from "../../../../types/tasks";
 import { extractYYYYMMDDHHMM, getLocalCurrentTimestamp } from "../../../../utils/dateUtils";
 import { toggleMessagesPane } from "../../../../utils/sidebarUtils";
 import { formatTaskDisplayId } from "../../../tasks/utils/taskDisplayId";
+import { useMessageReminder } from "../../hooks/useMessageReminder";
 import { loadV3SpecificMessages } from "../../services/loadV3SpecificMessages";
 import { loadV3SpecificThreadMessages } from "../../services/loadV3SpecificThreadMessages";
+import { formatReminderTime } from "../../utils/reminderPresets";
 
 // chat_type=4 carries two semantics in the wider codebase: legacy task
 // comments (live in the PM store, chat_id = project_id) and the newer MDM
@@ -176,8 +179,11 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
         viewMode = "active",
     } = props;
     const { mode } = useColorScheme();
-    const { t } = useTranslation();
+    const { t, locale } = useTranslation();
     const isDark = mode === "dark";
+    // Same legacy-slot cast as every other read of this field below: the
+    // v3 message UUID, which is also the key reminders are stored under.
+    const reminder = useMessageReminder(flaggedMessage.messageId as unknown as string);
 
     const isYou = myself.userId === flaggedMessage.dmPartnerUser.userId;
     const [tmpIsFlagged, setTmpIsFlagged] = useState(true);
@@ -680,6 +686,32 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
         </Chip>
     );
 
+    // "A nudge is coming, and when." Without it the flagged list can't tell
+    // a bookmark apart from a bookmark that will come back on its own, and
+    // the only way to check was to reopen the message's More menu.
+    const renderReminderChip = () => {
+        if (!reminder) return null;
+        return (
+            <Chip
+                size="sm"
+                startDecorator={<NotificationsActiveRoundedIcon sx={{ fontSize: 12 }} />}
+                variant="soft"
+                sx={{
+                    borderRadius: "6px",
+                    fontSize: "10px",
+                    fontWeight: 600,
+                    height: "20px",
+                    px: 0.75,
+                    background: isDark ? "rgba(196,181,253,0.16)" : "rgba(124,58,237,0.10)",
+                    color: isDark ? "#c4b5fd" : "#7c3aed",
+                    "& .MuiChip-startDecorator": { color: "inherit" },
+                }}
+            >
+                {formatReminderTime(new Date(reminder.remindAt), locale)}
+            </Chip>
+        );
+    };
+
     const renderThreadChip = () => {
         if (flaggedMessage.threadId !== 0) {
             return (
@@ -842,6 +874,7 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                                         {renderProjectChips()}
                                         {renderChatTypeChip()}
                                         {renderThreadChip()}
+                                        {renderReminderChip()}
                                         {chatRemoved &&
                                             renderRemovedChip(t.chat.listItem.chatRemoved)}
                                         {!chatRemoved &&

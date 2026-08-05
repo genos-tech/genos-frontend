@@ -679,9 +679,29 @@ export const ja: DeepPartial<Messages> = {
             replyInThread: "スレッドで返信",
             flagForLater: "後で確認用にフラグを付ける",
             removeFlag: "フラグを外す",
+            remindMe: "リマインドする…",
+            reminderSetFor: "リマインド: {time}",
             copyMessageLink: "メッセージリンクをコピー",
             editMessage: "メッセージを編集",
             deleteMessage: "メッセージを削除",
+        },
+        remindMe: {
+            title: "このメッセージをリマインド",
+            description:
+                "通知と受信箱のアクティビティでお知らせします。メッセージはフラグ付きのままです。",
+            currentlySetFor: "{time} にリマインドします。別の時間を選ぶと変更できます。",
+            presets: {
+                in20m: "20分後",
+                in1h: "1時間後",
+                in3h: "3時間後",
+                tomorrow: "明日の朝",
+                nextWeek: "来週",
+            },
+            customLabel: "または日時を指定",
+            customInvalid: "1年以内の未来の日時を選んでください。",
+            setButton: "設定",
+            remove: "リマインドを解除",
+            failed: "リマインドを更新できませんでした。もう一度お試しください。",
         },
         modals: {
             deleteMessage: {
@@ -1591,6 +1611,13 @@ export const ja: DeepPartial<Messages> = {
             noteAccessRequest: "ノートアクセス",
             ownershipClaim: "オーナー権限リクエスト",
             digest: "Genos ダイジェスト",
+            messageReminder: "リマインダー",
+        },
+        messageReminder: {
+            headline: "このメッセージについてリマインドをご希望でした。",
+            headlineFrom: "{name} さんのメッセージについてリマインドをご希望でした。",
+            openMessage: "メッセージを開く",
+            openInNamed: "「{chat}」で開く",
         },
         ownershipClaim: {
             respondBy:

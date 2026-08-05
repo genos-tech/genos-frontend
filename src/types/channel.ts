@@ -181,6 +181,23 @@ export interface Flag {
 }
 
 /**
+ * A PENDING "remind me about this message at T". Setting one also flags
+ * the message, and finishing with the flag (unflag or mark done) cancels
+ * it — so a reminder in hand always has a live flag behind it.
+ *
+ * Only pending reminders ever reach the client: one that has fired became
+ * an inbox item and a push, and one that was cancelled has nothing to say.
+ */
+export interface MessageReminder {
+    id: string;
+    messageId: string;
+    /** ISO instant, absolute — the browser computed it (see
+     *  `features/chat/utils/reminderPresets`). */
+    remindAt: string;
+    tsCreated: string;
+}
+
+/**
  * Tier retention window stamped on message delta envelopes when the
  * VIEWING user's plan limits chat history (hide-not-delete — upgrading
  * restores). Absent for plans with unlimited history. `truncated` is

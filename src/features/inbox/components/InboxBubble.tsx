@@ -6,6 +6,7 @@ import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
 import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
 import HubRoundedIcon from "@mui/icons-material/HubRounded";
+import NotificationsActiveRoundedIcon from "@mui/icons-material/NotificationsActiveRounded";
 import ScheduleRoundedIcon from "@mui/icons-material/ScheduleRounded";
 import ShareRoundedIcon from "@mui/icons-material/ShareRounded";
 import ShieldRoundedIcon from "@mui/icons-material/ShieldRounded";
@@ -31,6 +32,7 @@ import {
     respondToExternalShare,
     respondToTeamConnection,
 } from "../../admin/services/teamConnections";
+import { isActivityItemType } from "../utils/inboxItemTypes";
 import { DigestHeadline } from "./DigestHeadline";
 import { InboxCrossTeamChips } from "./InboxCrossTeamChips";
 import { InboxTargetChip } from "./InboxTargetChip";
@@ -51,7 +53,8 @@ type RequestLabelKey =
     | "ownershipClaim"
     | "digest"
     | "teamConnection"
-    | "externalShare";
+    | "externalShare"
+    | "messageReminder";
 
 const ITEM_TYPE_CONFIG: Record<
     number,
@@ -124,6 +127,13 @@ const ITEM_TYPE_CONFIG: Record<
         icon: <ShareRoundedIcon sx={{ fontSize: 14 }} />,
         colorScheme: { dark: "#2dd4bf", light: "#0d9488" },
     },
+    // A message reminder come due. Violet, matching the reminder chip in
+    // the flagged list and the More menu — the same promise, kept.
+    9: {
+        labelKey: "messageReminder",
+        icon: <NotificationsActiveRoundedIcon sx={{ fontSize: 14 }} />,
+        colorScheme: { dark: "#c4b5fd", light: "#7c3aed" },
+    },
 };
 
 /** `item_type` for a team-ownership claim. See `ownershipClaim.ts`. */
@@ -135,6 +145,10 @@ const DIGEST = 6;
 /** `item_type`s for cross-team sharing. See `teamConnections.ts`. */
 const TEAM_CONNECTION = 7;
 const EXTERNAL_SHARE = 8;
+
+/** `item_type` for a message reminder that came due. See
+ *  `origin/services/message_reminders.py`. */
+const MESSAGE_REMINDER = 9;
 
 /** The request types answered over HTTP rather than a socket event. */
 const HTTP_ANSWERED = [OWNERSHIP_CLAIM, TEAM_CONNECTION, EXTERNAL_SHARE];
@@ -177,15 +191,12 @@ export const InboxBubble = (props: InboxBubbleProps) => {
     const [respondError, setRespondError] = useState<string | null>(null);
 
     const config = ITEM_TYPE_CONFIG[inboxItem.itemType];
-    // Everything except an activity (0) and a digest (6) is something
-    // somebody is waiting on an answer to. Spelled out rather than left as
-    // `>= 1 && <= 5`, which is how the two cross-team types shipped as
+    // Anything that isn't an activity is something somebody is waiting on
+    // an answer to. Asked as "not an activity" rather than as a numeric
+    // range: an upper bound is how the two cross-team types shipped as
     // cards with no Approve button on a request that could not be answered
     // anywhere else in the product.
-    const isRequest =
-        inboxItem.itemType >= 1 &&
-        inboxItem.itemType <= EXTERNAL_SHARE &&
-        inboxItem.itemType !== DIGEST;
+    const isRequest = !isActivityItemType(inboxItem.itemType);
     // Cards that can name an openable target: team/project/GM join requests
     // (1-3) and activities (0). Note-access (4) is excluded — it has its own
     // open-note chip. The chip renders nothing when nothing resolves, so this
@@ -222,12 +233,25 @@ export const InboxBubble = (props: InboxBubbleProps) => {
     // empty document — the rows already filed that way would stay blank
     // cards forever. Read either shape rather than migrate them.
     const legacyBody =
-        inboxItem.itemType !== DIGEST && !Array.isArray(inboxItem.itemBody)
+        inboxItem.itemType !== DIGEST &&
+        inboxItem.itemType !== MESSAGE_REMINDER &&
+        !Array.isArray(inboxItem.itemBody)
             ? (inboxItem.itemBody as unknown as { title?: string; text?: string } | null)
             : null;
     const legacyText = legacyBody
         ? [legacyBody.title, legacyBody.text].filter(Boolean).join("\n")
         : "";
+
+    // A reminder that came due (itemType 9). The card is composed from the
+    // optionals rather than the stored `{title, text}` body: those facts are
+    // language-free, so a reminder set in English still reads in Japanese,
+    // and the preview can be quoted apart from the sentence about it.
+    const reminderOptionals =
+        inboxItem.itemType === MESSAGE_REMINDER ? inboxItem.itemOptionals : null;
+    const reminderPreview = String(reminderOptionals?.preview ?? "");
+    const reminderSender = String(reminderOptionals?.sender_name ?? "");
+    const reminderHref = String(reminderOptionals?.href ?? "");
+    const reminderChatName = String(reminderOptionals?.chat_name ?? "");
 
     // Note-access requests (itemType 4) can open the referenced note in the
     // URL-link modal. Only personal notes (note_type 1) are routable from
@@ -458,6 +482,40 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                         {legacyText}
                     </Typography>
                 )}
+                {reminderOptionals && (
+                    <Stack spacing={0.75}>
+                        <Typography
+                            level="body-sm"
+                            sx={{ color: isDark ? "rgba(255,255,255,0.8)" : "rgba(0,0,0,0.75)" }}
+                        >
+                            {reminderSender
+                                ? fmt(t.inbox.messageReminder.headlineFrom, {
+                                      name: reminderSender,
+                                  })
+                                : t.inbox.messageReminder.headline}
+                        </Typography>
+                        {/* The message itself, quoted. A reminder whose
+                            subject you have to go and look up is a reminder
+                            you postpone, so the text comes with it. */}
+                        {reminderPreview !== "" && (
+                            <Typography
+                                level="body-sm"
+                                sx={{
+                                    whiteSpace: "pre-wrap",
+                                    pl: 1,
+                                    borderLeft: "2px solid",
+                                    borderColor: isDark
+                                        ? "rgba(196,181,253,0.45)"
+                                        : "rgba(124,58,237,0.35)",
+                                    fontStyle: "italic",
+                                    color: isDark ? "rgba(255,255,255,0.72)" : "rgba(0,0,0,0.68)",
+                                }}
+                            >
+                                {reminderPreview}
+                            </Typography>
+                        )}
+                    </Stack>
+                )}
                 {inboxItem.itemType !== DIGEST &&
                     Array.isArray(inboxItem.itemBody) &&
                     inboxItem.itemBody[0]?.content?.length > 0 && (
@@ -534,6 +592,42 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                             onClick={() => urlLinkModal.openModalByHref(openableNote.href)}
                         >
                             {fmt(t.inbox.noteAccess.openNoteNamed, { title: openableNote.title })}
+                        </Chip>
+                    </Box>
+                )}
+
+                {/* Jump to the message the reminder is about. Same URL-link
+                    modal as the note affordance, so acting on a reminder
+                    doesn't cost you the inbox you were working through. */}
+                {reminderOptionals && reminderHref !== "" && urlLinkModal && (
+                    <Box sx={{ pl: BODY_TEXT_INDENT }}>
+                        <Chip
+                            size="sm"
+                            startDecorator={<ChatRoundedIcon sx={{ fontSize: 14 }} />}
+                            variant="soft"
+                            sx={{
+                                cursor: "pointer",
+                                maxWidth: "100%",
+                                borderRadius: "8px",
+                                fontWeight: 600,
+                                background: isDark
+                                    ? "rgba(196,181,253,0.16)"
+                                    : "rgba(124,58,237,0.10)",
+                                color: isDark ? "#c4b5fd" : "#7c3aed",
+                                "& .MuiChip-startDecorator": { color: "inherit" },
+                                "& .MuiChip-label": {
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    whiteSpace: "nowrap",
+                                },
+                            }}
+                            onClick={() => urlLinkModal.openModalByHref(reminderHref)}
+                        >
+                            {reminderChatName
+                                ? fmt(t.inbox.messageReminder.openInNamed, {
+                                      chat: reminderChatName,
+                                  })
+                                : t.inbox.messageReminder.openMessage}
                         </Chip>
                     </Box>
                 )}

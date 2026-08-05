@@ -158,7 +158,14 @@ export function useChannelServiceBootstrap(
         // a second device, which is why pinned chats appeared to have been
         // lost. Sequenced after hydration so the fetch reconciles against
         // the cached set rather than racing it.
-        void channelService.hydrateFromIDB().then(() => channelService.fetchPins());
+        //
+        // Reminders come from the server every time — they are never
+        // cached, never broadcast, and a reminder the user cannot see is
+        // one they set twice.
+        void channelService.hydrateFromIDB().then(() => {
+            void channelService.fetchPins();
+            void channelService.fetchReminders();
+        });
 
         return () => {
             next.off("connect", onConnect);

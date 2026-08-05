@@ -137,6 +137,21 @@ export const NOTIFICATION_CATEGORIES = [
         descriptionKey: "agentRunDone",
         defaultEnabled: true,
     },
+    {
+        // "Remind me about this message in 3 hours" coming due. Delivered by
+        // the backend cron (`message_reminder_tick`), never by the router,
+        // and grouped under `inbox` for the same reason as the entry above:
+        // a system notice addressed to just this user, on the existing
+        // `enable_inbox` column. Listed here so the toggle exists at all —
+        // the push gate reads `categorySettings` by this key
+        // (`webpush_gating._PUSH_DEFAULTS`), so without a row a user who
+        // wants the inbox card but not the OS popup has no way to say so.
+        key: "message_reminder",
+        group: "inbox",
+        labelKey: "messageReminder",
+        descriptionKey: "messageReminder",
+        defaultEnabled: true,
+    },
 ] as const satisfies readonly CategoryEntry[];
 
 /** Union of every fine category key — derived from the registry so the

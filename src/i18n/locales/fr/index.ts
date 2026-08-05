@@ -596,9 +596,30 @@ export const fr: DeepPartial<Messages> = {
             replyInThread: "Répondre dans le fil",
             flagForLater: "Marquer pour plus tard",
             removeFlag: "Retirer la marque",
+            remindMe: "Me le rappeler…",
+            reminderSetFor: "Rappel : {time}",
             copyMessageLink: "Copier le lien du message",
             editMessage: "Modifier le message",
             deleteMessage: "Supprimer le message",
+        },
+        remindMe: {
+            title: "Me rappeler ceci",
+            description:
+                "Vous recevrez une notification et une activité dans la boîte de réception. Le message reste marqué.",
+            currentlySetFor:
+                "Rappel prévu pour {time}. Choisissez une autre heure pour le modifier.",
+            presets: {
+                in20m: "Dans 20 minutes",
+                in1h: "Dans 1 heure",
+                in3h: "Dans 3 heures",
+                tomorrow: "Demain matin",
+                nextWeek: "La semaine prochaine",
+            },
+            customLabel: "Ou choisissez une date et une heure",
+            customInvalid: "Choisissez une heure future, dans l'année à venir.",
+            setButton: "Définir",
+            remove: "Supprimer le rappel",
+            failed: "Impossible de mettre à jour le rappel. Veuillez réessayer.",
         },
         modals: {
             deleteMessage: {
@@ -1458,6 +1479,13 @@ export const fr: DeepPartial<Messages> = {
             gmRequest: "Demande de GM",
             noteAccessRequest: "Accès à la note",
             ownershipClaim: "Demande de propriété",
+            messageReminder: "Rappel",
+        },
+        messageReminder: {
+            headline: "Vous avez demandé un rappel à propos de ce message.",
+            headlineFrom: "Vous avez demandé un rappel à propos du message de {name}.",
+            openMessage: "Ouvrir le message",
+            openInNamed: "Ouvrir dans {chat}",
         },
         ownershipClaim: {
             respondBy: "Répondez avant le {date}, sinon la propriété pourra leur être transférée",
