@@ -45,6 +45,7 @@ interface GenosHomeProps {
     mentionMembers?: UserProps[];
     mentionGroups?: MentionGroup[];
     projects?: ProjectProps[];
+    projectAvatars?: Map<number, string>;
     onSelect: (r: SpotlightResult) => void;
     onPreview: (r: SpotlightResult) => void;
     onOpenSettings: () => void;
@@ -59,6 +60,7 @@ export const GenosHome = ({
     mentionMembers,
     mentionGroups,
     projects,
+    projectAvatars,
     onSelect,
     onPreview,
     onOpenSettings,
@@ -303,6 +305,7 @@ export const GenosHome = ({
                         mentionGroups={mentionGroups}
                         mentionMembers={mentionMembers}
                         openHistory={spotlight.openHistory}
+                        projectAvatars={projectAvatars}
                         projects={projects}
                         query={spotlight.query}
                         registerInputFocus={spotlight.registerPageInputFocus}

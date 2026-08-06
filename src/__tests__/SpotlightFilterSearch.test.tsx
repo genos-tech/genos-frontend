@@ -497,6 +497,29 @@ describe("SpotlightOverlay project filter", () => {
         }
     });
 
+    it("shows each project's own avatar on its dropdown row", async () => {
+        const user = userEvent.setup();
+        // Only Apollo has an image. Absolute URL on purpose: it survives
+        // `buildAvatarSrc` untouched, so the assertion doesn't depend on
+        // VITE_MEDIA_ROOT_DJANGO (unset under vitest).
+        const props = {
+            ...overlayProps(),
+            projects: PROJECTS,
+            projectAvatars: new Map([[7, "https://cdn.test/apollo.png"]]),
+            onChangeFilterProjects: vi.fn(),
+        };
+        renderOverlay(props);
+
+        await user.click(screen.getByPlaceholderText("All projects"));
+
+        const apollo = screen.getByRole("option", { name: /Apollo/ });
+        expect(apollo.querySelector("img")).toHaveAttribute("src", "https://cdn.test/apollo.png");
+        // Borealis is absent from the map, so it keeps the generic
+        // project icon rather than borrowing the neighbouring image.
+        const borealis = screen.getByRole("option", { name: /Borealis/ });
+        expect(borealis.querySelector("img")).toBeNull();
+    });
+
     it("shows the scoped-project count and clears it in one click", async () => {
         const user = userEvent.setup();
         const onChangeFilterProjects = vi.fn();
