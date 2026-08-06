@@ -35,7 +35,7 @@ import { sleepMilliSeconds } from "../../../utils/sleep";
 import { createTeam } from "../services/createTeam";
 import { findTeam } from "../services/findTeam";
 import { joinTeam } from "../services/joinTeam";
-import { loadMyTeams } from "../services/loadMyTeams";
+import { loadMyTeams, membershipTeams } from "../services/loadMyTeams";
 import { acceptInvite } from "../services/teamInvite";
 
 interface FindTeamFormElements extends HTMLFormControlsCollection {
@@ -174,7 +174,7 @@ export const JoinTeam = () => {
         if (accessToken !== null && userId !== null) {
             (async () => {
                 const loadedTeams: Team[] = await loadMyTeams(accessToken, userId);
-                setJoinedTeams(loadedTeams);
+                setJoinedTeams(membershipTeams(loadedTeams));
             })();
         }
     }, [accessToken]);

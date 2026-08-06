@@ -156,8 +156,6 @@ export const admin = {
         showTeamProfile: "Show Team Profile",
         yourTeams: "Your Teams ({count})",
         currentTeam: "Current Team",
-        guestTeam: "Guest",
-        guestTeamHint: "Shared with your team — you can only see what was shared.",
         newTeam: "New Team",
         comingSoon: "Coming soon",
     },

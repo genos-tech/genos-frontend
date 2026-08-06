@@ -8,19 +8,16 @@ type SwitchTeamArgs = {
     setMyself: (me: UserProps) => void;
     teamId: string;
     teamName: string;
-    /**
-     * True for a host team the user reaches through a cross-team share
-     * rather than a membership (`Team.isGuest` from `loadMyTeams`).
-     */
-    isGuest?: boolean;
 };
 
 /**
  * Make `teamId` the active team.
  *
- * Shared by the desktop TeamDropdown and the mobile account sheet. The
- * `lastProjectId` removal matters: it belongs to the team being left, and
- * carrying it across would open a project the new team can't see.
+ * Shared by the desktop TeamDropdown and the mobile account sheet. Both
+ * pick from `membershipTeams`, so `teamId` is always a team the user holds
+ * a membership row in. The `lastProjectId` removal matters: it belongs to
+ * the team being left, and carrying it across would open a project the new
+ * team can't see.
  */
 export const switchTeam = ({
     accessToken,
@@ -28,7 +25,6 @@ export const switchTeam = ({
     setMyself,
     teamId,
     teamName,
-    isGuest = false,
 }: SwitchTeamArgs): void => {
     localStorage.setItem("teamId", teamId);
     localStorage.setItem("teamName", teamName);
@@ -48,12 +44,6 @@ export const switchTeam = ({
         avatarImgPath: myself.avatarImgPath,
     });
     // `/team/join/` is how a switch re-affirms a membership row and picks
-    // up the Genos Guide notes. A guest has no membership row to re-affirm
-    // — they are here through a shared chat, project or note folder — so
-    // the call can only come back 403. Skipping it keeps the switch quiet
-    // and keeps the endpoint's meaning intact: nothing about arriving in a
-    // host team's context should look like joining it.
-    if (!isGuest) {
-        void joinTeam(accessToken, teamId, myself.userId);
-    }
+    // up the Genos Guide notes.
+    void joinTeam(accessToken, teamId, myself.userId);
 };

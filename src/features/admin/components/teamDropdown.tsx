@@ -7,7 +7,6 @@ import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
 import {
     Avatar,
     Box,
-    Chip,
     Divider,
     Dropdown,
     IconButton,
@@ -28,7 +27,7 @@ import { UIStateManagementState } from "../../../hooks/common/useUIStateManageme
 import { fmt, useTranslation } from "../../../i18n";
 import { Team, TeamProfileProps, UserProps } from "../../../types/admin";
 import { buildAvatarSrc } from "../../../utils/avatarSrc";
-import { loadMyTeams } from "../services/loadMyTeams";
+import { loadMyTeams, membershipTeams } from "../services/loadMyTeams";
 import { switchTeam } from "../services/switchTeam";
 import { ModalTeamProfile } from "./modals/ModalTeamProfile";
 
@@ -69,7 +68,7 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
         if (accessToken !== null) {
             (async () => {
                 const loadedTeams: Team[] = await loadMyTeams(accessToken, myself.userId);
-                setTeams(loadedTeams);
+                setTeams(membershipTeams(loadedTeams));
             })();
             setAnchorEl(event.currentTarget);
         }
@@ -86,7 +85,6 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
             setMyself,
             teamId: team.teamId,
             teamName: team.teamName,
-            isGuest: team.isGuest,
         });
         handleClose();
     };
@@ -338,36 +336,17 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
                                     </Box>
                                 </ListItemDecorator>
                                 <Box sx={{ flex: 1 }}>
-                                    <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
-                                        <Typography
-                                            level="body-sm"
-                                            sx={{
-                                                fontWeight: isCurrentTeam ? 600 : 500,
-                                                color: isCurrentTeam
-                                                    ? styles.iconColor
-                                                    : styles.textColor,
-                                            }}
-                                        >
-                                            {team.teamName}
-                                        </Typography>
-                                        {/* Another organization's team, listed here
-                                            because something in it was shared with
-                                            ours. Without the label it is
-                                            indistinguishable from our own teams, and
-                                            the narrowed roster inside reads as a
-                                            small team rather than a partial view. */}
-                                        {team.isGuest && (
-                                            <AppTooltip
-                                                placement="top"
-                                                size="sm"
-                                                title={t.admin.teamDropdown.guestTeamHint}
-                                            >
-                                                <Chip color="neutral" size="sm" variant="soft">
-                                                    {t.admin.teamDropdown.guestTeam}
-                                                </Chip>
-                                            </AppTooltip>
-                                        )}
-                                    </Box>
+                                    <Typography
+                                        level="body-sm"
+                                        sx={{
+                                            fontWeight: isCurrentTeam ? 600 : 500,
+                                            color: isCurrentTeam
+                                                ? styles.iconColor
+                                                : styles.textColor,
+                                        }}
+                                    >
+                                        {team.teamName}
+                                    </Typography>
                                     {isCurrentTeam && (
                                         <Typography
                                             level="body-xs"
