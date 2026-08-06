@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
 
 import { UserProps } from "../../types/admin";
@@ -6,7 +6,14 @@ import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 
 const ws_url = import.meta.env.VITE_WS_BASE_URL;
 
-const SNACKBAR_DELAY_ATTEMPTS = 5;
+// How long the socket has to stay down before the banner says anything.
+// Socket.io drops and re-handshakes on its own for plenty of ordinary
+// reasons — a wifi roam, a laptop waking, a server redeploy — and nearly
+// all of those are back inside a second or two. Announcing them turns
+// the banner into noise, and a banner that cries wolf is one people stop
+// reading. Anything still down after this is worth interrupting for.
+const WS_DOWN_GRACE_MS = 5000;
+const WS_POLL_INTERVAL_MS = 1000;
 
 const createSocket = (accessToken: string | null): Socket => {
     return io(ws_url, {
@@ -36,7 +43,6 @@ export const useWebSocket = (
 ) => {
     const [socketInstance, setSocketInstance] = useState<Socket | null>(null);
     const [showDisconnected, setShowDisconnected] = useState(false);
-    const attemptCountRef = useRef(0);
 
     const sendHeartBeat = useCallback(() => {
         if (socketInstance) {
@@ -77,27 +83,43 @@ export const useWebSocket = (
 
     // Poll socket.connected status instead of relying on event listeners,
     // because cleanupWebSocketHandlers removes all listeners for shared events.
+    //
+    // The grace period is measured against the wall clock rather than
+    // counted in polls. Counting ticks made the window whatever the
+    // browser felt like giving us: a backgrounded tab throttles timers
+    // to about one a minute, which stretched a "5 second" wait into
+    // several minutes, and the count survived a socket being replaced
+    // (it's recreated on team switch), so a fresh socket could inherit
+    // an almost-expired counter and flash the banner on its first poll.
     useEffect(() => {
         if (!socketInstance) return;
 
+        // Null while connected; the timestamp we first saw it down otherwise.
+        // Local to the effect, so a replaced socket always starts a fresh window.
+        let downSince: number | null = null;
+
         const pollId = setInterval(() => {
             if (socketInstance.connected) {
-                if (showDisconnected) {
-                    setShowDisconnected(false);
-                }
-                attemptCountRef.current = 0;
-            } else {
-                attemptCountRef.current += 1;
-                if (attemptCountRef.current >= SNACKBAR_DELAY_ATTEMPTS && !showDisconnected) {
-                    setShowDisconnected(true);
-                }
+                downSince = null;
+                setShowDisconnected(false);
+                return;
             }
-        }, 1000);
+            if (downSince === null) {
+                downSince = Date.now();
+                return;
+            }
+            if (Date.now() - downSince >= WS_DOWN_GRACE_MS) {
+                setShowDisconnected(true);
+            }
+        }, WS_POLL_INTERVAL_MS);
 
         return () => {
             clearInterval(pollId);
         };
-    }, [socketInstance, showDisconnected]);
+        // `showDisconnected` is deliberately not a dependency: reading it
+        // here would tear down and restart the interval every time the
+        // banner flips, restarting the very window being measured.
+    }, [socketInstance]);
 
     // Setup heartbeat.
     //
