@@ -19,6 +19,7 @@ import {
     NotificationIntent,
     NotificationPreference,
 } from "../../services/notifications/types";
+import { viewingSurfaceToken } from "../../services/notifications/viewingSurface";
 import { UserProps } from "../../types/admin";
 
 export type WebNotificationPermission = NotificationPermission | "unsupported";
@@ -84,6 +85,14 @@ export const useNotifications = (
 
     const pushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const pendingPatchRef = useRef<Partial<NotificationPreference>>({});
+
+    // The conversation on screen, and a handle on the heartbeat that
+    // reports it. Refs rather than state: `setActiveSurface` runs from a
+    // layout effect on every route/chat change, and re-rendering every
+    // consumer of this hook for a value only the heartbeat reads would be
+    // a needless render on each one.
+    const viewingSurfaceRef = useRef<string>("");
+    const beatRef = useRef<(() => void) | null>(null);
 
     const flushPush = useCallback(async () => {
         if (pushTimerRef.current) {
@@ -198,9 +207,10 @@ export const useNotifications = (
         if (!accessToken || !myself.userId) return;
         const beat = () => {
             if (document.visibilityState === "visible") {
-                void sendPresenceHeartbeat(accessTokenRef.current);
+                void sendPresenceHeartbeat(accessTokenRef.current, viewingSurfaceRef.current);
             }
         };
+        beatRef.current = beat;
         beat();
         const interval = setInterval(beat, 45_000);
         const onVisibilityChange = () => {
@@ -214,6 +224,7 @@ export const useNotifications = (
         window.addEventListener("pagehide", onPageHide);
         return () => {
             clearInterval(interval);
+            beatRef.current = null;
             document.removeEventListener("visibilitychange", onVisibilityChange);
             window.removeEventListener("pagehide", onPageHide);
         };
@@ -296,8 +307,24 @@ export const useNotifications = (
             manager.isTargetMutedByKey(targetType, targetId),
         [manager]
     );
+    // Two consumers of one value: the manager suppresses toasts locally,
+    // and the presence heartbeat tells the server so it can skip the
+    // activity-feed row too (`viewingSurface.ts`).
+    //
+    // Beating immediately on change — rather than letting the next 45s tick
+    // carry it — is what keeps the server's picture honest while someone
+    // clicks between chats. The old surface is retracted by the same beat
+    // (the server remembers what this device last claimed), so a chat you
+    // left stops suppressing its activities right away instead of for the
+    // rest of the TTL.
     const setActiveSurface = useCallback(
-        (surface: ActiveSurface | null) => manager.setActiveSurface(surface),
+        (surface: ActiveSurface | null) => {
+            manager.setActiveSurface(surface);
+            const token = viewingSurfaceToken(surface);
+            if (token === viewingSurfaceRef.current) return;
+            viewingSurfaceRef.current = token;
+            beatRef.current?.();
+        },
         [manager]
     );
     const subscribeToasts = useCallback(
