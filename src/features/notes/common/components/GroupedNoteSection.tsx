@@ -90,10 +90,14 @@ function GroupedNoteSectionComponent({
                 outlineColor: isDark
                     ? "rgba(var(--gp-brandalt-400-rgb), 0.7)"
                     : "rgba(var(--gp-brand-700-rgb), 0.5)",
-                "&:hover": {
-                    backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
-                    "& .group-menu-btn": {
-                        opacity: 1,
+                // Hover-only on real pointers — sticky :hover on touch
+                // eats the first tap (folder won't expand until tap #2).
+                "@media (hover: hover) and (pointer: fine)": {
+                    "&:hover": {
+                        backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
+                        "& .group-menu-btn": {
+                            opacity: 1,
+                        },
                     },
                 },
             }}
@@ -178,6 +182,7 @@ function GroupedNoteSectionComponent({
                     sx={{
                         opacity: menuOpen ? 1 : 0,
                         transition: "opacity 0.15s ease",
+                        "@media (hover: none)": { opacity: 1 },
                     }}
                     onClick={(e) => e.stopPropagation()}
                 >

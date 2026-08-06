@@ -2,6 +2,8 @@ import { ReactNode } from "react";
 import { DragDropContext, Draggable, Droppable, DropResult } from "@hello-pangea/dnd";
 import { Box } from "@mui/joy";
 
+import { useIsMobile } from "../../../../hooks/common/useIsMobile";
+
 // ---------------------------------------------------------------------------
 // Sidebar note drag & drop — shared across the My/Task/Chat note sections.
 //
@@ -198,24 +200,33 @@ type DraggableNoteRowProps = {
 };
 
 // Wraps one container-root note row. Index is positional only — drops
-// never reorder.
-export const DraggableNoteRow = ({ kind, noteId, index, children }: DraggableNoteRowProps) => (
-    <Draggable draggableId={buildNoteDraggableId(kind, noteId)} index={index}>
-        {(provided, snapshot) => (
-            <Box
-                ref={provided.innerRef}
-                {...provided.draggableProps}
-                {...provided.dragHandleProps}
-                sx={{
-                    opacity: snapshot.isDragging ? 0.85 : 1,
-                    borderRadius: "8px",
-                    boxShadow: snapshot.isDragging
-                        ? "0 4px 16px rgba(var(--gp-brand-700-rgb), 0.35)"
-                        : "none",
-                }}
-            >
-                {children}
-            </Box>
-        )}
-    </Draggable>
-);
+// never reorder. Drag is disabled on mobile: touch DnD fights with
+// tap-to-open (and the long-press sensor isn't useful in a phone
+// sidebar), so rows stay plain clickable there.
+export const DraggableNoteRow = ({ kind, noteId, index, children }: DraggableNoteRowProps) => {
+    const isMobile = useIsMobile();
+    return (
+        <Draggable
+            draggableId={buildNoteDraggableId(kind, noteId)}
+            index={index}
+            isDragDisabled={isMobile}
+        >
+            {(provided, snapshot) => (
+                <Box
+                    ref={provided.innerRef}
+                    {...provided.draggableProps}
+                    {...(isMobile ? {} : provided.dragHandleProps)}
+                    sx={{
+                        opacity: snapshot.isDragging ? 0.85 : 1,
+                        borderRadius: "8px",
+                        boxShadow: snapshot.isDragging
+                            ? "0 4px 16px rgba(var(--gp-brand-700-rgb), 0.35)"
+                            : "none",
+                    }}
+                >
+                    {children}
+                </Box>
+            )}
+        </Draggable>
+    );
+};

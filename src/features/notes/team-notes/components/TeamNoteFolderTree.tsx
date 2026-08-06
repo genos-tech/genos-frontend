@@ -185,11 +185,16 @@ function TeamNoteFolderTreeComponent(props: TeamNoteFolderTreeProps) {
                         minHeight: 32,
                         transition: "all 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
                         backgroundColor: isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.01)",
-                        "&:hover": {
-                            backgroundColor: isDark
-                                ? "rgba(255,255,255,0.06)"
-                                : "rgba(0,0,0,0.04)",
-                            "& .folder-menu-btn": { opacity: 1 },
+                        // Hover-only on real pointers — sticky :hover on
+                        // touch eats the first tap (folder won't expand
+                        // until tap #2).
+                        "@media (hover: hover) and (pointer: fine)": {
+                            "&:hover": {
+                                backgroundColor: isDark
+                                    ? "rgba(255,255,255,0.06)"
+                                    : "rgba(0,0,0,0.04)",
+                                "& .folder-menu-btn": { opacity: 1 },
+                            },
                         },
                     }}
                     onClick={() => useNM.toggleFolderExpanded(folder.folderId)}
@@ -315,7 +320,12 @@ function TeamNoteFolderTreeComponent(props: TeamNoteFolderTreeProps) {
 
                     <Box
                         className="folder-menu-btn"
-                        sx={{ opacity: menuOpen ? 1 : 0, transition: "opacity 0.15s ease" }}
+                        sx={{
+                            opacity: menuOpen ? 1 : 0,
+                            transition: "opacity 0.15s ease",
+                            // Always show on touch — no hover to reveal.
+                            "@media (hover: none)": { opacity: 1 },
+                        }}
                         onClick={(e) => e.stopPropagation()}
                     >
                         <MoreMenu

@@ -35,10 +35,12 @@ function FavoriteNoteSectionComponent({
                         minHeight: 32,
                         transition: "all 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
                         backgroundColor: isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.01)",
-                        "&:hover": {
-                            backgroundColor: isDark
-                                ? "rgba(255,255,255,0.06)"
-                                : "rgba(0,0,0,0.04)",
+                        "@media (hover: hover) and (pointer: fine)": {
+                            "&:hover": {
+                                backgroundColor: isDark
+                                    ? "rgba(255,255,255,0.06)"
+                                    : "rgba(0,0,0,0.04)",
+                            },
                         },
                     }}
                     onClick={() => setIsExpanded(!isExpanded)}
