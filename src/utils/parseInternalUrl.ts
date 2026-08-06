@@ -18,11 +18,15 @@ const CHAT_TYPE_MAP: Record<string, ChatType> = {
     pm: 3,
 };
 
+// `messageId` is the `/message/:id` segment as written: a numeric `seq`
+// or a v3 UUID (see `toMessageRef`). Unlike `chatId` / `threadId` it is
+// NOT squeezed into a `number` slot — its only consumer (`ModalChatView`)
+// has to tell the two apart to resolve the row it names.
 export type ChatMainTarget = {
     kind: "chatMain";
     chatType: ChatType;
     chatId: number;
-    messageId?: number;
+    messageId?: number | string;
 };
 
 export type ChatThreadTarget = {
@@ -30,7 +34,7 @@ export type ChatThreadTarget = {
     chatType: ChatType;
     chatId: number;
     threadId: number;
-    messageId?: number;
+    messageId?: number | string;
     commentId?: number;
 };
 
@@ -135,6 +139,19 @@ const toV3IdAllowZero = (s: string | undefined): string | undefined => {
     return isLegacyNumericId(s) ? s : undefined;
 };
 
+// A `/message/:id` segment is EITHER the per-channel numeric `seq` (what
+// the in-app "Copy link to message" builds, and what a reminder's inbox
+// card / web-push link carries) or a v3 `Message.id` UUID (what Spotlight
+// results and answer citations build). Keep whichever arrived — `toInt`
+// alone NaN'd every UUID, so those links opened the preview with no focus
+// target at all. `ModalChatView` resolves either shape against the loaded
+// rows; the router's own parser does the same in `parseChatRoute`.
+const toMessageRef = (s: string | undefined): number | string | undefined => {
+    if (!s) return undefined;
+    if (isLegacyNumericId(s)) return toInt(s);
+    return isV3Uuid(s) ? s : undefined;
+};
+
 const segmentAfter = (parts: string[], key: string): string | undefined => {
     const i = parts.indexOf(key);
     return i !== -1 ? parts[i + 1] : undefined;
@@ -173,7 +190,7 @@ export const parseInternalUrl = (href: string): UrlClassification => {
         if (!chatType || !chatId) return route;
 
         const threadId = toV3Id(segmentAfter(parts, "thread"));
-        const messageId = toInt(segmentAfter(parts, "message"));
+        const messageId = toMessageRef(segmentAfter(parts, "message"));
         const commentId = toInt(segmentAfter(parts, "comment"));
 
         // Deeper wins: if a thread segment is present, the link author

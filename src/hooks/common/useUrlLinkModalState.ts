@@ -29,6 +29,12 @@ export type OpenModalByHrefOptions = {
     // (a chat the user hasn't opened this session needs
     // `moveToSpecificChat`, or the chat surface renders blank).
     onOpenFullPage?: () => void;
+    // The same action for the common case: "the real page IS this href".
+    // Saves a caller that has nothing else to do from reaching for a
+    // `navigate` of its own — this hook already owns one — which for deep
+    // consumers (an inbox card, a chat preview) means not needing to sit
+    // inside a router at all. Ignored when `onOpenFullPage` is given.
+    fullPageHref?: string;
     // Override the modal's stacking context. Default (omitted) uses
     // UrlLinkModal's own default (10020), correct for the chat-message
     // link case. Callers that open the preview from a higher surface
@@ -102,7 +108,14 @@ export const useUrlLinkModalState = ({
                 // different entity on screen, and the previous action
                 // would send the user to the one they navigated away
                 // from. No action ⇒ no button, which is right.
-                setFullPage(opts?.onOpenFullPage ? { run: opts.onOpenFullPage } : null);
+                const fullPageHref = opts?.fullPageHref;
+                setFullPage(
+                    opts?.onOpenFullPage
+                        ? { run: opts.onOpenFullPage }
+                        : fullPageHref
+                          ? { run: () => navigate(fullPageHref) }
+                          : null
+                );
                 setTarget(classified);
                 return "opened";
             }

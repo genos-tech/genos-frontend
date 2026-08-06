@@ -58,6 +58,46 @@ describe("UrlLinkModal → Move to page", () => {
         expect(result.current.openFullPage).toBeNull();
     });
 
+    it("navigates to `fullPageHref` for a caller with no navigate of its own", () => {
+        // The inbox reminder card's shape: it lives below the router-aware
+        // layers and has nothing to do beyond going to the link, so it
+        // names the href and lets this hook drive its own navigate.
+        const navigate = vi.fn();
+        const { result } = renderHook(() => useUrlLinkModalState({ navigate }));
+        const href = "/workspace/chat/dm/847c8111-3c14-45d1-add0-9c36373bed8b/message/111";
+
+        act(() => {
+            result.current.openModalByHref(href, { fullPageHref: href });
+        });
+        expect(result.current.openFullPage).not.toBeNull();
+
+        act(() => {
+            result.current.openFullPage?.();
+        });
+
+        expect(navigate).toHaveBeenCalledWith(href);
+        expect(result.current.target).toBeNull();
+    });
+
+    it("prefers an explicit `onOpenFullPage` over `fullPageHref`", () => {
+        const navigate = vi.fn();
+        const onOpenFullPage = vi.fn();
+        const { result } = renderHook(() => useUrlLinkModalState({ navigate }));
+
+        act(() => {
+            result.current.openModalByHref(TASK_HREF, {
+                fullPageHref: TASK_HREF,
+                onOpenFullPage,
+            });
+        });
+        act(() => {
+            result.current.openFullPage?.();
+        });
+
+        expect(onOpenFullPage).toHaveBeenCalledTimes(1);
+        expect(navigate).not.toHaveBeenCalled();
+    });
+
     it("drops the action when a link inside the preview re-targets it", () => {
         const navigate = vi.fn();
         const onOpenFullPage = vi.fn();
