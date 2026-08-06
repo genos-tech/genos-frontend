@@ -42,6 +42,7 @@ import { RouteLoadingFallback } from "./components/ui/misc/RouteLoadingFallback"
 import { CalendarModal } from "./features/calendar/components/CalendarModal";
 import { useIsV3ChatEnabled } from "./features/channel/chatRolloutFlags";
 import { OAUTH_INTEGRATIONS_ENABLED } from "./features/integrations/featureFlags";
+import { personalNoteScopes } from "./features/notes/common/utils/noteTypeAlias";
 import { SpotlightOverlay } from "./features/spotlight/SpotlightOverlay";
 import { SpotlightSettingsModal } from "./features/spotlight/SpotlightSettingsModal";
 import { CHAT_TYPE_CODE, SpotlightResult } from "./features/spotlight/types";
@@ -460,6 +461,16 @@ export const App = () => {
     // the overlay. Built as a map in one pass over the chats so an
     // option list is a lookup per row, not a rescan.
     const projectAvatars = useMemo(() => projectAvatarSrcMap(useCM.allChats), [useCM.allChats]);
+
+    // Which space each personal note lives in, for Spotlight's row
+    // subtitles. Resolved here for the same reason as the avatars above:
+    // My, Shared and Team notes are one backend type indexed one way, so
+    // the only thing that tells them apart is which meta list loaded
+    // them — and those live on the note manager, not in the overlay.
+    const noteScopes = useMemo(
+        () => personalNoteScopes(useNM.teamNoteMeta, useNM.sharedNoteMeta),
+        [useNM.teamNoteMeta, useNM.sharedNoteMeta]
+    );
 
     // Push freshly-cached IDB data into React state after a background
     // network refresh writes it. Shared by the cache-first boot refresh and
@@ -1313,6 +1324,7 @@ export const App = () => {
                                                             mentionMembers={
                                                                 spotlightMentionMembers
                                                             }
+                                                            noteScopes={noteScopes}
                                                             openHistory={spotlight.openHistory}
                                                             projectAvatars={projectAvatars}
                                                             projects={spotlightFilterProjects}
@@ -1761,6 +1773,9 @@ export const App = () => {
                                                                                                                         }
                                                                                                                         mentionMembers={
                                                                                                                             spotlightMentionMembers
+                                                                                                                        }
+                                                                                                                        noteScopes={
+                                                                                                                            noteScopes
                                                                                                                         }
                                                                                                                         projectAvatars={
                                                                                                                             projectAvatars

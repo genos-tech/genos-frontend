@@ -47,3 +47,26 @@ export const noteTypeFromBucket = (bucket: "my" | "shared" | "team"): number => 
     if (bucket === "team") return 8;
     return 1;
 };
+
+// Which bucket a personal note belongs to, by note id.
+//
+// Membership in a meta list is the only signal there is. A team note and
+// a My Note are the same row on the same endpoint — the folder carries
+// the sharing, and neither the note nor a search hit for it says which
+// space it came from — so anything that has to NAME the space has to ask
+// the lists. Same rule the sidebar applies to favorites and recents and
+// the tab-bucket heal in `useNoteManagement`.
+//
+// Only the non-personal ids are stored, so the map stays the size of the
+// exceptions: an id that isn't in it is a My Note.
+export const personalNoteScopes = (
+    teamNoteMeta: readonly { noteId: number }[],
+    sharedNoteMeta: readonly { noteId: number }[]
+): Map<number, "shared" | "team"> => {
+    const scopes = new Map<number, "shared" | "team">();
+    for (const note of sharedNoteMeta) scopes.set(note.noteId, "shared");
+    // Team last, so it wins a note that is reachable both ways — the
+    // order every other caller resolves the ambiguity in.
+    for (const note of teamNoteMeta) scopes.set(note.noteId, "team");
+    return scopes;
+};

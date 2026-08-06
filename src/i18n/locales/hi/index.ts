@@ -1581,6 +1581,8 @@ export const hi: DeepPartial<Messages> = {
             task: "टास्क",
             project: "प्रोजेक्ट",
             notePersonal: "मेरा नोट",
+            noteTeam: "टीम नोट",
+            noteShared: "शेयर किया गया नोट",
             noteTask: "टास्क नोट",
             noteChat: "चैट नोट",
             noteFallback: "नोट",
