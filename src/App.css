@@ -773,6 +773,42 @@ input[type="checkbox"] {
     opacity: 1 !important;
 }
 
+/* Note body editor as the ONLY vertical scroller.
+ *
+ * The rules above pin `.bn-editor` to a viewport fraction (92dvh, 85dvh
+ * on phones). Stacked under the note header and tab strip that already
+ * overflows, so the note page itself has to scroll — which carries the
+ * header and tabs off screen. `.note-editor-pool-fill` is the mobile
+ * notes-home editor pool (see NoteContentRenderer), a flex column of
+ * fixed height, so inside it the editor stretches into the leftover
+ * space instead and scrolls internally via the `overflow-y: scroll` it
+ * still picks up above.
+ *
+ * Scoped to that wrapper rather than a plain media query because the
+ * same editors also render inside the task and chat pages, where
+ * nothing bounds their height and stretching would collapse them. The
+ * three-class selectors outrank the viewport-fraction rules, so source
+ * order doesn't matter. Every element below is in-flow — the upload
+ * badge, wrap toggles and GIF picker are absolutely positioned. */
+.note-editor-pool-fill .bn-note-body-box-light,
+.note-editor-pool-fill .bn-note-body-box-dark {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+}
+
+.note-editor-pool-fill .bn-note-body-box-light > .bn-box,
+.note-editor-pool-fill .bn-note-body-box-dark > .bn-box {
+    flex: 1;
+    min-height: 0;
+}
+
+.note-editor-pool-fill .bn-note-body-box-light .bn-editor,
+.note-editor-pool-fill .bn-note-body-box-dark .bn-editor {
+    height: 100%;
+}
+
 /* Comment composer overrides – prevent parent .bn-editor styles from leaking
    into the nested editor inside the floating comment / thread composer. */
 .bn-comment-editor .bn-editor {

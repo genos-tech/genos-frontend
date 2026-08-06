@@ -6,6 +6,7 @@ import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { useIsMobile } from "../../../../hooks/common/useIsMobile";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
@@ -51,6 +52,7 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
     } = props;
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
+    const isMobile = useIsMobile();
     const { t } = useTranslation();
     const { accessToken } = useAuth();
 
@@ -391,6 +393,7 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
                     <MyNoteEditorPanel
                         key={tab.id}
                         accessToken={accessToken}
+                        fillHeight={isMobile}
                         isActive={isActive}
                         myself={myself}
                         setMyself={setMyself}
@@ -408,6 +411,7 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
                     <TaskNoteEditorPanel
                         key={tab.id}
                         accessToken={accessToken}
+                        fillHeight={isMobile}
                         isActive={isActive}
                         myself={myself}
                         setMyself={setMyself}
@@ -424,6 +428,7 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
                 <ChatNoteEditorPanel
                     key={tab.id}
                     accessToken={accessToken}
+                    fillHeight={isMobile}
                     isActive={isActive}
                     myself={myself}
                     setMyself={setMyself}
@@ -438,29 +443,56 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
         });
     };
 
+    /* Task preview sidebar — stays a singleton bound to the active task
+       tab, unaffected by the keepalive pool. */
+    const taskPreview = activeNoteType === 2 &&
+        useNM.currentTaskNote &&
+        useNM.isTaskVisibleInNote &&
+        useTM.currentPreviewTask && (
+            <TaskPreview
+                myself={myself}
+                setMyself={setMyself}
+                socket={socket}
+                useCM={useCM}
+                useNM={useNM}
+                usePM={usePM}
+                useTEM={useTEM}
+                useTM={useTM}
+                useUISM={useUISM}
+            />
+        );
+
+    if (isMobile) {
+        // Split into a pinned header zone and a filling editor zone.
+        // There's no room on a phone to let the page itself scroll — it
+        // carries the header and tab strip off screen. So the pool takes
+        // the leftover height and the active editor scrolls inside it
+        // (`.note-editor-pool-fill` in App.css sizes the BlockNote
+        // chain, which is otherwise pinned to a viewport fraction).
+        return (
+            <Stack direction="column" sx={{ width: "100%", height: "100%", minHeight: 0 }}>
+                <Box sx={{ flexShrink: 0 }}>{renderActiveMain()}</Box>
+                <Box
+                    className="note-editor-pool-fill"
+                    sx={{
+                        flex: 1,
+                        minHeight: 0,
+                        display: "flex",
+                        flexDirection: "column",
+                    }}
+                >
+                    {renderEditorPool()}
+                </Box>
+                {taskPreview}
+            </Stack>
+        );
+    }
+
     return (
         <Stack direction="column" sx={{ width: "100%" }}>
             {renderActiveMain()}
             {renderEditorPool()}
-
-            {/* Task preview sidebar — stays a singleton bound to the
-                active task tab, unaffected by the keepalive pool. */}
-            {activeNoteType === 2 &&
-                useNM.currentTaskNote &&
-                useNM.isTaskVisibleInNote &&
-                useTM.currentPreviewTask && (
-                    <TaskPreview
-                        myself={myself}
-                        setMyself={setMyself}
-                        socket={socket}
-                        useCM={useCM}
-                        useNM={useNM}
-                        usePM={usePM}
-                        useTEM={useTEM}
-                        useTM={useTM}
-                        useUISM={useUISM}
-                    />
-                )}
+            {taskPreview}
         </Stack>
     );
 };
