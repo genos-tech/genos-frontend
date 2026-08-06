@@ -146,6 +146,9 @@ export const zh: DeepPartial<Messages> = {
         snackbar: {
             wsLost: "实时连接已断开，正在尝试重新连接…",
             apiDown: "无法连接到 API 服务器。",
+            apiDownOffline: "您已离线。网络恢复后 Genos 将自动重新连接。",
+            apiDownTimeout: "API 服务器无响应 — 请求已超时。",
+            apiDownUnreachable: "无法连接到 API 服务器，正在重试…",
             serverError: "服务器错误，请稍后重试。",
             permissionDenied: "您没有执行此操作的权限。",
             requestFailed: "请求无法完成，请重试。",

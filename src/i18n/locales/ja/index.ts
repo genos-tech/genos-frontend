@@ -157,6 +157,10 @@ export const ja: DeepPartial<Messages> = {
         snackbar: {
             wsLost: "リアルタイム接続が切断されました。再接続を試みています…",
             apiDown: "APIサーバーに接続できません。",
+            apiDownOffline: "オフラインです。ネットワークが復旧すると自動的に再接続します。",
+            apiDownTimeout:
+                "APIサーバーから応答がありません（リクエストがタイムアウトしています）。",
+            apiDownUnreachable: "APIサーバーに接続できません。再試行しています…",
             serverError: "サーバーエラーが発生しました。しばらくしてからもう一度お試しください。",
             permissionDenied: "この操作を行う権限がありません。",
             requestFailed: "リクエストを完了できませんでした。もう一度お試しください。",

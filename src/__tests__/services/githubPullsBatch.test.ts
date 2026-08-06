@@ -53,6 +53,10 @@ describe("loadLinkedPullsBatched", () => {
         expect(get).toHaveBeenCalledTimes(1);
         expect(get).toHaveBeenCalledWith("/github/pulls/for-tasks/", {
             params: { task_ids: "1,2,3" },
+            // These endpoints proxy GitHub, so a refusal upstream arrives
+            // as a 502 that isn't Genos being down — and this collector
+            // swallows failures anyway. The shared toast stays out of it.
+            suppressErrorToast: true,
         });
     });
 

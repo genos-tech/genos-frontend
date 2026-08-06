@@ -3,14 +3,29 @@ import WifiOffRoundedIcon from "@mui/icons-material/WifiOffRounded";
 import { Snackbar, Stack, Typography } from "@mui/joy";
 
 import { useTranslation } from "../../i18n";
+import type { ApiDownReason } from "../../services/api";
 
 interface Props {
     showWsDisconnected: boolean;
     showApiDown: boolean;
+    /** Which flavour of unreachable, from the api.ts interceptor. Absent
+     *  when the failure couldn't be placed — then the generic copy runs. */
+    apiDownReason?: ApiDownReason;
 }
 
-export const ConnectionStatusSnackbar = ({ showWsDisconnected, showApiDown }: Props) => {
+export const ConnectionStatusSnackbar = ({
+    showWsDisconnected,
+    showApiDown,
+    apiDownReason,
+}: Props) => {
     const { t } = useTranslation();
+    const apiDownMessage = apiDownReason
+        ? {
+              offline: t.app.snackbar.apiDownOffline,
+              timeout: t.app.snackbar.apiDownTimeout,
+              unreachable: t.app.snackbar.apiDownUnreachable,
+          }[apiDownReason]
+        : t.app.snackbar.apiDown;
     return (
         <Snackbar
             anchorOrigin={{ vertical: "top", horizontal: "center" }}
@@ -45,7 +60,7 @@ export const ConnectionStatusSnackbar = ({ showWsDisconnected, showApiDown }: Pr
                         }}
                     >
                         <CloudOffRoundedIcon sx={{ fontSize: 16 }} />
-                        {t.app.snackbar.apiDown}
+                        {apiDownMessage}
                     </Typography>
                 )}
             </Stack>

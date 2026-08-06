@@ -1,4 +1,4 @@
-import axios, { AxiosInstance } from "axios";
+import axios, { AxiosError, AxiosInstance } from "axios";
 
 import { notifyNonMemberMentions } from "./nonMemberMentionBus";
 import { emitRequestError } from "./requestErrorNotifier";
@@ -13,7 +13,30 @@ declare module "axios" {
     }
 }
 
-type ApiHealthListener = (isDown: boolean) => void;
+/**
+ * Why the API looks unreachable.
+ *
+ * A rejection with no `response` carries no status to classify it by, so
+ * the banner used to say "unreachable" for all of them — which reads the
+ * same whether the laptop lost wifi, the request was sent and never
+ * answered, or the connection was refused outright. Those point the
+ * person reading the banner at different things.
+ */
+export type ApiDownReason = "offline" | "timeout" | "unreachable";
+
+const classifyUnreachable = (error: AxiosError): ApiDownReason => {
+    // The browser's own verdict, and the one to defer to when it's
+    // available: if the device says it has no network at all, the server
+    // isn't the story and telling the user to wait for it would be wrong.
+    if (typeof navigator !== "undefined" && navigator.onLine === false) return "offline";
+    // `ECONNABORTED` is axios's own `timeout` option firing; `ETIMEDOUT`
+    // comes from the platform socket. Both mean the request went out and
+    // nothing came back, which is a different failure from being refused.
+    if (error.code === "ECONNABORTED" || error.code === "ETIMEDOUT") return "timeout";
+    return "unreachable";
+};
+
+type ApiHealthListener = (isDown: boolean, reason?: ApiDownReason) => void;
 
 let _onApiHealthChange: ApiHealthListener | null = null;
 
@@ -52,7 +75,7 @@ const attachInterceptors = (instance: AxiosInstance): AxiosInstance => {
                 // "API down" banner. No transient toast — a failure either
                 // has a response or it doesn't, so the banner and the toast
                 // below are mutually exclusive and never double-fire.
-                _onApiHealthChange?.(true);
+                _onApiHealthChange?.(true, classifyUnreachable(error as AxiosError));
                 return Promise.reject(error);
             }
             // HTTP error response while the server is reachable → transient
