@@ -663,6 +663,7 @@ export const ChatNoteHeader = ({
                     <ModalImportMarkdown
                         context={importContext}
                         hostZIndex={hostZIndex}
+                        myself={myself}
                         open={importMdOpen}
                         useNM={useNM}
                         onClose={() => setImportMdOpen(false)}
